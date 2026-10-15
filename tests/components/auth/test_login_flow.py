@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.auth.login_flow import MAX_URL_LENGTH
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -585,37 +584,11 @@ async def test_login_flow_pkce_validation(
 
 
 @pytest.mark.parametrize(
-    "path",
-    [
-        pytest.param(
-            "/.well-known/oauth-authorization-server", id="authorization-server"
-        ),
-        pytest.param("/.well-known/oauth-protected-resource", id="protected-resource"),
-    ],
-)
-async def test_well_known_auth_info_allows_cors(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, path: str
-) -> None:
-    """Test browser clients can discover authorization server capabilities."""
-    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-
-    resp = await client.get(
-        path,
-        headers={"origin": "https://client.example"},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
-
-
-@pytest.mark.parametrize(
     "payload",
     [
+        pytest.param({"client_id": CLIENT_ID + "?" + "x" * 2048}, id="client_id"),
         pytest.param(
-            {"client_id": CLIENT_ID + "?" + "x" * MAX_URL_LENGTH}, id="client_id"
-        ),
-        pytest.param(
-            {"redirect_uri": CLIENT_REDIRECT_URI + "?" + "x" * MAX_URL_LENGTH},
+            {"redirect_uri": CLIENT_REDIRECT_URI + "?" + "x" * 2048},
             id="redirect_uri",
         ),
     ],
@@ -638,3 +611,27 @@ async def test_login_flow_url_too_long(
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
     assert not hass.auth.login_flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(
+            "/.well-known/oauth-authorization-server", id="authorization-server"
+        ),
+        pytest.param("/.well-known/oauth-protected-resource", id="protected-resource"),
+    ],
+)
+async def test_well_known_auth_info_allows_cors(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, path: str
+) -> None:
+    """Test browser clients can discover authorization server capabilities."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+
+    resp = await client.get(
+        path,
+        headers={"origin": "https://client.example"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
