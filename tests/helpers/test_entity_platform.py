@@ -1,7 +1,8 @@
 """Tests for the EntityPlatform helper."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import AsyncGenerator, Callable, Iterable
+from contextlib import asynccontextmanager
 from datetime import timedelta
 import logging
 import types
@@ -1218,23 +1219,54 @@ async def test_setup_entry_platform_timeout(
     await asyncio.sleep(0.1)
 
 
-async def test_setup_entry_platform_raises_timeout(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("setup_side_effect", "expected", "logged", "not_logged"),
+    [
+        pytest.param(
+            None,
+            True,
+            "test is taking longer than",
+            "Error while setting up",
+            id="deadline_after_setup",
+        ),
+        pytest.param(
+            TimeoutError,
+            False,
+            "Error while setting up test platform for test_domain",
+            "is taking longer than",
+            id="setup_raises_timeout",
+        ),
+    ],
+)
+async def test_setup_entry_platform_timeout_source(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    setup_side_effect: type[Exception] | None,
+    expected: bool,
+    logged: str,
+    not_logged: str,
 ) -> None:
-    """Test a config entry platform that raises a timeout itself has failed."""
-    async_setup_entry = AsyncMock(side_effect=TimeoutError)
-    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    """Test only a timeout raised by the setup itself is a failure."""
+
+    @asynccontextmanager
+    async def deadline_after_setup(*args: Any, **kwargs: Any) -> AsyncGenerator[None]:
+        # The deadline fires in the same loop iteration as the setup finishes
+        yield
+        raise TimeoutError
+
+    platform = MockPlatform(async_setup_entry=AsyncMock(side_effect=setup_side_effect))
     config_entry = MockConfigEntry()
     ent_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert not await ent_platform.async_setup_entry(config_entry)
+    with patch.object(hass.timeout, "async_timeout", deadline_after_setup):
+        assert await ent_platform.async_setup_entry(config_entry) is expected
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
-    assert "Error while setting up test platform for test_domain" in caplog.text
-    assert "is taking longer than" not in caplog.text
+    assert logged in caplog.text
+    assert not_logged not in caplog.text
 
 
 async def test_setup_entry_platform_not_ready_with_message(

@@ -543,8 +543,13 @@ class EntityPlatform:
                 )
             return True
         except TimeoutError:
-            # A finished setup raised the timeout itself, it does not keep running
-            if isinstance(awaitable, asyncio.Future) and awaitable.done():
+            # The setup raised the timeout itself, it does not keep running
+            if (
+                isinstance(awaitable, asyncio.Future)
+                and awaitable.done()
+                and not awaitable.cancelled()
+                and isinstance(awaitable.exception(), TimeoutError)
+            ):
                 logger.exception(
                     "Error while setting up %s platform for %s",
                     self.platform_name,
