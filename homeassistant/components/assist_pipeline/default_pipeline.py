@@ -406,9 +406,7 @@ class _DefaultPipelineProcessor:
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
         # Create a background task to prepare the conversation agents
-        if self.intent_agent and PIPELINE_STAGE_ORDER.index(
-            self.host.end_stage
-        ) >= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT):
+        if self.intent_agent:
             self.host.hass.async_create_background_task(
                 self._async_prepare_intent_agents(self.intent_agent.id),
                 f"prepare conversation agent {self.intent_agent.id}",
