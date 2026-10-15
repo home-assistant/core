@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from xknx.devices import Device as XknxDevice
+from xknx.devices import Device as XknxDevice, Light as XknxLight
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
@@ -142,6 +142,7 @@ class _KnxEntityBase(Entity):
     _device: XknxDevice
 
     _knx_entity_identifier: KnxEntityIdentifier | None = None
+    _device_state_initialized = False
 
     @property
     @override
@@ -164,21 +165,32 @@ class _KnxEntityBase(Entity):
             context = (
                 update.context if isinstance(update.context, Context) else Context()
             )
-            self.async_set_context(context)
+            state = self.state
             if (
                 isinstance(context, KnxTelegramContext)
                 and (old_state := self.hass.states.get(self.entity_id)) is not None
                 and (
-                    old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                    (
+                        self._device_state_initialized
+                        and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                    )
                     or (
                         update.telegram is not None
                         and isinstance(update.telegram.payload, GroupValueWrite)
                     )
                 )
-                and self.state is not None
-                and old_state.state != self.state
+                and state is not None
+                and old_state.state != state
             ):
                 context.async_log(self.hass)
+            # Do not let an unrelated state write claim the telegram's origin event.
+            if isinstance(context, KnxTelegramContext) and not context.logged:
+                context = Context()
+            self.async_set_context(context)
+            # Lights expose an uninitialized KNX state as "off" in HA.
+            self._device_state_initialized = state is not None and (
+                not isinstance(device, XknxLight) or device.state is not None
+            )
         self.async_write_ha_state()
 
     @override

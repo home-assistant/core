@@ -339,3 +339,92 @@ async def test_initial_response_has_no_sender_event(
 
     assert hass.states.get("switch.test").state == STATE_ON
     assert not events
+
+
+async def test_initial_light_response_has_no_sender_event(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """An initial light read response must not be recorded as an action."""
+    await knx.setup_integration(
+        {
+            "light": {
+                "name": "test",
+                "address": "1/1/1",
+                "brightness_address": "1/1/2",
+            }
+        },
+        state_updater=False,
+    )
+    assert hass.states.get("light.test").state == "off"
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+
+    # Learning brightness does not establish the switch state.
+    await knx.receive_response("1/1/2", (0,))
+    assert not events
+
+    await knx.receive_response("1/1/1", True)
+
+    assert hass.states.get("light.test").state == STATE_ON
+    assert not events
+
+    await knx.receive_response("1/1/1", False)
+    assert len(events) == 1
+    assert hass.states.get("light.test").context is events[0].context
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_shared_response_live_activity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Initialization of one entity must not claim another entity's sender context."""
+    assert await async_setup_component(hass, "logbook", {})
+    await knx.setup_integration(
+        {
+            "switch": [
+                {
+                    "name": "learning",
+                    "unique_id": "learning",
+                    "address": "1/1/1",
+                    "state_address": "1/1/2",
+                },
+                {
+                    "name": "known",
+                    "unique_id": "known",
+                    "address": "1/1/1",
+                    "state_address": "1/1/3",
+                },
+            ]
+        },
+        state_updater=False,
+    )
+    await knx.receive_response("1/1/3", False)
+    assert hass.states.get("switch.learning").state == STATE_UNKNOWN
+    assert hass.states.get("switch.known").state == "off"
+    await async_wait_recording_done(hass)
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/event_stream",
+            "start_time": (dt_util.utcnow() - timedelta(seconds=1)).isoformat(),
+            "entity_ids": ["switch.known"],
+        }
+    )
+    assert (await client.receive_json())["success"]
+    for _ in range(2):
+        assert (await client.receive_json())["type"] == "event"
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+
+    await knx.receive_response("1/1/1", True, source="1.1.23")
+
+    assert hass.states.get("switch.learning").state == STATE_ON
+    assert hass.states.get("switch.known").state == STATE_ON
+    assert len(events) == 1
+    message = await asyncio.wait_for(client.receive_json(), 2)
+    entries = message["event"]["events"]
+    assert len(entries) == 1
+    assert entries[0]["entity_id"] == "switch.known"
+    assert entries[0].get("context_name") == "1.1.23", entries[0]
+    assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
