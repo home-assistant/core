@@ -2895,6 +2895,12 @@
       "integration_type": "virtual",
       "supported_by": "aquacell"
     },
+    "hase_iq": {
+      "name": "Hase iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hassio": {
       "name": "Home Assistant Supervisor",
       "integration_type": "hub",
@@ -4188,6 +4194,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "lorawan": {
+      "name": "LoRaWAN",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "local_push"
+    },
     "luftdaten": {
       "name": "Sensor.Community",
       "integration_type": "device",
@@ -4277,6 +4289,12 @@
           "config_flow": true,
           "iot_class": "assumed_state",
           "name": "Marantz Infrared"
+        },
+        "marantz_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Marantz RS-232"
         }
       }
     },

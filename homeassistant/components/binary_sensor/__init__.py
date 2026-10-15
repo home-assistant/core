@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEVICE_CLASSES_SCHEMA, DOMAIN, BinarySensorDeviceClass  # noqa: F401
+from .const import DEVICE_CLASSES_SCHEMA, DOMAIN, BinarySensorDeviceClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,18 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
+
+__all__ = [
+    "DEVICE_CLASSES",
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "BinarySensorDeviceClass",
+    "BinarySensorEntity",
+    "BinarySensorEntityDescription",
+]
 
 # mypy: disallow-any-generics
 

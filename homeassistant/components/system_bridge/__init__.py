@@ -59,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SystemBridgeConfigEntry,
-) -> bool:
+) -> None:
     """Set up System Bridge from a config entry."""
 
     # Check version before initialising
@@ -189,29 +189,17 @@ async def async_setup_entry(
         )
     )
 
-    # Reload entry when its updated.
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
-) -> bool:
-    """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SystemBridgeConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -259,5 +247,3 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
-
-    return True

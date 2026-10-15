@@ -1,5 +1,6 @@
 """Test for the switchbot_cloud climate."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -30,7 +31,7 @@ from homeassistant.util.unit_system import (
 
 from . import configure_integration
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
 
 async def test_air_conditioner_set_hvac_mode(
@@ -265,10 +266,24 @@ async def test_air_conditioner_restore_state(
 
 
 @pytest.mark.parametrize(
-    ("restored_temperature", "expected_temperature"),
+    ("restored_temperature", "extra_data", "expected_temperature"),
     [
-        pytest.param(75, 75, id="restored_as_published"),
-        pytest.param(19381607032619749376, 70, id="corrupted_falls_back_to_default"),
+        pytest.param(75, None, 75, id="restored_as_published"),
+        pytest.param(
+            19381607032619749376, None, 70, id="corrupted_falls_back_to_default"
+        ),
+        pytest.param(
+            99,
+            {
+                "native_current_temperature": None,
+                "native_target_temperature": 25,
+                "native_target_temperature_high": None,
+                "native_target_temperature_low": None,
+                "native_temperature_unit": UnitOfTemperature.CELSIUS,
+            },
+            77,
+            id="extra_data",
+        ),
     ],
 )
 async def test_air_conditioner_restore_state_in_fahrenheit(
@@ -276,6 +291,7 @@ async def test_air_conditioner_restore_state_in_fahrenheit(
     mock_list_devices: AsyncMock,
     mock_get_status: AsyncMock,
     restored_temperature: float,
+    extra_data: dict[str, Any] | None,
     expected_temperature: float,
 ) -> None:
     """Test the target temperature is restored in the unit it was published in."""
@@ -290,9 +306,16 @@ async def test_air_conditioner_restore_state_in_fahrenheit(
     ]
 
     entity_id = "climate.climate_1"
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        (State(entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}),),
+        (
+            (
+                State(
+                    entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}
+                ),
+                extra_data,
+            ),
+        ),
     )
 
     entry = await configure_integration(hass)
