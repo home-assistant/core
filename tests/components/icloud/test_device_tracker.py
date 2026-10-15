@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
-from .const import MOCK_CONFIG, USERNAME
+from . import MockAppleDevice
+from .const import DEVICE, MOCK_CONFIG, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -116,6 +117,46 @@ async def test_a_location_cleared_during_a_state_write_does_not_change_it(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_LATITUDE] == 1.0
     assert state.attributes[ATTR_LONGITUDE] == 2.0
+
+
+async def test_new_devices_are_announced_once_after_the_scan(
+    hass: HomeAssistant,
+    locating_service: tuple,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that listeners are told only once the poll has finished adding devices.
+
+    The platforms iterate the account's devices on the event loop, while the
+    poll adds them from the executor. A signal sent from the middle of the scan
+    can have a listener iterating while the next device is added.
+    """
+    service, status = locating_service
+    config_entry = await setup_account(hass)
+    account = config_entry.runtime_data
+
+    status["location"] = location(
+        is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
+    )
+    await next_fetch(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+    # The first device regains its location, and another one appears after it.
+    status["location"] = location(is_old=False, age=timedelta(0))
+    service.devices._devices.append(
+        MockAppleDevice(
+            {**status, "id": "device2", "name": "iPad", "deviceDisplayName": "iPad"}
+        )
+    )
+    announced = []
+
+    def record(hass: HomeAssistant, signal: str, *args: object) -> None:
+        if signal == account.signal_device_new:
+            announced.append(sorted(account.devices))
+
+    with patch("homeassistant.components.icloud.account.dispatcher_send", record):
+        await next_fetch(hass, freezer)
+
+    assert announced == [sorted([DEVICE["id"], "device2"])]
 
 
 async def test_stale_location_cleared(

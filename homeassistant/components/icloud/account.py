@@ -327,7 +327,8 @@ class IcloudAccount:
             if self._devices.get(device_id) is not None:
                 # Seen device -> updating
                 _LOGGER.debug("Updating iCloud device: %s", device_name)
-                self._devices[device_id].update(status)
+                if self._devices[device_id].update(status):
+                    new_device = True
             else:
                 # New device, should be unique
                 _LOGGER.debug(
@@ -658,8 +659,13 @@ class IcloudDevice:
         elif account.owner_fullname is not None:
             self._attrs[ATTR_OWNER_NAME] = account.owner_fullname
 
-    def update(self, status) -> None:
-        """Update the iCloud device."""
+    def update(self, status) -> bool:
+        """Update the iCloud device.
+
+        Returns whether the device has gained something the platforms build
+        entities from, so the caller can tell them once its scan is done.
+        """
+        announce = False
         self._status = status
 
         self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
@@ -686,16 +692,9 @@ class IcloudDevice:
                     # than the place the device has since left.
                     self._location = None
                 else:
-                    # Stored before it is announced: this runs off the event
-                    # loop, so the listener can read the device before the
-                    # assignment lands, find no location, skip it and never be
-                    # told again.
                     announce = self._location is None
                     self._location = location
-                    if announce:
-                        dispatcher_send(
-                            self._account.hass, self._account.signal_device_new
-                        )
+        return announce
 
     def _is_stale(self, location: dict[str, Any]) -> bool:
         """Return whether a location fix is too old to be trusted.
