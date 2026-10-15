@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.debug_console.const import SESSION_TIMEOUT
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
@@ -231,6 +232,20 @@ async def test_disabling_stops_executions(
     msg = await websocket_client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "execution_stopped"
+
+
+async def test_code_disabling_the_console(
+    websocket_client: MockHAClientWebSocket,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test code that disables the console itself finishes, and so does that."""
+    result = await async_execute(
+        websocket_client,
+        f"await hass.config_entries.async_unload({setup_integration.entry_id!r})",
+    )
+
+    assert result["result"] == {"type": "boolean", "value": True}
+    assert setup_integration.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_disabling_waits_for_cleanup(

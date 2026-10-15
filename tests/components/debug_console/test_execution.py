@@ -241,6 +241,10 @@ task = asyncio.ensure_future(later())
         pytest.param("exit()", "SystemExit", id="exit"),
         pytest.param("raise SystemExit(3)", "SystemExit: 3", id="system_exit"),
         pytest.param("raise KeyboardInterrupt", "KeyboardInterrupt", id="interrupt"),
+        pytest.param("raise GeneratorExit", "GeneratorExit", id="generator_exit"),
+        pytest.param(
+            "raise BaseException('oops')", "BaseException: oops", id="base_exception"
+        ),
     ],
 )
 async def test_exit_does_not_stop_home_assistant(

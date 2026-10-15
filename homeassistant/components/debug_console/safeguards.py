@@ -85,6 +85,17 @@ def async_log_execution(user: User, code: str) -> None:
 
 
 @callback
+def async_log_inspection(user: User, value: Any) -> None:
+    """Log an object the user expanded, as reading its items runs its code."""
+    if IS_DEVELOPMENT_VERSION:
+        return
+
+    _LOGGER.warning(
+        "%s expanded a %s in the debug console", user.name, class_name(value)
+    )
+
+
+@callback
 def async_log_property_evaluation(user: User, value: Any, attribute: str) -> None:
     """Log a property the user evaluated, as properties can change things too."""
     if IS_DEVELOPMENT_VERSION:

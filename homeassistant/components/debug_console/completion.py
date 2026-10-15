@@ -7,7 +7,7 @@ descriptors, __getattr__, or __dir__, and no importing modules.
 from abc import ABCMeta
 from annotationlib import Format
 import builtins
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cache
 from importlib.machinery import PathFinder
@@ -60,6 +60,13 @@ _SIGNATURE_TYPES = (
     types.WrapperDescriptorType,
     types.MethodWrapperType,
     types.ClassMethodDescriptorType,
+)
+
+# Constructors of classes written in C, whose signature inspect reads safely.
+_BUILTIN_CONSTRUCTOR_TYPES = (
+    types.BuiltinFunctionType,
+    types.WrapperDescriptorType,
+    types.MethodDescriptorType,
 )
 
 # Metaclasses of classes whose signature inspect can read safely.
@@ -211,7 +218,11 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
             instance = None if value is owner else value
             value = static.__get__(instance, owner)  # pylint: disable=unnecessary-dunder-call
         elif type(static) is types.MemberDescriptorType and value is not owner:
-            value = static.__get__(value, owner)  # pylint: disable=unnecessary-dunder-call
+            try:
+                value = static.__get__(value, owner)  # pylint: disable=unnecessary-dunder-call
+            except AttributeError:
+                # A slot that is not set yet.
+                return _MISSING
         else:
             return _MISSING
 
@@ -271,13 +282,61 @@ def _has_safe_signature(value: Any) -> bool:
     inspect reads attributes like __signature__, which can be properties.
     """
     if is_class(value):
-        return type(value) in _STANDARD_METACLASSES
+        return type(value) in _STANDARD_METACLASSES and all(
+            _has_safe_constructors(class_dict(cls)) for cls in class_mro(value)
+        )
 
     # A method binds any callable, and inspect reads the signature of that.
     if type(value) is types.MethodType:
         return _has_safe_signature(value.__func__)
 
+    if type(value) is types.FunctionType:
+        return _has_plain_signature_attributes(instance_dict(value) or {})
+
     return type(value) in _SIGNATURE_TYPES
+
+
+def _has_plain_signature_attributes(attributes: Mapping[str, Any]) -> bool:
+    """Return if inspect can read __signature__ and __partialmethod__ safely.
+
+    It reads both with getattr(), which runs a descriptor stored there.
+    """
+    return (
+        type(attributes.get("__signature__")) in (type(None), inspect.Signature)
+        and "__partialmethod__" not in attributes
+    )
+
+
+def _has_safe_constructors(attributes: Mapping[str, Any]) -> bool:
+    """Return if inspect can read the signature of a class defining these.
+
+    It reads the class like a function, and the __new__ and __init__ it uses
+    for the signature.
+    """
+    if not _has_plain_signature_attributes(attributes):
+        return False
+
+    for name in ("__new__", "__init__"):
+        if (constructor := attributes.get(name)) is None:
+            continue
+
+        if type(constructor) in (staticmethod, classmethod):
+            constructor = constructor.__func__
+
+        if type(constructor) in _BUILTIN_CONSTRUCTOR_TYPES:
+            continue
+
+        if not _is_plain_function(constructor):
+            return False
+
+    return True
+
+
+def _is_plain_function(value: Any) -> bool:
+    """Return if a value is a function, with nothing unusual to read."""
+    return type(value) is types.FunctionType and _has_plain_signature_attributes(
+        instance_dict(value) or {}
+    )
 
 
 def _format_parameter(parameter: inspect.Parameter) -> str:

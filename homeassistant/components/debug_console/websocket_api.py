@@ -21,6 +21,7 @@ from .inspection import USER_CODE_ERRORS, get_attribute, inspect_children
 from .safeguards import (
     async_accept_warning,
     async_log_execution,
+    async_log_inspection,
     async_log_property_evaluation,
     async_warning_required,
 )
@@ -183,6 +184,7 @@ def handle_inspect(
         )
         return
 
+    async_log_inspection(connection.user, value)
     try:
         result = inspect_children(session, value)
     except USER_CODE_ERRORS as err:

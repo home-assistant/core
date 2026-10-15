@@ -180,6 +180,35 @@ async def test_logging_executions(
 
 
 @pytest.mark.usefixtures("release_version")
+async def test_logging_inspection(
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test release versions log objects that are expanded, with who did."""
+    await _async_send(websocket_client, {"type": "debug_console/warning/accept"})
+    msg = await _async_send(
+        websocket_client,
+        {**EXECUTE, "code": "class Thing:\n    pass\n\nThing()"},
+    )
+
+    with caplog.at_level(logging.WARNING):
+        msg = await _async_send(
+            websocket_client,
+            {
+                "type": "debug_console/inspect",
+                "session_id": SESSION_ID,
+                "object_id": msg["result"]["result"]["object_id"],
+            },
+        )
+
+    assert msg["success"]
+    assert f"{hass_admin_user.name} expanded a Thing in the debug console" in (
+        caplog.text
+    )
+
+
+@pytest.mark.usefixtures("release_version")
 async def test_logging_property_evaluation(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,

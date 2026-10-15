@@ -34,6 +34,7 @@ class Shadowed:
 thing = Thing()
 holder = Holder()
 holder.inner = thing
+empty_holder = Holder()
 
 class Box:
     pass
@@ -68,6 +69,9 @@ shadowed.__dict__["value"] = thing
             "holder.inner.alp",
             ["holder.inner.alpha", "holder.inner.alps("],
             id="slot",
+        ),
+        pytest.param(
+            "empty_holder.inner.al", "empty_holder.inner.al", [], id="unset_slot"
         ),
         pytest.param("thing.getter.up", "thing.getter.up", [], id="through_property"),
         pytest.param(
@@ -173,6 +177,22 @@ def wraps_itself(value):
 
 wraps_itself.__wrapped__ = wraps_itself
 
+import inspect
+
+class Signed:
+    __signature__ = inspect.Signature(
+        [inspect.Parameter("given", inspect.Parameter.POSITIONAL_OR_KEYWORD)]
+    )
+
+class WithNew:
+    def __new__(cls, value):
+        return super().__new__(cls)
+
+class DecoratedInit:
+    @functools.wraps(inner)
+    def __init__(self, *args, **kwargs):
+        pass
+
 class Thing:
     def method(self, entity_id: str, *values: int, force: bool = False, **extra) -> str:
         \"\"\"Do the thing.
@@ -264,6 +284,39 @@ METHOD_SIGNATURE = {
                 "doc": "",
             },
             id="wraps_itself",
+        ),
+        pytest.param(
+            "Signed(",
+            {
+                "name": "Signed",
+                "parameters": ["given"],
+                "active": 0,
+                "returns": None,
+                "doc": "",
+            },
+            id="class_signature",
+        ),
+        pytest.param(
+            "WithNew(",
+            {
+                "name": "WithNew",
+                "parameters": ["value"],
+                "active": 0,
+                "returns": None,
+                "doc": "",
+            },
+            id="class_new",
+        ),
+        pytest.param(
+            "DecoratedInit(",
+            {
+                "name": "DecoratedInit",
+                "parameters": ["*args", "**kwargs"],
+                "active": 0,
+                "returns": None,
+                "doc": "",
+            },
+            id="decorated_init",
         ),
         pytest.param(
             "thing.decorated_method(",
@@ -399,6 +452,38 @@ async def test_signature(
             {"type": "debug_console/signature", "code": "bound_trap("},
             id="signature_bound_callable",
         ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "SignatureTrap("},
+            id="signature_class_signature",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "InheritsSignatureTrap("},
+            id="signature_inherited_signature",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "SignatureTrap(a"},
+            id="keywords_class_signature",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "InitTrap("},
+            id="signature_init_descriptor",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "NewTrap("},
+            id="signature_new_descriptor",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "PartialTrap("},
+            id="signature_partialmethod",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "InitSignatureTrap("},
+            id="signature_init_signature",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "function_signature_trap("},
+            id="signature_function_signature",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -513,6 +598,34 @@ class FakeWrapper:
 import types
 
 holds_watched = HoldsWatched()
+
+class SignatureTrap:
+    __signature__ = Descriptor()
+
+class InheritsSignatureTrap(SignatureTrap):
+    pass
+
+class InitTrap:
+    __init__ = Descriptor()
+
+class NewTrap:
+    __new__ = Descriptor()
+
+class PartialTrap:
+    __partialmethod__ = Descriptor()
+
+def init_with_masked_signature(self, argument):
+    pass
+
+init_with_masked_signature.__signature__ = masked
+
+class InitSignatureTrap:
+    __init__ = init_with_masked_signature
+
+def function_signature_trap(argument):
+    pass
+
+function_signature_trap.__signature__ = masked
 bound_trap = types.MethodType(callable_trap, object())
 
 # Creating the classes above may run their hooks already.

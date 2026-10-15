@@ -61,6 +61,19 @@ Thing()
             ],
             id="object",
         ),
+        pytest.param(
+            """
+class Thing:
+    @property
+    def value(self):
+        raise AssertionError("Properties must not be evaluated")
+thing = Thing()
+thing.__dict__["value"] = 1
+thing
+""",
+            [{"key": "value", "getter": True}],
+            id="property_over_instance",
+        ),
     ],
 )
 async def test_inspect(

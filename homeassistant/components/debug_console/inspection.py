@@ -1,6 +1,5 @@
 """Describe values for the Debug console, and inspect them on request."""
 
-import asyncio
 import builtins
 from collections.abc import Iterator, Mapping, Sequence, Set as AbstractSet, Sized
 from contextlib import suppress
@@ -14,9 +13,10 @@ if TYPE_CHECKING:
     from .session import ConsoleSession
 
 # What code of the user can raise, which must not stop Home Assistant or close
-# the connection. Code can raise CancelledError itself too, like a property
-# reading a cancelled future; executions tell a real cancellation apart.
-USER_CODE_ERRORS = (Exception, SystemExit, KeyboardInterrupt, asyncio.CancelledError)
+# the connection: anything, as code can raise BaseException itself. That
+# includes CancelledError, like a property reading a cancelled future;
+# executions tell a real cancellation apart.
+USER_CODE_ERRORS = (BaseException,)
 
 # How Python itself reads a class, past any __getattribute__ of its metaclass,
 # which is code of the user.
@@ -286,7 +286,12 @@ def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:
 
         return
 
-    attributes: dict[str, Any] = dict(instance_dict(value) or {})
+    # A data descriptor of the class wins over the instance, like for getattr.
+    attributes: dict[str, Any] = {
+        name: item
+        for name, item in (instance_dict(value) or {}).items()
+        if not _is_data_descriptor(_class_attribute(type(value), name, None))
+    }
 
     for cls in class_mro(type(value)):
         slots = class_dict(cls).get("__slots__", ())

@@ -97,9 +97,13 @@ class ConsoleSession:
             if not stopping:
                 self.namespace.clear()
 
+        # Code can close its own session, like by reloading the console. That
+        # execution finishes on its own, or it would stop the reload.
+        current = asyncio.current_task()
         for execution in stopping:
             execution.add_done_callback(_release_namespace)
-            execution.cancel()
+            if execution is not current:
+                execution.cancel()
 
 
 type ConsoleSessions = dict[tuple[str, str], ConsoleSession]
@@ -144,8 +148,13 @@ def async_get_session(
 
 async def async_close_sessions(sessions: ConsoleSessions) -> None:
     """Close all sessions, and give code they still run a moment to clean up."""
+    # Not the execution closing them, which would wait on itself.
+    current = asyncio.current_task()
     executions = [
-        execution for session in sessions.values() for execution in session.executions
+        execution
+        for session in sessions.values()
+        for execution in session.executions
+        if execution is not current
     ]
 
     for session in sessions.values():
