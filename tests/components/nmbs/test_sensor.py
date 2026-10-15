@@ -459,17 +459,13 @@ async def test_enabled_liveboard_is_fetched(
 
 
 @pytest.mark.parametrize(
-    ("connection_side_effect", "connection_return_value"),
+    "connection_side_effect",
     [
-        pytest.param(None, None, id="api_failure"),
-        pytest.param(TimeoutError, None, id="timeout"),
+        pytest.param(None, id="api_failure"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
         pytest.param(
-            ValueError("Unexpected response schema"), None, id="decoding_error"
-        ),
-        pytest.param(
-            MissingField("delay", "datetime", "ConnectionDetails"),
-            None,
-            id="missing_field",
+            MissingField("delay", "datetime", "ConnectionDetails"), id="missing_field"
         ),
     ],
 )
@@ -479,10 +475,9 @@ async def test_connection_failure_only_affects_its_sensor(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     connection_side_effect: Exception | type[Exception] | None,
-    connection_return_value: ConnectionsApiResponse | None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a failed connection only affects the connection sensor."""
+    """Test a failed connection only affects the connection sensor and recovers."""
     freezer.move_to(FROZEN_TIME)
     await _setup_entry(hass, mock_config_entry)
     await _enable_liveboards(hass, entity_registry, mock_config_entry)
@@ -493,7 +488,7 @@ async def test_connection_failure_only_affects_its_sensor(
     assert from_state.state == "Track 3 - Blankenberge"
 
     mock_nmbs_client.get_connections.side_effect = connection_side_effect
-    mock_nmbs_client.get_connections.return_value = connection_return_value
+    mock_nmbs_client.get_connections.return_value = None
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -561,14 +556,41 @@ async def test_removed_connection_entity_is_fetched(
     assert mock_nmbs_client.get_connections.call_count == 2
 
 
-async def test_sensors_unavailable_when_api_fails(
+async def test_unexpected_error_fails_the_refresh(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the sensors become unavailable when the API cannot be reached."""
+    """Test an unexpected error makes all sensors unavailable."""
+    freezer.move_to(FROZEN_TIME)
+    await _setup_entry(hass, mock_config_entry)
+    await _enable_liveboards(hass, entity_registry, mock_config_entry)
+
+    mock_nmbs_client.get_connections.side_effect = RuntimeError("Unexpected")
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for unique_id in (
+        CONNECTION_UNIQUE_ID,
+        LIVEBOARD_FROM_UNIQUE_ID,
+        LIVEBOARD_TO_UNIQUE_ID,
+    ):
+        state = hass.states.get(_get_entity_id(entity_registry, unique_id))
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
+
+async def test_connection_sensor_unavailable_when_api_fails(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the connection sensor becomes unavailable when the API fails."""
     await _setup_entry(hass, mock_config_entry)
     connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
     state = hass.states.get(connection_id)
@@ -612,14 +634,14 @@ async def test_departure_minutes_decrease_with_unchanged_data(
     assert state.attributes["departure_minutes"] == 9
 
 
-async def test_sensors_unavailable_when_api_times_out(
+async def test_connection_sensor_unavailable_when_api_times_out(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the sensors become unavailable when the API request times out."""
+    """Test the connection sensor becomes unavailable when the API times out."""
     await _setup_entry(hass, mock_config_entry)
     connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
     state = hass.states.get(connection_id)
