@@ -27,6 +27,7 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aprilaire."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @override
     async def async_step_user(
