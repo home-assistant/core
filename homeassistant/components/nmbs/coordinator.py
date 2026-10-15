@@ -17,6 +17,7 @@ from pyrail.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,6 +26,7 @@ from .const import (
     CONF_STATION_FROM,
     CONF_STATION_TO,
     DOMAIN,
+    LIVEBOARD_UNIQUE_ID_PREFIX,
     NMBS_STATION_DATA,
 )
 
@@ -94,9 +96,25 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             )
             return None
 
+    def _liveboard_entity_enabled(self, station: StationDetails) -> bool:
+        """Return True if the liveboard entity for the station is enabled."""
+        registry = er.async_get(self.hass)
+        prefix = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station.id}_"
+        return any(
+            entry.disabled_by is None and entry.unique_id.startswith(prefix)
+            for entry in er.async_entries_for_config_entry(
+                registry, self.config_entry.entry_id
+            )
+        )
+
     @override
     async def _async_update_data(self) -> NMBSData:
-        """Fetch the next connection and liveboard departures."""
+        """Fetch the next connection and the departures of enabled liveboards."""
+        stations = [
+            station
+            for station in (self.station_from, self.station_to)
+            if self._liveboard_entity_enabled(station)
+        ]
         try:
             async with asyncio.TaskGroup() as task_group:
                 connections_task = task_group.create_task(
@@ -104,12 +122,12 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
                         self.station_from.id, self.station_to.id
                     )
                 )
-                liveboard_from_task = task_group.create_task(
-                    self._async_fetch_liveboard(self.station_from)
-                )
-                liveboard_to_task = task_group.create_task(
-                    self._async_fetch_liveboard(self.station_to)
-                )
+                liveboard_tasks = {
+                    station.id: task_group.create_task(
+                        self._async_fetch_liveboard(station)
+                    )
+                    for station in stations
+                }
         except* TimeoutError as err:
             raise UpdateFailed(
                 f"Timeout while fetching data from the iRail API: {err.exceptions[0]}"
@@ -128,17 +146,18 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
 
         next_departures: dict[str, LiveboardDeparture | None] = {}
         failed_liveboards: set[str] = set()
-        for station, liveboard in (
-            (self.station_from, liveboard_from_task.result()),
-            (self.station_to, liveboard_to_task.result()),
-        ):
+        for station in (self.station_from, self.station_to):
+            if (liveboard_task := liveboard_tasks.get(station.id)) is None:
+                next_departures[station.id] = None
+                continue
+            liveboard = liveboard_task.result()
             if liveboard is None:
                 failed_liveboards.add(station.id)
                 next_departures[station.id] = None
-            else:
-                next_departures[station.id] = (
-                    liveboard.departures[0] if liveboard.departures else None
-                )
+                continue
+            next_departures[station.id] = (
+                liveboard.departures[0] if liveboard.departures else None
+            )
 
         return NMBSData(
             connection=upcoming[0] if upcoming else None,

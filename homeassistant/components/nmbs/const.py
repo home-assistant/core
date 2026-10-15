@@ -12,6 +12,8 @@ NMBS_STATION_DATA: HassKey[list[StationDetails]] = HassKey(DOMAIN)
 
 PLATFORMS: Final = [Platform.SENSOR]
 
+LIVEBOARD_UNIQUE_ID_PREFIX: Final = "nmbs_live_"
+
 CONF_STATION_FROM = "station_from"
 CONF_STATION_TO = "station_to"
 CONF_EXCLUDE_VIAS = "exclude_vias"

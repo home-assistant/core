@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import LIVEBOARD_UNIQUE_ID_PREFIX
 from .coordinator import NMBSConfigEntry, NMBSCoordinator
 from .entity import NMBSEntity
 
@@ -165,7 +166,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
         )
         vias = "_excl_vias" if coordinator.exclude_vias else ""
         # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     @override

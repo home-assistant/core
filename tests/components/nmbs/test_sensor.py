@@ -384,6 +384,38 @@ async def test_liveboard_failure_only_affects_its_sensor(
     assert to_state.state == "Track 7 - Gent-Sint-Pieters"
 
 
+async def test_disabled_liveboards_are_not_fetched(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the coordinator does not fetch liveboards of disabled entities."""
+    await _setup_entry(hass, mock_config_entry)
+
+    assert mock_nmbs_client.get_connections.call_count == 1
+    assert mock_nmbs_client.get_liveboard.call_count == 0
+
+
+async def test_enabled_liveboard_is_fetched(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test only the liveboard of an enabled entity is fetched."""
+    await _setup_entry(hass, mock_config_entry)
+    assert mock_nmbs_client.get_liveboard.call_count == 0
+
+    entity_registry.async_update_entity(
+        _get_entity_id(entity_registry, LIVEBOARD_FROM_UNIQUE_ID), disabled_by=None
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_nmbs_client.get_liveboard.call_count == 1
+    mock_nmbs_client.get_liveboard.assert_called_once_with(STATION_FROM)
+
+
 async def test_sensors_unavailable_when_api_fails(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
