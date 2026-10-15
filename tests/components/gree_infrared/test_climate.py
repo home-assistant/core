@@ -2217,3 +2217,68 @@ async def test_cancelled_timer_replacement_preserves_expiry(
     assert hass.states.get("number.gree_ac_timer").state == "0.0"
     assert climate._timer_deadline is None
     assert len(mock_infrared_emitter_entity.send_command_calls) == sends
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
+@pytest.mark.parametrize("extra_entry_data", [{CONF_MODEL: MODEL_YAP1F}], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_pending_option_stays_private_during_state_publication(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """An unrelated availability publication cannot expose an unaccepted option."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_send(command: GreeAcCommand) -> None:
+        assert command.turbo is True
+        started.set()
+        await release.wait()
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        task = hass.async_create_background_task(
+            climate.async_set_option("turbo", True), "pending turbo command"
+        )
+        await asyncio.wait_for(started.wait(), timeout=5)
+        try:
+            climate._state.async_notify_switches()
+            await hass.async_block_till_done(wait_background_tasks=False)
+            assert hass.states.get("switch.gree_ac_turbo").state == "off"
+            assert climate.extra_restore_state_data.as_dict()["turbo"] is False
+        finally:
+            release.set()
+            await task
+
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.gree_ac_turbo").state == "on"
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_detached_climate_ignores_queued_received_signal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A received callback queued for the old owner cannot mutate shared options."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    before = climate.extra_restore_state_data.as_dict()
+    await climate._state.command_lock.acquire()
+    task = hass.async_create_task(
+        climate._async_handle_signal(
+            InfraredReceivedSignal(
+                timings=GreeAcCommand(
+                    mode=GreeAcMode.COOL, temperature=24, turbo=True
+                ).get_raw_timings()
+            )
+        )
+    )
+    await asyncio.sleep(0)
+    climate._state.climate = None
+    climate._state.command_lock.release()
+    await task
+    assert climate.extra_restore_state_data.as_dict() == before

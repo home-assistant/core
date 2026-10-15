@@ -1,7 +1,7 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
-from asyncio import CancelledError
 from collections.abc import Callable
+from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Self, override
@@ -538,18 +538,37 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self._state.async_notify_switches()
 
     async def _async_send_state(
-        self, hvac_mode: HVACMode, temp: int, fan_mode: str
+        self,
+        hvac_mode: HVACMode,
+        temp: int,
+        fan_mode: str,
+        *,
+        options: dict[str, Any] | None = None,
+        preserve_received_temperature: bool = True,
     ) -> None:
         """Send a full-state frame for the given target state."""
         power = hvac_mode is not HVACMode.OFF
         active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
-        command = self._build_command(active_hvac_mode, power, temp, fan_mode)
+        pending = copy(self._state)
+        for key, value in (options or {}).items():
+            setattr(pending, key, value)
+        command = self._build_command(
+            active_hvac_mode,
+            power,
+            temp,
+            fan_mode,
+            state=pending,
+            reset_timer=options is not None and "timer_hours" in options,
+            preserve_received_temperature=preserve_received_temperature,
+        )
         try:
             await self._send_command(command)
         except HomeAssistantError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="send_failed"
             ) from err
+        for key, value in (options or {}).items():
+            setattr(self._state, key, value)
         self._state.timer_hours = command.timer_hours
         self._timer_deadline = (
             dt_util.utcnow() + timedelta(hours=command.timer_hours)
@@ -560,29 +579,33 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         if power:
             self._last_active_hvac_mode = hvac_mode
 
-    def _clear_sleep_on_mode_change(self, new_hvac_mode: HVACMode) -> dict[str, bool]:
-        """Cancel sleep when the mode changes or the unit turns off.
-
-        The remote clears sleep on any mode change and on power-off, so the
-        assumed state follows the same rule before building the next frame.
-        The previous value of each cancelled option is returned so the caller
-        can restore them when the frame never goes out; the switches are
-        notified only once the send has succeeded.
-        """
-        cleared: dict[str, bool] = {}
+    def _options_for_mode(self, new_hvac_mode: HVACMode) -> dict[str, bool]:
+        """Build option cancellations without publishing unconfirmed values."""
+        options: dict[str, bool] = {}
         if (
             new_hvac_mode is HVACMode.OFF
             or new_hvac_mode != self._last_active_hvac_mode
         ) and self._state.sleep:
-            cleared["sleep"] = self._state.sleep
-            self._state.sleep = False
+            options["sleep"] = False
         if new_hvac_mode is not HVACMode.COOL and self._state.econo:
-            cleared["econo"] = self._state.econo
-            self._state.econo = False
+            options["econo"] = False
         if new_hvac_mode is not HVACMode.HEAT and self._state.absence:
-            cleared["absence"] = self._state.absence
-            self._state.absence = False
-        return cleared
+            options["absence"] = False
+        return options
+
+    async def _async_set_options_locked(self, options: dict[str, Any]) -> None:
+        """Commit options only after the active unit's command succeeds."""
+        hvac_mode = self._attr_hvac_mode
+        if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
+            await self._async_send_state(
+                hvac_mode,
+                int(self._attr_target_temperature or MIN_TEMP),
+                self._attr_fan_mode or FAN_AUTO,
+                options=options,
+            )
+        else:
+            for key, value in options.items():
+                setattr(self._state, key, value)
 
     async def async_set_option(self, option: str, value: bool) -> None:
         """Set an option flag and send the updated state when active."""
@@ -631,19 +654,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 raise ServiceValidationError(
                     translation_domain=DOMAIN, translation_key="absence_not_available"
                 )
-            previous = getattr(self._state, option)
-            setattr(self._state, option, value)
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-            except Exception, CancelledError:
-                setattr(self._state, option, previous)
-                raise
+            await self._async_set_options_locked({option: value})
             self._state.async_notify_switches()
 
     async def async_set_fresh_air(self, option: str) -> None:
@@ -653,19 +664,9 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_fresh_air"
             )
         async with self._state.command_lock:
-            previous = self._state.fresh_air
-            self._state.fresh_air = int(_HA_FRESH_AIR_TO_LIB[option])
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-            except Exception, CancelledError:
-                self._state.fresh_air = previous
-                raise
+            await self._async_set_options_locked(
+                {"fresh_air": int(_HA_FRESH_AIR_TO_LIB[option])}
+            )
             self._state.async_notify_switches()
 
     async def async_set_timer_hours(self, timer_hours: float | None) -> None:
@@ -677,28 +678,14 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_timer"
             )
         async with self._state.command_lock:
-            previous = self._state.timer_hours
-            previous_deadline = self._timer_deadline
-            self._state.timer_hours = timer_hours
-            self._timer_deadline = (
-                dt_util.utcnow() + timedelta(hours=timer_hours)
-                if timer_hours is not None
-                else None
-            )
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-            except Exception, CancelledError:
-                self._state.timer_hours = previous
-                self._timer_deadline = previous_deadline
-                self._schedule_timer_expiry()
-                raise
-            self._schedule_timer_expiry()
+            hvac_mode = self._attr_hvac_mode
+            if hvac_mode is not None:
+                await self._async_send_state(
+                    hvac_mode,
+                    int(self._attr_target_temperature or MIN_TEMP),
+                    self._attr_fan_mode or FAN_AUTO,
+                    options={"timer_hours": timer_hours},
+                )
             self._state.async_notify_switches()
 
     async def async_set_swing_v_position(self, position: int | None) -> None:
@@ -719,28 +706,12 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_vane_position"
             )
         async with self._state.command_lock:
-            previous_position = self._state.swing_v_position
-            previous_swing_v = self._state.swing_v
-            if position is None:
-                self._state.swing_v_position = None
-            else:
-                self._state.swing_v_position = position
-                self._state.swing_v = False
-                self._attr_swing_mode = SWING_OFF
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-                self.async_write_ha_state()
-            except Exception, CancelledError:
-                self._state.swing_v_position = previous_position
-                self._state.swing_v = previous_swing_v
-                self._attr_swing_mode = SWING_ON if previous_swing_v else SWING_OFF
-                raise
+            options: dict[str, Any] = {"swing_v_position": position}
+            if position is not None:
+                options["swing_v"] = False
+            await self._async_set_options_locked(options)
+            self._attr_swing_mode = SWING_ON if self._state.swing_v else SWING_OFF
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     @property
@@ -767,17 +738,12 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
 
     async def _async_set_hvac_mode_locked(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode while holding the shared command lock."""
-        cleared = self._clear_sleep_on_mode_change(hvac_mode)
-        try:
-            await self._async_send_state(
-                hvac_mode,
-                int(self._attr_native_target_temperature or MIN_TEMP),
-                self._attr_fan_mode or FAN_AUTO,
-            )
-        except Exception, CancelledError:
-            for option, value in cleared.items():
-                setattr(self._state, option, value)
-            raise
+        await self._async_send_state(
+            hvac_mode,
+            int(self._attr_native_target_temperature or MIN_TEMP),
+            self._attr_fan_mode or FAN_AUTO,
+            options=self._options_for_mode(hvac_mode),
+        )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
         self._state.async_notify_switches()
@@ -796,27 +762,18 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             cleared: dict[str, bool] = {}
             if hvac_mode is not None:
                 self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
-                cleared = self._clear_sleep_on_mode_change(hvac_mode)
+                cleared = self._options_for_mode(hvac_mode)
             effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
-            # A temperature change on its own has nothing to send while the unit is off.
-            previous_received_fahrenheit_temperature = (
-                self._received_fahrenheit_temperature
-            )
-            self._received_fahrenheit_temperature = None
+
             if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
-                try:
-                    await self._async_send_state(
-                        effective_mode,
-                        temp,
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-                except Exception, CancelledError:
-                    self._received_fahrenheit_temperature = (
-                        previous_received_fahrenheit_temperature
-                    )
-                    for option, value in cleared.items():
-                        setattr(self._state, option, value)
-                    raise
+                await self._async_send_state(
+                    effective_mode,
+                    temp,
+                    self._attr_fan_mode or FAN_AUTO,
+                    options=cleared,
+                    preserve_received_temperature=False,
+                )
+            self._received_fahrenheit_temperature = None
             if hvac_mode is not None:
                 self._attr_hvac_mode = hvac_mode
 
@@ -844,26 +801,11 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         """Set vertical sweep."""
         self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
         async with self._state.command_lock:
-            previous = self._state.swing_v
-            previous_position = self._state.swing_v_position
-            self._state.swing_v = swing_mode == SWING_ON
-            # Sweep and fixed positions share the YAP1F low nibble, so an
-            # explicit sweep choice returns to follow mode.
-            self._state.swing_v_position = None
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-                self._attr_swing_mode = swing_mode
-                self.async_write_ha_state()
-            except Exception, CancelledError:
-                self._state.swing_v = previous
-                self._state.swing_v_position = previous_position
-                raise
+            await self._async_set_options_locked(
+                {"swing_v": swing_mode == SWING_ON, "swing_v_position": None}
+            )
+            self._attr_swing_mode = swing_mode
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     @override
@@ -873,24 +815,12 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             "horizontal_swing", swing_horizontal_mode, self.swing_horizontal_modes
         )
         async with self._state.command_lock:
-            previous = self._state.swing_h
-            previous_position = self._state.swing_h_position
-            self._state.swing_h = swing_horizontal_mode == SWING_ON
-            self._state.swing_h_position = int(self._state.swing_h)
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-                self._attr_swing_horizontal_mode = swing_horizontal_mode
-                self.async_write_ha_state()
-            except Exception, CancelledError:
-                self._state.swing_h = previous
-                self._state.swing_h_position = previous_position
-                raise
+            swing_h = swing_horizontal_mode == SWING_ON
+            await self._async_set_options_locked(
+                {"swing_h": swing_h, "swing_h_position": int(swing_h)}
+            )
+            self._attr_swing_horizontal_mode = swing_horizontal_mode
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     async def async_set_swing_h_position(self, position: int) -> None:
@@ -901,24 +831,11 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_key="unsupported_horizontal_vane_position",
             )
         async with self._state.command_lock:
-            previous_position = self._state.swing_h_position
-            previous_swing = self._state.swing_h
-            self._state.swing_h_position = position
-            self._state.swing_h = position != 0
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-                self._attr_swing_horizontal_mode = SWING_ON if position else SWING_OFF
-                self.async_write_ha_state()
-            except Exception, CancelledError:
-                self._state.swing_h_position = previous_position
-                self._state.swing_h = previous_swing
-                raise
+            await self._async_set_options_locked(
+                {"swing_h_position": position, "swing_h": position != 0}
+            )
+            self._attr_swing_horizontal_mode = SWING_ON if position else SWING_OFF
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     async def async_set_display_temp(self, display_temp: int) -> None:
@@ -942,34 +859,30 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             )
         async with self._state.command_lock:
             previous = getattr(self._state, key)
-            previous_received_fahrenheit_temperature = (
-                self._received_fahrenheit_temperature
-            )
-            setattr(self._state, key, value)
+            await self._async_set_options_locked({key: value})
             if key == "fahrenheit" and value != previous:
                 self._received_fahrenheit_temperature = None
-            try:
-                hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                    await self._async_send_state(
-                        hvac_mode,
-                        int(self._attr_target_temperature or MIN_TEMP),
-                        self._attr_fan_mode or FAN_AUTO,
-                    )
-            except Exception, CancelledError:
-                setattr(self._state, key, previous)
-                self._received_fahrenheit_temperature = (
-                    previous_received_fahrenheit_temperature
-                )
-                raise
             self._state.async_notify_switches()
 
     def _build_command(
-        self, hvac_mode: HVACMode, power: bool, temp: int, fan_mode: str
+        self,
+        hvac_mode: HVACMode,
+        power: bool,
+        temp: int,
+        fan_mode: str,
+        *,
+        state: GreeAcState | None = None,
+        reset_timer: bool = False,
+        preserve_received_temperature: bool = True,
     ) -> GreeAcCommand:
         """Build a command from a mode, power state, a temperature and a fan mode."""
-        if self._is_yap1f and self._state.fahrenheit:
-            if self._received_fahrenheit_temperature is not None:
+        state = state or self._state
+        if self._is_yap1f and state.fahrenheit:
+            if (
+                preserve_received_temperature
+                and state.fahrenheit == self._state.fahrenheit
+                and self._received_fahrenheit_temperature is not None
+            ):
                 temp = self._received_fahrenheit_temperature
             else:
                 temp = round(
@@ -985,26 +898,26 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             mode=_HA_MODE_TO_LIB[hvac_mode],
             temperature=temp,
             fan=_HA_FAN_TO_LIB[fan_mode],
-            swing_v=self._state.swing_v,
-            swing_h=self._state.swing_h,
-            turbo=self._state.turbo,
-            display=self._state.light,
-            anion=self._state.health,
-            blow=self._state.xfan,
-            sleep=self._state.sleep,
-            timer_hours=self._remaining_timer_hours(),
-            fresh_air=GreeAcFreshAir(self._state.fresh_air),
-            ifeel=self._state.ifeel if self._is_yap1f else False,
-            swing_v_position=self._state.swing_v_position if self._is_yap1f else None,
+            swing_v=state.swing_v,
+            swing_h=state.swing_h,
+            turbo=state.turbo,
+            display=state.light,
+            anion=state.health,
+            blow=state.xfan,
+            sleep=state.sleep,
+            timer_hours=state.timer_hours
+            if reset_timer
+            else self._remaining_timer_hours(),
+            fresh_air=GreeAcFreshAir(state.fresh_air),
+            ifeel=state.ifeel if self._is_yap1f else False,
+            swing_v_position=state.swing_v_position if self._is_yap1f else None,
             swing_h_position=(
-                self._state.swing_h_position
-                if self._is_yap1f
-                else int(self._state.swing_h)
+                state.swing_h_position if self._is_yap1f else int(state.swing_h)
             ),
-            fahrenheit=self._state.fahrenheit if self._is_yap1f else False,
-            econo=self._state.econo if self._is_yap1f else False,
-            absence=self._state.absence if self._is_yap1f else False,
-            display_temp=self._state.display_temp if self._is_yap1f else None,
+            fahrenheit=state.fahrenheit if self._is_yap1f else False,
+            econo=state.econo if self._is_yap1f else False,
+            absence=state.absence if self._is_yap1f else False,
+            display_temp=state.display_temp if self._is_yap1f else None,
         )
 
 
@@ -1038,6 +951,8 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
     async def _async_handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Update state from a physical remote signal under the command lock."""
         async with self._state.command_lock:
+            if self._state.climate is not self:
+                return
             self._handle_signal_locked(signal)
 
     def _handle_signal_locked(self, signal: InfraredReceivedSignal) -> None:
