@@ -110,6 +110,10 @@ async def _async_stop_hub(service: ServiceCall) -> None:
 async def _async_reload_config(call: ServiceCall) -> None:
     """Reload Modbus."""
     hass = call.hass
+    # A failed setup stays cached, so the platforms would be rejected
+    if DOMAIN not in hass.config.components:
+        LOGGER.error("Modbus failed to set up, restart Home Assistant to retry")
+        return
     # Without YAML hubs there is nothing to close, but YAML may have been added
     hubs = hass.data.get(DATA_MODBUS_HUBS, {})
     for hub in hubs.values():

@@ -167,6 +167,27 @@ async def test_service_after_failed_reload_raises(
 
 
 @pytest.mark.usefixtures("mock_pymodbus")
+async def test_reload_after_failed_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reload does not set the hubs up after a failed setup."""
+    with patch(
+        "homeassistant.components.modbus.modbus.ModbusHub.async_setup",
+        return_value=False,
+    ):
+        assert not await async_setup_component(hass, DOMAIN, HUB_CONFIG)
+        await hass.async_block_till_done()
+
+    yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert "Modbus failed to set up, restart Home Assistant to retry" in caplog.text
+    assert DATA_MODBUS_HUBS not in hass.data
+
+
+@pytest.mark.usefixtures("mock_pymodbus")
 @pytest.mark.parametrize(
     "start_config",
     [
