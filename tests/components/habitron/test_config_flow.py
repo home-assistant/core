@@ -2003,3 +2003,21 @@ async def test_discovery_confirm_follows_a_configured_hub_that_answers_now(
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
     assert entry.data == {CONF_HOST: MOCK_HOST}
+
+
+async def test_discovery_confirm_aborts_when_the_hub_reports_no_mac(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """A hub without a MAC at the address on confirmation is not added."""
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+    assert result["step_id"] == "discovery_confirm"
+    mock_hub_mac.return_value = None
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_mac_address"
+    assert not hass.config_entries.async_entries(DOMAIN)
