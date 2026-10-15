@@ -45,6 +45,7 @@
   "config_subentries": {
     "library": {
       "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Seafile account is not loaded. Make sure it is set up and running before adding a library.",
         "no_libraries": "All libraries of this account have been added already, or they are encrypted."
       },

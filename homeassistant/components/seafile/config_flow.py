@@ -132,10 +132,10 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_revoke_token(client)
             errors["base"] = "cannot_connect"
         else:
-            await self.async_set_unique_id(
-                _unique_id(self._user_input[CONF_URL], account.email)
-            )
             try:
+                await self.async_set_unique_id(
+                    _unique_id(self._user_input[CONF_URL], account.email)
+                )
                 self._abort_if_unique_id_configured()
             except AbortFlow:
                 await self._async_revoke_token(client)
@@ -231,6 +231,10 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
 class LibrarySubentryFlowHandler(ConfigSubentryFlow):
     """Handle a subentry flow to add a library."""
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        self._libraries: dict[str, Library] = {}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -239,19 +243,26 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        libraries = entry.runtime_data.data.libraries
         if user_input is not None:
             library_id = user_input[CONF_LIBRARY_ID]
             return self.async_create_entry(
-                title=libraries[library_id].name,
+                title=self._libraries[library_id].name,
                 data={CONF_LIBRARY_ID: library_id},
                 unique_id=library_id,
             )
 
+        # Fetched here, as libraries created after setup aren't in the coordinator
+        # data when the account has no library sensors to refresh it.
+        try:
+            libraries = await entry.runtime_data.client.get_libraries()
+        except SeafileError:
+            return self.async_abort(reason="cannot_connect")
+        self._libraries = {library.id: library for library in libraries}
+
         configured = {subentry.unique_id for subentry in entry.subentries.values()}
         options = [
             option
-            for option in _library_options(list(libraries.values()))
+            for option in _library_options(libraries)
             if option["value"] not in configured
         ]
         if not options:

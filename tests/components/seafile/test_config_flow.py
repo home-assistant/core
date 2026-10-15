@@ -1,5 +1,6 @@
 """Test the Seafile config flow."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from aioseafile import (
@@ -30,6 +31,8 @@ from . import setup_integration
 from .conftest import ACCOUNT_EMAIL, ENCRYPTED_LIBRARY_ID, LIBRARY_ID, TOKEN, URL
 
 from tests.common import MockConfigEntry
+
+NEW_LIBRARY_ID = "0c8bd7d5-6ba2-4e7d-9a8b-1f2f4c6ad2b1"
 
 USER_INPUT = {
     CONF_URL: URL,
@@ -238,11 +241,12 @@ async def test_already_configured(
     mock_seafile_client.logout_device.assert_awaited_once()
 
 
-@pytest.mark.usefixtures("mock_seafile_client")
 async def test_add_library(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test adding a library as a subentry reloads the entry with it."""
+    """Test adding a library, including one created after setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=mock_config_entry.title,
@@ -250,6 +254,15 @@ async def test_add_library(
         unique_id=mock_config_entry.unique_id,
     )
     await setup_integration(hass, entry)
+    new_library = replace(
+        mock_seafile_client.get_libraries.return_value[0],
+        id=NEW_LIBRARY_ID,
+        name="Photos",
+    )
+    mock_seafile_client.get_libraries.return_value = [
+        *mock_seafile_client.get_libraries.return_value,
+        new_library,
+    ]
 
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_LIBRARY),
@@ -257,7 +270,7 @@ async def test_add_library(
     )
     assert result["type"] is FlowResultType.FORM
     options = result["data_schema"].schema[CONF_LIBRARY_ID].config["options"]
-    assert [option["value"] for option in options] == [LIBRARY_ID]
+    assert [option["value"] for option in options] == [LIBRARY_ID, NEW_LIBRARY_ID]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_LIBRARY_ID: LIBRARY_ID}
@@ -267,6 +280,39 @@ async def test_add_library(
     assert result["title"] == "Documents"
     assert result["unique_id"] == LIBRARY_ID
     assert hass.states.get("sensor.documents_size") is not None
+
+
+async def test_add_library_cannot_connect(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a library aborts when the libraries can't be fetched."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_libraries.side_effect = SeafileConnectionError
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_LIBRARY),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_already_in_progress(
+    hass: HomeAssistant, mock_seafile_client: AsyncMock
+) -> None:
+    """Test a second flow for the same account aborts and revokes its token."""
+    first_flow_id = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_configure(first_flow_id, USER_INPUT)
+    assert result["step_id"] == "libraries"
+
+    second_flow_id = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_configure(second_flow_id, USER_INPUT)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    mock_seafile_client.logout_device.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_seafile_client")
