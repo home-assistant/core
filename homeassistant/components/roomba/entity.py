@@ -59,7 +59,9 @@ class IRobotEntity(Entity):
     @property
     def run_stats(self):
         """Return the run stats."""
-        return self.vacuum_state.get("bbrun", {})
+        return self.vacuum_state.get("bbrun", {}) | self.vacuum_state.get(
+            "runtimeStats", {}
+        )
 
     @property
     def mission_stats(self):
