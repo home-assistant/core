@@ -2576,6 +2576,36 @@ async def test_async_internal_get_tts_audio_called(
         internal_get_tts_audio.assert_called_once_with("test message", "en_US", {})
 
 
+async def test_stream_preferred_options_handled_by_engine(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test that options the engine handles itself do not trigger ffmpeg."""
+    preferred_options = {
+        tts.ATTR_PREFERRED_FORMAT: "mp3",
+        tts.ATTR_PREFERRED_SAMPLE_RATE: 24000,
+        tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+        tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+        tts.ATTR_PREFERRED_BITRATE: 48,
+    }
+    mock_tts_entity._supported_options = list(preferred_options)
+    mock_tts_entity.get_tts_audio = Mock(return_value=("mp3", MOCK_DATA))
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(
+        hass, mock_tts_entity.entity_id, options=preferred_options
+    )
+    stream.async_set_message("beer")
+
+    with patch("asyncio.create_subprocess_exec") as mock_create_subprocess_exec:
+        result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+
+    mock_create_subprocess_exec.assert_not_called()
+    assert result_data == MOCK_DATA
+    assert (
+        mock_tts_entity.get_tts_audio.call_args.kwargs["options"] == preferred_options
+    )
+
+
 async def test_stream_override(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:

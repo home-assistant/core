@@ -1264,7 +1264,7 @@ class SpeechManager:
             final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
 
         if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
-            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+            sample_rate = None
         else:
             sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
 
@@ -1272,7 +1272,7 @@ class SpeechManager:
             sample_rate = int(sample_rate)
 
         if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
-            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+            sample_channels = None
         else:
             sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
 
@@ -1280,7 +1280,7 @@ class SpeechManager:
             sample_channels = int(sample_channels)
 
         if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
-            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+            sample_bytes = None
         else:
             sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
 
@@ -1288,7 +1288,7 @@ class SpeechManager:
             sample_bytes = int(sample_bytes)
 
         if ATTR_PREFERRED_BITRATE in supported_options:
-            bitrate = options.get(ATTR_PREFERRED_BITRATE)
+            bitrate = None
         else:
             bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
 
