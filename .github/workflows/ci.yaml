@@ -232,6 +232,10 @@ jobs:
             skip_coverage="true"
           fi
 
+          # Experiment: only run the linters
+          lint_only="true"
+          skip_coverage="true"
+
           if [[ "${INPUT_SKIP_COVERAGE}" == "true" ]] \
             || [[ "${HAS_CI_SKIP_COVERAGE_LABEL}" == "true" ]];
           then
@@ -581,8 +585,12 @@ jobs:
           python -m script.licenses check licenses-${PYTHON_VERSION}.json
 
   pylint:
-    name: Check pylint
+    name: Check pylint (jobs ${{ matrix.jobs }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: [2, 3, 4]
     permissions:
       contents: read
     needs:
@@ -612,10 +620,23 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
+        env:
+          PYLINT_JOBS: ${{ matrix.jobs }}
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant
+          sudo apt-get install -y -qq time >/dev/null
+          nproc
+          free -m
+          swapon --show
+          vmstat 5 > vmstat.log &
+          rc=0
+          /usr/bin/time -v -o time.log pylint --jobs "${PYLINT_JOBS}" --ignore-missing-annotations=y homeassistant || rc=$?
+          kill %1
+          grep -E "Elapsed|Maximum resident|Percent of CPU" time.log
+          echo "--- vmstat"
+          cat vmstat.log
+          exit $rc
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -627,8 +648,12 @@ jobs:
           pylint --ignore-missing-annotations=y $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   pylint-tests:
-    name: Check pylint on tests
+    name: Check pylint on tests (jobs ${{ matrix.jobs }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: [2, 3, 4]
     permissions:
       contents: read
     needs:
@@ -659,10 +684,23 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
+        env:
+          PYLINT_JOBS: ${{ matrix.jobs }}
         run: |
           . venv/bin/activate
           python --version
-          pylint tests
+          sudo apt-get install -y -qq time >/dev/null
+          nproc
+          free -m
+          swapon --show
+          vmstat 5 > vmstat.log &
+          rc=0
+          /usr/bin/time -v -o time.log pylint --jobs "${PYLINT_JOBS}" tests || rc=$?
+          kill %1
+          grep -E "Elapsed|Maximum resident|Percent of CPU" time.log
+          echo "--- vmstat"
+          cat vmstat.log
+          exit $rc
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
