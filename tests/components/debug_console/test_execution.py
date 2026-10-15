@@ -218,6 +218,32 @@ async def test_error_that_fails_to_format(
     assert result["result"] == {"type": "number", "value": "2"}
 
 
+async def test_error_with_failing_source_loader(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test the source of frames is read from disk, not from module loaders."""
+    result = await async_execute(
+        websocket_client,
+        "class LoudLoader:\n"
+        "    def get_source(self, name):\n"
+        "        raise SystemExit\n\n"
+        "virtual = {'__name__': 'debug_console_virtual', '__loader__': LoudLoader()}\n"
+        "exec(\n"
+        "    compile(\n"
+        "        'def fail():\\n    raise ValueError(\"inner\")',\n"
+        "        '/nonexistent/debug_console_virtual.py',\n"
+        "        'exec',\n"
+        "    ),\n"
+        "    virtual,\n"
+        ")\n"
+        "virtual['fail']()",
+    )
+    assert "ValueError: inner" in result["error"]
+
+    result = await async_execute(websocket_client, "1 + 1")
+    assert result["result"] == {"type": "number", "value": "2"}
+
+
 async def test_chained_errors(websocket_client: MockHAClientWebSocket) -> None:
     """Test chained errors and exception groups report each error, with source."""
     result = await async_execute(

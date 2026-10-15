@@ -245,11 +245,19 @@ async def _async_format_exception(hass: HomeAssistant, err: BaseException) -> st
 
 
 def _read_sources(report: traceback.TracebackException) -> None:
-    """Read the source of each frame in a report, and the reports it chains."""
+    """Read the source of each frame in a report, and the reports it chains.
+
+    From disk only. Capturing registers a loader of the module of each frame,
+    which can be code of the user, to get the source from on request.
+    """
     reports = [report]
     while reports:
         current = reports.pop()
         for frame in current.stack:
+            # A registered loader is cached as a tuple of just its getter.
+            if len(linecache.cache.get(frame.filename, ())) == 1:
+                linecache.cache.pop(frame.filename, None)
+
             linecache.getlines(frame.filename)
 
         reports.extend(

@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.debug_console.completion import _top_level_modules
+
 from . import async_execute, async_send
 
 from tests.typing import MockHAClientWebSocket
@@ -1104,29 +1106,45 @@ async def test_import_completion_runs_no_finders(
     package.mkdir()
     (package / "__init__.py").write_text("")
     (package / "submodule.py").write_text("")
-    # A namespace package, without an __init__.py.
+    # Namespace packages, without an __init__.py.
+    (package / "nested").mkdir()
+    (package / "nested" / "leaf.py").write_text("")
     (tmp_path / "debug_console_namespace").mkdir()
     (tmp_path / "debug_console_namespace" / "inner.py").write_text("")
 
-    with (
-        patch.object(sys, "path", [str(tmp_path)]),
-        patch.object(sys, "path_hooks", [recording_hook]),
-        patch.dict(sys.path_importer_cache, {str(tmp_path): RecordingFinder()}),
-    ):
-        package_result = await async_send(
-            websocket_client,
-            {"type": "debug_console/complete", "code": "import debug_console_found.s"},
+    async def _async_complete(code: str) -> list[str]:
+        result = await async_send(
+            websocket_client, {"type": "debug_console/complete", "code": code}
         )
-        namespace_result = await async_send(
-            websocket_client,
-            {
-                "type": "debug_console/complete",
-                "code": "import debug_console_namespace.i",
-            },
-        )
+        return result["matches"]
 
-    assert package_result["matches"] == ["debug_console_found.submodule"]
-    assert namespace_result["matches"] == ["debug_console_namespace.inner"]
+    # Top level modules are cached, and these are only on this search path.
+    _top_level_modules.cache_clear()
+    try:
+        with (
+            patch.object(sys, "path", [str(tmp_path)]),
+            patch.object(sys, "path_hooks", [recording_hook]),
+            patch.dict(sys.path_importer_cache, {str(tmp_path): RecordingFinder()}),
+        ):
+            assert await _async_complete("import debug_console_f") == [
+                "debug_console_found"
+            ]
+            assert await _async_complete("import debug_console_n") == [
+                "debug_console_namespace"
+            ]
+            assert await _async_complete("import debug_console_found.") == [
+                "debug_console_found.nested",
+                "debug_console_found.submodule",
+            ]
+            assert await _async_complete("import debug_console_found.nested.l") == [
+                "debug_console_found.nested.leaf"
+            ]
+            assert await _async_complete("import debug_console_namespace.i") == [
+                "debug_console_namespace.inner"
+            ]
+    finally:
+        _top_level_modules.cache_clear()
+
     assert not called
 
 

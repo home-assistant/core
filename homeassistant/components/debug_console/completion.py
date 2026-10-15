@@ -732,8 +732,9 @@ def _list_modules(locations: Iterable[str]) -> set[str]:
             continue
 
         for entry in entries:
+            # Any folder is a package, without an __init__.py a namespace one.
             if entry.is_dir():
-                if os.path.isfile(os.path.join(entry.path, "__init__.py")):
+                if entry.name != "__pycache__":
                     names.add(entry.name)
 
                 continue
