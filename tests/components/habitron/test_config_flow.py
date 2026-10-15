@@ -1584,25 +1584,50 @@ async def test_user_flow_recognises_a_migrated_entry_that_also_moved(
     assert entry.data[CONF_HOST] == MOCK_HOST
 
 
+def _entry_bound_to_hub_a(
+    hass: HomeAssistant, unique_id: str, *recorded_macs: str
+) -> MockConfigEntry:
+    """Add hub A's entry at ``MOCK_HOST``, bound by its id or its hub device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=unique_id,
+        data={CONF_HOST: MOCK_HOST},
+    )
+    entry.add_to_hass(hass)
+    if recorded_macs:
+        dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac) for mac in recorded_macs},
+        )
+    return entry
+
+
+_HUB_A_BINDINGS = [
+    pytest.param(MOCK_UID, (), id="keyed-by-mac"),
+    pytest.param(MOCK_SERIAL, (MOCK_MAC,), id="legacy-id-recorded-hub-device"),
+]
+
+
+@pytest.mark.parametrize(("unique_id", "recorded_macs"), _HUB_A_BINDINGS)
 async def test_user_flow_adds_a_different_hub_at_a_recycled_address(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_hub_mac: AsyncMock,
+    unique_id: str,
+    recorded_macs: tuple[str, ...],
 ) -> None:
     """An address DHCP handed to another hub must not match the old entry.
 
     The host fallback is there for an entry carried over from the custom
-    integration, which has no MAC identity yet. An entry that already carries
-    one is identified by it -- matching it on the address as well would abort
-    the new hub and rewrite the old entry onto a device that is not its own.
+    integration that never reached its hub. An entry bound to a hub -- by a MAC
+    id or by the MAC its hub device recorded -- is identified by that; matching
+    it on the address as well would abort the new hub and rewrite the old entry
+    onto a device that is not its own.
     """
-    MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,  # hub A, already keyed by its MAC
-        data={CONF_HOST: MOCK_HOST},
-    ).add_to_hass(hass)
+    entry = _entry_bound_to_hub_a(hass, unique_id, *recorded_macs)
 
     # Hub B answers at the address hub A used to have.
     mock_hub_mac.return_value = "112233445566"
@@ -1618,6 +1643,67 @@ async def test_user_flow_adds_a_different_hub_at_a_recycled_address(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "112233445566"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert entry.unique_id == unique_id
+    assert entry.data == {CONF_HOST: MOCK_HOST}
+
+
+@pytest.mark.parametrize(("unique_id", "recorded_macs"), _HUB_A_BINDINGS)
+async def test_ssdp_offers_a_different_hub_at_a_recycled_address(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+    unique_id: str,
+    recorded_macs: tuple[str, ...],
+) -> None:
+    """Discovery of a new hub at an old hub's address is offered, not dropped."""
+    entry = _entry_bound_to_hub_a(hass, unique_id, *recorded_macs)
+    mock_hub_mac.return_value = "112233445566"
+
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert entry.unique_id == unique_id
+    assert entry.data == {CONF_HOST: MOCK_HOST}
+
+
+async def test_user_flow_finds_a_legacy_entry_by_its_hub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A legacy entry whose hub moved is found by the MAC its device recorded.
+
+    Neither its id nor its stale address matches, but it is this hub's entry:
+    the flow updates its address instead of adding the hub a second time.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        data={CONF_HOST: "192.168.1.99"},
+    )
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_SERIAL)},
+        connections={(dr.CONNECTION_NETWORK_MAC, MOCK_MAC)},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.data == {CONF_HOST: MOCK_HOST}
 
 
 def _entry_in_backoff(

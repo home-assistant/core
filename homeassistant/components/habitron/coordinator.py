@@ -23,9 +23,9 @@ from habitron_client import (
     normalise_mac,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -49,6 +49,28 @@ _WEB_PORT = 7780
 
 # Timeout for one bus poll. Generous: a poll walks every module on the bus.
 _POLL_TIMEOUT = 20
+
+
+@callback
+def async_hub_macs(hass: HomeAssistant, entry: ConfigEntry) -> set[str]:
+    """Return the MACs that tie ``entry`` to its hub, normalised.
+
+    The single source of the identity every path checks against. It is the
+    unique id once that is a MAC, plus the MAC connections of the devices the
+    entry registered: an entry carried over from the custom integration keeps a
+    serial or ``habitron_<host>`` as its id, but its hub device already records
+    which hub it belongs to. Empty only for an entry that has never reached its
+    hub -- the one case where nothing but the address can match it.
+    """
+    macs = {mac} if (mac := normalise_mac(entry.unique_id or "")) else set()
+    for device in dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id):
+        macs.update(
+            mac
+            for kind, value in device.connections
+            if kind == dr.CONNECTION_NETWORK_MAC
+            and (mac := normalise_mac(value)) is not None
+        )
+    return macs
 
 
 def _is_ipv4(value: str) -> bool:
@@ -268,15 +290,11 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
 
         The hub derives its own from its LAN address; this adds only what the
         library cannot know -- the fallback for a hub that reports no usable
-        address, the check that no other entry already owns this identity, and
+        address, the checks that the hub is the one this entry belongs to and
+        that no other entry owns it (both through :func:`async_hub_macs`), and
         moving the entry onto it.
 
-        An entry already keyed by a MAC is never moved onto another one: a
-        different MAC at the stored address is a different hub that DHCP has
-        handed this address to, and adopting it would register that hub's
-        devices and clean up the entry's own as stale.
-
-        The entry is moved right after the check, with no await in between: a
+        The entry is moved right after the checks, with no await in between: a
         second entry for the same hub that is set up concurrently -- two entries
         carried over from the custom integration under a serial and a host
         fallback -- must find the MAC taken, not pass the check as well.
@@ -284,44 +302,51 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         self._uid_from_mac = bool(self.hub.uid)
         if not self._uid_from_mac:
             # Keep whatever the entry is already keyed by. Carrying an empty uid
-            # from here would give every device the same blank identifier.
+            # from here would give every device the same blank identifier. There
+            # is nothing to compare either: the hub cannot be told apart.
             self.hub.uid = self.entry.unique_id or self.entry.entry_id
             _LOGGER.debug("Hub reported no usable MAC; using %s as uid", self.uid)
+            return
 
-        if (
-            self._uid_from_mac
-            and (stored := normalise_mac(self.entry.unique_id or "")) is not None
-            and stored != self.uid
+        hub_macs = {self.uid} | {
+            mac for raw in self.hub.macs if (mac := normalise_mac(raw)) is not None
+        }
+
+        # Every check runs before the first registry write, so a refused setup
+        # leaves the registry untouched.
+        if (bound := async_hub_macs(self.hass, self.entry)) and bound.isdisjoint(
+            hub_macs
         ):
-            # Retried rather than failed: the hub may get its address back, and
-            # a discovery at its new address updates the entry and reloads it.
+            # A different hub answers at the stored address: DHCP has handed it
+            # on. Adopting it would register that hub's devices and clean up the
+            # entry's own as stale. Retried rather than failed: the hub may get
+            # its address back, and a discovery at its new address updates the
+            # entry and reloads it.
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="wrong_hub",
                 translation_placeholders={
                     "host": self.host,
-                    "expected": stored,
+                    "expected": min(bound),
                     "found": self.uid,
                 },
             )
-
-        # Before the first registry write: if another entry already owns this
-        # hub, its devices and entities are keyed by this very uid, so going on
-        # would attach a second, unusable entry to them. Failing here leaves the
-        # registry untouched.
-        if (
-            self._uid_from_mac
-            and self.entry.unique_id != self.uid
-            and self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, self.uid
-            )
+        if any(
+            not bound_elsewhere.isdisjoint(hub_macs)
+            for other in self.hass.config_entries.async_entries(DOMAIN)
+            if other.entry_id != self.entry.entry_id
+            and other.source != SOURCE_IGNORE
+            and (bound_elsewhere := async_hub_macs(self.hass, other))
         ):
+            # Another entry already owns this hub, so its devices are keyed by
+            # this very uid: going on would attach a second, unusable entry to
+            # them.
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="duplicate_hub",
                 translation_placeholders={"host": self.host, "uid": self.uid},
             )
-        if self._uid_from_mac and self.entry.unique_id != self.uid:
+        if self.entry.unique_id != self.uid:
             _LOGGER.debug(
                 "Adopting hub identity for %s: %s -> %s",
                 self.entry.title,
