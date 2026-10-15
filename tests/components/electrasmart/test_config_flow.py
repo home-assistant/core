@@ -14,8 +14,9 @@ from homeassistant.components.electrasmart.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import async_load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @asynccontextmanager
@@ -259,3 +260,44 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_OTP: "1234"}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_dhcp_discovery(hass: HomeAssistant) -> None:
+    """Test a flow started by DHCP discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.0.2.10",
+            hostname="elrssid123456",
+            macaddress="aabbcc123456",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test DHCP discovery aborts when an account is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0521234567",
+        data={
+            CONF_PHONE_NUMBER: "0521234567",
+            CONF_OTP: "1234",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.0.2.10",
+            hostname="elrssid123456",
+            macaddress="aabbcc123456",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
