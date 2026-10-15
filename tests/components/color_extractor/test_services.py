@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
-from PIL import UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from probatio.error import MultipleInvalid
 import pytest
 
@@ -17,6 +17,7 @@ from homeassistant.components.color_extractor.services import (
     DOMAIN,
     SERVICE_GET_COLOR,
     SERVICE_TURN_ON,
+    _get_bright_color,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -517,20 +518,13 @@ async def test_get_color_service_not_allowed_path(
         "file_path": "/opt/not_an_image.txt",
     }
 
-@pytest.mark.parametrize(
-    ("min_brightness", "expected"),
-    [
-        (0, (255, 0, 0)),
-        (30, (255, 0, 0)),
-        (100, (255, 0, 0)),
-        (101, None),
-    ],
-)
-def test_bright_color_extraction(min_brightness, expected) -> None:
-    """Bright colors remain eligible; thresholds are validated by schemas."""
-    from PIL import Image
 
-    from homeassistant.components.color_extractor.services import _get_bright_color
+@pytest.mark.parametrize(
+    "min_brightness",
+    [30, 100],
+)
+def test_bright_color_extraction(min_brightness: int) -> None:
+    """Bright colors remain eligible after excluding a dark background."""
 
     image = Image.new("RGB", (100, 100), (5, 5, 5))
     for x in range(20):
@@ -540,10 +534,19 @@ def test_bright_color_extraction(min_brightness, expected) -> None:
     with io.BytesIO() as image_buffer:
         image.save(image_buffer, format="PNG")
         image_buffer.seek(0)
-        if min_brightness <= 100:
-            color = _get_bright_color(image_buffer, min_brightness)
-            assert color is not None
-            assert _close_enough(color, expected)
+        color = _get_bright_color(image_buffer, min_brightness)
+        assert color is not None
+        assert _close_enough(color, (255, 0, 0))
+
+
+@pytest.mark.parametrize("rgb", [(255, 255, 255), (252, 253, 254)])
+def test_bright_color_extraction_near_white(rgb: tuple[int, int, int]) -> None:
+    """Qualifying near-white pixels must not be discarded by ColorThief."""
+    image = Image.new("RGB", (30, 30), rgb)
+    with io.BytesIO() as image_buffer:
+        image.save(image_buffer, format="PNG")
+        image_buffer.seek(0)
+        assert _get_bright_color(image_buffer, 90) == rgb
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -551,8 +554,6 @@ async def test_min_brightness_dark_image_skips_light(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """An entirely dark image must not turn a light on."""
-    from PIL import Image
-
     url = "http://example.com/images/dark.png"
     with io.BytesIO() as image_buffer:
         Image.new("RGB", (30, 30), (5, 5, 5)).save(image_buffer, format="PNG")
@@ -575,8 +576,6 @@ async def test_get_color_no_bright_pixels(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Response explicitly indicates when no pixel meets the threshold."""
-    from PIL import Image
-
     url = "http://example.com/images/dark.png"
     with io.BytesIO() as image_buffer:
         Image.new("RGB", (30, 30), (5, 5, 5)).save(image_buffer, format="PNG")
