@@ -10,6 +10,7 @@ from pyicloud import PyiCloudService
 from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
+    PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
@@ -163,6 +164,7 @@ class IcloudAccount:
             PyiCloud2FARequiredException,
             PyiCloudFailedLoginException,
             PyiCloudAuthRequiredException,
+            PyiCloudAcceptTermsException,
         ) as err:
             # Refreshing the devices can reject a session that logging in
             # accepted. The entry still loads: the user is asked to act on it,
@@ -557,6 +559,7 @@ class IcloudAccount:
                 PyiCloud2FARequiredException,
                 PyiCloudFailedLoginException,
                 PyiCloudAuthRequiredException,
+                PyiCloudAcceptTermsException,
             ) as err:
                 # None of these comes back on its own, so ask the user instead
                 # of retrying every couple of minutes forever.
