@@ -45,7 +45,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_CACHE,
     ATTR_LANGUAGE,
     ATTR_MEDIA_PLAYER_ENTITY_ID,
@@ -73,6 +73,7 @@ from .services import async_setup_services
 
 __all__ = [
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_MEDIA_PLAYER_ENTITY_ID",
     "ATTR_PREFERRED_BITRATE",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_BYTES",
@@ -82,6 +83,7 @@ __all__ = [
     "DEFAULT_CACHE_DIR",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "SERVICE_CLEAR_CACHE",
     "Provider",
     "ResultStream",
     "SampleFormat",
