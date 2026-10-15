@@ -359,15 +359,14 @@ def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
     list inside it can share a name, so leaving groups in shows that name
     twice, once as a permanently empty list.
 
-    Deleted lists leave tombstones that cannot be recognised yet. pyicloud
-    exposes ``deleted`` on a reminder but not on a list, and the model forbids
-    extra fields, so a tombstone is indistinguishable from an empty list until
-    timlaing/pyicloud#319 is released.
+    A deleted list leaves a tombstone that keeps the name but no longer holds
+    the reminders, so it shows up as a permanently empty second list with the
+    same name (home-assistant/core#185251).
     """
     return [
         (reminder_list.id, reminder_list.title)
         for reminder_list in service.lists()
-        if not reminder_list.is_group
+        if not reminder_list.is_group and not reminder_list.deleted
     ]
 
 
