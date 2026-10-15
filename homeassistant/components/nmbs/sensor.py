@@ -168,6 +168,15 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
         self._attr_unique_id = f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return True if the coordinator and the liveboard feed succeeded."""
+        return (
+            super().available
+            and self._station.id not in self.coordinator.data.failed_liveboards
+        )
+
+    @property
     def next_departure(self) -> LiveboardDeparture | None:
         """Return the next departure for the monitored station."""
         return self.coordinator.data.next_departures[self._station.id]

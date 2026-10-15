@@ -7,7 +7,12 @@ import logging
 from typing import override
 
 from pyrail import iRail
-from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
+from pyrail.models import (
+    ConnectionDetails,
+    LiveboardApiResponse,
+    LiveboardDeparture,
+    StationDetails,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,6 +41,7 @@ class NMBSData:
 
     connection: ConnectionDetails | None
     next_departures: dict[str, LiveboardDeparture | None]
+    failed_liveboards: set[str]
 
 
 def _find_station(hass: HomeAssistant, station_id: str) -> StationDetails | None:
@@ -76,6 +82,18 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self.station_to = station_to
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
 
+    async def _async_fetch_liveboard(
+        self, station: StationDetails
+    ) -> LiveboardApiResponse | None:
+        """Fetch a liveboard, returning None when the request fails."""
+        try:
+            return await self.client.get_liveboard(station.id)
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timeout while fetching the liveboard of %s", station.standard_name
+            )
+            return None
+
     @override
     async def _async_update_data(self) -> NMBSData:
         """Fetch the next connection and liveboard departures."""
@@ -87,23 +105,17 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
                     )
                 )
                 liveboard_from_task = task_group.create_task(
-                    self.client.get_liveboard(self.station_from.id)
+                    self._async_fetch_liveboard(self.station_from)
                 )
                 liveboard_to_task = task_group.create_task(
-                    self.client.get_liveboard(self.station_to.id)
+                    self._async_fetch_liveboard(self.station_to)
                 )
         except* TimeoutError as err:
             raise UpdateFailed(
                 f"Timeout while fetching data from the iRail API: {err.exceptions[0]}"
             ) from err
         connections_response = connections_task.result()
-        liveboard_from = liveboard_from_task.result()
-        liveboard_to = liveboard_to_task.result()
-        if (
-            connections_response is None
-            or liveboard_from is None
-            or liveboard_to is None
-        ):
+        if connections_response is None:
             raise UpdateFailed("Unable to fetch data from the iRail API")
 
         upcoming = [
@@ -114,14 +126,22 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         if self.exclude_vias:
             upcoming = [connection for connection in upcoming if not connection.vias]
 
+        next_departures: dict[str, LiveboardDeparture | None] = {}
+        failed_liveboards: set[str] = set()
+        for station, liveboard in (
+            (self.station_from, liveboard_from_task.result()),
+            (self.station_to, liveboard_to_task.result()),
+        ):
+            if liveboard is None:
+                failed_liveboards.add(station.id)
+                next_departures[station.id] = None
+            else:
+                next_departures[station.id] = (
+                    liveboard.departures[0] if liveboard.departures else None
+                )
+
         return NMBSData(
             connection=upcoming[0] if upcoming else None,
-            next_departures={
-                self.station_from.id: (
-                    liveboard_from.departures[0] if liveboard_from.departures else None
-                ),
-                self.station_to.id: (
-                    liveboard_to.departures[0] if liveboard_to.departures else None
-                ),
-            },
+            next_departures=next_departures,
+            failed_liveboards=failed_liveboards,
         )

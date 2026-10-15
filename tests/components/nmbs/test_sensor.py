@@ -1,11 +1,13 @@
 """Test the NMBS sensor platform."""
 
+from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from pyrail.models import ConnectionsApiResponse, LiveboardApiResponse
+import pytest
 
 from homeassistant.components.nmbs.const import (
     CONF_EXCLUDE_VIAS,
@@ -57,6 +59,16 @@ async def _enable_liveboards(
         )
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+def _liveboard_api_failure() -> LiveboardApiResponse | None:
+    """Simulate a liveboard request that returns no data."""
+    return None
+
+
+def _liveboard_timeout() -> LiveboardApiResponse | None:
+    """Simulate a liveboard request that times out."""
+    raise TimeoutError
 
 
 @freeze_time(FROZEN_TIME)
@@ -312,6 +324,64 @@ async def test_liveboard_sensor_no_delay(
     assert attrs["icon"] == "mdi:train"
     assert "delay" not in attrs
     assert "delay_minutes" not in attrs
+
+
+@pytest.mark.parametrize(
+    "destination_liveboard_result",
+    [
+        pytest.param(_liveboard_api_failure, id="api_failure"),
+        pytest.param(_liveboard_timeout, id="timeout"),
+    ],
+)
+async def test_liveboard_failure_only_affects_its_sensor(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    destination_liveboard_result: Callable[[], LiveboardApiResponse | None],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed liveboard only affects its own sensor and recovers."""
+    freezer.move_to(FROZEN_TIME)
+    await _setup_entry(hass, mock_config_entry)
+
+    liveboards = {
+        STATION_FROM: LiveboardApiResponse.from_dict(
+            await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
+        ),
+    }
+    mock_nmbs_client.get_liveboard.side_effect = lambda station: (
+        destination_liveboard_result() if station == STATION_TO else liveboards[station]
+    )
+    await _enable_liveboards(hass, entity_registry, mock_config_entry)
+
+    connection_state = hass.states.get(
+        _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
+    )
+    assert connection_state is not None
+    assert connection_state.state == "20"
+
+    from_state = hass.states.get(
+        _get_entity_id(entity_registry, LIVEBOARD_FROM_UNIQUE_ID)
+    )
+    assert from_state is not None
+    assert from_state.state == "Track 3 - Blankenberge"
+
+    to_state = hass.states.get(_get_entity_id(entity_registry, LIVEBOARD_TO_UNIQUE_ID))
+    assert to_state is not None
+    assert to_state.state == STATE_UNAVAILABLE
+
+    liveboards[STATION_TO] = LiveboardApiResponse.from_dict(
+        await async_load_json_object_fixture(hass, "liveboard_zuid.json", DOMAIN)
+    )
+    mock_nmbs_client.get_liveboard.side_effect = lambda station: liveboards[station]
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    to_state = hass.states.get(_get_entity_id(entity_registry, LIVEBOARD_TO_UNIQUE_ID))
+    assert to_state is not None
+    assert to_state.state == "Track 7 - Gent-Sint-Pieters"
 
 
 async def test_sensors_unavailable_when_api_fails(
