@@ -520,6 +520,8 @@ class DefaultAgent(ConversationEntity):
         result: RecognizeResult | None,
         user_input: ConversationInput,
         chat_log: ChatLog,
+        *,
+        discard_match_error: bool = False,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -581,6 +583,7 @@ class DefaultAgent(ConversationEntity):
             user_input,
             chat_log,
             lang_intents,
+            discard_match_error=discard_match_error,
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
@@ -600,6 +603,8 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
+        *,
+        discard_match_error: bool = False,
     ) -> intent.IntentResponse:
         """Handle one recognized intent and give it something to say."""
         language = user_input.language or self.hass.config.language
@@ -619,14 +624,6 @@ class DefaultAgent(ConversationEntity):
 
         if satellite_area is not None:
             slots = slots | {"preferred_area_id": {"value": satellite_area.id}}
-
-        chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(
-                agent_id=user_input.agent_id,
-                content=None,
-                tool_calls=[tool_input],
-            )
-        )
 
         try:
             intent_response = await intent.async_handle(
@@ -654,6 +651,10 @@ class DefaultAgent(ConversationEntity):
                     error_response_type, lang_intents, **error_response_args
                 ),
             )
+            if discard_match_error:
+                # The caller hands the turn to another agent, which must not see
+                # a tool call it did not make
+                return intent_response
         except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
@@ -689,6 +690,13 @@ class DefaultAgent(ConversationEntity):
                 )
                 intent_response.async_set_speech(speech)
 
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
+        )
         tool_result = llm.IntentResponseDict(intent_response)
         chat_log.async_add_assistant_content_without_tools(
             ToolResultContent(
@@ -1632,7 +1640,9 @@ class DefaultAgent(ConversationEntity):
             # No error message on failed match
             return None
 
-        response = await self._async_process_intent_result(result, user_input, chat_log)
+        response = await self._async_process_intent_result(
+            result, user_input, chat_log, discard_match_error=True
+        )
         if (
             response.response_type is intent.IntentResponseType.ERROR
             and response.error_code
