@@ -1,6 +1,6 @@
 """Tests for completion and signature hints of the Debug console."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from pathlib import Path
 import sys
 import types
@@ -1049,6 +1049,72 @@ async def test_signature_does_not_evaluate_text_signature(
         )
 
     assert not evaluated
+
+
+async def test_import_completion_runs_no_finders(
+    websocket_client: MockHAClientWebSocket, tmp_path: Path
+) -> None:
+    """Test completing imports reads the disk, without finders or path hooks."""
+    called = []
+
+    class RecordingFinder:
+        def find_spec(self, *args: Any, **kwargs: Any) -> None:
+            called.append("finder")
+
+        def iter_modules(self, prefix: str = "") -> Iterator[Any]:
+            called.append("finder")
+            return iter(())
+
+    def recording_hook(path: str) -> None:
+        called.append("hook")
+        raise ImportError
+
+    package = tmp_path / "debug_console_found"
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    (package / "submodule.py").write_text("")
+    # A namespace package, without an __init__.py.
+    (tmp_path / "debug_console_namespace").mkdir()
+    (tmp_path / "debug_console_namespace" / "inner.py").write_text("")
+
+    with (
+        patch.object(sys, "path", [str(tmp_path)]),
+        patch.object(sys, "path_hooks", [recording_hook]),
+        patch.dict(sys.path_importer_cache, {str(tmp_path): RecordingFinder()}),
+    ):
+        package_result = await async_send(
+            websocket_client,
+            {"type": "debug_console/complete", "code": "import debug_console_found.s"},
+        )
+        namespace_result = await async_send(
+            websocket_client,
+            {
+                "type": "debug_console/complete",
+                "code": "import debug_console_namespace.i",
+            },
+        )
+
+    assert package_result["matches"] == ["debug_console_found.submodule"]
+    assert namespace_result["matches"] == ["debug_console_namespace.inner"]
+    assert not called
+
+
+async def test_import_completion_with_odd_search_path(
+    websocket_client: MockHAClientWebSocket, tmp_path: Path
+) -> None:
+    """Test a search path that is not a plain list is not used."""
+    package = tmp_path / "debug_console_found"
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    (package / "submodule.py").write_text("")
+
+    with patch.object(sys, "path", (str(tmp_path),)):
+        result = await async_send(
+            websocket_client,
+            {"type": "debug_console/complete", "code": "import debug_console_found.s"},
+        )
+
+    assert result["matches"] == []
 
 
 async def test_import_completion_with_path_of_its_own(

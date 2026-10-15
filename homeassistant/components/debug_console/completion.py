@@ -9,11 +9,11 @@ import builtins
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cache
-from importlib.machinery import PathFinder
+from importlib.machinery import all_suffixes
 import inspect
 from itertools import pairwise
 import keyword
-import pkgutil
+import os
 import re
 import sys
 import types
@@ -70,6 +70,9 @@ _BUILTIN_CONSTRUCTOR_TYPES = (
     types.WrapperDescriptorType,
     types.MethodDescriptorType,
 )
+
+# Endings of files that are modules, longest first, as ".so" ends others too.
+_MODULE_SUFFIXES = sorted(all_suffixes(), key=len, reverse=True)
 
 # Flag of classes written in Python, which can have a __text_signature__ from
 # their docstring.
@@ -636,9 +639,7 @@ def _top_level_modules() -> frozenset[str]:
 
     Cached, as scanning every path for modules is slow and rarely changes.
     """
-    return frozenset(sys.builtin_module_names) | {
-        module.name for module in pkgutil.iter_modules()
-    }
+    return frozenset(sys.builtin_module_names) | _list_modules(_search_path())
 
 
 def _complete_module(path: str) -> list[str]:
@@ -649,7 +650,7 @@ def _complete_module(path: str) -> list[str]:
     elif (locations := _package_locations(parent)) is None:
         return []
     else:
-        names = [module.name for module in pkgutil.iter_modules(locations)]
+        names = _list_modules(locations)
 
     return sorted(
         f"{parent}.{name}" if parent else name
@@ -669,7 +670,7 @@ def _complete_module_attribute(module_name: str, prefix: str) -> list[str]:
         names.update(instance_dict(module) or {})
 
     if (locations := _package_locations(module_name)) is not None:
-        names.update(submodule.name for submodule in pkgutil.iter_modules(locations))
+        names.update(_list_modules(locations))
 
     return sorted(name for name in names if _is_completion(name, prefix))
 
@@ -689,16 +690,59 @@ def _package_locations(name: str) -> list[str] | None:
         if type(locations) is list:
             return [location for location in locations if type(location) is str]
 
-    parent = name.rpartition(".")[0]
-    search_path = None
-    if parent and (search_path := _package_locations(parent)) is None:
+    parent, _, child = name.rpartition(".")
+    search_path = _package_locations(parent) if parent else _search_path()
+    if search_path is None:
         return None
 
-    spec = PathFinder.find_spec(name, search_path)
-    if spec is None or spec.submodule_search_locations is None:
-        return None
+    # Like the import system finds them, but from disk only: it runs finders
+    # and hooks that code can register.
+    namespace = []
+    for location in search_path:
+        folder = os.path.join(location, child)
+        if os.path.isfile(os.path.join(folder, "__init__.py")):
+            return [folder]
 
-    return list(spec.submodule_search_locations)
+        if os.path.isdir(folder):
+            namespace.append(folder)
+
+    return namespace or None
+
+
+def _search_path() -> list[str]:
+    """Return the folders top level modules are imported from."""
+    if type(sys.path) is not list:
+        return []
+
+    return [location for location in sys.path if type(location) is str]
+
+
+def _list_modules(locations: Iterable[str]) -> set[str]:
+    """Return the modules and packages in folders, read from disk only.
+
+    Like pkgutil.iter_modules, which runs finders and hooks that code can
+    register. Packages in zip files are left out.
+    """
+    names: set[str] = set()
+    for location in locations:
+        try:
+            entries = list(os.scandir(location or "."))
+        except OSError:
+            continue
+
+        for entry in entries:
+            if entry.is_dir():
+                if os.path.isfile(os.path.join(entry.path, "__init__.py")):
+                    names.add(entry.name)
+
+                continue
+
+            for suffix in _MODULE_SUFFIXES:
+                if entry.name.endswith(suffix):
+                    names.add(entry.name.removesuffix(suffix))
+                    break
+
+    return {name for name in names if name.isidentifier() and name != "__init__"}
 
 
 def _is_completion(name: str, prefix: str) -> bool:
