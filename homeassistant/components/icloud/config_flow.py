@@ -63,6 +63,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self.api = None
         self._username = None
         self._password = None
+        self._api_login: tuple[str | None, str | None] | None = None
         self._with_family = None
         self._max_interval = None
         self._gps_accuracy_threshold = None
@@ -284,6 +285,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._include_completed = extra_inputs.get(
             CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED
         )
+
+        # A login kept through an outage belongs to the credentials it was made
+        # with, not to whatever the form is submitted with next.
+        login = (self._username, self._password)
+        if self._api_login not in (None, login):
+            self.api = None
+        self._api_login = login
 
         # Check if already configured.
         if self.unique_id is None:

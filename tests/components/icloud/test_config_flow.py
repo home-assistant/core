@@ -1155,3 +1155,31 @@ async def test_retry_login_unreachable_is_a_connection_error(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_changed_credentials_after_an_outage_are_logged_in_again(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the login kept through an outage is not reused for new credentials.
+
+    The session survives an outage because it carries the trust token, but it
+    belongs to the account that was entered. If the user corrects the Apple ID
+    or the password on the same form, those have to be validated rather than
+    the old login being trusted for them.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudServiceUnavailable("iCloud is unavailable")
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["errors"] == {"base": "unknown"}
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "other@me.com", CONF_PASSWORD: "other"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "other@me.com"
+    assert service_mock.call_count == 2
+    assert service_mock.call_args.args[:2] == ("other@me.com", "other")
