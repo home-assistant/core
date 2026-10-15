@@ -74,7 +74,7 @@ class LaMarzoccoBaseEntity(
                 (CONNECTION_BLUETOOTH, coordinator.config_entry.data[CONF_MAC])
             )
         if connections:
-            self._attr_device_info.update(DeviceInfo(connections=connections))
+            self._attr_device_info.connections = connections
 
     @property
     @override

@@ -37,14 +37,10 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
             name="Pinecil",
         )
         if coordinator.device_info.is_synced:
-            self._attr_device_info.update(
-                DeviceInfo(
-                    sw_version=coordinator.device_info.build,
-                    serial_number=(
-                        f"{coordinator.device_info.device_sn}"
-                        f" (ID:{coordinator.device_info.device_id})"
-                    ),
-                )
+            self._attr_device_info.sw_version = coordinator.device_info.build
+            self._attr_device_info.serial_number = (
+                f"{coordinator.device_info.device_sn}"
+                f" (ID:{coordinator.device_info.device_id})"
             )
 
     @property
