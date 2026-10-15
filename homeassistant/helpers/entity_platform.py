@@ -474,8 +474,8 @@ class EntityPlatform:
 
         async_create_setup_awaitable creates an awaitable that sets up platform.
 
-        Returns False only if the setup failed. A setup that is retried or still
-        running in the background is not a failure.
+        Returns False only if the setup failed. A setup that is retried is not a
+        failure.
         """
         current_platform.set(self)
         logger = self.logger
@@ -543,19 +543,6 @@ class EntityPlatform:
                 )
             return True
         except TimeoutError:
-            # The setup raised the timeout itself, it does not keep running
-            if (
-                isinstance(awaitable, asyncio.Future)
-                and awaitable.done()
-                and not awaitable.cancelled()
-                and isinstance(awaitable.exception(), TimeoutError)
-            ):
-                logger.exception(
-                    "Error while setting up %s platform for %s",
-                    self.platform_name,
-                    self.domain,
-                )
-                return False
             logger.error(
                 (
                     "Setup of platform %s is taking longer than %s seconds."
@@ -564,7 +551,7 @@ class EntityPlatform:
                 self.platform_name,
                 SLOW_SETUP_MAX_WAIT,
             )
-            return True
+            return False
         except (ConfigEntryNotReady, ConfigEntryAuthFailed, ConfigEntryError) as exc:
             _LOGGER.error(
                 "%s raises exception %s in forwarded platform "
