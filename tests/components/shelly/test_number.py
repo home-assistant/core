@@ -1,6 +1,7 @@
 """Tests for Shelly number platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
@@ -683,9 +684,7 @@ async def test_rpc_ledstrip_speed_number(
         {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID, ATTR_VALUE: 80.0},
         blocking=True,
     )
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "speed": 80}
-    )
+    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {"speed": 80})
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "ledstrip:0", "speed", 80)
     mock_rpc_device.mock_update()
@@ -694,12 +693,43 @@ async def test_rpc_ledstrip_speed_number(
     assert state.state == "80"
 
 
+@pytest.mark.parametrize(
+    ("ledstrip_status", "expected_state"),
+    [
+        (LEDSTRIP_STATUS_RAINBOW, "33"),
+        (LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True}, STATE_UNAVAILABLE),
+        (
+            {
+                "id": 0,
+                "on": False,
+                "brightness": 36,
+                "effect": "ddp",
+                "speed": 33,
+                "reverse": True,
+            },
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                "id": 0,
+                "on": False,
+                "brightness": 36,
+                "effect": "rainbow",
+                "reverse": True,
+            },
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
 async def test_rpc_ledstrip_speed_number_availability(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    ledstrip_status: dict[str, Any],
+    expected_state: str,
 ) -> None:
-    """Test RPC LED strip effect speed number is unavailable without speed."""
+    """Test RPC LED strip effect speed number availability depends on the effect."""
     config = deepcopy(mock_rpc_device.config)
     config["ledstrip:0"] = LEDSTRIP_CONFIG
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -713,18 +743,8 @@ async def test_rpc_ledstrip_speed_number_availability(
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
-    monkeypatch.setitem(
-        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_RAINBOW)
-    )
+    monkeypatch.setitem(mock_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status))
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
-    assert state.state == "33"
-
-    monkeypatch.setitem(
-        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
-    )
-    mock_rpc_device.mock_update()
-
-    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state

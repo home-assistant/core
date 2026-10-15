@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
@@ -1205,11 +1206,9 @@ async def test_rpc_ledstrip_reverse_switch(
         {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID},
         blocking=True,
     )
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "reverse": False}
-    )
+    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": False})
 
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.ledstrip_set.reset_mock()
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "ledstrip:0", "reverse", False
     )
@@ -1224,17 +1223,40 @@ async def test_rpc_ledstrip_reverse_switch(
         {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID},
         blocking=True,
     )
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "reverse": True}
-    )
+    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": True})
 
 
+@pytest.mark.parametrize(
+    ("ledstrip_status", "expected_state"),
+    [
+        (LEDSTRIP_STATUS_RAINBOW, STATE_ON),
+        (LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True}, STATE_UNAVAILABLE),
+        (
+            {
+                "id": 0,
+                "on": True,
+                "brightness": 36,
+                "effect": "ddp",
+                "speed": 33,
+                "reverse": True,
+            },
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {"id": 0, "on": True, "brightness": 36, "effect": "rainbow", "speed": 33},
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
 async def test_rpc_ledstrip_reverse_switch_availability(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    ledstrip_status: dict[str, Any],
+    expected_state: str,
 ) -> None:
-    """Test RPC LED strip reverse switch is unavailable for effects without it."""
+    """Test RPC LED strip reverse switch availability depends on the effect."""
     config = deepcopy(mock_rpc_device.config)
     config["ledstrip:0"] = LEDSTRIP_CONFIG
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -1248,18 +1270,8 @@ async def test_rpc_ledstrip_reverse_switch_availability(
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
-    monkeypatch.setitem(
-        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_RAINBOW)
-    )
+    monkeypatch.setitem(mock_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status))
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
-    assert state.state == STATE_ON
-
-    monkeypatch.setitem(
-        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
-    )
-    mock_rpc_device.mock_update()
-
-    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state

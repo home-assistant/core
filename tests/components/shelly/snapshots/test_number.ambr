@@ -258,7 +258,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'number.test_name_ledstrip_0_effect_speed',
     'has_entity_name': True,
     'hidden_by': None,
