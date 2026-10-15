@@ -1218,6 +1218,25 @@ async def test_setup_entry_platform_timeout(
     await asyncio.sleep(0.1)
 
 
+async def test_setup_entry_platform_raises_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a config entry platform that raises a timeout itself has failed."""
+    async_setup_entry = AsyncMock(side_effect=TimeoutError)
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert not await ent_platform.async_setup_entry(config_entry)
+
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
+    assert full_name not in hass.config.components
+    assert "Error while setting up test platform for test_domain" in caplog.text
+    assert "is taking longer than" not in caplog.text
+
+
 async def test_setup_entry_platform_not_ready_with_message(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

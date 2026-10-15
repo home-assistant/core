@@ -543,6 +543,14 @@ class EntityPlatform:
                 )
             return True
         except TimeoutError:
+            # A finished setup raised the timeout itself, it does not keep running
+            if isinstance(awaitable, asyncio.Future) and awaitable.done():
+                logger.exception(
+                    "Error while setting up %s platform for %s",
+                    self.platform_name,
+                    self.domain,
+                )
+                return False
             logger.error(
                 (
                     "Setup of platform %s is taking longer than %s seconds."
