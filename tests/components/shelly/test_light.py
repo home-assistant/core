@@ -1,7 +1,7 @@
 """Tests for Shelly light platform."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock, Mock, PropertyMock
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import (
     MODEL_BULB,
@@ -13,7 +13,6 @@ from aioshelly.const import (
     MODEL_RGBW2,
     MODEL_VINTAGE_V2,
 )
-from aioshelly.exceptions import NotInitialized
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -1268,14 +1267,7 @@ async def test_rpc_ledstrip_light_device_not_initialized(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_EFFECT_LIST] == ["solid", "blink", "fade", "rainbow"]
 
-    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
-    monkeypatch.setattr(
-        type(mock_rpc_device),
-        "config",
-        PropertyMock(side_effect=NotInitialized),
-        raising=False,
-    )
     mock_rpc_device.mock_disconnected()
     await hass.async_block_till_done()
 
