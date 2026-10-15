@@ -255,7 +255,7 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         await self._client.connect()
 
         self.hub = await async_build_hub(self._client)
-        self._resolve_uid()
+        await self._async_resolve_uid()
         self.base_url = self._resolve_base_url()
         self._register_hub_device()
 
@@ -285,7 +285,7 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
             return await self.hass.async_add_executor_job(get_own_ip)
         return await get_host_ip(host)
 
-    def _resolve_uid(self) -> None:
+    async def _async_resolve_uid(self) -> None:
         """Settle the identity every device and entity of this entry is keyed by.
 
         The hub derives its own from its LAN address; this adds only what the
@@ -294,7 +294,8 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         that no other entry owns it (both through :func:`async_hub_macs`), and
         moving the entry onto it.
 
-        The entry is moved right after the checks, with no await in between: a
+        An ignored entry for the hub is removed first; the checks and the move
+        then run with no await in between: a
         second entry for the same hub that is set up concurrently -- two entries
         carried over from the custom integration under a serial and a host
         fallback -- must find the MAC taken, not pass the check as well.
@@ -308,9 +309,18 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
             _LOGGER.debug("Hub reported no usable MAC; using %s as uid", self.uid)
             return
 
-        hub_macs = {self.uid} | {
-            mac for raw in self.hub.macs if (mac := normalise_mac(raw)) is not None
-        }
+        # Only the LAN MAC identifies a hub: every SmartHub has one, and the
+        # other interfaces it may report are not part of its identity.
+        hub_macs = {self.uid}
+
+        # An ignored entry for this hub is replaced, as a config flow adding the
+        # hub would do. Leaving it would give two entries the same unique id,
+        # and a rediscovery could then update the ignored one instead of this.
+        for ignored in self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=True
+        ):
+            if ignored.source == SOURCE_IGNORE and ignored.unique_id == self.uid:
+                await self.hass.config_entries.async_remove(ignored.entry_id)
 
         # Every check runs before the first registry write, so a refused setup
         # leaves the registry untouched.

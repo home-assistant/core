@@ -369,7 +369,7 @@ async def test_uid_falls_back_to_the_entry(hass: HomeAssistant) -> None:
     entry.entry_id = "01JENTRY"
     coord = HbtnCoordinator(hass, entry)
     coord.hub = _hub(uid="", lan_mac="")
-    coord._resolve_uid()
+    await coord._async_resolve_uid()
     assert coord.uid == "01JENTRY"
     assert coord.has_mac_uid is False
     # Written onto the hub itself: the hub's entities read their device
@@ -579,7 +579,6 @@ async def test_integration_version_is_reported_to_the_hub(
 
 
 _HUB_B = "112233445566"
-_WLAN_A = "AA:BB:CC:DD:EE:00"
 
 
 def _bind_to_hub(
@@ -612,13 +611,6 @@ _HUB_B_MODEL = {
         pytest.param(MOCK_UID, (MOCK_MAC,), _hub(), MOCK_UID, id="mac-entry-same-hub"),
         pytest.param("HBT-123456", (MOCK_MAC,), _hub(), MOCK_UID, id="legacy-same-hub"),
         pytest.param(
-            "HBT-123456",
-            (_WLAN_A,),
-            _hub(macs=[MOCK_MAC, _WLAN_A]),
-            MOCK_UID,
-            id="legacy-recorded-by-other-interface",
-        ),
-        pytest.param(
             "habitron_192.168.1.50", (), _hub(), MOCK_UID, id="legacy-unbound"
         ),
         pytest.param(
@@ -649,7 +641,7 @@ async def test_resolve_uid_accepts_the_entrys_own_hub(
     coord.host = MOCK_HOST
     coord.hub = hub
 
-    coord._resolve_uid()
+    await coord._async_resolve_uid()
 
     assert entry.unique_id == expected_id
 
@@ -679,7 +671,7 @@ async def test_resolve_uid_refuses_another_hub_at_the_stored_address(
     coord.hub = _hub(**_HUB_B_MODEL)
 
     with pytest.raises(ConfigEntryNotReady) as exc_info:
-        coord._resolve_uid()
+        await coord._async_resolve_uid()
 
     assert exc_info.value.translation_key == "wrong_hub"
     assert entry.unique_id == stored_id
@@ -712,34 +704,45 @@ async def test_resolve_uid_refuses_a_hub_another_entry_owns(
     coord.hub = _hub()
 
     with pytest.raises(ConfigEntryError) as exc_info:
-        coord._resolve_uid()
+        await coord._async_resolve_uid()
 
     assert exc_info.value.translation_key == "duplicate_hub"
     assert entry.unique_id == "habitron_192.168.1.50"
 
 
-@pytest.mark.parametrize(
-    ("other_id", "other_source"),
-    [
-        pytest.param(MOCK_UID, "ignore", id="ignored-entry"),
-        pytest.param(_HUB_B, "user", id="entry-of-another-hub"),
-    ],
-)
-async def test_resolve_uid_ignores_entries_that_do_not_own_the_hub(
+async def test_resolve_uid_replaces_an_ignored_entry_for_the_hub(
     hass: HomeAssistant,
-    other_id: str,
-    other_source: str,
 ) -> None:
-    """An ignored entry owns nothing, and another hub's entry is no conflict."""
-    MockConfigEntry(domain=DOMAIN, unique_id=other_id, source=other_source).add_to_hass(
-        hass
-    )
+    """An ignored entry for the hub is removed before its MAC is adopted.
+
+    Otherwise two entries would share the unique id, and a rediscovery could
+    update the ignored one instead of this.
+    """
+    ignored = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_UID, source="ignore")
+    ignored.add_to_hass(hass)
     entry = MockConfigEntry(domain=DOMAIN, unique_id="habitron_192.168.1.50")
     entry.add_to_hass(hass)
     coord = HbtnCoordinator(hass, entry)
     coord.host = MOCK_HOST
     coord.hub = _hub()
 
-    coord._resolve_uid()
+    await coord._async_resolve_uid()
 
     assert entry.unique_id == MOCK_UID
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+
+
+async def test_resolve_uid_ignores_another_hubs_entry(hass: HomeAssistant) -> None:
+    """An entry of another hub is no conflict and stays as it is."""
+    other = MockConfigEntry(domain=DOMAIN, unique_id=_HUB_B)
+    other.add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="habitron_192.168.1.50")
+    entry.add_to_hass(hass)
+    coord = HbtnCoordinator(hass, entry)
+    coord.host = MOCK_HOST
+    coord.hub = _hub()
+
+    await coord._async_resolve_uid()
+
+    assert entry.unique_id == MOCK_UID
+    assert other.unique_id == _HUB_B

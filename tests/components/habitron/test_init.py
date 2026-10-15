@@ -13,10 +13,12 @@ from homeassistant.components.habitron import (
 )
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.coordinator import HbtnCoordinator
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_MAC, MOCK_NAME, MOCK_UDN, MOCK_UID
@@ -322,7 +324,7 @@ async def _connect_and_build(coordinator: HbtnCoordinator) -> None:
     coordinator._client = AsyncMock()
     coordinator.host = MOCK_HOST
     coordinator.hub = SmartHub(uid=MOCK_UID, lan_mac=MOCK_MAC, macs=[MOCK_MAC])
-    coordinator._resolve_uid()
+    await coordinator._async_resolve_uid()
     # The real build polls the bus here, letting a concurrent setup run.
     await asyncio.sleep(0)
     await asyncio.sleep(0)
@@ -484,3 +486,47 @@ async def test_migrate_v2_entry_is_bumped_and_keeps_the_token(
     assert (entry.version, entry.minor_version) == (2, 2)
     assert entry.data == {CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"}
     assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("setup_homeassistant", "mock_habitron_client", "mock_bus")
+async def test_rediscovery_after_migration_updates_the_live_entry(
+    hass: HomeAssistant,
+) -> None:
+    """A migrated hub that moves is followed by its live entry, not an ignored one.
+
+    The hub was ignored once and then carried over from the custom integration
+    under a serial. Setup moves the live entry onto the MAC and drops the
+    ignored entry, so a later discovery at a new address finds the live one.
+    """
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_UID, source=SOURCE_IGNORE
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="HBT-123456",
+        version=2,
+        minor_version=2,
+        data={CONF_HOST: MOCK_HOST},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+            ssdp_st="urn:habitron-com:device:SmartHub:1",
+            ssdp_location="http://192.168.1.77:80/desc.xml",
+            upnp={ATTR_UPNP_UDN: MOCK_UDN},
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == MOCK_UID
+    assert entry.data[CONF_HOST] == "192.168.1.77"
