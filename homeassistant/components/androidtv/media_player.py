@@ -77,7 +77,7 @@ def _encode_raw_screencap(encoded: str) -> bytes | None:
         raise ValueError("Invalid screenshot dimensions or pixel length")
     image = Image.frombytes(mode, (width, height), raw[header_bytes:], "raw", raw_mode)
     output = BytesIO()
-    image.save(output, format="PNG")
+    image.save(output, format="PNG", compress_level=1)
     return output.getvalue()
 
 
