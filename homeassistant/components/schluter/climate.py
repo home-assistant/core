@@ -1,5 +1,6 @@
 """Support for Schluter thermostats."""
 
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -8,7 +9,6 @@ from requests import RequestException
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    SCAN_INTERVAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=60)
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_SCAN_INTERVAL): probatio.All(

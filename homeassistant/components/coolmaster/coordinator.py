@@ -1,13 +1,13 @@
 """DataUpdateCoordinator for coolmaster integration."""
 
 import asyncio
+from datetime import timedelta
 import logging
 from typing import override
 
 from pycoolmasternet_async import CoolMasterNet
 from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
 
-from homeassistant.components.climate import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import BACKOFF_BASE_DELAY, DOMAIN, MAX_RETRIES
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 type CoolmasterConfigEntry = ConfigEntry[CoolmasterDataUpdateCoordinator]
