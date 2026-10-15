@@ -1,6 +1,7 @@
 """Test the KACO RS485 sensor platform."""
 
 from freezegun.api import FrozenDateTimeFactory
+from kaco_rs485 import BusError
 from kaco_rs485.testing import POWADOR_6400XI, CannedInverter, FakeBus
 from syrupy.assertion import SnapshotAssertion
 
@@ -115,3 +116,29 @@ async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
         hass.states.get(_entity_id(entity_registry, entry_id, 1, "ac_power")).state
         == "635"
     )
+
+
+async def test_a_lost_bus_is_reopened(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_bus: FakeBus,
+) -> None:
+    """Test a bus lost after setup is closed, retried, and recovers."""
+    ac_power = _entity_id(entity_registry, init_integration.entry_id, 1, "ac_power")
+
+    mock_bus.request_error = BusError("connection closed")
+    await _run_cycles(hass, freezer, 1)
+    assert hass.states.get(ac_power).state == STATE_UNAVAILABLE
+    assert not mock_bus.opened
+
+    mock_bus.open_error = BusError("could not open /dev/ttyUSB0")
+    await _run_cycles(hass, freezer, 1)
+    assert hass.states.get(ac_power).state == STATE_UNAVAILABLE
+
+    mock_bus.request_error = None
+    mock_bus.open_error = None
+    await _run_cycles(hass, freezer, 1)
+    assert mock_bus.opened
+    assert hass.states.get(ac_power).state == "635"
