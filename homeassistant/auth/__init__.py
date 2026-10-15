@@ -130,6 +130,9 @@ class AuthManagerFlowManager(
         data: dict[str, Any] | None = None,
     ) -> LoginFlow[Any]:
         """Create a login flow."""
+        auth_provider = self.auth_manager.get_auth_provider(*handler_key)
+        if not auth_provider:
+            raise KeyError(f"Unknown auth provider {handler_key}")
         now = dt_util.utcnow()
         expired = now - LOGIN_FLOW_EXPIRATION
         for flow in list(self._progress.values()):
@@ -151,9 +154,6 @@ class AuthManagerFlowManager(
                 raise TooManyRequestsError
             self._next_eviction = now + LOGIN_FLOW_EVICTION_INTERVAL
             self.async_abort(evictable.flow_id)
-        auth_provider = self.auth_manager.get_auth_provider(*handler_key)
-        if not auth_provider:
-            raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
 
     @override

@@ -886,6 +886,27 @@ async def test_login_with_auth_module(mock_hass) -> None:
     assert step["result"].id == "mock-id"
 
 
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 1)
+async def test_login_flow_limit_unknown_provider(mock_hass: HomeAssistant) -> None:
+    """Test a request for an unknown provider doesn't evict a login flow."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass, [{"type": "insecure_example", "users": []}], []
+    )
+    step = await manager.login_flow.async_init(("insecure_example", None))
+
+    with pytest.raises(KeyError):
+        await manager.login_flow.async_init(("unknown", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        step["flow_id"]
+    ]
+
+    # The eviction interval wasn't used up by the rejected request.
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        step["flow_id"]
+    ]
+
+
 @patch("homeassistant.auth.MAX_LOGIN_FLOWS", 2)
 async def test_login_flow_limit_keeps_mfa_flows(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
