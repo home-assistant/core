@@ -2,12 +2,13 @@
 
 from datetime import timedelta
 import math
-from unittest.mock import patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.icloud.const import DEFAULT_MAX_INTERVAL, DOMAIN
+from homeassistant.components.icloud.device_tracker import IcloudTrackerEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -59,6 +60,29 @@ async def test_location_reported(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_LATITUDE] == 1.0
     assert state.attributes[ATTR_LONGITUDE] == 2.0
+
+
+@pytest.mark.parametrize(
+    ("attribute", "expected"),
+    [
+        pytest.param("latitude", 1.0, id="latitude"),
+        pytest.param("longitude", 2.0, id="longitude"),
+        pytest.param("location_accuracy", 10, id="accuracy"),
+    ],
+)
+def test_tracker_reads_the_location_once(attribute: str, expected: float) -> None:
+    """Test that a location cleared mid-read cannot break the tracker.
+
+    The poll clears the location from the executor, so it can be gone between
+    checking it and reading a coordinate out of it.
+    """
+    device = MagicMock()
+    type(device).location = PropertyMock(
+        side_effect=[location(is_old=False, age=timedelta(0)), None, None]
+    )
+    tracker = IcloudTrackerEntity(MagicMock(), device)
+
+    assert getattr(tracker, attribute) == expected
 
 
 async def test_stale_location_cleared(
