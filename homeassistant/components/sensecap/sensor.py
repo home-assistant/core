@@ -103,16 +103,6 @@ class SenseCapSensor(LoRaWANEntity[SenseCapDevice], SensorEntity):
     coordinator: SenseCapCoordinator
     entity_description: SenseCapSensorDescription
 
-    def __init__(
-        self, coordinator: SenseCapCoordinator, description: SenseCapSensorDescription
-    ) -> None:
-        """Bind one measurement to its model."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        descriptor = self.device.descriptor
-        identity = f"{descriptor.network_id}:{descriptor.dev_eui}"
-        self._attr_unique_id = f"{identity}:{description.key}"
-
     @property
     @override
     def device_info(self) -> DeviceInfo:
