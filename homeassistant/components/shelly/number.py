@@ -51,6 +51,7 @@ from .utils import (
     get_device_entry_gen,
     get_virtual_component_ids,
     get_virtual_component_unit,
+    is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
 
@@ -146,16 +147,25 @@ class RpcLedStripNumber(RpcNumber):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        # Only reported for effects that use the option
-        return super().available and self.entity_description.sub_key in self.status
+        if TYPE_CHECKING:
+            assert self.entity_description.sub_key is not None
 
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            self.entity_description.sub_key,
+        )
+
+    @rpc_call
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        await self.call_rpc(
-            "LedStrip.Set",
-            {"id": self._id, self.entity_description.sub_key: round(value)},
-        )
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id, {self.entity_description.sub_key: round(value)})
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -358,7 +368,7 @@ RPC_NUMBERS: Final = {
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        method="call_rpc",
+        method="ledstrip_set",
         supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),

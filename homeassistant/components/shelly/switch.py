@@ -49,6 +49,7 @@ from .utils import (
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
+    is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
 
@@ -191,8 +192,14 @@ class RpcLedStripSwitch(RpcSwitch):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        # Only reported for effects that use the option
-        return super().available and self.entity_description.sub_key in self.status
+        if TYPE_CHECKING:
+            assert self.entity_description.sub_key is not None
+
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            self.entity_description.sub_key,
+        )
 
 
 RPC_SWITCHES = {
@@ -439,12 +446,9 @@ RPC_SWITCHES = {
         sub_key="reverse",
         translation_key="effect_reverse",
         is_on=lambda status: bool(status["reverse"]),
-        method_on="call_rpc",
-        method_off="call_rpc",
-        method_params_fn=lambda id, value: (
-            "LedStrip.Set",
-            {"id": id, "reverse": value},
-        ),
+        method_on="ledstrip_set",
+        method_off="ledstrip_set",
+        method_params_fn=lambda id, value: (id, {"reverse": value}),
         supported=lambda _: True,
         entity_class=RpcLedStripSwitch,
     ),
