@@ -891,3 +891,58 @@ async def test_reauth_two_factor_auth(
     assert config_entry.data[RenaultConfigurationKeys.PASSWORD] == "new-password"
     assert config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
     assert config_entry.data[RenaultConfigurationKeys.DEVICE_IDS] == MOCK_DEVICE_IDS
+
+
+@pytest.mark.usefixtures("mock_get_api_accounts", "mock_two_factor_auth")
+async def test_reconfigure_two_factor_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    mock_pending_login: AsyncMock,
+) -> None:
+    """Test reconfigure with two-factor authentication restores the device ids first."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            RenaultConfigurationKeys.DEVICE_IDS: {
+                "gmid": "old-gmid",
+                "ucid": "old-ucid",
+            },
+        },
+    )
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    device_ids: list[dict[str, str]] = []
+
+    def _record_device_ids(
+        session: RenaultSession, login_id: str, password: str
+    ) -> None:
+        device_ids.append(session.device_ids)
+        _mock_pending_login(session, login_id, password)
+
+    mock_pending_login.side_effect = _record_device_ids
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            RenaultConfigurationKeys.LOCALE: "fr_FR",
+            RenaultConfigurationKeys.USERNAME: "email2@test.com",
+            RenaultConfigurationKeys.PASSWORD: "test2",
+        },
+    )
+
+    assert device_ids == [{"gmid": "old-gmid", "ucid": "old-ucid"}]
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "two_factor_code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[RenaultConfigurationKeys.USERNAME] == "email2@test.com"
+    assert config_entry.data[RenaultConfigurationKeys.PASSWORD] == "test2"
+    assert config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert config_entry.data[RenaultConfigurationKeys.DEVICE_IDS] == MOCK_DEVICE_IDS
+    assert len(mock_setup_entry.mock_calls) == 1

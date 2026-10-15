@@ -55,7 +55,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Renault config flow."""
         self.renault_config: dict[str, Any] = {}
         self._two_factor_emails: dict[str, str] = {}
-        self._two_factor_email = ""
+        self._two_factor_email: str = ""
 
     @override
     async def async_step_user(
