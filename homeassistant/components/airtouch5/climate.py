@@ -199,7 +199,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = AC_MODE_TO_HVAC_MODE[status.ac_mode]
-        self._attr_fan_mode = AC_FAN_SPEED_TO_FAN_SPEED[status.ac_fan_speed]
+        self._attr_fan_mode = AC_FAN_SPEED_TO_FAN_SPEED.get(status.ac_fan_speed)
         self.async_write_ha_state()
 
     @override
