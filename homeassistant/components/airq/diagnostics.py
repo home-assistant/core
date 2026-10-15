@@ -22,7 +22,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), REDACT_CONFIG),
         "device_info": async_redact_data(
-            dict(coordinator.device_info), REDACT_DEVICE_INFO
+            coordinator.device_info.as_dict(), REDACT_DEVICE_INFO
         ),
         "coordinator_data": async_redact_data(
             coordinator.data, REDACT_COORDINATOR_DATA
