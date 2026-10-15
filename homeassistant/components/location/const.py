@@ -1,4 +1,4 @@
-"""Constants for location based discovery."""
+"""Constants for location based integration matching."""
 
 DOMAIN = "location"
 

@@ -1,23 +1,20 @@
-"""Tests for location based discovery."""
+"""Tests for location based integration matching."""
 
 from collections.abc import Generator
+import json
+from pathlib import Path
 from typing import Any
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.location.const import DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_LOCATION_DISCOVERY,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.components.location.region import available_regions, match_regions
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import locations as generated_locations
-from homeassistant.helpers.service_info.location import LocationServiceInfo
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 AMSTERDAM = (52.3731, 4.8922)
 ENSCHEDE = (52.2215, 6.8937)
@@ -37,103 +34,119 @@ def mock_locations(locations: dict[str, list[str]]) -> Generator[None]:
         yield
 
 
-class MockLocationFlow(ConfigFlow):
-    """Config flow handling location discovery."""
-
-    async def async_step_location_discovery(
-        self, discovery_info: LocationServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle location discovery."""
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm the discovery."""
-        return self.async_show_form(step_id="confirm")
+async def _get_integrations(client: MockHAClientWebSocket) -> dict[str, Any]:
+    """Return the integrations serving the home location."""
+    await client.send_json_auto_id({"type": "location/integrations"})
+    response = await client.receive_json()
+    assert response["success"]
+    return response["result"]
 
 
 @pytest.mark.parametrize(
-    ("latitude", "longitude", "domains"),
+    ("latitude", "longitude", "integrations"),
     [
-        pytest.param(*AMSTERDAM, ["test"], id="inside_region"),
-        pytest.param(*ANTWERP, [], id="outside_region"),
-        pytest.param(0, 0, [], id="core_config_default_location"),
-        pytest.param(52.3731339, 4.8903147, [], id="onboarding_default_location"),
+        pytest.param(*AMSTERDAM, {"test": ["NL"]}, id="inside_region"),
+        pytest.param(*ANTWERP, {}, id="outside_region"),
+        pytest.param(0, 0, {}, id="core_config_default_location"),
+        pytest.param(52.3731339, 4.8903147, {}, id="onboarding_default_location"),
     ],
 )
-async def test_discovery_at_start(
-    hass: HomeAssistant, latitude: float, longitude: float, domains: list[str]
+async def test_integrations(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    latitude: float,
+    longitude: float,
+    integrations: dict[str, list[str]],
 ) -> None:
-    """Test integrations serving the home location are discovered."""
+    """Test getting the integrations serving the home location."""
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    with patch(
-        "homeassistant.components.location.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
 
-    assert mock_create_flow.mock_calls == [
-        call(
-            hass,
-            domain,
-            {"source": SOURCE_LOCATION_DISCOVERY},
-            LocationServiceInfo(latitude=latitude, longitude=longitude, regions=["NL"]),
+    assert await _get_integrations(client) == integrations
+
+
+@pytest.mark.parametrize("locations", [{"NL": ["test"], "RANDSTAD": ["other", "test"]}])
+async def test_overlapping_regions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, tmp_path: Path
+) -> None:
+    """Test integrations list every region containing the home location."""
+    randstad = tmp_path / "RANDSTAD.geojson"
+    randstad.write_text(
+        json.dumps(
+            {
+                "type": "Polygon",
+                "coordinates": [
+                    [[4, 51.8], [5.2, 51.8], [5.2, 52.5], [4, 52.5], [4, 51.8]]
+                ],
+            }
         )
-        for domain in domains
-    ]
+    )
+    hass.config.latitude, hass.config.longitude = AMSTERDAM
+    with patch(
+        "homeassistant.components.location.available_regions",
+        return_value={**available_regions(), "RANDSTAD": randstad},
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    assert await _get_integrations(client) == {
+        "other": ["RANDSTAD"],
+        "test": ["NL", "RANDSTAD"],
+    }
 
 
 @pytest.mark.parametrize("locations", [{"NL": ["test"], "XX": ["test", "other"]}])
 async def test_unknown_region(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test regions without a region file are ignored."""
     hass.config.latitude, hass.config.longitude = AMSTERDAM
-    with patch(
-        "homeassistant.components.location.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
 
     assert "Integrations test, other use unknown region XX" in caplog.text
-    assert mock_create_flow.mock_calls == [
-        call(
-            hass,
-            "test",
-            {"source": SOURCE_LOCATION_DISCOVERY},
-            LocationServiceInfo(
-                latitude=AMSTERDAM[0], longitude=AMSTERDAM[1], regions=["NL"]
-            ),
-        )
-    ]
+    assert await _get_integrations(client) == {"test": ["NL"]}
 
 
-async def test_home_location_updated(hass: HomeAssistant) -> None:
-    """Test discovery follows the home location."""
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.config_flow", None)
+async def test_home_location_updated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the integrations follow the home location."""
     hass.config.latitude, hass.config.longitude = AMSTERDAM
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
 
-    with mock_config_flow("test", MockLocationFlow):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        [amsterdam_flow] = hass.config_entries.flow.async_progress_by_handler("test")
-
-        # Unrelated updates and updates keeping the location are ignored
-        await hass.config.async_update(location_name="Somewhere")
-        await hass.config.async_update(latitude=AMSTERDAM[0])
-        await hass.async_block_till_done()
-        assert hass.config_entries.flow.async_progress_by_handler("test") == [
-            amsterdam_flow
-        ]
-
-        await hass.config.async_update(latitude=ENSCHEDE[0], longitude=ENSCHEDE[1])
-        await hass.async_block_till_done()
-        [enschede_flow] = hass.config_entries.flow.async_progress_by_handler("test")
-        assert enschede_flow["flow_id"] != amsterdam_flow["flow_id"]
+    with patch(
+        "homeassistant.components.location.match_regions", wraps=match_regions
+    ) as mock_match_regions:
+        assert await _get_integrations(client) == {"test": ["NL"]}
+        assert await _get_integrations(client) == {"test": ["NL"]}
+        # The regions are only matched again when the home location changes
+        assert mock_match_regions.call_count == 1
 
         await hass.config.async_update(latitude=ANTWERP[0], longitude=ANTWERP[1])
-        await hass.async_block_till_done()
-        assert hass.config_entries.flow.async_progress_by_handler("test") == []
+        assert await _get_integrations(client) == {}
+
+        await hass.config.async_update(latitude=ENSCHEDE[0], longitude=ENSCHEDE[1])
+        assert await _get_integrations(client) == {"test": ["NL"]}
+        assert mock_match_regions.call_count == 3
+
+
+async def test_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test only admins can get the integrations."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json_auto_id({"type": "location/integrations"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"

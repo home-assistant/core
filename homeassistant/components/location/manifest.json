@@ -1,7 +1,8 @@
 {
   "domain": "location",
-  "name": "Location based discovery",
+  "name": "Location",
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/location",
   "integration_type": "system",
   "quality_scale": "internal"

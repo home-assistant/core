@@ -1,24 +1,23 @@
-"""Location based discovery.
+"""Location based integration matching.
 
-Starts discovery flows for integrations that serve the region of the home
-location. Regions are stored as GeoJSON files in the regions directory and
-integrations reference them by id with the locations key in their manifest.
+Finds the integrations that serve the region of the home location. Regions are
+stored as GeoJSON files in the regions directory and integrations reference
+them by id with the locations key in their manifest.
 """
 
 from collections import defaultdict
-from collections.abc import Mapping
 import logging
 from pathlib import Path
 from typing import Any
 
-from homeassistant import config_entries
-from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery_flow
-from homeassistant.helpers.service_info.location import LocationServiceInfo
-from homeassistant.helpers.start import async_at_started
+import probatio
+
+from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_locations
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DEFAULT_LOCATIONS, DOMAIN
 from .region import available_regions, match_regions
@@ -27,9 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+DATA_MATCHER: HassKey[LocationMatcher] = HassKey(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up location based discovery."""
+    """Set up location based integration matching."""
     region_domains = await async_get_locations(hass)
     known_regions = await hass.async_add_executor_job(available_regions)
     for region_id in sorted(region_domains.keys() - known_regions.keys()):
@@ -38,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ", ".join(region_domains[region_id]),
             region_id,
         )
-    discovery = LocationDiscovery(
+    hass.data[DATA_MATCHER] = LocationMatcher(
         hass,
         {
             region_id: domains
@@ -51,27 +52,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if region_id in region_domains
         },
     )
-
-    async def _async_discover(hass: HomeAssistant) -> None:
-        await discovery.async_discover()
-
-    async_at_started(hass, _async_discover)
-    hass.bus.async_listen(
-        EVENT_CORE_CONFIG_UPDATE,
-        discovery.async_core_config_updated,
-        event_filter=_location_updated,
-    )
+    websocket_api.async_register_command(hass, websocket_integrations)
     return True
 
 
-@callback
-def _location_updated(event_data: Mapping[str, Any]) -> bool:
-    """Return if the core config update changed the home location."""
-    return "latitude" in event_data or "longitude" in event_data
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): "location/integrations"})
+@websocket_api.async_response
+async def websocket_integrations(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the integrations serving the home location."""
+    connection.send_result(
+        msg["id"], await hass.data[DATA_MATCHER].async_get_integrations()
+    )
 
 
-class LocationDiscovery:
-    """Discover integrations serving the regions containing the home location."""
+class LocationMatcher:
+    """Match the home location against the regions served by integrations."""
 
     def __init__(
         self,
@@ -79,52 +79,31 @@ class LocationDiscovery:
         region_domains: dict[str, list[str]],
         region_paths: dict[str, Path],
     ) -> None:
-        """Initialize location discovery."""
+        """Initialize the location matcher."""
         self.hass = hass
         self._region_domains = region_domains
         self._region_paths = region_paths
-        self._location: tuple[float, float] | None = None
+        self._matched: tuple[tuple[float, float], set[str]] | None = None
 
-    async def async_core_config_updated(self, event: Event) -> None:
-        """Handle the home location being updated."""
-        await self.async_discover()
+    async def async_get_integrations(self) -> dict[str, list[str]]:
+        """Return the integrations serving the home location.
 
-    async def async_discover(self) -> None:
-        """Start discovery flows for the current home location."""
-        latitude = self.hass.config.latitude
-        longitude = self.hass.config.longitude
-        if (latitude, longitude) == self._location:
-            return
-        self._location = (latitude, longitude)
-        self._async_abort_stale_flows()
+        Maps each domain to the regions it serves that contain the home location.
+        """
+        location = (self.hass.config.latitude, self.hass.config.longitude)
+        if location in DEFAULT_LOCATIONS:
+            return {}
 
-        if (latitude, longitude) in DEFAULT_LOCATIONS:
-            return
-
-        matched = await self.hass.async_add_executor_job(
-            match_regions, self._region_paths, latitude, longitude
-        )
-        domain_regions: defaultdict[str, list[str]] = defaultdict(list)
-        for region_id in sorted(matched):
-            for domain in self._region_domains[region_id]:
-                domain_regions[domain].append(region_id)
-
-        for domain, regions in domain_regions.items():
-            discovery_flow.async_create_flow(
-                self.hass,
-                domain,
-                {"source": config_entries.SOURCE_LOCATION_DISCOVERY},
-                LocationServiceInfo(
-                    latitude=latitude, longitude=longitude, regions=regions
+        if self._matched is None or self._matched[0] != location:
+            self._matched = (
+                location,
+                await self.hass.async_add_executor_job(
+                    match_regions, self._region_paths, *location
                 ),
             )
 
-    @callback
-    def _async_abort_stale_flows(self) -> None:
-        """Abort flows discovered for a previous home location."""
-        flow_manager = self.hass.config_entries.flow
-        for flow in flow_manager.async_progress_by_init_data_type(
-            LocationServiceInfo,
-            lambda info: (info.latitude, info.longitude) != self._location,
-        ):
-            flow_manager.async_abort(flow["flow_id"])
+        domain_regions: defaultdict[str, list[str]] = defaultdict(list)
+        for region_id in sorted(self._matched[1]):
+            for domain in self._region_domains[region_id]:
+                domain_regions[domain].append(region_id)
+        return dict(sorted(domain_regions.items()))
