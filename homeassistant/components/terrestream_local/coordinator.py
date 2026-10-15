@@ -59,7 +59,8 @@ class TerrestreamCoordinator(DataUpdateCoordinator[Snapshot]):
     async def async_release(self) -> None:
         """Release the lease after stopping polling; offline leases expire."""
         await self.async_shutdown()
-        try:
-            await self.client.command("release")
-        except ClientError:
-            _LOGGER.debug("Sensor unavailable while releasing controller lease")
+        async with self._debounced_refresh.async_lock():
+            try:
+                await self.client.command("release")
+            except ClientError:
+                _LOGGER.debug("Sensor unavailable while releasing controller lease")

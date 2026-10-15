@@ -71,6 +71,26 @@ async def test_pairing_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected}
 
+    with (
+        patch(
+            "homeassistant.components.terrestream_local.config_flow.pair_device",
+            return_value=(CREDENTIALS, AsyncMock()),
+        ),
+        patch(
+            "homeassistant.components.terrestream_local.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "sensor.local", "code": "00123456"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UUID
+    assert result["data"]["credentials"]["fingerprint"] == CREDENTIALS.fingerprint
+
 
 async def test_duplicate(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Do not create two entries for the same authenticated UUID."""

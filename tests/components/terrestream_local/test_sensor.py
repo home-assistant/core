@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from terrestream_local.errors import AuthenticationError, ClientError
@@ -72,14 +73,18 @@ async def test_setup_failure(
 
 
 async def test_measurement_expiry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """An invalid measurement becomes unavailable rather than zero."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_client.measurement_available.return_value = False
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(6)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -150,13 +155,17 @@ async def test_deadline_expires_without_another_poll(
 
 
 async def test_revoked_pairing_during_refresh(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: MagicMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Stop exposing readings when an established credential is revoked."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_client.refresh.side_effect = AuthenticationError("revoked")
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(6)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
     await hass.config_entries.async_unload(config_entry.entry_id)
