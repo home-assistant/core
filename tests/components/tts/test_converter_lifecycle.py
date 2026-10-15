@@ -15,7 +15,7 @@ import pytest
 from homeassistant.components import ffmpeg, tts
 from homeassistant.components.tts import SpeechManager
 from homeassistant.components.tts.entity import TTSAudioResponse
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HassJob, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -1032,13 +1032,13 @@ async def test_failed_exhausted_close_aborts_live_child(
 
     async def observed_wait(tasks, *args, **kwargs):
         nonlocal first_writer_done
-        names = {task.get_name() for task in tasks}
+        names = {task.get_name() for task in tasks if isinstance(task, asyncio.Task)}
         if {"tts_ffmpeg_stdout", "tts_ffmpeg_wait"} <= names:
             if not first_wait_entered.is_set():
                 first_writer_done = captured["tts_ffmpeg_conversion"].done()
             first_wait_entered.set()
         entering_completed_wait = (
-            len(tasks) == 2
+            len(names) == 2
             and "tts_ffmpeg_wait" in names
             and "tts_ffmpeg_conversion" in names
             and asyncio.current_task() is owner
@@ -1202,7 +1202,7 @@ async def test_cancelled_exhausted_writer_aborts_live_child(
             stdout_eof
             and asyncio.current_task() is owner
             and {"tts_ffmpeg_wait", "tts_ffmpeg_conversion"}
-            <= {task.get_name() for task in pending}
+            <= {task.get_name() for task in pending if isinstance(task, asyncio.Task)}
             and empty_stdout.is_set()
         ):
             process_wait_entered.set()
@@ -1987,9 +1987,13 @@ async def test_owner_cancel_during_final_exhausted_writer_wait_is_bounded(
                 and close_entered.is_set()
                 and processes
                 and processes[0].returncode == 0
-                and len(futures) == 1
-                and (writer_task := next(iter(futures))).get_name()
-                == "tts_ffmpeg_conversion"
+                and len(
+                    named := [
+                        task for task in futures if isinstance(task, asyncio.Task)
+                    ]
+                )
+                == 1
+                and (writer_task := named[0]).get_name() == "tts_ffmpeg_conversion"
                 and not writer_task.done()
             ):
                 asyncio.get_running_loop().call_soon(final_wait.set)
@@ -3769,3 +3773,309 @@ async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(  # noq
             await asyncio.wait_for(process.wait(), 5)
         with contextlib.suppress(HomeAssistantError):
             await gen.aclose()
+
+
+@pytest.mark.parametrize(
+    "phase",
+    [
+        "held-writer",
+        "active-drain",
+        "pending-reader",
+        "paused-resume",
+        "terminal-workers",
+        "stderr-pressure",
+    ],
+)
+async def test_shutdown_drains_before_background_cancellation(  # noqa: C901
+    ffmpeg_ready: HomeAssistant, phase: str
+) -> None:
+    """Stage one finishes cooperative pipes before HA cancels background jobs."""
+    paused = asyncio.Event()
+    closing = asyncio.Event()
+    release_source = asyncio.Event()
+    cleanup_waiting = asyncio.Event()
+    discard_entered = asyncio.Event()
+    stdout_eof = asyncio.Event()
+    stderr_eof = asyncio.Event()
+    reader_entered = asyncio.Event()
+    reader_cancelled = asyncio.Event()
+    release_reader = asyncio.Event()
+    old_reader = None
+    overlap = False
+    processes = []
+    tasks = []
+    native_reads = []
+    spawn_os = asyncio.create_subprocess_exec
+    native_wait = asyncio.wait
+    background = ffmpeg_ready.async_create_background_task
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(
+            sys.executable,
+            "-c",
+            "import os,time\nos.write(1,b'PREFIX')\nwhile True:\n os.write(1,b'X'*1024)\n"
+            + (" os.write(2,b'E'*1024)\n" if phase == "stderr-pressure" else ""),
+            limit=1024,
+            **kwargs,
+        )
+        processes.append(process)
+        assert process.stdout is not None
+        transport = process.stdout._transport  # Test-only backpressure observer.
+        pause = transport.pause_reading
+
+        def observed_pause():
+            pause()
+            paused.set()
+
+        transport.pause_reading = observed_pause
+        read = process.stdout.read
+        native_reads.append(read)
+
+        first_discard = True
+        normal_reads = 0
+        stderr_read = process.stderr.read
+
+        async def observed_stderr(n=-1):
+            if not (data := await stderr_read(n)):
+                stderr_eof.set()
+            return data
+
+        process.stderr.read = observed_stderr
+
+        async def observed_read(n=-1):
+            nonlocal first_discard, old_reader, overlap, normal_reads
+            current = asyncio.current_task()
+            if current.get_name() == "tts_ffmpeg_stdout":
+                normal_reads += 1
+            if (
+                phase == "pending-reader"
+                and normal_reads == 2
+                and current.get_name() == "tts_ffmpeg_stdout"
+            ):
+                old_reader = current
+                reader_entered.set()
+                try:
+                    await asyncio.Event().wait()
+                except asyncio.CancelledError:
+                    reader_cancelled.set()
+                    await release_reader.wait()
+                    raise
+            if (
+                old_reader is not None
+                and current is not old_reader
+                and not old_reader.done()
+            ):
+                overlap = True
+            if (
+                first_discard
+                and asyncio.current_task().get_name() == "tts_ffmpeg_stdout_discard"
+            ):
+                first_discard = False
+                discard_entered.set()  # Inside eager worker, before factory returns.
+                if phase == "active-drain":
+                    # Cancellation propagates into production, never suppressed.
+                    await asyncio.sleep(0.05)
+            data = await read(n)
+            if not data:
+                stdout_eof.set()
+            return data
+
+        process.stdout.read = observed_read
+        return process
+
+    def tracked_background(target, name, eager_start=True):
+        task = background(target, name, eager_start=eager_start)
+        tasks.append(task)
+        return task
+
+    async def observed_wait(fs, **kwargs):
+        if asyncio.current_task().get_name() == "tts_ffmpeg_cleanup" and any(
+            task.get_name() == "tts_ffmpeg_conversion" for task in fs
+        ):
+            asyncio.get_running_loop().call_soon(cleanup_waiting.set)
+        return await native_wait(fs, **kwargs)
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"R" * 100
+            await asyncio.Event().wait()
+        finally:
+            closing.set()
+            while not release_source.is_set():
+                with contextlib.suppress(asyncio.CancelledError):
+                    await release_source.wait()
+
+    gen = tts._async_convert_audio(ffmpeg_ready, None, source(), "wav")
+    owner = None
+    stop = None
+    try:
+        with (
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch("homeassistant.components.tts.asyncio.wait", observed_wait),
+            patch.object(
+                ffmpeg_ready, "async_create_background_task", tracked_background
+            ),
+        ):
+            assert (await asyncio.wait_for(anext(gen), 3)).startswith(b"PREFIX")
+            await asyncio.wait_for(paused.wait(), 3)
+            if phase == "pending-reader":
+                owner = asyncio.create_task(anext(gen))
+                await asyncio.wait_for(reader_entered.wait(), 3)
+            elif phase != "paused-resume":
+                owner = asyncio.create_task(gen.aclose())
+                await asyncio.wait_for(closing.wait(), 3)
+                await asyncio.wait_for(cleanup_waiting.wait(), 3)
+                assert not owner.done() and not release_source.is_set()
+            if phase == "terminal-workers":
+                for task in tasks:
+                    if (
+                        task.get_name() in ("tts_ffmpeg_wait", "tts_ffmpeg_stderr")
+                        and not task.done()
+                    ):
+                        task.cancel()
+                await asyncio.sleep(0)
+            if phase == "active-drain":
+                release_source.set()
+                await asyncio.wait_for(discard_entered.wait(), 3)
+                assert not stdout_eof.is_set()
+            stop = asyncio.create_task(ffmpeg_ready.async_stop(force=True))
+            if phase == "pending-reader":
+                await asyncio.wait_for(reader_cancelled.wait(), 3)
+                assert old_reader is not None and not old_reader.done()
+                assert not discard_entered.is_set() and not overlap
+                release_reader.set()
+            if phase == "paused-resume":
+                await asyncio.wait_for(closing.wait(), 3)
+                owner = asyncio.create_task(anext(gen))
+            await _observe(stop, 4)
+            # These observations precede all harness release, read and kill.
+            assert stdout_eof.is_set() and stderr_eof.is_set() and not overlap
+            assert processes[0].returncode == -9
+            if phase in ("paused-resume", "pending-reader"):
+                with pytest.raises((HomeAssistantError, asyncio.CancelledError)):
+                    await _observe(owner, 3)
+            assert next(t for t in tasks if t.get_name() == "tts_ffmpeg_wait").done()
+            if phase == "held-writer":
+                assert not release_source.is_set()
+    finally:
+        release_source.set()
+        release_reader.set()
+        if stop is not None:
+            await _observe(stop, 4)
+        if owner is not None:
+            await asyncio.wait_for(asyncio.gather(owner, return_exceptions=True), 5)
+        await asyncio.gather(*tasks, return_exceptions=True)
+        for process, read in zip(processes, native_reads, strict=True):
+            if process.returncode is None:
+                process.kill()
+            while await asyncio.wait_for(read(65536), 3):
+                pass
+            await asyncio.wait_for(process.wait(), 3)
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("phase", ["gather", "stopping", "stopped"])
+async def test_shutdown_gate_rejects_late_conversion(
+    ffmpeg_ready: HomeAssistant, phase: str
+) -> None:
+    """The existing coordinator closes admission even while HA still reports RUNNING."""
+    coordinator = tts._conversion_coordinator(ffmpeg_ready)
+    assert tts._conversion_coordinator(ffmpeg_ready) is coordinator
+    close_count = 0
+
+    class Source(_FailingExhaustedClose):
+        async def aclose(self):
+            nonlocal close_count
+            close_count += 1
+
+    release = asyncio.Event()
+    entered = asyncio.Event()
+
+    async def hold_shutdown():
+        entered.set()
+        await release.wait()
+
+    ffmpeg_ready.set_state(CoreState.running)
+    ffmpeg_ready.async_add_shutdown_job(HassJob(hold_shutdown))
+    stop = asyncio.create_task(ffmpeg_ready.async_stop(force=True))
+    try:
+        await asyncio.wait_for(entered.wait(), 3)
+        assert coordinator.closing and ffmpeg_ready.state is CoreState.running
+        if phase != "gather":
+            ffmpeg_ready.set_state(
+                CoreState.stopping if phase == "stopping" else CoreState.stopped
+            )
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec"
+        ) as spawn:
+            gen = tts._async_convert_audio(ffmpeg_ready, None, Source(), "wav")
+            with pytest.raises(HomeAssistantError, match="shutting down"):
+                await anext(gen)
+            await gen.aclose()
+            spawn.assert_not_called()
+        assert close_count == 1
+    finally:
+        release.set()
+        await _observe(stop, 3)
+
+
+async def test_shutdown_tracks_inflight_acquisition(
+    ffmpeg_ready: HomeAssistant,
+) -> None:
+    """A process acquired after the snapshot is killed without delivering output."""
+    acquired = asyncio.Event()
+    release = asyncio.Event()
+    closed = asyncio.Event()
+    processes = []
+    spawn_os = asyncio.create_subprocess_exec
+
+    async def spawn(*args, **kwargs):
+        acquired.set()
+        await release.wait()
+        process = await spawn_os(
+            sys.executable, "-c", "import time;time.sleep(30)", **kwargs
+        )
+        processes.append(process)
+        return process
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"R" * 100
+            await asyncio.Event().wait()
+        finally:
+            closed.set()
+
+    # Start the source so its finally has ownership before subprocess acquisition.
+    audio = source()
+    assert await anext(audio) == b"R" * 100
+    gen = tts._async_convert_audio(ffmpeg_ready, None, audio, "wav")
+    owner = None
+    stop = None
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        ):
+            owner = asyncio.create_task(anext(gen))
+            await asyncio.wait_for(acquired.wait(), 3)
+            coordinator = tts._conversion_coordinator(ffmpeg_ready)
+            assert len(coordinator.active) == 1
+            stop = asyncio.create_task(ffmpeg_ready.async_stop(force=True))
+            while not coordinator.closing:
+                await asyncio.sleep(0)
+            release.set()
+            with pytest.raises(asyncio.CancelledError):
+                await _observe(owner, 3)
+            await _observe(stop, 3)
+            assert processes[0].returncode == -9
+            assert closed.is_set() and not coordinator.active
+    finally:
+        release.set()
+        if owner is not None:
+            await asyncio.gather(owner, return_exceptions=True)
+        if stop is not None:
+            await _observe(stop, 3)
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 3)
+        await gen.aclose()
