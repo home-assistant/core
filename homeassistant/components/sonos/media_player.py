@@ -1,6 +1,6 @@
 """Support to interface with Sonos players."""
 
-import datetime
+import datetime as dt
 from functools import partial
 import logging
 import os
@@ -288,7 +288,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     @property
     @override
-    def media_position_updated_at(self) -> datetime.datetime | None:
+    def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
         return self.media.position_updated_at
 
@@ -481,7 +481,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @override
     def media_seek(self, position: float) -> None:
         """Send seek command."""
-        self.coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
+        self.coordinator.soco.seek(str(dt.timedelta(seconds=int(position))))
 
     @soco_error()
     @override
@@ -779,7 +779,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def set_alarm(
         self,
         alarm_id: int,
-        time: datetime.datetime | None = None,
+        time: dt.datetime | None = None,
         volume: float | None = None,
         enabled: bool | None = None,
         include_linked_zones: bool | None = None,
@@ -941,7 +941,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         sonos_data = self.config_entry.runtime_data
         household_id = self.speaker.household_id
 
-        async def async_process_unjoin(now: datetime.datetime) -> None:
+        async def async_process_unjoin(now: dt.datetime) -> None:
             """Process the unjoin with all remove requests."""
             unjoin_data = sonos_data.unjoin_data.pop(household_id)
             _LOGGER.debug(

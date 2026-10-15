@@ -354,6 +354,10 @@ class AuthManager:
         if tasks:
             await asyncio.gather(*tasks)
 
+        # Revoking runs the callbacks, which close connections using the tokens.
+        for refresh_token in list(user.refresh_tokens.values()):
+            self.async_remove_refresh_token(refresh_token)
+
         await self._store.async_remove_user(user)
 
         self.hass.bus.async_fire(EVENT_USER_REMOVED, {"user_id": user.id})
