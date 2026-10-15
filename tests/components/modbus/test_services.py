@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -186,7 +187,7 @@ async def test_service_after_failed_reload_raises(
 async def test_reload_yaml(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    start_config: dict,
+    start_config: ConfigType,
     yaml_file: str,
     expected_hubs: set[str],
     expected_entities: list[str],
