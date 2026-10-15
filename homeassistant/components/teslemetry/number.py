@@ -348,6 +348,7 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
+        self.coordinator.async_set_command_value(self.key, value)
         self.async_write_ha_state()
 
 

@@ -9,6 +9,10 @@ UNIQUE_ID = "abc-123"
 VIN = "LRW3F7EK4NC700000"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
+# The vehicle in products.json, and the Bluetooth address a subentry pairs it at.
+VIN = "LRW3F7EK4NC700000"
+ADDRESS = "AA:BB:CC:DD:EE:FF"
+
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)

@@ -1,6 +1,6 @@
 """Tests for sensor platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
@@ -66,7 +66,7 @@ async def test_cutting_blade_usage_time_sensor(
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_next_start_sensor(
     hass: HomeAssistant,

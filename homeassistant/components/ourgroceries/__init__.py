@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.TODO]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: OurGroceriesConfigEntry
-) -> bool:
+) -> None:
     """Set up OurGroceries from a config entry."""
     data = entry.data
     og = OurGroceries(data[CONF_USERNAME], data[CONF_PASSWORD])
@@ -36,11 +36,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OurGroceriesConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

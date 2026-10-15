@@ -1,6 +1,6 @@
 """Patch time related functions."""
 
-import datetime
+import datetime as dt
 import inspect
 import time
 import types
@@ -85,7 +85,7 @@ def ha_should_use_real_time() -> bool:
     return False
 
 
-def ha_get_current_time() -> datetime.datetime:
+def ha_get_current_time() -> dt.datetime:
     """Return the frozen time as a naive UTC datetime.
 
     Modified to fall back to the real time when freeze_time stop() in another
@@ -96,10 +96,10 @@ def ha_get_current_time() -> datetime.datetime:
         return freezegun.api.freeze_factories[-1]()
     except IndexError:
         # Means stop() has already been called, so we can now return the real time
-        return freezegun.api.real_datetime.now(datetime.UTC).replace(tzinfo=None)
+        return freezegun.api.real_datetime.now(dt.UTC).replace(tzinfo=None)
 
 
-def _ha_tz_offset() -> datetime.timedelta:
+def _ha_tz_offset() -> dt.timedelta:
     """Return the frozen tz offset.
 
     Modified to fall back to no offset when freeze_time stop() in another
@@ -110,7 +110,7 @@ def _ha_tz_offset() -> datetime.timedelta:
         return freezegun.api.tz_offsets[-1]
     except IndexError:
         # Means stop() has already been called, and real time has no offset
-        return datetime.timedelta(0)
+        return dt.timedelta(0)
 
 
 class HAFakeDateMeta(freezegun.api.FakeDateMeta):
@@ -125,7 +125,7 @@ class HAFakeDate(freezegun.api.FakeDate, metaclass=HAFakeDateMeta):  # type: ign
     """Modified to improve class str and tolerate a concurrent unfreeze."""
 
     @classmethod
-    def _tz_offset(cls) -> datetime.timedelta:
+    def _tz_offset(cls) -> dt.timedelta:
         """Return the frozen tz offset."""
         return _ha_tz_offset()
 
@@ -146,7 +146,7 @@ class HAFakeDatetime(freezegun.api.FakeDatetime, metaclass=HAFakeDatetimeMeta): 
     """
 
     @classmethod
-    def _tz_offset(cls) -> datetime.timedelta:
+    def _tz_offset(cls) -> dt.timedelta:
         """Return the frozen tz offset."""
         return _ha_tz_offset()
 
@@ -167,14 +167,14 @@ class HAFakeDatetime(freezegun.api.FakeDatetime, metaclass=HAFakeDatetimeMeta): 
 
 
 # Needed by Mashumaro
-datetime.HAFakeDatetime = HAFakeDatetime
+dt.HAFakeDatetime = HAFakeDatetime
 
 # Do not add any Home Assistant import here
 
 
-def _utcnow() -> datetime.datetime:
+def _utcnow() -> dt.datetime:
     """Make utcnow patchable by freezegun."""
-    return datetime.datetime.now(datetime.UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    return dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
 
 
 def _monotonic() -> float:

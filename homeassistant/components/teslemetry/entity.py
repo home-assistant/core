@@ -166,6 +166,7 @@ class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
     api: EnergySite | EnergySiteRouter
+    coordinator: TeslemetryEnergySiteInfoCoordinator
 
     def __init__(
         self,
