@@ -17,7 +17,7 @@ from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_CONFIG
+from .const import MOCK_CONFIG, MONITOR_ID
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +32,7 @@ def mock_flow_sense_fixture() -> Iterator[MagicMock]:
         mock_sense.return_value.validate_mfa = AsyncMock(return_value=True)
         mock_sense.return_value.sense_access_token = "ABC"
         mock_sense.return_value.sense_user_id = "123"
-        mock_sense.return_value.sense_monitor_id = "456"
+        mock_sense.return_value.sense_monitor_id = MONITOR_ID
         mock_sense.return_value.device_id = "789"
         mock_sense.return_value.refresh_token = "XYZ"
         yield mock_sense
