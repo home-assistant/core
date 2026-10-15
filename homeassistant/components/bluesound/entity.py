@@ -60,4 +60,4 @@ class BluesoundEntity(CoordinatorEntity[BluesoundCoordinator]):
             if leader_devices := dr.async_get(coordinator.hass).async_get_devices(
                 identifiers={(DOMAIN, format_mac(sync_status.mac))}
             ):
-                self._attr_device_info["via_device_id"] = leader_devices[0].id
+                self._attr_device_info.via_device_id = leader_devices[0].id

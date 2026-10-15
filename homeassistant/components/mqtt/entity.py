@@ -1553,7 +1553,18 @@ class MqttEntity(
         object_id: str
         default_entity_id: str | None
         if default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID):
-            _, _, object_id = default_entity_id.partition(".")
+            domain, _, object_id = default_entity_id.partition(".")
+            entity_domain = self._entity_id_format.split(".")[0]
+            if object_id and domain != entity_domain:
+                _LOGGER.warning(
+                    "The default_entity_id %s of a %s entity has the %s domain; "
+                    "using %s.%s as the default instead",
+                    default_entity_id,
+                    entity_domain,
+                    domain,
+                    entity_domain,
+                    object_id,
+                )
             self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, None, self.hass
             )

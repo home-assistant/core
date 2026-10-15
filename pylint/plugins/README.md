@@ -105,6 +105,7 @@ Every check has a code following the
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
+| `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -147,6 +148,7 @@ Every check has a code following the
 | `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
+| `W7445` | [`home-assistant-test-flow-start-helper`](#w7445-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 | `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
@@ -1060,6 +1062,39 @@ fixtures themselves are defined) and `tests.helpers` (which exercises the
 registry helpers directly) are exempt.
 
 
+## `home_assistant_tests_user_flow_no_data` checker
+
+Detects tests that pass a `data` argument when initializing a user config
+flow. In production a user flow is always started without data — only
+discovery flows (zeroconf, dhcp, ssdp, ...) receive `data`. Passing `data`
+to a user flow init therefore exercises a code path that cannot happen in
+reality.
+
+### `R7405`: `home-assistant-tests-user-flow-no-data`
+
+A `hass.config_entries.flow.async_init(...)` or
+`hass.config_entries.subentries.async_init(...)` call passes a `data`
+keyword argument while its `context` sets the source to the user source.
+The user source is recognized as `SOURCE_USER`, `config_entries.SOURCE_USER`,
+or the literal `"user"`, and the `context` may be a dict literal or a
+`ConfigFlowContext(source=...)` call:
+
+```python
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": SOURCE_USER},
+    data={CONF_HOST: "127.0.0.1"},  # <-- flagged
+)
+```
+
+Only the config-entry flow managers (`config_entries.flow` and
+`config_entries.subentries`) are checked, so unrelated `async_init` methods
+are not flagged. Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`),
+dynamic source values (a variable rather than a known user source), and user
+flows without
+`data` are not flagged. The checker is scoped to test modules.
+
+
 ## `home_assistant_test_determinism` checker
 
 `if` and `match` statements inside test functions create non-deterministic
@@ -1323,3 +1358,29 @@ Check the `step_id` parameter for all calls to `async_show_form`,
 `async_external_step`, `async_show_progress` and `async_show_menu`.
 The `step_id` parameter should be same as the method it is in.
 For example: `step_id="user"` should be used in `async_step_user`
+
+
+## `home_assistant_flow_start_helpers` checker
+
+Enforces the use of `MockConfigEntry` helpers to start reauth and
+reconfigure flows in integration tests.
+
+### `W7445`: `home-assistant-test-flow-start-helper`
+
+Tests must not start a reauth or reconfigure flow by calling
+`hass.config_entries.flow.async_init` with a hand-built `context`
+(`"source": SOURCE_REAUTH` / `SOURCE_RECONFIGURE`). Use
+`entry.start_reauth_flow(hass)` or `entry.start_reconfigure_flow(hass)`
+instead; they build the same context Home Assistant uses at runtime.
+
+```python
+# Bad
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+    data=entry.data,
+)
+
+# Good
+result = await entry.start_reauth_flow(hass)
+```

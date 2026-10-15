@@ -491,6 +491,30 @@ MOCK_CAMERA_STATUS = {
     }
 }
 
+MOCK_LEDSTRIP_CONFIG = {
+    "ledstrip:0": {
+        "id": 0,
+        "name": None,
+        "initial_state": 2,
+        "num_leds": 100,
+        "protocol": "ws2812b",
+        "color_order": "rgb",
+        "ddp_port": 4048,
+        "effects": ["solid", "blink", "fade", "rainbow"],
+    }
+}
+
+MOCK_LEDSTRIP_STATUS = {
+    "ledstrip:0": {
+        "id": 0,
+        "on": False,
+        "brightness": 36,
+        "effect": "rainbow",
+        "speed": 33,
+        "reverse": True,
+    }
+}
+
 MOCK_SCRIPTS = [
     """"
 function eventHandler(event, userdata) {
@@ -867,5 +891,18 @@ def mock_camera_rpc_device(
     """Set up mock RPC device with camera component data."""
     monkeypatch.setattr(mock_rpc_device, "config", MOCK_CAMERA_CONFIG)
     monkeypatch.setattr(mock_rpc_device, "status", MOCK_CAMERA_STATUS)
+
+    return mock_rpc_device
+
+
+@pytest.fixture
+def mock_ledstrip_rpc_device(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
+) -> Mock:
+    """Set up mock RPC device with LED strip component data."""
+    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG)
+    monkeypatch.setattr(
+        mock_rpc_device, "status", MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
+    )
 
     return mock_rpc_device
