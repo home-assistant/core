@@ -711,6 +711,10 @@ async def _async_convert_audio_owned(  # noqa: C901
             await close_before_spawn(primary)
         raise
 
+    if handle.requested.done() and process.returncode is None:
+        with contextlib.suppress(ProcessLookupError):
+            process.kill()
+
     writer_task: asyncio.Task | None = None
     read_task: asyncio.Task | None = None
     source_failure_task: asyncio.Task | None = None
@@ -757,51 +761,32 @@ async def _async_convert_audio_owned(  # noqa: C901
             critical.add(
                 owned(transfer_then_discard(read_task), "tts_ffmpeg_stdout_transfer")
             )
-            assert process.stderr is not None and stderr_task is not None
-            if stderr_task.done() and (
-                stderr_task.cancelled() or stderr_task.exception()
-            ):
-                owned_stderr = owned(
-                    _async_ffmpeg_stderr(process.stderr, diagnostic),
-                    "tts_ffmpeg_stderr_replacement",
-                )
-            else:
-                owned_stderr = stderr_task
-            critical.add(owned_stderr)
-            assert wait_task is not None
-            effective_wait = wait_task
-            if wait_task.done() and process.returncode is None:
-                effective_wait = owned(process.wait(), "tts_ffmpeg_wait_replacement")
-            critical.add(effective_wait)
+            assert stderr_task is not None and wait_task is not None
+            critical.update((stderr_task, wait_task))
         resources.update(critical)
         if writer_task is not None:
             writer_task.add_done_callback(_ffmpeg_late_result)
             resources.add(writer_task)
 
-        def finished(task: asyncio.Task | None = None) -> None:
-            if (
-                not complete
-                and task is wait_task
-                and process.returncode is None
-                and hass.loop.time() < deadline
-            ):
-                replacement = owned(process.wait(), "tts_ffmpeg_wait_replacement")
-                critical.add(replacement)
-                resources.add(replacement)
-                replacement.add_done_callback(finished)
-            if (
-                not complete
-                and task is not None
-                and task is stderr_task
-                and (task.cancelled() or task.exception() is not None)
-                and task in critical
-                and hass.loop.time() < deadline
-            ):
-                assert process.stderr is not None
-                replacement = owned(
-                    _async_ffmpeg_stderr(process.stderr, diagnostic),
-                    "tts_ffmpeg_stderr_replacement",
-                )
+        def finished(_: asyncio.Task | None = None) -> None:
+            # Refresh every terminal original before checking the effective set:
+            # another original's replacement callback may still be queued.
+            for task in tuple(critical):
+                if not task.done() or hass.loop.time() >= deadline:
+                    continue
+                if task is wait_task and process.returncode is None:
+                    replacement = owned(process.wait(), "tts_ffmpeg_wait_replacement")
+                elif task is stderr_task and (
+                    task.cancelled() or task.exception() is not None
+                ):
+                    assert process.stderr is not None
+                    replacement = owned(
+                        _async_ffmpeg_stderr(process.stderr, diagnostic),
+                        "tts_ffmpeg_stderr_replacement",
+                    )
+                else:
+                    continue
+                critical.remove(task)
                 critical.add(replacement)
                 resources.add(replacement)
                 replacement.add_done_callback(finished)
@@ -867,6 +852,8 @@ async def _async_convert_audio_owned(  # noqa: C901
             assert process.stdin
             primary: BaseException | None = None
             try:
+                if handle.requested.done():
+                    return
                 while True:
                     try:
                         chunk = await anext(audio_input)
