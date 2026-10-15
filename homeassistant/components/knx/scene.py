@@ -71,6 +71,10 @@ class _KnxScene(BaseScene, _KnxEntityBase):
         """Activate the scene."""
         await self._device.run()
 
+    async def async_save_scene(self) -> None:
+        """Tell KNX actuators to store their current state in this scene."""
+        await self._device.learn()
+
     @override
     def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
