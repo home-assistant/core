@@ -12,8 +12,7 @@ from typing import Any, Final, Self, cast, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    ATTR_UNIT_OF_MEASUREMENT,
+from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
     UnitOfTemperature,
@@ -30,7 +29,7 @@ from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.variance import ignore_variance
 
-from .const import (  # noqa: F401
+from .const import (
     AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_OPTIONS,
@@ -66,14 +65,24 @@ UPTIME_DEFAULT_TOLERANCE_SECONDS: Final = 60
 UPTIME_MIN_TOLERANCE_SECONDS: Final = 5
 
 __all__ = [
+    "AMBIGUOUS_UNITS",
     "ATTR_LAST_RESET",
     "ATTR_OPTIONS",
     "ATTR_STATE_CLASS",
     "CONF_STATE_CLASS",
+    "DEVICE_CLASSES",
+    "DEVICE_CLASSES_SCHEMA",
     "DEVICE_CLASS_STATE_CLASSES",
+    "DEVICE_CLASS_UNITS",
     "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "NON_NUMERIC_DEVICE_CLASSES",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "STATE_CLASSES",
+    "STATE_CLASSES_SCHEMA",
+    "STATE_CLASS_UNITS",
+    "UNIT_CONVERTERS",
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",
@@ -82,6 +91,8 @@ __all__ = [
     "SensorEntityStateAttribute",
     "SensorExtraStoredData",
     "SensorStateClass",
+    "async_rounded_state",
+    "async_update_suggested_units",
 ]
 
 # mypy: disallow-any-generics
