@@ -34,6 +34,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username: str = user_input[CONF_USERNAME]
             password: str = user_input[CONF_PASSWORD]
+            self._async_abort_entries_match({CONF_USERNAME: username})
             connector = create_connector(self.hass, username, password)
             try:
                 await connector.initialize()
@@ -48,10 +49,6 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not connector.systems:
                     errors["base"] = "no_systems"
                 else:
-                    await self.async_set_unique_id(username.lower())
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_PASSWORD: password}
-                    )
                     return self.async_create_entry(
                         title=username,
                         data={

@@ -33,7 +33,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == USER_INPUT
-    assert result["result"].unique_id == USERNAME
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.parametrize(
@@ -84,17 +84,16 @@ async def test_flow_no_systems(hass: HomeAssistant, mock_connector: AsyncMock) -
 
 
 @pytest.mark.usefixtures("mock_connector", "mock_setup_entry")
-async def test_flow_already_configured_updates_password(
+async def test_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test re-adding an account aborts and updates the stored password."""
+    """Test re-adding an account aborts when the email is already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USERNAME.upper(), CONF_PASSWORD: "new"}
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_PASSWORD] == "new"
