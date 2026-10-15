@@ -26,7 +26,6 @@ async def test_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    # assert result["device_schedule"] == schedule
     assert result == snapshot(
         exclude=props("created_at", "modified_at", "entry_id", "time")
     )
