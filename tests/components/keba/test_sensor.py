@@ -65,12 +65,12 @@ async def test_session_energy_currently_from_report_100(
 ) -> None:
     """Test report 100 overwrites report 3's present-session energy.
 
-    Both reports carry "E pres"; the library merges them into one dict and
-    report 100 is requested last.
+    Both reports carry the same present-session energy key; the library
+    merges them into one dict and report 100 is requested last.
     """
     station = setup_keba
-    station.push("3", **{"E pres": 10000})
-    station.push("100", **{"E pres": 20000})
+    station.push("3", **{"E pres": 10000})  # codespell:ignore pres
+    station.push("100", **{"E pres": 20000})  # codespell:ignore pres
 
     await poll_clock.tick()
     await hass.async_block_till_done()

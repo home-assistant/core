@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import FakeKebaStation
 
 # Sent by the station on its own while charging: no "ID", no trailing newline.
-PUSH_DATAGRAM = b'{"E pres": 12965}'
+PUSH_DATAGRAM = b'{"E pres": 12965}'  # codespell:ignore pres
 
 
 @pytest.mark.parametrize("corpus", ["p30_plugged.json", "p30_charging.json"])
