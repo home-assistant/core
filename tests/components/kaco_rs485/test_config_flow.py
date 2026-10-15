@@ -28,24 +28,26 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def _scan(hass: HomeAssistant) -> ConfigFlowResult:
-    """Start the flow, submit the port, and return the step after the scan.
+async def _submit_port(
+    hass: HomeAssistant, flow_id: str, port: str = MOCK_PORT
+) -> ConfigFlowResult:
+    """Submit the port, let the scan finish, and return the step after it."""
+    result = await hass.config_entries.flow.async_configure(flow_id, {CONF_PORT: port})
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-    A fast scan can finish before the step returns, so progress is not certain.
-    """
+    await hass.async_block_till_done()
+    return await hass.config_entries.flow.async_configure(flow_id)
+
+
+async def _scan(hass: HomeAssistant, port: str = MOCK_PORT) -> ConfigFlowResult:
+    """Start the flow, submit the port, and return the step after the scan."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PORT: MOCK_PORT}
-    )
-    if result["type"] is FlowResultType.SHOW_PROGRESS:
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    return result
+    return await _submit_port(hass, result["flow_id"], port)
 
 
 @pytest.mark.usefixtures("mock_bus")
@@ -125,19 +127,19 @@ async def test_a_port_that_will_not_open_can_be_corrected(
     """Test the port is opened before scanning, so a bad one can be retried."""
     mock_bus.open_error = BusError("could not open /dev/ttyUSB0")
 
-    result = await _scan(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: MOCK_PORT}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_bus.open_error = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PORT: MOCK_PORT}
-    )
-    if result["type"] is FlowResultType.SHOW_PROGRESS:
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await _submit_port(hass, result["flow_id"])
 
     assert result["step_id"] == "confirm"
 
@@ -248,15 +250,7 @@ async def test_a_proxied_port_is_left_alone(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.kaco_rs485.config_flow.usb.get_serial_by_id"
     ) as resolve:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PORT: proxy}
-        )
-        if result["type"] is FlowResultType.SHOW_PROGRESS:
-            await hass.async_block_till_done()
-            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await _scan(hass, proxy)
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     resolve.assert_not_called()

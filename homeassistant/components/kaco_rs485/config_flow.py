@@ -79,7 +79,9 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._port is not None
 
         if self._scan_task is None:
-            self._scan_task = self.hass.async_create_task(self._scan(self._port))
+            self._scan_task = self.hass.async_create_task(
+                self._scan(self._port), eager_start=False
+            )
 
         if not self._scan_task.done():
             return self.async_show_progress(
