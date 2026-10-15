@@ -7,13 +7,12 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-
-# The SERVICE_* constants are re-exported for integrations importing them from
-# the siren component root.
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -21,7 +20,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
@@ -31,7 +30,7 @@ from .const import (  # noqa: F401
     SirenEntityCapabilityAttribute,
     SirenEntityFeature,
 )
-from .services import (  # noqa: F401
+from .services import (
     TURN_ON_SCHEMA,
     SirenTurnOnServiceParameters,
     async_setup_services,
@@ -44,6 +43,28 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
 
+
+__all__ = [
+    "ATTR_AVAILABLE_TONES",
+    "ATTR_DURATION",
+    "ATTR_TONE",
+    "ATTR_VOLUME_LEVEL",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_OFF",
+    "STATE_ON",
+    "TURN_ON_SCHEMA",
+    "SirenEntity",
+    "SirenEntityCapabilityAttribute",
+    "SirenEntityDescription",
+    "SirenEntityFeature",
+    "SirenTurnOnServiceParameters",
+    "process_turn_on_params",
+]
 
 # mypy: disallow-any-generics
 
