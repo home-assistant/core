@@ -19,7 +19,7 @@ from gkphomepython import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -60,20 +60,31 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         )
         self.client = client
         self.installations: dict[str, Installation] = {}
-        self.last_discovery: float | None = None
+        self.last_discovery = 0.0
         self.first_user_connected: datetime | None = None
         self.last_user_connected: float | None = None
+
+    @override
+    async def _async_setup(self) -> None:
+        """Discover the installations of the user before the first refresh."""
+        try:
+            await self._async_discover()
+        except GkpError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_discover_devices",
+            ) from err
 
     @override
     async def _async_update_data(self) -> dict[str, Thermostat]:
         """Discover installations, wake up devices and fetch their state."""
         now = time.time()
 
-        if (
-            self.last_discovery is None
-            or now - self.last_discovery >= DISCOVERY_INTERVAL.total_seconds()
-        ):
-            await self._async_discover(now)
+        if now - self.last_discovery >= DISCOVERY_INTERVAL.total_seconds():
+            try:
+                await self._async_discover()
+            except GkpError as err:
+                _LOGGER.warning("Periodic discovery failed: %s", err)
 
         if (
             self.last_user_connected is None
@@ -89,9 +100,8 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
 
         return await self._async_fetch_thermostats()
 
-    async def _async_discover(self, now: float) -> None:
+    async def _async_discover(self) -> None:
         """Refresh the installations of the user."""
-        is_first_refresh = self.last_discovery is None
         try:
             installations = await self.client.get_installations()
         except GkpAuthError as err:
@@ -99,20 +109,12 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
-        except GkpError as err:
-            if is_first_refresh:
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_discover_devices",
-                ) from err
-            _LOGGER.warning("Periodic discovery failed: %s", err)
-            return
 
         previous_devices = set(self.device_installations)
         self.installations = {
             installation.installation_id: installation for installation in installations
         }
-        self.last_discovery = now
+        self.last_discovery = time.time()
 
         if stale_devices := previous_devices - set(self.device_installations):
             self._remove_stale_devices(stale_devices)
