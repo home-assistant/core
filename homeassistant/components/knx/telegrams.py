@@ -10,9 +10,11 @@ from typing import Any, TypedDict
 from knx_telegram_store import (
     BufferedPostgresStore,
     BufferedSqliteStore,
+    ConnectionErrorKind,
     KnxTelegramStoreException,
     StoredTelegram,
 )
+from knx_telegram_store.connection import classify_postgres_error
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt import DPTComplexData, DPTEnumData
@@ -60,6 +62,16 @@ FLUSH_INTERVAL_SECONDS_POSTGRES = 1
 # single KNX TP line, times 4 for headroom - routing can record multiple TP
 # lines concurrently.
 MAX_BUFFER_TELEGRAMS = 600 * 50 * 4
+
+# A PostgreSQL server that is not reachable yet - typically a database container
+# that starts after Home Assistant - is retried with this backoff before the store
+# is given up until the next reload. Other errors are final at once, and SQLite
+# has no connection to lose.
+STORE_CONNECT_RETRY_BACKOFF = (15, 30, 60, 120, 300)
+_RETRIED_CONNECTION_ERRORS = {
+    ConnectionErrorKind.HOST_UNREACHABLE,
+    ConnectionErrorKind.TIMEOUT,
+}
 
 
 class DecodedTelegramPayload(TypedDict):
@@ -169,17 +181,7 @@ class Telegrams:
         if self._uninitialized_store is None:
             return
         try:
-            if await self._uninitialized_store.needs_migration():
-                _LOGGER.warning(
-                    "KNX telegram history database schema upgrade/migration is required. "
-                    "This may take some time depending on your database size. Please do not restart Home Assistant"
-                )
-            else:
-                _LOGGER.debug(
-                    "Initializing KNX telegram storage backend '%s'",
-                    self.backend,
-                )
-            await self._uninitialized_store.initialize()
+            await self._async_initialize_store(self._uninitialized_store)
         except KnxTelegramStoreException as err:
             _LOGGER.error(
                 "Database error initializing KNX telegram storage backend '%s': %s",
@@ -233,6 +235,46 @@ class Telegrams:
                 # Telegrams received while the store was initializing are newer.
                 self.last_ga_telegrams.setdefault(t_dict["destination"], t_dict)
         _LOGGER.debug("Hydrated %d unique telegrams from store", len(result))
+
+    async def _async_initialize_store(
+        self, store: BufferedSqliteStore | BufferedPostgresStore
+    ) -> None:
+        """Initialize the store, waiting for a PostgreSQL server that is not up yet."""
+        attempt = 0
+        while True:
+            try:
+                if await store.needs_migration():
+                    _LOGGER.warning(
+                        "KNX telegram history database schema upgrade/migration is required. "
+                        "This may take some time depending on your database size. Please do not restart Home Assistant"
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Initializing KNX telegram storage backend '%s'",
+                        self.backend,
+                    )
+                await store.initialize()
+            except Exception as err:
+                if (
+                    self.backend != KNX_TELEGRAM_BACKEND_POSTGRES
+                    or attempt >= len(STORE_CONNECT_RETRY_BACKOFF)
+                    or classify_postgres_error(err.__cause__ or err)
+                    not in _RETRIED_CONNECTION_ERRORS
+                ):
+                    raise
+                delay = STORE_CONNECT_RETRY_BACKOFF[attempt]
+                attempt += 1
+                _LOGGER.warning(
+                    "KNX telegram storage backend '%s' is not reachable (%s); retrying "
+                    "in %s s. Telegram history is temporarily unavailable; the KNX "
+                    "connection is unaffected",
+                    self.backend,
+                    err,
+                    delay,
+                )
+                await asyncio.sleep(delay)
+            else:
+                return
 
     async def _abort_store_init(self) -> None:
         """Create a repair issue and tear down a store that failed to init."""

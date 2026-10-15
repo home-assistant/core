@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import AbstractContextManager
 from copy import copy
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from knx_telegram_store import (
+    BufferedPostgresStore,
     BufferedSqliteStore,
     KnxTelegramStoreException,
     StoredTelegram,
@@ -675,19 +677,118 @@ async def test_postgres_backend_init_error(
         },
     )
 
-    # Mock the store to avoid constructing a real SQLAlchemy engine / connecting.
-    mock_store = AsyncMock()
-    mock_store.needs_migration.return_value = False
-    mock_store.initialize.side_effect = KnxTelegramStoreException("no server")
-    with patch(
-        "homeassistant.components.knx.telegrams.BufferedPostgresStore",
-        return_value=mock_store,
+    with _patch_postgres_store(
+        initialize=AsyncMock(side_effect=KnxTelegramStoreException("no server"))
     ):
         await knx.setup_integration(add_entry_to_hass=False, real_telegram_store=True)
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is None
 
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is not None
+    )
+
+
+POSTGRES_OPTIONS = {
+    CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_POSTGRES,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: "postgresql://user:secret@db.local:5432/knx",
+}
+
+
+def _connect_error(cause: BaseException | None) -> KnxTelegramStoreException:
+    """Return a store exception wrapping a driver error, as the library raises it."""
+    error = KnxTelegramStoreException("connect failed")
+    error.__cause__ = cause
+    return error
+
+
+def _patch_postgres_store(initialize: AsyncMock) -> AbstractContextManager[None]:
+    """Keep the PostgreSQL store off the network; the engine itself never connects.
+
+    Patched on the class: the test kit re-patches the module attribute during
+    setup, so a patched constructor would not be the one called.
+    """
+    return patch.multiple(
+        BufferedPostgresStore,
+        needs_migration=AsyncMock(return_value=False),
+        initialize=initialize,
+        get_last_unique_telegrams=AsyncMock(return_value=[]),
+    )
+
+
+@pytest.mark.parametrize(
+    ("cause", "attempts", "store_available"),
+    [
+        pytest.param(
+            ConnectionRefusedError(111, "Connection refused"),
+            2,
+            True,
+            id="refused_then_reachable",
+        ),
+        pytest.param(TimeoutError(), 2, True, id="timeout_then_reachable"),
+        pytest.param(ValueError("bad dsn"), 1, False, id="other_error_not_retried"),
+        pytest.param(None, 1, False, id="no_cause_not_retried"),
+    ],
+)
+async def test_postgres_store_init_retries_unreachable_server(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+    cause: BaseException | None,
+    attempts: int,
+    store_available: bool,
+) -> None:
+    """An unreachable PostgreSQL server is retried; other errors are final."""
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options | POSTGRES_OPTIONS,
+    )
+    initialize = AsyncMock(side_effect=[_connect_error(cause), None])
+    with (
+        patch(
+            "homeassistant.components.knx.telegrams.STORE_CONNECT_RETRY_BACKOFF", (0,)
+        ),
+        _patch_postgres_store(initialize),
+    ):
+        await knx.setup_integration(add_entry_to_hass=False, real_telegram_store=True)
+
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert initialize.call_count == attempts
+    assert (telegrams_module.store is not None) == store_available
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is None
+    ) == store_available
+
+
+async def test_postgres_store_init_gives_up_after_retries(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A PostgreSQL server that stays unreachable disables the store after the backoff."""
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options | POSTGRES_OPTIONS,
+    )
+    initialize = AsyncMock(
+        side_effect=_connect_error(ConnectionRefusedError(111, "Connection refused"))
+    )
+    with (
+        patch(
+            "homeassistant.components.knx.telegrams.STORE_CONNECT_RETRY_BACKOFF", (0, 0)
+        ),
+        _patch_postgres_store(initialize),
+    ):
+        await knx.setup_integration(add_entry_to_hass=False, real_telegram_store=True)
+
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert initialize.call_count == 3
+    assert telegrams_module.store is None
     assert (
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None
