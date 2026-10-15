@@ -7,13 +7,9 @@ from typing import Any, Final, final, override
 
 import probatio
 
-from homeassistant.components.light import ATTR_TRANSITION  # noqa: F401
+from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    CONF_PLATFORM,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -61,6 +57,16 @@ PLATFORM_SCHEMA = probatio.Schema(
     ),
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "ATTR_TRANSITION",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "SERVICE_TURN_ON",
+    "STATES",
+    "BaseScene",
+    "Scene",
+]
 
 # mypy: disallow-any-generics
 

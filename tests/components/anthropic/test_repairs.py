@@ -1,7 +1,7 @@
 """Tests for the Anthropic repairs flow."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from anthropic import (
     APIConnectionError,
@@ -17,8 +17,20 @@ import pytest
 
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
+    CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
 )
 from homeassistant.components.anthropic.coordinator import model_alias
@@ -37,6 +49,22 @@ from . import model_list
 from tests.common import MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
+
+
+def _copy_model_info(model_id: str) -> ModelInfo:
+    """Return an independent copy of the live model metadata."""
+    return next(
+        model for model in model_list if model_alias(model.id) == model_alias(model_id)
+    ).model_copy(deep=True)
+
+
+def _model_info_without_thinking() -> ModelInfo:
+    """Return metadata for a model without thinking support."""
+    model_info = _copy_model_info("claude-haiku-4-5")
+    assert model_info.capabilities
+    model_info.capabilities.thinking.supported = False
+    model_info.capabilities.thinking.types.enabled.supported = False
+    return model_info
 
 
 def _make_entry(
@@ -236,80 +264,225 @@ async def test_repair_flow_no_deprecated_models(
 
 
 @pytest.mark.parametrize(
-    "available_models",
+    "cached_model_count",
     [
-        pytest.param(model_list, id="listed_model"),
-        pytest.param([], id="custom_model"),
+        pytest.param(1, id="listed_model"),
+        pytest.param(0, id="custom_model"),
     ],
 )
 @pytest.mark.parametrize(
-    ("model", "thinking_effort", "expected_options"),
+    "subentry_type",
     [
-        pytest.param("claude-opus-5-5", "none", {}, id="opus_5_5"),
-        pytest.param("claude-fable-5", "none", {}, id="fable_5"),
-        pytest.param("claude-fable-5-1", "none", {}, id="fable_5_1"),
-        pytest.param("claude-opus-5-5-20260921", "none", {}, id="versioned_opus_5_5"),
-        pytest.param("claude-sonnet-5-5", "none", {}, id="sonnet_5_5"),
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("model", "model_info", "model_options", "expected_options"),
+    [
         pytest.param(
-            "claude-sonnet-5-5-20260928", "none", {}, id="versioned_sonnet_5_5"
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="opus_5_5",
+        ),
+        pytest.param(
+            "claude-fable-5",
+            _copy_model_info("claude-fable-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="fable_5",
+        ),
+        pytest.param(
+            "claude-fable-5-1",
+            _copy_model_info("claude-fable-5-1"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="fable_5_1",
+        ),
+        pytest.param(
+            "claude-opus-5-5-20260921",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="versioned_opus_5_5",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="sonnet_5_5",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5-20260928",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="versioned_sonnet_5_5",
         ),
         pytest.param(
             "claude-haiku-5-5",
-            "none",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
             {CONF_THINKING_EFFORT: "none"},
             id="haiku_5_5",
         ),
         pytest.param(
             "claude-haiku-5-5-20261007",
-            "none",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
             {CONF_THINKING_EFFORT: "none"},
             id="versioned_haiku_5_5",
         ),
         pytest.param(
             "claude-opus-5-5",
-            "high",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_EFFORT: "high"},
             {CONF_THINKING_EFFORT: "high"},
             id="adaptive_effort",
         ),
         pytest.param(
             "claude-opus-4-6",
-            "none",
+            _copy_model_info("claude-opus-4-6"),
+            {CONF_THINKING_EFFORT: "none"},
             {CONF_THINKING_EFFORT: "none"},
             id="optional_thinking",
         ),
         pytest.param(
             "claude-opus-4-6-20260204",
-            "none",
+            _copy_model_info("claude-opus-4-6"),
+            {CONF_THINKING_EFFORT: "none"},
             {CONF_THINKING_EFFORT: "none"},
             id="versioned_optional_thinking",
         ),
-        pytest.param("claude-opus-4-5", "none", {}, id="nonadaptive_effort"),
         pytest.param(
-            "claude-opus-4-5-20251101", "none", {}, id="versioned_nonadaptive_effort"
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="nonadaptive_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5-20251101",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="versioned_nonadaptive_effort",
         ),
         pytest.param(
             "claude-opus-4-5",
-            "high",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "high"},
             {CONF_THINKING_EFFORT: "high"},
             id="valid_nonadaptive_effort",
         ),
         pytest.param(
             "claude-haiku-4-5",
-            "none",
+            _copy_model_info("claude-haiku-4-5"),
             {CONF_THINKING_EFFORT: "none"},
+            {},
             id="no_effort_support",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_EFFORT: "high"},
+            id="adaptive_removes_manual_budget",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            id="manual_thinking_budget_and_effort",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            _copy_model_info("claude-haiku-4-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_BUDGET: 4096},
+            id="manual_thinking_without_effort",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            _model_info_without_thinking(),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {},
+            id="unsupported_thinking",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5").model_copy(
+                update={"capabilities": None}, deep=True
+            ),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {},
+            id="unknown_capabilities",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "max"},
+            {},
+            id="unsupported_max_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "xhigh"},
+            {},
+            id="unsupported_xhigh_effort",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_TOOL_SEARCH: True},
+            {CONF_TOOL_SEARCH: True},
+            id="supported_tool_search",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_TOOL_SEARCH: True},
+            {},
+            id="unsupported_tool_search",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {},
+            {},
+            id="unrelated_options",
         ),
     ],
 )
-async def test_repair_flow_thinking_effort(
+async def test_repair_flow_model_options(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    available_models: list[ModelInfo],
+    cached_model_count: int,
+    subentry_type: str,
     model: str,
-    thinking_effort: str,
-    expected_options: dict[str, str],
+    model_info: ModelInfo,
+    model_options: dict[str, int | str | bool],
+    expected_options: dict[str, int | str | bool],
 ) -> None:
-    """Remove incompatible thinking effort while preserving valid effort settings."""
+    """Reconcile stored model options against the selected model's capabilities."""
+    preserved_options = {
+        CONF_MAX_TOKENS: 8192,
+        CONF_CODE_EXECUTION: True,
+        CONF_WEB_SEARCH: True,
+        CONF_WEB_SEARCH_MAX_USES: 3,
+        CONF_WEB_SEARCH_USER_LOCATION: True,
+        CONF_WEB_SEARCH_CITY: "San Francisco",
+        CONF_WEB_SEARCH_REGION: "California",
+        CONF_WEB_SEARCH_COUNTRY: "US",
+        CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        CONF_WEB_FETCH: True,
+        CONF_WEB_FETCH_MAX_USES: 7,
+    }
     entry = _make_entry(
         hass,
         title="Claude",
@@ -318,24 +491,20 @@ async def test_repair_flow_thinking_effort(
             {
                 "data": {
                     CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
-                    CONF_THINKING_EFFORT: thinking_effort,
-                    CONF_MAX_TOKENS: 4096,
+                    **preserved_options,
+                    **model_options,
                 },
-                "subentry_type": "conversation",
+                "subentry_type": subentry_type,
                 "title": "Conversation",
                 "unique_id": None,
             }
         ],
     )
     entry.runtime_data.client.models.list.return_value = AsyncPage(
-        data=available_models
+        data=[model_info][:cached_model_count]
     )
-    entry.runtime_data.client.models.retrieve = AsyncMock(
-        return_value=next(
-            model_info
-            for model_info in model_list
-            if model_alias(model_info.id) == model_alias(model)
-        )
+    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
+        return_value=model_info
     )
     ir.async_create_issue(
         hass,
@@ -357,11 +526,15 @@ async def test_repair_flow_thinking_effort(
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert _get_subentry(entry, "conversation").data == {
+    assert _get_subentry(entry, subentry_type).data == {
         CONF_CHAT_MODEL: model,
-        CONF_MAX_TOKENS: 4096,
+        **preserved_options,
         **expected_options,
     }
+    assert (
+        retrieve.await_args_list
+        == [call(model, timeout=10.0)][: 1 - cached_model_count]
+    )
 
 
 @pytest.mark.parametrize(
@@ -434,6 +607,7 @@ async def test_repair_flow_model_lookup_error(
         side_effect=[
             error,
             next(model for model in model_list if model.id == "claude-opus-5-5"),
+            _copy_model_info("claude-haiku-4-5"),
         ]
     )
     ir.async_create_issue(
@@ -510,3 +684,5 @@ async def test_repair_flow_model_lookup_error(
         CONF_CHAT_MODEL: "claude-haiku-4-5"
     }
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert retrieve.await_count == 3
+    retrieve.assert_awaited_with("claude-haiku-4-5", timeout=10.0)

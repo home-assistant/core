@@ -7,11 +7,12 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_MODE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -20,7 +21,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
     ATTR_CURRENT_HUMIDITY,
@@ -63,6 +64,47 @@ SCAN_INTERVAL = timedelta(seconds=60)
 # DEVICE_CLASSES below is deprecated as of 2021.12
 # use the HumidifierDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
+
+__all__ = [
+    "ATTR_ACTION",
+    "ATTR_AVAILABLE_MODES",
+    "ATTR_CURRENT_HUMIDITY",
+    "ATTR_HUMIDITY",
+    "ATTR_MAX_HUMIDITY",
+    "ATTR_MIN_HUMIDITY",
+    "ATTR_MODE",
+    "ATTR_TARGET_HUMIDITY_STEP",
+    "DEFAULT_MAX_HUMIDITY",
+    "DEFAULT_MIN_HUMIDITY",
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "MODE_AUTO",
+    "MODE_AWAY",
+    "MODE_BABY",
+    "MODE_BOOST",
+    "MODE_COMFORT",
+    "MODE_ECO",
+    "MODE_HOME",
+    "MODE_NORMAL",
+    "MODE_SLEEP",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SET_HUMIDITY",
+    "SERVICE_SET_MODE",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_OFF",
+    "STATE_ON",
+    "HumidifierAction",
+    "HumidifierDeviceClass",
+    "HumidifierEntity",
+    "HumidifierEntityCapabilityAttribute",
+    "HumidifierEntityDescription",
+    "HumidifierEntityFeature",
+    "HumidifierEntityStateAttribute",
+]
 
 # mypy: disallow-any-generics
 
