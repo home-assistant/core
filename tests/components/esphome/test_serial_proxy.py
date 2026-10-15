@@ -481,6 +481,31 @@ async def test_serial_proxy_device_offline(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
+async def test_serial_proxy_unload(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Unloading a connected ESPHome device takes its USB ports with it."""
+    hass.config.components.add("usb")
+    _mock_identities(mock_client, [ZBT2, EMPTY_SOCKET])
+    with patch(
+        "homeassistant.components.usb.async_notify_serial_ports_changed"
+    ) as mock_notify:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={"serial_proxies": USB_PROXIES},
+        )
+        assert mock_notify.mock_calls == [call(hass)] * 2
+        entry_data = device.entry.runtime_data
+
+        assert await hass.config_entries.async_unload(device.entry.entry_id)
+        assert entry_data.serial_proxy_identities == {}
+        assert _async_scan_serial_ports(hass) == []
+        assert mock_notify.mock_calls == [call(hass)] * 3
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_async_open_missing_host(hass: HomeAssistant) -> None:
     """A URL with an invalid entry_id raises InvalidSettingsError."""
     assert await async_setup_component(hass, DOMAIN, {})

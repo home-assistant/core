@@ -35,7 +35,7 @@ import aiohttp
 from awesomeversion import AwesomeVersion
 import probatio
 
-from homeassistant.components import bluetooth, tag, usb, zeroconf
+from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
@@ -102,7 +102,11 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import (
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    async_notify_serial_ports_changed,
+)
 from .enum_mapper import EsphomeEnumMapper
 from .outgoing_connection import async_register_outgoing_target
 
@@ -291,7 +295,7 @@ class ESPHomeManager:
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
-        await cleanup_instance(self.entry)
+        await cleanup_instance(self.hass, self.entry)
 
     @property
     def services_issue(self) -> str:
@@ -854,13 +858,7 @@ class ESPHomeManager:
         ):
             return
         identities[identity.instance] = identity
-        self._async_notify_serial_ports_changed()
-
-    @callback
-    def _async_notify_serial_ports_changed(self) -> None:
-        """Have the usb integration rescan, as a udev event would for a local port."""
-        if "usb" in self.hass.config.components:
-            usb.async_notify_serial_ports_changed(self.hass)
+        async_notify_serial_ports_changed(self.hass)
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -874,9 +872,7 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        # The device's ports go with it, as a hub being unplugged takes its ports
-        had_serial_proxy_ports = bool(entry_data.serial_proxy_identities)
-        entry_data.async_on_disconnect()
+        entry_data.async_on_disconnect(hass)
         entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
@@ -884,8 +880,6 @@ class ESPHomeManager:
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
             entry_data.async_update_device_state()
-            if had_serial_proxy_ports:
-                self._async_notify_serial_ports_changed()
 
         if Platform.ASSIST_SATELLITE in self.entry_data.loaded_platforms:
             await self.hass.config_entries.async_unload_platforms(
@@ -1684,11 +1678,13 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
+async def cleanup_instance(
+    hass: HomeAssistant, entry: ESPHomeConfigEntry
+) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
     was_connected = data.available
-    data.async_on_disconnect()
+    data.async_on_disconnect(hass)
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     try:

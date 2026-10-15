@@ -52,6 +52,7 @@ from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -115,6 +116,13 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     ValveInfo: Platform.VALVE,
     WaterHeaterInfo: Platform.WATER_HEATER,
 }
+
+
+@callback
+def async_notify_serial_ports_changed(hass: HomeAssistant) -> None:
+    """Have the usb integration rescan, as a udev event would for a local port."""
+    if "usb" in hass.config.components:
+        usb.async_notify_serial_ports_changed(hass)
 
 
 @callback
@@ -599,14 +607,17 @@ class RuntimeEntryData:
             await self.store.async_save(self._pending_storage())
 
     @callback
-    def async_on_disconnect(self) -> None:
+    def async_on_disconnect(self, hass: HomeAssistant) -> None:
         """Call when the entry has been disconnected.
 
         Safe to call multiple times.
         """
         self.available = False
-        # Whatever is plugged in now is unknown until the device is back
-        self.serial_proxy_identities.clear()
+        # The device's ports go with it, as a hub being unplugged takes its ports
+        if self.serial_proxy_identities:
+            self.serial_proxy_identities.clear()
+            if not hass.is_stopping:
+                async_notify_serial_ports_changed(hass)
         if self.bluetooth_device:
             # Fails pending BLE slot waiters and clears the dead
             # session's allocations in addition to closing the gate.
