@@ -1,6 +1,6 @@
 """Support for Google Assistant SDK broadcast notifications."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.core import HomeAssistant
@@ -54,6 +54,7 @@ class BroadcastNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.hass = hass
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message."""
         if not message:

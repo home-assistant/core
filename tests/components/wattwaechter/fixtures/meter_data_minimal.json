@@ -1,0 +1,6 @@
+{
+  "timestamp": 1704067200,
+  "datetime": "2024-01-01T00:00:00",
+  "1.8.0": { "value": 100.0, "unit": "kWh", "name": "Total Import" },
+  "16.7.0": { "value": 500, "unit": "W", "name": "Active Power" }
+}

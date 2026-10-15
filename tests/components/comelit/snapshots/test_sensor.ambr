@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm',
         'armed',
         'open',
@@ -53,9 +53,9 @@
 # name: test_all_entities[sensor.zone0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Zone0',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone0',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm',
         'armed',
         'open',

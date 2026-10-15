@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
@@ -113,6 +113,7 @@ class SynologyDSMSwitchUpdateCoordinator(
         self.version = info["data"]["CMSMinVersion"]
 
     @async_re_login_on_expired
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
@@ -138,6 +139,7 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
         super().__init__(hass, entry, api, timedelta(minutes=15))
 
     @async_re_login_on_expired
+    @override
     async def _async_update_data(self) -> None:
         """Fetch all data from api."""
         await self.api.async_update()
@@ -158,6 +160,7 @@ class SynologyDSMCameraUpdateCoordinator(
         super().__init__(hass, entry, api, timedelta(seconds=30))
 
     @async_re_login_on_expired
+    @override
     async def _async_update_data(self) -> dict[str, dict[int, SynoCamera]]:
         """Fetch all camera data from api."""
         surveillance_station = self.api.surveillance_station

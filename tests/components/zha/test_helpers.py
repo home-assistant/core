@@ -5,8 +5,8 @@ import logging
 from typing import Any
 from unittest.mock import MagicMock
 
+from probatio import to_field_list
 import pytest
-import voluptuous_serialize
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
@@ -97,7 +97,7 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
             "required": False,
         },
     ]
-    vol_schema = voluptuous_serialize.convert(
+    vol_schema = to_field_list(
         cluster_command_schema_to_vol_schema(command_schema),
         custom_serializer=cv.custom_serializer,
     )
@@ -124,11 +124,11 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
     assert isinstance(converted_data["action"], lighting.Color.ColorLoopAction)
     assert (
         converted_data["action"]
-        is lighting.Color.ColorLoopAction.Activate_from_current_hue
+        == lighting.Color.ColorLoopAction.Activate_from_current_hue
     )
 
     assert isinstance(converted_data["direction"], lighting.Color.ColorLoopDirection)
-    assert converted_data["direction"] is lighting.Color.ColorLoopDirection.Increment
+    assert converted_data["direction"] == lighting.Color.ColorLoopDirection.Increment
 
     assert isinstance(converted_data["time"], uint16_t)
     assert converted_data["time"] == 20
@@ -157,11 +157,11 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
     assert isinstance(converted_data["action"], lighting.Color.ColorLoopAction)
     assert (
         converted_data["action"]
-        is lighting.Color.ColorLoopAction.Activate_from_current_hue
+        == lighting.Color.ColorLoopAction.Activate_from_current_hue
     )
 
     assert isinstance(converted_data["direction"], lighting.Color.ColorLoopDirection)
-    assert converted_data["direction"] is lighting.Color.ColorLoopDirection.Increment
+    assert converted_data["direction"] == lighting.Color.ColorLoopDirection.Increment
 
     assert isinstance(converted_data["time"], uint16_t)
     assert converted_data["time"] == 20
@@ -256,11 +256,8 @@ def test_zha_group_proxy_get_device_info() -> None:
     """Test ZHAGroupProxy get_device_info returns correct DeviceInfo."""
     mock_group = MagicMock(group_id=0x1001)
     mock_group.name = "Test Group"
-    coordinator_ieee = "00:15:8d:00:02:32:4f:32"
 
-    device_info = ZHAGroupProxy(mock_group, MagicMock()).get_device_info(
-        coordinator_ieee
-    )
+    device_info = ZHAGroupProxy(mock_group, MagicMock()).get_device_info()
 
     assert device_info == {
         "identifiers": {(zha_const.DOMAIN, "zha_group_0x1001")},
@@ -268,7 +265,6 @@ def test_zha_group_proxy_get_device_info() -> None:
         "manufacturer": "Zigbee",
         "model": "Group",
         "entry_type": dr.DeviceEntryType.SERVICE,
-        "via_device": (zha_const.DOMAIN, coordinator_ieee),
     }
 
 
@@ -323,9 +319,10 @@ async def test_zha_group_device_creation_with_entities(
     # Verify via_device points to coordinator
     gateway = get_zha_gateway(hass)
     coordinator_ieee = str(gateway.state.node_info.ieee)
-    coordinator_device = device_registry.async_get_device(
-        identifiers={("zha", coordinator_ieee)}
+    coordinator_device = device_registry.async_get_device_by_identifier(
+        ("zha", coordinator_ieee), device.config_entry_id
     )
+    assert coordinator_device is not None
     assert device.via_device_id == coordinator_device.id
 
 
@@ -360,8 +357,6 @@ async def test_zha_group_cleanup_on_removal(
 
     # Device should be removed from device registry
     assert device_registry.async_get(device_id) is None
-    # Deleted devices cache should not contain the removed device
-    assert device_id not in device_registry.deleted_devices
 
     # Entities should be removed and not in deleted cache
     for key in entity_keys:

@@ -6,9 +6,9 @@ from contextlib import suppress
 from enum import StrEnum
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -96,12 +96,14 @@ REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
 
 ZEROCONF_SERVICE_TYPE = "_zigbee-coordinator._tcp.local."
-ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
+ZEROCONF_PROPERTIES_SCHEMA = probatio.Schema(
     {
-        vol.Required("radio_type"): vol.All(str, vol.In([t.name for t in RadioType])),
-        vol.Required("serial_number"): str,
+        probatio.Required("radio_type"): probatio.All(
+            str, probatio.In([t.name for t in RadioType])
+        ),
+        probatio.Required("serial_number"): str,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -150,7 +152,11 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # re-raise it in a dedicated step
         self._progress_error: AbortFlow | None = None
 
-    @property
+    # mypy doesn't recognize @override on a property with a setter
+    # (https://github.com/python/mypy/issues/15900); unused-ignore is needed
+    # because the explicit-override check is not enabled yet.
+    @property  # type: ignore[explicit-override, unused-ignore]
+    @override
     def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._hass
@@ -208,10 +214,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
             return await self.async_step_verify_radio()
 
-        default_path = self._radio_mgr.device_path or vol.UNDEFINED
-        schema = vol.Schema(
+        default_path = self._radio_mgr.device_path or probatio.UNDEFINED
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_DEVICE_PATH, default=default_path
                 ): SerialPortSelector(
                     SerialPortSelectorConfig(
@@ -237,18 +243,20 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             return await self.async_step_manual_port_config()
 
         # Preselect the current radio type
-        default: vol.Undefined | str = vol.UNDEFINED
+        default: probatio.Undefined | str = probatio.UNDEFINED
 
         if self._radio_mgr.radio_type is not None:
             default = self._radio_mgr.radio_type.description
 
         schema = {
-            vol.Required(CONF_RADIO_TYPE, default=default): vol.In(RadioType.list())
+            probatio.Required(CONF_RADIO_TYPE, default=default): probatio.In(
+                RadioType.list()
+            )
         }
 
         return self.async_show_form(
             step_id="manual_pick_radio_type",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
         )
 
     async def async_step_manual_port_config(
@@ -284,20 +292,20 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="manual_port_config",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE_PATH,
-                        default=self._radio_mgr.device_path or vol.UNDEFINED,
+                        default=self._radio_mgr.device_path or probatio.UNDEFINED,
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_BAUDRATE,
                         default=device_settings.get(CONF_BAUDRATE) or 115200,
                     ): int,
-                    vol.Required(
+                    probatio.Required(
                         CONF_FLOW_CONTROL,
                         default=device_settings.get(CONF_FLOW_CONTROL) or "none",
-                    ): vol.In(["hardware", "software", "none"]),
+                    ): probatio.In(["hardware", "software", "none"]),
                 }
             ),
             errors=errors,
@@ -634,9 +642,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="upload_manual_backup",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(UPLOADED_BACKUP_FILE): FileSelector(
+                    probatio.Required(UPLOADED_BACKUP_FILE): FileSelector(
                         FileSelectorConfig(accept=".json,application/json")
                     )
                 }
@@ -661,11 +669,11 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="choose_automatic_backup",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=choices[0]): vol.In(
-                        choices
-                    ),
+                    probatio.Required(
+                        CHOOSE_AUTOMATIC_BACKUP, default=choices[0]
+                    ): probatio.In(choices),
                 }
             ),
         )
@@ -726,8 +734,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="confirm_ezsp_ieee_overwrite",
-                data_schema=vol.Schema(
-                    {vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True): bool}
+                data_schema=probatio.Schema(
+                    {probatio.Required(OVERWRITE_COORDINATOR_IEEE, default=True): bool}
                 ),
             )
 
@@ -771,12 +779,14 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return ZhaOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -822,7 +832,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
                 # Abort discovery if the device path is already configured
                 if path is not None and path in current_device_paths:
-                    return self.async_abort(reason="single_instance_allowed")
+                    return self.async_abort(
+                        reason="single_instance_allowed",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
@@ -863,6 +876,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
@@ -899,6 +913,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -942,7 +957,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         try:
             discovery_props = ZEROCONF_PROPERTIES_SCHEMA(discovery_info.properties)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.async_abort(reason="invalid_zeroconf_data")
 
         radio_type = self._radio_mgr.parse_radio_type(discovery_props["radio_type"])
@@ -973,7 +988,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         """Handle hardware flow."""
         try:
             discovery_data = HARDWARE_DISCOVERY_SCHEMA(data)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.async_abort(reason="invalid_hardware_data")
 
         name = discovery_data["name"]
@@ -994,6 +1009,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
 
@@ -1023,7 +1039,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title="", data=data)
         # This should never be reached
-        return self.async_abort(reason="single_instance_allowed")
+        return self.async_abort(
+            reason="single_instance_allowed",
+            translation_domain=HOMEASSISTANT_DOMAIN,
+        )
 
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
@@ -1090,6 +1109,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         self._migration_intent = OptionsMigrationIntent.MIGRATE
         return await self.async_step_choose_serial_port()
 
+    @override
     async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -1101,6 +1121,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return await super().async_step_maybe_reset_old_radio(user_input)
 
+    @override
     async def _async_create_radio_entry(self):
         """Re-implementation of the base flow's final step to update the config."""
 
@@ -1116,6 +1137,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return self.async_abort(reason="reconfigure_successful")
 
+    @override
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""
         if self.config_entry.state not in (

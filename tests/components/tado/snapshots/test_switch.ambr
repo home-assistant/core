@@ -39,7 +39,7 @@
 # name: test_entities[switch.baseboard_heater_baseboard_heater_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Baseboard Heater Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.baseboard_heater_baseboard_heater_child_lock',

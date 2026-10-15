@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import chain
+from typing import override
 
 from pysmlight import Info, Sensors
 
@@ -19,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import UPTIME_DEVIATION
+from .const import UPTIME_DEVIATION, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -158,7 +159,8 @@ async def async_setup_entry(
 
     entities.extend(
         SmInfoSensorEntity(coordinator, RADIO_INFO, idx)
-        for idx, _ in enumerate(coordinator.data.info.radios)
+        for idx, radio in enumerate(coordinator.data.info.radios)
+        if radio.zb_type not in ZWAVE_TYPES
     )
 
     if coordinator.data.sensors.zb_temp2 is not None:
@@ -189,6 +191,7 @@ class SmSensorEntity(SmEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | str | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.sensors)
@@ -216,6 +219,7 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}{sensor}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         value = self.entity_description.value_fn(self.coordinator.data.info, self.idx)
@@ -262,6 +266,7 @@ class SmUptimeSensorEntity(SmSensorEntity):
         return self._last_uptime
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the sensor value."""
         value = self.entity_description.value_fn(self.coordinator.data.sensors)

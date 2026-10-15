@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +17,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import PterodactylConfigEntry, PterodactylCoordinator, PterodactylData
+from .api import PterodactylGameServer
+from .coordinator import (
+    PterodactylConfigEntry,
+    PterodactylCoordinator,
+    PterodactylGameServerData,
+)
 from .entity import PterodactylEntity
 
 KEY_CPU_UTILIZATION = "cpu_utilization"
@@ -37,7 +43,7 @@ PARALLEL_UPDATES = 0
 class PterodactylSensorEntityDescription(SensorEntityDescription):
     """Class describing Pterodactyl sensor entities."""
 
-    value_fn: Callable[[PterodactylData], StateType | datetime]
+    value_fn: Callable[[PterodactylGameServerData], StateType | datetime]
 
 
 SENSOR_DESCRIPTIONS = [
@@ -154,8 +160,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        PterodactylSensorEntity(coordinator, identifier, description, config_entry)
-        for identifier in coordinator.api.identifiers
+        PterodactylSensorEntity(coordinator, game_server, description, config_entry)
+        for game_server in coordinator.api.game_servers
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -168,16 +174,17 @@ class PterodactylSensorEntity(PterodactylEntity, SensorEntity):
     def __init__(
         self,
         coordinator: PterodactylCoordinator,
-        identifier: str,
+        game_server: PterodactylGameServer,
         description: PterodactylSensorEntityDescription,
         config_entry: PterodactylConfigEntry,
     ) -> None:
         """Initialize sensor base entity."""
-        super().__init__(coordinator, identifier, config_entry)
+        super().__init__(coordinator, game_server, config_entry)
         self.entity_description = description
         self._attr_unique_id = f"{self.game_server_data.uuid}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self.game_server_data)

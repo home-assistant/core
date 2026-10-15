@@ -23,7 +23,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> None:
     """Set up Husqvarna Autoconnect Bluetooth from a config entry."""
     if CONF_PIN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -45,6 +45,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
         device = bluetooth.async_ble_device_from_address(
             hass, address, connectable=True
         ) or await get_device(address)
+        if device is None:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "address": address,
+                    "error": "device not found",
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
+            )
         response_result = await mower.connect(device)
         if response_result == ResponseResult.INVALID_PIN:
             raise ConfigEntryAuthFailed(
@@ -52,8 +66,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
             )
         if response_result != ResponseResult.OK:
             raise ConfigEntryNotReady(
-                f"Unable to connect to device {address}, "
-                f"mower returned {response_result}"
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "address": address,
+                    "error": response_result.name,
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
             )
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(
@@ -81,13 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: HusqvarnaCoordinator = entry.runtime_data
-        await coordinator.async_shutdown()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator: HusqvarnaCoordinator = entry.runtime_data
+    await coordinator.async_shutdown()

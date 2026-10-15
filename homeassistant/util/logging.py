@@ -94,6 +94,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
 
     listener: logging.handlers.QueueListener | None = None
 
+    @override
     def handle(self, record: logging.LogRecord) -> Any:
         """Conditionally emit the specified logging record.
 
@@ -111,6 +112,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
             self.emit(record)
         return return_value
 
+    @override
     def close(self) -> None:
         """Tidy up any resources used by the handler.
 
@@ -267,7 +269,7 @@ def async_create_catching_coro[_T](
     return catch_log_coro_exception(
         target,
         lambda: (
-            f"Exception in {target.__name__} called from\n"
+            f"Exception in {target.__name__} called from\n"  # type: ignore[attr-defined]
             + "".join(traceback.format_list(trace[:-1]))
         ),
     )

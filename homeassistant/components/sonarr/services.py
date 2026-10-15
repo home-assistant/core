@@ -5,13 +5,12 @@ from datetime import timedelta
 from typing import Any, cast
 
 from aiopyarr import exceptions
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -52,9 +51,9 @@ DEFAULT_SPACE_UNIT = "bytes"
 # Default values - 0 means no limit
 DEFAULT_MAX_ITEMS = 0
 
-SERVICE_BASE_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -64,58 +63,46 @@ SERVICE_GET_SERIES_SCHEMA = SERVICE_BASE_SCHEMA
 
 SERVICE_GET_EPISODES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_SERIES_ID): vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Optional(CONF_SEASON_NUMBER): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        probatio.Required(CONF_SERIES_ID): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
+        ),
+        probatio.Optional(CONF_SEASON_NUMBER): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
     }
 )
 
 SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=500)
+        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=500)
         ),
     }
 )
 
 SERVICE_GET_DISKSPACE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_SPACE_UNIT, default=DEFAULT_SPACE_UNIT): vol.In(SPACE_UNITS),
+        probatio.Optional(CONF_SPACE_UNIT, default=DEFAULT_SPACE_UNIT): probatio.In(
+            SPACE_UNITS
+        ),
     }
 )
 
 SERVICE_GET_UPCOMING_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_DAYS, default=DEFAULT_UPCOMING_DAYS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=30)
+        probatio.Optional(CONF_DAYS, default=DEFAULT_UPCOMING_DAYS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=30)
         ),
     }
 )
 
 SERVICE_GET_WANTED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=500)
+        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=500)
         ),
     }
 )
-
-
-def _get_config_entry_from_service_data(call: ServiceCall) -> SonarrConfigEntry:
-    """Return config entry for entry id."""
-    config_entry_id: str = call.data[ATTR_ENTRY_ID]
-    if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": config_entry_id},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return cast(SonarrConfigEntry, entry)
 
 
 async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
@@ -130,9 +117,11 @@ async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
         raise HomeAssistantError(f"Sonarr API error: {ex}") from ex
 
 
-async def _async_get_series(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_series(call: ServiceCall) -> dict[str, Any]:
     """Get all Sonarr series."""
-    entry = _get_config_entry_from_service_data(service)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
 
     api_client = entry.runtime_data.status.api_client
     series_list = await _handle_api_errors(api_client.async_get_series)
@@ -143,11 +132,13 @@ async def _async_get_series(service: ServiceCall) -> dict[str, Any]:
     return {ATTR_SHOWS: shows}
 
 
-async def _async_get_episodes(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_episodes(call: ServiceCall) -> dict[str, Any]:
     """Get episodes for a specific series."""
-    entry = _get_config_entry_from_service_data(service)
-    series_id: int = service.data[CONF_SERIES_ID]
-    season_number: int | None = service.data.get(CONF_SEASON_NUMBER)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
+    series_id: int = call.data[CONF_SERIES_ID]
+    season_number: int | None = call.data.get(CONF_SEASON_NUMBER)
 
     api_client = entry.runtime_data.status.api_client
     episodes = await _handle_api_errors(
@@ -159,10 +150,12 @@ async def _async_get_episodes(service: ServiceCall) -> dict[str, Any]:
     return {ATTR_EPISODES: formatted_episodes}
 
 
-async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr queue."""
-    entry = _get_config_entry_from_service_data(service)
-    max_items: int = service.data[CONF_MAX_ITEMS]
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
+    max_items: int = call.data[CONF_MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
@@ -179,10 +172,12 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     return {ATTR_SHOWS: shows}
 
 
-async def _async_get_diskspace(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_diskspace(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr diskspace information."""
-    entry = _get_config_entry_from_service_data(service)
-    space_unit: str = service.data[CONF_SPACE_UNIT]
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
+    space_unit: str = call.data[CONF_SPACE_UNIT]
 
     api_client = entry.runtime_data.status.api_client
     disks = await _handle_api_errors(api_client.async_get_diskspace)
@@ -190,10 +185,12 @@ async def _async_get_diskspace(service: ServiceCall) -> dict[str, Any]:
     return {ATTR_DISKS: format_diskspace(disks, space_unit)}
 
 
-async def _async_get_upcoming(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_upcoming(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr upcoming episodes."""
-    entry = _get_config_entry_from_service_data(service)
-    days: int = service.data[CONF_DAYS]
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
+    days: int = call.data[CONF_DAYS]
 
     api_client = entry.runtime_data.status.api_client
 
@@ -213,10 +210,12 @@ async def _async_get_upcoming(service: ServiceCall) -> dict[str, Any]:
     return {ATTR_EPISODES: episodes}
 
 
-async def _async_get_wanted(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_wanted(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr wanted/missing episodes."""
-    entry = _get_config_entry_from_service_data(service)
-    max_items: int = service.data[CONF_MAX_ITEMS]
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
+    max_items: int = call.data[CONF_MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items

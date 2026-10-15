@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from ns_api import NSAPI, Trip
 from requests.exceptions import ConnectionError, HTTPError, Timeout
@@ -77,6 +78,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         self.via = subentry.data.get(CONF_VIA)
         self.departure_time = subentry.data.get(CONF_TIME)  # str | None
 
+    @override
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
         trips: list[Trip] = []

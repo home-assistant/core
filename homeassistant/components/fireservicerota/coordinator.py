@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyfireservicerota import (
     ExpiredTokenError,
@@ -52,6 +52,7 @@ class FireServiceUpdateCoordinator(DataUpdateCoordinator[dict | None]):
 
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict | None:
         """Get the latest availability data."""
         return await self.client.async_update()

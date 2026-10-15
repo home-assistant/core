@@ -12,18 +12,20 @@ from .coordinator import BleBoxCoordinator
 class BleBoxEntity[_FeatureT: Feature](CoordinatorEntity[BleBoxCoordinator]):
     """Implements a common class for entities representing a BleBox feature."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: BleBoxCoordinator, feature: _FeatureT) -> None:
         """Initialize a BleBox entity."""
         super().__init__(coordinator)
         self._feature = feature
-        self._attr_name = feature.full_name
         self._attr_unique_id = feature.unique_id
         product = feature.product
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, product.unique_id)},
             manufacturer=product.brand,
-            model=product.model,
+            model=product.product,
             name=product.name,
             sw_version=product.firmware_version,
+            hw_version=product.hardware_version,
             configuration_url=f"http://{product.address}",
         )

@@ -1,6 +1,7 @@
 """Support for Buienradar.nl weather service."""
 
 import logging
+from typing import override
 
 from buienradar.constants import (
     ATTRIBUTION,
@@ -27,7 +28,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -761,6 +761,7 @@ class BrSensor(SensorEntity):
         if description.key.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to hass."""
         if self._data is None:
@@ -903,17 +904,15 @@ class BrSensor(SensorEntity):
 
         # update all other sensors
         self._attr_native_value = data.get(sensor_type)
+        self._attr_attribution = data.get(ATTRIBUTION)
         if sensor_type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
+            result = {}
             if self._timeframe is not None:
                 result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
 
             self._attr_extra_state_attributes = result
 
-        result = {
-            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
-            STATIONNAME_LABEL: data.get(STATIONNAME),
-        }
+        result = {STATIONNAME_LABEL: data.get(STATIONNAME)}
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime
             local_dt = dt_util.as_local(self._measured)

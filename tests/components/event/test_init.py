@@ -1,6 +1,7 @@
 """The tests for the event integration."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from typing import Any
 
 from freezegun import freeze_time
@@ -80,12 +81,14 @@ async def test_event() -> None:
         assert event.state_attributes == {ATTR_EVENT_TYPE: "long_press"}
         assert not event.extra_state_attributes
 
-    # Test triggering an event, with extra attribute data
-    now = dt_util.utcnow()
-    with freeze_time(now):
+    # Test triggering an event, with extra attribute data. Use a later time so
+    # the assertion is not affected by the strictly-increasing timestamp
+    # guarantee (which only kicks in within the same millisecond).
+    later = now + timedelta(seconds=1)
+    with freeze_time(later):
         event._trigger_event("short_press", {"hello": "world"})
 
-        assert event.state == now.isoformat(timespec="milliseconds")
+        assert event.state == later.isoformat(timespec="milliseconds")
         assert event.state_attributes == {
             ATTR_EVENT_TYPE: "short_press",
             "hello": "world",
@@ -96,6 +99,36 @@ async def test_event() -> None:
         ValueError, match="^Invalid event type unknown_event for event.doorbell$"
     ):
         event._trigger_event("unknown_event")
+
+
+async def test_trigger_event_strictly_increasing_timestamp() -> None:
+    """Test events within the same millisecond get strictly increasing states.
+
+    The event state is a millisecond timestamp; state triggers such as
+    event.received detect a new event by the state value changing. Multiple
+    events fired within one millisecond (e.g. several items handled in a single
+    coordinator poll) must therefore not collapse onto one timestamp.
+    """
+    event = EventEntity()
+    event.entity_id = "event.test"
+    event._attr_event_types = ["ping"]
+
+    states: list[str | None] = []
+    with freeze_time("2026-01-01T00:00:00+00:00"):
+        for _ in range(3):
+            event._trigger_event("ping")
+            states.append(event.state)
+
+    assert states == [
+        "2026-01-01T00:00:00.000+00:00",
+        "2026-01-01T00:00:00.001+00:00",
+        "2026-01-01T00:00:00.002+00:00",
+    ]
+
+    # A later real event keeps its true timestamp rather than an artificial bump.
+    with freeze_time("2026-01-01T00:00:05+00:00"):
+        event._trigger_event("ping")
+    assert event.state == "2026-01-01T00:00:05.000+00:00"
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")

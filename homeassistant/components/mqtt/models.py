@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 from paho.mqtt.client import MQTTMessage
 
@@ -73,7 +73,6 @@ class SubscriptionID:
 
         subscription_id = self._next_id
         if subscription_id > MAX_28BIT:
-            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="mqtt_max_subscription_id_reached",
@@ -190,6 +189,15 @@ class PendingDiscovered(TypedDict):
     unsub: CALLBACK_TYPE
 
 
+@dataclass(slots=True, frozen=True)
+class DiscoveredDisabledEntity:
+    """Discovered entity that is disabled in the entity registry."""
+
+    # Entity registry index (entity_platform, "mqtt", unique_id)
+    registry_key: tuple[str, str, str]
+    discovery_data: DiscoveryInfoType
+
+
 class MqttOriginInfo(TypedDict, total=False):
     """Integration info of discovered entity."""
 
@@ -232,6 +240,7 @@ class MqttCommandTemplateException(ServiceValidationError):
             f" and payload: {value_log}"
         )
 
+    @override
     def __str__(self) -> str:
         """Return exception message string."""
         return self._message
@@ -265,7 +274,11 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state and self._command_template.hass is not None:
+            # Created again when the entity_id is changed in place
+            if self._command_template.hass is not None and (
+                not self._template_state
+                or self._template_state.entity_id != self._entity.entity_id
+            ):
                 self._template_state = template.TemplateStateFromEntityId(
                     self._entity.hass, self._entity.entity_id
                 )
@@ -322,6 +335,7 @@ class MqttValueTemplateException(TemplateError):
             f" and payload: {payload_log}"
         )
 
+    @override
     def __str__(self) -> str:
         """Return exception message string."""
         return self._message
@@ -367,7 +381,11 @@ class MqttValueTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state and self._value_template.hass:
+            # Created again when the entity_id is changed in place
+            if self._value_template.hass and (
+                not self._template_state
+                or self._template_state.entity_id != self._entity.entity_id
+            ):
                 self._template_state = template.TemplateStateFromEntityId(
                     self._value_template.hass, self._entity.entity_id
                 )
@@ -474,11 +492,11 @@ class MqttData:
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
-    # the entity registry index, which is a tuple (entity_platform, "mqtt", unique_id)
-    # It allows to cleanup disabled entities when an empty payload is received.
-    discovery_discovered_and_disabled: dict[tuple[str, str], tuple[str, str, str]] = (
-        field(default_factory=dict)
-    )
+    # the disabled entity, so it can be cleaned up when an empty payload
+    # is received on the topic it was discovered on.
+    discovery_discovered_and_disabled: dict[
+        tuple[str, str], DiscoveredDisabledEntity
+    ] = field(default_factory=dict)
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict

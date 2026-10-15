@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysiaalarm import SIAEvent
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
         SIAAlarmControlPanel(
-            entry, account_data[CONF_ACCOUNT], zone, ENTITY_DESCRIPTION_ALARM
+            hass, entry, account_data[CONF_ACCOUNT], zone, ENTITY_DESCRIPTION_ALARM
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
@@ -89,6 +89,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: ConfigEntry,
         account: str,
         zone: int,
@@ -96,6 +97,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(
+            hass,
             entry,
             account,
             zone,
@@ -105,6 +107,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         self._attr_alarm_state: AlarmControlPanelState | None = None
         self._old_state: AlarmControlPanelState | None = None
 
+    @override
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         self._attr_alarm_state = None
@@ -116,6 +119,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         if self.state == STATE_UNAVAILABLE:
             self._attr_available = False
 
+    @override
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the alarm control panel.
 

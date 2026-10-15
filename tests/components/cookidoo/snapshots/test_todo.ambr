@@ -39,8 +39,8 @@
 # name: test_todo[todo.cookidoo_additional_purchases-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cookidoo Additional purchases',
-      'supported_features': <TodoListEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Additional purchases',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.cookidoo_additional_purchases',
@@ -90,8 +90,8 @@
 # name: test_todo[todo.cookidoo_shopping_list-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cookidoo Shopping list',
-      'supported_features': <TodoListEntityFeature: 4>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Shopping list',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.cookidoo_shopping_list',

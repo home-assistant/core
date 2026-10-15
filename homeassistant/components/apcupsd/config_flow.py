@@ -1,10 +1,10 @@
 """Config flow for APCUPSd integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 import aioapcaccess
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -13,19 +13,19 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import CONNECTION_TIMEOUT, DOMAIN
 from .coordinator import APCUPSdData
 
-_PORT_SELECTOR = vol.All(
+_PORT_SELECTOR = probatio.All(
     selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=1, max=65535, mode=selector.NumberSelectorMode.BOX
         ),
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 
-_SCHEMA = vol.Schema(
+_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default="localhost"): cv.string,
-        vol.Required(CONF_PORT, default=3551): _PORT_SELECTOR,
+        probatio.Required(CONF_HOST, default="localhost"): cv.string,
+        probatio.Required(CONF_PORT, default=3551): _PORT_SELECTOR,
     }
 )
 
@@ -35,6 +35,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.input_datetime import (
     ATTR_DATE,
@@ -14,15 +14,17 @@ from homeassistant.components.input_datetime import (
     ATTR_EDITABLE,
     ATTR_TIME,
     ATTR_TIMESTAMP,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
     CONF_ID,
-    CONF_INITIAL,
     CONF_NAME,
     CONFIG_SCHEMA,
-    DEFAULT_TIME,
     DOMAIN,
     SERVICE_RELOAD,
+)
+from homeassistant.components.input_datetime.const import (
+    CONF_HAS_DATE,
+    CONF_HAS_TIME,
+    CONF_INITIAL,
+    DEFAULT_TIME,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -130,7 +132,7 @@ async def async_set_timestamp(
 )
 def test_invalid_configs(config) -> None:
     """Test config."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         CONFIG_SCHEMA({DOMAIN: config})
 
 
@@ -284,7 +286,7 @@ async def test_set_invalid(hass: HomeAssistant) -> None:
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_datetime",
@@ -314,7 +316,7 @@ async def test_set_invalid_2(hass: HomeAssistant) -> None:
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_datetime",
@@ -344,7 +346,9 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
     assert not state.attributes["has_time"]
     assert state.attributes["has_date"]
 
-    date_dt_obj = datetime.datetime(2017, 9, 7)
+    date_dt_obj = datetime.datetime(
+        2017, 9, 7, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
@@ -443,7 +447,7 @@ async def test_input_datetime_context(
 ) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
-        hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
+        hass, DOMAIN, {"input_datetime": {"only_date": {"has_date": True}}}
     )
 
     state = hass.states.get("input_datetime.only_date")

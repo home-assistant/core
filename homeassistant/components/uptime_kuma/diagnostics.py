@@ -16,6 +16,11 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    return async_redact_data(
-        {k: asdict(v) for k, v in entry.runtime_data.data.items()}, TO_REDACT
-    )
+    return {
+        "version": entry.runtime_data.version.version
+        if entry.runtime_data.version
+        else None,
+        "monitors": async_redact_data(
+            {k: asdict(v) for k, v in entry.runtime_data.data.items()}, TO_REDACT
+        ),
+    }

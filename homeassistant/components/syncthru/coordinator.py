@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from pysyncthru import ConnectionMode, SyncThru
 
@@ -37,6 +38,7 @@ class SyncthruCoordinator(DataUpdateCoordinator[SyncThru]):
             connection_mode=ConnectionMode.API,
         )
 
+    @override
     async def _async_update_data(self) -> SyncThru:
         async with asyncio.timeout(10):
             await self.syncthru.update()

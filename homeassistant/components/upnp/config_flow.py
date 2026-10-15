@@ -1,10 +1,10 @@
 """Config flow for UPNP."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.ssdp import (
@@ -97,6 +97,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> UpnpOptionsFlowHandler:
@@ -117,6 +118,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         """Remove a discovery by its USN/unique_id."""
         return self._discoveries.pop(usn)
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -155,9 +157,9 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._discoveries:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("unique_id"): vol.In(
+                probatio.Required("unique_id"): probatio.In(
                     {
                         discovery.ssdp_usn: _friendly_name_from_discovery(discovery)
                         for discovery in self._discoveries.values()
@@ -170,6 +172,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -256,6 +259,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         discovery = self._remove_discovery(self.unique_id)
         return await self._async_create_entry_from_discovery(discovery)
 
+    @override
     async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow."""
         usn = user_input["unique_id"]
@@ -304,7 +308,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=options)
 
 
-class UpnpOptionsFlowHandler(OptionsFlow):
+class UpnpOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -312,11 +316,11 @@ class UpnpOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONFIG_ENTRY_FORCE_POLL,
                     default=self.config_entry.options.get(
                         CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL

@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 
@@ -71,10 +71,12 @@ class iOSNotificationService(BaseNotificationService):
         """Initialize the service."""
 
     @property
+    @override
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return devices_with_push(self.hass)
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
         data: dict[str, Any] = {ATTR_MESSAGE: message}

@@ -1,5 +1,7 @@
 """Support for the Rainforest Eagle energy monitor."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SUMMATION_DELIVERED, SUMMATION_RECEIVED
 from .coordinator import EagleDataCoordinator, RainforestEagleConfigEntry
 
 SENSORS = (
@@ -25,14 +27,14 @@ SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="zigbee:CurrentSummationDelivered",
+        key=SUMMATION_DELIVERED,
         translation_key="total_energy_delivered",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key="zigbee:CurrentSummationReceived",
+        key=SUMMATION_RECEIVED,
         translation_key="total_energy_received",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -88,11 +90,13 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.is_connected
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
         return self.coordinator.data.get(self.entity_description.key)

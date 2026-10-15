@@ -1,5 +1,7 @@
 """Binary sensors for myUplink."""
 
+from typing import override
+
 from myuplink import DeviceConnectionState, DevicePoint
 
 from homeassistant.components.binary_sensor import (
@@ -134,12 +136,14 @@ class MyUplinkDevicePointBinarySensor(MyUplinkEntity, BinarySensorEntity):
             self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Binary sensor state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         return int(device_point.value) != 0
 
     @property
+    @override
     def available(self) -> bool:
         """Return device data availability."""
         return super().available and (
@@ -168,6 +172,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Binary sensor state value."""
         return (
@@ -198,6 +203,7 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Binary sensor state value."""
         retval = None

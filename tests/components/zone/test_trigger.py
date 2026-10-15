@@ -4,10 +4,11 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation, zone
+from homeassistant.components.zone.trigger import TRIGGERS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -22,11 +23,13 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_time_changed, mock_component
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -123,6 +126,144 @@ async def test_if_fires_on_zone_enter(
     await hass.async_block_till_done()
 
     assert len(service_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "coords",
+    [
+        # Coordinates stay inside the zone the whole time, so a coordinate-based
+        # trigger would never see an enter transition.
+        pytest.param(
+            {"latitude": 32.880586, "longitude": -117.237564},
+            id="with_coordinates",
+        ),
+        # No coordinates at all; a coordinate-based trigger could not evaluate.
+        pytest.param({}, id="without_coordinates"),
+    ],
+)
+async def test_if_fires_on_zone_enter_via_in_zones(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    coords: dict[str, float],
+) -> None:
+    """Test the zone trigger fires based on in_zones, not coordinates.
+
+    Only the entity's in_zones attribute changes (from empty to the zone), and
+    that is what drives the enter event.
+    """
+    hass.states.async_set("device_tracker.entity", "hello", {**coords, "in_zones": []})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "device_tracker.entity",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Only in_zones changes; any coordinates are left unchanged.
+    hass.states.async_set(
+        "device_tracker.entity", "hello", {**coords, "in_zones": ["zone.test"]}
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_zone_enter_ignores_in_zones_for_other_domains(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the zone trigger uses coordinates for non device_tracker/person.
+
+    A sensor entity reports in_zones that always lists the zone, yet only its
+    coordinates crossing into the zone drives the enter event. If in_zones were
+    honored the entity would already count as "in" and never enter.
+    """
+    hass.states.async_set(
+        "sensor.tracker",
+        "hello",
+        {
+            "latitude": 32.881011,
+            "longitude": -117.234758,
+            "in_zones": ["zone.test"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "sensor.tracker",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # in_zones unchanged (still lists the zone); coordinates move inside.
+    hass.states.async_set(
+        "sensor.tracker",
+        "hello",
+        {
+            "latitude": 32.880586,
+            "longitude": -117.237564,
+            "in_zones": ["zone.test"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_zone_trigger_skips_coordinateless_non_tracker(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a coordinate-less non-tracker entity with in_zones is skipped.
+
+    Its in_zones attribute is not honored (wrong domain) and it has no
+    coordinates, so the zone trigger neither fires nor raises.
+    """
+    hass.states.async_set("sensor.tracker", "hello", {"in_zones": []})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "sensor.tracker",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("sensor.tracker", "hello", {"in_zones": ["zone.test"]})
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 0
+    assert "has no 'latitude' attribute" not in caplog.text
 
 
 async def test_if_fires_on_zone_enter_uuid(
@@ -388,6 +529,15 @@ IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
 TRIGGER_ZONE = ZONE_HOME
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "_": TargetSupport.NONE,
+    "entered": TargetSupport.STANDARD,
+    "left": TargetSupport.STANDARD,
+    "occupancy_detected": TargetSupport.NONE,
+    "occupancy_cleared": TargetSupport.NONE,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -412,12 +562,17 @@ async def test_zone_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize("trigger_key", ["zone.entered", "zone.left"])
 async def test_zone_trigger_rejects_non_zone_entity_id(
     hass: HomeAssistant, trigger_key: str
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_trigger_config(
             hass,
             [
@@ -569,7 +724,6 @@ async def test_zone_trigger_behavior_all(
 # --- Zone occupancy trigger tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key"),
     ["zone.occupancy_detected", "zone.occupancy_cleared"],
@@ -589,7 +743,6 @@ async def test_zone_occupancy_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "from_state", "to_state", "should_fire"),
     [
@@ -671,7 +824,6 @@ async def test_zone_occupancy_trigger_transitions(
     assert (len(service_calls) == 1) is should_fire
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "from_value", "to_value", "revert_value"),
     [

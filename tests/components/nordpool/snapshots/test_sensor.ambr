@@ -39,7 +39,7 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_currency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Currency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Currency',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_currency',
@@ -56,7 +56,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -94,9 +94,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Current price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Current price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_current_price',
@@ -113,7 +113,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,9 +151,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_daily_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Daily average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Daily average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_daily_average',
@@ -170,7 +170,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -205,8 +205,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_exchange_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Exchange rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Exchange rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_exchange_rate',
@@ -260,9 +260,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T17:15:00+00:00',
-      'friendly_name': 'Nord Pool SE3 Highest price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Highest price',
       'start': '2025-10-01T17:00:00+00:00',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_highest_price',
@@ -312,8 +312,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_last_updated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Last updated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Last updated',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_last_updated',
@@ -367,9 +367,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T02:15:00+00:00',
-      'friendly_name': 'Nord Pool SE3 Lowest price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Lowest price',
       'start': '2025-10-01T02:00:00+00:00',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_lowest_price',
@@ -422,8 +422,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_next_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Next price',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Next price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_next_price',
@@ -440,7 +440,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -478,9 +478,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 1 average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 1 average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_1_average',
@@ -497,7 +497,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -535,9 +535,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 1 highest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 1 highest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_1_highest_price',
@@ -554,7 +554,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -592,9 +592,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 1 lowest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 1 lowest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_1_lowest_price',
@@ -644,8 +644,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Off-peak 1 time from',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 1 time from',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_1_time_from',
@@ -695,8 +695,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Off-peak 1 time until',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 1 time until',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_1_time_until',
@@ -713,7 +713,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -751,9 +751,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 2 average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 2 average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_2_average',
@@ -770,7 +770,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -808,9 +808,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 2 highest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 2 highest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_2_highest_price',
@@ -827,7 +827,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -865,9 +865,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 2 lowest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 2 lowest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_2_lowest_price',
@@ -917,8 +917,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Off-peak 2 time from',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 2 time from',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_2_time_from',
@@ -968,8 +968,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Off-peak 2 time until',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Off-peak 2 time until',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_off_peak_2_time_until',
@@ -986,7 +986,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1024,9 +1024,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Peak average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Peak average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_peak_average',
@@ -1043,7 +1043,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1081,9 +1081,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Peak highest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Peak highest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_peak_highest_price',
@@ -1100,7 +1100,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1138,9 +1138,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Peak lowest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Peak lowest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_peak_lowest_price',
@@ -1190,8 +1190,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Peak time from',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Peak time from',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_peak_time_from',
@@ -1241,8 +1241,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE3 Peak time until',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Peak time until',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_peak_time_until',
@@ -1295,8 +1295,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se3_previous_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Previous price',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Previous price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se3_previous_price',
@@ -1346,7 +1346,7 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_currency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Currency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Currency',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_currency',
@@ -1363,7 +1363,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1401,9 +1401,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Current price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Current price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_current_price',
@@ -1420,7 +1420,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1458,9 +1458,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_daily_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Daily average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Daily average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_daily_average',
@@ -1477,7 +1477,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1512,8 +1512,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_exchange_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Exchange rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Exchange rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_exchange_rate',
@@ -1567,9 +1567,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T17:15:00+00:00',
-      'friendly_name': 'Nord Pool SE4 Highest price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Highest price',
       'start': '2025-10-01T17:00:00+00:00',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_highest_price',
@@ -1619,8 +1619,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_last_updated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Last updated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Last updated',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_last_updated',
@@ -1674,9 +1674,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T18:15:00+00:00',
-      'friendly_name': 'Nord Pool SE4 Lowest price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Lowest price',
       'start': '2025-10-01T18:00:00+00:00',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_lowest_price',
@@ -1729,8 +1729,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_next_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Next price',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Next price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_next_price',
@@ -1747,7 +1747,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1785,9 +1785,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 1 average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 1 average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_1_average',
@@ -1804,7 +1804,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1842,9 +1842,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 1 highest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 1 highest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_1_highest_price',
@@ -1861,7 +1861,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1899,9 +1899,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 1 lowest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 1 lowest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_1_lowest_price',
@@ -1951,8 +1951,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Off-peak 1 time from',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 1 time from',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_1_time_from',
@@ -2002,8 +2002,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Off-peak 1 time until',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 1 time until',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_1_time_until',
@@ -2020,7 +2020,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2058,9 +2058,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 2 average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 2 average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_2_average',
@@ -2077,7 +2077,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2115,9 +2115,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 2 highest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 2 highest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_2_highest_price',
@@ -2134,7 +2134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2172,9 +2172,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 2 lowest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 2 lowest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_2_lowest_price',
@@ -2224,8 +2224,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Off-peak 2 time from',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 2 time from',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_2_time_from',
@@ -2275,8 +2275,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Off-peak 2 time until',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Off-peak 2 time until',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_off_peak_2_time_until',
@@ -2293,7 +2293,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2331,9 +2331,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Peak average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Peak average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_peak_average',
@@ -2350,7 +2350,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2388,9 +2388,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Peak highest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Peak highest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_peak_highest_price',
@@ -2407,7 +2407,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2445,9 +2445,9 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Peak lowest price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Peak lowest price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_peak_lowest_price',
@@ -2497,8 +2497,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Peak time from',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Peak time from',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_peak_time_from',
@@ -2548,8 +2548,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Nord Pool SE4 Peak time until',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Peak time until',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_peak_time_until',
@@ -2602,8 +2602,8 @@
 # name: test_sensor[load_platforms0][sensor.nord_pool_se4_previous_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Previous price',
-      'unit_of_measurement': 'SEK/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Previous price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'SEK/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nord_pool_se4_previous_price',

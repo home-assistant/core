@@ -1,11 +1,11 @@
 """Config flow for the guntamatic integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from guntamatic.heater import Heater, NoSerialException
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -15,9 +15,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -27,6 +27,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_ip: str
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -58,6 +59,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

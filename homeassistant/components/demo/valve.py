@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature, ValveState
 from homeassistant.config_entries import ConfigEntry
@@ -73,25 +73,30 @@ class DemoValve(ValveEntity):
         )
 
     @property
+    @override
     def current_valve_position(self) -> int:
         """Return current position of valve."""
         return self._position
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return true if valve is opening."""
         return self._state == ValveState.OPENING
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return true if valve is closing."""
         return self._state == ValveState.CLOSING
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return true if valve is closed."""
         return self._state == ValveState.CLOSED
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
         self._state = ValveState.OPENING
@@ -100,6 +105,7 @@ class DemoValve(ValveEntity):
         self._state = ValveState.OPEN
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
         self._state = ValveState.CLOSING
@@ -108,6 +114,7 @@ class DemoValve(ValveEntity):
         self._state = ValveState.CLOSED
         self.async_write_ha_state()
 
+    @override
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
         self._state = ValveState.OPEN if self._position > 0 else ValveState.CLOSED
@@ -116,6 +123,7 @@ class DemoValve(ValveEntity):
             self._unsub_listener_valve = None
         self.async_write_ha_state()
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         if position == self._position:

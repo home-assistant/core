@@ -1,7 +1,7 @@
 """Support for Freedompro fan."""
 
 import json
-from typing import Any
+from typing import Any, override
 
 from pyfreedompro import put_state
 
@@ -68,11 +68,13 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -90,11 +92,13 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
                 self._attr_percentage = state["rotationSpeed"]
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -111,6 +115,7 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to turn off the fan."""
         payload = {"on": False}
@@ -122,6 +127,7 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         payload = {"rotationSpeed": percentage}

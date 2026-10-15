@@ -60,6 +60,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+        assert result["result"].unique_id == "40.30403754--3.72935236"
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -136,7 +137,15 @@ async def test_form_duplicated_id(
         entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -153,7 +162,23 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
         return_value=mocked_aemet,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["errors"] == {"base": "invalid_api_key"}
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY

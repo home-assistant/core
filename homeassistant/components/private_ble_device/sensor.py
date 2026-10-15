@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from bluetooth_data_tools import calculate_distance_meters
 
@@ -120,6 +121,7 @@ class PrivateBLEDeviceSensor(BasePrivateDeviceEntity, SensorEntity):
         super().__init__(config_entry)
 
     @callback
+    @override
     def _async_track_service_info(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -131,6 +133,7 @@ class PrivateBLEDeviceSensor(BasePrivateDeviceEntity, SensorEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _async_track_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
@@ -139,6 +142,7 @@ class PrivateBLEDeviceSensor(BasePrivateDeviceEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         assert self._last_info

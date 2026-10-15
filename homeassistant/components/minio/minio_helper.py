@@ -7,7 +7,7 @@ from queue import Queue
 import re
 import threading
 import time
-from typing import Self
+from typing import Self, override
 from urllib.parse import unquote
 
 from minio import Minio
@@ -52,6 +52,7 @@ def get_minio_notification_response(
 class MinioEventStreamIterator(Iterable):
     """Iterator wrapper over notification http response stream."""
 
+    @override
     def __iter__(self) -> Self:
         """Return self."""
         return self
@@ -112,6 +113,7 @@ class MinioEventThread(threading.Thread):
         """Stop and join the thread."""
         self.stop()
 
+    @override
     def run(self):
         """Create MinioClient and run the loop."""
         _LOGGER.debug("Running MinioEventThread")

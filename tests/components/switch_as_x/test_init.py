@@ -119,6 +119,10 @@ async def test_config_entry_unregistered_uuid(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == (
+        f"Failed to set up switch_as_x for unknown entity {fake_uuid}"
+    )
 
 
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
@@ -208,12 +212,6 @@ async def test_device_registry_config_entry_1(
         device_id=device_entry.id,
         original_name="ABC",
     )
-    # Add another config entry to the same device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=other_config_entry.entry_id
-    )
 
     switch_as_x_config_entry = MockConfigEntry(
         data={},
@@ -232,11 +230,14 @@ async def test_device_registry_config_entry_1(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     events = []
 
@@ -246,22 +247,19 @@ async def test_device_registry_config_entry_1(
 
     async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
 
-    # Remove the wrapped switch's config entry from the device, this removes the
-    # wrapped switch
+    # Remove the wrapped switch, this removes the switch_as_x config entry
     with patch(
         "homeassistant.components.switch_as_x.async_unload_entry",
         wraps=switch_as_x.async_unload_entry,
     ) as mock_setup_entry:
-        device_registry.async_update_device(
-            device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
-        )
+        entity_registry.async_remove(switch_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
 
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     # Check that the switch_as_x config entry is removed
     assert (
@@ -314,11 +312,14 @@ async def test_device_registry_config_entry_2(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     events = []
 
@@ -341,7 +342,7 @@ async def test_device_registry_config_entry_2(
 
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -396,13 +397,16 @@ async def test_device_registry_config_entry_3(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
     device_entry_2 = device_registry.async_get(device_entry_2.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
+    assert device_entry_2.config_entry_id != switch_as_x_config_entry.entry_id
 
     events = []
 
@@ -425,9 +429,9 @@ async def test_device_registry_config_entry_3(
 
     # Check that the switch_as_x config entry is moved to the other device
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
     device_entry_2 = device_registry.async_get(device_entry_2.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
+    assert device_entry_2.config_entry_id != switch_as_x_config_entry.entry_id
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -540,7 +544,10 @@ async def test_device(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
+    entity_id = entity_registry.async_get_entity_id(
+        target_domain, DOMAIN, switch_as_x_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
 
@@ -1134,9 +1141,6 @@ async def test_migrate(
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=config_entry.entry_id
-    )
     switch_as_x_entity_entry = entity_registry.async_get_or_create(
         target_domain,
         "switch_as_x",
@@ -1176,22 +1180,12 @@ async def test_migrate(
     assert config_entry.minor_version == SwitchAsXConfigFlowHandler.MINOR_VERSION
 
     # Check the state and entity registry entry are present
-    assert hass.states.get(f"{target_domain}.abc") is not None
-    assert entity_registry.async_get(f"{target_domain}.abc") is not None
+    assert hass.states.get(switch_as_x_entity_entry.entity_id) is not None
+    assert entity_registry.async_get(switch_as_x_entity_entry.entity_id) is not None
 
-    # Entity removed from device to prevent deletion, then added back to device
-    assert events == [
-        {
-            "action": "update",
-            "changes": {"device_id": device_entry.id},
-            "entity_id": switch_as_x_entity_entry.entity_id,
-        },
-        {
-            "action": "update",
-            "changes": {"device_id": None},
-            "entity_id": switch_as_x_entity_entry.entity_id,
-        },
-    ]
+    # The switch_as_x config entry was never added to the device, so migration does
+    # not change the switch_as_x entity's device link
+    assert events == []
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

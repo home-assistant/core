@@ -8,10 +8,11 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import history
-from homeassistant.components.history import websocket_api
+from homeassistant.components.history import DOMAIN, websocket_api
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_STATE_CHANGED,
@@ -77,7 +78,7 @@ async def test_history_during_period(
     """Test history_during_period."""
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
@@ -210,7 +211,7 @@ async def test_history_during_period_impossible_conditions(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period returns when condition cannot be true."""
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
@@ -278,7 +279,7 @@ async def test_history_during_period_significant_domain(
     await hass.config.async_set_time_zone(time_zone)
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("climate.test", "on", attributes={"temperature": "1"})
@@ -443,7 +444,7 @@ async def test_history_during_period_bad_start_time(
     """Test history_during_period bad state time."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
 
@@ -470,7 +471,7 @@ async def test_history_during_period_bad_end_time(
 
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
 
@@ -497,7 +498,7 @@ async def test_history_stream_historical_only(
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -586,7 +587,7 @@ async def test_history_stream_significant_domain_historical_only(
     """Test the stream with climate domain with historical states only."""
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("climate.test", "on", attributes={"temperature": "1"})
@@ -788,7 +789,7 @@ async def test_history_stream_bad_start_time(
     """Test history stream bad state time."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
 
@@ -816,7 +817,7 @@ async def test_history_stream_end_time_before_start_time(
 
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
 
@@ -844,7 +845,7 @@ async def test_history_stream_bad_end_time(
 
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
 
@@ -871,7 +872,7 @@ async def test_history_stream_live_no_attributes_minimal_response(
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -965,7 +966,7 @@ async def test_history_stream_live(
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1079,7 +1080,7 @@ async def test_history_stream_live_minimal_response(
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1185,7 +1186,7 @@ async def test_history_stream_live_no_attributes(
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1291,7 +1292,7 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {history.DOMAIN: {}},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1386,7 +1387,7 @@ async def test_history_stream_live_with_future_end_time(
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {history.DOMAIN: {}},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1496,7 +1497,7 @@ async def test_history_stream_before_history_starts(
     """Test history stream before we have history."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1548,7 +1549,7 @@ async def test_history_stream_for_entity_with_no_possible_changes(
     """
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -1624,7 +1625,7 @@ async def test_overflow_queue(
     ):
         await async_setup_component(
             hass,
-            "history",
+            DOMAIN,
             {history.DOMAIN: {}},
         )
         await async_setup_component(hass, "sensor", {})
@@ -1711,7 +1712,7 @@ async def test_history_during_period_for_invalid_entity_ids(
     """Test history_during_period for valid and invalid entity ids."""
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
@@ -1873,7 +1874,7 @@ async def test_history_stream_for_invalid_entity_ids(
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {history.DOMAIN: {}},
     )
 
@@ -2045,12 +2046,14 @@ async def test_history_stream_for_invalid_entity_ids(
 
 @pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_historical_only_with_start_time_state_past(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test history stream."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_setup_component(hass, "sensor", {})
@@ -2058,15 +2061,16 @@ async def test_history_stream_historical_only_with_start_time_state_past(
     hass.states.async_set("sensor.one", "first", attributes={"any": "attr"})
     await async_recorder_block_till_done(hass)
 
-    await asyncio.sleep(0.00002)
+    freezer.tick(timedelta(seconds=1))
     now = dt_util.utcnow()
     await async_recorder_block_till_done(hass)
+    freezer.tick(timedelta(seconds=1))
     hass.states.async_set("sensor.one", "second", attributes={"any": "attr"})
     sensor_one_last_updated_second_timestamp = hass.states.get(
         "sensor.one"
     ).last_updated_timestamp
 
-    await asyncio.sleep(0.00001)
+    freezer.tick(timedelta(seconds=1))
     hass.states.async_set("sensor.one", "third", attributes={"any": "attr"})
     sensor_one_last_updated_third_timestamp = hass.states.get(
         "sensor.one"
@@ -2091,6 +2095,7 @@ async def test_history_stream_historical_only_with_start_time_state_past(
     hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
     await async_wait_recording_done(hass)
 
+    freezer.tick(timedelta(seconds=1))
     end_time = dt_util.utcnow()
 
     client = await hass_ws_client()
@@ -2161,7 +2166,7 @@ async def test_history_stream_live_chained_events(
 ) -> None:
     """Test history stream with history with a chained event."""
     now = dt_util.utcnow()
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
     await async_wait_recording_done(hass)
@@ -2251,7 +2256,7 @@ async def test_history_during_period_filters_unauthorized_entities(
     )
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.allowed", "on")
     hass.states.async_set("sensor.forbidden", "on")
@@ -2303,7 +2308,7 @@ async def test_history_stream_filters_unauthorized_entities(
     )
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.allowed", "on")
     hass.states.async_set("sensor.forbidden", "on")

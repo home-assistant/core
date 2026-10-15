@@ -5,6 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
@@ -67,6 +68,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         """Return the parsed id of the Nuki bridge."""
         return parse_id(self.bridge.info()["ids"]["hardwareId"])
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from Nuki bridge."""
         try:

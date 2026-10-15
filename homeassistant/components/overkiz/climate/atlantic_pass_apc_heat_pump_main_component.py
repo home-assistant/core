@@ -1,7 +1,7 @@
 """Support for Atlantic Pass APC Heat Pump Main Component."""
 
 from asyncio import sleep
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -40,18 +40,21 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac current mode: stop, cooling, heating."""
         return OVERKIZ_TO_HVAC_MODES[
             cast(
-                str, self.executor.select_state(OverkizState.IO_PASS_APC_OPERATING_MODE)
+                str,
+                self.device.states.get_value(OverkizState.IO_PASS_APC_OPERATING_MODE),
             )
         ]
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode: stop, cooling, heating."""
         # They are mainly managed by the Zone Control device

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: VesyncConfigEntry
-) -> bool:
+) -> None:
     """Set up Vesync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
@@ -64,17 +64,14 @@ async def async_setup_entry(
     try:
         await manager.login()
     except VeSyncLoginError as err:
-        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except VeSyncServerError as err:
-        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="server_error"
         ) from err
     except VeSyncAPIResponseError as err:
-        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="api_response_error"
         ) from err
@@ -94,17 +91,15 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VesyncConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VesyncConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VesyncConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating VeSync config entry: %s minor version: %s",
@@ -135,11 +130,10 @@ async def async_migrate_entry(
             else:
                 _LOGGER.debug("Skipping entity with unique_id: %s", reg_entry.unique_id)
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
-    return True
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: VesyncConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: VesyncConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     manager = config_entry.runtime_data.manager

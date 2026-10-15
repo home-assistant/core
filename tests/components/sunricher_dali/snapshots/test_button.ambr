@@ -39,8 +39,8 @@
 # name: test_entities[button.cct_0000_03-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'CCT 0000-03',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CCT 0000-03',
     }),
     'context': <ANY>,
     'entity_id': 'button.cct_0000_03',
@@ -90,8 +90,8 @@
 # name: test_entities[button.dimmer_0000_02-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Dimmer 0000-02',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer 0000-02',
     }),
     'context': <ANY>,
     'entity_id': 'button.dimmer_0000_02',
@@ -141,8 +141,8 @@
 # name: test_entities[button.hs_color_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'HS Color Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HS Color Light',
     }),
     'context': <ANY>,
     'entity_id': 'button.hs_color_light',
@@ -192,8 +192,8 @@
 # name: test_entities[button.rgbw_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'RGBW Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RGBW Light',
     }),
     'context': <ANY>,
     'entity_id': 'button.rgbw_light',

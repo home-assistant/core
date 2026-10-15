@@ -1,5 +1,7 @@
 """Representation of a switchMultilevel."""
 
+from typing import override
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -34,12 +36,14 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     """Representation of a ZWaveMe Multilevel Switch."""
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the unit of measurement."""
         if self.device.level == 99:  # Scale max value
             return 100
         return self.device.level
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(

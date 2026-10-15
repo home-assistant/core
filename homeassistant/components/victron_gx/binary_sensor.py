@@ -1,6 +1,6 @@
 """Support for Victron GX binary sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -69,6 +69,7 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
         self._attr_is_on = self.convert_metric_value_to_is_on(metric.value)
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_is_on = self.convert_metric_value_to_is_on(value)
         self.async_write_ha_state()

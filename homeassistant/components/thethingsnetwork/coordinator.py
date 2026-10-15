@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from ttn_client import TTNAuthError, TTNClient
 
@@ -44,6 +45,7 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             push_callback=self._push_callback,
         )
 
+    @override
     async def _async_update_data(self) -> TTNClient.DATA_TYPE:
         """Fetch data from API endpoint.
 
@@ -57,7 +59,6 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
         except TTNAuthError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            _LOGGER.error("TTNAuthError")
             raise ConfigEntryAuthFailed from err
         else:
             # Return measurements

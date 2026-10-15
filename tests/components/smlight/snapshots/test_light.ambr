@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Off',
         'Blur',
@@ -26,7 +26,7 @@
         'System OK',
         'System Info',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -63,10 +63,10 @@
 # name: test_light_setup_ultima[light.mock_title_ambilight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'effect': None,
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: None,
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Off',
         'Blur',
@@ -86,15 +86,15 @@
         'System OK',
         'System Info',
       ]),
-      'friendly_name': 'Mock Title Ambilight',
-      'hs_color': None,
-      'icon': 'mdi:led-strip',
-      'rgb_color': None,
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Ambilight',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:led-strip',
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.mock_title_ambilight',

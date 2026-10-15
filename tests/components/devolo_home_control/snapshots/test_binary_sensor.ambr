@@ -2,8 +2,8 @@
 # name: test_binary_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_door',
@@ -53,8 +53,8 @@
 # name: test_binary_sensor.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Test Overload',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Overload',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_overload',
@@ -104,7 +104,7 @@
 # name: test_remote_control
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_button_1',

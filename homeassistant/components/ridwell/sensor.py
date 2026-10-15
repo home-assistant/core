@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from datetime import date
-from typing import Any
+from typing import Any, override
 
 from aioridwell.model import RidwellAccount
 
@@ -60,6 +60,7 @@ class RidwellSensor(RidwellEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         attrs: dict[str, Any] = {
@@ -82,6 +83,7 @@ class RidwellSensor(RidwellEntity, SensorEntity):
         return attrs
 
     @property
+    @override
     def native_value(self) -> date:
         """Return the value reported by the sensor."""
         return self.next_pickup_event.pickup_date

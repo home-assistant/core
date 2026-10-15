@@ -1,7 +1,7 @@
 """Support for D-Link Power Plug Switches."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DLinkConfigEntry
-from .const import ATTR_TOTAL_CONSUMPTION
+from .const import ATTR_CURRENT_CONSUMPTION, ATTR_TOTAL_CONSUMPTION
 from .entity import DLinkEntity
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -34,6 +34,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     _attr_name = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         try:
@@ -48,20 +49,29 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         except ValueError:
             total_consumption = None
 
+        try:
+            current_consumption = float(self.data.current_consumption)
+        except ValueError:
+            current_consumption = None
+
         return {
             ATTR_TOTAL_CONSUMPTION: total_consumption,
             ATTR_TEMPERATURE: temperature,
+            ATTR_CURRENT_CONSUMPTION: current_consumption,
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.data.state == "ON"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.data.smartplug.state = "ON"
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.data.smartplug.state = "OFF"
@@ -71,6 +81,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         self.data.update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data.available

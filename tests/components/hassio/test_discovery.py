@@ -11,6 +11,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import ConfigEntries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
@@ -124,7 +125,7 @@ async def test_hassio_discovery_startup_done(
 
     supervisor_root_info.side_effect = SupervisorError()
     await hass.async_start()
-    await async_setup_component(hass, "hassio", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert get_addon_discovery_info.call_count == 1

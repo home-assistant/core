@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizState
+from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,7 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, build_event
+from .helpers import (
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+)
 
 from tests.common import snapshot_platform
 
@@ -44,12 +48,19 @@ COZYTOUCH_DHW = FixtureDevice(
     "io://1234-5678-5643/109286#2",
     "sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
+# Hitachi Yutaki heat pump exposing energy and temperature sensors
+YUTAKI = FixtureDevice(
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#1",
+    "sensor.my_house_yutaki_outdoor_ambient_temperature",
+)
 
 SNAPSHOT_FIXTURES = [
     TEMPERATURE_SENSOR,
     TEMPERATURE_SENSOR_LOCAL,
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
+    YUTAKI,
 ]
 
 
@@ -97,8 +108,7 @@ async def test_sensor_temperature_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=TEMPERATURE_SENSOR.device_url,
                 device_states=[
                     {
@@ -133,8 +143,7 @@ async def test_sensor_battery_level_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=HEATING_BATTERY.device_url,
                 device_states=[
                     {
@@ -169,8 +178,7 @@ async def test_sensor_unavailability(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+            device_unavailable_event(
                 device_url=TEMPERATURE_SENSOR.device_url,
             )
         ],

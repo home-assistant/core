@@ -31,6 +31,29 @@ async def _async_get_write_requests_remaining(
         return {"type": "failed", "error": "unreachable"}
 
 
+def _entry_write_requests_remaining_key(config_entry: DucoConfigEntry) -> str:
+    """Return the identifying label for a config entry quota."""
+    identifier = config_entry.unique_id or config_entry.entry_id
+    return f"{config_entry.title or config_entry.entry_id} ({identifier})"
+
+
+async def _async_get_write_requests_remaining_summary(
+    config_entries: list[DucoConfigEntry],
+) -> str:
+    """Get a per-entry write-request summary for system health."""
+    # Keep one translated system health label; multiple Duco boxes are
+    # summarized in the value to avoid ambiguous per-entry labels.
+    summaries: list[str] = []
+    for config_entry in config_entries:
+        result = await _async_get_write_requests_remaining(config_entry)
+        summaries.append(
+            f"{_entry_write_requests_remaining_key(config_entry)}: "
+            f"{result if not isinstance(result, dict) else f'Failed: {result["error"]}'}"
+        )
+
+    return "; ".join(summaries)
+
+
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     config_entries: list[DucoConfigEntry] = hass.config_entries.async_loaded_entries(
@@ -40,8 +63,15 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     if not config_entries:
         return {}
 
+    if len(config_entries) == 1:
+        return {
+            "write_requests_remaining": _async_get_write_requests_remaining(
+                config_entries[0]
+            )
+        }
+
     return {
-        "write_requests_remaining": _async_get_write_requests_remaining(
-            config_entries[0]
+        "write_requests_remaining": _async_get_write_requests_remaining_summary(
+            config_entries
         )
     }

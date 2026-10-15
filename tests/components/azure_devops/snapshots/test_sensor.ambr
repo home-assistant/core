@@ -42,7 +42,7 @@
       'definition_id': 9876,
       'definition_name': 'CI',
       'finish_time': '2021-01-01T00:00:00Z',
-      'friendly_name': 'testproject CI latest build',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build',
       'id': 5678,
       'queue_time': '2021-01-01T00:00:00Z',
       'reason': 'manual',
@@ -101,8 +101,8 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_finish_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testproject CI latest build finish time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build finish time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_finish_time',
@@ -152,7 +152,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_id-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build ID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_id',
@@ -202,8 +202,8 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_queue_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testproject CI latest build queue time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build queue time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_queue_time',
@@ -253,7 +253,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build reason',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build reason',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_reason',
@@ -303,7 +303,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_result-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build result',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build result',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_result',
@@ -353,7 +353,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_source_branch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build source branch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build source branch',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_source_branch',
@@ -403,7 +403,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_source_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build source version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build source version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_source_version',
@@ -453,8 +453,8 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testproject CI latest build start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build start time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_start_time',
@@ -504,7 +504,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_url-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build URL',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build URL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_url',
@@ -520,7 +520,7 @@
       'definition_id': 9876,
       'definition_name': 'CI',
       'finish_time': None,
-      'friendly_name': 'testproject CI latest build',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build',
       'id': 6789,
       'queue_time': None,
       'reason': None,
@@ -542,8 +542,8 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_finish_time-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testproject CI latest build finish time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build finish time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_finish_time',
@@ -556,7 +556,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_id-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build ID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_id',
@@ -569,8 +569,8 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_queue_time-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testproject CI latest build queue time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build queue time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_queue_time',
@@ -583,7 +583,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_reason-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build reason',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build reason',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_reason',
@@ -596,7 +596,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_result-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build result',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build result',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_result',
@@ -609,7 +609,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_source_branch-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build source branch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build source branch',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_source_branch',
@@ -622,7 +622,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_source_version-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build source version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build source version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_source_version',
@@ -635,8 +635,8 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_start_time-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testproject CI latest build start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build start time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_start_time',
@@ -649,7 +649,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_url-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build URL',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testproject CI latest build URL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_url',

@@ -1,7 +1,7 @@
 """Base entity for the Chacon Dio entity."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from dio_chacon_wifi_api import DIOChaconAPIClient
 
@@ -38,6 +38,7 @@ class ChaconDioEntity(Entity):
     def _update_attr(self, data: dict[str, Any]) -> None:
         """Recomputes the attributes values."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register the callback for server side events."""
         await super().async_added_to_hass()

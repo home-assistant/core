@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -106,11 +107,13 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
     entity_description: HDFuryNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current number value."""
 
         return float(self.coordinator.data.config[self.entity_description.key])
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set Number Value Event."""
 

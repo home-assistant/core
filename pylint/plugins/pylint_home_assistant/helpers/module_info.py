@@ -5,6 +5,8 @@ import re
 
 _INTEGRATION_ROOT = "homeassistant.components"
 _INTEGRATION_ROOT_DOT = f"{_INTEGRATION_ROOT}."
+_INTEGRATION_TEST_ROOT = "tests.components"
+_INTEGRATION_TEST_ROOT_DOT = f"{_INTEGRATION_TEST_ROOT}."
 _ROOT_SEGMENT_COUNT = _INTEGRATION_ROOT.count(".") + 1
 _MODULE_REGEX: re.Pattern[str] = re.compile(
     rf"^{re.escape(_INTEGRATION_ROOT)}\.\w+(\.\w+)?$"
@@ -26,14 +28,20 @@ class IntegrationModule:
     """
 
 
-def parse_module(module_name: str) -> IntegrationModule | None:
+def parse_module(
+    module_name: str, *, include_test: bool = False
+) -> IntegrationModule | None:
     """Parse a dotted module name into integration parts.
 
     Returns ``None`` if *module_name* is not under the integration root.
     For deep sub-modules (e.g. ``homeassistant.components.hue.light.v2``),
     ``module`` is set to the first segment after the domain (``light``).
     """
-    if not module_name.startswith(_INTEGRATION_ROOT_DOT):
+    if module_name.startswith(_INTEGRATION_ROOT_DOT):
+        root = _INTEGRATION_ROOT
+    elif include_test and module_name.startswith(_INTEGRATION_TEST_ROOT_DOT):
+        root = _INTEGRATION_TEST_ROOT
+    else:
         return None
 
     parts = module_name.split(".")
@@ -42,13 +50,13 @@ def parse_module(module_name: str) -> IntegrationModule | None:
         return None
     if n == _ROOT_SEGMENT_COUNT + 1:
         return IntegrationModule(
-            root=_INTEGRATION_ROOT,
+            root=root,
             domain=parts[_ROOT_SEGMENT_COUNT],
             module=None,
         )
     # n >= _ROOT_SEGMENT_COUNT + 2: domain.module[.submodule...]
     return IntegrationModule(
-        root=_INTEGRATION_ROOT,
+        root=root,
         domain=parts[_ROOT_SEGMENT_COUNT],
         module=parts[_ROOT_SEGMENT_COUNT + 1],
     )

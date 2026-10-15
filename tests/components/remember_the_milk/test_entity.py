@@ -3,29 +3,41 @@
 from typing import Any
 from unittest.mock import MagicMock, call
 
+from aiortm import AioRTMError, AuthError
 import pytest
-from rtmapi import RtmRequestFailedException
 
 from homeassistant.components.remember_the_milk import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import CONFIG, PROFILE
+from .const import PROFILE
+
+from tests.common import MockConfigEntry
+
+CONFIG = {
+    "name": f"{PROFILE}",
+    "api_key": "test-api-key",
+    "shared_secret": "test-shared-secret",
+}
 
 
+@pytest.mark.usefixtures("storage")
 @pytest.mark.parametrize(
-    ("valid_token", "entity_state"), [(True, "ok"), (False, "API token invalid")]
+    ("check_token_side_effect", "entity_state"),
+    [(None, "ok"), (AuthError("Invalid token!"), "API token invalid")],
 )
 async def test_entity_state(
     hass: HomeAssistant,
     client: MagicMock,
-    storage: MagicMock,
-    valid_token: bool,
+    config_entry: MockConfigEntry,
+    check_token_side_effect: Exception | None,
     entity_state: str,
 ) -> None:
     """Test the entity state."""
-    client.token_valid.return_value = valid_token
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG})
+    client.rtm.api.check_token.side_effect = check_token_side_effect
+    await hass.config_entries.async_setup(config_entry.entry_id)
     entity_id = f"{DOMAIN}.{PROFILE}"
     state = hass.states.get(entity_id)
 
@@ -50,7 +62,7 @@ async def test_entity_state(
     ),
     [
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_create_task",
             {"name": "Test 1"},
             0,
@@ -59,9 +71,9 @@ async def test_entity_state(
             "rtm.tasks.add",
             1,
             call(
-                timeline="1234",
+                timeline=1234,
                 name="Test 1",
-                parse="1",
+                parse=True,
             ),
             "set_rtm_id",
             0,
@@ -77,36 +89,36 @@ async def test_entity_state(
             "rtm.tasks.add",
             1,
             call(
-                timeline="1234",
+                timeline=1234,
                 name="Test 1",
-                parse="1",
+                parse=True,
             ),
             "set_rtm_id",
             1,
-            call(PROFILE, "test_1", "1", "2", "3"),
+            call(PROFILE, "test_1", 1, 2, 3),
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             1,
             call(PROFILE, "test_1"),
             1,
-            "rtm.tasks.setName",
+            "rtm.tasks.set_name",
             1,
             call(
                 name="Test 1",
-                list_id="1",
-                taskseries_id="2",
-                task_id="3",
-                timeline="1234",
+                list_id=1,
+                taskseries_id=2,
+                task_id=3,
+                timeline=1234,
             ),
             "set_rtm_id",
             0,
             None,
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_complete_task",
             {"id": "test_1"},
             1,
@@ -115,10 +127,10 @@ async def test_entity_state(
             "rtm.tasks.complete",
             1,
             call(
-                list_id="1",
-                taskseries_id="2",
-                task_id="3",
-                timeline="1234",
+                list_id=1,
+                taskseries_id=2,
+                task_id=3,
+                timeline=1234,
             ),
             "delete_rtm_id",
             1,
@@ -173,52 +185,52 @@ async def test_services(
     ),
     [
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_create_task",
             {"name": "Test 1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error creating new Remember The Milk task for account myprofile: Boom!",
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_create_task",
             {"name": "Test 1"},
             "rtm.tasks.add",
-            RtmRequestFailedException("rtm.tasks.add", "400", "Bad request"),
-            "Request rtm.tasks.add failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error creating new Remember The Milk task for account myprofile: Boom!",
         ),
         (
             None,
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error creating new Remember The Milk task for account myprofile: Boom!",
         ),
         (
             None,
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             "rtm.tasks.add",
-            RtmRequestFailedException("rtm.tasks.add", "400", "Bad request"),
-            "Request rtm.tasks.add failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error creating new Remember The Milk task for account myprofile: Boom!",
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error creating new Remember The Milk task for account myprofile: Boom!",
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
-            "rtm.tasks.setName",
-            RtmRequestFailedException("rtm.tasks.setName", "400", "Bad request"),
-            "Request rtm.tasks.setName failed. Status: 400, reason: Bad request.",
+            "rtm.tasks.set_name",
+            AioRTMError("Boom!"),
+            "Error creating new Remember The Milk task for account myprofile: Boom!",
         ),
         (
             None,
@@ -232,20 +244,20 @@ async def test_services(
             ),
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_complete_task",
             {"id": "test_1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error completing task with id test_1 for account myprofile: Boom!",
         ),
         (
-            ("1", "2", "3"),
+            (1, 2, 3),
             f"{PROFILE}_complete_task",
             {"id": "test_1"},
             "rtm.tasks.complete",
-            RtmRequestFailedException("rtm.tasks.complete", "400", "Bad request"),
-            "Request rtm.tasks.complete failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Error completing task with id test_1 for account myprofile: Boom!",
         ),
     ],
 )
@@ -274,3 +286,107 @@ async def test_services_errors(
     await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
 
     assert error_message in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "get_rtm_id_return_value",
+        "service",
+        "service_data",
+        "method",
+        "error_message",
+    ),
+    [
+        (
+            (1, 2, 3),
+            f"{PROFILE}_create_task",
+            {"name": "Test 1"},
+            "rtm.timelines.create",
+            "Invalid authentication when creating task for account myprofile: Boom!",
+        ),
+        (
+            (1, 2, 3),
+            f"{PROFILE}_create_task",
+            {"name": "Test 1", "id": "test_1"},
+            "rtm.tasks.set_name",
+            "Invalid authentication when creating task for account myprofile: Boom!",
+        ),
+        (
+            (1, 2, 3),
+            f"{PROFILE}_complete_task",
+            {"id": "test_1"},
+            "rtm.tasks.complete",
+            (
+                "Invalid authentication when completing task with id test_1 "
+                "for account myprofile: Boom!"
+            ),
+        ),
+    ],
+)
+async def test_services_auth_errors(
+    hass: HomeAssistant,
+    client: MagicMock,
+    storage: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    get_rtm_id_return_value: Any,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    error_message: str,
+) -> None:
+    """Test that an auth error invalidates the token and reloads the entry."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG})
+    storage.get_rtm_id.return_value = get_rtm_id_return_value
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(f"{DOMAIN}.{PROFILE}")
+    assert state
+    assert state.state == "ok"
+
+    client_method = client
+    for name in method.split("."):
+        client_method = getattr(client_method, name)
+
+    client_method.side_effect = AuthError("Boom!")
+    # The token is now invalid, so re-checking it during the reload fails too.
+    client.rtm.api.check_token.side_effect = AuthError("Invalid token!")
+
+    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+    await hass.async_block_till_done()
+
+    assert error_message in caplog.text
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = list(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert len(flows) == 1
+
+
+@pytest.mark.usefixtures("storage")
+@pytest.mark.parametrize(
+    ("service", "service_data", "replacement"),
+    [
+        (f"{PROFILE}_create_task", {"name": "Test 1"}, "todo.add_item"),
+        (f"{PROFILE}_complete_task", {"id": "test_1"}, "todo.update_item"),
+    ],
+)
+async def test_deprecated_action_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    replacement: str,
+) -> None:
+    """Test calling a legacy account action creates a deprecation issue."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_key == "deprecated_action"
+    assert issue.translation_placeholders == {
+        "action": f"{DOMAIN}.{service}",
+        "replacement": replacement,
+    }

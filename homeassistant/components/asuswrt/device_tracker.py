@@ -1,5 +1,7 @@
 """Support for ASUSWRT routers."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -63,26 +65,31 @@ class AsusWrtDevice(ScannerEntity):
         self._attr_name = device.name or DEFAULT_DEVICE_NAME
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device.is_connected
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return the hostname of device."""
         return self._device.name
 
     @property
+    @override
     def icon(self) -> str:
         """Return device icon."""
         return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip_address
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._device.mac
@@ -93,6 +100,7 @@ class AsusWrtDevice(ScannerEntity):
         self._device = self._router.devices[self._device.mac]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_on_remove(

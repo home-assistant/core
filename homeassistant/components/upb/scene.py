@@ -1,21 +1,13 @@
 """Platform for UPB link integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UpbConfigEntry
-from .const import UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
 from .entity import UpbEntity
-
-SERVICE_LINK_DEACTIVATE = "link_deactivate"
-SERVICE_LINK_FADE_STOP = "link_fade_stop"
-SERVICE_LINK_GOTO = "link_goto"
-SERVICE_LINK_FADE_START = "link_fade_start"
-SERVICE_LINK_BLINK = "link_blink"
 
 
 async def async_setup_entry(
@@ -28,24 +20,6 @@ async def async_setup_entry(
     unique_id = config_entry.entry_id
     async_add_entities(UpbLink(upb.links[link], unique_id, upb) for link in upb.links)
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_LINK_DEACTIVATE, None, "async_link_deactivate"
-    )
-    platform.async_register_entity_service(
-        SERVICE_LINK_FADE_STOP, None, "async_link_fade_stop"
-    )
-    platform.async_register_entity_service(
-        SERVICE_LINK_GOTO, UPB_BRIGHTNESS_RATE_SCHEMA, "async_link_goto"
-    )
-    platform.async_register_entity_service(
-        SERVICE_LINK_FADE_START, UPB_BRIGHTNESS_RATE_SCHEMA, "async_link_fade_start"
-    )
-    platform.async_register_entity_service(
-        SERVICE_LINK_BLINK, UPB_BLINK_RATE_SCHEMA, "async_link_blink"
-    )
-
 
 class UpbLink(UpbEntity, Scene):
     """Representation of a UPB Link."""
@@ -55,6 +29,7 @@ class UpbLink(UpbEntity, Scene):
         super().__init__(element, unique_id, upb)
         self._attr_name = element.name
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""
         self._element.activate()

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -193,12 +194,14 @@ class PlaystationNetworkSensorBaseEntity(
     coordinator: PlayStationNetworkBaseCoordinator
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if self.entity_description.key is PlaystationNetworkSensor.ONLINE_ID and (
@@ -213,6 +216,7 @@ class PlaystationNetworkSensorBaseEntity(
         return super().entity_picture
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
 

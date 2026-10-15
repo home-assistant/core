@@ -1,7 +1,7 @@
 """Platform for NASweb thermostat."""
 
 import time
-from typing import Any
+from typing import Any, override
 
 from webio_api import Thermostat as NASwebThermostat
 from webio_api.const import KEY_THERMOSTAT
@@ -62,7 +62,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = CLIMATE_TRANSLATION_KEY
 
     def __init__(
@@ -75,11 +75,13 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._thermostat = nasweb_thermostat
         self._attr_available = False
         self._attr_name = nasweb_thermostat.name
-        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -97,11 +99,12 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
             self._attr_available = available if available is not None else False
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_temperature = self._thermostat.current_temp
-        self._attr_target_temperature_low = self._thermostat.temp_target_min
-        self._attr_target_temperature_high = self._thermostat.temp_target_max
+        self._attr_native_current_temperature = self._thermostat.current_temp
+        self._attr_native_target_temperature_low = self._thermostat.temp_target_min
+        self._attr_native_target_temperature_high = self._thermostat.temp_target_max
         self._attr_hvac_mode = self._get_current_hvac_mode()
         self._attr_hvac_action = self._get_current_action()
         self._attr_name = self._thermostat.name or None
@@ -141,13 +144,15 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         if (
             self._thermostat.temp_target_min is not None
             and self._thermostat.temp_target_max is not None
-            and self._thermostat.current_temp >= self._thermostat.temp_target_min
-            and self._thermostat.current_temp <= self._thermostat.temp_target_max
+            and self._thermostat.temp_target_min
+            <= self._thermostat.current_temp
+            <= self._thermostat.temp_target_max
             and self._thermostat.enabled_inrange_output
         ):
             return HVACAction.FAN
         return HVACAction.IDLE
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
@@ -156,10 +161,12 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         takes care of updates via push notifications.
         """
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVACMode for Thermostat."""
         await self._thermostat.set_hvac_mode(hvac_mode)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature range for Thermostat."""
         await self._thermostat.set_temperature(

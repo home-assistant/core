@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from togrill_bluetooth.packets import Packet, PacketA0Notify, PacketA1Notify
 
@@ -11,11 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import ToGrillConfigEntry
 from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, MAX_PROBE_COUNT
@@ -144,11 +144,13 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.native_value is not None
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Get current value."""
         if packet := self.coordinator.data.get(

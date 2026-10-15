@@ -1,7 +1,7 @@
 """Matter sirens."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from matter_server.common.custom_clusters import HeimanCluster
 
@@ -40,15 +40,18 @@ class MatterSiren(MatterEntity, SirenEntity):
     entity_description: MatterSirenEntityDescription
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         await self.write_attribute(value=1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         await self.write_attribute(value=0)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)

@@ -2,14 +2,12 @@
 
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
-    ATTR_ENTRY_ID,
-    ATTR_SAFE_MODE,
     DOMAIN,
     SERVICE_CHECK_CONFIG,
     SERVICE_HOMEASSISTANT_RESTART,
@@ -18,6 +16,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
+)
+from homeassistant.components.homeassistant.services import (
+    ATTR_ENTRY_ID,
+    ATTR_SAFE_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -130,7 +132,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
-@patch("homeassistant.components.homeassistant._LOGGER.error")
+@patch("homeassistant.components.homeassistant.services._LOGGER.error")
 @patch("homeassistant.core_config.async_process_ha_core_config")
 @pytest.mark.parametrize(
     ("files_patch", "expected_error"),
@@ -201,7 +203,7 @@ async def test_turn_on_skips_domains_without_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if turn_on is blocking domain with no service."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     async_mock_service(hass, "light", SERVICE_TURN_ON)
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -241,10 +243,10 @@ async def test_turn_on_skips_domains_without_service(
 
 async def test_entity_update(hass: HomeAssistant) -> None:
     """Test being able to call entity update."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with patch(
-        "homeassistant.components.homeassistant.async_update_entity",
+        "homeassistant.components.homeassistant.services.async_update_entity",
         return_value=None,
     ) as mock_update:
         await hass.services.async_call(
@@ -260,7 +262,7 @@ async def test_entity_update(hass: HomeAssistant) -> None:
 
 async def test_setting_location(hass: HomeAssistant) -> None:
     """Test setting the location."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
     # Just to make sure that we are updating values.
     assert hass.config.latitude != 30
@@ -291,7 +293,7 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_LOCATION,
-        {"latitude": 30, "longitude": 40, "elevation": 0},
+        {"latitude": 30, "longitude": 40, "elevation": 0.6},
         blocking=True,
     )
     assert hass.config.latitude == 30
@@ -303,7 +305,7 @@ async def test_require_admin(
     hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
     """Test services requiring admin."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     for service in (
         SERVICE_HOMEASSISTANT_RESTART,
@@ -334,11 +336,11 @@ async def test_turn_on_off_toggle_schema(
     hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
     """Test the schemas for the turn on/off/toggle services."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         for invalid in None, "nothing", ENTITY_MATCH_ALL, ENTITY_MATCH_NONE:
-            with pytest.raises(vol.Invalid):
+            with pytest.raises(probatio.Invalid):
                 await hass.services.async_call(
                     ha.DOMAIN,
                     service,
@@ -352,7 +354,7 @@ async def test_not_allowing_recursion(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we do not allow recursion."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         await hass.services.async_call(
@@ -368,10 +370,12 @@ async def test_not_allowing_recursion(
 
 
 async def test_reload_config_entry_by_entity_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test being able to reload a config entry by entity_id."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     entry1 = MockConfigEntry(domain="mockdomain")
     entry1.add_to_hass(hass)
     entry2 = MockConfigEntry(domain="mockdomain")
@@ -398,6 +402,11 @@ async def test_reload_config_entry_by_entity_id(
         entry1.entry_id,
         entry2.entry_id,
     }
+    assert (
+        "Reloading a config entry by target is deprecated and will stop working in "
+        "Home Assistant 2027.4, please specify the config entry to reload in the "
+        "'entry_id' parameter instead"
+    ) in caplog.text
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -408,9 +417,11 @@ async def test_reload_config_entry_by_entity_id(
         )
 
 
-async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
+async def test_reload_config_entry_by_entry_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test being able to reload a config entry by config entry id."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -425,19 +436,23 @@ async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
 
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+    assert "Reloading a config entry by target is deprecated" not in caplog.text
 
 
 @pytest.mark.parametrize(
     "service", [SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP]
 )
 async def test_raises_when_db_upgrade_in_progress(
-    hass: HomeAssistant, service, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, service: str
 ) -> None:
     """Test an exception is raised when the database migration is in progress."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with (
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            HomeAssistantError,
+            match=f"The system cannot {service} while a database upgrade is in progress",
+        ),
         patch(
             "homeassistant.helpers.recorder.async_migration_in_progress",
             return_value=True,
@@ -448,11 +463,7 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-    assert "The system cannot" in caplog.text
-    assert "while a database upgrade is in progress" in caplog.text
-
     assert mock_async_migration_in_progress.called
-    caplog.clear()
 
     with (
         patch(
@@ -466,8 +477,6 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-        assert "The system cannot" not in caplog.text
-        assert "while a database upgrade in progress" not in caplog.text
 
     assert mock_async_migration_in_progress.called
 
@@ -476,7 +485,7 @@ async def test_raises_when_config_is_invalid(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test an exception is raised when the configuration is invalid."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with (
         pytest.raises(HomeAssistantError),
@@ -526,7 +535,7 @@ async def test_restart_homeassistant(
     hass: HomeAssistant, service_data: dict, safe_mode_enabled: bool
 ) -> None:
     """Test we can restart when there is no configuration error."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     with (
         patch(
             "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -550,7 +559,7 @@ async def test_restart_homeassistant(
 
 async def test_stop_homeassistant(hass: HomeAssistant) -> None:
     """Test we can stop when there is a configuration error."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     with (
         patch(
             "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -571,7 +580,7 @@ async def test_stop_homeassistant(hass: HomeAssistant) -> None:
 
 async def test_save_persistent_states(hass: HomeAssistant) -> None:
     """Test we can call save_persistent_states."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     with patch(
         "homeassistant.helpers.restore_state.RestoreStateData.async_save_persistent_states",
         return_value=None,
@@ -586,9 +595,9 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
 
 async def test_reload_custom_templates(hass: HomeAssistant) -> None:
     """Test we can call reload_custom_templates."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     with patch(
-        "homeassistant.components.homeassistant.async_load_custom_templates",
+        "homeassistant.components.homeassistant.services.async_load_custom_templates",
         return_value=None,
     ) as mock_load_custom_templates:
         await hass.services.async_call(
@@ -599,11 +608,9 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
         assert mock_load_custom_templates.called
 
 
-async def test_reload_all(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_reload_all(hass: HomeAssistant) -> None:
     """Test reload_all service."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, DOMAIN, {})
     test1 = async_mock_service(hass, "test1", "reload")
     test2 = async_mock_service(hass, "test2", "reload")
     no_reload = async_mock_service(hass, "test3", "not_reload")
@@ -651,10 +658,6 @@ async def test_reload_all(
         )
 
     assert mock_async_check_ha_config_file.called
-    assert (
-        "The system cannot reload because the configuration is not valid: Oh no, drama!"
-        in caplog.text
-    )
 
     # None have been called again
     assert len(test1) == 1

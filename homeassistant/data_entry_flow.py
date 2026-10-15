@@ -12,7 +12,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, Generic, Required, TypedDict, TypeVar, cast
 
-import voluptuous as vol
+import probatio
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -87,7 +87,7 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-class InvalidData(vol.Invalid):
+class InvalidData(probatio.Invalid):
     """Invalid data provided."""
 
     def __init__(
@@ -107,12 +107,17 @@ class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
     def __init__(
-        self, reason: str, description_placeholders: Mapping[str, str] | None = None
+        self,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        *,
+        translation_domain: str | None = None,
     ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
         self.reason = reason
         self.description_placeholders = description_placeholders
+        self.translation_domain = translation_domain
 
 
 class FlowContext(TypedDict, total=False):
@@ -125,7 +130,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     """Typed result dict."""
 
     context: _FlowContextT
-    data_schema: vol.Schema | None
+    data_schema: probatio.Schema | None
     data: Mapping[str, Any]
     description_placeholders: Mapping[str, str] | None
     description: str | None
@@ -150,8 +155,8 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
 
 def _map_error_to_schema_errors(
     schema_errors: dict[str, Any],
-    error: vol.Invalid,
-    data_schema: vol.Schema,
+    error: probatio.Invalid,
+    data_schema: probatio.Schema,
 ) -> None:
     """Map an error to the correct position in the schema_errors.
 
@@ -166,7 +171,7 @@ def _map_error_to_schema_errors(
     if len(error_path) > 1:
         raise ValueError("Nested schemas are not supported")
 
-    # path_part can also be vol.Marker, but we need a string key
+    # path_part can also be probatio.Marker, but we need a string key
     path_part_str = str(path_part)
     schema_errors[path_part_str] = error.error_message
 
@@ -350,12 +355,12 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
-            data_schema = cast(vol.Schema, data_schema)
+            data_schema = cast(probatio.Schema, data_schema)
             try:
                 user_input = data_schema(user_input)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 raised_errors = [ex]
-                if isinstance(ex, vol.MultipleInvalid):
+                if isinstance(ex, probatio.MultipleInvalid):
                     raised_errors = ex.errors
 
                 schema_errors: dict[str, Any] = {}
@@ -468,6 +473,23 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         except Exception:
             _LOGGER.exception("Error removing %s flow", flow.handler)
 
+    def _abort_flow_result(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+        err: AbortFlow,
+    ) -> _FlowResultT:
+        """Convert an AbortFlow exception into an abort result."""
+        result = self._flow_result(
+            type=FlowResultType.ABORT,
+            flow_id=flow.flow_id,
+            handler=flow.handler,
+            reason=err.reason,
+            description_placeholders=err.description_placeholders,
+        )
+        if err.translation_domain is not None:
+            result["translation_domain"] = err.translation_domain
+        return result
+
     async def _async_handle_step(
         self,
         flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
@@ -481,20 +503,14 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         try:
             result: _FlowResultT = await getattr(flow, method)(user_input)
         except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+            result = self._abort_flow_result(flow, err)
 
         if flow.flow_id not in self._progress:
-            # The flow was removed during the step, raise UnknownFlow
-            # unless the result is an abort. Uses `!=` (not `is not`) because
-            # this runs before the legacy-string normalization below, and
-            # out-of-tree flow handlers may still return raw "abort".
-            if result["type"] != FlowResultType.ABORT:  # type: ignore[ha-enum-identity-compare,unused-ignore]
+            # The flow was removed during the step, raise UnknownFlow unless
+            # the result is an abort. Compares against the string value
+            # because this runs before the legacy-string normalization
+            # below, and out-of-tree flow handlers may still return raw "abort".
+            if result["type"] != FlowResultType.ABORT.value:
                 raise UnknownFlow
             return result
 
@@ -544,13 +560,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             # We pass a copy of the result because we're mutating our version
             result = await self.async_finish_flow(flow, result.copy())
         except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+            result = self._abort_flow_result(flow, err)
 
         # _async_finish_flow may change result type, check it again
         if result["type"] is FlowResultType.FORM:
@@ -656,8 +666,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return True
 
     def add_suggested_values_to_schema(
-        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
-    ) -> vol.Schema:
+        self, data_schema: probatio.Schema, suggested_values: Mapping[str, Any] | None
+    ) -> probatio.Schema:
         """Make a copy of the schema, populated with suggested values.
 
         For each schema marker matching items in `suggested_values`,
@@ -684,20 +694,20 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             if (
                 suggested_values
                 and key in suggested_values
-                and isinstance(key, vol.Marker)
+                and isinstance(key, probatio.Marker)
             ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
                 new_key.description = {"suggested_value": suggested_values[key.schema]}
             schema[new_key] = val
-        return vol.Schema(schema)
+        return probatio.Schema(schema)
 
     @callback
     def async_show_form(
         self,
         *,
         step_id: str | None = None,
-        data_schema: vol.Schema | None = None,
+        data_schema: probatio.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
@@ -747,15 +757,23 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
     ) -> _FlowResultT:
-        """Abort the flow."""
-        return self._flow_result(
+        """Abort the flow.
+
+        Pass `translation_domain` to resolve the reason from another integration's
+        translations instead of the one owning the flow.
+        """
+        flow_result = self._flow_result(
             type=FlowResultType.ABORT,
             flow_id=self.flow_id,
             handler=self.handler,
             reason=reason,
             description_placeholders=description_placeholders,
         )
+        if translation_domain is not None:
+            flow_result["translation_domain"] = translation_domain
+        return flow_result
 
     @callback
     def async_external_step(
@@ -873,7 +891,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             type=FlowResultType.MENU,
             flow_id=self.flow_id,
             handler=self.handler,
-            data_schema=vol.Schema({"next_step_id": vol.In(menu_options)}),
+            data_schema=probatio.Schema({"next_step_id": probatio.In(menu_options)}),
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
@@ -921,14 +939,14 @@ class SectionConfig(TypedDict, total=False):
 class section:
     """Data entry flow section."""
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = probatio.Schema(
         {
-            vol.Optional("collapsed", default=False): bool,
+            probatio.Optional("collapsed", default=False): bool,
         },
     )
 
     def __init__(
-        self, schema: vol.Schema, options: SectionConfig | None = None
+        self, schema: probatio.Schema, options: SectionConfig | None = None
     ) -> None:
         """Initialize."""
         self.schema = schema

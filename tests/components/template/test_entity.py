@@ -55,7 +55,7 @@ async def test_reload_stops_entity_action_scripts(
     hass: HomeAssistant, config: dict
 ) -> None:
     """Test that reloading stops template entity action scripts."""
-    assert await async_setup_component(hass, "template", config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()

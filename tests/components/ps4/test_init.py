@@ -17,6 +17,7 @@ from homeassistant.components.ps4.const import (
     DOMAIN,
     PS4_DATA,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -142,11 +143,16 @@ async def test_config_flow_entry_migrate(
     manager = hass.config_entries
     mock_entry = MOCK_ENTRY_VERSION_1
     mock_entry.add_to_manager(manager)
+    # The integration registers the PS4 device with a name (the console host name),
+    # so the entity id is derived from the device name.
     mock_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={(DOMAIN, MOCK_UNIQUE_ID)},
+        manufacturer="Sony Interactive Entertainment Inc.",
+        model="PlayStation 4",
+        name="My PS4",
     )
-    mock_entity_id = f"media_player.ps4_{MOCK_UNIQUE_ID}"
     mock_e_entry = entity_registry.async_get_or_create(
         "media_player",
         "ps4",
@@ -154,8 +160,9 @@ async def test_config_flow_entry_migrate(
         config_entry=mock_entry,
         device_id=mock_device_entry.id,
     )
+    mock_entity_id = mock_e_entry.entity_id
     assert len(entity_registry.entities) == 1
-    assert mock_e_entry.entity_id == mock_entity_id
+    assert mock_entity_id == "media_player.my_ps4"
     assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
 
     with (
@@ -168,16 +175,14 @@ async def test_config_flow_entry_migrate(
             return_value=entity_registry,
         ),
     ):
-        # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
-        await ps4.async_migrate_entry(hass, mock_entry)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
 
     await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == 1
-    for entity in entity_registry.entities.values():
-        mock_entity = entity
-
-    # Test that entity_id remains the same.
+    # The migration must keep the entity_id unchanged.
+    mock_entity = entity_registry.async_get(mock_entity_id)
+    assert mock_entity is not None
     assert mock_entity.entity_id == mock_entity_id
     assert mock_entity.device_id == mock_device_entry.id
 
@@ -190,6 +195,30 @@ async def test_config_flow_entry_migrate(
     assert mock_entry.data["devices"][0][CONF_HOST] == MOCK_HOST
     assert mock_entry.data["devices"][0][CONF_NAME] == MOCK_NAME
     assert mock_entry.data["devices"][0][CONF_REGION] == DEFAULT_REGION
+
+
+async def test_config_flow_entry_migrate_no_location(hass: HomeAssistant) -> None:
+    """Test migration fails when the region cannot be detected."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_TOKEN: MOCK_CREDS, "devices": [dict(MOCK_DEVICE_VERSION_1)]},
+        version=1,
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.util.location.async_detect_location_info",
+        return_value=None,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert mock_entry.reason == (
+        "Region codes have changed for the PlayStation 4 integration, remove and"
+        " re-add the integration"
+    )
+    assert mock_entry.version == 1
 
 
 async def test_media_player_is_setup(hass: HomeAssistant) -> None:

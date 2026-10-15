@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.core import HomeAssistant
@@ -49,15 +49,14 @@ class AnthropicTaskEntity(
     )
     _attr_translation_key = "ai_task_data"
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        await self._async_handle_chat_log(
-            chat_log, task.name, task.structure, max_iterations=1000
-        )
+        await self._async_handle_chat_log(chat_log, task.structure, max_iterations=1000)
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
@@ -74,6 +73,7 @@ class AnthropicTaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,

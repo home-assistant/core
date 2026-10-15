@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyaprilaire.const import Attribute
 
@@ -118,6 +118,7 @@ class AprilaireSelectEntity(BaseAprilaireEntity, SelectEntity):
         self._attr_options = list(description.options_map.values())
 
     @property
+    @override
     def current_option(self) -> str:
         """Get the current option."""
 
@@ -130,6 +131,7 @@ class AprilaireSelectEntity(BaseAprilaireEntity, SelectEntity):
 
         return self.entity_description.options_map.get(current_value, "off")
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the current option."""
 

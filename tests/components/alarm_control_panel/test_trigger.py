@@ -8,16 +8,18 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.components.alarm_control_panel.trigger import TRIGGERS
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -31,26 +33,17 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str
     return await target_entities(hass, "alarm_control_panel")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "alarm_control_panel.armed",
-        "alarm_control_panel.armed_away",
-        "alarm_control_panel.armed_home",
-        "alarm_control_panel.armed_night",
-        "alarm_control_panel.armed_vacation",
-        "alarm_control_panel.disarmed",
-        "alarm_control_panel.triggered",
-    ],
-)
-async def test_alarm_control_panel_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the ACP triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "armed": TargetSupport.STANDARD,
+    "armed_away": TargetSupport.STANDARD,
+    "armed_home": TargetSupport.STANDARD,
+    "armed_night": TargetSupport.STANDARD,
+    "armed_vacation": TargetSupport.STANDARD,
+    "disarmed": TargetSupport.STANDARD,
+    "triggered": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -80,7 +73,11 @@ async def test_alarm_control_panel_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -180,7 +177,6 @@ async def test_alarm_control_panel_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -280,7 +276,6 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),

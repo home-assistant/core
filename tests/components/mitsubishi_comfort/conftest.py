@@ -14,13 +14,17 @@ from mitsubishi_comfort import (
 )
 import pytest
 
-from homeassistant.components.mitsubishi_comfort.const import DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@test.com"
 MOCK_PASSWORD = "testpass"
+MOCK_SERIAL = "SERIAL001"
+MOCK_MAC = "AA:BB:CC:DD:EE:FF"
+MOCK_ADDRESS = "192.168.1.100"
 
 
 def _make_device_status(
@@ -63,12 +67,13 @@ def _make_device_status(
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
+    """Return a mock config entry with a previously resolved device address."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ADDRESSES: {format_mac(MOCK_MAC): MOCK_ADDRESS},
         },
         unique_id="user-12345",
     )
@@ -76,12 +81,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_device_info() -> DeviceInfo:
-    """Return a mock DeviceInfo."""
+    """Return a mock DeviceInfo as returned by the cloud (no LAN address)."""
     return DeviceInfo(
-        serial="SERIAL001",
+        serial=MOCK_SERIAL,
         label="Living Room",
-        address="192.168.1.100",
-        mac="AA:BB:CC:DD:EE:FF",
+        address="",
+        mac=MOCK_MAC,
         unit_type="ductless",
         password="dGVzdHBhc3M=",
         crypto_serial="0102030405060708090a",

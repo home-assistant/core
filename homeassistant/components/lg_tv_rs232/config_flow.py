@@ -1,9 +1,9 @@
 """Config flow for the LG TV RS-232 integration."""
 
-from typing import Any
+from typing import Any, override
 
 from lg_rs232_tv import DEFAULT_SET_ID, LGTV, TVNotRespondingError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
@@ -16,10 +16,10 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_SET_ID, DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Required(CONF_SET_ID, default=DEFAULT_SET_ID): NumberSelector(
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Required(CONF_SET_ID, default=DEFAULT_SET_ID): NumberSelector(
             NumberSelectorConfig(min=1, max=99, mode=NumberSelectorMode.BOX)
         ),
     }
@@ -62,6 +62,7 @@ class LGTVRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _user_input: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

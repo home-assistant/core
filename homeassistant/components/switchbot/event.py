@@ -1,6 +1,7 @@
 """Support for SwitchBot event entities."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -39,6 +40,22 @@ EVENT_DESCRIPTIONS: tuple[SwitchbotEventEntityDescription, ...] = (
         counter_key="button_count",
         fire_event="press",
     ),
+    SwitchbotEventEntityDescription(
+        key="on_button",
+        translation_key="on_button",
+        device_class=EventDeviceClass.BUTTON,
+        event_types=["press"],
+        counter_key="on_keystate",
+        fire_event="press",
+    ),
+    SwitchbotEventEntityDescription(
+        key="off_button",
+        translation_key="off_button",
+        device_class=EventDeviceClass.BUTTON,
+        event_types=["press"],
+        counter_key="off_keystate",
+        fire_event="press",
+    ),
 )
 
 
@@ -75,6 +92,7 @@ class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
         )
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         counter = int(self.parsed_data.get(self.entity_description.counter_key, 0))

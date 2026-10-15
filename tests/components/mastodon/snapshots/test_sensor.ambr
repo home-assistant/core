@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,9 +41,9 @@
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Followers',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'accounts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Followers',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'accounts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_followers',
@@ -60,7 +60,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,9 +95,9 @@
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Following',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'accounts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Following',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'accounts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_following',
@@ -147,8 +147,8 @@
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_last_post-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Last post',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Last post',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_last_post',
@@ -165,7 +165,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,9 +200,9 @@
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Posts',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'posts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Posts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'posts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_posts',
@@ -255,8 +255,8 @@
       'bio': '<p>i have approximate knowledge of many things. perpetual student. (nb/ace/they)</p><p>xmpp/email: a@trwnh.com<br /><a href="https://trwnh.com" target="_blank" rel="nofollow noopener" translate="no"><span class="invisible">https://</span><span class="">trwnh.com</span><span class="invisible"></span></a><br />help me live:<br />- <a href="https://donate.stripe.com/4gwcPCaMpcQ19RC4gg" target="_blank" rel="nofollow noopener" translate="no"><span class="invisible">https://</span><span class="ellipsis">donate.stripe.com/4gwcPCaMpcQ1</span><span class="invisible">9RC4gg</span></a><br />- <a href="https://liberapay.com/trwnh" target="_blank" rel="nofollow noopener" translate="no"><span class="invisible">https://</span><span class="">liberapay.com/trwnh</span><span class="invisible"></span></a></p><p>notes:<br />- my triggers are moths and glitter<br />- i have all notifs except mentions turned off, so please interact if you wanna be friends! i literally will not notice otherwise<br />- dm me if i did something wrong, so i can improve<br />- purest person on fedi, do not lewd in my presence</p>',
       'created': datetime.date(2016, 11, 23),
       'display_name': 'infinite love ⴳ',
-      'entity_picture': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Username',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mastodon @trwnh@mastodon.social Username',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_username',

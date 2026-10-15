@@ -1,6 +1,6 @@
 """Homekit Controller entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
@@ -87,6 +87,7 @@ class HomeKitEntity(Entity):
         self._async_subscribe_chars()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self._async_subscribe_chars()
@@ -97,6 +98,7 @@ class HomeKitEntity(Entity):
             self._accessory.async_subscribe_availability(self._async_write_ha_state)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
         self._async_unsubscribe_chars()
@@ -173,6 +175,9 @@ class HomeKitEntity(Entity):
         self.all_characteristics.update(self.pollable_characteristics)
         self.all_characteristics.update(self.watchable_characteristics)
         self.all_iids = {iid for _, iid in self.all_characteristics}
+        if not self.has_entity_name:
+            self._attr_name = self._homekit_name()
+            self._async_clear_property_cache(("name",))
 
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
@@ -205,9 +210,8 @@ class HomeKitEntity(Entity):
         """Return the default name of the device."""
         return None
 
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device if any."""
+    def _homekit_name(self) -> str:
+        """Return the name provided by the HomeKit accessory."""
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
         # fallback to the default name provided by the subclass
@@ -226,6 +230,7 @@ class HomeKitEntity(Entity):
         return accessory_name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         all_iids = self.all_iids
@@ -235,6 +240,7 @@ class HomeKitEntity(Entity):
         return self._accessory.available
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self._accessory.device_info_for_accessory(self.accessory)
@@ -257,6 +263,7 @@ class AccessoryEntity(HomeKitEntity):
         self._attr_unique_id = f"{accessory.unique_id}_{self._aid}"
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
@@ -280,25 +287,23 @@ class BaseCharacteristicEntity(HomeKitEntity):
         self._entity_key = (self._aid, self._iid, char.iid)
 
     @callback
-    def _async_remove_entity_if_characteristics_disappeared(self) -> bool:
-        """Handle characteristic disappearance."""
-        if (
-            not self._accessory.entity_map.aid(self._aid)
-            .services.iid(self._iid)
-            .get_char_by_iid(self._char.iid)
-        ):
-            self._async_handle_entity_removed()
-            return True
-        return False
-
-    @callback
+    @override
     def _async_config_changed(self) -> None:
         """Handle accessory discovery changes."""
-        if (
-            not self._async_remove_entity_if_accessory_or_service_disappeared()
-            and not self._async_remove_entity_if_characteristics_disappeared()
-        ):
-            super()._async_reconfigure()
+        if self._async_remove_entity_if_accessory_or_service_disappeared():
+            return
+
+        char = (
+            self._accessory.entity_map.aid(self._aid)
+            .services.iid(self._iid)
+            .get_char_by_iid(self._char.iid)
+        )
+        if char is None:
+            self._async_handle_entity_removed()
+            return
+
+        self._char = char
+        super()._async_reconfigure()
 
 
 class CharacteristicEntity(BaseCharacteristicEntity):
@@ -308,6 +313,8 @@ class CharacteristicEntity(BaseCharacteristicEntity):
     binary_sensor or number entities that don't belong
     with the service entity.
     """
+
+    _attr_has_entity_name = True
 
     def __init__(
         self, accessory: HKDevice, devinfo: ConfigType, char: Characteristic
@@ -319,6 +326,7 @@ class CharacteristicEntity(BaseCharacteristicEntity):
         )
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)

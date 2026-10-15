@@ -1,6 +1,6 @@
 """API for myUplink bound to Home Assistant OAuth."""
 
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from myuplink.auth_abstract import AbstractAuth
@@ -22,6 +22,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         super().__init__(websession, API_ENDPOINT)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()

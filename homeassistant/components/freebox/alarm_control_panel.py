@@ -1,6 +1,6 @@
 """Support for Freebox alarms."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -77,18 +77,22 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             | AlarmControlPanelEntityFeature.TRIGGER
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.set_home_endpoint_value(self._command_disarm)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.set_home_endpoint_value(self._command_arm_away)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.set_home_endpoint_value(self._command_arm_home)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self.set_home_endpoint_value(self._command_trigger)

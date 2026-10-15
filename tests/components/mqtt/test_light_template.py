@@ -31,7 +31,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import light, mqtt
+from homeassistant.components import light
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.light.schema_basic import (
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
@@ -81,7 +82,7 @@ from tests.components.light import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         light.DOMAIN: {
             "schema": "template",
             "name": "test",
@@ -96,10 +97,10 @@ DEFAULT_CONFIG = {
 @pytest.mark.parametrize(
     "hass_config",
     [
-        ({mqtt.DOMAIN: {light.DOMAIN: {"schema": "template", "name": "test"}}},),
+        ({DOMAIN: {light.DOMAIN: {"schema": "template", "name": "test"}}},),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -110,7 +111,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -122,7 +123,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -149,7 +150,7 @@ async def test_setup_fails(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -185,7 +186,7 @@ async def test_rgb_light(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -204,7 +205,7 @@ async def test_rgb_light(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -254,7 +255,7 @@ async def test_single_color_mode(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -309,7 +310,7 @@ async def test_state_change_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -427,7 +428,7 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -459,7 +460,7 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "schema": "template",
                         "name": "test",
@@ -626,7 +627,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -765,7 +766,7 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "effect_list": ["rainbow", "colorloop"],
@@ -820,7 +821,7 @@ async def test_effect(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -871,7 +872,7 @@ async def test_flash(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -915,7 +916,7 @@ async def test_transition(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -1113,7 +1114,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1280,7 +1281,7 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             light.DOMAIN: {
                 "schema": "template",
                 "name": "test",
@@ -1304,7 +1305,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "schema": "template",
                     "name": "test",
@@ -1368,7 +1369,7 @@ async def test_publishing_with_custom_encoding(
     domain = light.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "effect_command_topic":
-        config[mqtt.DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
+        config[DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -1411,7 +1412,7 @@ async def test_encoding_subscribable_topics(
     init_payload,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][light.DOMAIN])
     config["state_template"] = "{{ value }}"
     await help_test_encoding_subscribable_topics(
         hass,

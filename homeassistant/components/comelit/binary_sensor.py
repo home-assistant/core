@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, cast, override
 
 from aiocomelit.api import ComelitVedoAreaObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_AREA, ALARM_ZONE, AlarmAreaState, AlarmZoneState
@@ -48,7 +48,6 @@ BINARY_SENSOR_TYPES: Final[tuple[ComelitBinarySensorEntityDescription, ...]] = (
     ),
     ComelitBinarySensorEntityDescription(
         key="presence",
-        translation_key="motion",
         object_type=ALARM_ZONE,
         device_class=BinarySensorDeviceClass.MOTION,
         is_on_fn=lambda obj: cast(ComelitVedoZoneObject, obj).status_api == "0001",
@@ -160,6 +159,7 @@ class ComelitVedoBinarySensorEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if object is available."""
         if not self.entity_description.available_fn(self._object):
@@ -167,6 +167,7 @@ class ComelitVedoBinarySensorEntity(
         return super().available
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return object binary sensor state."""
         return self.entity_description.is_on_fn(self._object)

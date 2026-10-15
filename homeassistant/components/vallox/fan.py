@@ -1,7 +1,7 @@
 """Support for the Vallox ventilation unit fan."""
 
 from collections.abc import Mapping
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from vallox_websocket_api import ValloxApiException, ValloxInvalidInputException
 
@@ -89,17 +89,20 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         self._attr_preset_modes = list(PRESET_MODE_TO_VALLOX_PROFILE)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if device is on."""
         return self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         vallox_profile = self.coordinator.data.profile
         return VALLOX_PROFILE_TO_PRESET_MODE.get(vallox_profile)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
 
@@ -110,6 +113,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             return None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, int | None]:
         """Return device specific state attributes."""
         data = self.coordinator.data
@@ -119,6 +123,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             for attr in EXTRA_STATE_ATTRIBUTES
         }
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         update_needed = await self._async_set_preset_mode_internal(preset_mode)
@@ -129,6 +134,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             # observed by all parties involved.
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -155,6 +161,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             # observed by all parties involved.
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if not self.is_on:
@@ -165,6 +172,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         if update_needed:
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage == 0:

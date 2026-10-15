@@ -1,6 +1,6 @@
 {
   "entity_component": {
-    "_": {
+    "emitter": {
       "name": "Infrared emitter"
     },
     "receiver": {

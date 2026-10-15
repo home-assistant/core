@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
@@ -78,9 +79,11 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Handle setup of the coordinator."""
         try:
+            await self.api.async_setup()
             user_info = await self.api.users.async_get_my_user()
         except ImmichUnauthorizedError as err:
             raise ConfigEntryAuthFailed(
@@ -95,6 +98,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
         self.is_admin = user_info.is_admin
 
+    @override
     async def _async_update_data(self) -> ImmichData:
         """Update data via internal method."""
         try:
@@ -119,8 +123,20 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": repr(err)},
+                translation_placeholders={"error": str(err)},
             ) from err
+
+        if (
+            self.data is not None
+            and self.data.server_about.version != server_about.version
+        ):
+            # The API client adapts to the server version during setup
+            _LOGGER.info(
+                "Immich server version changed from %s to %s, reloading integration",
+                self.data.server_about.version,
+                server_about.version,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
         return ImmichData(
             server_about, server_storage, server_usage, server_version_check

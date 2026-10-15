@@ -1,5 +1,7 @@
 """Support for Waterfurnace."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -174,6 +176,7 @@ class WaterFurnaceSensor(WaterFurnaceEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unit}_{description.key}"
 
     @property
+    @override
     def native_value(self):
         """Return the native value of the sensor."""
         return getattr(self.coordinator.data, self.entity_description.key, None)

@@ -1,5 +1,7 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 
+from typing import override
+
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -7,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -23,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import TelldusLiveConfigEntry
 from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
 from .entity import TelldusLiveEntity
 
@@ -118,22 +120,22 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TelldusLiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        client = hass.data[DOMAIN]
+        client = config_entry.runtime_data.client
         async_add_entities([TelldusLiveSensor(client, device_id)])
 
-    async_dispatcher_connect(
-        hass,
-        TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN, DOMAIN),
-        async_discover_sensor,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN, DOMAIN),
+            async_discover_sensor,
+        )
     )
 
 
@@ -149,6 +151,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
             self._attr_name = None
 
     @property
+    @override
     def device_id(self):
         """Return id of the device."""
         return self._id[0]
@@ -179,6 +182,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return round(float(self._value))
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if not self.available:
@@ -192,6 +196,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return self._value
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return "-".join(map(str, self._id))

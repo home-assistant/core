@@ -1,7 +1,7 @@
 """Representation of a switchBinary."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -67,14 +67,17 @@ class ZWaveMeSwitch(ZWaveMeEntity, SwitchEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.device.level == "on"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.controller.zwave_api.send_command(self.device.id, "on")
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.controller.zwave_api.send_command(self.device.id, "off")

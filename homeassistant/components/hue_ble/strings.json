@@ -27,5 +27,10 @@
         "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
     }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "The light {name} ({mac}) was not found: {reason}"
+    }
   }
 }

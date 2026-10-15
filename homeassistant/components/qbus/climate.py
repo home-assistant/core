@@ -1,7 +1,7 @@
 """Support for Qbus thermostat."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from qbusmqttapi.const import KEY_PROPERTIES_REGIME, KEY_PROPERTIES_SET_TEMPERATURE
 from qbusmqttapi.discovery import QbusMqttOutput
@@ -64,7 +64,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize climate entity."""
@@ -91,6 +91,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
         self._request_state_debouncer: Debouncer | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._request_state_debouncer = Debouncer(
@@ -102,6 +103,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         )
         await super().async_added_to_hass()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
 
@@ -120,6 +122,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -130,15 +133,16 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
             await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttThermoState) -> None:
         if preset_mode := state.read_regime():
             self._attr_preset_mode = preset_mode
 
         if current_temperature := state.read_current_temperature():
-            self._attr_current_temperature = current_temperature
+            self._attr_native_current_temperature = current_temperature
 
         if target_temperature := state.read_set_temperature():
-            self._attr_target_temperature = target_temperature
+            self._attr_native_target_temperature = target_temperature
 
         self._set_hvac_action()
 
@@ -151,13 +155,16 @@ class QbusClimate(QbusEntity, ClimateEntity):
             await self._request_state_debouncer.async_call()
 
     def _set_hvac_action(self) -> None:
-        if self.target_temperature is None or self.current_temperature is None:
+        if (
+            self.native_target_temperature is None
+            or self.native_current_temperature is None
+        ):
             self._attr_hvac_action = HVACAction.IDLE
             return
 
         self._attr_hvac_action = (
             HVACAction.HEATING
-            if self.target_temperature > self.current_temperature
+            if self.native_target_temperature > self.native_current_temperature
             else HVACAction.IDLE
         )
 

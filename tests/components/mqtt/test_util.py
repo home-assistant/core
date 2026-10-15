@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.models import MessageCallbackType
 from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -72,7 +73,7 @@ async def test_canceling_debouncer_normal(
 
     debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
     debouncer.async_schedule()
-    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass)
     assert debouncer._task is not None
     await debouncer.async_cleanup()
     assert debouncer._task is None
@@ -89,7 +90,7 @@ async def test_canceling_debouncer_throws(
 
     debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
     debouncer.async_schedule()
-    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass)
     assert debouncer._task is not None
     # let debouncer._task fail by mocking it
     with patch.object(debouncer, "_task") as task:
@@ -222,7 +223,7 @@ async def test_waiting_for_client_not_loaded(
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.CONFIG_ENTRY_VERSION,
@@ -263,7 +264,7 @@ async def test_waiting_for_client_loaded(
         assert await mqtt.async_wait_for_mqtt_client(hass)
         unsub = await mqtt.async_subscribe(hass, "test_topic", lambda msg: None)
 
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
 
     await _async_just_in_time_subscribe()
@@ -281,7 +282,7 @@ async def test_waiting_for_client_entry_fails(
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.CONFIG_ENTRY_VERSION,
@@ -311,7 +312,7 @@ async def test_waiting_for_client_setup_fails(
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.CONFIG_ENTRY_VERSION,
@@ -340,7 +341,7 @@ async def test_waiting_for_client_timeout(
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.CONFIG_ENTRY_VERSION,
@@ -361,7 +362,7 @@ async def test_waiting_for_client_with_disabled_entry(
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.CONFIG_ENTRY_VERSION,

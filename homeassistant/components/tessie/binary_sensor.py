@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -83,6 +84,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on=lambda x: x == "On",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_cabin_overheat_protection_actively_cooling",
@@ -224,6 +226,7 @@ class TessieBinarySensorEntity(TessieEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on(self._value)
@@ -245,10 +248,12 @@ class TessieEnergyLiveBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity)
         super().__init__(data, data.live_coordinator, description.key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._attr_available
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_available = self._value is not None
@@ -270,6 +275,7 @@ class TessieEnergyInfoBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity)
         self.entity_description = description
         super().__init__(data, data.info_coordinator, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self._value

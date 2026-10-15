@@ -4,7 +4,7 @@ from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -20,7 +20,7 @@ from evohomeasync2.const import (
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
     SZ_ZONES,
 )
-from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
+from evohomeasync2.typedefs import EvoLocStatusT, EvoTcsConfigResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -60,7 +60,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.loc_idx = location_idx
 
-        self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
+        self.data: EvoLocStatusT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
 
         self._first_refresh_done = False  # get schedules only after first refresh
@@ -81,6 +81,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator.
 
@@ -88,7 +89,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """
 
         try:
-            await self.client.update(dont_update_status=True)  # only config for now
+            await self.client.setup()  # only config for now
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
@@ -113,8 +114,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                     SZ_USE_DAYLIGHT_SAVE_SWITCHING
                 ],
             }
-            tcs_info: EvoTcsConfigResponseT = self.tcs.config  # type: ignore[assignment]
-            tcs_info[SZ_ZONES] = [zone.config for zone in self.tcs.zones]
+            tcs_info: EvoTcsConfigResponseT = {
+                **self.tcs.config,
+                SZ_ZONES: [zone.config for zone in self.tcs.zones],
+            }
             if self.tcs.hotwater:
                 tcs_info[SZ_DHW] = self.tcs.hotwater.config
             gwy_info = {
@@ -127,20 +130,20 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             }
             self.logger.debug("Config = %s", [config])
 
-    async def call_client_api(
+    async def call_client_api[_T](
         self,
-        client_api: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[_T],
         request_refresh: bool = True,
-    ) -> dict[str, Any] | None:
+    ) -> _T | None:
         """Call a client API and update the Coordinator state if required."""
 
         try:
             result = await client_api
 
-        except ec2.InvalidSystemModeError:
+        except ec2.AuthenticationFailedError:
             raise
 
-        except ec2.ApiRequestFailedError as err:
+        except ec2.ApiCallFailedError as err:
             self.logger.error(err)
             return None
 
@@ -155,7 +158,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         assert self.client_v1 is not None  # mypy check
 
         try:
-            await self.client_v1.update()
+            await self.client_v1.get_status()
 
         except ec1.BadUserCredentialsError as err:
             self.logger.warning(
@@ -188,9 +191,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """Get the latest modes, temperatures, setpoints of a Location."""
 
         try:
-            status = await self.loc.update()
+            status = await self.loc.get_status()
 
-        except ec2.ApiRequestFailedError as err:
+        except ec2.ApiCallFailedError as err:
             if err.status != HTTPStatus.TOO_MANY_REQUESTS:
                 raise UpdateFailed(err) from err
 
@@ -221,7 +224,8 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             except ec2.InvalidScheduleError as err:
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
 
-    async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
+    @override
+    async def _async_update_data(self) -> EvoLocStatusT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the

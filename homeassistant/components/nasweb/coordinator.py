@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import Request, Response
 from webio_api import WebioAPI
@@ -116,6 +116,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
         return self._last_update is not None
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:

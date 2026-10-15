@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from Tami4EdgeAPI import Tami4EdgeAPI
 from Tami4EdgeAPI.drink import Drink
@@ -74,6 +75,7 @@ class Tami4EdgeButton(Tami4EdgeBaseEntity, ButtonEntity):
 
     entity_description: Tami4EdgeButtonEntityDescription
 
+    @override
     def press(self) -> None:
         """Handle the button press."""
         self.entity_description.press_fn(self._api)
@@ -91,6 +93,7 @@ class Tami4EdgeDrinkButton(Tami4EdgeBaseEntity, ButtonEntity):
         super().__init__(api=api, entity_description=entity_description)
         self.drink = drink
 
+    @override
     def press(self) -> None:
         """Handle the button press."""
         self.entity_description.press_fn(self._api, self.drink)

@@ -4,7 +4,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
@@ -75,6 +75,7 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Get the latest data from the PSN."""
         try:
@@ -98,6 +99,7 @@ class PlaystationNetworkUserDataCoordinator(
 
     _update_interval = timedelta(seconds=30)
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
@@ -114,6 +116,7 @@ class PlaystationNetworkUserDataCoordinator(
                 translation_key="update_failed",
             ) from error
 
+    @override
     async def update_data(self) -> PlaystationNetworkData:
         """Get the latest data from the PSN."""
         return await self.psn.get_data()
@@ -126,6 +129,7 @@ class PlaystationNetworkTrophyTitlesCoordinator(
 
     _update_interval = timedelta(days=1)
 
+    @override
     async def update_data(self) -> list[TrophyTitle]:
         """Update trophy titles data."""
         self.psn.trophy_titles = await self.hass.async_add_executor_job(
@@ -142,6 +146,7 @@ class PlaystationNetworkFriendlistCoordinator(
 
     _update_interval = timedelta(hours=3)
 
+    @override
     async def update_data(self) -> dict[str, User]:
         """Update trophy titles data."""
 
@@ -161,6 +166,7 @@ class PlaystationNetworkGroupsUpdateCoordinator(
 
     _update_interval = timedelta(hours=3)
 
+    @override
     async def update_data(self) -> dict[str, GroupDetails]:
         """Update groups data."""
         try:
@@ -221,6 +227,7 @@ class PlaystationNetworkFriendDataCoordinator(
 
         self.profile = self.user.profile()
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
@@ -272,6 +279,7 @@ class PlaystationNetworkFriendDataCoordinator(
             trophy_summary=trophy_summary,
         )
 
+    @override
     async def update_data(self) -> PlaystationNetworkData:
         """Update friend status data."""
         return await self.hass.async_add_executor_job(self._update_data)

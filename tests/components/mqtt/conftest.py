@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import DOMAIN
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -115,14 +116,14 @@ async def setup_with_birth_msg_client_mock(
         patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0),
     ):
         entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
+            domain=DOMAIN,
             data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
             options=mqtt_config_entry_options or {},
             version=mqtt.CONFIG_ENTRY_VERSION,
             minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
-        hass.config.components.add(mqtt.DOMAIN)
+        hass.config.components.add(DOMAIN)
         assert await hass.config_entries.async_setup(entry.entry_id)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 

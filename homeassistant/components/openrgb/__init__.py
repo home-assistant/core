@@ -3,7 +3,7 @@
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
@@ -29,7 +29,7 @@ def _setup_server_device_registry(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> None:
     """Set up OpenRGB from a config entry."""
     coordinator = OpenRGBCoordinator(hass, entry)
 
@@ -42,16 +42,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: OpenRGBConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, entry: OpenRGBConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Allows removal of device if it is no longer connected."""
     coordinator = entry.runtime_data

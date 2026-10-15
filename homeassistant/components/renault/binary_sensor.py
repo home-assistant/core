@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -69,6 +70,7 @@ class RenaultBinarySensor[T: KamereonVehicleDataAttributes](
     entity_description: RenaultBinarySensorEntityDescription[T]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_lambda(self)

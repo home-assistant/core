@@ -1,12 +1,12 @@
 """Support for the cloud for text-to-speech service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     ATTR_AUDIO_OUTPUT,
@@ -266,17 +266,19 @@ def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
         )
 
     if (lang, gender) not in MAP_VOICE:
-        raise vol.Invalid("Unsupported language and gender specified.")
+        raise probatio.Invalid("Unsupported language and gender specified.")
 
     return value
 
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     TTS_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
-            vol.Optional(CONF_LANG): str,
-            vol.Optional(ATTR_GENDER): str,
+            probatio.Required(CONF_PLATFORM): probatio.All(
+                cv.string, _deprecated_platform
+            ),
+            probatio.Optional(CONF_LANG): str,
+            probatio.Optional(ATTR_GENDER): str,
         }
     ),
     validate_lang,
@@ -324,11 +326,13 @@ class CloudTTSEntity(TextToSpeechEntity):
         self._language, self._voice = prefs.tts_default_voice
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._language
 
     @property
+    @override
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
@@ -336,16 +340,19 @@ class CloudTTSEntity(TextToSpeechEntity):
         }
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
         # The gender option is deprecated and will be removed in 2024.10.0.
         return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -367,6 +374,7 @@ class CloudTTSEntity(TextToSpeechEntity):
         )
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
@@ -404,6 +412,7 @@ class CloudTTSEntity(TextToSpeechEntity):
 
         return result
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -433,6 +442,7 @@ class CloudTTSEntity(TextToSpeechEntity):
 
         return (options[ATTR_AUDIO_OUTPUT], data)
 
+    @override
     async def async_stream_tts_audio(
         self, request: TTSAudioRequest
     ) -> TTSAudioResponse:
@@ -474,22 +484,26 @@ class CloudProvider(Provider):
         self._language, self._voice = prefs.tts_default_voice
 
     @property
+    @override
     def default_language(self) -> str | None:
         """Return the default language."""
         return self._language
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
         # The gender option is deprecated and will be removed in 2024.10.0.
         return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
@@ -528,12 +542,14 @@ class CloudProvider(Provider):
         return result
 
     @property
+    @override
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

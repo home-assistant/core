@@ -1,6 +1,7 @@
 """GoodWe PV inverter selection settings entities."""
 
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError, OperationMode
 
@@ -91,7 +92,8 @@ class InverterOperationModeEntity(SelectEntity):
     ) -> None:
         """Initialize the inverter operation mode setting entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_options = supported_options
         self._attr_current_option = current_mode
@@ -102,6 +104,7 @@ class InverterOperationModeEntity(SelectEntity):
         value = await self._inverter.get_operation_mode()
         self._attr_current_option = _MODE_TO_OPTION[value]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._inverter.set_operation_mode(_OPTION_TO_MODE[option])

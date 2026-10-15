@@ -1,6 +1,6 @@
 """Support for HomeKit Controller humidifier."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -48,17 +48,20 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
     _on_mode_value = 1
 
     @callback
+    @override
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
         self._async_clear_property_cache(("max_humidity", "min_humidity"))
         super()._async_reconfigure()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
 
     @property
+    @override
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
@@ -70,37 +73,45 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
         return MODE_AUTO if mode == 1 else MODE_NORMAL
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self.service.value(self._humidity_char)
 
     @cached_property
+    @override
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return int(self.service[self._humidity_char].minValue or DEFAULT_MIN_HUMIDITY)
 
     @cached_property
+    @override
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return int(self.service[self._humidity_char].maxValue or DEFAULT_MAX_HUMIDITY)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self.async_put_characteristics({self._humidity_char: humidity})
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified valve on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""
         if mode == MODE_AUTO:
@@ -120,6 +131,7 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
                 }
             )
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -148,6 +160,7 @@ class HomeKitDehumidifier(HomeKitBaseHumidifier):
         super().__init__(accessory, devinfo)
         self._attr_unique_id = f"{accessory.unique_id}_{self._iid}_{self.device_class}"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -156,6 +169,7 @@ class HomeKitDehumidifier(HomeKitBaseHumidifier):
         ]
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)

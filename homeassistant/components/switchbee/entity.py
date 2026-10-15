@@ -1,7 +1,7 @@
 """Support for SwitchBee entity."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
@@ -61,13 +61,10 @@ class SwitchBeeDeviceEntity[_DeviceTypeT: SwitchBeeBaseDevice](
             manufacturer=SWITCHBEE_BRAND,
             model=coordinator.api.module_display(device.unit_id),
             suggested_area=device.zone,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.api.name} ({coordinator.api.unique_id})",
-            ),
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_online and super().available

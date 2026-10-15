@@ -2,13 +2,15 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from nexia.home import NexiaHome
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from .types import NexiaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,12 +20,12 @@ DEFAULT_UPDATE_RATE = 120
 class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator for nexia homes."""
 
-    config_entry: ConfigEntry
+    config_entry: NexiaConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NexiaConfigEntry,
         nexia_home: NexiaHome,
     ) -> None:
         """Initialize DataUpdateCoordinator for the nexia home."""
@@ -37,6 +39,9 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        return await self.nexia_home.update()
+        update_data = await self.nexia_home.update()  # can return None
+
+        return update_data or {}

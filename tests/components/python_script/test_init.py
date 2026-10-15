@@ -5,7 +5,8 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from homeassistant.components.python_script import DOMAIN, FOLDER, execute
+from homeassistant.components.python_script.const import DOMAIN, FOLDER
+from homeassistant.components.python_script.helpers import execute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -28,7 +29,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -36,11 +37,11 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.python_script.open",
+            "homeassistant.components.python_script.helpers.open",
             mock_open(read_data="fake source"),
             create=True,
         ),
-        patch("homeassistant.components.python_script.execute") as mock_ex,
+        patch("homeassistant.components.python_script.helpers.execute") as mock_ex,
     ):
         await hass.services.async_call(DOMAIN, "hello", {"some": "data"}, blocking=True)
 
@@ -60,7 +61,7 @@ async def test_setup_fails_on_no_dir(
     with patch(
         "homeassistant.components.python_script.os.path.isdir", return_value=False
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert not res
     assert "Folder python_scripts not found in configuration folder" in caplog.text
@@ -371,7 +372,7 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -513,7 +514,7 @@ time.sleep(2)
 time.sleep(5)
 """
 
-    with patch("homeassistant.components.python_script.time.sleep"):
+    with patch("homeassistant.components.python_script.helpers.time.sleep"):
         hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -537,14 +538,14 @@ async def test_execute_with_output(
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = {"result": f"hello {data.get('name', 'World')}"}
     """
 
     with patch(
-        "homeassistant.components.python_script.open",
+        "homeassistant.components.python_script.helpers.open",
         mock_open(read_data=source),
         create=True,
     ):
@@ -581,14 +582,14 @@ async def test_execute_no_output(
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 no_output = {"result": f"hello {data.get('name', 'World')}"}
     """
 
     with patch(
-        "homeassistant.components.python_script.open",
+        "homeassistant.components.python_script.helpers.open",
         mock_open(read_data=source),
         create=True,
     ):
@@ -620,7 +621,7 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = f"hello {data.get('name', 'World')}"
@@ -628,7 +629,7 @@ output = f"hello {data.get('name', 'World')}"
 
     with (
         patch(
-            "homeassistant.components.python_script.open",
+            "homeassistant.components.python_script.helpers.open",
             mock_open(read_data=source),
             create=True,
         ),

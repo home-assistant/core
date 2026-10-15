@@ -1,5 +1,7 @@
 """Demo platform that has a couple of fake device trackers."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import (
     BaseScannerEntity,
     SourceType,
@@ -86,6 +88,7 @@ class DemoScanner(BaseScannerEntity):
         self._is_connected = is_connected
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected."""
         return self._is_connected

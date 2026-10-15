@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
@@ -124,6 +124,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         base_name = self.backup_base_names[backup_id]
         return (f"{base_name}.tar", f"{base_name}_meta.json")
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -149,6 +150,7 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         return ChunkAsyncStreamIterator(resp)
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -186,6 +188,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to upload backup") from err
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -212,6 +215,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                     LOGGER.error("Failed to delete backup: %s", err)
                     raise BackupAgentError("Failed to delete backup") from err
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._async_list_backups(**kwargs)).values())
@@ -259,6 +263,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         self.backup_base_names = backup_base_names
         return backups
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

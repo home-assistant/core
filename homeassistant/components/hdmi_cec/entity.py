@@ -1,6 +1,6 @@
 """Support for HDMI CEC."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -63,6 +63,7 @@ class CecEntity(Entity):
         self._attr_available = False
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
@@ -101,6 +102,7 @@ class CecEntity(Entity):
         return self._device.type
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         state_attr = {}

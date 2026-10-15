@@ -2,6 +2,7 @@
 
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
@@ -42,6 +43,7 @@ class OllamaTaskEntity(
         | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -65,6 +67,7 @@ class OllamaTaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,

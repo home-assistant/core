@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 
@@ -95,6 +95,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RedgtechDevi
             )
             return await api_call(*args)
 
+    @override
     async def _async_update_data(self) -> dict[str, RedgtechDevice]:
         """Fetch data from the API on demand.
 

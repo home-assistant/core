@@ -2,20 +2,14 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from aiohttp import ClientResponseError, ContentTypeError
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
-from teltasync.error_codes import TeltonikaErrorCode
 from teltasync.modems import Modems, ModemStatusFull
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -26,13 +20,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
-AUTH_ERROR_CODES = frozenset(
-    {
-        TeltonikaErrorCode.UNAUTHORIZED_ACCESS,
-        TeltonikaErrorCode.LOGIN_FAILED,
-        TeltonikaErrorCode.INVALID_JWT_TOKEN,
-    }
-)
 
 
 class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatusFull]]):
@@ -58,6 +45,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
         self.client = client
         self.base_url = base_url
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator - authenticate and fetch device info."""
         try:
@@ -65,12 +53,6 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
             system_info_response = await self.client.get_system_info()
         except TeltonikaAuthenticationError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except (ClientResponseError, ContentTypeError) as err:
-            if (isinstance(err, ClientResponseError) and err.status in (401, 403)) or (
-                isinstance(err, ContentTypeError) and err.status == 403
-            ):
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-            raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
         except TeltonikaConnectionError as err:
             raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
 
@@ -78,7 +60,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, system_info_response.mnf_info.serial)},
             connections={
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                (CONNECTION_NETWORK_MAC, mac)
                 for mac in (
                     system_info_response.mnf_info.mac_eth,
                     system_info_response.mnf_info.mac,
@@ -93,6 +75,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
             configuration_url=self.base_url,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, ModemStatusFull]:
         """Fetch data from Teltonika device."""
         modems = Modems(self.client.auth)
@@ -101,23 +84,10 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
             modems_response = await modems.get_status()
         except TeltonikaAuthenticationError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except (ClientResponseError, ContentTypeError) as err:
-            if (isinstance(err, ClientResponseError) and err.status in (401, 403)) or (
-                isinstance(err, ContentTypeError) and err.status == 403
-            ):
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
         except TeltonikaConnectionError as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
 
         if not modems_response.success:
-            if modems_response.errors and any(
-                error.code in AUTH_ERROR_CODES for error in modems_response.errors
-            ):
-                raise ConfigEntryAuthFailed(
-                    "Authentication failed: unauthorized access"
-                )
-
             error_message = (
                 modems_response.errors[0].error
                 if modems_response.errors

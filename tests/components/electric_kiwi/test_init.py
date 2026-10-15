@@ -4,7 +4,6 @@ import http
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import RequestInfo
-from aiohttp.client_exceptions import ClientResponseError
 from electrickiwi_api.exceptions import ApiException, AuthException
 import pytest
 
@@ -12,6 +11,10 @@ from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
@@ -54,14 +57,22 @@ async def test_async_setup_multiple_entries(
 
 
 @pytest.mark.parametrize(
-    ("status", "expected_state"),
+    ("exc", "expected_state"),
     [
         (
-            http.HTTPStatus.UNAUTHORIZED,
+            OAuth2TokenRequestReauthError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.UNAUTHORIZED,
+                domain=DOMAIN,
+            ),
             ConfigEntryState.SETUP_ERROR,
         ),
         (
-            http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            OAuth2TokenRequestError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
+                domain=DOMAIN,
+            ),
             ConfigEntryState.SETUP_RETRY,
         ),
     ],
@@ -70,15 +81,13 @@ async def test_async_setup_multiple_entries(
 async def test_refresh_token_validity_failures(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    status: http.HTTPStatus,
+    exc: OAuth2TokenRequestError,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test token refresh failure status."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            RequestInfo("", "POST", {}, ""), None, status=status
-        ),
+        side_effect=exc,
     ) as mock_async_ensure_token_valid:
         await init_integration(hass, config_entry)
         mock_async_ensure_token_valid.assert_called_once()
@@ -120,7 +129,8 @@ async def test_unique_id_migration_failure(
 
     assert config_entry.minor_version == 1
     assert config_entry.unique_id == DOMAIN
-    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == "Failed to connect to Electric Kiwi"
 
 
 async def test_unique_id_migration_auth_failure(
@@ -133,3 +143,7 @@ async def test_unique_id_migration_auth_failure(
     assert config_entry.minor_version == 1
     assert config_entry.unique_id == DOMAIN
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        config_entry.reason
+        == "Authentication with Electric Kiwi failed. Please re-authenticate"
+    )

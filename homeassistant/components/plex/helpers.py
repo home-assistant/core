@@ -1,39 +1,61 @@
 """Helper methods for common Plex integration operations."""
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from plexapi.gdm import GDM
 from plexwebsocket import PlexWebsocket
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, SERVERS
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import PlexServer
 
 
+@dataclass
+class PlexRuntimeData:
+    """Runtime data for a Plex config entry."""
+
+    server: PlexServer
+    websocket: PlexWebsocket
+    dispatchers: list[CALLBACK_TYPE]
+
+
+type PlexConfigEntry = ConfigEntry[PlexRuntimeData]
+
+
 class PlexData(TypedDict):
     """Typed description of plex data stored in `hass.data`."""
 
-    servers: dict[str, PlexServer]
-    dispatchers: dict[str, list[CALLBACK_TYPE]]
-    websockets: dict[str, PlexWebsocket]
     gdm_scanner: GDM
     gdm_debouncer: Callable[[], Coroutine[Any, Any, None]]
 
 
+DATA_PLEX: HassKey[PlexData] = HassKey(DOMAIN)
+
+
 def get_plex_data(hass: HomeAssistant) -> PlexData:
     """Get typed data from hass.data."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    return hass.data[DOMAIN]
+    return hass.data[DATA_PLEX]
+
+
+def get_plex_servers(hass: HomeAssistant) -> dict[str, PlexServer]:
+    """Get the Plex servers of all loaded config entries."""
+    entries: list[PlexConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    return {
+        entry.runtime_data.server.machine_identifier: entry.runtime_data.server
+        for entry in entries
+    }
 
 
 def get_plex_server(hass: HomeAssistant, server_id: str) -> PlexServer:
-    """Get Plex server from hass.data."""
-    return get_plex_data(hass)[SERVERS][server_id]
+    """Get a loaded Plex server by its identifier."""
+    return get_plex_servers(hass)[server_id]
 
 
 def pretty_title(media, short_name=False):

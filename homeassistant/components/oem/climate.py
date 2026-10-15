@@ -1,10 +1,10 @@
 """OpenEnergyMonitor Thermostat Support."""
 
-from typing import Any
+from typing import Any, override
 
 from oemthermostat import Thermostat
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -29,11 +29,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default="Thermostat"): cv.string,
+        probatio.Optional(CONF_PORT, default=80): probatio.Port(),
+        probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
     }
 )
 
@@ -70,7 +70,7 @@ class ThermostatDevice(ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, thermostat, name):
         """Initialize the device."""
@@ -82,6 +82,7 @@ class ThermostatDevice(ClimateEntity):
         self._mode = None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -94,6 +95,7 @@ class ThermostatDevice(ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
@@ -102,6 +104,7 @@ class ThermostatDevice(ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.AUTO:
@@ -111,6 +114,7 @@ class ThermostatDevice(ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -118,7 +122,7 @@ class ThermostatDevice(ClimateEntity):
 
     def update(self) -> None:
         """Update local state."""
-        self._attr_target_temperature = self.thermostat.setpoint
-        self._attr_current_temperature = self.thermostat.temperature
+        self._attr_native_target_temperature = self.thermostat.setpoint
+        self._attr_native_current_temperature = self.thermostat.temperature
         self._state = self.thermostat.state
         self._mode = self.thermostat.mode

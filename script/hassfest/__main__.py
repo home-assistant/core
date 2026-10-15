@@ -15,6 +15,7 @@ from . import (
     config_schema,
     core_files,
     dependencies,
+    device_classes,
     dhcp,
     docker,
     icons,
@@ -22,6 +23,7 @@ from . import (
     integration_type,
     json,
     labs,
+    lorawan,
     manifest,
     mdi_icons,
     metadata,
@@ -29,6 +31,7 @@ from . import (
     mypy_config,
     quality_scale,
     requirements,
+    sensor,
     services,
     ssdp,
     translations,
@@ -51,6 +54,7 @@ INTEGRATION_PLUGINS = [
     integration_type,
     json,
     labs,
+    lorawan,
     manifest,
     mqtt,
     quality_scale,
@@ -65,10 +69,12 @@ INTEGRATION_PLUGINS = [
 ]
 HASS_PLUGINS = [
     core_files,
+    device_classes,
     docker,
     mdi_icons,
     mypy_config,
     metadata,
+    sensor,
 ]
 
 ALL_PLUGIN_NAMES = [

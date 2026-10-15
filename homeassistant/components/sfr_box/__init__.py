@@ -15,7 +15,7 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import SFRConfigEntry, SFRDataUpdateCoordinator, SFRRuntimeData
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> None:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=async_get_clientsession(hass))
     has_auth = False
@@ -72,6 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
         tasks.append(data.ftth.async_config_entry_first_refresh())
     await asyncio.gather(*tasks)
 
+    host: str = entry.data[CONF_HOST]
+    configuration_url = (
+        host if host.startswith(("http://", "https://")) else f"http://{host}"
+    )
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -81,15 +85,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
         model=None,
         model_id=system_info.product_id,
         sw_version=system_info.version_mainfirmware,
-        configuration_url=f"http://{entry.data[CONF_HOST]}",
+        configuration_url=configuration_url,
     )
 
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

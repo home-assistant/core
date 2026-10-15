@@ -1,6 +1,6 @@
 """PTDevices integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -44,6 +44,7 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
         return self.coordinator.data[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self._device_id in self.coordinator.data

@@ -1,8 +1,9 @@
 """Config flow for SlimProto Player integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -12,12 +13,16 @@ class SlimProtoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         # we have nothing to configure so simply create the entry
         return self.async_create_entry(title=DEFAULT_NAME, data={})

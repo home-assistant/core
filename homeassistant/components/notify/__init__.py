@@ -1,18 +1,16 @@
 """Provides functionality to notify people."""
 
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
-from homeassistant.components import persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -20,7 +18,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_DATA,
@@ -28,11 +25,13 @@ from .const import (  # noqa: F401
     ATTR_RECIPIENTS,
     ATTR_TARGET,
     ATTR_TITLE,
+    DATA_COMPONENT,
     DOMAIN,
     NOTIFY_SERVICE_SCHEMA,
     SERVICE_NOTIFY,
     SERVICE_PERSISTENT_NOTIFICATION,
     SERVICE_SEND_MESSAGE,
+    NotifyEntityFeature,
 )
 from .legacy import (  # noqa: F401
     BaseNotificationService,
@@ -41,29 +40,26 @@ from .legacy import (  # noqa: F401
     async_setup_legacy,
 )
 from .repairs import migrate_notify_issue  # noqa: F401
+from .services import async_setup_services
 
 # mypy: disallow-any-generics
 
 # Platform specific data
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
-DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
-    extra=vol.ALLOW_EXTRA,
+PLATFORM_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_PLATFORM): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
-
-
-class NotifyEntityFeature(IntFlag):
-    """Supported features of a notify entity."""
-
-    TITLE = 1
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -78,35 +74,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # legacy platforms to finish setting up.
         hass.async_create_task(setup, eager_start=True)
 
-    component = hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](
-        _LOGGER, DOMAIN, hass
-    )
-    component.async_register_entity_service(
-        SERVICE_SEND_MESSAGE,
-        {
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_TITLE): cv.string,
-        },
-        "_async_send_message",
-    )
+    # Reloading legacy platforms runs async_setup again; keep the existing
+    # component so config entry entities stay tracked.
+    if DATA_COMPONENT in hass.data:
+        return True
 
-    async def persistent_notification(service: ServiceCall) -> None:
-        """Send notification via the built-in persistent_notify integration."""
-        message: str = service.data[ATTR_MESSAGE]
-        title: str | None = service.data.get(ATTR_TITLE)
-
-        notification_id = None
-        if data := service.data.get(ATTR_DATA):
-            notification_id = data.get(pn.ATTR_NOTIFICATION_ID)
-
-        pn.async_create(hass, message, title, notification_id)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PERSISTENT_NOTIFICATION,
-        persistent_notification,
-        schema=NOTIFY_SERVICE_SCHEMA,
-    )
+    hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
+    async_setup_services(hass)
 
     return True
 
@@ -147,6 +121,7 @@ class NotifyEntity(RestoreEntity):
         self.__dict__.pop("state", None)
         self.__last_notified_isoformat = state
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the notify entity is added to hass."""
         await super().async_internal_added_to_hass()

@@ -10,10 +10,10 @@
     "step": {
       "user": {
         "data": {
-          "code": "Station code"
+          "station_code": "Station code"
         },
         "data_description": {
-          "code": "Looks like ESCAT4300000043206B"
+          "station_code": "Looks like ESCAT4300000043206B"
         }
       }
     }

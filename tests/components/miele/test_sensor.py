@@ -9,11 +9,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.components.miele.sensor import _convert_temperature
+from homeassistant.components.miele.sensor import _convert_temperature, _get_plate_count
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+
+from . import get_data_callback
 
 from tests.common import (
     MockConfigEntry,
@@ -52,6 +54,29 @@ async def test_sensor_states_api_push(
 ) -> None:
     """Test sensor state when the API pushes data via SSE."""
 
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.freeze_time("2025-05-31 12:30:00+00:00")
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_states_api_push_one_device(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+    push_data_and_actions: None,
+) -> None:
+    """Test sensor state when the API pushes data for one device only via SSE."""
+
+    dev_file = await async_load_json_object_fixture(hass, "1_device.json", DOMAIN)
+    data_callback = get_data_callback(mock_miele_client)
+    await data_callback(dev_file)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.refrigerator_temperature").state != "unavailable"
+    assert hass.states.get("sensor.freezer_temperature").state == "-19.0"
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
@@ -877,3 +902,20 @@ def test_convert_temperature_invalid_raw_types() -> None:
     """int() must not raise: bad API payloads become unknown."""
     assert _convert_temperature([_core_temperature_entry("n/a")], 0) is None
     assert _convert_temperature([_core_temperature_entry([1])], 0) is None
+
+
+@pytest.mark.parametrize(
+    ("tech_type", "expected"),
+    [
+        ("KM7575", 6),
+        ("KM7699", 5),
+        ("KM7899", 5),
+        ("KM7999 FR/R01", 5),
+        ("KMX 123", 6),
+        ("KMDA7774-1 R01", 5),
+        ("Unknown model", 4),
+    ],
+)
+def test_get_plate_count(tech_type: str, expected: int) -> None:
+    """Cover _get_plate_count prefix matching, including the KM7999 entry."""
+    assert _get_plate_count(tech_type) == expected

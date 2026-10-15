@@ -15,5 +15,5 @@
       selector:
         duration:
 
-turned_off: *trigger_common
-turned_on: *trigger_common
+block_ended: *trigger_common
+block_started: *trigger_common

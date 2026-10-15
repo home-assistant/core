@@ -111,7 +111,7 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     """Test sending a message with to a notify group."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -211,7 +211,7 @@ async def test_invalid_configuration(
     """Test failing to set up group with an invalid configuration."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -244,7 +244,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     """Verify we can reload the notify service."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()

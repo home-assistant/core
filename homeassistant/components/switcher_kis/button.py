@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import DeviceCategory, DeviceState, ThermostatSwing
@@ -103,6 +103,7 @@ class SwitcherThermostatButtonEntity(SwitcherEntity, ButtonEntity):
 
         self._attr_unique_id = f"{coordinator.mac_address}-{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_call_api(

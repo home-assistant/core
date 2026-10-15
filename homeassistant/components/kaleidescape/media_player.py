@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import override
 
 from kaleidescape import const as kaleidescape_const
 
@@ -53,35 +54,43 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
     )
     _attr_name = None
 
+    @override
     async def async_turn_on(self) -> None:
         """Send leave standby command."""
         await self._device.leave_standby()
 
+    @override
     async def async_turn_off(self) -> None:
         """Send enter standby command."""
         await self._device.enter_standby()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._device.pause()
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._device.play()
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.stop()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send track next command."""
         await self._device.next()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send track previous command."""
         await self._device.previous()
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """State of device."""
         if self._device.power.state == kaleidescape_const.DEVICE_POWER_STATE_STANDBY:
@@ -93,11 +102,13 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
+    @override
     def available(self) -> bool:
         """Return if device is available."""
         return self._device.is_connected
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         if self._device.movie.handle:
@@ -105,11 +116,13 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_content_type(self) -> str | None:
         """Content type of current playing media."""
         return self._device.movie.media_type
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if self._device.movie.title_length:
@@ -117,6 +130,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._device.movie.title_location:
@@ -124,6 +138,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
         if self._device.movie.play_status in KALEIDESCAPE_PLAYING_STATES:
@@ -131,11 +146,13 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_image_url(self) -> str:
         """Image url of current playing media."""
         return self._device.movie.cover
 
     @property
+    @override
     def media_title(self) -> str:
         """Title of current playing media."""
         return self._device.movie.title

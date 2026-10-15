@@ -3,7 +3,7 @@
 from collections import ChainMap, UserDict
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -195,10 +195,12 @@ class ScriptRunVariables(UserDict[str, Any]):
             raise ValueError("Cannot exit top-level scope")
         return self._previous
 
+    @override
     def __delitem__(self, key: str) -> None:
         """Delete a variable (disallowed)."""
         raise TypeError("Deleting items is not allowed in ScriptRunVariables.")
 
+    @override
     def __setitem__(self, key: str, value: Any) -> None:
         """Assign value to a variable."""
         self._assign(key, value, parallel_protected=False)
@@ -246,6 +248,7 @@ class ScriptRunVariables(UserDict[str, Any]):
         self._local_data[key] = value
 
     @property
+    @override
     def data(self) -> Mapping[str, Any]:  # type: ignore[override]
         """Return variables in full scope.
 

@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 import socket
 import time
-from typing import Any, Final
+from typing import Any, Final, override
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
@@ -138,16 +138,19 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._run_pipeline_after_announce: bool = False
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
         return self.voip_device.get_pipeline_entity_id(self.hass)
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the VAD sensitivity entity ID for next conversation."""
         return self.voip_device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    @override
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
@@ -157,6 +160,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -169,6 +173,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -176,6 +181,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.voip_device.protocol = None
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> AssistSatelliteConfiguration:
@@ -205,12 +211,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self.hass, announce_message(), "voip_announce_timer"
         )
 
+    @override
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
     ) -> None:
         """Set the current satellite configuration."""
         raise NotImplementedError
 
+    @override
     async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
 
@@ -289,6 +297,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop ringing
             _LOGGER.debug("Caller did not pick up in time")
             sip_protocol.cancel_call(call_info)
+            self.disconnect()
             raise
 
     async def _check_announcement_pickup(self) -> None:
@@ -332,12 +341,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 ):
                     # Caller hung up
                     _LOGGER.debug("Hang up")
-                    self._announcement = None
-                    if self._run_pipeline_task is not None:
-                        _LOGGER.debug("Cancelling running pipeline")
-                        self._run_pipeline_task.cancel()
-                    if not self._call_end_future.done():
-                        self._call_end_future.set_result(None)
                     self.disconnect()
                     break
 
@@ -348,6 +351,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 raise
             _LOGGER.debug("Check hangup cancelled")
 
+    @override
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
     ) -> None:
@@ -361,15 +365,31 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     def disconnect(self):
         """Server disconnected."""
         super().disconnect()
+        if self._check_announcement_pickup_task is not None:
+            self._check_announcement_pickup_task.cancel()
+            self._check_announcement_pickup_task = None
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
+        self.voip_device.set_is_active(False)
+        self._announcement = None
+        if self._run_pipeline_task is not None:
+            _LOGGER.debug("Cancelling running pipeline")
+            self._run_pipeline_task.cancel()
+        if not self._call_end_future.done():
+            self._call_end_future.set_result(None)
+        self._last_chunk_time = None
         self._rtp_port = None
+        _LOGGER.debug("VoIP disconnected")
 
     def connection_made(self, transport):
         """Server is ready."""
         super().connection_made(transport)
-        self._last_chunk_time = time.monotonic()
+        self.voip_device.set_is_active(True)
+        # If announcement isn't set, assume it was an incoming call and
+        # initialize the chunk time for checking if the caller hung up
+        if self._announcement is None:
+            self._last_chunk_time = time.monotonic()
         # Check if caller hung up
         self._check_hangup_task = self.config_entry.async_create_background_task(
             self.hass,
@@ -409,9 +429,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Run a pipeline with STT input and TTS output."""
         _LOGGER.debug("Starting pipeline")
 
-        self.async_set_context(Context(user_id=self.config_entry.data["user"]))
-        self.voip_device.set_is_active(True)
-
         async def stt_stream():
             retry: bool = True
             while True:
@@ -436,6 +453,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         try:
             await self.async_accept_pipeline_from_satellite(
                 audio_stream=stt_stream(),
+                context=Context(user_id=self.config_entry.data["user"]),
             )
 
             if self._pipeline_had_error:
@@ -462,7 +480,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop audio stream
             await self._audio_queue.put(None)
 
-            self.voip_device.set_is_active(False)
             self._run_pipeline_task = None
             _LOGGER.debug("Pipeline finished")
 
@@ -505,6 +522,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         while not self._audio_queue.empty():
             self._audio_queue.get_nowait()
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == PipelineEventType.STT_END:

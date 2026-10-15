@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from gps3.agps3threaded import AGPS3mechanism
 
@@ -193,6 +194,7 @@ class GpsdSensor(SensorEntity):
         self.agps_thread = agps_thread
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of GPSD."""
         value = self.entity_description.value_fn(self.agps_thread)

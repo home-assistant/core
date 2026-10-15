@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -260,7 +260,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube binary sensors."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     async_add_entities(
         QubeBinarySensor(coordinator, entry, description)
@@ -285,6 +285,7 @@ class QubeBinarySensor(QubeEntity, BinarySensorEntity):
         self._attr_unique_id = f"{entry.entry_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator.data)

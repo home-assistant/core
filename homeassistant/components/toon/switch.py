@@ -1,7 +1,7 @@
 """Support for Toon switches."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from toonapi import (
     ACTIVE_STATE_AWAY,
@@ -51,6 +51,7 @@ class ToonSwitch(ToonEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the status of the binary sensor."""
         section = getattr(self.coordinator.data, self.entity_description.section)
@@ -61,6 +62,7 @@ class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
     """Defines a Toon program switch."""
 
     @toon_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Toon program switch."""
         await self.coordinator.toon.set_active_state(
@@ -68,6 +70,7 @@ class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
         )
 
     @toon_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Toon program switch."""
         await self.coordinator.toon.set_active_state(
@@ -79,6 +82,7 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
     """Defines a Toon Holiday mode switch."""
 
     @toon_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Toon holiday mode switch."""
         await self.coordinator.toon.set_active_state(
@@ -86,6 +90,7 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
         )
 
     @toon_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Toon holiday mode switch."""
         await self.coordinator.toon.set_active_state(

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -66,6 +67,7 @@ class WallboxButton(WallboxEntity, ButtonEntity):
             f"{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
         )
 
+    @override
     async def async_press(self) -> None:
         """Resume schedule and EcoSmart mode after a manual stop."""
         await self.entity_description.press_fn(self.coordinator)

@@ -2,9 +2,9 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.hassio import (
     GreenOptions,
@@ -25,12 +25,12 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_HW_SETTINGS_SCHEMA = vol.Schema(
+STEP_HW_SETTINGS_SCHEMA = probatio.Schema(
     {
         # Sorted to match front panel left to right
-        vol.Required("power_led"): selector.BooleanSelector(),
-        vol.Required("activity_led"): selector.BooleanSelector(),
-        vol.Required("system_health_led"): selector.BooleanSelector(),
+        probatio.Required("power_led"): selector.BooleanSelector(),
+        probatio.Required("activity_led"): selector.BooleanSelector(),
+        probatio.Required("system_health_led"): selector.BooleanSelector(),
     }
 )
 
@@ -42,6 +42,7 @@ class HomeAssistantGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> HomeAssistantGreenOptionsFlow:

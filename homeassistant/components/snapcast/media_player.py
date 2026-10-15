@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
@@ -131,11 +131,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Return the group the client is associated with."""
         return self._device.group
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
         self._device.set_callback(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         self._device.set_callback(None)
@@ -146,11 +148,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return self._device.identifier
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return f"{self._device.friendly_name} {CLIENT_SUFFIX}"
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._device.connected:
@@ -168,6 +172,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         state_attrs = {}
@@ -181,6 +186,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return self._device.latency
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         if self._current_group is None:
@@ -189,6 +195,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return self._current_group.stream
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
         if self._current_group is None:
@@ -196,6 +203,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         return list(self._current_group.streams_by_name().keys())
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
         if self._current_group is None:
@@ -214,20 +222,24 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Volume muted."""
         return self._device.muted
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
         await self._device.set_muted(mute)
         self.async_write_ha_state()
 
     @property
+    @override
     def volume_level(self) -> float:
         """Return the volume level."""
         return self._device.volume / 100
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self._device.set_volume(round(volume * 100))
@@ -248,6 +260,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def group_members(self) -> list[str] | None:
         """List of players currently grouped for synchronous playback."""
         if self._current_group is None:
@@ -266,6 +279,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             )
         ]
 
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add `group_members` to this client's current group."""
         if self._current_group is None:
@@ -314,6 +328,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this client from its current group."""
         if self._current_group is None:
@@ -348,16 +363,19 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return {}
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self.metadata.get("title")
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self.metadata.get("artUrl")
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if (value := self.metadata.get("artist")) is not None:
@@ -366,11 +384,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self.metadata.get("album")
 
     @property
+    @override
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
         if (value := self.metadata.get("albumArtist")) is not None:
@@ -379,6 +399,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
         if (value := self.metadata.get("trackNumber")) is not None:
@@ -387,6 +408,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if (value := self.metadata.get("duration")) is not None:
@@ -395,6 +417,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._current_group is None:

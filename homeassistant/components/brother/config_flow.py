@@ -1,9 +1,9 @@
 """Adds config flow for Brother Printer."""
 
-from typing import Any
+from typing import Any, override
 
 from brother import Brother, SnmpError, UnsupportedModelError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -25,53 +25,53 @@ from .const import (
     SECTION_ADVANCED_SETTINGS,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
             SelectSelectorConfig(
                 options=PRINTER_TYPES,
                 translation_key="printer_type",
             )
         ),
-        vol.Required(SECTION_ADVANCED_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(SECTION_ADVANCED_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
                 },
             ),
             {"collapsed": True},
         ),
     }
 )
-ZEROCONF_SCHEMA = vol.Schema(
+ZEROCONF_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
+        probatio.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
             SelectSelectorConfig(
                 options=PRINTER_TYPES,
                 translation_key="printer_type",
             )
         ),
-        vol.Required(SECTION_ADVANCED_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(SECTION_ADVANCED_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
                 },
             ),
             {"collapsed": True},
         ),
     }
 )
-RECONFIGURE_SCHEMA = vol.Schema(
+RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(SECTION_ADVANCED_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(SECTION_ADVANCED_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
                 },
             ),
             {"collapsed": True},
@@ -114,6 +114,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         self.brother: Brother
         self.host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -142,6 +143,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

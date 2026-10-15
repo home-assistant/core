@@ -1,0 +1,5 @@
+{
+  "domain": "midea",
+  "name": "Midea",
+  "integrations": ["ccm15", "midea"]
+}

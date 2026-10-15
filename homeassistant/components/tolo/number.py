@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tololib import (
     FAN_TIMER_MAX,
@@ -90,10 +90,12 @@ class ToloNumberEntity(ToloSaunaCoordinatorEntity, NumberEntity):
         self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the value of this TOLO Number entity."""
         return self.entity_description.getter(self.coordinator.data.settings) or 0
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Set the value of this TOLO Number entity."""
         int_value = int(value)

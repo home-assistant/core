@@ -1,6 +1,6 @@
 """Support for deCONZ siren."""
 
-from typing import Any
+from typing import Any, override
 
 from pydeconz.models.event import EventType
 from pydeconz.models.light.siren import Siren
@@ -50,10 +50,12 @@ class DeconzSiren(DeconzDevice[Siren], SirenEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if siren is on."""
         return self._device.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
@@ -64,6 +66,7 @@ class DeconzSiren(DeconzDevice[Siren], SirenEntity):
             duration=duration,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
         await self.hub.api.lights.sirens.set_state(

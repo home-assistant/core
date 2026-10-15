@@ -1,10 +1,11 @@
 """DataUpdateCoordinator for the wallbox integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+import time
+from typing import Any, Concatenate, override
 
 import requests
 from wallbox import Wallbox
@@ -100,9 +101,7 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
 
 def check_token_validity(jwt_token_ttl: int, jwt_token_drift: int) -> bool:
     """Check if the jwtToken is still valid in order to reuse if possible."""
-    return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > datetime.timestamp(
-        datetime.now()
-    )
+    return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > time.time()
 
 
 def _validate(wallbox: Wallbox) -> None:
@@ -236,6 +235,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from wallbox_connection_error
 
     @_require_authentication
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
 

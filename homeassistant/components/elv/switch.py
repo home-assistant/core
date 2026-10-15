@@ -1,7 +1,7 @@
 """Support for PCA 301 smart switch."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import pypca
 from serial import SerialException
@@ -53,10 +53,12 @@ class SmartPlugSwitch(SwitchEntity):
         self._attr_name = "PCA 301"
         self._pca = pca
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._pca.turn_on(self._device_id)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._pca.turn_off(self._device_id)

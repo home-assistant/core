@@ -1,12 +1,13 @@
 """Support for myStrom switches/plugs."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymystrom.exceptions import MyStromConnectionError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,21 +48,27 @@ class MyStromSwitch(SwitchEntity):
             configuration_url=self.plug.uri,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
             await self.plug.turn_on()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except MyStromConnectionError:
-            _LOGGER.error("No route to myStrom plug")
+        except MyStromConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.plug.turn_off()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except MyStromConnectionError:
-            _LOGGER.error("No route to myStrom plug")
+        except MyStromConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from err
 
     async def async_update(self) -> None:
         """Get the latest data from the device and update the data."""

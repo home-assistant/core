@@ -275,3 +275,98 @@ async def test_user_flow_no_device_id(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_kiosker_api.status.return_value.device_id = (
+        "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "10.0.1.5",
+            CONF_API_TOKEN: "test_token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow updates the token and reloads."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "new-token"
+
+
+async def test_reauth_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow aborts when a different device is found at the host."""
+    mock_config_entry.add_to_hass(hass)
+    mock_kiosker_api.status.return_value.device_id = "DIFFERENT-DEVICE-ID"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_device"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(ConnectionError, "cannot_connect", id="connection_error"),
+        pytest.param(AuthenticationError, "invalid_auth", id="auth_error"),
+        pytest.param(IPAuthenticationError, "invalid_ip_auth", id="ip_auth_error"),
+        pytest.param(TLSVerificationError, "tls_error", id="tls_error"),
+        pytest.param(BadRequestError, "bad_request", id="bad_request"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test reauth flow shows correct error for each API exception."""
+    mock_config_entry.add_to_hass(hass)
+    mock_kiosker_api.status.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "bad-token"},
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_error}
+
+    mock_kiosker_api.status.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

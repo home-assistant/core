@@ -3,7 +3,7 @@
 from datetime import datetime
 from functools import partial
 from ipaddress import ip_address
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
@@ -22,10 +22,14 @@ from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     KIBIBYTES_PER_SEC_RECEIVED,
+    KIBIBYTES_PER_SEC_RECEIVED_NO_ROLLOVER,
     KIBIBYTES_PER_SEC_SENT,
+    KIBIBYTES_PER_SEC_SENT_NO_ROLLOVER,
     LOGGER as _LOGGER,
     PACKETS_PER_SEC_RECEIVED,
+    PACKETS_PER_SEC_RECEIVED_NO_ROLLOVER,
     PACKETS_PER_SEC_SENT,
+    PACKETS_PER_SEC_SENT_NO_ROLLOVER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
@@ -104,18 +108,23 @@ async def async_create_device(
 
     # Create profile wrapper.
     igd_device = IgdDevice(upnp_device, notify_server.event_handler)
-    return Device(hass, igd_device, force_poll)
+    return Device(hass, igd_device, notify_server, force_poll)
 
 
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
     def __init__(
-        self, hass: HomeAssistant, igd_device: IgdDevice, force_poll: bool
+        self,
+        hass: HomeAssistant,
+        igd_device: IgdDevice,
+        notify_server: AiohttpNotifyServer,
+        force_poll: bool,
     ) -> None:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
+        self._notify_server = notify_server
         self._force_poll = force_poll
 
         self.coordinator: (
@@ -181,6 +190,7 @@ class Device:
         """Get the serial number."""
         return self._igd_device.device.serial_number
 
+    @override
     def __str__(self) -> str:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
@@ -216,6 +226,11 @@ class Device:
             await self._igd_device.async_unsubscribe_services()
         except UpnpCommunicationError as ex:
             _LOGGER.debug("Error unsubscribing to services: %s", ex)
+
+    async def async_stop(self) -> None:
+        """Unsubscribe from services and stop the notify server."""
+        await self.async_unsubscribe_services()
+        await self._notify_server.async_stop_server()
 
     async def async_get_data(
         self, entity_description_keys: list[str] | None
@@ -255,8 +270,12 @@ class Device:
             ROUTER_IP: get_value(igd_state.external_ip_address),
             KIBIBYTES_PER_SEC_RECEIVED: igd_state.kibibytes_per_sec_received,
             KIBIBYTES_PER_SEC_SENT: igd_state.kibibytes_per_sec_sent,
+            KIBIBYTES_PER_SEC_RECEIVED_NO_ROLLOVER: igd_state.kibibytes_per_sec_received_no_rollover,
+            KIBIBYTES_PER_SEC_SENT_NO_ROLLOVER: igd_state.kibibytes_per_sec_sent_no_rollover,
             PACKETS_PER_SEC_RECEIVED: igd_state.packets_per_sec_received,
             PACKETS_PER_SEC_SENT: igd_state.packets_per_sec_sent,
+            PACKETS_PER_SEC_RECEIVED_NO_ROLLOVER: igd_state.packets_per_sec_received_no_rollover,
+            PACKETS_PER_SEC_SENT_NO_ROLLOVER: igd_state.packets_per_sec_sent_no_rollover,
             PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4: get_value(
                 igd_state.port_mapping_number_of_entries
             ),

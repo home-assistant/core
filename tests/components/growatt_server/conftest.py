@@ -29,6 +29,7 @@ def mock_growatt_v1_api():
     Methods mocked for integration setup:
     - device_list: Called during async_setup_entry to discover devices
     - plant_energy_overview: Called by total coordinator during first refresh
+    - plant_power_overview: Called for the total coordinator's current power
 
     Methods mocked for MIN device coordinator refresh:
     - min_detail: Provides device state (e.g., acChargeEnable, chargePowerCommand)
@@ -138,10 +139,16 @@ def mock_growatt_v1_api():
         }
 
         # Called by total coordinator during refresh
+        # Note: V1 API returns current_power in kW; the coordinator
+        # converts it to W when mapping to invTodayPpv.
         mock_v1_api.plant_energy_overview.return_value = {
             "today_energy": 12.5,
             "total_energy": 1250.0,
-            "current_power": 2500,
+            "current_power": 2.5,
+        }
+        mock_v1_api.plant_power_overview.return_value = {
+            "count": 0,
+            "powers": [],
         }
 
         # Called by switch/number entities during turn_on/turn_off/set_value

@@ -1,11 +1,11 @@
 """The lookin integration config_flow."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiolookin import Device, LookInHttpProtocol, NoUsableService
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -25,6 +25,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._name: str | None = None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -51,6 +52,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -77,7 +79,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 

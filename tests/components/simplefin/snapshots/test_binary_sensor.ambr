@@ -39,9 +39,9 @@
 # name: test_all_entities[binary_sensor.investments_dr_evil_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Investments Dr Evil Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments Dr Evil Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.investments_dr_evil_possible_error',
@@ -91,9 +91,9 @@
 # name: test_all_entities[binary_sensor.investments_my_checking_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Investments My Checking Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments My Checking Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.investments_my_checking_possible_error',
@@ -143,9 +143,9 @@
 # name: test_all_entities[binary_sensor.investments_nerdcorp_series_b_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Investments NerdCorp Series B Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments NerdCorp Series B Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.investments_nerdcorp_series_b_possible_error',
@@ -195,9 +195,9 @@
 # name: test_all_entities[binary_sensor.mythical_randomsavings_castle_mortgage_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Mythical RandomSavings Castle Mortgage Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Castle Mortgage Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mythical_randomsavings_castle_mortgage_possible_error',
@@ -247,9 +247,9 @@
 # name: test_all_entities[binary_sensor.mythical_randomsavings_unicorn_pot_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Mythical RandomSavings Unicorn Pot Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Unicorn Pot Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mythical_randomsavings_unicorn_pot_possible_error',
@@ -299,9 +299,9 @@
 # name: test_all_entities[binary_sensor.random_bank_costco_anywhere_visa_r_card_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Random Bank Costco Anywhere Visa® Card Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Random Bank Costco Anywhere Visa® Card Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.random_bank_costco_anywhere_visa_r_card_possible_error',
@@ -351,9 +351,9 @@
 # name: test_all_entities[binary_sensor.the_bank_of_go_prime_savings_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'The Bank of Go PRIME SAVINGS Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go PRIME SAVINGS Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.the_bank_of_go_prime_savings_possible_error',
@@ -403,9 +403,9 @@
 # name: test_all_entities[binary_sensor.the_bank_of_go_the_bank_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'The Bank of Go The Bank Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go The Bank Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.the_bank_of_go_the_bank_possible_error',

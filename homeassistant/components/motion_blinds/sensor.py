@@ -1,6 +1,6 @@
 """Support for Motionblinds sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from motionblinds import DEVICE_TYPES_WIFI
 from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
@@ -64,11 +64,13 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{blind.mac}-battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._blind.battery_level
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
@@ -86,6 +88,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         self._attr_translation_key = f"{motor.lower()}_battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self._blind.battery_level is None:
@@ -93,6 +96,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return self._blind.battery_level[self._motor[0]]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         attributes = {}
@@ -117,6 +121,7 @@ class MotionSignalStrengthSensor(MotionCoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{blind.mac}-RSSI"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._blind.RSSI

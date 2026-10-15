@@ -1,5 +1,7 @@
 """Envertech EVT800 entity."""
 
+from typing import override
+
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,6 +26,7 @@ class EnvertechEVT800Entity(CoordinatorEntity[EnvertechEVT800Coordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.client.online

@@ -5,32 +5,65 @@
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
-      "missing_infrared_entity": "Select an infrared emitter or receiver."
+      "missing_infrared_entity": "Select an infrared emitter or receiver.",
+      "no_hvac_modes": "Select at least one supported mode."
     },
     "step": {
-      "user": {
+      "ac": {
         "data": {
-          "device_type": "[%key:common::generic::device_type%]",
+          "hvac_modes": "Supported modes",
           "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
           "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "device_type": "The type of LG device to control.",
+          "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
+        },
+        "description": "Select an infrared emitter and the modes your LG AC supports.",
+        "title": "Set up LG AC"
+      },
+      "tv": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
           "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
           "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
-        "description": "Select the device type and at least one infrared emitter or receiver to use with your LG device.",
+        "description": "Select at least one infrared emitter or receiver to use with your LG TV.",
+        "title": "Set up LG TV"
+      },
+      "user": {
+        "description": "Select the type of LG device to set up.",
+        "menu_options": {
+          "ac": "Air conditioner",
+          "tv": "[%key:common::generic::tv%]"
+        },
         "title": "Set up LG IR Remote"
       }
     }
   },
   "entity": {
     "button": {
+      "ai_convertible": {
+        "name": "AI mode"
+      },
+      "audio": {
+        "name": "Toggle beep"
+      },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
       },
+      "diagnose": {
+        "name": "Diagnose"
+      },
       "down": {
         "name": "[%key:common::entity::button::down::name%]"
+      },
+      "eco": {
+        "name": "Eco mode"
       },
       "exit": {
         "name": "[%key:common::entity::button::exit::name%]"
@@ -59,8 +92,14 @@
       "input": {
         "name": "[%key:common::entity::button::input::name%]"
       },
+      "jet": {
+        "name": "Jet mode"
+      },
       "left": {
         "name": "[%key:common::entity::button::left::name%]"
+      },
+      "light": {
+        "name": "Toggle light"
       },
       "menu": {
         "name": "[%key:common::entity::button::menu::name%]"
@@ -110,8 +149,55 @@
       "right": {
         "name": "[%key:common::entity::button::right::name%]"
       },
+      "swing_v_toggle": {
+        "name": "Toggle vertical swing"
+      },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"
+      },
+      "viraat": {
+        "name": "Viraat mode"
+      },
+      "wifi": {
+        "name": "Start Wi-Fi pairing"
+      }
+    },
+    "climate": {
+      "lg_ac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium_high": "Medium high",
+              "medium_low": "Medium low",
+              "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "left": "Left",
+              "left_half": "Left half",
+              "middle": "Middle",
+              "middle_left": "Middle left",
+              "middle_right": "Middle right",
+              "off": "Off",
+              "right": "Right",
+              "right_half": "Right half",
+              "swing": "Swing"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "high": "High",
+              "highest": "Highest",
+              "low": "Low",
+              "lowest": "Lowest",
+              "middle_high": "Middle high",
+              "middle_low": "Middle low",
+              "off": "Off",
+              "swing": "Swing"
+            }
+          }
+        }
       }
     },
     "event": {
@@ -176,12 +262,34 @@
           }
         }
       }
+    },
+    "select": {
+      "energy_limit": {
+        "name": "Energy limit",
+        "state": {
+          "40": "40%",
+          "60": "60%",
+          "80": "80%",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "switch": {
+      "auto_clean": {
+        "name": "Auto clean"
+      },
+      "ion_generator": {
+        "name": "Ion generator"
+      }
     }
   },
   "selector": {
-    "device_type": {
+    "hvac_modes": {
       "options": {
-        "tv": "[%key:common::generic::tv%]"
+        "cool": "Cool",
+        "dry": "Dry",
+        "fan_only": "Fan only",
+        "heat": "Heat"
       }
     }
   }

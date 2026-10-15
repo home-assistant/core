@@ -1,6 +1,6 @@
 """Hue sensor entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohue.v1.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
@@ -53,6 +53,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
     _attr_native_unit_of_measurement = LIGHT_LUX
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         if self.sensor.lightlevel is None:
@@ -66,6 +67,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         return round(float(10 ** ((self.sensor.lightlevel - 1) / 10000)), 2)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = super().extra_state_attributes
@@ -90,6 +92,7 @@ class HueTemperature(GenericHueGaugeSensorEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         if self.sensor.temperature is None:
@@ -108,11 +111,13 @@ class HueBattery(GenericHueSensor, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def unique_id(self):
         """Return a unique identifier for this device."""
         return f"{self.sensor.uniqueid}-battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the battery."""
         return self.sensor.battery

@@ -1,5 +1,7 @@
 """Binary sensor platform support for wiffi devices."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +33,9 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
+    )
 
 
 class BoolEntity(WiffiEntity, BinarySensorEntity):
@@ -44,11 +48,13 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
         self.reset_expiration_date()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_is_on is not None
 
     @callback
+    @override
     def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 

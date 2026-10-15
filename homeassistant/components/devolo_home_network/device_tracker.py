@@ -1,5 +1,7 @@
 """Platform for device tracker integration."""
 
+from typing import override
+
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo
 
@@ -30,49 +32,33 @@ async def async_setup_entry(
         str, DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]
     ] = entry.runtime_data.coordinators
     registry = er.async_get(hass)
-    tracked = set()
 
     @callback
     def new_device_callback() -> None:
-        """Add new devices if needed."""
-        new_entities = []
-        for mac_address in coordinators[CONNECTED_WIFI_CLIENTS].data:
-            if mac_address in tracked:
-                continue
-
-            new_entities.append(
-                DevoloScannerEntity(
-                    coordinators[CONNECTED_WIFI_CLIENTS], device, mac_address
-                )
+        """Add clients that don't have an entity yet."""
+        async_add_entities(
+            DevoloScannerEntity(coordinators[CONNECTED_WIFI_CLIENTS], device, mac)
+            for mac in coordinators[CONNECTED_WIFI_CLIENTS].data
+            if not registry.async_get_entity_id(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, f"{device.serial_number}_{mac}"
             )
-            tracked.add(mac_address)
-        async_add_entities(new_entities)
+        )
 
     @callback
     def restore_entities() -> None:
         """Restore clients that are not a part of active clients list."""
-        missing = []
-        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-            if (
-                entity.platform == DOMAIN
-                and entity.domain == DEVICE_TRACKER_DOMAIN
-                and (
-                    mac_address := entity.unique_id.replace(
-                        f"{device.serial_number}_", ""
-                    )
-                )
-                not in tracked
-            ):
-                missing.append(
-                    DevoloScannerEntity(
-                        coordinators[CONNECTED_WIFI_CLIENTS], device, mac_address
-                    )
-                )
-                tracked.add(mac_address)
-
-        async_add_entities(missing)
+        async_add_entities(
+            DevoloScannerEntity(
+                coordinators[CONNECTED_WIFI_CLIENTS],
+                device,
+                entity.unique_id.removeprefix(f"{device.serial_number}_"),
+            )
+            for entity in er.async_entries_for_config_entry(registry, entry.entry_id)
+            if entity.platform == DOMAIN and entity.domain == DEVICE_TRACKER_DOMAIN
+        )
 
     restore_entities()
+    new_device_callback()
     entry.async_on_unload(
         coordinators[CONNECTED_WIFI_CLIENTS].async_add_listener(new_device_callback)
     )
@@ -100,6 +86,7 @@ class DevoloScannerEntity(
         self._attr_name = mac
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
@@ -118,12 +105,14 @@ class DevoloScannerEntity(
         return attrs
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         assert self.mac_address
         return self.coordinator.data.get(self.mac_address) is not None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique ID of the entity."""
         return f"{self._device.serial_number}_{self.mac_address}"

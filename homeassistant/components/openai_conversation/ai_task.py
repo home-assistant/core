@@ -3,7 +3,7 @@
 import base64
 from json import JSONDecodeError
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from openai.types.responses.response_output_item import ImageGenerationCall
 
@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -63,6 +65,7 @@ class OpenAITaskEntity(
         if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -88,6 +91,7 @@ class OpenAITaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,
@@ -100,6 +104,7 @@ class OpenAITaskEntity(
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,
@@ -136,7 +141,7 @@ class OpenAITaskEntity(
         else:
             mime_type = "image/png"
 
-        if hasattr(image_call, "size") and (size := image_call.size):
+        if size := image_call.size:
             width, height = tuple(size.split("x"))
         else:
             width, height = None, None

@@ -32,7 +32,7 @@ def mock_charger() -> Generator[MagicMock]:
             "model": "openevse_wifi_v1",
         }
         # Websocket support
-        charger.ws_start = MagicMock()
+        charger.ws_start = AsyncMock()
         charger.ws_disconnect = AsyncMock()
         charger.websocket = MagicMock()
         charger.callback = None
@@ -96,6 +96,9 @@ def mock_charger() -> Generator[MagicMock]:
         charger.shaper_active = False
         charger.has_limit = False
         charger.mqtt_connected = False
+        charger.get_override_state = AsyncMock(return_value="auto")
+        charger.set_override = AsyncMock()
+        charger.clear_override = AsyncMock()
         yield charger
 
 

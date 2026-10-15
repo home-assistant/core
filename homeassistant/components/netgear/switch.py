@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynetgear import ALLOW, BLOCK
 
@@ -157,17 +157,20 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         self._attr_unique_id = f"{self._mac}-{entity_description.key}"
         self.async_update_device()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._router.async_allow_block_device(self._mac, ALLOW)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._router.async_allow_block_device(self._mac, BLOCK)
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
@@ -197,6 +200,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         self._attr_is_on = None
         self._attr_available = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Fetch state when entity is added."""
         await self.async_update()
@@ -214,6 +218,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
             self._attr_is_on = response
             self._attr_available = True
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         async with self._router.api_lock:
@@ -221,6 +226,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
                 self.entity_description.action(self._router), True
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         async with self._router.api_lock:

@@ -1,6 +1,7 @@
 """Support for HDMI CEC devices as media players."""
 
 import logging
+from typing import override
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
@@ -78,53 +79,63 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         """Send playback status to CEC adapter."""
         self._device.send_command(CecCommand(key, dst=self._logical_address))
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute volume."""
         self.send_keypress(KEY_MUTE_TOGGLE)
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Go to previous track."""
         self.send_keypress(KEY_BACKWARD)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn device on."""
         self._device.turn_on()
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn device off."""
         self._device.send_command(CecCommand(CMD_STANDBY, dst=self._logical_address))
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop playback."""
         self.send_keypress(KEY_STOP)
         self._attr_state = MediaPlayerState.IDLE
         self.async_write_ha_state()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         self.send_keypress(KEY_FORWARD)
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause playback."""
         self.send_keypress(KEY_PAUSE)
         self._attr_state = MediaPlayerState.PAUSED
         self.async_write_ha_state()
 
+    @override
     async def async_media_play(self) -> None:
         """Start playback."""
         self.send_keypress(KEY_PLAY)
         self._attr_state = MediaPlayerState.PLAYING
         self.async_write_ha_state()
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase volume."""
         _LOGGER.debug("%s: volume up", self._logical_address)
         self.send_keypress(KEY_VOLUME_UP)
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease volume."""
         _LOGGER.debug("%s: volume down", self._logical_address)
@@ -148,6 +159,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
             _LOGGER.warning("Unknown state: %s", device.status)
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:

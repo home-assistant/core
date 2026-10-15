@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import ipaddress
 import logging
 import re
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -27,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import HuaweiLteConfigEntry, Router
 from .const import (
@@ -75,11 +77,10 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        last_reset = datetime.now() - timedelta(seconds=int(value))
-        last_reset.replace(microsecond=0)
+        elapsed = timedelta(seconds=int(value))
     except ValueError:
         return None
-    return last_reset
+    return (dt_util.utcnow() - elapsed).replace(microsecond=0)
 
 
 def format_ipv6(value: StateType) -> tuple[StateType, str | None]:
@@ -574,7 +575,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
         descriptions={
             "BatteryPercent": HuaweiSensorEntityDescription(
                 key="BatteryPercent",
-                translation_key="battery",
                 device_class=SensorDeviceClass.BATTERY,
                 native_unit_of_measurement=PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -804,7 +804,7 @@ async def async_setup_entry(
                 _LOGGER.debug("Ignoring sensor %s.%s due to None value", key, item)
                 continue
             if not (desc := SENSOR_META[key].descriptions.get(item)):
-                _LOGGER.debug(  # pylint: disable=home-assistant-logger-period # false positive
+                _LOGGER.debug(
                     (
                         "Ignoring unknown sensor %s.%s. "
                         "Opening an issue at GitHub against the "
@@ -813,7 +813,7 @@ async def async_setup_entry(
                         "add support for it in a future release. "
                         'Include the sensor name "%s.%s" in the issue, '
                         "as well as any information you may have about it, "
-                        "such as values received for it as shown in the debug log."
+                        "such as values received for it as shown in the debug log"
                     ),
                     key,
                     item,
@@ -847,6 +847,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         self.item = item
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
@@ -856,6 +857,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
                 f"{SENSOR_DOMAIN}/{self.entity_description.last_reset_item}"
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
@@ -866,20 +868,24 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
             )
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return f"{self.key}.{self.item}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return sensor state."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return sensor's unit of measurement."""
         return self.entity_description.native_unit_of_measurement or self._unit
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return icon for sensor."""
         if self.entity_description.icon_fn:
@@ -887,6 +893,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         return super().icon
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return device class for sensor."""
         if self.entity_description.device_class_fn:
@@ -895,10 +902,12 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         return super().device_class
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self._last_reset
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         try:

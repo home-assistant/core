@@ -1,7 +1,7 @@
 """Const for conversation integration."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from .entity import ConversationEntity
 
-DOMAIN = "conversation"
+DOMAIN: Final = "conversation"
 HOME_ASSISTANT_AGENT = "conversation.home_assistant"
 
 ATTR_TEXT = "text"
@@ -19,8 +19,6 @@ ATTR_AGENT_ID = "agent_id"
 ATTR_CONVERSATION_ID = "conversation_id"
 
 SERVICE_PROCESS = "process"
-# pylint: disable-next=home-assistant-duplicate-const
-SERVICE_RELOAD = "reload"
 
 DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
 

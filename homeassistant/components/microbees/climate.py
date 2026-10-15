@@ -1,6 +1,6 @@
 """Climate integration microBees."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -55,7 +55,7 @@ async def async_setup_entry(
 class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
     """Representation of a microBees climate."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -80,11 +80,13 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         self.sensor_id = sensor_id
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the sensor temperature."""
         return self.coordinator.data.sensors[self.sensor_id].value
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current hvac operation i.e. heat, cool mode."""
         if self.actuator.value == 1:
@@ -92,10 +94,12 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the current target temperature."""
         return self.bee.instanceData.targetTemp
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -109,12 +113,14 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         self.bee.instanceData.targetTemp = temperature
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode, **kwargs: Any) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             return await self.async_turn_off()
         return await self.async_turn_on()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the climate."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -129,6 +135,7 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the climate."""
         temperature = kwargs.get(ATTR_TEMPERATURE)

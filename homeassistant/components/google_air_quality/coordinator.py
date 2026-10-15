@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
@@ -66,6 +66,7 @@ class GoogleAirQualityUpdateCoordinator(
                 self.custom_local_aqi = custom_laqi
                 self.region_code = region_code
 
+    @override
     async def _async_update_data(self) -> AirQualityCurrentConditionsData:
         """Fetch air quality data for this coordinate."""
         try:

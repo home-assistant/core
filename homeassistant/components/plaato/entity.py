@@ -1,6 +1,6 @@
 """PlaatoEntity class."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyplaato.models.device import PlaatoDevice
 
@@ -61,6 +61,7 @@ class PlaatoEntity(entity.Entity):
         return self._entry_data.sensor_data
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the monitored installation."""
         if self._attributes:
@@ -73,12 +74,14 @@ class PlaatoEntity(entity.Entity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         if self._coordinator is not None:
             return self._coordinator.last_update_success
         return True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         if self._coordinator is not None:

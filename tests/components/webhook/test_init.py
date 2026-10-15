@@ -9,6 +9,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import webhook
+from homeassistant.components.webhook import DOMAIN
 from homeassistant.components.websocket_api import auth, http
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -24,7 +25,7 @@ async def mock_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Create http client for webhooks."""
-    await async_setup_component(hass, "webhook", {})
+    await async_setup_component(hass, DOMAIN, {})
     return await hass_client()
 
 
@@ -283,7 +284,7 @@ async def test_webhook_local_only_mock_request(
     hass: HomeAssistant, remote: str | None, expected_calls: int
 ) -> None:
     """Test local_only webhooks for MockRequests with various remote values."""
-    await async_setup_component(hass, "webhook", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -309,6 +310,42 @@ async def test_webhook_local_only_mock_request(
     assert len(hooks) == expected_calls
 
 
+async def test_webhook_local_only_supervisor_unix_socket(
+    hass: HomeAssistant, mock_client: TestClient
+) -> None:
+    """Test local_only webhooks accept requests over the Supervisor Unix socket."""
+    hooks = []
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(hass: HomeAssistant, webhook_id: str, request: web.Request):
+        """Handle webhook."""
+        hooks.append((hass, webhook_id, await request.text()))
+
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, local_only=True
+    )
+
+    # A Unix socket has no peer address, aiohttp reports an empty remote
+    with patch(
+        "homeassistant.components.webhook.ip_address",
+        side_effect=ValueError,
+    ):
+        resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
+        assert resp.status == HTTPStatus.OK
+        assert len(hooks) == 0
+
+        with patch(
+            "homeassistant.components.webhook.is_supervisor_unix_socket_request",
+            return_value=True,
+        ):
+            resp = await mock_client.post(
+                f"/api/webhook/{webhook_id}", json={"data": True}
+            )
+        assert resp.status == HTTPStatus.OK
+        assert len(hooks) == 1
+        assert hooks[0][2] == '{"data": true}'
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_listing_webhook(
     hass: HomeAssistant,
@@ -316,7 +353,7 @@ async def test_listing_webhook(
     hass_access_token: str,
 ) -> None:
     """Test unregistering a webhook."""
-    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass, hass_access_token)
 
     webhook.async_register(hass, "test", "Test hook", "my-id", None)
@@ -360,7 +397,7 @@ async def test_listing_webhook_requires_admin(
     hass_read_only_access_token: str,
 ) -> None:
     """Test listing webhooks requires an admin user."""
-    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
     await client.send_json({"id": 5, "type": "webhook/list"})
@@ -377,7 +414,7 @@ async def test_ws_webhook(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test sending webhook msg via WS API."""
-    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     received = []
 
@@ -462,7 +499,7 @@ async def test_ws_webhook_local_only(
     expected_calls: int,
 ) -> None:
     """Test a local_only webhook over the websocket connection."""
-    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 

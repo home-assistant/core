@@ -5,7 +5,11 @@ from homeassistant.components.datetime import (
     DOMAIN as DATETIME_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
+from homeassistant.components.knx.const import (
+    CONF_RESPOND_TO_READ,
+    CONF_STATE_ADDRESS,
+    KNX_ADDRESS,
+)
 from homeassistant.components.knx.schema import DateTimeSchema
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, State
@@ -91,6 +95,36 @@ async def test_date_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) ->
     await knx.receive_write(
         test_passive_address,
         (0x78, 0x01, 0x01, 0x73, 0x04, 0x05, 0x20, 0x80),
+    )
+    state = hass.states.get("datetime.test")
+    assert state.state == "2020-01-01T18:04:05+00:00"
+
+
+async def test_datetime_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX datetime with state_address restores state until bus read completes."""
+    await hass.config.async_set_time_zone("Europe/Vienna")
+    test_address = "1/1/1"
+    test_state_address = "2/2/2"
+    fake_state = State("datetime.test", "2022-03-03T03:04:05+00:00")
+    mock_restore_cache(hass, (fake_state,))
+
+    await knx.setup_integration(
+        {
+            DateTimeSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: test_address,
+                CONF_STATE_ADDRESS: test_state_address,
+            }
+        }
+    )
+    # StateUpdater initialize state - restored value is used before response is received
+    await knx.assert_read(test_state_address)
+    state = hass.states.get("datetime.test")
+    assert state.state == "2022-03-03T03:04:05+00:00"
+
+    # bus reports a different value than restored - state updates to the real value
+    await knx.receive_response(
+        test_state_address, (0x78, 0x01, 0x01, 0x73, 0x04, 0x05, 0x20, 0x80)
     )
     state = hass.states.get("datetime.test")
     assert state.state == "2020-01-01T18:04:05+00:00"

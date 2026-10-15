@@ -1,6 +1,6 @@
 """Support for Proximity sensors."""
 
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -145,6 +145,7 @@ class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator], SensorE
         self._attr_device_info = _device_info(coordinator)
 
     @property
+    @override
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
         if (
@@ -183,11 +184,21 @@ class ProximityTrackedEntitySensor(
             "tracked_entity": tracked_entity_descriptor.name
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register entity mapping."""
         await super().async_added_to_hass()
         self.coordinator.async_add_entity_mapping(
             self.tracked_entity_id, self.entity_id
+        )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update entity mapping."""
+        super().async_entity_id_changed(old_entity_id)
+        self.coordinator.async_update_entity_mapping(
+            self.tracked_entity_id, old_entity_id, self.entity_id
         )
 
     @property
@@ -196,6 +207,7 @@ class ProximityTrackedEntitySensor(
         return self.coordinator.data.entities[self.tracked_entity_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -204,6 +216,7 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
+    @override
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
         return self.data.get(self.entity_description.key)

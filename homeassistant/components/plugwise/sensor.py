@@ -1,6 +1,7 @@
 """Plugwise Sensor component for Home Assistant."""
 
 from dataclasses import dataclass
+from typing import override
 
 from plugwise.constants import SensorType
 
@@ -440,6 +441,7 @@ class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return the value reported by the sensor."""
         return self.device["sensors"][self.entity_description.key]

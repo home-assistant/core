@@ -1,0 +1,148 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'vistapool',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'pools': list([
+      dict({
+        'backwash': dict({
+          'status': 0,
+        }),
+        'filtration': dict({
+          'intel': dict({
+            'temp': 24,
+            'time': '600',
+          }),
+          'interval1': dict({
+            'from': 28800,
+            'to': 36000,
+          }),
+          'interval2': dict({
+            'from': 46800,
+            'to': 50400,
+          }),
+          'interval3': dict({
+            'from': 68400,
+            'to': 70200,
+          }),
+          'manVel': 2,
+          'mode': 1,
+          'status': 1,
+          'timerVel1': 1,
+          'timerVel2': 1,
+          'timerVel3': 0,
+        }),
+        'form': dict({
+          'city': '**REDACTED**',
+          'country': 'BE',
+          'lat': '**REDACTED**',
+          'lng': '**REDACTED**',
+          'street': '**REDACTED**',
+          'zipcode': '**REDACTED**',
+        }),
+        'hidro': dict({
+          'cloration_enabled': 0,
+          'cover': 0,
+          'cover_enabled': 0,
+          'current': 50,
+          'fl1': 0,
+          'fl2': 0,
+          'is_electrolysis': True,
+          'level': 100,
+          'low': 0,
+          'maxAllowedValue': 220,
+        }),
+        'light': dict({
+          'status': 0,
+        }),
+        'main': dict({
+          'RSSI': -65,
+          'hasCD': 0,
+          'hasCL': 0,
+          'hasHidro': 1,
+          'hasIO': 0,
+          'hasLED': 0,
+          'hasPH': 1,
+          'hasRX': 1,
+          'hasUV': 0,
+          'localTime': 1775995380,
+          'temperature': 25.5,
+          'version': 825,
+        }),
+        'modules': dict({
+          'ph': dict({
+            'al3': 0,
+            'current': '742',
+            'pump_high_on': 0,
+            'pump_low_on': 0,
+            'status': dict({
+              'high_value': '751',
+              'low_value': '650',
+            }),
+            'tank': 0,
+          }),
+          'rx': dict({
+            'current': 707,
+            'pump_status': 0,
+            'status': dict({
+              'value': 700,
+            }),
+            'tank': 0,
+          }),
+        }),
+        'present': True,
+        'relays': dict({
+          'filtration': dict({
+            'heating': dict({
+              'status': 0,
+            }),
+          }),
+          'relay1': dict({
+            'info': dict({
+              'onoff': 0,
+              'status': 0,
+            }),
+          }),
+          'relay2': dict({
+            'info': dict({
+              'onoff': 0,
+              'status': 0,
+            }),
+          }),
+          'relay3': dict({
+            'info': dict({
+              'onoff': 0,
+              'status': 0,
+            }),
+          }),
+          'relay4': dict({
+            'info': dict({
+              'onoff': 0,
+              'status': 0,
+            }),
+          }),
+        }),
+        'wifi': '**REDACTED**',
+      }),
+    ]),
+  })
+# ---

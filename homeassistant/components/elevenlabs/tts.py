@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import AsyncGenerator, Mapping
 import contextlib
 import logging
-from typing import Any
+from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
@@ -134,10 +134,12 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             else "en"
         )
 
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -156,12 +158,10 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
 
         except ApiError as exc:
-            _LOGGER.warning(
-                "Error during processing of TTS request %s", exc, exc_info=True
-            )
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
 
+    @override
     async def async_stream_tts_audio(
         self, request: TTSAudioRequest
     ) -> TTSAudioResponse:
@@ -299,9 +299,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                                 )
                                 previous_request_ids.clear()
                 except ApiError as exc:
-                    _LOGGER.warning(
-                        "Error during processing of TTS request %s", exc, exc_info=True
-                    )
                     _add_sentences_task.cancel()
                     with contextlib.suppress(asyncio.CancelledError):
                         await _add_sentences_task

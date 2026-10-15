@@ -132,7 +132,7 @@
   "title": "Calendar",
   "triggers": {
     "event_ended": {
-      "description": "Triggers when a calendar event ends.",
+      "description": "Triggers when one or more calendar events end.",
       "fields": {
         "offset": {
           "description": "Offset from the end of the event.",
@@ -146,7 +146,7 @@
       "name": "Calendar event ended"
     },
     "event_started": {
-      "description": "Triggers when a calendar event starts.",
+      "description": "Triggers when one or more calendar events start.",
       "fields": {
         "offset": {
           "description": "Offset from the start of the event.",

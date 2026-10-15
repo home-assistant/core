@@ -1,5 +1,7 @@
 """Select platform for the UniFi Access integration."""
 
+from typing import override
+
 from unifi_access_api import Door, DoorLockRuleType, UnifiAccessError
 
 from homeassistant.components.select import SelectEntity
@@ -56,6 +58,7 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
         super().__init__(coordinator, door, "lock_rule_select")
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently active lock rule, or None if no rule is set."""
         rule_status = self.coordinator.get_lock_rule_status(self._door_id)
@@ -69,6 +72,7 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
         return value if value in self.options else None
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the available lock rule options."""
         opts = ["keep_lock", "keep_unlock", "custom", "reset"]
@@ -81,12 +85,14 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
         return opts
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the select should currently be shown as available."""
         return super().available and (
             self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Apply the selected lock rule to the door."""
         if option == DoorLockRuleType.SCHEDULE.value:

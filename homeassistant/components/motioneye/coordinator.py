@@ -1,7 +1,7 @@
 """Coordinator for the motionEye integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient, MotionEyeClientError
 
@@ -35,6 +35,7 @@ class MotionEyeUpdateCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, Any] | None:
         try:
             return await self.client.async_get_cameras()

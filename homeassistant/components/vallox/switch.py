@@ -1,7 +1,7 @@
 """Support for Vallox ventilation unit switches."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import CONF_NAME, EntityCategory
@@ -32,6 +32,7 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         if (
@@ -40,10 +41,12 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
             return None
         return value == 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self._set_value(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self._set_value(False)

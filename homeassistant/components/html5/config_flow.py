@@ -1,14 +1,14 @@
 """Config flow for the html5 component."""
 
 import binascii
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+import probatio
 from py_vapid import Vapid
 from py_vapid.utils import b64urlencode
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
@@ -66,6 +66,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             flow_result = self.async_create_entry(title="HTML5", data=config)
         return errors, flow_result
 
+    @override
     async def async_step_user(
         self: HTML5ConfigFlow, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -79,12 +80,12 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         return self.async_show_form(
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         ATTR_VAPID_EMAIL, default=user_input.get(ATTR_VAPID_EMAIL, "")
                     ): str,
-                    vol.Optional(ATTR_VAPID_PRV_KEY): str,
+                    probatio.Optional(ATTR_VAPID_PRV_KEY): str,
                 }
             ),
             errors=errors,

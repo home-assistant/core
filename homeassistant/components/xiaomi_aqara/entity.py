@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
@@ -67,17 +67,30 @@ class XiaomiDevice(Entity):
             self._is_gateway = False
             self._device_id = self._sid
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Start unavailability tracking."""
         self._xiaomi_hub.callbacks[self._sid].append(self.push_data)
+        self.async_on_remove(
+            lambda: self._xiaomi_hub.callbacks[self._sid].remove(self.push_data)
+        )
         self._async_track_unavailable()
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop unavailability tracking."""
+        if self._remove_unavailability_tracker:
+            self._remove_unavailability_tracker()
+            self._remove_unavailability_tracker = None
+
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
@@ -88,6 +101,7 @@ class XiaomiDevice(Entity):
         return self._device_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info of the Xiaomi Aqara device."""
         if self._is_gateway:
@@ -99,6 +113,7 @@ class XiaomiDevice(Entity):
         else:
             if TYPE_CHECKING:
                 assert self._gateway_id is not None
+                assert self.platform.config_entry is not None
             device_info = DeviceInfo(
                 connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
                 identifiers={(DOMAIN, self._device_id)},
@@ -106,12 +121,17 @@ class XiaomiDevice(Entity):
                 model=self._model,
                 name=self._device_name,
                 sw_version=self._protocol,
-                via_device=(DOMAIN, self._gateway_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, self._gateway_id),
+                    config_entry_id=self.platform.config_entry.entry_id,
+                ),
             )
 
         return device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_available

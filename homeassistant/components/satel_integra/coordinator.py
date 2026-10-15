@@ -3,8 +3,9 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
-from satel_integra import AlarmState
+from satel_integra import AlarmState, SatelPanelInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -25,6 +26,7 @@ class SatelIntegraData:
     """Data for the satel_integra integration."""
 
     client: SatelClient
+    panel_info: SatelPanelInfo | None
     coordinator_zones: SatelIntegraZonesCoordinator
     coordinator_outputs: SatelIntegraOutputsCoordinator
     coordinator_partitions: SatelIntegraPartitionsCoordinator
@@ -166,6 +168,7 @@ class SatelIntegraTemperaturesCoordinator(
             if subentry.data.get(CONF_ENABLE_TEMPERATURE_SENSOR, False)
         ]
 
+    @override
     async def _async_update_data(self) -> dict[int, float | None]:
         """Fetch temperatures from the alarm."""
         if not self._zone_numbers:

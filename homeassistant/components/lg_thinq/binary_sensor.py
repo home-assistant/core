@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -162,6 +163,7 @@ class ThinQBinarySensorEntity(ThinQEntity, BinarySensorEntity):
 
     entity_description: ThinQBinarySensorEntityDescription
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()

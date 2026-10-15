@@ -1,6 +1,7 @@
 """Support for Lupusec System alarm control panels."""
 
 from datetime import timedelta
+from typing import override
 
 import lupupy
 
@@ -57,6 +58,7 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         )
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._device.is_standby:
@@ -71,14 +73,17 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
             state = None
         return state
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._device.set_away()
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._device.set_standby()
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()

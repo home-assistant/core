@@ -57,6 +57,7 @@ MOCK_SYSTEM_UNPAIRED = {
 
 MOCK_USERINPUT = {
     "host": "1.1.1.1",
+    "api_version": "1",
 }
 
 MOCK_CONFIG = {

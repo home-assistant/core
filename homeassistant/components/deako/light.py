@@ -1,6 +1,6 @@
 """Binary sensor platform for integration_blueprint."""
 
-from typing import Any
+from typing import Any, override
 
 from pydeako import Deako
 
@@ -73,6 +73,7 @@ class DeakoLightEntity(LightEntity):
         assert self._attr_unique_id is not None
         await self.client.control_device(self._attr_unique_id, power, dim)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         dim = None
@@ -80,6 +81,7 @@ class DeakoLightEntity(LightEntity):
             dim = round(kwargs[ATTR_BRIGHTNESS] / 2.55, 0)
         await self.control_device(True, dim)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self.control_device(False)

@@ -5,7 +5,7 @@ Collects data from advertisements but can also poll.
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
@@ -152,6 +152,7 @@ class ActiveBluetoothProcessorCoordinator[_DataT](
             processor.async_handle_update(update)
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -169,6 +170,7 @@ class ActiveBluetoothProcessorCoordinator[_DataT](
             self._debounced_poll.async_schedule_call()
 
     @callback
+    @override
     def _async_stop(self) -> None:
         """Cancel debouncer and stop the callbacks."""
         self._debounced_poll.async_cancel()

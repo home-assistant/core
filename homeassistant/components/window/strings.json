@@ -34,7 +34,7 @@
   "title": "Window",
   "triggers": {
     "closed": {
-      "description": "Triggers after one or more windows close.",
+      "description": "Triggers when one or more windows close.",
       "fields": {
         "behavior": {
           "name": "[%key:component::window::common::trigger_behavior_name%]"
@@ -46,7 +46,7 @@
       "name": "Window closed"
     },
     "opened": {
-      "description": "Triggers after one or more windows open.",
+      "description": "Triggers when one or more windows open.",
       "fields": {
         "behavior": {
           "name": "[%key:component::window::common::trigger_behavior_name%]"

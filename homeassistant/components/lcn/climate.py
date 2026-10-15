@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 import pypck
 
@@ -111,8 +111,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
             )
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    @override
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement."""
         # Config schema only allows for:
         # UnitOfTemperature.CELSIUS and
         # UnitOfTemperature.FAHRENHEIT
@@ -121,6 +122,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -131,15 +133,18 @@ class LcnClimate(LcnEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return cast(float, self._max_temp)
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return cast(float, self._min_temp)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -155,9 +160,10 @@ class LcnClimate(LcnEntity, ClimateEntity):
             ):
                 return
             self._is_on = False
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
             self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -167,7 +173,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
             self.setpoint, temperature, self.unit
         ):
             return
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
@@ -183,19 +189,20 @@ class LcnClimate(LcnEntity, ClimateEntity):
             ]
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set temperature value when LCN input object is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusVar):
             return
         self._attr_available = True
         if input_obj.get_var() is self.variable:
-            self._attr_current_temperature = float(
+            self._attr_native_current_temperature = float(
                 input_obj.get_value().to_var_unit(self.unit)
             )
         elif input_obj.get_var() is self.setpoint:
             self._is_on = not input_obj.get_value().is_locked_regulator()
             if self._is_on:
-                self._attr_target_temperature = float(
+                self._attr_native_target_temperature = float(
                     input_obj.get_value().to_var_unit(self.unit)
                 )
 

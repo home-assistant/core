@@ -39,13 +39,13 @@
 # name: test_platform_setup_and_discovery[camera.burocam-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.burocam?token=1',
-      'friendly_name': 'Bürocam',
-      'model_name': 'LSC PTZ Camera',
-      'motion_detection': True,
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.burocam?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bürocam',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'LSC PTZ Camera',
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.burocam',
@@ -95,13 +95,13 @@
 # name: test_platform_setup_and_discovery[camera.c9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.c9?token=1',
-      'friendly_name': 'C9',
-      'model_name': 'Security Camera',
-      'motion_detection': True,
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.c9?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C9',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Security Camera',
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.c9',
@@ -151,13 +151,13 @@
 # name: test_platform_setup_and_discovery[camera.cam_garage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.cam_garage?token=1',
-      'friendly_name': 'CAM GARAGE',
-      'model_name': 'Indoor camera ',
-      'motion_detection': True,
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.cam_garage?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CAM GARAGE',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Indoor camera ',
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.cam_garage',
@@ -207,12 +207,12 @@
 # name: test_platform_setup_and_discovery[camera.cam_porch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.cam_porch?token=1',
-      'friendly_name': 'CAM PORCH',
-      'model_name': 'Indoor cam Pan/Tilt ',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.cam_porch?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CAM PORCH',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Indoor cam Pan/Tilt ',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.cam_porch',
@@ -262,11 +262,11 @@
 # name: test_platform_setup_and_discovery[camera.dolni_vchod_zapad-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.dolni_vchod_zapad?token=1',
-      'friendly_name': 'Dolní vchod - západ',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.dolni_vchod_zapad?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dolní vchod - západ',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.dolni_vchod_zapad',
@@ -316,12 +316,12 @@
 # name: test_platform_setup_and_discovery[camera.garage_camera-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.garage_camera?token=1',
-      'friendly_name': 'Garage Camera',
-      'model_name': 'Smart Camera ',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.garage_camera?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Camera',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Smart Camera ',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.garage_camera',
@@ -371,12 +371,12 @@
 # name: test_platform_setup_and_discovery[camera.intercom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.intercom?token=1',
-      'friendly_name': 'Intercom',
-      'model_name': 'Security Camera ',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.intercom?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Intercom',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Security Camera ',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.intercom',
@@ -426,12 +426,12 @@
 # name: test_platform_setup_and_discovery[camera.mirilla_puerta-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.mirilla_puerta?token=1',
-      'friendly_name': 'Mirilla puerta',
-      'model_name': 'Smart DoorBell （WiFi）',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.mirilla_puerta?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mirilla puerta',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Smart DoorBell （WiFi）',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.mirilla_puerta',
@@ -481,13 +481,13 @@
 # name: test_platform_setup_and_discovery[camera.security_camera-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
-      'brand': 'Tuya',
-      'entity_picture': '/api/camera_proxy/camera.security_camera?token=1',
-      'friendly_name': 'Security Camera',
-      'model_name': 'Security Camera',
-      'motion_detection': True,
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <CameraEntityStateAttribute.BRAND: 'brand'>: 'Tuya',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.security_camera?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Security Camera',
+      <CameraEntityStateAttribute.MODEL_NAME: 'model_name'>: 'Security Camera',
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.security_camera',

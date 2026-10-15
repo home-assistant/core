@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
     UnitOfTemperature,
 )
 from homeassistant.const import (
@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import CentriConnectConfigEntry, CentriConnectCoordinator
 from .entity import CentriConnectBaseEntity
@@ -237,6 +238,7 @@ class CentriConnectSensor(CentriConnectBaseEntity, SensorEntity):
     entity_description: CentriConnectSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator)

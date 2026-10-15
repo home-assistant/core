@@ -7,7 +7,7 @@ import sys
 from threading import Thread
 import time
 import traceback
-from typing import Any
+from typing import Any, override
 
 from .thread import async_raise
 
@@ -61,6 +61,7 @@ def join_or_interrupt_threads(
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
     """A ThreadPoolExecutor instance that will not deadlock on shutdown."""
 
+    @override
     def shutdown(
         self, *args: Any, join_threads_or_timeout: bool = True, **kwargs: Any
     ) -> None:

@@ -1,6 +1,7 @@
 """Support for Honeywell Lyric select platform."""
 
 import logging
+from typing import override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LYRIC_EXCEPTIONS
+from .const import DOMAIN, LYRIC_EXCEPTIONS
 from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
 from .entity import LyricDeviceEntity
 
@@ -40,7 +41,6 @@ async def async_setup_entry(
         for location in coordinator.data.locations
         for device in location.devices
         if device.device_class == "Thermostat"
-        and device.device_id.startswith("LCC")
         and coordinator.data.rooms_dict.get(device.mac_id)
     )
 
@@ -71,6 +71,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
         return self.coordinator.data.rooms_dict.get(self._mac_id, {})
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of available room priority options."""
         room_options = sorted(
@@ -79,6 +80,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
         return [OPTION_FOLLOW_ME, *room_options]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected room priority."""
         priority = self.coordinator.data.priorities_dict.get(self._mac_id)
@@ -98,6 +100,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
 
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the room priority."""
         if option == OPTION_FOLLOW_ME:
@@ -105,14 +108,13 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
             rooms: list[int] = []
         else:
             priority_type = PRIORITY_TYPE_PICK_A_ROOM
-            room_id = next(
-                (rid for rid, room in self._rooms.items() if room.room_name == option),
-                None,
-            )
-            if room_id is None:
-                _LOGGER.error("Room not found: %s", option)
-                return
-            rooms = [room_id]
+            rooms = [
+                next(
+                    room_id
+                    for room_id, room in self._rooms.items()
+                    if room.room_name == option
+                )
+            ]
 
         _LOGGER.debug("Set room priority: type=%s, rooms=%s", priority_type, rooms)
         try:
@@ -122,8 +124,9 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
                 priority_type=priority_type,
                 rooms=rooms,
             )
-        except LYRIC_EXCEPTIONS as exception:
+        except LYRIC_EXCEPTIONS as err:
             raise HomeAssistantError(
-                f"Failed to set room priority: {exception}"
-            ) from exception
+                translation_domain=DOMAIN,
+                translation_key="failed_to_set_room_priority",
+            ) from err
         await self.coordinator.async_refresh()

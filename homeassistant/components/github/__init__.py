@@ -14,12 +14,17 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import CONF_REPOSITORIES, CONF_REPOSITORY, DOMAIN, SUBENTRY_TYPE_REPOSITORY
-from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
+from .coordinator import (
+    GithubConfigEntry,
+    GitHubDataUpdateCoordinator,
+    GitHubRuntimeData,
+    GitHubUserDataUpdateCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> None:
     """Set up GitHub from a config entry."""
     client = GitHubAPI(
         token=entry.data[CONF_ACCESS_TOKEN],
@@ -27,7 +32,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
         client_name=SERVER_SOFTWARE,
     )
 
-    entry.runtime_data = {}
+    user_coordinator = GitHubUserDataUpdateCoordinator(
+        hass=hass,
+        config_entry=entry,
+        client=client,
+    )
+    await user_coordinator.async_config_entry_first_refresh()
+
+    repositories: dict[str, GitHubDataUpdateCoordinator] = {}
     for repository_subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_REPOSITORY):
         repository = repository_subentry.data[CONF_REPOSITORY]
         coordinator = GitHubDataUpdateCoordinator(
@@ -42,12 +54,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
         if not entry.pref_disable_polling:
             await coordinator.subscribe()
 
-        entry.runtime_data[repository_subentry.subentry_id] = coordinator
+        repositories[repository_subentry.subentry_id] = coordinator
+
+    entry.runtime_data = GitHubRuntimeData(
+        user_coordinator=user_coordinator,
+        repositories=repositories,
+    )
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_update_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> None:
@@ -55,16 +71,15 @@ async def async_update_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> N
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> None:
     """Unload a config entry."""
-    repositories = entry.runtime_data
-    for coordinator in repositories.values():
+    for coordinator in entry.runtime_data.repositories.values():
         coordinator.unsubscribe()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> None:
     """Migrate old entry."""
     if entry.minor_version == 1:
         dev_reg = dr.async_get(hass)
@@ -79,12 +94,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> 
                 unique_id=repository,
             )
             hass.config_entries.async_add_subentry(entry, subentry)
-            if device := dev_reg.async_get_device({(DOMAIN, repository)}):
+            if device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, repository), entry.entry_id
+            ):
                 dev_reg.async_update_device(
                     device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    add_config_subentry_id=subentry.subentry_id,
-                    add_config_entry_id=entry.entry_id,
+                    new_config_entry_id=entry.entry_id,
+                    new_config_subentry_id=subentry.subentry_id,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=2)
-    return True

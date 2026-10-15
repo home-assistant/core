@@ -2,7 +2,7 @@
 
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
@@ -19,10 +19,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
-from .const import LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
+from .const import DOMAIN, LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
 from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 from .util import blebox_command
@@ -70,13 +71,20 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         super().__init__(coordinator, feature)
         if feature.effect_list:
             self._attr_supported_features = LightEntityFeature.EFFECT
+        if feature.index is not None:
+            self._attr_translation_key = "channel"
+            self._attr_translation_placeholders = {"index": str(feature.index + 1)}
+        else:
+            self._attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if light is on."""
         return self._feature.is_on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the name."""
         return self._feature.brightness
@@ -117,11 +125,13 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return int(bounded)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the color temperature value in Kelvin."""
         return self._color_temp_from_native_scale(self._feature.color_temp)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode.
 
@@ -130,21 +140,25 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return supported color modes."""
         return {self.color_mode}
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._feature.effect_list
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         return self._feature.effect
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return value for rgb."""
         if (rgb_hex := self._feature.rgb_hex) is None:
@@ -156,6 +170,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         )
 
     @property
+    @override
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the hue and saturation."""
         if (rgbw_hex := self._feature.rgbw_hex) is None:
@@ -163,6 +178,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbw_hex)[0:4])
 
     @property
+    @override
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return value for rgbww."""
         if (rgbww_hex := self._feature.rgbww_hex) is None:
@@ -170,6 +186,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbww_hex))
 
     @blebox_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
@@ -215,8 +232,10 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         try:
             await self._feature.async_on(value)
         except ValueError as exc:
-            raise ValueError(
-                f"Turning on '{self.name}' failed: Bad value {value}"
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="bad_value",
+                translation_placeholders={"error": str(exc)},
             ) from exc
 
         if effect is not None:
@@ -224,12 +243,14 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                 effect_value = self.effect_list.index(effect)
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
-                raise ValueError(
-                    f"Turning on with effect '{self.name}' failed: {effect} not in"
-                    " effect list."
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="effect_not_found",
+                    translation_placeholders={"error": str(exc)},
                 ) from exc
 
     @blebox_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._feature.async_off()

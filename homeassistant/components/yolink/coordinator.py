@@ -2,9 +2,9 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.device import YoLinkDevice
@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIME
 
@@ -63,6 +64,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.dev_online = True
         self.dev_net_type = None
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
         try:
@@ -72,8 +74,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                 device_reporttime = device_state_resp.data.get("reportAt")
                 if device_reporttime is not None:
                     rpt_time_delta = (
-                        # pylint: disable-next=home-assistant-enforce-utcnow
-                        datetime.now(tz=UTC).replace(tzinfo=None)
+                        dt_util.utcnow().replace(tzinfo=None)
                         - datetime.strptime(device_reporttime, "%Y-%m-%dT%H:%M:%S.%fZ")
                     ).total_seconds()
                     self.dev_online = rpt_time_delta < YOLINK_OFFLINE_TIME
@@ -92,12 +93,11 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
-            _LOGGER.error(
-                "Failed to obtain device status, device: %s, error: %s ",
-                self.device.device_id,
-                yl_client_err,
-            )
-            raise UpdateFailed from yl_client_err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_status_failed",
+                translation_placeholders={"device_id": self.device.device_id},
+            ) from yl_client_err
         if device_state is not None:
             dev_lora_info = device_state.get(ATTR_LORA_INFO)
             if dev_lora_info is not None:

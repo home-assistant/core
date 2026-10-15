@@ -5,7 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from rabbitair import Mode, Model, Speed
+from rabbitair import Mode, Model, Quality, Speed
 
 from homeassistant import config_entries
 from homeassistant.components.rabbitair.const import DOMAIN
@@ -62,6 +62,7 @@ def get_mock_state(
     main_firmware: str | None = TEST_HARDWARE,
     power: bool | None = True,
     mode: Mode | None = Mode.Auto,
+    quality: Quality | None = Quality.High,
     speed: Speed | None = Speed.Low,
     wifi_firmware: str | None = TEST_FIRMWARE,
 ) -> Mock:
@@ -71,6 +72,7 @@ def get_mock_state(
     mock_state.main_firmware = main_firmware
     mock_state.power = power
     mock_state.mode = mode
+    mock_state.quality = quality
     mock_state.speed = speed
     mock_state.wifi_firmware = wifi_firmware
     return mock_state
@@ -109,6 +111,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("rabbitair_connect")
 @pytest.mark.parametrize(
     ("error_type", "base_value"),
     [
@@ -143,7 +146,23 @@ async def test_form_cannot_connect(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_value}
 
+    with patch(
+        "homeassistant.components.rabbitair.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: TEST_HOST,
+                CONF_ACCESS_TOKEN: TEST_TOKEN,
+            },
+        )
+        await hass.async_block_till_done()
 
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("rabbitair_connect")
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
@@ -166,6 +185,21 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with patch(
+        "homeassistant.components.rabbitair.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: TEST_HOST,
+                CONF_ACCESS_TOKEN: TEST_TOKEN,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("rabbitair_connect")

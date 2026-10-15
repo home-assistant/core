@@ -1,6 +1,6 @@
 """Switcher integration Climate platform."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
@@ -95,7 +95,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature
         self._attr_target_temperature_step = 1
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_hvac_modes = [HVACMode.OFF]
         for mode in remote.modes_features:
@@ -117,17 +117,18 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         )
         self._update_data()
 
+    @override
     def _update_data(self) -> None:
         """Update data from device."""
         data = cast(SwitcherThermostat, self.coordinator.data)
         features = self._remote.modes_features[data.mode]
 
         # Ignore empty update from device that was power cycled
-        if data.target_temperature == 0 and self.target_temperature is not None:
+        if data.target_temperature == 0 and self.native_target_temperature is not None:
             return
 
-        self._attr_current_temperature = data.temperature
-        self._attr_target_temperature = float(data.target_temperature)
+        self._attr_native_current_temperature = data.temperature
+        self._attr_native_target_temperature = float(data.target_temperature)
 
         self._attr_hvac_mode = HVACMode.OFF
         if data.device_state is DeviceState.ON:
@@ -151,6 +152,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         """Call Switcher Control Breeze API."""
         await self._async_call_api(API_CONTROL_BREEZE_DEVICE, self._remote, **kwargs)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         data = cast(SwitcherThermostat, self.coordinator.data)
@@ -163,10 +165,12 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
             target_temp=int(kwargs[ATTR_TEMPERATURE])
         )
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._async_control_breeze_device(fan_level=HA_TO_DEVICE_FAN[fan_mode])
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == hvac_mode.OFF:
@@ -176,6 +180,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
                 state=DeviceState.ON, mode=HA_TO_DEVICE_MODE[hvac_mode]
             )
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if swing_mode == SWING_VERTICAL:

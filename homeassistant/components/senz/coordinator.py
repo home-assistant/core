@@ -2,8 +2,9 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
-from httpx import RequestError
+from httpx2 import RequestError
 from pysenz import SENZAPI, Thermostat
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,6 +41,7 @@ class SENZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         )
         self._senz_api = senz_api
 
+    @override
     async def _async_update_data(self) -> dict[str, Thermostat]:
         """Fetch data from SENZ."""
         try:

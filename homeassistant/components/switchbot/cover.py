@@ -1,24 +1,31 @@
 """Support for SwitchBot curtains."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import switchbot
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+from .const import (
+    CONF_CURTAIN_SPEED,
+    CURTAIN_3_MODEL_FRIENDLY_NAME,
+    CURTAIN_SPEED_TO_VALUE,
+    DEFAULT_CURTAIN_SPEED,
+    ROLLER_SHADE_SPEED_PERFORMANCE,
+    ROLLER_SHADE_SPEED_TO_MODE,
+)
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -62,53 +69,72 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Initialize the Switchbot."""
         super().__init__(coordinator)
         self._attr_is_closed = None
+        # Only the Curtain 3 honours the speed byte; expose cover speeds
+        # (e.g. silent mode) for that model only.
+        if self._device.data.get("modelFriendlyName") == CURTAIN_3_MODEL_FRIENDLY_NAME:
+            self._attr_supported_features |= CoverEntityFeature.SPEED
+            self._attr_supported_speeds = list(CURTAIN_SPEED_TO_VALUE)
 
     @callback
-    def _get_curtain_speed(self) -> int:
-        """Return the configured curtain speed."""
+    def _get_curtain_speed(self, kwargs: dict[str, Any]) -> int:
+        """Return the movement speed for the requested cover speed.
+
+        A speed passed to the action takes precedence; otherwise the speed
+        configured in the options flow is used.
+        """
+        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+            # The cover entity validated the speed against _attr_supported_speeds.
+            return CURTAIN_SPEED_TO_VALUE[speed]
         return int(
             self.coordinator.config_entry.options.get(
                 CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
             )
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
+        if (
+            not last_state
+            or CoverEntityStateAttribute.CURRENT_POSITION not in last_state.attributes
+        ):
             return
 
         self._attr_current_cover_position = last_state.attributes.get(
-            ATTR_CURRENT_POSITION
+            CoverEntityStateAttribute.CURRENT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
     @exception_handler
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
-        speed = self._get_curtain_speed()
+        speed = self._get_curtain_speed(kwargs)
         self._last_run_success = bool(await self._device.open(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
-        speed = self._get_curtain_speed()
+        speed = self._get_curtain_speed(kwargs)
         self._last_run_success = bool(await self._device.close(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
@@ -119,17 +145,20 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
+        position = kwargs[ATTR_POSITION]
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        speed = self._get_curtain_speed(kwargs)
+        self._last_run_success = bool(await self._device.set_position(position, speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_closing = self._device.is_closing()
@@ -161,15 +190,20 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_closed = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state or ATTR_CURRENT_TILT_POSITION not in last_state.attributes:
+        if (
+            not last_state
+            or CoverEntityStateAttribute.CURRENT_TILT_POSITION
+            not in last_state.attributes
+        ):
             return
 
         self._attr_current_cover_tilt_position = last_state.attributes.get(
-            ATTR_CURRENT_TILT_POSITION
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
         if (_tilt := self._attr_current_cover_tilt_position) is not None:
@@ -178,6 +212,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
             )
 
     @exception_handler
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the tilt."""
 
@@ -186,6 +221,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the tilt."""
 
@@ -194,6 +230,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
@@ -202,6 +239,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         position = kwargs.get(ATTR_TILT_POSITION)
@@ -211,6 +249,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _tilt = self.parsed_data["tilt"]
@@ -233,9 +272,11 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.SPEED
     )
+    _attr_supported_speeds = list(ROLLER_SHADE_SPEED_TO_MODE)
 
-    _attr_translation_key = "cover"
+    _attr_translation_key = "roller_shade"
     _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
@@ -243,41 +284,58 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_closed = None
 
+    @callback
+    def _motor_mode(self, kwargs: dict[str, Any]) -> int:
+        """Return the motor mode for the requested speed."""
+        # The cover entity validated the speed against _attr_supported_speeds.
+        return ROLLER_SHADE_SPEED_TO_MODE[
+            kwargs.get(ATTR_SPEED, ROLLER_SHADE_SPEED_PERFORMANCE)
+        ]
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
+        if (
+            not last_state
+            or CoverEntityStateAttribute.CURRENT_POSITION not in last_state.attributes
+        ):
             return
 
         self._attr_current_cover_position = last_state.attributes.get(
-            ATTR_CURRENT_POSITION
+            CoverEntityStateAttribute.CURRENT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
     @exception_handler
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the roller shade."""
 
         _LOGGER.debug("Switchbot to open roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        self._last_run_success = bool(await self._device.open(self._motor_mode(kwargs)))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the roller shade."""
 
         _LOGGER.debug("Switchbot to close roller shade %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        self._last_run_success = bool(
+            await self._device.close(self._motor_mode(kwargs))
+        )
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of roller shade."""
 
@@ -288,17 +346,21 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
 
-        position = kwargs.get(ATTR_POSITION)
+        position = kwargs[ATTR_POSITION]
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        self._last_run_success = bool(
+            await self._device.set_position(position, self._motor_mode(kwargs))
+        )
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_closing = self._device.is_closing()
@@ -319,17 +381,20 @@ class SwitchbotGarageDoorOpenerEntity(SwitchbotEntity, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, else False."""
         return not self._device.door_open()
 
     @exception_handler
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
         await self._device.open()
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
         await self._device.close()

@@ -1,5 +1,7 @@
 """Demo platform that offers a fake select entity."""
 
+from typing import override
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -57,6 +59,7 @@ class DemoSelect(SelectEntity):
             name=device_name,
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         self._attr_current_option = option

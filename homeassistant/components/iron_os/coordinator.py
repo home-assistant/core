@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from awesomeversion import AwesomeVersion
 from pynecil import (
@@ -77,6 +77,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.device = device
         self.v223_features = False
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -101,6 +102,7 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         super().__init__(hass, config_entry, device, SCAN_INTERVAL)
         self.device_info = DeviceInfoResponse()
 
+    @override
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
 
@@ -138,8 +140,9 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         device_registry = dr.async_get(self.hass)
         if TYPE_CHECKING:
             assert self.config_entry.unique_id
-        device = device_registry.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, self.config_entry.unique_id)}
+        device = device_registry.async_get_device_by_connection(
+            (CONNECTION_BLUETOOTH, self.config_entry.unique_id),
+            self.config_entry.entry_id,
         )
         if device is None:
             return
@@ -161,6 +164,7 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
         """Initialize IronOS coordinator."""
         super().__init__(hass, config_entry, device, SCAN_INTERVAL_SETTINGS)
 
+    @override
     async def _async_update_data(self) -> SettingsDataResponse:
         """Fetch data from Device."""
 
@@ -213,6 +217,7 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
         )
         self.github = github
 
+    @override
     async def _async_update_data(self) -> LatestRelease:
         """Fetch data from Github."""
 

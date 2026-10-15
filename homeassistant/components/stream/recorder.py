@@ -5,7 +5,7 @@ from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import math
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import av
 import av.container
@@ -47,6 +47,7 @@ class RecorderOutput(StreamOutput):
         self.video_path: str
 
     @property
+    @override
     def name(self) -> str:
         """Return provider name."""
         return RECORDER_PROVIDER
@@ -55,6 +56,7 @@ class RecorderOutput(StreamOutput):
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
+    @override
     def cleanup(self) -> None:
         """Handle cleanup."""
         self.idle_timer.idle = True
@@ -108,7 +110,7 @@ class RecorderOutput(StreamOutput):
             # Create output on first segment
             if not output:
                 container_options: dict[str, str] = {
-                    "video_track_timescale": str(int(1 / source_v.time_base)),  # type: ignore[operator]
+                    "video_track_timescale": str(int(1 / source_v.time_base)),
                     "movflags": "frag_keyframe+empty_moov",
                     "min_frag_duration": str(self.stream_settings.min_segment_duration),
                 }
@@ -122,6 +124,8 @@ class RecorderOutput(StreamOutput):
             # Add output streams if necessary
             if not output_v:
                 output_v = output.add_stream_from_template(source_v)
+                if source_v.name == "hevc":
+                    output_v.codec_context.codec_tag = "hvc1"
             if source_a and not output_a:
                 output_a = output.add_stream_from_template(source_a)
 
@@ -131,12 +135,12 @@ class RecorderOutput(StreamOutput):
                 last_stream_id = segment.stream_id
                 pts_adjuster["video"] = int(
                     (running_duration - source.start_time)
-                    / (av.time_base * source_v.time_base)  # type: ignore[operator]
+                    / (av.time_base * source_v.time_base)
                 )
                 if source_a:
                     pts_adjuster["audio"] = int(
                         (running_duration - source.start_time)
-                        / (av.time_base * source_a.time_base)  # type: ignore[operator]
+                        / (av.time_base * source_a.time_base)
                     )
 
             # Remux video

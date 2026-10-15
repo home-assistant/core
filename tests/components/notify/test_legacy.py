@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config as hass_config
@@ -20,7 +20,20 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, mock_platform
+from .test_init import (
+    MockNotifyEntity,
+    help_async_setup_entry_init,
+    help_async_unload_entry,
+)
+
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 
 class NotificationService(notify.BaseNotificationService):
@@ -114,7 +127,7 @@ async def help_setup_notify(
     # Mock platform with service
     mock_notify_platform(hass, tmp_path, "test", async_get_service=async_get_service)
     # Setup the platform
-    await async_setup_component(hass, "notify", {"notify": [{"platform": "test"}]})
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "test"}]})
     await hass.async_block_till_done()
 
     # Return mock for assertion service calls
@@ -193,9 +206,7 @@ async def test_invalid_platform(
     """Test service setup with an invalid platform."""
     mock_notify_platform(hass, tmp_path, "testnotify1")
     # Setup the platform
-    await async_setup_component(
-        hass, "notify", {"notify": [{"platform": "testnotify1"}]}
-    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify1"}]})
     await hass.async_block_till_done()
     assert "Invalid notify platform" in caplog.text
     caplog.clear()
@@ -303,9 +314,7 @@ async def test_reload_with_notify_builtin_platform_reload(
     await notify.async_reload(hass, "testnotify")
 
     # Setup the platform
-    await async_setup_component(
-        hass, "notify", {"notify": [{"platform": "testnotify"}]}
-    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify"}]})
     await hass.async_block_till_done()
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
@@ -314,6 +323,61 @@ async def test_reload_with_notify_builtin_platform_reload(
     await notify.async_reload(hass, "testnotify")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", [["component.testnotify.services.reload."]]
+)
+async def test_reload_keeps_entity_component(
+    hass: HomeAssistant, tmp_path: Path, config_flow_fixture: None
+) -> None:
+    """Test reloading a legacy platform keeps config entry entities manageable."""
+
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
+        """Get notify service for mocked platform."""
+        return NotificationService(hass, {"a": 1}, "testnotify")
+
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify"}]})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [MockNotifyEntity(name="test", entity_id="notify.test")],
+        from_config_entry=True,
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert hass.states.get("notify.test") is not None
+
+    component = hass.data[notify.DATA_COMPONENT]
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config_file.write_text(yaml.dump({"notify": [{"platform": "testnotify"}]}))
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        await hass.services.async_call("testnotify", SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert hass.data[notify.DATA_COMPONENT] is component
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get("notify.test") is None
 
 
 @pytest.mark.parametrize(
@@ -360,9 +424,7 @@ async def test_setup_platform_and_reload(hass: HomeAssistant, tmp_path: Path) ->
     )
 
     # Setup the testnotify platform
-    await async_setup_component(
-        hass, "notify", {"notify": [{"platform": "testnotify"}]}
-    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify"}]})
     await hass.async_block_till_done()
     assert hass.services.has_service("testnotify", SERVICE_RELOAD)
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
@@ -474,7 +536,7 @@ async def test_setup_platform_before_notify_setup(
     )
 
     # Setup the testnotify platform
-    setup_coro = async_setup_component(hass, "notify", hass_config)
+    setup_coro = async_setup_component(hass, DOMAIN, hass_config)
 
     load_task = asyncio.create_task(load_coro)
     setup_task = asyncio.create_task(setup_coro)
@@ -541,7 +603,7 @@ async def test_setup_platform_after_notify_setup(
     )
 
     # Setup the testnotify platform
-    setup_coro = async_setup_component(hass, "notify", hass_config)
+    setup_coro = async_setup_component(hass, DOMAIN, hass_config)
 
     setup_task = asyncio.create_task(setup_coro)
     load_task = asyncio.create_task(load_coro)
@@ -558,13 +620,11 @@ async def test_setup_platform_after_notify_setup(
 async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test send with None as message."""
     send_message_mock = await help_setup_notify(hass, tmp_path)
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )
-    assert (
-        str(exc.value) == "string value is None for dictionary value @ data['message']"
-    )
+    assert str(exc.value) == "string value is None at 'message'"
     send_message_mock.assert_not_called()
 
 

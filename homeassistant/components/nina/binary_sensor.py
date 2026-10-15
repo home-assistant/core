@@ -1,6 +1,6 @@
 """NINA binary sensor platform."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -23,6 +23,17 @@ from .const import (
     ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
+    SERVICE_DATA_AFFECTED_AREAS,
+    SERVICE_DATA_DESCRIPTION,
+    SERVICE_DATA_EXPIRES,
+    SERVICE_DATA_HEADLINE,
+    SERVICE_DATA_ID,
+    SERVICE_DATA_RECOMMENDED_ACTIONS,
+    SERVICE_DATA_SENDER,
+    SERVICE_DATA_SENT,
+    SERVICE_DATA_SEVERITY,
+    SERVICE_DATA_START,
+    SERVICE_DATA_WEB,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 from .entity import NinaEntity
@@ -70,6 +81,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{region}-{slot_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         if self._get_active_warnings_count() <= self._warning_index:
@@ -78,6 +90,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         return self._get_warning_data().is_valid
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
         if not self.is_on:
@@ -102,4 +115,25 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
             ATTR_EXPIRES: data.expires.isoformat()
             if data.expires
             else "",  # Deprecated, remove in 2026.11
+        }
+
+    def get_details(self) -> dict[str, str] | None:
+        """Return the details of the warning."""
+        if not self.is_on:
+            return None
+
+        data = self._get_warning_data()
+
+        return {
+            SERVICE_DATA_HEADLINE: data.headline,
+            SERVICE_DATA_DESCRIPTION: data.description,
+            SERVICE_DATA_SENDER: data.sender,
+            SERVICE_DATA_SEVERITY: data.severity or "Unknown",
+            SERVICE_DATA_RECOMMENDED_ACTIONS: data.recommended_actions,
+            SERVICE_DATA_AFFECTED_AREAS: data.affected_areas,
+            SERVICE_DATA_WEB: data.more_info_url,
+            SERVICE_DATA_ID: data.id,
+            SERVICE_DATA_SENT: data.sent.isoformat(),
+            SERVICE_DATA_START: data.start.isoformat() if data.start else "",
+            SERVICE_DATA_EXPIRES: data.expires.isoformat() if data.expires else "",
         }

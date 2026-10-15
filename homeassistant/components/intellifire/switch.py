@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -65,17 +65,20 @@ class IntellifireSwitch(IntellifireEntity, SwitchEntity):
 
     entity_description: IntellifireSwitchEntityDescription
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.entity_description.on_fn(self.coordinator)
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.off_fn(self.coordinator)
         await self.async_update_ha_state(force_refresh=True)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the on state."""
         return self.entity_description.value_fn(self.coordinator)

@@ -10,7 +10,15 @@ import pytest
 from solaredge_web import EnergyData
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.components.recorder.models import (
+    StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    async_list_statistic_ids,
+    statistics_during_period,
+)
 from homeassistant.components.solaredge.const import (
     CONF_SITE_ID,
     DATA_MODULES_COORDINATOR,
@@ -29,6 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
@@ -169,41 +178,17 @@ def mock_solar_edge_web() -> AsyncMock:
     ) as mock_api:
         api = mock_api.return_value
         api.async_get_equipment.return_value = {
-            1001: {"displayName": "1.1"},
-            1002: {"displayName": "1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1"},
+            "7A012346-CA": {"name": "Optimizer 1.2"},
         }
         api.async_get_energy_data.return_value = [
             EnergyData(
                 start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 0)),
-                values={1001: 10.0, 1002: 20.0},
-            ),
-            EnergyData(
-                start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 15)),
-                values={1001: 11.0, 1002: 21.0},
-            ),
-            EnergyData(
-                start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 30)),
-                values={1001: 12.0, 1002: 22.0},
-            ),
-            EnergyData(
-                start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 45)),
-                values={1001: 13.0, 1002: 23.0},
+                values={"7A012345-CA": 10.0, "7A012346-CA": 20.0},
             ),
             EnergyData(
                 start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 0)),
-                values={1001: 14.0, 1002: 24.0},
-            ),
-            EnergyData(
-                start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 15)),
-                values={1001: 15.0, 1002: 25.0},
-            ),
-            EnergyData(
-                start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 30)),
-                values={1001: 16.0, 1002: 26.0},
-            ),
-            EnergyData(
-                start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 45)),
-                values={1001: 17.0, 1002: 27.0},
+                values={"7A012345-CA": 14.0, "7A012346-CA": 24.0},
             ),
         ]
         yield api
@@ -229,19 +214,19 @@ async def test_modules_coordinator_first_run(
         hass,
         dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
         None,
-        {f"{DOMAIN}:{SITE_ID}_1001", f"{DOMAIN}:{SITE_ID}_1002"},
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca", f"{DOMAIN}:{SITE_ID}_7a012346_ca"},
         "hour",
         None,
         {"state", "sum"},
     )
     assert stats == {
-        f"{DOMAIN}:{SITE_ID}_1001": [
-            {"start": 1735783200.0, "end": 1735786800.0, "state": 11.5, "sum": 11.5},
-            {"start": 1735786800.0, "end": 1735790400.0, "state": 15.5, "sum": 27.0},
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
         ],
-        f"{DOMAIN}:{SITE_ID}_1002": [
-            {"start": 1735783200.0, "end": 1735786800.0, "state": 21.5, "sum": 21.5},
-            {"start": 1735786800.0, "end": 1735790400.0, "state": 25.5, "sum": 47.0},
+        f"{DOMAIN}:{SITE_ID}_7a012346_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 20.0, "sum": 20.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 24.0, "sum": 44.0},
         ],
     }
 
@@ -254,7 +239,7 @@ async def test_modules_coordinator_subsequent_run(
 ) -> None:
     """Test the coordinator correctly updates statistics on subsequent runs."""
     mock_solar_edge_web.async_get_equipment.return_value = {
-        1001: {"displayName": "1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -269,36 +254,12 @@ async def test_modules_coordinator_subsequent_run(
         # Updated values, different from the first run
         EnergyData(
             start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 0)),
-            values={1001: 24.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 15)),
-            values={1001: 25.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 30)),
-            values={1001: 26.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 45)),
-            values={1001: 27.0},
+            values={"7A012345-CA": 24.0},
         ),
         # New values for the next hour
         EnergyData(
             start_time=dt_util.as_utc(datetime(2025, 1, 1, 12, 0)),
-            values={1001: 28.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 1, 1, 12, 15)),
-            values={1001: 29.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 1, 1, 12, 30)),
-            values={1001: 30.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 1, 1, 12, 45)),
-            values={1001: 31.0},
+            values={"7A012345-CA": 28.0},
         ),
     ]
 
@@ -313,16 +274,16 @@ async def test_modules_coordinator_subsequent_run(
         hass,
         dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
         None,
-        {f"{DOMAIN}:{SITE_ID}_1001"},
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca"},
         "hour",
         None,
         {"state", "sum"},
     )
     assert stats == {
-        f"{DOMAIN}:{SITE_ID}_1001": [
-            {"start": 1735783200.0, "end": 1735786800.0, "state": 11.5, "sum": 11.5},
-            {"start": 1735786800.0, "end": 1735790400.0, "state": 25.5, "sum": 37.0},
-            {"start": 1735790400.0, "end": 1735794000.0, "state": 29.5, "sum": 66.5},
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 24.0, "sum": 34.0},
+            {"start": 1735790400.0, "end": 1735794000.0, "state": 28.0, "sum": 62.0},
         ]
     }
 
@@ -335,7 +296,7 @@ async def test_modules_coordinator_subsequent_run_with_gap(
 ) -> None:
     """Test the coordinator updates statistics with a gap in data."""
     mock_solar_edge_web.async_get_equipment.return_value = {
-        1001: {"displayName": "1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -350,19 +311,7 @@ async def test_modules_coordinator_subsequent_run_with_gap(
         # New values a month later, simulating a gap in data
         EnergyData(
             start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
-            values={1001: 24.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 15)),
-            values={1001: 25.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 30)),
-            values={1001: 26.0},
-        ),
-        EnergyData(
-            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 45)),
-            values={1001: 27.0},
+            values={"7A012345-CA": 24.0},
         ),
     ]
 
@@ -376,16 +325,16 @@ async def test_modules_coordinator_subsequent_run_with_gap(
         hass,
         dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
         None,
-        {f"{DOMAIN}:{SITE_ID}_1001"},
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca"},
         "hour",
         None,
         {"state", "sum"},
     )
     assert stats == {
-        f"{DOMAIN}:{SITE_ID}_1001": [
-            {"start": 1735783200.0, "end": 1735786800.0, "state": 11.5, "sum": 11.5},
-            {"start": 1735786800.0, "end": 1735790400.0, "state": 15.5, "sum": 27.0},
-            {"start": 1738465200.0, "end": 1738468800.0, "state": 25.5, "sum": 52.5},
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 24.0, "sum": 48.0},
         ]
     }
 
@@ -415,7 +364,7 @@ async def test_modules_coordinator_no_energy_data(
         hass,
         dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
         None,
-        {f"{DOMAIN}:{SITE_ID}_1001", f"{DOMAIN}:{SITE_ID}_1002"},
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca", f"{DOMAIN}:{SITE_ID}_7a012346_ca"},
         "hour",
         None,
         {"state", "sum"},
@@ -435,3 +384,117 @@ async def test_modules_coordinator_api_failure(
     await setup_integration(hass, mock_config_entry_web_login)
 
     assert mock_config_entry_web_login.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_legacy_statistic_id_reused(
+    hass: HomeAssistant,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test that legacy numeric statistic IDs are reused via name matching."""
+    # Add a legacy numeric statistic with name "1.1" (matching equipment name).
+    legacy_statistic_id = f"{DOMAIN}:{SITE_ID}_231397259"
+    legacy_metadata = StatisticMetaData(
+        mean_type=StatisticMeanType.ARITHMETIC,
+        has_sum=True,
+        name="SolarEdge 1.1",
+        source=DOMAIN,
+        statistic_id=legacy_statistic_id,
+        unit_class=EnergyConverter.UNIT_CLASS,
+        unit_of_measurement="Wh",
+    )
+    async_add_external_statistics(hass, legacy_metadata, [])
+    await async_wait_recording_done(hass)
+
+    # Equipment with matching name "1.1".
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1"},
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # The legacy statistic ID should be reused (not a new serial-based one).
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    assert coordinator.get_statistic_id("7A012345-CA") == legacy_statistic_id
+
+    # Data should be inserted under the legacy ID.
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {legacy_statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        legacy_statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+        ]
+    }
+    # No new serial-based ID should have been created.
+    all_stats = await async_list_statistic_ids(hass)
+    stat_ids = {s["statistic_id"] for s in all_stats}
+    assert f"{DOMAIN}:{SITE_ID}_7a012345_ca" not in stat_ids
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_legacy_statistic_id_ambiguous(
+    hass: HomeAssistant,
+    mock_solar_edge_web: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that ambiguous legacy statistic names are not reused."""
+    # Two legacy numeric statistics with the same name, e.g. after a module
+    # replacement created a new series under a new numeric ID.
+    for legacy_id in (
+        f"{DOMAIN}:{SITE_ID}_231397259",
+        f"{DOMAIN}:{SITE_ID}_231397260",
+    ):
+        legacy_metadata = StatisticMetaData(
+            mean_type=StatisticMeanType.ARITHMETIC,
+            has_sum=True,
+            name="SolarEdge 1.1",
+            source=DOMAIN,
+            statistic_id=legacy_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement="Wh",
+        )
+        async_add_external_statistics(hass, legacy_metadata, [])
+    await async_wait_recording_done(hass)
+
+    # Equipment with matching name "1.1".
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1"},
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # The match is ambiguous, so a new serial-based ID is used.
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    assert (
+        coordinator.get_statistic_id("7A012345-CA") == f"{DOMAIN}:{SITE_ID}_7a012345_ca"
+    )
+    assert "ambiguous" in caplog.text

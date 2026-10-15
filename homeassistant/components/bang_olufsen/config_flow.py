@@ -1,12 +1,12 @@
 """Config flow for the Bang & Olufsen integration."""
 
 from ipaddress import AddressValueError, IPv4Address
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -61,14 +61,15 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
                     SelectSelectorConfig(options=SELECTABLE_MODELS)
                 ),
             }
@@ -123,6 +124,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from pycoolmasternet_async import CoolMasterNet
 from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
@@ -24,6 +25,8 @@ class CoolmasterDataUpdateCoordinator(
 ):
     """Class to manage fetching Coolmaster data."""
 
+    config_entry: CoolmasterConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -43,6 +46,7 @@ class CoolmasterDataUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, CoolMasterNetUnit]:
         """Fetch data from Coolmaster."""
         retries_left = MAX_RETRIES

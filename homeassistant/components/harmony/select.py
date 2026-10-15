@@ -1,6 +1,7 @@
 """Support for Harmony Hub select activities."""
 
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HassJob, HomeAssistant, callback
@@ -38,11 +39,13 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         return [TRANSLATABLE_POWER_OFF, *sorted(self._data.activity_names)]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current activity."""
         _, activity_name = self._data.current_activity
@@ -50,6 +53,7 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
             return TRANSLATABLE_POWER_OFF
         return activity_name
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the current activity."""
         if option == TRANSLATABLE_POWER_OFF:
@@ -57,6 +61,7 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
             return
         await self._data.async_start_activity(option)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         activity_update_job = HassJob(self._async_activity_update)

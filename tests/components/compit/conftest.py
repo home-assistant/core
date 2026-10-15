@@ -68,6 +68,7 @@ def mock_connector():
         MagicMock(code="__aerokonfbypass", value="off"),
         MagicMock(code="__rd_alarmwent", value="no_alarm"),
         MagicMock(code="__rd_co2", value="normal"),
+        MagicMock(code="__rd_filtrwent", value="dirty"),
         MagicMock(code="__rd_pm10", value="warning"),
         MagicMock(code="__rr_wietrzenie", value="on"),
         MagicMock(code="__tempzadkomf", value=21),  # Target temperature comfort
@@ -90,7 +91,11 @@ def mock_connector():
         return all_devices.get(device_id)
 
     def get_current_value(device_id: int, parameter_code: CompitParameter):
-        code = PARAMS[parameter_code][all_devices[device_id].definition.code]
+        # Not every device supports every parameter; fall back instead of
+        # raising when this device has no mapping for it.
+        code = PARAMS.get(parameter_code, {}).get(
+            all_devices[device_id].definition.code, parameter_code.value
+        )
         param = next(
             (p for p in all_devices[device_id].state.params if p.code == code),
             None,
