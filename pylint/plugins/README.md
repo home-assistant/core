@@ -147,10 +147,13 @@ Every check has a code following the
 | `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
+| `W7445` | [`home-assistant-test-flow-start-helper`](#w7445-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 | `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
+| `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
+| `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
 
 ## `home_assistant_logger` checker
 
@@ -944,6 +947,24 @@ from `services.py`.
 See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
 
 
+## `home_assistant_actions_services_module` checker
+
+Detects actions registered outside the integration's `services.py`.
+
+### `W7452`: `home-assistant-action-registered-outside-services-module`
+
+Actions should be registered in `services.py`, from `async_setup_services`
+(called from `async_setup`) or `setup_services` (called from a synchronous
+`setup`). Module-level functions in `services.py` that are called from these
+functions may register actions too.
+
+### `W7453`: `home-assistant-invalid-setup-services`
+
+`async_setup_services` should be a synchronous function decorated with
+`@callback`, and `setup_services` a synchronous function that is not, since
+it runs in the executor. Both should only take `hass`.
+
+
 ## `home_assistant_exception_translations` checker
 
 Ensures `HomeAssistantError` and its subclasses use the translation system
@@ -1303,3 +1324,29 @@ Check the `step_id` parameter for all calls to `async_show_form`,
 `async_external_step`, `async_show_progress` and `async_show_menu`.
 The `step_id` parameter should be same as the method it is in.
 For example: `step_id="user"` should be used in `async_step_user`
+
+
+## `home_assistant_flow_start_helpers` checker
+
+Enforces the use of `MockConfigEntry` helpers to start reauth and
+reconfigure flows in integration tests.
+
+### `W7445`: `home-assistant-test-flow-start-helper`
+
+Tests must not start a reauth or reconfigure flow by calling
+`hass.config_entries.flow.async_init` with a hand-built `context`
+(`"source": SOURCE_REAUTH` / `SOURCE_RECONFIGURE`). Use
+`entry.start_reauth_flow(hass)` or `entry.start_reconfigure_flow(hass)`
+instead; they build the same context Home Assistant uses at runtime.
+
+```python
+# Bad
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+    data=entry.data,
+)
+
+# Good
+result = await entry.start_reauth_flow(hass)
+```

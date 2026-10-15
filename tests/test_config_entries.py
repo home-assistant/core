@@ -4991,7 +4991,7 @@ async def test_finish_flow_aborts_progress(
             await self.async_set_unique_id("mock-unique-id", raise_on_progress=False)
 
             if user_input is None:
-                return self.async_show_form(step_id="discovery")
+                return self.async_show_form(step_id="user")
 
             return self.async_create_entry(title="yo", data={})
 
@@ -5002,10 +5002,13 @@ async def test_finish_flow_aborts_progress(
         )
         assert result["type"] is data_entry_flow.FlowResultType.FORM
 
-        # Will finish and cancel other one.
         result2 = await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}, data={}
+            "comp", context={"source": config_entries.SOURCE_USER}
         )
+        assert result2["type"] is data_entry_flow.FlowResultType.FORM
+
+        # Will finish and cancel other one.
+        result2 = await manager.flow.async_configure(result2["flow_id"], {})
 
     assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 

@@ -263,7 +263,7 @@ aioemonitor==1.0.5
 aioengiebelgium==0.4.3
 
 # homeassistant.components.esphome
-aioesphomeapi==46.6.0
+aioesphomeapi==46.12.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -349,7 +349,7 @@ aiolyric==2.2.1
 aiomealie==2.1.2
 
 # homeassistant.components.melcloud_home
-aiomelcloudhome==0.3.0
+aiomelcloudhome==0.3.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.3.1
@@ -358,7 +358,7 @@ aiomodernforms==0.3.1
 aiomusiccast==0.15.0
 
 # homeassistant.components.nanoleaf
-aionanoleaf2==1.0.5
+aionanoleaf2==1.2.0
 
 # homeassistant.components.notion
 aionotion==2024.03.0
@@ -556,7 +556,7 @@ anthemav==1.4.2
 anthropic==1.12.0
 
 # homeassistant.components.mcp_server
-anyio==4.14.2
+anyio==4.15.1
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.3
@@ -736,6 +736,9 @@ boto3==1.42.97
 
 # homeassistant.components.bring
 bring-api==1.1.2
+
+# homeassistant.components.broadlink
+broadlink-async==1.1.0
 
 # homeassistant.components.brother
 brother==6.2.0
@@ -1218,7 +1221,7 @@ gps3==0.33.3
 grandstream-home-api==0.1.7
 
 # homeassistant.components.gree
-greeclimate==3.2.1
+greeclimate==3.2.2
 
 # homeassistant.components.greencell
 greencell_client==1.0.3
@@ -1254,7 +1257,7 @@ ha-ffmpeg==3.2.2
 ha-iotawattpy==0.3.0
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.2.5
+ha-philipsjs==3.3.0
 
 # homeassistant.components.homeassistant_hardware
 ha-silabs-firmware-client==0.3.0
@@ -2051,7 +2054,7 @@ pyElectra==1.2.5
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.7
+pyHik==0.4.8
 
 # homeassistant.components.homee
 pyHomee==1.4.4
@@ -2350,7 +2353,7 @@ pyiskra==0.1.29
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.7.0
+pyisy==3.8.0
 
 # homeassistant.components.itach
 pyitachip2ir2==0.0.8
@@ -2713,9 +2716,6 @@ python-awair==0.2.5
 
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
-
-# homeassistant.components.broadlink
-python-broadlink==1.0.6
 
 # homeassistant.components.bsblan
 python-bsblan==6.1.10
@@ -3091,10 +3091,10 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.11.0
+serialx==1.14.0
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.1.2
+sfrbox-api==0.2.0
 
 # homeassistant.components.sharkiq
 sharkiq==1.5.0
