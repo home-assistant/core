@@ -36,6 +36,8 @@ __all__ = [
     "ENTITY_ID_FORMAT",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "STATE_OFF",
+    "STATE_ON",
     "BinarySensorDeviceClass",
     "BinarySensorEntity",
     "BinarySensorEntityDescription",
