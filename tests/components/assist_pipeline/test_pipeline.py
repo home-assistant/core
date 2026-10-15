@@ -1489,14 +1489,14 @@ async def test_stt_language_used_instead_of_conversation_language(
         )
 
 
-async def test_tts_language_not_used_for_intent_language(
+async def test_tts_language_used_instead_of_conversation_language(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test TTS language is skipped when conversation language is '*'."""
+    """Test TTS language used after STT when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -1554,14 +1554,14 @@ async def test_tts_language_not_used_for_intent_language(
 
         assert intent_start is not None
 
-        # Pipeline language (en) should be used, not the TTS language
-        assert intent_start.data.get("language") == pipeline.language
+        # STT language (en-US) should be used instead of '*'
+        assert intent_start.data.get("language") == pipeline.tts_language
 
         # Check input to async_converse
         mock_async_converse.assert_called_once()
         assert (
             mock_async_converse.call_args_list[0].kwargs.get("language")
-            == pipeline.language
+            == pipeline.tts_language
         )
 
 

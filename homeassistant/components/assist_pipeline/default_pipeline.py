@@ -570,11 +570,15 @@ class _DefaultPipelineProcessor:
             # LLMs support all languages ('*') so use languages from the
             # pipeline for intent fallback.
             #
-            # We prioritize the STT language because it may be more specific,
-            # such as "zh-CN" instead of just "zh". This is necessary for
-            # languages whose intents are split out by region when preferring
-            # local intent matching.
-            return self.host.pipeline.stt_language or self.host.pipeline.language
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            return (
+                self.host.pipeline.stt_language
+                or self.host.pipeline.tts_language
+                or self.host.pipeline.language
+            )
         return self.host.pipeline.conversation_language
 
     async def _async_prepare_intent_agents(self, agent_id: str) -> None:
