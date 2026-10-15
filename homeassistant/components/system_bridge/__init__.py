@@ -189,22 +189,12 @@ async def async_setup_entry(
         )
     )
 
-    # Reload entry when its updated.
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, entry: SystemBridgeConfigEntry
-) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_entry(
