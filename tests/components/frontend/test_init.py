@@ -473,7 +473,7 @@ async def test_themes_reload_themes(
     """Test frontend.reload_themes service."""
 
     with patch(
-        "homeassistant.components.frontend.async_hass_config_yaml",
+        "homeassistant.components.frontend.services.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         with pytest.raises(
@@ -564,14 +564,14 @@ async def test_themes_reload_invalid(
     """Test frontend.reload_themes service with an invalid theme."""
 
     with patch(
-        "homeassistant.components.frontend.async_hass_config_yaml",
+        "homeassistant.components.frontend.services.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
     ):
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     with (
         patch(
-            "homeassistant.components.frontend.async_hass_config_yaml",
+            "homeassistant.components.frontend.services.async_hass_config_yaml",
             return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
         ),
         pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
