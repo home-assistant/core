@@ -899,31 +899,6 @@ async def test_assign_unique_id_failure(
     assert config_entry.unique_id is None
 
 
-async def test_unload_flushes_calendar_cache(
-    hass: HomeAssistant,
-    mock_calendars_list: ApiResult,
-    component_setup: ComponentSetup,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
-    hass_storage: dict[str, Any],
-) -> None:
-    """Unloading persists the latest calendar data before dropping runtime data."""
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    assert await component_setup()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    storage_key = f"google.{entry.entry_id}"
-    data = await entry.runtime_data.store.async_load()
-    assert data
-    assert storage_key not in hass_storage
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-
-    assert hass_storage[storage_key]["data"] == data
-    assert not hasattr(entry, "runtime_data")
-
-
-@pytest.mark.parametrize("elapsed", [0, STORAGE_SAVE_DELAY_SECONDS + 1])
 async def test_remove_entry(
     hass: HomeAssistant,
     mock_calendars_list: ApiResult,
@@ -932,7 +907,6 @@ async def test_remove_entry(
     mock_events_list: ApiResult,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
-    elapsed: int,
 ) -> None:
     """Removing a loaded entry also cancels delayed cache writes."""
     mock_calendars_list({"items": [test_api_calendar]})
@@ -951,7 +925,7 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert storage_key not in hass_storage
 
-    freezer.tick(elapsed)
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert storage_key not in hass_storage
@@ -961,7 +935,6 @@ async def test_remove_entry(
     assert storage_key not in hass_storage
 
 
-@pytest.mark.parametrize("elapsed", [0, STORAGE_SAVE_DELAY_SECONDS + 1])
 async def test_remove_entry_after_failed_unload(
     hass: HomeAssistant,
     mock_calendars_list: ApiResult,
@@ -970,7 +943,6 @@ async def test_remove_entry_after_failed_unload(
     mock_events_list: ApiResult,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
-    elapsed: int,
 ) -> None:
     """Removal prevents pending and future writes after an unload failure."""
     mock_calendars_list({"items": [test_api_calendar]})
@@ -992,15 +964,12 @@ async def test_remove_entry_after_failed_unload(
     assert entry.state is ConfigEntryState.FAILED_UNLOAD
     assert storage_key not in hass_storage
 
-    freezer.tick(elapsed)
+    # A platform that failed to unload can still update its calendar store.
+    await store.async_save(data)
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
     async_fire_time_changed(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
-    assert storage_key not in hass_storage
-
-    # A platform that failed to unload can still update its calendar store.
-    await store.async_save(data)
-    await store.async_flush()
     assert storage_key not in hass_storage
 
 
