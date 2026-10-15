@@ -615,7 +615,7 @@ async def test_login_flow_limit_per_ip(
     aiohttp_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test an IP address can only have a limited number of login flows."""
+    """Test the oldest login flows of an IP address are aborted over the limit."""
     client = await async_setup_auth(hass, aiohttp_client)
     payload = {
         "client_id": CLIENT_ID,
@@ -623,13 +623,15 @@ async def test_login_flow_limit_per_ip(
         "redirect_uri": CLIENT_REDIRECT_URI,
     }
 
-    for _ in range(MAX_LOGIN_FLOWS_PER_IP):
+    flow_ids = []
+    for _ in range(MAX_LOGIN_FLOWS_PER_IP + 1):
         resp = await client.post("/auth/login_flow", json=payload)
         assert resp.status == HTTPStatus.OK
+        flow_ids.append((await resp.json())["flow_id"])
 
-    resp = await client.post("/auth/login_flow", json=payload)
-    assert resp.status == HTTPStatus.TOO_MANY_REQUESTS
-    assert len(hass.auth.login_flow.async_progress()) == MAX_LOGIN_FLOWS_PER_IP
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[1:]
 
     # Expired flows are aborted when the next flow is created.
     freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))

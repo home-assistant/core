@@ -51,10 +51,6 @@ class InvalidProvider(Exception):
     """Authentication provider not found."""
 
 
-class TooManyLoginFlowsError(Exception):
-    """Raised when an IP address has too many login flows in progress."""
-
-
 async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: list[dict[str, Any]],
@@ -132,15 +128,16 @@ class AuthManagerFlowManager(
         for flow in list(self._progress.values()):
             if cast(LoginFlow, flow).created_at < expired:
                 self.async_abort(flow.flow_id)
-        if (
-            context is not None
-            and (ip := context.get("ip_address")) is not None
-            and sum(
-                flow.context.get("ip_address") == ip for flow in self._progress.values()
-            )
-            >= MAX_LOGIN_FLOWS_PER_IP
-        ):
-            raise TooManyLoginFlowsError
+        if context is not None and (ip := context.get("ip_address")) is not None:
+            ip_flows = [
+                flow
+                for flow in self._progress.values()
+                if flow.context.get("ip_address") == ip
+            ]
+            # Abort the oldest flow instead of refusing new ones, so a client
+            # sharing the IP address can't lock others out.
+            if len(ip_flows) >= MAX_LOGIN_FLOWS_PER_IP:
+                self.async_abort(ip_flows[0].flow_id)
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {handler_key}")
