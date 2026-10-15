@@ -660,10 +660,7 @@ def ws_get_entities_by_group(
     msg: dict,
 ) -> None:
     """Get entities by group address."""
-    data = {
-        str(ga): identifiers for ga, identifiers in knx.group_address_entities.items()
-    }
-    connection.send_result(msg["id"], data)
+    connection.send_result(msg["id"], knx.entities_by_group_address())
 
 
 @websocket_api.require_admin

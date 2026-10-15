@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Final
 import probatio
 from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram.address import InternalGroupAddress
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.const import Platform
@@ -137,7 +138,9 @@ def _data_secure_group_key_issue_handler(
     knx_module: KNXModule, telegram: Telegram, telegram_dict: TelegramDict
 ) -> None:
     """Handle DataSecure group key issue telegrams."""
-    if telegram.destination_address not in knx_module.group_address_entities:
+    if not isinstance(
+        telegram.destination_address, (GroupAddress, InternalGroupAddress)
+    ) or not knx_module.group_address_has_entity(telegram.destination_address):
         # Only report issues for configured group addresses
         return
 

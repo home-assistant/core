@@ -1,5 +1,6 @@
 """Base module for the KNX integration."""
 
+from collections import defaultdict
 import logging
 from typing import cast
 
@@ -7,6 +8,7 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, TrackerOptions
 from xknx.core.telegram_queue import TelegramQueue
+from xknx.devices import Device as XknxDevice
 from xknx.dpt import DPTBase
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
@@ -111,9 +113,7 @@ class KNXModule:
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
         self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
-        self.group_address_entities: dict[
-            DeviceGroupAddress, set[KnxEntityIdentifier]
-        ] = {}
+        self.entity_identifiers: dict[XknxDevice, KnxEntityIdentifier] = {}
         self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
         self.entry.async_on_unload(data_secure_group_key_issue_dispatcher(self))
@@ -233,28 +233,20 @@ class KNXModule:
             threaded=True,
         )
 
-    def add_to_group_address_entities(
-        self,
-        group_addresses: set[DeviceGroupAddress],
-        identifier: KnxEntityIdentifier,
-    ) -> None:
-        """Register entity in group_address_entities map."""
-        for ga in group_addresses:
-            if ga not in self.group_address_entities:
-                self.group_address_entities[ga] = set()
-            self.group_address_entities[ga].add(identifier)
+    def entities_by_group_address(self) -> dict[str, set[KnxEntityIdentifier]]:
+        """Return the identifiers of the entities using each group address."""
+        result: defaultdict[str, set[KnxEntityIdentifier]] = defaultdict(set)
+        for device, identifier in self.entity_identifiers.items():
+            for group_address in device.group_addresses():
+                result[str(group_address)].add(identifier)
+        return result
 
-    def remove_from_group_address_entities(
-        self,
-        group_addresses: set[DeviceGroupAddress],
-        identifier: KnxEntityIdentifier,
-    ) -> None:
-        """Unregister entity from group_address_entities map."""
-        for ga in group_addresses:
-            if ga in self.group_address_entities:
-                self.group_address_entities[ga].discard(identifier)
-                if not self.group_address_entities[ga]:
-                    del self.group_address_entities[ga]
+    def group_address_has_entity(self, group_address: DeviceGroupAddress) -> bool:
+        """Return if an entity uses the group address."""
+        return any(
+            device in self.entity_identifiers
+            for device in self.xknx.devices.devices_by_group_address(group_address)
+        )
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
