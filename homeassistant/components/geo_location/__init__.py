@@ -38,7 +38,6 @@ __all__ = [
     "ENTITY_ID_FORMAT",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
-    "EntityStateAttribute",
     "GeolocationEntityStateAttribute",
     "GeolocationEvent",
 ]
