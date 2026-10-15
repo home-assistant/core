@@ -24,7 +24,7 @@ OAUTH2_SCOPES = [
     "IOTManagement.Write",
 ]
 
-UPDATE_INTERVAL = timedelta(seconds=60)
+UPDATE_INTERVAL = timedelta(minutes=2)
 FAST_POLLING_INTERVAL = timedelta(seconds=5)
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 
