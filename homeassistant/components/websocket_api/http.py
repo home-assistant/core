@@ -469,9 +469,9 @@ class WebSocketHandler:
         # Our websocket implementation is backed by a deque
         #
         # As back-pressure builds, the queue will back up and use more memory
-        # until we disconnect the client when the queue size reaches
-        # MAX_PENDING_MSG. When we are generating a high volume of websocket messages,
-        # we hit a bottleneck in aiohttp where it will wait for
+        # until we disconnect the client when the entity state changes it is
+        # holding reach MAX_PENDING_MSG. When we are generating a high volume of
+        # websocket messages, we hit a bottleneck in aiohttp where it will wait for
         # the buffer to drain before sending the next message and messages
         # start backing up in the queue.
         #
