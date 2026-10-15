@@ -805,6 +805,22 @@ class ResultStream:
             )
             return
 
+        # Overrides like the acknowledge sound repeat on many responses, so
+        # convert each format once.
+        cache_key = (
+            self._override_media_path,
+            frozenset(
+                (option, value)
+                for option, value in self.options.items()
+                if option in _PREFFERED_FORMAT_OPTIONS
+            ),
+        )
+        if (
+            converted := self._manager.converted_override_cache.get(cache_key)
+        ) is not None:
+            yield converted
+            return
+
         # Use ffmpeg to convert audio to preferred format
         if not preferred_format:
             preferred_format = self._override_media_path.suffix[1:]  # strip .
@@ -819,8 +835,12 @@ class ResultStream:
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
             to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
+        chunks: list[bytes] = []
         async for chunk in converted_audio:
+            chunks.append(chunk)
             yield chunk
+
+        self._manager.converted_override_cache[cache_key] = b"".join(chunks)
 
     def delete(self) -> None:
         """Remove the result stream from the manager."""
@@ -919,6 +939,9 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
+        self.converted_override_cache: dict[
+            tuple[Path, frozenset[tuple[str, Any]]], bytes
+        ] = {}
         self.memcache_cleanup = DictCleaning(hass, memory_cache_maxage, self.mem_cache)
         self.token_to_stream_cleanup = DictCleaning(
             hass, memory_cache_maxage, self.token_to_stream

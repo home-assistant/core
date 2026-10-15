@@ -2684,6 +2684,51 @@ async def test_stream_override_with_conversion(
         )  # 1 second @ 22.5Khz/stereo
 
 
+async def test_stream_override_conversion_is_cached(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test that a converted override is reused for the same format."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    def create_stream(sample_rate: int) -> tts.ResultStream:
+        return tts.async_create_stream(
+            hass,
+            mock_tts_entity.entity_id,
+            options={
+                tts.ATTR_PREFERRED_FORMAT: "wav",
+                tts.ATTR_PREFERRED_SAMPLE_RATE: sample_rate,
+            },
+        )
+
+    # Use a temp file here since ffmpeg will read it directly
+    with (
+        tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file,
+        patch(
+            "asyncio.create_subprocess_exec", wraps=asyncio.create_subprocess_exec
+        ) as mock_create_subprocess_exec,
+    ):
+        with wave.open(wav_file, "wb") as wav_writer:
+            wav_writer.setframerate(16000)
+            wav_writer.setsampwidth(2)
+            wav_writer.setnchannels(1)
+            wav_writer.writeframes(bytes(16000 * 2))  # 1 second @ 16Khz/mono
+
+        wav_file.seek(0)
+
+        results = []
+        for sample_rate in (22050, 22050, 48000):
+            stream = create_stream(sample_rate)
+            stream.async_override_result(wav_file.name)
+            results.append(
+                b"".join([chunk async for chunk in stream.async_stream_result()])
+            )
+
+    # ffmpeg only runs again for a different format
+    assert mock_create_subprocess_exec.call_count == 2
+    assert results[0] == results[1]
+    assert results[0] != results[2]
+
+
 def test_write_tags_keeps_single_id3_tag() -> None:
     """Test tagging audio that already carries an ID3 tag does not add a second one."""
     data = load_fixture_bytes("tagged.mp3", DOMAIN)
