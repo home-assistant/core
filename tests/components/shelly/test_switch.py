@@ -44,6 +44,7 @@ from . import (
     register_entity,
     register_sub_device,
 )
+from .conftest import MOCK_LEDSTRIP_STATUS
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
@@ -1149,24 +1150,7 @@ async def test_rpc_camera_privacy_switch(
 
 
 LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_ledstrip_0_reverse_effect"
-LEDSTRIP_CONFIG = {
-    "id": 0,
-    "name": None,
-    "initial_state": 2,
-    "num_leds": 100,
-    "protocol": "ws2812b",
-    "color_order": "rgb",
-    "ddp_port": 4048,
-    "effects": ["solid", "blink", "fade", "rainbow"],
-}
-LEDSTRIP_STATUS_RAINBOW = {
-    "id": 0,
-    "on": True,
-    "brightness": 36,
-    "effect": "rainbow",
-    "speed": 33,
-    "reverse": True,
-}
+LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
 LEDSTRIP_STATUS_SOLID = {
     "id": 0,
     "on": True,
@@ -1178,20 +1162,12 @@ LEDSTRIP_STATUS_SOLID = {
 
 async def test_rpc_ledstrip_reverse_switch(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
+    mock_ledstrip_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip reverse effect switch."""
-    config = deepcopy(mock_rpc_device.config)
-    config["ledstrip:0"] = LEDSTRIP_CONFIG
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_RAINBOW)
-    monkeypatch.setattr(mock_rpc_device, "status", status)
-
     await init_integration(hass, 4)
 
     state = hass.states.get(LEDSTRIP_ENTITY_ID)
@@ -1206,13 +1182,13 @@ async def test_rpc_ledstrip_reverse_switch(
         {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID},
         blocking=True,
     )
-    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": False})
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": False})
 
-    mock_rpc_device.ledstrip_set.reset_mock()
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "ledstrip:0", "reverse", False
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "reverse", False
     )
-    mock_rpc_device.mock_update()
+    mock_ledstrip_rpc_device.mock_update()
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == STATE_OFF
@@ -1223,7 +1199,7 @@ async def test_rpc_ledstrip_reverse_switch(
         {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID},
         blocking=True,
     )
-    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": True})
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": True})
 
 
 @pytest.mark.parametrize(
@@ -1251,27 +1227,25 @@ async def test_rpc_ledstrip_reverse_switch(
 )
 async def test_rpc_ledstrip_reverse_switch_availability(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
+    mock_ledstrip_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     ledstrip_status: dict[str, Any],
     expected_state: str,
 ) -> None:
     """Test RPC LED strip reverse switch availability depends on the effect."""
-    config = deepcopy(mock_rpc_device.config)
-    config["ledstrip:0"] = LEDSTRIP_CONFIG
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_SOLID)
-    monkeypatch.setattr(mock_rpc_device, "status", status)
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+    )
 
     await init_integration(hass, 4)
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
-    monkeypatch.setitem(mock_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status))
-    mock_rpc_device.mock_update()
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
+    )
+    mock_ledstrip_rpc_device.mock_update()
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == expected_state

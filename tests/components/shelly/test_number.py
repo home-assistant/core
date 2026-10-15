@@ -40,6 +40,7 @@ from . import (
     register_device,
     register_entity,
 )
+from .conftest import MOCK_LEDSTRIP_STATUS
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -627,24 +628,7 @@ async def test_cury_number_entity(
 
 
 LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
-LEDSTRIP_CONFIG = {
-    "id": 0,
-    "name": None,
-    "initial_state": 2,
-    "num_leds": 100,
-    "protocol": "ws2812b",
-    "color_order": "rgb",
-    "ddp_port": 4048,
-    "effects": ["solid", "blink", "fade", "rainbow"],
-}
-LEDSTRIP_STATUS_RAINBOW = {
-    "id": 0,
-    "on": False,
-    "brightness": 36,
-    "effect": "rainbow",
-    "speed": 33,
-    "reverse": True,
-}
+LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
 LEDSTRIP_STATUS_BLINK = {
     "id": 0,
     "on": False,
@@ -670,7 +654,7 @@ LEDSTRIP_STATUS_SOLID = {
 )
 async def test_rpc_ledstrip_number(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
+    mock_ledstrip_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
@@ -679,13 +663,9 @@ async def test_rpc_ledstrip_number(
 ) -> None:
     """Test RPC LED strip effect control number."""
     entity_id = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_{control}"
-    config = deepcopy(mock_rpc_device.config)
-    config["ledstrip:0"] = LEDSTRIP_CONFIG
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["ledstrip:0"] = deepcopy(ledstrip_status)
-    monkeypatch.setattr(mock_rpc_device, "status", status)
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
+    )
 
     await init_integration(hass, 4)
 
@@ -701,10 +681,12 @@ async def test_rpc_ledstrip_number(
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80.0},
         blocking=True,
     )
-    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
 
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "ledstrip:0", control, 80)
-    mock_rpc_device.mock_update()
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", control, 80
+    )
+    mock_ledstrip_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "80"
@@ -741,27 +723,25 @@ async def test_rpc_ledstrip_number(
 )
 async def test_rpc_ledstrip_speed_number_availability(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
+    mock_ledstrip_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     ledstrip_status: dict[str, Any],
     expected_state: str,
 ) -> None:
     """Test RPC LED strip effect speed number availability depends on the effect."""
-    config = deepcopy(mock_rpc_device.config)
-    config["ledstrip:0"] = LEDSTRIP_CONFIG
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_SOLID)
-    monkeypatch.setattr(mock_rpc_device, "status", status)
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+    )
 
     await init_integration(hass, 4)
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
-    monkeypatch.setitem(mock_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status))
-    mock_rpc_device.mock_update()
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
+    )
+    mock_ledstrip_rpc_device.mock_update()
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == expected_state
