@@ -688,23 +688,56 @@ async def test_config_flow_two_factor_auth_multiple_emails(
 
 
 @pytest.mark.usefixtures("mock_get_api_accounts", "mock_two_factor_auth")
+async def test_config_flow_two_factor_invalid_code(hass: HomeAssistant) -> None:
+    """Test a wrong two-factor authentication code can be corrected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            RenaultConfigurationKeys.LOCALE: "fr_FR",
+            RenaultConfigurationKeys.USERNAME: "email@test.com",
+            RenaultConfigurationKeys.PASSWORD: "test",
+        },
+    )
+
+    with patch(
+        "renault_api.renault_session.RenaultSession.complete_two_factor_auth",
+        side_effect=InvalidVerificationCodeException(400006, "Wrong verification code"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_CODE: "000000"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "two_factor_code"
+    assert result["errors"] == {"base": "invalid_code"}
+
+    # The pending login stays valid after a wrong code.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "account_id_1"
+    assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+
+
+@pytest.mark.usefixtures("mock_get_api_accounts", "mock_two_factor_auth")
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("exception", "reason"),
     [
-        (
-            InvalidVerificationCodeException(400006, "Wrong verification code"),
-            "invalid_code",
-        ),
         (aiohttp.ClientConnectionError(), "cannot_connect"),
         (aiohttp.ClientResponseError(Mock(), (), status=500), "cannot_connect"),
         (GigyaException(), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
-async def test_config_flow_two_factor_code_error(
-    hass: HomeAssistant, exception: Exception, error: str
+async def test_config_flow_two_factor_code_abort(
+    hass: HomeAssistant, exception: Exception, reason: str
 ) -> None:
-    """Test errors when submitting the two-factor authentication code."""
+    """Test the flow aborts on errors other than a wrong code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -722,21 +755,11 @@ async def test_config_flow_two_factor_code_error(
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_CODE: "000000"}
+            result["flow_id"], user_input={CONF_CODE: "123456"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "two_factor_code"
-    assert result["errors"] == {"base": error}
-
-    # The pending login can be completed after an error.
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_CODE: "123456"}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "account_id_1"
-    assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(

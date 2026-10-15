@@ -263,11 +263,12 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.renault_hub.complete_two_factor_auth(user_input[CONF_CODE])
             except InvalidVerificationCodeException:
                 errors["base"] = "invalid_code"
+            # Other failures may discard the pending login, so the code can't be retried.
             except aiohttp.ClientError, GigyaException:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="cannot_connect")
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                return self.async_abort(reason="unknown")
             else:
                 return await self._async_login_complete()
 
