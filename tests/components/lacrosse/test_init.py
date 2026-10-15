@@ -57,6 +57,48 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+async def test_receivers_with_same_sensor_key(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test identical sensor keys on different receivers remain independent."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN, data={**ENTRY_DATA, "device": "/dev/ttyUSB1"}
+    )
+
+    with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        second_entry.add_to_hass(hass)
+        hass.config_entries.async_add_subentry(
+            second_entry,
+            ConfigSubentry(
+                data=next(iter(config_entry.subentries.values())).data,
+                subentry_type="sensor",
+                title="LaCrosse sensor 1",
+                unique_id="1",
+            ),
+        )
+        assert await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
+        for entry in (config_entry, second_entry):
+            entity_id = entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{entry.entry_id}_outdoor_temperature"
+            )
+            assert entity_id is not None
+            entity = entity_registry.async_get(entity_id)
+            assert entity.config_entry_id == entry.entry_id
+            assert entity.config_subentry_id in entry.subentries
+            assert hass.states.get(entity_id) is not None
+
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(entity_registry.entities) == 2
+
+
 async def test_setup_and_unload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -88,7 +130,7 @@ async def test_setup_and_unload(
 
         entity_entry = entity_registry.async_get("sensor.outdoor_temperature")
         assert entity_entry is not None
-        assert entity_entry.unique_id == "outdoor_temperature"
+        assert entity_entry.unique_id == f"{entry.entry_id}_outdoor_temperature"
 
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, "/dev/ttyUSB0_1"), entry.entry_id

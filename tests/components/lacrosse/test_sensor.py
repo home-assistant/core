@@ -41,6 +41,7 @@ def test_sensor_uses_default_expiration(hass: HomeAssistant) -> None:
     _add_sensors(
         hass,
         MagicMock(),
+        "receiver_entry_id",
         {
             "device": "/dev/ttyUSB0",
             "sensors": {"outdoor": {"id": 1, "type": "temperature"}},
@@ -113,6 +114,7 @@ def test_device_uses_friendly_name(
     sensor = sensor_class(
         hass,
         MagicMock(),
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         f"{object_id}_{sensor_type}",
         device_name,
@@ -134,6 +136,7 @@ async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> No
     temperature = LaCrosseTemperature(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_temperature",
         "Outdoor temperature",
@@ -143,6 +146,7 @@ async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> No
     humidity = LaCrosseHumidity(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_humidity",
         "Outdoor humidity",
@@ -167,6 +171,7 @@ def test_sensor_registers_callback_when_created(hass: HomeAssistant) -> None:
     sensor = LaCrosseSensor(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_temperature",
         "Outdoor temperature",
@@ -185,6 +190,7 @@ async def test_sensor_cancels_expiration_when_removed(hass: HomeAssistant) -> No
     sensor = LaCrosseSensor(
         hass,
         MagicMock(),
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_temperature",
         "Outdoor temperature",
@@ -220,6 +226,7 @@ async def test_battery_sensor_updates_and_expires(
     sensor = LaCrosseBattery(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_battery",
         "Outdoor battery",

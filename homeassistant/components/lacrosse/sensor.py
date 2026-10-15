@@ -87,6 +87,7 @@ async def async_setup_entry(
         _add_sensors(
             hass,
             entry.runtime_data,
+            entry.entry_id,
             {**entry.data, **subentry.data},
             lambda entities, subentry_id=subentry.subentry_id: async_add_entities(
                 entities, config_subentry_id=subentry_id
@@ -111,6 +112,7 @@ def setup_platform(
 def _add_sensors(
     hass: HomeAssistant,
     lacrosse: pylacrosse.LaCrosse,
+    receiver_entry_id: str,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
 ) -> None:
@@ -128,6 +130,7 @@ def _add_sensors(
             sensor_class(
                 hass,
                 lacrosse,
+                receiver_entry_id,
                 config[CONF_DEVICE],
                 device,
                 name,
@@ -162,6 +165,7 @@ class LaCrosseSensor(SensorEntity):
         self,
         hass: HomeAssistant,
         lacrosse: pylacrosse.LaCrosse,
+        receiver_entry_id: str,
         receiver_device: str,
         device_id: str,
         name: str,
@@ -177,7 +181,7 @@ class LaCrosseSensor(SensorEntity):
         self._expire_after = expire_after
         self._expiration_trigger: CALLBACK_TYPE | None = None
         self._attr_name = name
-        self._attr_unique_id = device_id
+        self._attr_unique_id = f"{receiver_entry_id}_{device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{receiver_device}_{config[CONF_ID]}")},
             manufacturer="LaCrosse",
