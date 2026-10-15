@@ -9,7 +9,7 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -78,6 +78,16 @@ __all__ = [
     "INTENT_OPEN_COVER",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "SERVICE_CLOSE_COVER",
+    "SERVICE_CLOSE_COVER_TILT",
+    "SERVICE_OPEN_COVER",
+    "SERVICE_OPEN_COVER_TILT",
+    "SERVICE_SET_COVER_POSITION",
+    "SERVICE_SET_COVER_TILT_POSITION",
+    "SERVICE_STOP_COVER",
+    "SERVICE_STOP_COVER_TILT",
+    "SERVICE_TOGGLE",
+    "SERVICE_TOGGLE_COVER_TILT",
     "CoverDeviceClass",
     "CoverEntity",
     "CoverEntityCapabilityAttribute",
