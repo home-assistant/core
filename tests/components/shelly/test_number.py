@@ -23,6 +23,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -31,7 +32,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, patch_platforms, register_device, register_entity
+from . import (
+    init_integration,
+    mutate_rpc_device_status,
+    patch_platforms,
+    register_device,
+    register_entity,
+)
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -616,3 +623,108 @@ async def test_cury_number_entity(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)
+
+
+LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
+LEDSTRIP_CONFIG = {
+    "id": 0,
+    "name": None,
+    "initial_state": 2,
+    "num_leds": 100,
+    "protocol": "ws2812b",
+    "color_order": "rgb",
+    "ddp_port": 4048,
+    "effects": ["solid", "blink", "fade", "rainbow"],
+}
+LEDSTRIP_STATUS_RAINBOW = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "rainbow",
+    "speed": 33,
+    "reverse": True,
+}
+LEDSTRIP_STATUS_SOLID = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "solid",
+    "rgb": [255, 81, 68],
+}
+
+
+async def test_rpc_ledstrip_speed_number(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip effect speed number."""
+    config = deepcopy(mock_rpc_device.config)
+    config["ledstrip:0"] = LEDSTRIP_CONFIG
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_RAINBOW)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 4)
+
+    state = hass.states.get(LEDSTRIP_ENTITY_ID)
+    assert state == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-state")
+
+    entry = entity_registry.async_get(LEDSTRIP_ENTITY_ID)
+    assert entry == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-entry")
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID, ATTR_VALUE: 80.0},
+        blocking=True,
+    )
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "LedStrip.Set", {"id": 0, "speed": 80}
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "ledstrip:0", "speed", 80)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == "80"
+
+
+async def test_rpc_ledstrip_speed_number_availability(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip effect speed number is unavailable without speed."""
+    config = deepcopy(mock_rpc_device.config)
+    config["ledstrip:0"] = LEDSTRIP_CONFIG
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_SOLID)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    monkeypatch.setitem(
+        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_RAINBOW)
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == "33"
+
+    monkeypatch.setitem(
+        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE

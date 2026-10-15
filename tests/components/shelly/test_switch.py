@@ -1145,3 +1145,121 @@ async def test_rpc_camera_privacy_switch(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+
+
+LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_ledstrip_0_reverse_effect"
+LEDSTRIP_CONFIG = {
+    "id": 0,
+    "name": None,
+    "initial_state": 2,
+    "num_leds": 100,
+    "protocol": "ws2812b",
+    "color_order": "rgb",
+    "ddp_port": 4048,
+    "effects": ["solid", "blink", "fade", "rainbow"],
+}
+LEDSTRIP_STATUS_RAINBOW = {
+    "id": 0,
+    "on": True,
+    "brightness": 36,
+    "effect": "rainbow",
+    "speed": 33,
+    "reverse": True,
+}
+LEDSTRIP_STATUS_SOLID = {
+    "id": 0,
+    "on": True,
+    "brightness": 36,
+    "effect": "solid",
+    "rgb": [100, 150, 200],
+}
+
+
+async def test_rpc_ledstrip_reverse_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip reverse effect switch."""
+    config = deepcopy(mock_rpc_device.config)
+    config["ledstrip:0"] = LEDSTRIP_CONFIG
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_RAINBOW)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 4)
+
+    state = hass.states.get(LEDSTRIP_ENTITY_ID)
+    assert state == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-state")
+
+    entry = entity_registry.async_get(LEDSTRIP_ENTITY_ID)
+    assert entry == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-entry")
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID},
+        blocking=True,
+    )
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "LedStrip.Set", {"id": 0, "reverse": False}
+    )
+
+    mock_rpc_device.call_rpc.reset_mock()
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "ledstrip:0", "reverse", False
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID},
+        blocking=True,
+    )
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "LedStrip.Set", {"id": 0, "reverse": True}
+    )
+
+
+async def test_rpc_ledstrip_reverse_switch_availability(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip reverse switch is unavailable for effects without it."""
+    config = deepcopy(mock_rpc_device.config)
+    config["ledstrip:0"] = LEDSTRIP_CONFIG
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_SOLID)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    monkeypatch.setitem(
+        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_RAINBOW)
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_ON
+
+    monkeypatch.setitem(
+        mock_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
