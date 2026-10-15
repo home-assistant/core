@@ -2,7 +2,7 @@
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
@@ -68,11 +68,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    # The coordinator only keeps polling while something listens, and with every
+    # sensor disabled nothing would: a router repair issue raised by the first
+    # poll could then never clear. The polls also drive that issue, so they
+    # run for the entry's lifetime.
+    entry.async_on_unload(coordinator.async_add_listener(_async_keep_polling))
+
     _async_cleanup_stale_devices(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+@callback
+def _async_keep_polling() -> None:
+    """Listen to the coordinator only so it keeps polling."""
 
 
 async def async_remove_config_entry_device(

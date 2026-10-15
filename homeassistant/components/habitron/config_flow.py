@@ -413,6 +413,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = {CONF_HOST: host}
             try:
                 info = await validate_input(self.hass, data)
+                # Probed again: the address may have been handed to another hub
+                # while the form was open, and the entry belongs to whichever
+                # hub answers there now.
+                unique_id = await self._async_hub_identity(host)
             except CannotConnect, HostNotFound:
                 # A briefly-offline hub or an unresolved discovery host should be
                 # retryable via the confirmation form, not aborted.
@@ -421,15 +425,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                # Checked again: while the form was open, a carried-over entry
-                # may have adopted this MAC in its setup. Creating the entry now
-                # would replace that one, and with it its stored settings.
-                # Outside the try, since the abort is raised as an exception.
+                if unique_id is None:
+                    return self.async_abort(reason="no_mac_address")
+                # Checked again for the hub that answered: while the form was
+                # open, a carried-over entry may have adopted its MAC in its
+                # setup, and creating the entry now would replace that one, and
+                # with it its stored settings. Outside the try, since the
+                # aborts are raised as exceptions.
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: await self._async_stored_host(host)},
                     reload_on_update=False,
                 )
-                if (unique_id := self.unique_id) is not None and (
+                if (
                     result := await self._async_abort_if_host_configured(
                         host, unique_id=unique_id
                     )

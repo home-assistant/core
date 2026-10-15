@@ -14,6 +14,7 @@ from habitron_client import (
 )
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -29,10 +30,11 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import HabitronConfigEntry, HbtnCoordinator
 from .entity import HabitronEntity, HbtnOwner
 
@@ -63,18 +65,21 @@ async def async_setup_entry(
         name = bus_area_names.get(area_no)
         return area_reg.async_get_or_create(name).id if name else None
 
-    # Snapshot the entities already registered for this entry. The deviating
-    # analog-input area is stamped only at first creation, never on a reload:
-    # a user may later move the entity or clear its area to inherit the device
-    # area, and clearing it reads as ``area_id is None`` -- indistinguishable
-    # from a fresh entity -- so the "already registered" check is what protects
-    # that choice.
+    # The deviating analog-input area is stamped only when the registry entry
+    # is first created, never on a reload: a user may later move the entity or
+    # clear its area to inherit the device area, and clearing it reads as
+    # ``area_id is None`` -- indistinguishable from a fresh entity. A deleted
+    # entry counts as known too, since re-adding restores the area it had.
+    ent_reg = er.async_get(hass)
     known_unique_ids = {
         registered.unique_id
-        for registered in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
-        )
+        for registered in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+    } | {
+        unique_id
+        for domain, platform, unique_id in ent_reg.deleted_entities
+        if domain == SENSOR_DOMAIN and platform == DOMAIN
     }
+    pending_areas: dict[str, str] = {}
 
     new_entities: list[SensorEntity] = []
 
@@ -82,7 +87,6 @@ async def async_setup_entry(
         owner: HbtnOwner,
         member: BusMember,
         descriptions: tuple[HbtnSensorEntityDescription, ...],
-        initial_area_id: str | None = None,
         *,
         entity_class: type[HbtnDescribedSensor] = HbtnDescribedSensor,
     ) -> None:
@@ -95,7 +99,6 @@ async def async_setup_entry(
                     hbtn_cord,
                     len(new_entities),
                     description,
-                    initial_area_id=initial_area_id,
                 )
             )
 
@@ -122,19 +125,16 @@ async def async_setup_entry(
             if ain.type != 3:
                 continue
             # ain.area == 0 means "the module's own area"; only a value that
-            # differs is a real deviation, and only stamp it on first creation
-            # (unique_id not yet registered) so a later user area choice
-            # survives reloads.
+            # differs is a real deviation, and only an entity never registered
+            # gets it, so a later user area choice survives reloads.
             analog_uid = f"{hbt_module.uid}_{ANALOG_DESCRIPTION.key}_{ain.nmbr}"
-            deviating_area = (
-                bus_area_id(ain.area)
-                if ain.area not in (0, hbt_module.area)
+            if (
+                ain.area not in (0, hbt_module.area)
                 and analog_uid not in known_unique_ids
-                else None
-            )
-            add_described(
-                hbt_module, ain, (ANALOG_DESCRIPTION,), initial_area_id=deviating_area
-            )
+                and (area_id := bus_area_id(ain.area)) is not None
+            ):
+                pending_areas[analog_uid] = area_id
+            add_described(hbt_module, ain, (ANALOG_DESCRIPTION,))
         for mod_sensor in hbt_module.sensors:
             add_described(
                 hbt_module, mod_sensor, MODULE_SENSORS.get(mod_sensor.name, ())
@@ -154,6 +154,28 @@ async def async_setup_entry(
     ):
         for router_member in router_members:
             add_described(hbtn_rt, router_member, (router_description,))
+
+    if pending_areas:
+        # Applied when the registry entry is created rather than when the entity
+        # is added: a disabled entity is registered but never added, and once
+        # enabled it is no longer new. HA has no per-entity ``suggested_area``.
+        @callback
+        def _async_stamp_area(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            if event.data["action"] != "create":
+                return
+            registered = ent_reg.async_get(event.data["entity_id"])
+            if (
+                registered is not None
+                and registered.config_entry_id == entry.entry_id
+                and (area_id := pending_areas.pop(registered.unique_id, None))
+            ):
+                ent_reg.async_update_entity(registered.entity_id, area_id=area_id)
+
+        entry.async_on_unload(
+            hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _async_stamp_area)
+        )
 
     if new_entities:
         async_add_entities(new_entities)
@@ -197,15 +219,10 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
         coord: HbtnCoordinator,
         idx: int,
         description: HbtnSensorEntityDescription,
-        initial_area_id: str | None = None,
     ) -> None:
         """Initialize the described sensor."""
         super().__init__(module, sensor, coord, idx)
         self.entity_description = description
-        # An area that deviates from the module's own, applied once the entity
-        # is registered (see ``async_added_to_hass``). HA has no per-entity
-        # ``suggested_area``, so it has to go through the entity registry.
-        self._initial_area_id = initial_area_id
         # Members sharing a description -- router channels, analogue inputs --
         # would collide on uid and key alone, hence the member number.
         self._attr_unique_id = f"{module.uid}_{description.key}"
@@ -222,15 +239,6 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
-        # Apply the deviating area now the entity is registered.
-        # ``_initial_area_id`` is only set for a first-time creation (the setup
-        # snapshot gate), so this never overrides a later user choice.
-        # ``async_add_entities`` registers asynchronously, so this cannot run at
-        # platform-setup time.
-        if self._initial_area_id is not None and (entry := self.registry_entry):
-            er.async_get(self.hass).async_update_entity(
-                entry.entity_id, area_id=self._initial_area_id
-            )
         if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
             member = subscribe_fn(self._module, self._sensor_idx)
             member.add_listener(self._handle_coordinator_update)

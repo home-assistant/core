@@ -727,32 +727,6 @@ def _analog_router(ain_area: int, module_area: int = 1) -> Router:
     return router
 
 
-def _analog_entity_with_area(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    area_id: str,
-) -> HbtnDescribedSensor:
-    """Build a registered analog sensor carrying a deviating ``area_id``.
-
-    ``async_add_entities`` registers asynchronously, so the deviating area is
-    applied from the entity's own ``async_added_to_hass`` (after registration),
-    not at platform-setup time -- which is what these tests drive directly.
-    """
-    mod = _make_module()
-    mod.analogins[0] = _make_value(1.0)
-    sensor_desc = _make_sensor_descriptor(name="AIn 1", type_=3)
-    coord = MagicMock(spec=DataUpdateCoordinator)
-    entity = HbtnDescribedSensor(
-        mod, sensor_desc, coord, 0, ANALOG_DESCRIPTION, initial_area_id=area_id
-    )
-    reg_entry = entity_registry.async_get_or_create("sensor", DOMAIN, entity.unique_id)
-    entity.hass = hass
-    entity.entity_id = reg_entry.entity_id
-    entity.registry_entry = reg_entry
-    entity.async_write_ha_state = MagicMock()
-    return entity
-
-
 async def _run_added_to_hass(entity: HbtnDescribedSensor) -> None:
     with patch(
         "homeassistant.helpers.update_coordinator."
@@ -760,20 +734,6 @@ async def _run_added_to_hass(entity: HbtnDescribedSensor) -> None:
         new=AsyncMock(),
     ):
         await entity.async_added_to_hass()
-
-
-async def test_analog_deviating_area_applied_when_unset(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    area_registry: ar.AreaRegistry,
-) -> None:
-    """An analog input with no area of its own adopts its deviating area."""
-    kitchen = area_registry.async_get_or_create("Kitchen")
-    entity = _analog_entity_with_area(hass, entity_registry, kitchen.id)
-
-    await _run_added_to_hass(entity)
-
-    assert entity_registry.async_get(entity.entity_id).area_id == kitchen.id
 
 
 async def test_analog_deviating_area_stamped_only_on_first_create(
@@ -803,8 +763,8 @@ async def test_analog_deviating_area_not_restamped_on_reload(
 
     ``area_id is None`` after a reload can mean the user cleared the entity's
     area to inherit the device area; re-stamping the deviating area would
-    silently overwrite that choice, so an already-registered entity carries no
-    ``initial_area_id``.
+    silently overwrite that choice, so an already-registered entity is left as
+    it is.
     """
     mock_config_entry.add_to_hass(hass)
     # Registered as if from a prior run, with the area the user has since cleared.
@@ -817,6 +777,59 @@ async def test_analog_deviating_area_not_restamped_on_reload(
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
     assert entity_id is not None
     assert entity_registry.async_get(entity_id).area_id is None
+
+
+async def test_analog_area_restored_from_a_deleted_entry_is_kept(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
+) -> None:
+    """Re-adding a removed input keeps the area the user had given it.
+
+    The entity registry restores the area from the deleted entry, so the bus
+    area must not overwrite it.
+    """
+    garage = area_registry.async_get_or_create("Garage")
+    mock_config_entry.add_to_hass(hass)
+    previous = entity_registry.async_get_or_create(
+        "sensor", DOMAIN, _ANALOG_UNIQUE_ID, config_entry=mock_config_entry
+    )
+    entity_registry.async_update_entity(previous.entity_id, area_id=garage.id)
+    entity_registry.async_remove(previous.entity_id)
+
+    await setup_with_model(_analog_router(ain_area=2, module_area=1))
+
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+    assert entity_registry.async_get(entity_id).area_id == garage.id
+
+
+async def test_analog_deviating_area_stamped_on_a_disabled_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
+) -> None:
+    """An input registered disabled still gets its bus area.
+
+    With new entities disabled the entity is registered but never added, and
+    once enabled it is no longer new, so the area has to come with the
+    registration.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, pref_disable_new_entities=True
+    )
+
+    await setup_with_model(_analog_router(ain_area=2, module_area=1))
+
+    registered = entity_registry.async_get(
+        entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+    )
+    assert registered.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert registered.area_id == area_registry.async_get_area_by_name("Kitchen").id
 
 
 async def test_bus_areas_are_not_created_up_front(

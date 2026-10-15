@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from habitron_client import HabitronError, HabitronTimeoutError, SmartHub
 import pytest
 
@@ -11,19 +12,19 @@ from homeassistant.components.habitron import (
     _async_cleanup_stale_devices,
     async_remove_config_entry_device,
 )
-from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.components.habitron.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.habitron.coordinator import HbtnCoordinator
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_MAC, MOCK_NAME, MOCK_UDN, MOCK_UID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry(
@@ -538,3 +539,29 @@ async def test_rediscovery_after_migration_updates_the_live_entry(
     assert result["reason"] == "already_configured"
     assert entry.unique_id == MOCK_UID
     assert entry.data[CONF_HOST] == "192.168.1.77"
+
+
+@pytest.mark.usefixtures("setup_homeassistant", "mock_habitron_client", "mock_bus")
+async def test_router_issue_clears_without_any_sensor_entity(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The polls go on without entities, so a router issue clears by itself.
+
+    A hub and router without members give the sensor platform nothing to add,
+    and the coordinator only polls while something listens to it.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    router = mock_config_entry.runtime_data.router
+    issue_id = f"router_system_error_{router.uid}"
+
+    for sys_ok, raised in ((False, True), (True, False)):
+        router.sys_ok = sys_ok
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert (issue_registry.async_get_issue(DOMAIN, issue_id) is not None) is raised

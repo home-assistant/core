@@ -1950,3 +1950,56 @@ async def test_user_flow_drops_an_address_match_bound_meanwhile_to_another_hub(
     assert result["result"].unique_id == MOCK_UID
     assert entry.unique_id == "112233445566"
     assert entry.data == {CONF_HOST: MOCK_HOST}
+
+
+async def test_discovery_confirm_adds_the_hub_that_answers_now(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """The entry belongs to the hub at the address when the user confirms.
+
+    The address can be handed to another hub while the form is open. Keeping
+    the MAC from the discovery would create an entry setup then refuses.
+    """
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+    assert result["step_id"] == "discovery_confirm"
+    mock_hub_mac.return_value = "112233445566"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "112233445566"
+
+
+async def test_discovery_confirm_follows_a_configured_hub_that_answers_now(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """A configured hub that took over the address keeps its entry.
+
+    Its entry is moved to the address; no entry is created for the hub that
+    was discovered there before.
+    """
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+    assert result["step_id"] == "discovery_confirm"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="112233445566",
+        data={CONF_HOST: "192.168.1.99"},
+    )
+    entry.add_to_hass(hass)
+    mock_hub_mac.return_value = "112233445566"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data == {CONF_HOST: MOCK_HOST}
