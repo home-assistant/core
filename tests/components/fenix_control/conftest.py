@@ -7,7 +7,7 @@ from pyfenixcontrol import Device, Installation, PresetMode, Room
 import pytest
 
 from homeassistant.components.fenix_control.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -87,13 +87,21 @@ def mock_fenix_client() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_fenix_client: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the FENIX Control integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.fenix_control._PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     return mock_config_entry

@@ -1,5 +1,6 @@
 """Data update coordinator for the FENIX Control integration."""
 
+from dataclasses import dataclass
 from typing import override
 
 from pyfenixcontrol import (
@@ -19,7 +20,14 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 type FenixControlConfigEntry = ConfigEntry[FenixControlCoordinator]
 
 
-class FenixControlCoordinator(DataUpdateCoordinator[dict[str, Device]]):
+@dataclass
+class FenixControlData:
+    """State of all thermostats of the account."""
+
+    devices: dict[str, Device]
+
+
+class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
     """Poll the state of all thermostats of the account."""
 
     config_entry: FenixControlConfigEntry
@@ -41,7 +49,7 @@ class FenixControlCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
 
     @override
-    async def _async_update_data(self) -> dict[str, Device]:
+    async def _async_update_data(self) -> FenixControlData:
         """Fetch the state of all thermostats."""
         try:
             installations = await self.client.get_installations()
@@ -58,7 +66,7 @@ class FenixControlCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         for installation_id in {device.installation_id for device in devices}:
             await self._trigger_installation_update(installation_id)
 
-        return {device.id: device for device in devices}
+        return FenixControlData(devices={device.id: device for device in devices})
 
     async def _trigger_installation_update(self, installation_id: str) -> None:
         """Ask the thermostats of an installation to report fresh values."""

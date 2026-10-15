@@ -56,7 +56,8 @@ async def async_setup_entry(
     """Set up FENIX Control climate entities."""
     coordinator = entry.runtime_data
     async_add_entities(
-        FenixControlClimate(coordinator, device_id) for device_id in coordinator.data
+        FenixControlClimate(coordinator, device_id)
+        for device_id in coordinator.data.devices
     )
 
 
@@ -194,6 +195,7 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         # The cloud reports a change only after the thermostat has applied it,
         # so an immediate refresh would show the old state
         device: Device = dataclasses.replace(self.device, **changes)
+        data = self.coordinator.data
         self.coordinator.async_set_updated_data(
-            {**self.coordinator.data, self._device_id: device}
+            dataclasses.replace(data, devices={**data.devices, self._device_id: device})
         )

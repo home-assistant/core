@@ -22,7 +22,7 @@ class FenixControlEntity(CoordinatorEntity[FenixControlCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._device_id = device_id
-        device = self.device = coordinator.data[device_id]
+        device = self.device = coordinator.data.devices[device_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=" ".join(
@@ -40,12 +40,12 @@ class FenixControlEntity(CoordinatorEntity[FenixControlCoordinator]):
     @override
     def available(self) -> bool:
         """Return if the thermostat is still reported by the cloud."""
-        return super().available and self._device_id in self.coordinator.data
+        return super().available and self._device_id in self.coordinator.data.devices
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Keep the last known state of a thermostat the cloud stopped reporting."""
-        if (device := self.coordinator.data.get(self._device_id)) is not None:
+        if (device := self.coordinator.data.devices.get(self._device_id)) is not None:
             self.device = device
         super()._handle_coordinator_update()

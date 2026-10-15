@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -61,7 +62,13 @@ async def _set_devices(
     mock_fenix_client.get_devices.return_value = list(devices)
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Load only the climate platform."""
+    return [Platform.CLIMATE]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -304,13 +311,13 @@ async def test_cloud_unavailable(
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     mock_fenix_client.get_installations.side_effect = None
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
