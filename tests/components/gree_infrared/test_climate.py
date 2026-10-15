@@ -21,6 +21,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -254,6 +256,67 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
             fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("prior_modes", "service", "power", "expected_state"),
+    [
+        pytest.param(
+            (HVACMode.DRY,), SERVICE_TURN_OFF, False, HVACMode.OFF, id="turn_off"
+        ),
+        pytest.param(
+            (HVACMode.DRY, HVACMode.OFF),
+            SERVICE_TURN_ON,
+            True,
+            HVACMode.DRY,
+            id="turn_on",
+        ),
+    ],
+)
+async def test_turn_on_off_uses_the_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    prior_modes: tuple[HVACMode, ...],
+    service: str,
+    power: bool,
+    expected_state: HVACMode,
+) -> None:
+    """Test turning on or off sends a frame carrying the last active mode.
+
+    Dry is deliberately not the first configured mode, so a turn on that ignored the
+    last active mode would come back in cool.
+    """
+    for hvac_mode in prior_modes:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+            blocking=True,
+        )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=power,
+            mode=GreeAcMode.DRY,
+            temperature=MIN_TEMP,
+            fan=GreeAcFanSpeed.AUTO,
+        ).get_raw_timings()
+    )
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -828,7 +891,10 @@ async def test_supported_features_always_include_target_temperature(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["supported_features"] == (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
 
 
