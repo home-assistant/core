@@ -1558,7 +1558,7 @@ class MqttEntity(
             if object_id and domain != entity_domain:
                 _LOGGER.warning(
                     "The default_entity_id %s of a %s entity has the %s domain; "
-                    "using %s.%s instead",
+                    "using %s.%s as the default instead",
                     default_entity_id,
                     entity_domain,
                     domain,

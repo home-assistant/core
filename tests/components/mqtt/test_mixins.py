@@ -499,7 +499,8 @@ async def test_default_entity_id_with_wrong_domain(
     assert hass.states.get("sensor.park_brake") is None
     assert (
         "The default_entity_id sensor.park_brake of a binary_sensor entity has "
-        "the sensor domain; using binary_sensor.park_brake instead" in caplog.text
+        "the sensor domain; using binary_sensor.park_brake as the default instead"
+        in caplog.text
     )
 
 
