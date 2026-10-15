@@ -51,12 +51,6 @@
     "failed_to_update_devices": {
       "message": "Failed to update devices"
     },
-    "network_issue": {
-      "message": "Network issue during OAuth setup"
-    },
-    "oauth_session_not_valid": {
-      "message": "OAuth session not valid"
-    },
     "rate_limited": {
       "message": "Too many requests to the GKP cloud, try again in {retry_after} seconds"
     },
@@ -71,9 +65,6 @@
     },
     "setpoint_not_adjustable": {
       "message": "The temperature of {entity_id} cannot be changed in the current mode, change the mode first"
-    },
-    "temporary_connection_error": {
-      "message": "Temporary connection error"
     }
   },
   "services": {

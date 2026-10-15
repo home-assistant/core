@@ -1,16 +1,13 @@
 """The GKP integration."""
 
 from dataclasses import dataclass
-from http import HTTPStatus
 import logging
 
-from aiohttp import ClientError, ClientResponseError
 from gkphomepython import GkpAuth, GkpClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -106,23 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> bool:
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    try:
-        await oauth_session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if HTTPStatus.BAD_REQUEST <= err.status < HTTPStatus.INTERNAL_SERVER_ERROR:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="oauth_session_not_valid",
-            ) from err
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="temporary_connection_error",
-        ) from err
-    except ClientError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="network_issue",
-        ) from err
+    await oauth_session.async_ensure_token_valid()
 
     auth = GkpAuth(oauth_session)
     client = GkpClient(auth, aiohttp_client.async_get_clientsession(hass))
