@@ -700,6 +700,12 @@ async def _async_convert_audio(  # noqa: C901
         """Use the observed OS exit even when the original wait is pending."""
         return isinstance(process.returncode, int) and process.returncode != 0
 
+    def child_exited_before_input_exhausted() -> bool:
+        """Reject a known zero exit if a generator still has input."""
+        return (
+            process.returncode == 0 and writer_task is not None and not input_exhausted
+        )
+
     def check_completed_writer() -> bool:
         """Raise a close failure, or signal an already-known failed child."""
         if (
@@ -718,6 +724,8 @@ async def _async_convert_audio(  # noqa: C901
         while True:
             if source_read_error is not None:
                 raise source_read_error
+            if child_exited_before_input_exhausted():
+                raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
             if child_exited_unsuccessfully():
                 if read_task is not None and not read_task.done():
                     read_task.cancel()
@@ -763,6 +771,8 @@ async def _async_convert_audio(  # noqa: C901
                 # Do not let a later source close or child failure replace an
                 # error already observed while reading input.
                 raise source_read_error
+            if child_exited_before_input_exhausted():
+                raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
             if child_exited_unsuccessfully():
                 read_task.cancel()
                 await _async_ffmpeg_join(read_task)

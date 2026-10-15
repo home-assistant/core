@@ -1411,6 +1411,7 @@ async def test_failed_exhausted_close_keeps_known_child_diagnostic(
     processes = []
     owner = None
     wait_entered = asyncio.Event()
+    eof_observed = asyncio.Event()
     release_wait = asyncio.Event()
     captured: dict[str, asyncio.Task] = {}
     create_background = ffmpeg_ready.async_create_background_task
@@ -1428,6 +1429,18 @@ async def test_failed_exhausted_close_keeps_known_child_diagnostic(
             **kwargs,
         )
         real_wait = process.wait
+        if force_cancel:
+            assert process.stdout is not None
+            original_read = process.stdout.read
+
+            async def status_before_eof(*args, **kwargs):
+                chunk = await original_read(*args, **kwargs)
+                if not chunk:
+                    eof_observed.set()
+                    assert await asyncio.wait_for(real_wait(), 3) == 7
+                return chunk
+
+            process.stdout.read = status_before_eof
 
         async def observed_wait():
             result = await real_wait()
@@ -1456,6 +1469,8 @@ async def test_failed_exhausted_close_keeps_known_child_diagnostic(
                 _collect(tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav"))
             )
             await asyncio.wait_for(source.close_entered.wait(), 3)
+            if force_cancel:
+                await asyncio.wait_for(eof_observed.wait(), 3)
             assert await asyncio.wait_for(processes[0].wait(), 3) == 7
             await asyncio.wait_for(wait_entered.wait(), 3)
             wait_task = captured["tts_ffmpeg_wait"]
@@ -1961,29 +1976,24 @@ async def test_owner_cancel_during_final_exhausted_writer_wait_is_bounded(
         return process
 
     class AsyncioProbe:
-        """Signal the last EOF wake; delegate all other asyncio operations."""
+        """Signal entry into the final sole-writer wait; delegate operations."""
 
         def __getattr__(self, name):
             return getattr(asyncio, name)
 
         async def wait(self, futures, **kwargs):
-            done, pending = await native_wait(futures, **kwargs)
             if (
                 asyncio.current_task() is owner
+                and close_entered.is_set()
                 and processes
                 and processes[0].returncode == 0
-                and close_entered.is_set()
-                and any(
-                    task.get_name() == "tts_ffmpeg_stdout"
-                    and task in done
-                    and task.result() == b""
-                    for task in futures
-                )
+                and len(futures) == 1
+                and (writer_task := next(iter(futures))).get_name()
+                == "tts_ffmpeg_conversion"
+                and not writer_task.done()
             ):
-                # Once this EOF wake resumes, the zero-exit/exhausted path's
-                # next pending operation is the direct final writer await.
                 asyncio.get_running_loop().call_soon(final_wait.set)
-            return done, pending
+            return await native_wait(futures, **kwargs)
 
     source = Source()
     try:
@@ -3572,14 +3582,18 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
         await gen.aclose()
 
 
-@pytest.mark.parametrize("mode", ["failed-child", "stdin-failure", "exhausted-writer"])
-async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
+@pytest.mark.parametrize(
+    "mode", ["failed-child", "stdin-failure", "exhausted-writer", "zero-exit-paused"]
+)
+async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(  # noqa: C901
     ffmpeg_ready: HomeAssistant, mode: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A held second read cannot be replaced or raced by abort discard."""
     read_entered = asyncio.Event()
     release_read = asyncio.Event()
     release_input = asyncio.Event()
+    source_waiting = asyncio.Event()
+    source_closed = asyncio.Event()
     processes = []
     tasks = []
     competing_read = False
@@ -3590,7 +3604,7 @@ async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
     background = ffmpeg_ready.async_create_background_task
     script = "import os,sys\nos.write(1,b'P'*4096)\nos.read(0,1)\n" + (
         "os.write(2,b'failed child\\n');sys.exit(7)\n"
-        if mode != "exhausted-writer"
+        if mode in ("failed-child", "stdin-failure")
         else "os.write(1,b'Q'*4096)\n"
     )
 
@@ -3623,7 +3637,7 @@ async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
                 while not release_read.is_set():
                     with contextlib.suppress(asyncio.CancelledError):
                         await release_read.wait()
-                if mode != "exhausted-writer":
+                if mode in ("failed-child", "stdin-failure"):
                     raise late_failure
             elif old_reader is not None and not old_reader.done():
                 competing_read = True
@@ -3638,12 +3652,41 @@ async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
         return task
 
     async def source() -> AsyncGenerator[bytes]:
-        await release_input.wait()
-        yield b"X"
-        if mode == "stdin-failure":
-            yield b"Y"
-        if mode != "exhausted-writer":
-            await asyncio.Event().wait()
+        try:
+            await release_input.wait()
+            yield b"X"
+            if mode == "stdin-failure":
+                yield b"Y"
+            if mode != "exhausted-writer":
+                source_waiting.set()
+                await asyncio.Event().wait()
+        finally:
+            source_closed.set()
+
+    async def observe_paused_zero_exit(gen: AsyncGenerator[bytes]) -> None:
+        """Known zero exit during the consumer pause must abort the held read."""
+        nonlocal owner
+        release_input.set()
+        await asyncio.wait_for(source_waiting.wait(), 3)
+        process = processes[0]
+        assert await asyncio.wait_for(process.wait(), 3) == 0
+        original_wait = next(
+            task for task in tasks if task.get_name() == "tts_ffmpeg_wait"
+        )
+        assert await _observe(original_wait, 3) == 0
+        assert not original_wait.cancelled() and not source_closed.is_set()
+        owner = asyncio.create_task(anext(gen))
+        await asyncio.wait_for(read_entered.wait(), 3)
+        assert old_reader is not None and not old_reader.done()
+        with pytest.raises(
+            HomeAssistantError,
+            match="ffmpeg exited before TTS input was exhausted",
+        ):
+            await _observe(owner)
+        assert process.returncode == 0
+        assert source_closed.is_set() and not competing_read
+        assert not release_read.is_set()
+        assert old_reader.done() or old_reader in ffmpeg_ready._background_tasks
 
     # This OS-child ownership test does not exercise WAV header parsing.
     gen = tts._async_convert_audio(ffmpeg_ready, None, source(), "wav")
@@ -3660,6 +3703,9 @@ async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
             ),
         ):
             assert await asyncio.wait_for(anext(gen), 3) == b"P" * 4096
+            if mode == "zero-exit-paused":
+                await observe_paused_zero_exit(gen)
+                return
             owner = asyncio.create_task(
                 anext(gen) if mode == "failed-child" else _collect(gen)
             )
