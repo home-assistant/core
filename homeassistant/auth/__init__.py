@@ -128,7 +128,10 @@ class AuthManagerFlowManager(
         data: dict[str, Any] | None = None,
     ) -> LoginFlow[Any]:
         """Create a login flow."""
-        self._async_abort_expired_flows()
+        expired = dt_util.utcnow() - LOGIN_FLOW_EXPIRATION
+        for flow in list(self._progress.values()):
+            if cast(LoginFlow, flow).created_at < expired:
+                self.async_abort(flow.flow_id)
         if (
             context is not None
             and (ip := context.get("ip_address")) is not None
@@ -142,14 +145,6 @@ class AuthManagerFlowManager(
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
-
-    @callback
-    def _async_abort_expired_flows(self) -> None:
-        """Abort login flows that were started too long ago."""
-        expired = dt_util.utcnow() - LOGIN_FLOW_EXPIRATION
-        for flow in list(self._progress.values()):
-            if cast(LoginFlow, flow).created_at < expired:
-                self.async_abort(flow.flow_id)
 
     @override
     async def async_finish_flow(
