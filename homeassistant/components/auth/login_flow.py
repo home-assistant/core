@@ -77,7 +77,11 @@ from aiohttp import web
 import probatio
 
 from homeassistant import data_entry_flow
-from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
+from homeassistant.auth import (
+    AuthManagerFlowManager,
+    InvalidAuthError,
+    TooManyLoginFlowsError,
+)
 from homeassistant.auth.models import AuthFlowContext, AuthFlowResult
 from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS
@@ -424,6 +428,10 @@ class LoginFlowIndexView(LoginFlowBaseView):
         except data_entry_flow.UnknownStep:
             return self.json_message(
                 "Handler does not support init", HTTPStatus.BAD_REQUEST
+            )
+        except TooManyLoginFlowsError:
+            return self.json_message(
+                "Too many login flows in progress", HTTPStatus.TOO_MANY_REQUESTS
             )
 
         return await self._async_flow_result_to_response(request, client_id, result)

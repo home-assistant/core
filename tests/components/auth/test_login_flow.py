@@ -1,11 +1,14 @@
 """Tests for the login flow."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.auth.const import LOGIN_FLOW_EXPIRATION, MAX_LOGIN_FLOWS_PER_IP
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -605,3 +608,31 @@ async def test_well_known_auth_info_allows_cors(
 
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
+
+
+async def test_login_flow_limit_per_ip(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an IP address can only have a limited number of login flows."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    payload = {
+        "client_id": CLIENT_ID,
+        "handler": ["insecure_example", None],
+        "redirect_uri": CLIENT_REDIRECT_URI,
+    }
+
+    for _ in range(MAX_LOGIN_FLOWS_PER_IP):
+        resp = await client.post("/auth/login_flow", json=payload)
+        assert resp.status == HTTPStatus.OK
+
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.TOO_MANY_REQUESTS
+    assert len(hass.auth.login_flow.async_progress()) == MAX_LOGIN_FLOWS_PER_IP
+
+    # Expired flows are aborted when the next flow is created.
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    assert len(hass.auth.login_flow.async_progress()) == 1

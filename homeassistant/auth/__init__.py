@@ -22,7 +22,13 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
-from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
+from .const import (
+    ACCESS_TOKEN_EXPIRATION,
+    GROUP_ID_ADMIN,
+    LOGIN_FLOW_EXPIRATION,
+    MAX_LOGIN_FLOWS_PER_IP,
+    REFRESH_TOKEN_EXPIRATION,
+)
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowContext, AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
@@ -43,6 +49,10 @@ class InvalidAuthError(Exception):
 
 class InvalidProvider(Exception):
     """Authentication provider not found."""
+
+
+class TooManyLoginFlowsError(Exception):
+    """Raised when an IP address has too many login flows in progress."""
 
 
 async def auth_manager_from_config(
@@ -118,10 +128,28 @@ class AuthManagerFlowManager(
         data: dict[str, Any] | None = None,
     ) -> LoginFlow[Any]:
         """Create a login flow."""
+        self._async_abort_expired_flows()
+        if (
+            context is not None
+            and (ip := context.get("ip_address")) is not None
+            and sum(
+                flow.context.get("ip_address") == ip for flow in self._progress.values()
+            )
+            >= MAX_LOGIN_FLOWS_PER_IP
+        ):
+            raise TooManyLoginFlowsError
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
+
+    @callback
+    def _async_abort_expired_flows(self) -> None:
+        """Abort login flows that were started too long ago."""
+        expired = dt_util.utcnow() - LOGIN_FLOW_EXPIRATION
+        for flow in list(self._progress.values()):
+            if cast(LoginFlow, flow).created_at < expired:
+                self.async_abort(flow.flow_id)
 
     @override
     async def async_finish_flow(
