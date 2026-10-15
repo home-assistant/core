@@ -329,7 +329,12 @@ class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self.fs_device.set_power(True)
+        async with self._navigation_lock:
+            await self.async_turn_on()
+            await self._async_select_source_unlocked(source)
+
+    async def _async_select_source_unlocked(self, source: str) -> None:
+        """Select a source with power on and the navigation lock already held."""
         if (
             self.__modes_by_label
             and (mode := self.__modes_by_label.get(source)) is not None
@@ -401,11 +406,11 @@ class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
         player_mode, media_type, *keys = media_id.split("/")
 
         async with self._navigation_lock:
-            if player_mode != self.source:
-                await self.async_select_source(player_mode)
-            else:
-                # Setting the mode again clears the API's cached navigation path.
-                await self.async_turn_on()
+            await self.async_turn_on()
+            current_mode = await self.fs_device.get_mode()
+            # Setting even the current mode clears the API's cached path.
+            if current_mode is None or current_mode.label != player_mode:
+                await self._async_select_source_unlocked(player_mode)
 
             if media_type == MEDIA_CONTENT_ID_PRESET:
                 if len(keys) != 1:

@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from afsapi import FSApiError, PlayerMode
 import pytest
@@ -109,6 +109,11 @@ async def test_channels_root_resets_navigation(
         pytest.param("async_browse_media", "async_play_media", id="browse-play"),
         pytest.param("async_play_media", "async_browse_media", id="play-browse"),
         pytest.param("async_play_media", "async_play_media", id="play-play"),
+        pytest.param("async_browse_media", "async_select_source", id="browse-source"),
+        pytest.param("async_select_source", "async_browse_media", id="source-browse"),
+        pytest.param("async_play_media", "async_select_source", id="play-source"),
+        pytest.param("async_select_source", "async_play_media", id="source-play"),
+        pytest.param("async_select_source", "async_select_source", id="source-source"),
     ],
 )
 async def test_navigation_is_serialized(
@@ -136,14 +141,20 @@ async def test_navigation_is_serialized(
         yield "2", {"label": "Station", "type": "1"}
 
     mock_afsapi.nav_select_item_via_path.side_effect = hold_play
+    mock_afsapi.set_mode.side_effect = hold_play
     mock_afsapi.nav_list.side_effect = hold_list
+    request_args = {
+        "async_browse_media": (MediaType.CHANNEL, "MockedMode/channels/1"),
+        "async_play_media": (MediaType.CHANNEL, "MockedMode/channels/1"),
+        "async_select_source": ("MockedMode",),
+    }
     first = asyncio.create_task(
-        getattr(entity, first_method)(MediaType.CHANNEL, "MockedMode/channels/1")
+        getattr(entity, first_method)(*request_args[first_method])
     )
     await entered.wait()
     mock_afsapi.reset_mock()
     second = asyncio.create_task(
-        getattr(entity, second_method)(MediaType.CHANNEL, "MockedMode/channels/1")
+        getattr(entity, second_method)(*request_args[second_method])
     )
     try:
         # Let the second task run up to its first blocking await.
@@ -243,3 +254,59 @@ async def test_navigation_lock_released_after_browse_error(
         )
     assert result.media_content_id == "MockedMode/channels"
     assert mock_afsapi.nav_reset.await_count == 2
+
+
+@pytest.mark.parametrize(
+    ("cached_label", "live_label", "mode_changes"),
+    [
+        pytest.param("MockedMode", "Other mode", 1, id="cached-requested-live-other"),
+        pytest.param("Other mode", "MockedMode", 0, id="cached-other-live-requested"),
+    ],
+)
+@pytest.mark.parametrize("media_id", ["MockedMode/channels/1/2", "MockedMode/preset/1"])
+async def test_play_media_checks_live_mode_after_power_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_afsapi: AsyncMock,
+    cached_label: str,
+    live_label: str,
+    mode_changes: int,
+    media_id: str,
+) -> None:
+    """Use the device mode even if the physical source changed since the last poll."""
+    mock_afsapi.get_power.return_value = True
+    mock_afsapi.get_mode.return_value = PlayerMode(
+        id="cached",
+        key=0,
+        label=cached_label,
+        selectable=True,
+        streamable=None,
+        modetype=None,
+    )
+    await setup_integration(hass, config_entry)
+    entity = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+    assert isinstance(entity, AFSAPIMediaPlayer)
+    assert entity.source == cached_label
+    mock_afsapi.reset_mock()
+
+    async def live_mode() -> PlayerMode:
+        mock_afsapi.set_power.assert_awaited_once_with(True)
+        mock_afsapi.set_mode.assert_not_awaited()
+        mock_afsapi.nav_select_item_via_path.assert_not_awaited()
+        mock_afsapi.select_preset.assert_not_awaited()
+        return PlayerMode(
+            id="live",
+            key=0,
+            label=live_label,
+            selectable=True,
+            streamable=None,
+            modetype=None,
+        )
+
+    mock_afsapi.get_mode.side_effect = live_mode
+    # Isolate the decision read from the subsequent refresh's own mode read.
+    with patch.object(entity, "async_update"):
+        await entity.async_play_media(MediaType.CHANNEL, media_id)
+
+    assert mock_afsapi.set_mode.await_count == mode_changes
+    mock_afsapi.get_mode.assert_awaited_once_with()
