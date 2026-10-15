@@ -44,6 +44,10 @@ async def test_setup_auth_failed(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.reason
+        == "Authentication with NYT Games failed. Please reauthenticate"
+    )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
