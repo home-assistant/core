@@ -52,7 +52,6 @@ async def async_setup_entry(
     ) -> None:
         current_entities = set(entity_builder)
         new_entities = current_entities - known_entities
-        stale_entities = known_entities - current_entities
 
         if new_entities:
             with contextlib.suppress(ValueError):
@@ -63,8 +62,6 @@ async def async_setup_entry(
                     ]
                 )
                 known_entities.update(new_entities)
-        if stale_entities:
-            known_entities.difference_update(stale_entities)
 
     known_broadcast_entities: set[str] = set()
 
