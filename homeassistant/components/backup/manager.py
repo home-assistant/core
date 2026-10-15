@@ -382,6 +382,7 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = BlockedEvent()
         self.last_action_event: ManagerStateEvent | None = None
+        self.last_upload_events: dict[str, UploadBackupEvent] = {}
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
         self._backup_platform_event_subscriptions: list[
             Callable[[BackupPlatformEvent], None]
@@ -1446,9 +1447,13 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        if not isinstance(event, UploadBackupEvent):
+        if isinstance(event, UploadBackupEvent):
+            self.last_upload_events[event.agent_id] = event
+        else:
             self.last_event = event
-            if not isinstance(event, (BlockedEvent, IdleEvent)):
+            if isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_upload_events.clear()
+            else:
                 self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
