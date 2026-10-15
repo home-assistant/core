@@ -597,7 +597,11 @@ def _complete_global(namespace: dict[str, Any], prefix: str) -> list[str]:
 
     for names in (namespace, vars(builtins)):
         for name, value in names.items():
-            if name in seen or not _is_completion(name, prefix):
+            # Code can store a subclass of str as a name, like in globals().
+            if type(name) is not str or name in seen:
+                continue
+
+            if not _is_completion(name, prefix):
                 continue
 
             seen.add(name)

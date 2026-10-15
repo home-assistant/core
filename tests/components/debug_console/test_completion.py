@@ -583,6 +583,18 @@ async def test_signature(
             id="resolve_dict_subclass",
         ),
         pytest.param(
+            {"type": "debug_console/complete", "code": "loud_na"},
+            id="complete_global_name_subclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "named_holder.lo"},
+            id="complete_attribute_name_subclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "named_holder.beta.re"},
+            id="resolve_colliding_name",
+        ),
+        pytest.param(
             {"type": "debug_console/signature", "code": "doc_method("},
             id="signature_method_doc",
         ),
@@ -813,6 +825,34 @@ class LoudDictHolder:
 
 loud_dict_holder = LoudDictHolder()
 loud_dict_holder.__dict__ = LoudDict(alpha=1)
+
+class LoudName(str):
+    def __hash__(self):
+        ran.append("name hash")
+        return super().__hash__()
+
+    def __eq__(self, other):
+        ran.append("name eq")
+        return super().__eq__(other)
+
+    def startswith(self, prefix, *args):
+        ran.append("name startswith")
+        return super().startswith(prefix, *args)
+
+class CollidingName(LoudName):
+    def __hash__(self):
+        ran.append("name hash")
+        return hash("beta")
+
+globals()[LoudName("loud_name")] = 1
+
+class NamedHolder:
+    pass
+
+named_holder = NamedHolder()
+named_holder.__dict__[LoudName("loud_attribute")] = 1
+named_holder.__dict__[CollidingName("gamma")] = 1
+named_holder.beta = 1
 
 class DocTrap:
     __doc__ = Descriptor()

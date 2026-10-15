@@ -205,9 +205,18 @@ def class_mro(cls: type) -> tuple[type, ...]:
     return _CLASS_MRO.__get__(cls)  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
 
 
-def class_dict(cls: type) -> Mapping[str, Any]:
+def class_dict(cls: type) -> dict[str, Any]:
     """Return the attributes a class defines itself, without running code."""
-    return _CLASS_DICT.__get__(cls)  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
+    return _with_string_names(_CLASS_DICT.__get__(cls).items())  # pylint: disable=unnecessary-dunder-call
+
+
+def _with_string_names(items: Iterable[tuple[Any, Any]]) -> dict[str, Any]:
+    """Return attributes, keeping only those with a name that is a str.
+
+    A name can be a subclass of str, whose own __hash__, __eq__, and other
+    methods would run when comparing or matching it.
+    """
+    return {name: value for name, value in items if type(name) is str}
 
 
 def class_name(value: Any) -> str:
@@ -302,7 +311,7 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
     """
     # A class keeps its attributes behind a read only view.
     if is_class(value):
-        return dict(class_dict(value))
+        return class_dict(value)
 
     # Only the class of the instance counts, not the class of that class.
     for cls in class_mro(type(value)):
@@ -315,13 +324,10 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
     if not has_type(descriptor, (GetSetDescriptorType, MemberDescriptorType)):
         return None
 
+    # Code can set a subclass of dict, with methods of its own. Its items view
+    # reads the dict underneath.
     attributes = descriptor.__get__(value, type(value))  # pylint: disable=unnecessary-dunder-call
-    if type(attributes) is not dict:
-        # Code can set a subclass of dict, with methods of its own. Its items
-        # view reads the dict underneath.
-        attributes = dict(dict.items(attributes))
-
-    return attributes
+    return _with_string_names(dict.items(attributes))
 
 
 def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:
