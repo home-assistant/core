@@ -105,6 +105,20 @@ def _mock_client(mac_address: str) -> AsyncMock:
     return client
 
 
+async def _async_setup_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mac_address: str
+) -> None:
+    """Set up an entry, which migrates it, with a client reporting a MAC address."""
+    with patch(
+        "homeassistant.components.aprilaire.coordinator.pyaprilaire.client.AprilaireClient",
+        return_value=_mock_client(mac_address),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("old_mac", "new_mac"),
     [
@@ -149,14 +163,8 @@ async def test_migrate_unpadded_mac_address(
         config_entry=config_entry,
     )
 
-    with patch(
-        "homeassistant.components.aprilaire.coordinator.pyaprilaire.client.AprilaireClient",
-        return_value=_mock_client(new_mac),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await _async_setup_entry(hass, config_entry, new_mac)
 
-    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 2
     assert config_entry.unique_id == new_mac
 
@@ -193,7 +201,7 @@ async def test_migrate_mac_address_unchanged(
         "climate", DOMAIN, f"{mac_address}_thermostat", config_entry=config_entry
     )
 
-    assert await config_entry.async_migrate(hass)
+    await _async_setup_entry(hass, config_entry, mac_address)
 
     assert config_entry.minor_version == 2
     assert config_entry.unique_id == mac_address
@@ -224,7 +232,7 @@ async def test_migrate_mac_address_entity_conflict(
         "climate", DOMAIN, f"{new_mac}_thermostat", config_entry=config_entry
     )
 
-    assert await config_entry.async_migrate(hass)
+    await _async_setup_entry(hass, config_entry, new_mac)
 
     assert config_entry.minor_version == 2
     assert config_entry.unique_id == new_mac
