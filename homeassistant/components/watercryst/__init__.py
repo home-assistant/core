@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     state = WatercrystStateUpdateCoordinator(
         hass=hass, config_entry=entry, client=client
     )
-    state.async_set_updated_data(initial_state)
+    await state.async_config_entry_first_refresh()
 
     measurements = WatercrystMeasurementsUpdateCoordinator(
         hass=hass, config_entry=entry, client=client, state=state
