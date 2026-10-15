@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
     ATTR_DISPLAY_PRECISION,
@@ -58,9 +58,17 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 
 __all__ = [
+    "ATTR_AUTO_UPDATE",
     "ATTR_BACKUP",
+    "ATTR_DISPLAY_PRECISION",
     "ATTR_INSTALLED_VERSION",
+    "ATTR_IN_PROGRESS",
     "ATTR_LATEST_VERSION",
+    "ATTR_RELEASE_SUMMARY",
+    "ATTR_RELEASE_URL",
+    "ATTR_SKIPPED_VERSION",
+    "ATTR_TITLE",
+    "ATTR_UPDATE_PERCENTAGE",
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
