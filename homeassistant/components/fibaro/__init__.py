@@ -191,7 +191,7 @@ class FibaroController:
     def link_main_devices_to_hub(self, via_device_id: str) -> None:
         """Link all main devices to the hub via device."""
         for device_info in self._device_infos.values():
-            device_info["via_device_id"] = via_device_id
+            device_info.via_device_id = via_device_id
 
     def get_device_info(self, device: DeviceModel) -> DeviceInfo:
         """Get the device info by fibaro device id."""

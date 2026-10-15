@@ -60,9 +60,9 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             serial_number=serial,
         )
         if identity.hardware_version:
-            info["hw_version"] = identity.hardware_version
+            info.hw_version = identity.hardware_version
         if identity.software_version:
-            info["sw_version"] = identity.software_version
+            info.sw_version = identity.software_version
         return info
 
     @override

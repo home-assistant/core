@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     )
     for zone, coordinator in coordinators.items():
         if zone != 1:
-            coordinator.device_info["via_device_id"] = zone1_device.id
+            coordinator.device_info.via_device_id = zone1_device.id
 
     entry.runtime_data = ArcamFmjRuntimeData(client, coordinators)
 

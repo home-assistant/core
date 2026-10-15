@@ -116,7 +116,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         # The unique id is the formatted MAC for current config entries, but was
         # historically the serial number, so derive the connection from the MAC.
         if mac_address := self.config_entry.data.get(CONF_MAC):
-            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac_address)}
+            device_info.connections = {(CONNECTION_NETWORK_MAC, mac_address)}
         return device_info
 
     @override
