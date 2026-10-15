@@ -70,25 +70,28 @@ class IcloudTrackerEntity(TrackerEntity):
     @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
-        if self._device.location is None:
+        location = self._device.location
+        if location is None:
             return 0
-        return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
+        return location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
     @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if self._device.location is None:
+        location = self._device.location
+        if location is None:
             return None
-        return self._device.location[DEVICE_LOCATION_LATITUDE]
+        return location[DEVICE_LOCATION_LATITUDE]
 
     @property
     @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if self._device.location is None:
+        location = self._device.location
+        if location is None:
             return None
-        return self._device.location[DEVICE_LOCATION_LONGITUDE]
+        return location[DEVICE_LOCATION_LONGITUDE]
 
     @property
     @override

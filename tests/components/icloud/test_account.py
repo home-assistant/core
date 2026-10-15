@@ -28,6 +28,7 @@ from homeassistant.components.icloud.const import (
     DEVICE_STATUS,
     DOMAIN,
 )
+from homeassistant.components.icloud.device_tracker import IcloudTrackerEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -502,6 +503,29 @@ async def test_a_device_that_stops_sharing_its_location_reads_unknown(
     state = hass.states.get(tracker)
     assert state.state == STATE_UNKNOWN
     assert ATTR_LATITUDE not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("attribute", "expected"),
+    [
+        pytest.param("latitude", 1.0, id="latitude"),
+        pytest.param("longitude", 2.0, id="longitude"),
+        pytest.param("location_accuracy", 10, id="accuracy"),
+    ],
+)
+def test_tracker_reads_the_location_once(attribute: str, expected: float) -> None:
+    """Test that a location cleared mid-read cannot break the tracker.
+
+    The poll clears the location from the executor, so it can be gone between
+    checking it and reading a coordinate out of it.
+    """
+    device = MagicMock()
+    type(device).location = PropertyMock(
+        side_effect=[_located_device_status(0.8)["location"], None, None]
+    )
+    tracker = IcloudTrackerEntity(MagicMock(), device)
+
+    assert getattr(tracker, attribute) == expected
 
 
 async def test_a_tracked_device_is_updated_even_when_it_reports_nothing(
