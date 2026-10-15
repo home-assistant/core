@@ -108,7 +108,8 @@ class GreeAcState:
         """Flush staged changes immediately on unload, without new scheduling.
 
         Awaits an in-flight flush; sends one final frame when changes are still
-        staged. Never raises: teardown must not fail on a best-effort send.
+        staged. Never raises for send failures: the flush logs them so teardown
+        cannot fail on a best-effort send.
         """
         if self._coalesce_handle is not None:
             self._coalesce_handle.cancel()
@@ -116,15 +117,9 @@ class GreeAcState:
         task = self._coalesce_task
         self._coalesce_task = None
         if task is not None and not task.done():
-            try:
-                await task
-            except asyncio.CancelledError, Exception:
-                pass
+            await asyncio.wait((task,))
         elif self.coalesce_dirty:
-            try:
-                await flush()
-            except asyncio.CancelledError, Exception:
-                pass
+            await flush()
         self._clear_coalesced()
 
     def _clear_coalesced(self) -> None:
