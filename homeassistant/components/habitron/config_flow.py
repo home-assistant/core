@@ -333,6 +333,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ],
             host,
         )
+        # The address match awaits name resolution, and an entry may have
+        # adopted this MAC in its setup meanwhile. Asked again here, with no
+        # await between this answer and the caller creating its entry.
+        entry = entry or self._async_entry_by_hub_identity(unique_id)
         if entry is None:
             return None
         self.hass.config_entries.async_update_entry(

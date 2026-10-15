@@ -1869,3 +1869,44 @@ async def test_discovery_confirm_aborts_once_another_entry_owns_the_hub(
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
     assert entry.options == {"keep": True}
+
+
+async def test_user_flow_aborts_when_an_entry_adopts_the_hub_during_matching(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """An entry that adopts the MAC while the address is resolved is kept.
+
+    The address match awaits name resolution. A carried-over entry whose setup
+    adopts the MAC in that window must still be found, or the flow would create
+    a second entry and core would replace the existing one with it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        data={CONF_HOST: "192.168.1.99"},
+        options={"keep": True},
+    )
+    entry.add_to_hass(hass)
+
+    async def _resolve_while_the_entry_adopts(self: ConfigFlow, host: str) -> str:
+        hass.config_entries.async_update_entry(entry, unique_id=MOCK_UID)
+        return host
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch.object(
+        ConfigFlow, "_async_canonical_host", new=_resolve_while_the_entry_adopts
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: MOCK_HOST}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.options == {"keep": True}
