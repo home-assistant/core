@@ -174,6 +174,21 @@ async def test_a_port_already_configured_is_rejected(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_bus")
+async def test_a_port_added_by_another_flow_during_the_scan_is_rejected(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test two flows on one port cannot both create an entry."""
+    result = await _scan(hass)
+    assert result["step_id"] == "confirm"
+
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_an_inverter_whose_type_could_not_be_read_is_still_offered(
     hass: HomeAssistant, mock_bus: FakeBus
 ) -> None:
