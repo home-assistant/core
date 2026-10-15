@@ -131,15 +131,11 @@ class HomematicipHAP:
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
         self.arming_problems: list[str] = []
-        self.arming_problem_channels: list[str] = []
 
     @callback
-    def async_set_arming_problems(
-        self, problems: list[str], channels: list[str]
-    ) -> None:
+    def async_set_arming_problems(self, problems: list[str]) -> None:
         """Publish the devices that refused the last arming attempt."""
         self.arming_problems = problems
-        self.arming_problem_channels = channels
         async_dispatcher_send(
             self.hass, SIGNAL_ARMING_PROBLEMS.format(self.config_entry.entry_id)
         )
