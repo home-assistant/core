@@ -54,13 +54,13 @@ class EcovacsEntity[CapabilityEntityT](Entity):
         )
 
         if nick := device_info.get("nick"):
-            info["name"] = nick
+            info.name = nick
 
         if model := device_info.get("deviceName"):
-            info["model"] = model
+            info.model = model
 
         if mac := self._device.mac:
-            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
         return info
 

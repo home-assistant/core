@@ -6,6 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.alexa_devices.const import DOMAIN
+from homeassistant.components.alexa_devices.entity import service_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -66,3 +67,25 @@ async def test_device_diagnostics(
             "modified_at",
         )
     )
+
+
+async def test_service_device_diagnostics(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test Amazon service device diagnostics, which has no serial number."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, service_device_id(mock_config_entry.runtime_data)),
+        mock_config_entry.entry_id,
+    )
+    assert device, repr(device_registry._devices)
+    assert device.serial_number is None
+
+    assert await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, device
+    ) == {"service device": True}

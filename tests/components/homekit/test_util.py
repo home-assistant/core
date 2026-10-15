@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
@@ -164,7 +164,7 @@ def test_validate_entity_config() -> None:
     ]
 
     for conf in configs:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             vec(conf)
 
     assert vec({}) == {}

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -16,8 +16,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
 )
 
 _LOGGER = logging.getLogger(__name__)

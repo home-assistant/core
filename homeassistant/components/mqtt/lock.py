@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import lock
 from homeassistant.components.lock import (
@@ -79,25 +79,31 @@ MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_CODE_FORMAT): cv.is_regex,
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
-        vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
-        vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-        vol.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
-        vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
-        vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
-        vol.Optional(CONF_STATE_OPEN, default=DEFAULT_STATE_OPEN): cv.string,
-        vol.Optional(CONF_STATE_OPENING, default=DEFAULT_STATE_OPENING): cv.string,
-        vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
-        vol.Optional(CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_CODE_FORMAT): cv.is_regex,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
+        probatio.Optional(
+            CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK
+        ): cv.string,
+        probatio.Optional(CONF_PAYLOAD_OPEN): cv.string,
+        probatio.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        probatio.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
+        probatio.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
+        probatio.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
+        probatio.Optional(CONF_STATE_OPEN, default=DEFAULT_STATE_OPEN): cv.string,
+        probatio.Optional(CONF_STATE_OPENING, default=DEFAULT_STATE_OPENING): cv.string,
+        probatio.Optional(
+            CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED
+        ): cv.string,
+        probatio.Optional(
+            CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING
+        ): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 STATE_CONFIG_KEYS = [
     CONF_STATE_JAMMED,
@@ -144,7 +150,7 @@ class MqttLock(MqttEntity, LockEntity):
 
     @staticmethod
     @override
-    def config_schema() -> vol.Schema:
+    def config_schema() -> probatio.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

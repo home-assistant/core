@@ -40,7 +40,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> None:
     """Set up Watergate from a config entry."""
     sonic_address = entry.data[CONF_IP_ADDRESS]
     webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -76,14 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> None:
     """Unload a config entry."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     async_unregister(hass, webhook_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def get_webhook_handler(

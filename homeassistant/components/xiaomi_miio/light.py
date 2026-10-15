@@ -41,7 +41,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
-    LIGHT_DATA_KEY as DATA_KEY,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -108,9 +107,6 @@ async def async_setup_entry(
         )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
-
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         name = config_entry.title
@@ -123,35 +119,28 @@ async def async_setup_entry(
             light = PhilipsEyecare(host, token)
             entity = XiaomiPhilipsEyecareLamp(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
 
             entities.append(
                 XiaomiPhilipsEyecareLampAmbientLight(
                     name, light, config_entry, unique_id
                 )
             )
-            # The ambient light doesn't expose additional services.
-            # A hass.data[DATA_KEY] entry isn't needed.
         elif model in MODELS_LIGHT_CEILING:
             light = Ceil(host, token)
             entity = XiaomiPhilipsCeilingLamp(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         elif model in MODELS_LIGHT_MOON:
             light = PhilipsMoonlight(host, token)
             entity = XiaomiPhilipsMoonlightLamp(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         elif model in MODELS_LIGHT_BULB:
             light = PhilipsBulb(host, token)
             entity = XiaomiPhilipsBulb(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         elif model in MODELS_LIGHT_MONO:
             light = PhilipsBulb(host, token)
             entity = XiaomiPhilipsGenericLight(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         else:
             _LOGGER.error(
                 (

@@ -168,7 +168,7 @@
           "preset_mode": {
             "state": {
               "camp": "Camp mode",
-              "dog": "Dog mode",
+              "dog": "Pet mode",
               "off": "[%key:common::state::normal%]",
               "on": "Keep mode"
             }

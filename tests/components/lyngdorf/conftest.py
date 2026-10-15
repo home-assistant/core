@@ -15,6 +15,7 @@ from lyngdorf import (
     RemoteKey,
     SteppableControl,
     Trim,
+    VolumeControl,
     ZoneB,
 )
 import pytest
@@ -68,6 +69,15 @@ def _steppable(value: float | None, value_range: NumericRange) -> MagicMock:
     control = MagicMock(spec=SteppableControl)
     control.value = value
     control.range = value_range
+    return control
+
+
+def _volume_control(value: float | None, value_range: NumericRange) -> MagicMock:
+    """Return a mocked volume control, as the MP and P models report."""
+    control = MagicMock(spec=VolumeControl)
+    control.value = value
+    control.range = value_range
+    control.maximum_volume = None
     return control
 
 
@@ -130,7 +140,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
 
     receiver.power_on = False
-    receiver.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.volume = _volume_control(-40.0, NumericRange(-99.9, 24.0, 0.1))
     receiver.muted = False
     receiver.sources = []
     receiver.sound_modes = []
@@ -191,7 +201,7 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     receiver.zone_b = zone_b
     receiver.zone_b_streaming_source = "DLNA"
 
-    receiver.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    receiver.volume = _volume_control(-40.0, NumericRange(-99.9, 24.0, 0.1))
     receiver.muted = False
     receiver.sources = []
     receiver.sound_modes = []
