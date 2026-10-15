@@ -122,7 +122,7 @@ def mock_coordinator_setup() -> Generator[MagicMock]:
             platform=MOCK_HWTYPE,
             version=MOCK_VERSION,
         )
-        self._uid_from_mac = True
+        self._resolve_uid()
         self.base_url = f"http://{MOCK_HOST}:7780"
         self.router.modules = []
         self.router.states = []

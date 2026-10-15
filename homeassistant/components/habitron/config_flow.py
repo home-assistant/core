@@ -311,7 +311,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         The unique-id check only recognises an entry that is already keyed by
         the hub's MAC. An entry carried over from the custom integration keeps
         its older id -- a serial, or ``habitron_<host>`` -- until its first
-        successful setup adopts the MAC (see ``_async_adopt_hub_identity``), and
+        successful setup adopts the MAC (see ``HbtnCoordinator._resolve_uid``), and
         in that window the same hub would be offered, and configured, a second
         time. The address is the one thing both entries agree on, so match on
         that as well.

@@ -1,22 +1,24 @@
 """Setup / unload / migration tests for the Habitron integration."""
 
+import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import HabitronError, HabitronTimeoutError
+from habitron_client import HabitronError, HabitronTimeoutError, SmartHub
 import pytest
 
 from homeassistant.components.habitron import (
-    _async_adopt_hub_identity,
     _async_cleanup_stale_devices,
     async_remove_config_entry_device,
 )
 from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.components.habitron.coordinator import HbtnCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import MOCK_HOST, MOCK_NAME, MOCK_UDN, MOCK_UID
+from .const import MOCK_HOST, MOCK_MAC, MOCK_NAME, MOCK_UDN, MOCK_UID
 
 from tests.common import MockConfigEntry
 
@@ -293,76 +295,41 @@ async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
     assert entry.data == {CONF_HOST: MOCK_HOST}
 
 
-@pytest.mark.parametrize(
-    ("stored_id", "has_mac", "expected"),
-    [
-        # A host-based fallback from a flow that could not reach the hub.
-        ("habitron_192.168.1.50", True, MOCK_UID),
-        # A serial, as the custom integration falls back to.
-        ("HBT-123456", True, MOCK_UID),
-        # Already the identity: nothing to do.
-        (MOCK_UID, True, MOCK_UID),
-        # No MAC read at all: there is no identity to adopt.
-        ("habitron_192.168.1.50", False, "habitron_192.168.1.50"),
-    ],
-)
-async def test_setup_adopts_the_hub_identity(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    stored_id: str,
-    has_mac: bool,
-    expected: str,
-) -> None:
-    """A successful setup moves the entry onto the hub's MAC.
-
-    Every path derives that MAC, so once the entry carries it the plain
-    unique-id check recognises the hub at any address -- no extra matcher.
-
-    Driven directly: the config-entry fixtures stub the first refresh, and
-    ``SmartHub.async_setup`` -- which reads the MAC -- runs inside it.
-    """
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, unique_id=stored_id)
-
-    smhub = MagicMock()
-    smhub.uid = MOCK_UID
-    smhub.has_mac_uid = has_mac
-
-    _async_adopt_hub_identity(hass, mock_config_entry, smhub)
-
-    assert mock_config_entry.unique_id == expected
+async def _connect_and_build(coordinator: HbtnCoordinator) -> None:
+    """Build a hub reporting its MAC, as the real build would."""
+    coordinator._client = AsyncMock()
+    coordinator.host = MOCK_HOST
+    coordinator.hub = SmartHub(uid=MOCK_UID, lan_mac=MOCK_MAC, macs=[MOCK_MAC])
+    coordinator._resolve_uid()
+    # The real build polls the bus here, letting a concurrent setup run.
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
 
 
-async def test_setup_adopts_the_mac_when_no_other_entry_owns_it(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """An entry carrying an older id is moved onto the hub's MAC.
-
-    The duplicate case is caught earlier, before the first registry write (see
-    ``test_setup_stops_before_registering_a_hub_another_entry_owns``), so all
-    that is left here is the adoption itself.
-    """
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry, unique_id="habitron_192.168.1.50"
-    )
-
-    smhub = MagicMock()
-    smhub.uid = MOCK_UID
-    smhub.has_mac_uid = True
-
-    _async_adopt_hub_identity(hass, mock_config_entry, smhub)
-
-    assert mock_config_entry.unique_id == MOCK_UID
+@pytest.fixture
+def mock_bus() -> Generator[None]:
+    """Run the coordinator's real setup and polls over a stubbed bus."""
+    with (
+        patch(
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator._async_connect_and_build",
+            new=_connect_and_build,
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator.async_refresh_system",
+            new=AsyncMock(return_value=4711),
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator.async_refresh_hub",
+            new=AsyncMock(),
+        ),
+    ):
+        yield
 
 
+@pytest.mark.usefixtures("setup_homeassistant", "mock_habitron_client", "mock_bus")
 async def test_setup_adopts_before_the_update_listener_exists(
     hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-    mock_coordinator_setup: None,
-    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """Rewriting the entry must not reload the entry that is still setting up.
 
@@ -379,24 +346,53 @@ async def test_setup_adopts_before_the_update_listener_exists(
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch.object(
-            type(hass.config_entries),
-            "async_reload",
-            new=AsyncMock(return_value=True),
-        ) as reload,
-        patch(
-            "homeassistant.components.habitron._async_adopt_hub_identity",
-            side_effect=lambda hass, entry, smhub: (
-                hass.config_entries.async_update_entry(entry, unique_id=MOCK_UID)
-            ),
-        ),
-    ):
+    with patch.object(
+        type(hass.config_entries),
+        "async_reload",
+        new=AsyncMock(return_value=True),
+    ) as reload:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.unique_id == MOCK_UID
     reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("setup_homeassistant", "mock_habitron_client", "mock_bus")
+async def test_concurrent_legacy_entries_of_one_hub_load_only_once(
+    hass: HomeAssistant,
+) -> None:
+    """Two carried-over entries for the same hub cannot both claim its MAC.
+
+    The custom integration keys a hub without a usable MAC by its serial or its
+    host, so one hub can arrive as two entries. Set up concurrently, both read
+    the same MAC; the second must find it taken even though the build still
+    yields to the event loop after the identity check.
+    """
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            title=MOCK_NAME,
+            unique_id=unique_id,
+            version=2,
+            minor_version=2,
+            data={CONF_HOST: MOCK_HOST},
+        )
+        for unique_id in ("HBT-123456", "habitron_192.168.1.50")
+    ]
+    for entry in entries:
+        entry.add_to_hass(hass)
+
+    await asyncio.gather(
+        *(hass.config_entries.async_setup(entry.entry_id) for entry in entries)
+    )
+    await hass.async_block_till_done()
+
+    assert [entry.state for entry in entries] == [
+        ConfigEntryState.LOADED,
+        ConfigEntryState.SETUP_ERROR,
+    ]
+    assert [entry.unique_id for entry in entries] == [MOCK_UID, "habitron_192.168.1.50"]
 
 
 async def test_cleanup_keeps_a_device_with_one_live_identifier(

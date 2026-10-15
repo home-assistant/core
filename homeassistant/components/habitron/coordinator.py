@@ -265,7 +265,13 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
 
         The hub derives its own from its LAN address; this adds only what the
         library cannot know -- the fallback for a hub that reports no usable
-        address, and the check that no other entry already owns this identity.
+        address, the check that no other entry already owns this identity, and
+        moving the entry onto it.
+
+        The entry is moved right after the check, with no await in between: a
+        second entry for the same hub that is set up concurrently -- two entries
+        carried over from the custom integration under a serial and a host
+        fallback -- must find the MAC taken, not pass the check as well.
         """
         self._uid_from_mac = bool(self.hub.uid)
         if not self._uid_from_mac:
@@ -290,6 +296,14 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
                 translation_key="duplicate_hub",
                 translation_placeholders={"host": self.host, "uid": self.uid},
             )
+        if self._uid_from_mac and self.entry.unique_id != self.uid:
+            _LOGGER.debug(
+                "Adopting hub identity for %s: %s -> %s",
+                self.entry.title,
+                self.entry.unique_id,
+                self.uid,
+            )
+            self.hass.config_entries.async_update_entry(self.entry, unique_id=self.uid)
 
     def _resolve_base_url(self) -> str:
         """Return the base of the hub's own web UI.

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from habitron_client import (
     Area,
     Diagnostic,
@@ -18,7 +19,7 @@ from habitron_client import (
 import pytest
 
 from homeassistant.components.habitron import sensor as habitron_sensor
-from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.components.habitron.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.habitron.coordinator import HbtnCoordinator
 from homeassistant.components.habitron.sensor import (
     AIRQUALITY_DESCRIPTION,
@@ -57,7 +58,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import MOCK_HOST, MOCK_UID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _make_module(uid: str = "MOD-1") -> MagicMock:
@@ -927,3 +928,73 @@ async def test_host_readings_unknown_until_first_hub_answer() -> None:
     hub.host_valid = True
     assert CPU_LOAD_DESCRIPTION.value_fn(hub, 0) == 42.0
     assert MEMORY_DESCRIPTION.value_fn(hub, 0) == 17.0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_member_updates_reach_states_while_the_bus_crc_is_unchanged(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
+) -> None:
+    """Router and host readings change state without a coordinator fan-out.
+
+    An unchanged CRC with live host readings leaves the coordinator data equal,
+    so ``always_update=False`` suppresses the coordinator notification. The new
+    readings then only reach Home Assistant through the member listeners.
+    """
+    hub = SmartHub(uid=MOCK_UID, host_valid=True)
+    hub.sensors = [Sensor(name="Memory usage", nmbr=0, type=1, value=40.0)]
+    hub.diags = [Diagnostic(name="CPU load", nmbr=0, type=1, value=10.0)]
+    router = Router(uid="rt_1", name="Router")
+    router.voltages = [Diagnostic(name="Voltage 5V", nmbr=0, type=1, value=5.0)]
+
+    entry = await setup_with_model(router, hub)
+    coordinator: HbtnCoordinator = entry.runtime_data
+
+    entity_ids = {
+        unique_id: entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        for unique_id in (
+            "rt_1_voltage_0",
+            f"{MOCK_UID}_memory_usage",
+            f"{MOCK_UID}_cpu_load",
+        )
+    }
+    assert hass.states.get(entity_ids["rt_1_voltage_0"]).state == "5.0"
+    assert hass.states.get(entity_ids[f"{MOCK_UID}_memory_usage"]).state == "40.0"
+    assert hass.states.get(entity_ids[f"{MOCK_UID}_cpu_load"]).state == "10.0"
+
+    async def _refresh_system(*_: object, **__: object) -> int:
+        router.voltages[0].value = 5.2
+        router.voltages[0].notify()
+        return 4711
+
+    async def _refresh_hub(*_: object, **__: object) -> None:
+        hub.sensors[0].value = 55.0
+        hub.sensors[0].notify()
+        hub.diags[0].value = 80.0
+        hub.diags[0].notify()
+
+    with (
+        patch(
+            "homeassistant.components.habitron.coordinator.async_refresh_system",
+            new=_refresh_system,
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator.async_refresh_hub",
+            new=_refresh_hub,
+        ),
+        patch.object(
+            coordinator,
+            "async_update_listeners",
+            wraps=coordinator.async_update_listeners,
+        ) as fan_out,
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    fan_out.assert_not_called()
+    assert hass.states.get(entity_ids["rt_1_voltage_0"]).state == "5.2"
+    assert hass.states.get(entity_ids[f"{MOCK_UID}_memory_usage"]).state == "55.0"
+    assert hass.states.get(entity_ids[f"{MOCK_UID}_cpu_load"]).state == "80.0"

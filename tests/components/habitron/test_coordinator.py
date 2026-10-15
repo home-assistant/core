@@ -358,13 +358,34 @@ async def test_close_releases_the_client(hass: HomeAssistant) -> None:
     client.close.assert_awaited_once()
 
 
-async def test_uid_is_the_hubs_own_address(hass: HomeAssistant) -> None:
-    """The hub's own LAN address is the identity when it reports one."""
-    coord = HbtnCoordinator(hass, MagicMock())
-    coord.hub = _hub()
+@pytest.mark.parametrize(
+    ("stored_id", "hub_uid", "expected"),
+    [
+        pytest.param("habitron_192.168.1.50", MOCK_UID, MOCK_UID, id="host-fallback"),
+        pytest.param("HBT-123456", MOCK_UID, MOCK_UID, id="serial-fallback"),
+        pytest.param(MOCK_UID, MOCK_UID, MOCK_UID, id="already-the-mac"),
+        pytest.param("habitron_192.168.1.50", "", "habitron_192.168.1.50", id="no-mac"),
+    ],
+)
+async def test_resolve_uid_moves_the_entry_onto_the_mac(
+    hass: HomeAssistant,
+    stored_id: str,
+    hub_uid: str,
+    expected: str,
+) -> None:
+    """The hub's own LAN address becomes the identity of the entry.
+
+    Every path derives that MAC, so once the entry carries it the plain
+    unique-id check recognises the hub at any address -- no extra matcher.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=stored_id)
+    entry.add_to_hass(hass)
+    coord = HbtnCoordinator(hass, entry)
+    coord.hub = _hub(uid=hub_uid)
     coord._resolve_uid()
-    assert coord.uid == MOCK_UID
-    assert coord.has_mac_uid is True
+    assert coord.uid == expected
+    assert coord.has_mac_uid is bool(hub_uid)
+    assert entry.unique_id == expected
 
 
 async def test_uid_falls_back_to_the_entry(hass: HomeAssistant) -> None:

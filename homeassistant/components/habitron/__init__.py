@@ -1,15 +1,11 @@
 """The Habitron integration."""
 
-import logging
-
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import HabitronConfigEntry, HbtnCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -61,16 +57,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
     entry.async_on_unload(coordinator.async_close)
 
     # First refresh runs the coordinator setup (connect, build the hub and bus
-    # models, register the devices), then the first bus poll. Both halves are
-    # wrapped by DataUpdateCoordinator, which turns every failure into
-    # ConfigEntryNotReady and carries the translation key the coordinator
-    # attached -- so no raw library error can surface here.
+    # models, move the entry onto the hub's MAC, register the devices), then the
+    # first bus poll. Both halves are wrapped by DataUpdateCoordinator, which
+    # turns every failure into ConfigEntryNotReady and carries the translation
+    # key the coordinator attached -- so no raw library error can surface here.
+    # It runs before the update listener exists: moving the entry onto the MAC
+    # fires the listeners, which would reload this very setup.
     await coordinator.async_config_entry_first_refresh()
-
-    # Before the update listener exists: adopting rewrites the entry, and
-    # ``async_update_entry`` fires the listeners -- which would schedule a
-    # reload while this very setup is still running.
-    _async_adopt_hub_identity(hass, entry, coordinator)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -114,33 +107,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) ->
 async def update_listener(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
     """Reload the entry so a changed host is picked up by the normal setup."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-@callback
-def _async_adopt_hub_identity(
-    hass: HomeAssistant,
-    entry: HabitronConfigEntry,
-    coordinator: HbtnCoordinator,
-) -> None:
-    """Move the entry onto the hub's MAC, the one identity every path derives.
-
-    This config flow only ever keys an entry by the MAC. An entry can still
-    carry an older id, though: the custom (HACS) integration falls back to a
-    serial or the host when the hub answers without a usable ``lan mac``, and
-    such an entry keeps that id when it moves over. Now that the hub has given
-    us its MAC, rewrite the entry -- from here on the plain unique-id check
-    recognises it, whatever address it moves to, and no extra matcher is
-    needed.
-    """
-    if not coordinator.has_mac_uid or entry.unique_id == coordinator.uid:
-        return
-    _LOGGER.debug(
-        "Adopting hub identity for %s: %s -> %s",
-        entry.title,
-        entry.unique_id,
-        coordinator.uid,
-    )
-    hass.config_entries.async_update_entry(entry, unique_id=coordinator.uid)
 
 
 def _async_cleanup_stale_devices(
