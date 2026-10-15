@@ -78,7 +78,7 @@ def _liveboard_timeout() -> LiveboardApiResponse | None:
 
 
 def _liveboard_decoding_error() -> LiveboardApiResponse | None:
-    """Simulate a liveboard response with an invalid field."""
+    """Simulate a liveboard response that fails to decode."""
     raise ValueError("Unexpected response schema")
 
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import TypeVar, override
+from typing import override
 
 from pyrail import iRail
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
@@ -30,8 +30,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ApiResponseT = TypeVar("ApiResponseT")
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
@@ -85,10 +83,10 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self.station_to = station_to
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
 
-    async def _async_fetch_feed(
-        self, feed: str, fetch: Callable[[], Awaitable[ApiResponseT | None]]
-    ) -> ApiResponseT | None:
-        """Fetch a feed, returning None when the request fails."""
+    async def _async_fetch_feed[T](
+        self, feed: str, fetch: Callable[[], Awaitable[T | None]]
+    ) -> T | None:
+        """Fetch a feed, returning None on a timeout or a parse error."""
         try:
             return await fetch()
         except TimeoutError:
@@ -121,7 +119,7 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
 
     @override
     async def _async_update_data(self) -> NMBSData:
-        """Fetch the next connection and the departures of enabled liveboards."""
+        """Fetch the connection and liveboard departures for enabled entities."""
         entries = er.async_entries_for_config_entry(
             er.async_get(self.hass), self.config_entry.entry_id
         )

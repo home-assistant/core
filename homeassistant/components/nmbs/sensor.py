@@ -31,7 +31,7 @@ DEFAULT_ICON_ALERT = "mdi:alert-octagon"
 
 
 def get_time_until(departure_time: datetime) -> int:
-    """Calculate the time between now and a train's departure time."""
+    """Calculate the minutes between now and a train's departure time."""
     delta = dt_util.as_utc(departure_time) - dt_util.utcnow()
     return round(delta.total_seconds() / 60)
 
@@ -204,7 +204,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
     @property
     @override
     def icon(self) -> str:
-        """Return the default icon or an alert icon if delays."""
+        """Return the default icon or an alert icon if the next departure is delayed."""
         if (departure := self.next_departure) and departure.delay > 0:
             return DEFAULT_ICON_ALERT
         return DEFAULT_ICON
@@ -212,7 +212,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> str | None:
-        """Return sensor state."""
+        """Return the track and destination of the next departure."""
         if (departure := self.next_departure) is None:
             return None
         return f"Track {departure.platform} - {departure.station}"
