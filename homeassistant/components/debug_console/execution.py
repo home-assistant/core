@@ -7,6 +7,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 import inspect
 import io
+import linecache
 import traceback
 from types import CodeType
 from typing import TYPE_CHECKING, Any
@@ -120,16 +121,7 @@ async def async_execute(
         output["logs_truncated"] = True
 
     if error is not None:
-        try:
-            report = _capture_exception(error)
-        except USER_CODE_ERRORS:
-            output["error"] = f"<{class_name(error)} that failed to format>"
-            return output
-
-        # Formatting reads the source of each frame from disk.
-        output["error"] = await hass.async_add_executor_job(
-            lambda: "".join(report.format())
-        )
+        output["error"] = await _async_format_exception(hass, error)
         return output
 
     return {**output, "result": description}
@@ -218,12 +210,44 @@ async def _async_run(code_object: CodeType, namespace: dict[str, Any]) -> Any:
     return result
 
 
-def _capture_exception(err: BaseException) -> traceback.TracebackException:
-    """Capture an exception to report, hiding the frames of the console itself.
+async def _async_format_exception(hass: HomeAssistant, err: BaseException) -> str:
+    """Format an exception with its traceback, like Python does.
 
-    Capturing runs code of the exception, like its __str__, so it happens here,
-    in the event loop. The source of each frame is only read when formatting.
+    Capturing and formatting it runs code of the exception, like its __str__
+    and __notes__, which can raise too. That stays in the event loop; only
+    reading the source of its frames from disk happens in the executor.
     """
+    try:
+        report = _capture_exception(err)
+    except USER_CODE_ERRORS:
+        return f"<{class_name(err)} that failed to format>"
+
+    await hass.async_add_executor_job(_read_sources, report)
+
+    try:
+        return "".join(report.format())
+    except USER_CODE_ERRORS:
+        return f"<{class_name(err)} that failed to format>"
+
+
+def _read_sources(report: traceback.TracebackException) -> None:
+    """Read the source of each frame in a report, and the reports it chains."""
+    reports = [report]
+    while reports:
+        current = reports.pop()
+        for frame in current.stack:
+            linecache.getlines(frame.filename)
+
+        reports.extend(
+            chained
+            for chained in (current.__cause__, current.__context__)
+            if chained is not None
+        )
+        reports.extend(current.exceptions or ())
+
+
+def _capture_exception(err: BaseException) -> traceback.TracebackException:
+    """Capture an exception to report, hiding the frames of the console itself."""
     # Its own traceback, as an exception can replace __traceback__ too.
     tb = _EXCEPTION_TRACEBACK.__get__(err)  # pylint: disable=unnecessary-dunder-call
     while tb is not None and tb.tb_frame.f_code.co_filename != CONSOLE_FILENAME:

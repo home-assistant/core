@@ -192,6 +192,16 @@ async def test_syntax_error(websocket_client: MockHAClientWebSocket) -> None:
             "<Sneaky that failed to format>",
             id="notes",
         ),
+        pytest.param(
+            "class Notes(list):\n"
+            "        def __iter__(self):\n"
+            "            raise SystemExit\n\n"
+            "    @property\n"
+            "    def __notes__(self):\n"
+            "        return self.Notes(['note'])",
+            "<Sneaky that failed to format>",
+            id="notes_while_formatting",
+        ),
     ],
 )
 async def test_error_that_fails_to_format(
@@ -206,6 +216,25 @@ async def test_error_that_fails_to_format(
 
     result = await async_execute(websocket_client, "1 + 1")
     assert result["result"] == {"type": "number", "value": "2"}
+
+
+async def test_chained_errors(websocket_client: MockHAClientWebSocket) -> None:
+    """Test chained errors and exception groups report each error, with source."""
+    result = await async_execute(
+        websocket_client,
+        "import json\n"
+        "try:\n"
+        "    json.loads('{')\n"
+        "except ValueError as err:\n"
+        "    raise ExceptionGroup('many', [KeyError('inner')]) from err",
+    )
+
+    assert "json.decoder.JSONDecodeError" in result["error"]
+    assert "The above exception was the direct cause" in result["error"]
+    assert "ExceptionGroup: many (1 sub-exception)" in result["error"]
+    assert "KeyError: 'inner'" in result["error"]
+    # Read from the source of the json module, in the executor.
+    assert "obj, end = self.raw_decode(s, idx=_w(s, 0).end())" in result["error"]
 
 
 async def test_syntax_error_runs_nothing(

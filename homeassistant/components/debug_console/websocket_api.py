@@ -2,7 +2,6 @@
 
 import asyncio
 from functools import wraps
-import traceback
 from typing import Any
 
 import probatio
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from .completion import async_complete, signature_hint
 from .const import DOMAIN
 from .execution import async_execute, is_incomplete
-from .inspection import USER_CODE_ERRORS, get_attribute, inspect_children
+from .inspection import USER_CODE_ERRORS, format_error, get_attribute, inspect_children
 from .safeguards import (
     async_accept_warning,
     async_log_execution,
@@ -191,7 +190,7 @@ def handle_inspect(
         connection.send_error(
             msg["id"],
             websocket_api.ERR_UNKNOWN_ERROR,
-            "".join(traceback.format_exception_only(err)).strip(),
+            format_error(err),
         )
         return
 

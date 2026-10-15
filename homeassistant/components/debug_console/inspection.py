@@ -180,7 +180,7 @@ def get_attribute(session: ConsoleSession, value: Any, name: str) -> dict[str, A
     try:
         return {"value": describe(session, getattr(value, name))}
     except USER_CODE_ERRORS as err:
-        return {"error": "".join(traceback.format_exception_only(err))}
+        return {"error": format_error(err)}
 
 
 def has_type(value: Any, types: Iterable[type]) -> bool:
@@ -198,6 +198,17 @@ def is_class(value: Any) -> TypeGuard[type]:
     Unlike isinstance(), which reads __class__, and that can be a property.
     """
     return issubclass(type(value), type)
+
+
+def format_error(err: BaseException) -> str:
+    """Format an exception in a line, like Python does after its traceback.
+
+    That runs code of the exception, like its __notes__, which can raise too.
+    """
+    try:
+        return "".join(traceback.format_exception_only(err)).strip()
+    except USER_CODE_ERRORS:
+        return f"<{class_name(err)} that failed to format>"
 
 
 def class_mro(cls: type) -> tuple[type, ...]:

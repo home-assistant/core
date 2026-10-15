@@ -138,7 +138,7 @@ Thing()
             "object_id": object_id,
             "attribute": "fails",
         },
-    ) == {"error": "ValueError: nope\n"}
+    ) == {"error": "ValueError: nope"}
 
 
 @pytest.mark.parametrize(
@@ -210,7 +210,7 @@ async def test_property_raising_system_exit(
             "object_id": result["result"]["object_id"],
             "attribute": "leave",
         },
-    ) == {"error": "SystemExit: None\n"}
+    ) == {"error": "SystemExit: None"}
 
     result = await async_execute(websocket_client, "1 + 1")
 
@@ -403,6 +403,64 @@ async def test_inspecting_does_not_exit(
 
     assert not msg["success"]
     assert msg["error"] == {"code": "unknown_error", "message": "SystemExit: None"}
+
+
+# An exception that raises SystemExit when its notes are read, like when
+# formatting it.
+UNFORMATTABLE = """
+class Unformattable(Exception):
+    @property
+    def __notes__(self):
+        raise SystemExit
+"""
+
+
+async def test_inspect_error_that_fails_to_format(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test an error that fails to format while expanding is reported."""
+    result = await async_execute(
+        websocket_client,
+        UNFORMATTABLE
+        + "class Bad(list):\n    def __iter__(self):\n        raise Unformattable\n"
+        + "\nBad([1])",
+    )
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "debug_console/inspect",
+            "session_id": SESSION_ID,
+            "object_id": result["result"]["object_id"],
+        }
+    )
+    msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "<Unformattable that failed to format>",
+    }
+
+
+async def test_property_error_that_fails_to_format(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test a property raising an error that fails to format is reported."""
+    result = await async_execute(
+        websocket_client,
+        UNFORMATTABLE
+        + "class Thing:\n    @property\n    def state(self):\n"
+        + "        raise Unformattable\n\nThing()",
+    )
+
+    assert await async_send(
+        websocket_client,
+        {
+            "type": "debug_console/get_attribute",
+            "object_id": result["result"]["object_id"],
+            "attribute": "state",
+        },
+    ) == {"error": "<Unformattable that failed to format>"}
 
 
 async def test_inspect_without_metaclass_code(
