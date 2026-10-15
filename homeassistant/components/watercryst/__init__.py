@@ -122,6 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
