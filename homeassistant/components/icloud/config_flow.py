@@ -293,8 +293,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self.api = None
         self._api_login = login
 
-        # Check if already configured.
-        if self.unique_id is None:
+        # Check if already configured. The user flow can be submitted again with
+        # another account, which then is the one that is checked and stored.
+        if self.source == SOURCE_USER or self.unique_id is None:
             await self.async_set_unique_id(self._username)
             self._abort_if_unique_id_configured()
 

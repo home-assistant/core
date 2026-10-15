@@ -1181,5 +1181,32 @@ async def test_changed_credentials_after_an_outage_are_logged_in_again(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "other@me.com"
+    assert result["result"].unique_id == "other@me.com"
     assert service_mock.call_count == 2
     assert service_mock.call_args.args[:2] == ("other@me.com", "other")
+
+
+async def test_switching_to_a_configured_account_after_an_outage_is_refused(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the account submitted last is the one checked for duplicates."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_USERNAME: "other@me.com"},
+        unique_id="other@me.com",
+    ).add_to_hass(hass)
+
+    with _service_rejecting_the_device_fetch(
+        PyiCloudServiceUnavailable("iCloud is unavailable")
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "other@me.com", CONF_PASSWORD: "other"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
