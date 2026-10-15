@@ -1278,7 +1278,7 @@ ha-iotawattpy==0.3.0
 ha-philipsjs==3.3.0
 
 # homeassistant.components.homeassistant_hardware
-ha-silabs-firmware-client==0.3.0
+ha-silabs-firmware-client==0.4.0
 
 # homeassistant.components.xthings_cloud
 ha-xthings-cloud==1.0.5

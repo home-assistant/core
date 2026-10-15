@@ -8,6 +8,6 @@
   "integration_type": "system",
   "requirements": [
     "universal-silabs-flasher==1.1.0",
-    "ha-silabs-firmware-client==0.3.0"
+    "ha-silabs-firmware-client==0.4.0"
   ]
 }
