@@ -10,7 +10,7 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
+from homeassistant.const import (
     ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_FAN_SPEED,
     ATTR_PARAMS,
     DATA_COMPONENT,
@@ -62,6 +62,39 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
+
+__all__ = [
+    "ATTR_CLEANED_AREA",
+    "ATTR_COMMAND",
+    "ATTR_FAN_SPEED",
+    "ATTR_FAN_SPEED_LIST",
+    "ATTR_PARAMS",
+    "ATTR_STATUS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_CLEAN_AREA",
+    "SERVICE_CLEAN_SPOT",
+    "SERVICE_LOCATE",
+    "SERVICE_PAUSE",
+    "SERVICE_RETURN_TO_BASE",
+    "SERVICE_SEND_COMMAND",
+    "SERVICE_SET_FAN_SPEED",
+    "SERVICE_START",
+    "SERVICE_START_PAUSE",
+    "SERVICE_STOP",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "Segment",
+    "StateVacuumEntity",
+    "StateVacuumEntityDescription",
+    "VacuumActivity",
+    "VacuumEntityCapabilityAttribute",
+    "VacuumEntityFeature",
+    "VacuumEntityStateAttribute",
+]
 
 # mypy: disallow-any-generics
 

@@ -1,7 +1,7 @@
 """The enphase_envoy component."""
 
 import contextlib
-import datetime
+import datetime as dt
 from datetime import timedelta
 import logging
 import math
@@ -121,7 +121,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return int(low), int(high)
 
     @callback
-    def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
+    def _async_refresh_token_if_needed(self, now: dt.datetime) -> None:
         """Proactively refresh token if its stale in case cloud services goes down."""
         assert isinstance(self.envoy.auth, EnvoyTokenAuth)
         fresh = self._track_token_lifetime()
@@ -188,7 +188,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._async_update_saved_token()
 
     @callback
-    def _async_refresh_firmware(self, now: datetime.datetime) -> None:
+    def _async_refresh_firmware(self, now: dt.datetime) -> None:
         """Proactively check for firmware changes in Envoy."""
         self.hass.async_create_background_task(
             self._async_try_refresh_firmware(), "{name} firmware refresh"
@@ -230,7 +230,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @callback
-    def _async_verify_mac(self, now: datetime.datetime) -> None:
+    def _async_verify_mac(self, now: dt.datetime) -> None:
         """Verify Envoy active interface mac address in background."""
         self.hass.async_create_background_task(
             self._async_fetch_and_compare_mac(), "{name} verify envoy mac address"

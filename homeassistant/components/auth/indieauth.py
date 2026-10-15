@@ -1,5 +1,6 @@
 """Helpers to resolve client ID/secret."""
 
+from contextlib import suppress
 from html.parser import HTMLParser
 from http import HTTPStatus
 from ipaddress import ip_address
@@ -389,19 +390,13 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # We are not goint to follow the spec here. We are going to allow
     # any internal network IP to be used inside a client id.
 
+    # hostname excludes the port and the [, ] around ipv6 addresses
+    if parts.hostname is None:
+        raise ValueError("Client ID must contain a hostname")
+
     address = None
-
-    try:
-        netloc = parts.netloc
-
-        # Strip the [, ] from ipv6 addresses before parsing
-        if netloc[0] == "[" and netloc[-1] == "]":
-            netloc = netloc[1:-1]
-
-        address = ip_address(netloc)
-    except ValueError:
-        # Not an ip address
-        pass
+    with suppress(ValueError):
+        address = ip_address(parts.hostname)
 
     if address is None or is_local(address):
         return parts
