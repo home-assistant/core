@@ -2056,7 +2056,10 @@ async def test_normal_child_exit_waits_for_exhausted_source_close(
 
     async def spawn(*args, **kwargs):
         process = await original(
-            sys.executable, "-c", "import sys;sys.exit(0)", **kwargs
+            sys.executable,
+            "-c",
+            "import sys;sys.stdin.buffer.read();sys.exit(0)",
+            **kwargs,
         )
         processes.append(process)
         return process
