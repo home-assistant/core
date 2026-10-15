@@ -50,6 +50,7 @@ from .helpers import data_packet
 _LOGGER = logging.getLogger(__name__)
 
 LEARNING_TIMEOUT = timedelta(seconds=30)
+LEARNING_POLL_INTERVAL = 1
 
 COMMAND_TYPE_IR = "ir"
 COMMAND_TYPE_RF = "rf"
@@ -387,7 +388,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
+                await asyncio.sleep(LEARNING_POLL_INTERVAL)
                 try:
                     code = await device.async_request(device.api.check_data)
                 except ReadError, StorageError:
@@ -425,7 +426,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
+                await asyncio.sleep(LEARNING_POLL_INTERVAL)
                 is_found, frequency = await device.async_request(
                     device.api.check_frequency
                 )
@@ -463,7 +464,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
+                await asyncio.sleep(LEARNING_POLL_INTERVAL)
                 try:
                     code = await device.async_request(device.api.check_data)
                 except ReadError, StorageError:

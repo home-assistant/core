@@ -1,6 +1,7 @@
 """Tests for Broadlink remotes."""
 
 from base64 import b64decode
+from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
@@ -43,16 +44,14 @@ IR_PACKET = (
     "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
     "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA=="
 )
+IR_PACKET_ALT = "JgAEAAECAwQ="
 
 
-def _codes_storage_key(device: BroadlinkDevice) -> str:
-    """Return the storage key holding the codes of a device."""
-    return f"broadlink_remote_{device.mac}_codes"
-
-
-def _flags_storage_key(device: BroadlinkDevice) -> str:
-    """Return the storage key holding the toggle flags of a device."""
-    return f"broadlink_remote_{device.mac}_flags"
+@pytest.fixture
+def no_learning_delay() -> Generator[None]:
+    """Make the learning loop poll the device without waiting."""
+    with patch("homeassistant.components.broadlink.remote.LEARNING_POLL_INTERVAL", 0):
+        yield
 
 
 async def _async_setup_remote(
@@ -67,6 +66,28 @@ async def _async_setup_remote(
     )
     remote = next(entry for entry in entries if entry.domain == Platform.REMOTE)
     return mock_setup, remote.entity_id
+
+
+async def _async_reload_remote(hass: HomeAssistant, mock_setup: MockSetup) -> None:
+    """Reload the config entry, so the remote reads its codes back from storage."""
+    with patch(
+        "homeassistant.components.broadlink.device.blk.gendevice",
+        return_value=mock_setup.api,
+    ):
+        await hass.config_entries.async_reload(mock_setup.entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def _async_call_remote(
+    hass: HomeAssistant, service: str, entity_id: str, **data: Any
+) -> None:
+    """Call a remote action for the subdevice."""
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        service,
+        {"entity_id": entity_id, "device": SUBDEVICE, **data},
+        blocking=True,
+    )
 
 
 async def test_remote_setup_works(
@@ -263,44 +284,47 @@ async def test_remote_send_command_error_stops_sending(
     assert exc_info.value.translation_domain == DOMAIN
 
 
+@pytest.mark.usefixtures("no_learning_delay")
 async def test_remote_send_command_error_stores_toggle_flags(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the toggle flags are stored when sending fails partway."""
     device = get_device("Entrance")
-    hass_storage[_codes_storage_key(device)] = {
-        "version": 1,
-        "data": {SUBDEVICE: {"toggle": [IR_PACKET, IR_PACKET]}},
-    }
     mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup.api.check_data.side_effect = [
+        b64decode(IR_PACKET),
+        b64decode(IR_PACKET_ALT),
+    ]
+    await _async_call_remote(
+        hass, SERVICE_LEARN_COMMAND, entity_id, command=["toggle"], alternative=True
+    )
     mock_setup.api.send_data.side_effect = [None, BroadlinkException("boom")]
 
     with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            REMOTE_DOMAIN,
+        await _async_call_remote(
+            hass,
             SERVICE_SEND_COMMAND,
-            {
-                "entity_id": entity_id,
-                "device": SUBDEVICE,
-                "command": ["toggle", "toggle"],
-                "delay_secs": 0,
-            },
-            blocking=True,
+            entity_id,
+            command=["toggle", "toggle"],
+            delay_secs=0,
         )
 
     freezer.tick(timedelta(seconds=FLAG_SAVE_DELAY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    await _async_reload_remote(hass, mock_setup)
+    mock_setup.api.send_data.reset_mock(side_effect=True)
 
-    assert hass_storage[_flags_storage_key(device)]["data"] == {SUBDEVICE: 1}
+    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["toggle"])
+
+    assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET_ALT))]
 
 
+@pytest.mark.usefixtures("no_learning_delay")
 async def test_remote_learn_command_error_stops_learning(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a fatal learning error stops learning but stores what was learned."""
@@ -309,27 +333,22 @@ async def test_remote_learn_command_error_stops_learning(
     mock_setup.api.check_data.return_value = b64decode(IR_PACKET)
     mock_setup.api.enter_learning.side_effect = [None, NetworkTimeoutError("boom")]
 
-    with (
-        patch("homeassistant.components.broadlink.remote.asyncio.sleep"),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await hass.services.async_call(
-            REMOTE_DOMAIN,
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _async_call_remote(
+            hass,
             SERVICE_LEARN_COMMAND,
-            {
-                "entity_id": entity_id,
-                "device": SUBDEVICE,
-                "command": ["first", "second", "third"],
-            },
-            blocking=True,
+            entity_id,
+            command=["first", "second", "third"],
         )
 
     assert mock_setup.api.enter_learning.call_count == 2
     assert exc_info.value.translation_key == "learn_command_failed"
     assert exc_info.value.translation_domain == DOMAIN
-    assert hass_storage[_codes_storage_key(device)]["data"] == {
-        SUBDEVICE: {"first": IR_PACKET}
-    }
+
+    await _async_reload_remote(hass, mock_setup)
+    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["first"])
+
+    assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))]
 
 
 @pytest.mark.parametrize(
@@ -338,24 +357,24 @@ async def test_remote_learn_command_error_stops_learning(
         pytest.param(
             [None, BroadlinkException("boom"), None],
             "learn_command_failed",
-            {"first": IR_PACKET, "third": IR_PACKET},
+            ["first", "third"],
             id="one_command_failed",
         ),
         pytest.param(
             [BroadlinkException("boom"), None, BroadlinkException("boom")],
             "learn_commands_failed",
-            {"second": IR_PACKET},
+            ["second"],
             id="two_commands_failed",
         ),
     ],
 )
+@pytest.mark.usefixtures("no_learning_delay")
 async def test_remote_learn_command_skips_failed_commands(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
     entity_registry: er.EntityRegistry,
     side_effect: list[Exception | None],
     translation_key: str,
-    learned: dict[str, str],
+    learned: list[str],
 ) -> None:
     """Test an unreadable command is skipped while the others are learned."""
     device = get_device("Entrance")
@@ -363,51 +382,44 @@ async def test_remote_learn_command_skips_failed_commands(
     mock_setup.api.check_data.return_value = b64decode(IR_PACKET)
     mock_setup.api.enter_learning.side_effect = side_effect
 
-    with (
-        patch("homeassistant.components.broadlink.remote.asyncio.sleep"),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await hass.services.async_call(
-            REMOTE_DOMAIN,
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _async_call_remote(
+            hass,
             SERVICE_LEARN_COMMAND,
-            {
-                "entity_id": entity_id,
-                "device": SUBDEVICE,
-                "command": ["first", "second", "third"],
-            },
-            blocking=True,
+            entity_id,
+            command=["first", "second", "third"],
         )
 
     assert mock_setup.api.enter_learning.call_count == 3
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_domain == DOMAIN
-    assert hass_storage[_codes_storage_key(device)]["data"] == {SUBDEVICE: learned}
+
+    await _async_call_remote(
+        hass, SERVICE_SEND_COMMAND, entity_id, command=learned, delay_secs=0
+    )
+
+    assert mock_setup.api.send_data.call_args_list == [
+        call(b64decode(IR_PACKET))
+    ] * len(learned)
 
 
+@pytest.mark.usefixtures("no_learning_delay")
 async def test_remote_delete_command_reports_unknown_commands(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test partially unknown commands are reported, known ones are deleted."""
     device = get_device("Entrance")
-    hass_storage[_codes_storage_key(device)] = {
-        "version": 1,
-        "data": {SUBDEVICE: {"known": IR_PACKET, "other": IR_PACKET}},
-    }
-    _, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup.api.check_data.return_value = b64decode(IR_PACKET)
+    await _async_call_remote(
+        hass, SERVICE_LEARN_COMMAND, entity_id, command=["known", "other"]
+    )
 
     with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            REMOTE_DOMAIN,
-            SERVICE_DELETE_COMMAND,
-            {
-                "entity_id": entity_id,
-                "device": SUBDEVICE,
-                "command": ["known", "unknown"],
-            },
-            blocking=True,
+        await _async_call_remote(
+            hass, SERVICE_DELETE_COMMAND, entity_id, command=["known", "unknown"]
         )
 
     assert exc_info.value.translation_key == "command_not_found"
@@ -416,10 +428,15 @@ async def test_remote_delete_command_reports_unknown_commands(
     freezer.tick(timedelta(seconds=CODE_SAVE_DELAY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    await _async_reload_remote(hass, mock_setup)
 
-    assert hass_storage[_codes_storage_key(device)]["data"] == {
-        SUBDEVICE: {"other": IR_PACKET}
-    }
+    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["other"])
+    assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))]
+
+    with pytest.raises(ValueError, match="Command not found: 'known'"):
+        await _async_call_remote(
+            hass, SERVICE_SEND_COMMAND, entity_id, command=["known"]
+        )
 
 
 @pytest.mark.parametrize(
@@ -439,10 +456,9 @@ async def test_remote_delete_command_reports_unknown_commands(
         ),
     ],
 )
+@pytest.mark.usefixtures("no_learning_delay")
 async def test_remote_delete_command_reports_invalid_input(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     commands: list[str],
     subdevice: str,
@@ -450,9 +466,11 @@ async def test_remote_delete_command_reports_invalid_input(
 ) -> None:
     """Test nothing is deleted when no command matches the request."""
     device = get_device("Entrance")
-    codes = {SUBDEVICE: {"known": IR_PACKET, "other": IR_PACKET}}
-    hass_storage[_codes_storage_key(device)] = {"version": 1, "data": codes}
-    _, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup.api.check_data.return_value = b64decode(IR_PACKET)
+    await _async_call_remote(
+        hass, SERVICE_LEARN_COMMAND, entity_id, command=["known", "other"]
+    )
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
@@ -465,8 +483,8 @@ async def test_remote_delete_command_reports_invalid_input(
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_domain == DOMAIN
 
-    freezer.tick(timedelta(seconds=CODE_SAVE_DELAY))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _async_call_remote(
+        hass, SERVICE_SEND_COMMAND, entity_id, command=["known", "other"], delay_secs=0
+    )
 
-    assert hass_storage[_codes_storage_key(device)]["data"] == codes
+    assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))] * 2
