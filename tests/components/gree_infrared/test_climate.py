@@ -2258,6 +2258,7 @@ async def test_pending_option_stays_private_during_state_publication(
 
 
 @pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("extra_entry_data", [{CONF_MODEL: MODEL_YAP1F}], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_detached_climate_ignores_queued_received_signal(
     hass: HomeAssistant,
@@ -2272,7 +2273,10 @@ async def test_detached_climate_ignores_queued_received_signal(
         climate._async_handle_signal(
             InfraredReceivedSignal(
                 timings=GreeAcCommand(
-                    mode=GreeAcMode.COOL, temperature=24, turbo=True
+                    model=GreeAcModel.YAP1F,
+                    mode=GreeAcMode.COOL,
+                    temperature=24,
+                    turbo=True,
                 ).get_raw_timings()
             )
         )
