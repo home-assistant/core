@@ -524,6 +524,17 @@ async def _async_convert_audio(  # noqa: C901
         if error is not None:
             raise error
 
+    async def close_before_spawn(primary: BaseException) -> None:
+        """Keep the primary error and retrieve an interrupted close result."""
+        close_task = hass.async_create_background_task(
+            close_input(), "tts_ffmpeg_source_close"
+        )
+        try:
+            await _async_ffmpeg_join(close_task)
+        except asyncio.CancelledError:
+            close_task.add_done_callback(_ffmpeg_late_result)
+            raise primary from None
+
     pcm_info: _StreamingPcmInfo | None = None
     if is_streaming_wav:
         # Unwrapping the container lets ffmpeg start streaming immediately
@@ -531,11 +542,8 @@ async def _async_convert_audio(  # noqa: C901
         assert isinstance(audio_input, AsyncGenerator)
         try:
             pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
-        except BaseException:
-            close_task = hass.async_create_background_task(
-                close_input(), "tts_ffmpeg_source_close"
-            )
-            await _async_ffmpeg_join(close_task)
+        except BaseException as primary:
+            await close_before_spawn(primary)
             raise
         audio_input = _async_prepend_audio(
             pcm_info.leftover if pcm_info else consumed, audio_input
@@ -598,12 +606,9 @@ async def _async_convert_audio(  # noqa: C901
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-    except BaseException:
+    except BaseException as primary:
         if is_input_gen:
-            close_task = hass.async_create_background_task(
-                close_input(), "tts_ffmpeg_source_close"
-            )
-            await _async_ffmpeg_join(close_task)
+            await close_before_spawn(primary)
         raise
 
     writer_task: asyncio.Task | None = None

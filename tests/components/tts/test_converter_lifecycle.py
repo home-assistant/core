@@ -445,6 +445,120 @@ async def test_wav_header_failure_supervises_slow_source_close(
         await gen.aclose()
 
 
+@pytest.mark.parametrize("boundary", ["header", "spawn"])
+@pytest.mark.parametrize("primary", ["error", "cancelled"])
+@pytest.mark.parametrize("late_close", ["healthy", "error"])
+async def test_second_cancel_during_prespawn_close_preserves_primary_and_retrieves_late_result(
+    ffmpeg_ready: HomeAssistant,
+    wav_audio: bytes,
+    caplog: pytest.LogCaptureFixture,
+    boundary: str,
+    primary: str,
+    late_close: str,
+) -> None:
+    """An interrupted pre-spawn join must keep both source and result owned."""
+    failure = RuntimeError(f"{boundary} primary")
+    close_failure = RuntimeError("late pre-spawn close sentinel")
+    closing = asyncio.Event()
+    release = asyncio.Event()
+    pulling = asyncio.Event()
+    wrapper_closed = asyncio.Event()
+    close_owner: asyncio.Task | None = None
+
+    class Source(AsyncGenerator[bytes]):
+        def __init__(self) -> None:
+            self.sent = False
+
+        async def __anext__(self) -> bytes:
+            if boundary == "header":
+                pulling.set()
+                if primary == "error":
+                    raise failure
+                await asyncio.Event().wait()
+            if not self.sent:
+                self.sent = True
+                return wav_audio
+            raise StopAsyncIteration
+
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
+            return await anext(self)
+
+        async def athrow(self, *args) -> bytes:
+            raise StopAsyncIteration
+
+        async def aclose(self) -> None:
+            nonlocal close_owner
+            close_owner = asyncio.current_task()
+            closing.set()
+            await release.wait()
+            if late_close == "error":
+                raise close_failure
+
+    class Wrapper(AsyncGenerator[bytes]):
+        async def __anext__(self) -> bytes:
+            return await anext(source)
+
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
+            return await anext(self)
+
+        async def athrow(self, *args) -> bytes:
+            raise StopAsyncIteration
+
+        async def aclose(self) -> None:
+            wrapper_closed.set()
+
+    async def spawn(*args, **kwargs):
+        pulling.set()
+        if primary == "error":
+            raise failure
+        await asyncio.Event().wait()
+
+    source = Source()
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav")
+    owner: asyncio.Task | None = None
+    try:
+        with (
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch("homeassistant.components.tts._async_prepend_audio", return_value=Wrapper()),
+        ):
+            owner = asyncio.create_task(anext(gen))
+            await asyncio.wait_for(pulling.wait(), 3)
+            if primary == "cancelled":
+                owner.cancel()
+            await asyncio.wait_for(closing.wait(), 3)
+            assert not owner.done() and close_owner is not None
+            owner.cancel()  # Interrupt the production join, not the owned close.
+            if primary == "error":
+                with pytest.raises(RuntimeError) as caught:
+                    await _observe(owner, 0.7)
+                assert caught.value is failure
+            else:
+                with pytest.raises(asyncio.CancelledError):
+                    await _observe(owner, 0.7)
+            assert close_owner in ffmpeg_ready._background_tasks
+            assert not close_owner.done() and not close_owner.cancelling()
+            if boundary == "spawn":
+                assert wrapper_closed.is_set()
+            assert not release.is_set()
+            release.set()  # Late close finishes after the primary owner outcome.
+            await asyncio.wait({close_owner}, timeout=2)
+            assert close_owner.done()
+            await asyncio.sleep(0)  # Allow the production result callback to run.
+            if late_close == "error":
+                assert any(str(close_failure) in r.message for r in caplog.records)
+            else:
+                assert not any("cleanup task failed" in r.message for r in caplog.records)
+    finally:
+        release.set()
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        if close_owner is not None:
+            await asyncio.gather(close_owner, return_exceptions=True)
+        await gen.aclose()
+
+
 async def _collect(gen: AsyncGenerator[bytes]) -> bytes:
     return b"".join([chunk async for chunk in gen])
 
