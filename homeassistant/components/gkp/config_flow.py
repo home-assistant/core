@@ -94,4 +94,4 @@ class OAuth2FlowHandler(
 
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title="GKP", data=data)
+        return self.async_create_entry(title="GKP Home", data=data)

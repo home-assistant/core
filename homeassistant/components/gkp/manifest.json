@@ -1,6 +1,6 @@
 {
   "domain": "gkp",
-  "name": "GKP",
+  "name": "GKP Home",
   "codeowners": ["@theobld-ww"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

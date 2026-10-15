@@ -129,7 +129,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="GKP",
+        title="GKP Home",
         data={
             "auth_implementation": DOMAIN,
             "token": {

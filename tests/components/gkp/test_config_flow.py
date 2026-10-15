@@ -62,7 +62,7 @@ async def test_full_flow(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result.get("type") is FlowResultType.CREATE_ENTRY
-        assert result.get("title") == "GKP"
+        assert result.get("title") == "GKP Home"
         assert "token" in result.get("data", {})
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
