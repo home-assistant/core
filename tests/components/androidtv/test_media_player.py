@@ -1283,16 +1283,23 @@ def test_raw_screencap_unsupported_format() -> None:
 
 
 @pytest.mark.parametrize(
-    ("raw", "legacy_calls"),
+    ("compressed", "legacy_calls"),
     [
-        pytest.param(bytes(11), 0, id="truncated-frame"),
+        pytest.param(gzip.compress(bytes(11)), 0, id="truncated-frame"),
         pytest.param(
-            struct.pack("<IIII", 1, 1, 43, 0) + bytes(4), 1, id="unsupported-format"
+            gzip.compress(struct.pack("<IIII", 1, 1, 43, 0) + bytes(4)),
+            1,
+            id="unsupported-format",
+        ),
+        pytest.param(
+            bytes.fromhex("1f8b0800000000000003070000000000000000"),
+            0,
+            id="invalid-deflate",
         ),
     ],
 )
 async def test_raw_screencap_failure_keeps_connection(
-    hass: HomeAssistant, raw: bytes, legacy_calls: int
+    hass: HomeAssistant, compressed: bytes, legacy_calls: int
 ) -> None:
     """A decoding failure does not disconnect a healthy ADB transport."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
@@ -1303,7 +1310,7 @@ async def test_raw_screencap_failure_keeps_connection(
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    encoded = base64.b64encode(gzip.compress(raw)).decode()
+    encoded = base64.b64encode(compressed).decode()
     with (
         patchers.patch_shell("11")[patch_key],
         patch(

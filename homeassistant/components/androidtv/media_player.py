@@ -8,6 +8,7 @@ from io import BytesIO
 import logging
 import struct
 from typing import override
+import zlib
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
@@ -188,7 +189,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             image = await self.hass.async_add_executor_job(
                 _encode_raw_screencap, encoded
             )
-        except (ValueError, OSError, EOFError) as err:
+        except (ValueError, OSError, EOFError, zlib.error) as err:
             _LOGGER.warning("Unable to decode raw screenshot: %s", err)
             return None
         if image is not None:
