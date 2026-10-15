@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'api_key': '**REDACTED**',
+    }),
+    'subentries': dict({
+      'ABCDEF': dict({
+        'data': dict({
+          'model': 'openai/gpt-3.5-turbo',
+          'prompt': '**REDACTED**',
+          'web_search': False,
+        }),
+        'subentry_type': 'conversation',
+        'title': 'GPT-3.5 Turbo',
+      }),
+      'ABCDEG': dict({
+        'data': dict({
+          'model': 'google/gemini-2.5-flash-image',
+          'output_modalities': list([
+            'text',
+            'image',
+          ]),
+        }),
+        'subentry_type': 'ai_task_data',
+        'title': 'Gemini 2.5 Flash Image',
+      }),
+    }),
+  })
+# ---

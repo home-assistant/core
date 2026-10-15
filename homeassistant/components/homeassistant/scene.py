@@ -88,7 +88,7 @@ PLATFORM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_PLATFORM): DOMAIN,
         probatio.Required(STATES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
@@ -106,7 +106,7 @@ PLATFORM_SCHEMA = probatio.Schema(
 )
 
 CREATE_SCENE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_ENTITIES, CONF_SNAPSHOT),
+    probatio.AtLeastOne(CONF_ENTITIES, CONF_SNAPSHOT),
     _ensure_no_intersection,
     probatio.Schema(
         {
@@ -210,6 +210,8 @@ async def async_setup_platform(
 
         hass.bus.async_fire(EVENT_SCENE_RELOADED, context=call.context)
 
+    # Cannot be moved: scene actions are registered by the scene platform
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     async_register_admin_service(hass, SCENE_DOMAIN, SERVICE_RELOAD, reload_config)
 
     async def apply_service(call: ServiceCall) -> None:
@@ -226,6 +228,7 @@ async def async_setup_platform(
             reproduce_options=reproduce_options,
         )
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         SCENE_DOMAIN,
         SERVICE_APPLY,
@@ -267,6 +270,7 @@ async def async_setup_platform(
             await platform.async_remove_entity(entity_id)
         async_add_entities([HomeAssistantScene(hass, scene_config, from_service=True)])
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
     )
@@ -297,6 +301,7 @@ async def async_setup_platform(
 
             await platform.async_remove_entity(entity_id)
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         SCENE_DOMAIN,
         SERVICE_DELETE,

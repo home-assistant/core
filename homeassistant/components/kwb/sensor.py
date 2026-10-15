@@ -44,12 +44,14 @@ ETHERNET_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_TYPE): "tcp",
     }
 )
 
-PLATFORM_SCHEMA = probatio.Schema(probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA))
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.TaggedUnion(CONF_TYPE, [SERIAL_SCHEMA, ETHERNET_SCHEMA])
+)
 
 
 def setup_platform(

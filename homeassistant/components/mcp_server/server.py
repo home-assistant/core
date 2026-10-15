@@ -44,7 +44,9 @@ def _format_tool(
 ) -> types.Tool:
     """Format tool specification."""
     input_schema = probatio.to_openapi(
-        tool.parameters, custom_serializer=custom_serializer
+        tool.parameters,
+        custom_serializer=custom_serializer,
+        openapi_version="3.1.0",
     )
     mcp_schema: dict[str, Any] = {
         "type": "object",
@@ -55,13 +57,23 @@ def _format_tool(
         mcp_schema["required"] = required
     return types.Tool(
         name=tool.name,
+        title=tool.title,
         description=tool.description or "",
         inputSchema=mcp_schema,
+        annotations=types.ToolAnnotations(
+            readOnlyHint=tool.annotations.read_only,
+            destructiveHint=tool.annotations.destructive,
+            idempotentHint=tool.annotations.idempotent,
+            openWorldHint=tool.annotations.open_world,
+        ),
     )
 
 
 async def create_server(
-    hass: HomeAssistant, llm_api_id: str | list[str], llm_context: llm.LLMContext
+    hass: HomeAssistant,
+    llm_api_id: str | list[str],
+    llm_context: llm.LLMContext,
+    read_only: bool,
 ) -> Server:
     """Create a new Model Context Protocol Server.
 
@@ -81,9 +93,15 @@ async def create_server(
             raise ValueError(f"{META_DEVICE_ID} must be a string")
 
         # Backwards compatibility with old MCP Server config
-        return await llm.async_get_api(
+        llm_api = await llm.async_get_api(
             hass, llm_api_id, replace(llm_context, device_id=device_id)
         )
+        if read_only:
+            # Removing the tools also blocks calls to them.
+            llm_api.tools = [
+                tool for tool in llm_api.tools if tool.annotations.read_only
+            ]
+        return llm_api
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
@@ -147,12 +165,12 @@ async def create_server(
         tool_response = await llm_api.async_call_tool(
             llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
         )
-        if not tool_response.get("success"):
-            raise HomeAssistantError(cast(str, tool_response["error"]))
+        if tool_response.error:
+            raise HomeAssistantError(cast(str, tool_response.data["error"]))
 
         return [
             ReadResourceContents(
-                content=cast(str, tool_response["result"]),
+                content=cast(str, tool_response.data["result"]),
                 mime_type=SNAPSHOT_RESOURCE_MIME_TYPE,
             )
         ]
@@ -164,7 +182,7 @@ async def create_server(
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
     @server.call_tool()  # type: ignore[untyped-decorator]
-    async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
+    async def call_tool(name: str, arguments: dict) -> types.CallToolResult:
         """Handle calling tools."""
         llm_api = await get_api_instance()
         tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
@@ -174,11 +192,14 @@ async def create_server(
             tool_response = await llm_api.async_call_tool(tool_input)
         except (HomeAssistantError, probatio.Invalid) as e:
             raise HomeAssistantError(f"Error calling tool: {e}") from e
-        return [
-            types.TextContent(
-                type="text",
-                text=json.dumps(tool_response, ensure_ascii=False),
-            )
-        ]
+        return types.CallToolResult(
+            content=[
+                types.TextContent(
+                    type="text",
+                    text=json.dumps(tool_response.data, ensure_ascii=False),
+                )
+            ],
+            isError=tool_response.error,
+        )
 
     return server

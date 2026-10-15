@@ -1,5 +1,7 @@
 """Test the IntelliFire config flow."""
 
+from unittest.mock import AsyncMock, MagicMock
+
 from intellifire4py.exceptions import LoginError
 import pytest
 
@@ -38,6 +40,7 @@ async def test_standard_config_with_single_fireplace(
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
     # For a single fireplace we just create it
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "ip_address": "192.168.2.108",
@@ -155,6 +158,7 @@ async def test_standard_config_with_multiple_fireplace(
         "username": "grumpypanda@china.cn",
         "password": "you-stole-my-pandas",
     }
+    assert result["result"].unique_id == "4GC295860E5837G40D9974B7FD459234"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -180,6 +184,7 @@ async def test_dhcp_discovery_intellifire_device(
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "4GC295860E5837G40D9974B7FD459234"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -298,7 +303,7 @@ async def test_options_flow_allows_submit_when_not_loaded(
 async def test_options_flow_local_read_unavailable(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
-    mock_apis_single_fp,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, MagicMock],
 ) -> None:
     """Test options flow error when local unavailable for read."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
@@ -327,11 +332,18 @@ async def test_options_flow_local_read_unavailable(
     # Verify connectivity was checked
     mock_fp.async_validate_connectivity.assert_called_once()
 
+    mock_fp.local_connectivity = True
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_flow_local_control_unavailable(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
-    mock_apis_single_fp,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, MagicMock],
 ) -> None:
     """Test options flow error when local unavailable for control."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
@@ -358,11 +370,18 @@ async def test_options_flow_local_control_unavailable(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_CONTROL_MODE: "local_unavailable"}
 
+    mock_fp.local_connectivity = True
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_LOCAL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_flow_cloud_read_unavailable(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
-    mock_apis_single_fp,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, MagicMock],
 ) -> None:
     """Test options flow error when cloud unavailable for read."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
@@ -391,11 +410,18 @@ async def test_options_flow_cloud_read_unavailable(
     # Verify connectivity was checked
     mock_fp.async_validate_connectivity.assert_called_once()
 
+    mock_fp.cloud_connectivity = True
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_LOCAL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_flow_cloud_control_unavailable(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
-    mock_apis_single_fp,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, MagicMock],
 ) -> None:
     """Test options flow error when cloud unavailable for control."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
@@ -421,3 +447,10 @@ async def test_options_flow_cloud_control_unavailable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_CONTROL_MODE: "cloud_unavailable"}
+
+    mock_fp.cloud_connectivity = True
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

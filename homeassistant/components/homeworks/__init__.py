@@ -1,11 +1,9 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
 
-import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any
 
-import probatio
 from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import (
     HW_BUTTON_PRESSED,
@@ -16,7 +14,6 @@ from pyhomeworks.pyhomeworks import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_COMMAND,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -26,8 +23,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -35,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_KEYPADS, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,13 +44,6 @@ EVENT_BUTTON_RELEASE = "homeworks_button_release"
 KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_CONTROLLER_ID): str,
-        probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [str]),
-    }
-)
 
 type HomeworksConfigEntry = ConfigEntry[HomeworksData]
 
@@ -66,62 +57,6 @@ class HomeworksData:
     keypads: dict[str, HomeworksKeypad]
 
 
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for Lutron Homeworks Series 4 and 8 integration."""
-
-    hass.services.async_register(
-        DOMAIN,
-        "send_command",
-        async_send_command,
-        schema=SERVICE_SEND_COMMAND_SCHEMA,
-    )
-
-
-async def async_send_command(service_call: ServiceCall) -> None:
-    """Send command to a controller."""
-
-    def get_controller_ids() -> list[str]:
-        """Get homeworks data for the specified controller ID."""
-        return [
-            entry.runtime_data.controller_id
-            for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN)
-        ]
-
-    def get_homeworks_data(controller_id: str) -> HomeworksData | None:
-        """Get homeworks data for the specified controller ID."""
-        entry: HomeworksConfigEntry
-        for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN):
-            if entry.runtime_data.controller_id == controller_id:
-                return entry.runtime_data
-        return None
-
-    homeworks_data = get_homeworks_data(service_call.data[CONF_CONTROLLER_ID])
-    if not homeworks_data:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_controller_id",
-            translation_placeholders={
-                "controller_id": service_call.data[CONF_CONTROLLER_ID],
-                "controller_ids": ",".join(get_controller_ids()),
-            },
-        )
-
-    commands = service_call.data[CONF_COMMAND]
-    _LOGGER.debug("Send commands: %s", commands)
-    for command in commands:
-        if command.lower().startswith("delay"):
-            delay = int(command.partition(" ")[2])
-            _LOGGER.debug("Sleeping for %s ms", delay)
-            await asyncio.sleep(delay / 1000)
-        else:
-            _LOGGER.debug("Sending command '%s'", command)
-            await service_call.hass.async_add_executor_job(
-                homeworks_data.controller._send,  # noqa: SLF001
-                command,
-            )
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start Homeworks controller."""
     async_setup_services(hass)
@@ -129,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:
     """Set up Homeworks from a config entry."""
 
     controller_id = entry.options[CONF_CONTROLLER_ID]
@@ -175,18 +110,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        for keypad in entry.runtime_data.keypads.values():
-            keypad.unsubscribe()
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    for keypad in entry.runtime_data.keypads.values():
+        keypad.unsubscribe()
 
-        await hass.async_add_executor_job(entry.runtime_data.controller.stop)
-
-    return unload_ok
+    await hass.async_add_executor_job(entry.runtime_data.controller.stop)
 
 
 async def update_listener(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:

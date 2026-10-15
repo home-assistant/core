@@ -58,15 +58,13 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
         )
 
         if subentry:
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    coordinator.hass,
-                    (
-                        DOMAIN,
-                        f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
-                    ),
-                    config_entry_id=coordinator.config_entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
+                ),
+                config_entry_id=coordinator.config_entry.entry_id,
             )
 
     @property

@@ -38,8 +38,8 @@ description: Reviews Home Assistant code changes and provides constructive feedb
   - Example output:
     ```
     Overall assessment: request changes.
-    - [CRITICAL] sensor.py:143 - Memory leak
-    - [PROBLEM] data_processing.py:87 - Inefficient algorithm
-    - [SUGGESTION] test_init.py:45 - Improve x variable name
+    1. [CRITICAL] sensor.py:143 - Memory leak
+    2. [PROBLEM] data_processing.py:87 - Inefficient algorithm
+    3. [SUGGESTION] test_init.py:45 - Improve x variable name
     ```
   - Make sure to include the file and line number when possible in the bullet points.

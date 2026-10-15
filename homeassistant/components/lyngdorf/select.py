@@ -4,13 +4,15 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from lyngdorf import LyngdorfReceiver
+from lyngdorf import LyngdorfInvalidValueError, LyngdorfReceiver
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
@@ -94,4 +96,14 @@ class LyngdorfSelect(LyngdorfEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
-        await self.entity_description.select_option_fn(self._receiver, option)
+        try:
+            await self.entity_description.select_option_fn(self._receiver, option)
+        except LyngdorfInvalidValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_option",
+                translation_placeholders={
+                    "option": option,
+                    "options": ", ".join(self.options),
+                },
+            ) from err

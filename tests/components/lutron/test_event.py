@@ -61,14 +61,18 @@ async def test_event_single_press(
     assert events[0].data["uuid"] == "button_uuid"
 
 
+@pytest.mark.parametrize("button_type", ["MasterRaiseLower", "SingleSceneRaiseLower"])
 async def test_event_press_release(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    button_type: str,
 ) -> None:
     """Test press and release events."""
     mock_config_entry.add_to_hass(hass)
 
     button = mock_lutron.areas[0].keypads[0].buttons[0]
-    button.button_type = "MasterRaiseLower"
+    button.button_type = button_type
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,23 +80,24 @@ async def test_event_press_release(
     # Subscribe to events
     events = async_capture_events(hass, "lutron_event")
 
-    # Simulate button press
-    for call in button.subscribe.call_args_list:
-        callback = call[0][0]
-        callback(button, None, Button.Event.PRESSED, None)
-    await hass.async_block_till_done()
+    # Two taps, so a release swallowed after a press would show up
+    for event in (
+        Button.Event.PRESSED,
+        Button.Event.RELEASED,
+        Button.Event.PRESSED,
+        Button.Event.RELEASED,
+    ):
+        for call in button.subscribe.call_args_list:
+            callback = call[0][0]
+            callback(button, None, event, None)
+        await hass.async_block_till_done()
 
-    assert len(events) == 1
-    assert events[0].data["action"] == "pressed"
-
-    # Simulate button release
-    for call in button.subscribe.call_args_list:
-        callback = call[0][0]
-        callback(button, None, Button.Event.RELEASED, None)
-    await hass.async_block_till_done()
-
-    assert len(events) == 2
-    assert events[1].data["action"] == "released"
+    assert [e.data["action"] for e in events] == [
+        "pressed",
+        "released",
+        "pressed",
+        "released",
+    ]
 
 
 async def test_event_release_only_button(
@@ -114,3 +119,33 @@ async def test_event_release_only_button(
 
     assert len(events) == 1
     assert events[0].data["action"] == "single"
+
+
+async def test_event_press_and_release_button(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A button that reports both a press and a release fires once per tap."""
+    mock_config_entry.add_to_hass(hass)
+
+    button = mock_lutron.areas[0].keypads[0].buttons[0]
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    events = async_capture_events(hass, "lutron_event")
+
+    # Fires on the press and skips its release. A release with no press
+    # before it (e.g. a dropped press, or HA started mid-hold) still fires.
+    for event, expected in (
+        (Button.Event.PRESSED, 1),
+        (Button.Event.RELEASED, 1),
+        (Button.Event.RELEASED, 2),
+        (Button.Event.PRESSED, 3),
+        (Button.Event.RELEASED, 3),
+    ):
+        for call in button.subscribe.call_args_list:
+            callback = call[0][0]
+            callback(button, None, event, None)
+        await hass.async_block_till_done()
+        assert len(events) == expected
+
+    assert all(e.data["action"] == "single" for e in events)

@@ -66,3 +66,4 @@ async def test_flow_works(
     assert result["data"] == {
         "station": "L12345",
     }
+    assert result["result"].unique_id == "L12345"

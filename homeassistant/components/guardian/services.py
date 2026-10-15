@@ -49,7 +49,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): cv.string,
         probatio.Optional(CONF_URL): cv.url,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
         probatio.Optional(CONF_FILENAME): cv.string,
     },
 )

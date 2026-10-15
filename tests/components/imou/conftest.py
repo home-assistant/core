@@ -66,6 +66,7 @@ def mock_imou_ha_device_manager(
     with patch(PATCH_IMOU_HA_DEVICE_MANAGER, autospec=True) as mock_manager:
         device_manager = mock_manager.return_value
         device_manager.async_get_devices.return_value = imou_mock_devices
+        device_manager.async_update_devices_status.return_value = set()
         yield device_manager
 
 

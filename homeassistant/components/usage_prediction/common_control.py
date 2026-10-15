@@ -25,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 # Time categories for usage patterns
 TIME_CATEGORIES = ["morning", "afternoon", "evening", "night"]
 
-RESULTS_TO_INCLUDE = 8
-
 # Rows fetched per round trip while streaming the events query
 QUERY_YIELD_PER = 4096
 
@@ -106,19 +104,10 @@ async def async_predict_common_control(
     )
 
     return EntityUsagePredictions(
-        morning=[
-            ent_id for (ent_id, _) in results["morning"].most_common(RESULTS_TO_INCLUDE)
-        ],
-        afternoon=[
-            ent_id
-            for (ent_id, _) in results["afternoon"].most_common(RESULTS_TO_INCLUDE)
-        ],
-        evening=[
-            ent_id for (ent_id, _) in results["evening"].most_common(RESULTS_TO_INCLUDE)
-        ],
-        night=[
-            ent_id for (ent_id, _) in results["night"].most_common(RESULTS_TO_INCLUDE)
-        ],
+        morning=[ent_id for (ent_id, _) in results["morning"].most_common()],
+        afternoon=[ent_id for (ent_id, _) in results["afternoon"].most_common()],
+        evening=[ent_id for (ent_id, _) in results["evening"].most_common()],
+        night=[ent_id for (ent_id, _) in results["night"].most_common()],
     )
 
 

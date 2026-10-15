@@ -43,7 +43,7 @@ PARALLEL_UPDATES = 1
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_SWITCHES, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(CONF_HOST): cv.string,

@@ -24,7 +24,7 @@ from homeassistant.components.ovhcloud_ai_endpoints.entity import (
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, intent
+from homeassistant.helpers import entity_registry as er, intent, llm
 from homeassistant.helpers.llm import ToolInput
 
 from . import setup_integration
@@ -355,12 +355,14 @@ async def test_function_call(
             agent_id="conversation.meta_llama_3_3_70b_instruct",
             tool_call_id="mock_tool_call_id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=llm.ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(

@@ -836,9 +836,7 @@ async def test_get_progress_index(
         form_user = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        form_reconfigure = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
-        )
+        form_reconfigure = await entry.start_reconfigure_flow(hass)
 
     for form in (form_hassio, form_user, form_reconfigure):
         assert form["type"] is data_entry_flow.FlowResultType.FORM
@@ -1296,10 +1294,10 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
         assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
+    bad_entry = MockConfigEntry(domain="test2", title="Test 2")
+    bad_entry.add_to_hass(hass)
     with mock_config_flow("test2", BadFlow):
-        forms["bad"] = await hass.config_entries.flow.async_init(
-            "test2", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
-        )
+        forms["bad"] = await bad_entry.start_reauth_flow(hass)
     assert forms["bad"]["type"] is data_entry_flow.FlowResultType.FORM
     assert forms["bad"]["step_id"] == "account"
 

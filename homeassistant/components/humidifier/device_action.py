@@ -21,7 +21,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 # mypy: disallow-any-generics
 
@@ -45,7 +46,16 @@ ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend(
     {probatio.Required(CONF_DOMAIN): DOMAIN}
 )
 
-_ACTION_SCHEMA = probatio.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "set_humidity": SET_HUMIDITY_SCHEMA,
+        "set_mode": SET_MODE_SCHEMA,
+        "toggle": ONOFF_SCHEMA,
+        "turn_off": ONOFF_SCHEMA,
+        "turn_on": ONOFF_SCHEMA,
+    },
+)
 
 
 async def async_validate_action_config(

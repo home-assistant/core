@@ -147,6 +147,16 @@ def v2_resources_test_data() -> JsonArrayType:
     return load_json_array_fixture("hue/v2_resources.json")
 
 
+def replace_resources(
+    data: JsonArrayType, resources: list[dict[str, Any]]
+) -> JsonArrayType:
+    """Return the test data with each resource of the same id replaced."""
+    replacements = {resource["id"]: resource for resource in resources}
+    missing = replacements.keys() - {resource["id"] for resource in data}
+    assert not missing, f"resource id(s) not present in the test data: {missing}"
+    return [replacements.get(resource["id"], resource) for resource in data]
+
+
 def create_mock_api_v2() -> Mock:
     """Create a mock V2 API."""
     api = Mock(spec=aiohue_v2.HueBridgeV2)
@@ -231,6 +241,7 @@ def create_config_entry(
         domain=hue.DOMAIN,
         title=f"Mock bridge {api_version}",
         data={"host": host, "api_version": api_version, "api_key": ""},
+        minor_version=2,
     )
 
 
@@ -273,7 +284,6 @@ async def setup_platform(
         platforms = [platforms]
     if hostname is None:
         hostname = "mock-host"
-    hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry(
         api_version=mock_bridge.api_version, host=hostname
     )

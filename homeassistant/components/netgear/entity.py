@@ -44,7 +44,7 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
         # Offline devices restored at startup have no model yet; only set it when known
         # so a previously stored model is not overwritten with None.
         if (device_model := device["device_model"]) is not None:
-            self._attr_device_info["model"] = device_model
+            self._attr_device_info.model = device_model
 
     def get_device_name(self):
         """Return the name of the given device or the MAC if we don't know."""
