@@ -118,6 +118,15 @@ def remove_entity_data(hass: HomeAssistant, entity_id: str) -> None:
         del debug_info_entities[entity_id]
 
 
+def rename_entity_data(
+    hass: HomeAssistant, old_entity_id: str, new_entity_id: str
+) -> None:
+    """Move debug data to a new entity_id."""
+    debug_info_entities = hass.data[DATA_MQTT].debug_info_entities
+    if old_entity_id in debug_info_entities:
+        debug_info_entities[new_entity_id] = debug_info_entities.pop(old_entity_id)
+
+
 def add_trigger_discovery_data(
     hass: HomeAssistant,
     discovery_hash: tuple[str, str],

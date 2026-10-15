@@ -82,7 +82,7 @@ async def test_scrape_sensor(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -111,7 +111,7 @@ async def test_scrape_xml_content_type(
 
     mocker = MockRestData("test_scrape_xml")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -144,7 +144,7 @@ async def test_scrape_xml_declaration(
 
     mocker = MockRestData("test_scrape_xml_fallback")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -184,7 +184,7 @@ async def test_scrape_html5_with_xml_declaration(
 
     mocker = MockRestData("test_scrape_html5_with_xml_declaration")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -220,7 +220,7 @@ async def test_scrape_sensor_value_template(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -251,7 +251,7 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_uom_and_classes")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -283,7 +283,7 @@ async def test_scrape_unique_id(
 
     mocker = MockRestData("test_scrape_uom_and_classes")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -327,7 +327,7 @@ async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor_authentication")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -351,7 +351,7 @@ async def test_scrape_sensor_no_data(
 
     mocker = MockRestData("test_scrape_sensor_no_data")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -375,7 +375,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -414,7 +414,7 @@ async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -447,7 +447,7 @@ async def test_scrape_sensor_device_date(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -475,7 +475,7 @@ async def test_scrape_sensor_device_date_errors(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -503,7 +503,7 @@ async def test_scrape_sensor_device_timestamp(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -531,7 +531,7 @@ async def test_scrape_sensor_device_timestamp_error(hass: HomeAssistant) -> None
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -565,7 +565,7 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -597,7 +597,7 @@ async def test_scrape_sensor_unique_id(
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -661,7 +661,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -809,7 +809,7 @@ async def test_template_render_with_availability_syntax_error(
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -852,7 +852,7 @@ async def test_availability_blocks_value_template(
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)

@@ -355,6 +355,102 @@
     }),
   ])
 # ---
+# name: test_function_call_with_silent_response[empty-delta]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function silently',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': '',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call_with_silent_response[no-text-deltas]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function silently',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': '',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
 # name: test_function_call_without_reasoning
   list([
     dict({
@@ -416,9 +512,6 @@
 # ---
 # name: test_model_args[subentry_options1]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.5',
     'prompt_cache_retention': '24h',
@@ -436,9 +529,6 @@
 # ---
 # name: test_model_args[subentry_options2]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.6-sol',
     'prompt_cache_options': dict({
@@ -459,9 +549,6 @@
 # ---
 # name: test_model_args[subentry_options3]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.6-sol',
     'prompt_cache_options': dict({
@@ -483,9 +570,6 @@
 # ---
 # name: test_model_args[subentry_options4]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-6-astra',
     'prompt_cache_options': dict({
@@ -505,9 +589,6 @@
 # ---
 # name: test_model_args[subentry_options5]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-6-astra',
     'prompt_cache_options': dict({
@@ -528,9 +609,6 @@
 # ---
 # name: test_model_args[subentry_options6]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-6-astra',
     'prompt_cache_options': dict({
@@ -545,6 +623,46 @@
     'text': dict({
       'verbosity': 'high',
     }),
+  })
+# ---
+# name: test_model_args[subentry_options7]
+  dict({
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-luna',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options8]
+  dict({
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-luna',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'none',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'temperature': 0.5,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+    'top_p': 0.9,
   })
 # ---
 # name: test_web_search[False]

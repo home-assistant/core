@@ -336,3 +336,7 @@ async def test_entry_migration_v3_failure(
     # Test config entry.
     assert v1_mock_config_entry.version == 2
     assert v1_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        v1_mock_config_entry.reason
+        == f"Unable to look up the address of Minecraft server {TEST_HOST}"
+    )

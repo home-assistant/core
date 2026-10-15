@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import attr
-import httpx
+import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -42,13 +42,13 @@ from tests.common import MockConfigEntry
     ("side_effect", "error"),
     [
         (
-            APIConnectionError(request=httpx.Request(method="GET", url="test")),
+            APIConnectionError(request=httpx2.Request(method="GET", url="test")),
             "Connection error",
         ),
         (
             BadRequestError(
-                response=httpx.Response(
-                    status_code=500, request=httpx.Request(method="GET", url="test")
+                response=httpx2.Response(
+                    status_code=500, request=httpx2.Request(method="GET", url="test")
                 ),
                 body=None,
                 message="",
@@ -85,8 +85,8 @@ async def test_init_auth_error(
         "openai.resources.models.AsyncModels.list",
         new_callable=AsyncMock,
         side_effect=AuthenticationError(
-            response=httpx.Response(
-                status_code=500, request=httpx.Request(method="GET", url="test")
+            response=httpx2.Response(
+                status_code=500, request=httpx2.Request(method="GET", url="test")
             ),
             body=None,
             message="",

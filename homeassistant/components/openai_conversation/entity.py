@@ -438,6 +438,19 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 ]
             }
         elif isinstance(event, ResponseCompletedEvent):
+            if (
+                event.response.output
+                and isinstance(
+                    message := event.response.output[-1], ResponseOutputMessage
+                )
+                and message.status == "completed"
+                and message.content
+                and all(
+                    part.type == "output_text" and part.text == ""
+                    for part in message.content
+                )
+            ):
+                yield {"content": ""}
             if event.response.usage is not None:
                 chat_log.async_trace(
                     {
@@ -557,7 +570,6 @@ class OpenAIBaseLLMEntity(Entity):
                 reasoning["mode"] = "pro"
 
             model_args["reasoning"] = reasoning
-            model_args["include"] = ["reasoning.encrypted_content"]
 
         if (
             not model_args["model"].startswith(("gpt-5", "gpt-6"))
@@ -710,6 +722,7 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                     model_args["service_tier"] = "default"
                     continue
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
@@ -717,6 +730,7 @@ class OpenAIBaseLLMEntity(Entity):
                     isinstance(err, openai.APIError)
                     and err.type == "insufficient_quota"
                 ):
+                    # pylint: disable-next=home-assistant-log-and-raise
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
                 if "Verify Organization" in str(err):
@@ -734,6 +748,7 @@ class OpenAIBaseLLMEntity(Entity):
                         },
                     )
 
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
 

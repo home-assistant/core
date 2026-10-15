@@ -7,7 +7,11 @@ from typing import override
 from ical.event import Event, EventStatus
 from ical.timeline import Timeline, materialize_timeline
 
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    CalendarEntity,
+    CalendarEvent,
+    CalendarEventStatus,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -170,4 +174,10 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
+        # Callers drop cancelled events, the one status CalendarEventStatus lacks.
+        status=(
+            CalendarEventStatus(event.status.value.lower())
+            if event.status is not None
+            else None
+        ),
     )

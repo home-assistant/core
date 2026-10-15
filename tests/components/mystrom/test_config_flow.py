@@ -50,6 +50,7 @@ async def test_form_combined(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "myStrom Device"
     assert result2["data"] == {"host": "1.1.1.1"}
+    assert result2["result"].unique_id == DEVICE_MAC
 
 
 async def test_form_duplicates(

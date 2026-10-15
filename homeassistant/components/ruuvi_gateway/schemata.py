@@ -7,7 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 

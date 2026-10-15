@@ -40,6 +40,8 @@ async def test_binary_sensor_entities_snapshot(
         ("not_charging", "off"),
         ("alert", "on"),
         ("no_alert", "off"),
+        ("dirty", "on"),
+        ("clean", "off"),
     ],
 )
 async def test_binary_sensor_return_value(

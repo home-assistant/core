@@ -1,6 +1,7 @@
 """The tests for the MQTT client."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import json
 import socket
@@ -16,7 +17,11 @@ import pytest
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
 from homeassistant.components.mqtt.const import DOMAIN, SUPPORTED_COMPONENTS
-from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
+from homeassistant.components.mqtt.models import (
+    DATA_MQTT,
+    MessageCallbackType,
+    ReceiveMessage,
+)
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     CONF_PROTOCOL,
@@ -454,6 +459,9 @@ async def test_subscribe_and_resubscribe(
         mqtt_client_mock.unsubscribe.assert_called_once_with(["test-topic"])
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_topic_non_async(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
@@ -1217,6 +1225,97 @@ async def test_wildcard_unsubscribe_race(
         expected_calls_2,
         expected_calls_3,
     )
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [
+        (
+            {mqtt.CONF_BROKER: "mock-broker", CONF_PROTOCOL: "5"},
+            ENTRY_DEFAULT_BIRTH_MESSAGE,
+        )
+    ],
+    ids=["v5"],
+)
+@pytest.mark.parametrize(
+    "deliver_unsuback",
+    [
+        pytest.param(
+            lambda hass, ack, *args: hass.loop.call_soon(ack, *args),
+            id="unsuback_after_subscribe_pass",
+        ),
+        pytest.param(
+            lambda hass, ack, *args: ack(*args),
+            id="unsuback_before_subscribe_pass",
+        ),
+    ],
+)
+async def test_wildcard_resubscribe_while_unsubscribe_in_flight(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    deliver_unsuback: Callable[..., Any],
+) -> None:
+    """Test resubscribing to a wildcard topic while its UNSUBACK is pending."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    generator = hass.data[DATA_MQTT].subscription_id_generator
+    calls: list[ReceiveMessage] = []
+
+    @callback
+    def _callback(msg: ReceiveMessage) -> None:
+        calls.append(msg)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, "test/#", _callback)
+    await mock_debouncer.wait()
+    subscription_id = generator.get_subscription_id("test/#")
+
+    resubscribe_callbacks: list[CALLBACK_TYPE] = []
+
+    def _unsubscribe(topic: list[str]) -> tuple[int, int]:
+        # Subscribe again before the UNSUBACK is processed
+        resubscribe_callbacks.append(
+            hass.data[DATA_MQTT].client.async_subscribe("test/#", _callback, 0)
+        )
+        mid = 1000
+        deliver_unsuback(
+            hass,
+            mqtt_client_mock.on_unsubscribe,
+            Mock(),
+            0,
+            mid,
+            [MockMqttReasonCode()],
+            None,
+        )
+        return (0, mid)
+
+    mqtt_client_mock.unsubscribe.side_effect = _unsubscribe
+    mqtt_client_mock.reset_mock()
+
+    mock_debouncer.clear()
+    unsub()
+    await mock_debouncer.wait()
+    mqtt_client_mock.unsubscribe.assert_called_once_with(["test/#"])
+
+    mock_debouncer.clear()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await mock_debouncer.wait()
+
+    assert len(resubscribe_callbacks) == 1
+    mqtt_client_mock.subscribe.assert_called_once()
+    assert mqtt_client_mock.subscribe.call_args.kwargs[
+        "properties"
+    ].SubscriptionIdentifier == [subscription_id]
+    assert generator.get_subscription_id("test/#") == subscription_id
+
+    properties = paho_mqtt.Properties(paho_mqtt.PacketTypes.PUBLISH)
+    properties.SubscriptionIdentifier = subscription_id
+    async_fire_mqtt_message(hass, "test/state", "online", properties=properties)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # The kept ID must not be handed out to another topic
+    assert generator.get_or_generate("other/#") != subscription_id
 
 
 @pytest.mark.parametrize(

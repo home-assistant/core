@@ -43,7 +43,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.components.tplink.light import (
+from homeassistant.components.tplink.services import (
     SERVICE_RANDOM_EFFECT,
     SERVICE_SEQUENCE_EFFECT,
 )
