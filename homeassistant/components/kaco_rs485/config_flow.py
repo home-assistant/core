@@ -6,7 +6,7 @@ each inverter's own display menu and nothing announces them.
 """
 
 import asyncio
-from typing import Any, override
+from typing import Any, Self, override
 
 from kaco_rs485 import AsyncBus, BusError
 from kaco_rs485.discovery import ALL_ADDRESSES, Discovered, ScanResult, scan
@@ -50,11 +50,14 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._scan_task = None
             # No unique id available: xi units return zero bytes for `s`.
             self._async_abort_entries_match({CONF_PORT: self._port})
+            if self.hass.config_entries.flow.async_has_matching_flow(self):
+                return self.async_abort(reason="already_in_progress")
             try:
                 async with AsyncBus(self._port):
                     pass
             except BusError:
                 LOGGER.debug("Could not open %s", self._port, exc_info=True)
+                self._port = None
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_scan()
@@ -66,6 +69,11 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    @override
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is using the same port."""
+        return self._port is not None and self._port == other_flow._port
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None

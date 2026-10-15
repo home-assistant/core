@@ -192,6 +192,32 @@ async def test_a_port_added_by_another_flow_during_the_scan_is_rejected(
 
 
 @pytest.mark.usefixtures("mock_bus")
+async def test_a_port_already_being_set_up_is_rejected(hass: HomeAssistant) -> None:
+    """Test a second flow cannot scan a port another flow is scanning."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    first = await hass.config_entries.flow.async_configure(
+        first["flow_id"], {CONF_PORT: MOCK_PORT}
+    )
+    assert first["type"] is FlowResultType.SHOW_PROGRESS
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_configure(
+        second["flow_id"], {CONF_PORT: MOCK_PORT}
+    )
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_in_progress"
+
+    await hass.async_block_till_done()
+    first = await hass.config_entries.flow.async_configure(first["flow_id"])
+    first = await hass.config_entries.flow.async_configure(first["flow_id"], {})
+    assert first["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_bus")
 async def test_a_port_added_during_the_title_lookup_is_rejected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
