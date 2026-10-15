@@ -542,6 +542,12 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             self.hass.async_create_task(self._async_disconnect())
 
 
+def _energy_site_name(energy_data: TeslemetryEnergyData) -> str | None:
+    """Return the name of an energy site, if it has one."""
+    name = energy_data.device.name
+    return name if isinstance(name, str) else None
+
+
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     """Pair a local Powerwall gateway for TEDAPI v1r command routing."""
 
@@ -589,7 +595,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
-            self._site_name = energy_data.device.get("name") or "Energy Site"
+            self._site_name = _energy_site_name(energy_data) or "Energy Site"
             try:
                 await self._prepare_energy_site(energy_data)
                 return await self._async_begin_pairing()
@@ -604,7 +610,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     probatio.Required(CONF_SITE_ID): probatio.In(
                         {
-                            site_id: energy_data.device.get("name") or site_id
+                            site_id: _energy_site_name(energy_data) or site_id
                             for site_id, energy_data in available.items()
                         }
                     )
