@@ -6490,6 +6490,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "seafile": {
+      "name": "Seafile",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "season": {
       "integration_type": "service",
       "config_flow": true,
