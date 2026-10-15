@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyaprilaire.const import Attribute
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aprilaire.const import DOMAIN
@@ -104,14 +105,22 @@ def _mock_client(mac_address: str) -> AsyncMock:
     return client
 
 
+@pytest.mark.parametrize(
+    ("old_mac", "new_mac"),
+    [
+        pytest.param("b4:82:55:0:1a:5", "b4:82:55:00:1a:05", id="unpadded"),
+        # format_mac treated the 12 character "0:3:4a:1:2:3" as unseparated
+        pytest.param("0::3::4a::1::2::3", "00:03:4a:01:02:03", id="regrouped"),
+    ],
+)
 async def test_migrate_unpadded_mac_address(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    old_mac: str,
+    new_mac: str,
 ) -> None:
     """Test migrating the unpadded MAC address of pyaprilaire < 0.10."""
-    old_mac = "b4:82:55:0:1a:5"
-    new_mac = "b4:82:55:00:1a:05"
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,

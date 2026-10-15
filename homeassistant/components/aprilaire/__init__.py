@@ -67,8 +67,13 @@ def _zero_pad_mac(mac_address: str) -> str:
     """Zero-pad each octet of a MAC address formatted by pyaprilaire < 0.10.
 
     Older versions of pyaprilaire dropped the leading zero of octets below
-    0x10 (e.g. "b4:82:55:0:1a:5"), which format_mac passes through unchanged.
+    0x10 (e.g. "b4:82:55:0:1a:5"), which format_mac passes through unchanged,
+    except at 12 characters, where it inserted a colon after every second
+    character (e.g. "0:3:4a:1:2:3" became "0::3::4a::1::2::3").
     """
+    if len(mac_address) == 17 and mac_address.count(":") == 10:
+        mac_address = "".join(mac_address[i : i + 2] for i in range(0, 17, 3))
+
     return format_mac(":".join(octet.zfill(2) for octet in mac_address.split(":")))
 
 
