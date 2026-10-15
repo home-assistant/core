@@ -374,6 +374,10 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
 
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
+            ),
+            probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
             probatio.Optional(
                 CONF_UNIT_OF_MEASUREMENT
             ): selector.UnitOfMeasurementSelector(
@@ -384,10 +388,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
                     }
                 ),
             ),
-            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
-            ),
-            probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
         }
 
     if domain == Platform.SWITCH:
