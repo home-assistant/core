@@ -627,6 +627,7 @@ jobs:
           python --version
           sudo apt-get install -y -qq time >/dev/null
           nproc
+          lscpu | grep "Model name"
           free -m
           swapon --show
           vmstat 5 > vmstat.log &
@@ -691,6 +692,7 @@ jobs:
           python --version
           sudo apt-get install -y -qq time >/dev/null
           nproc
+          lscpu | grep "Model name"
           free -m
           swapon --show
           vmstat 5 > vmstat.log &
