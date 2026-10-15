@@ -404,15 +404,66 @@ async def test_a_device_gaining_a_battery_gets_its_battery_sensor(
 
         account = config_entry.runtime_data
         device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
-        await hass.async_add_executor_job(
-            device.update,
+        service.devices._devices[0] = MockAppleDevice(
             DEVICE_WITHOUT_BATTERY
-            | {"batteryStatus": "NotCharging", "batteryLevel": 0.4},
+            | {"batteryStatus": "NotCharging", "batteryLevel": 0.4}
         )
+        with patch.object(account, "_schedule_next_fetch"):
+            await hass.async_add_executor_job(account.update_devices)
         await hass.async_block_till_done()
 
     assert device.battery_level == 40
     assert battery_sensors() != []
+
+
+async def test_new_devices_are_announced_once_after_the_scan(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that listeners are told only once the poll has finished adding devices.
+
+    The platforms iterate the account's devices on the event loop, while the
+    poll adds them from the executor. A signal sent from the middle of the scan
+    can have a listener iterating while the next device is added.
+    """
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(
+            USER_INFO, [MockAppleDevice(DEVICE_WITHOUT_BATTERY)]
+        )
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        account = config_entry.runtime_data
+
+        # The first device gains a battery, and another one appears after it.
+        service.devices._devices[0] = MockAppleDevice(
+            DEVICE_WITHOUT_BATTERY
+            | {"batteryStatus": "NotCharging", "batteryLevel": 0.4}
+        )
+        service.devices._devices.append(
+            MockAppleDevice(DEVICE | {"id": "device9", "name": "iPad 9"})
+        )
+        announced = []
+
+        def record(hass: HomeAssistant, signal: str, *args: object) -> None:
+            if signal == account.signal_device_new:
+                announced.append(sorted(account.devices))
+
+        with (
+            patch.object(account, "_schedule_next_fetch"),
+            patch("homeassistant.components.icloud.account.dispatcher_send", record),
+        ):
+            await hass.async_add_executor_job(account.update_devices)
+
+    assert announced == [sorted([DEVICE_WITHOUT_BATTERY["id"], "device9"])]
 
 
 async def test_a_battery_level_that_is_absent_is_not_zero(

@@ -334,7 +334,8 @@ class IcloudAccount:
                 # to keep it current: skipping the update would leave the
                 # battery and location it has stopped reporting on show.
                 _LOGGER.debug("Updating iCloud device: %s", device_name)
-                self._devices[device_id].update(status)
+                if self._devices[device_id].update(status):
+                    new_device = True
                 continue
 
             # Being locatable is what makes a device worth tracking, and
@@ -675,8 +676,13 @@ class IcloudDevice:
         elif account.owner_fullname is not None:
             self._attrs[ATTR_OWNER_NAME] = account.owner_fullname
 
-    def update(self, status) -> None:
-        """Update the iCloud device."""
+    def update(self, status) -> bool:
+        """Update the iCloud device.
+
+        Returns whether the device has gained something the platforms build
+        entities from, so the caller can tell them once its scan is done.
+        """
+        announce = False
         self._status = status
 
         self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
@@ -695,8 +701,6 @@ class IcloudDevice:
             self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
-            if announce:
-                dispatcher_send(self._account.hass, self._account.signal_device_new)
         else:
             # Keeping a device whose battery iCloud has stopped reporting -
             # one that has gone to sleep, say - would otherwise leave the
@@ -709,15 +713,11 @@ class IcloudDevice:
         # iCloud reports no battery for still has a location worth reading.
         location = self._status.get(DEVICE_LOCATION)
         if location and _is_usable_location(location):
-            # Stored before it is announced: this runs off the event loop, so
-            # the listener can read the device before the assignment lands,
-            # find no location, skip it and never be told again.
-            announce = self._location is None
+            announce = announce or self._location is None
             self._location = location
-            if announce:
-                dispatcher_send(self._account.hass, self._account.signal_device_new)
         else:
             self._location = None
+        return announce
 
     def play_sound(self) -> None:
         """Play sound on the device."""
