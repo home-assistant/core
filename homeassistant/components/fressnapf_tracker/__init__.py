@@ -73,7 +73,7 @@ async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | N
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: FressnapfTrackerConfigEntry
-) -> bool:
+) -> None:
     """Set up Fressnapf Tracker from a config entry."""
     auth_client = AuthClient(client=get_async_client(hass))
     try:
@@ -104,11 +104,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: FressnapfTrackerConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

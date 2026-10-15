@@ -41,10 +41,12 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_AB_ALARM_SOUND,
         translation_key=PARAM_AB_ALARM_SOUND,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_AUDIO_ENCODE_CONTROL,
         translation_key=PARAM_AUDIO_ENCODE_CONTROL,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_CLOSE_CAMERA,
@@ -58,11 +60,13 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_HEADER_DETECT,
         translation_key=PARAM_HEADER_DETECT,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_LIGHT,
         translation_key=PARAM_LIGHT,
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_LINKAGE_SIREN,
@@ -77,6 +81,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_MOTION_DETECT,
         translation_key=PARAM_MOTION_DETECT,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_PET_DETECT,

@@ -1169,3 +1169,9 @@ async def async_manage_coiot_issues_task(
         },
         data={"entry_id": entry.entry_id},
     )
+
+
+def normalize_command_source(source: str | None) -> str | None:
+    """Normalize the last command source to match translation keys."""
+    # Sources mix case (e.g. "WS_in"); Wall Display also uses spaces ("RPC Set")
+    return source and source.lower().replace(" ", "_")

@@ -56,7 +56,7 @@ class VistapoolData:
 type VistapoolConfigEntry = ConfigEntry[VistapoolData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> None:
     """Set up Vistapool from a config entry.
 
     One config entry represents a Hayward account; the account can contain
@@ -129,19 +129,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
     entry.async_on_unload(subscription.aclose)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> None:
     """Unload Vistapool config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        # Hold sync_lock so a reconcile background task can't mutate the
-        # coordinators dict while we shut it down.
-        async with entry.runtime_data.sync_lock:
-            for coordinator in entry.runtime_data.coordinators.values():
-                await coordinator.async_shutdown()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Hold sync_lock so a reconcile background task can't mutate the
+    # coordinators dict while we shut it down.
+    async with entry.runtime_data.sync_lock:
+        for coordinator in entry.runtime_data.coordinators.values():
+            await coordinator.async_shutdown()
 
 
 @callback

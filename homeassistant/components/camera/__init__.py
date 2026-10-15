@@ -154,7 +154,7 @@ async def _async_get_image(
     that we can scale, however the majority of cases
     are handled.
     """
-    with suppress(asyncio.CancelledError, TimeoutError):
+    with suppress(TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
                 await async_get_stream_image(

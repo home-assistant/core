@@ -26,7 +26,7 @@ DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
 _PLATFORMS = (Platform.SENSOR,)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) -> None:
     """Set up Google Drive from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -64,13 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleDriveConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

@@ -9,10 +9,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import (
+    ApiError,
     CredentialsInvalidError,
     LoginAccountDeviceError,
     LoginPrivacyModeError,
+    ReolinkConnectionError,
     ReolinkError,
+    ReolinkTimeoutError,
 )
 
 from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL
@@ -27,7 +30,7 @@ from homeassistant.components.reolink.coordinator import (
     DEVICE_UPDATE_INTERVAL_MIN,
     NUM_CRED_ERRORS,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -144,6 +147,101 @@ async def test_failures_parametrized(
     await hass.async_block_till_done()
 
     assert config_entry.state is expected
+
+
+@pytest.mark.parametrize(
+    ("attr", "value", "translation_key"),
+    [
+        pytest.param("is_admin", False, "user_not_admin", id="user_not_admin"),
+        pytest.param(
+            "valid_password",
+            MagicMock(return_value=False),
+            "password_incompatible",
+            id="password_incompatible",
+        ),
+        pytest.param(
+            "get_host_data",
+            AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            "authentication_failed",
+            id="credentials_invalid",
+        ),
+    ],
+)
+async def test_setup_auth_failed_reason(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    attr: str,
+    value: Any,
+    translation_key: str,
+) -> None:
+    """Test the setup error keeps the reason of the authentication failure."""
+    setattr(reolink_host, attr, value)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.error_reason_translation_key == translation_key
+    assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_setup_no_mac_address(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the setup retry keeps the reason when the MAC address is missing."""
+    reolink_host.mac_address = None
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "no_mac_address"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(ApiError("Test error"), "update_api_error", id="api_error"),
+        pytest.param(
+            ReolinkConnectionError("Test error"),
+            "update_connection_error",
+            id="connection_error",
+        ),
+        pytest.param(ReolinkTimeoutError("Test error"), "update_timeout", id="timeout"),
+        pytest.param(ReolinkError("Test error"), "update_failed", id="other"),
+        pytest.param(
+            CredentialsInvalidError("Test error"),
+            "authentication_failed",
+            id="credentials_invalid",
+        ),
+    ],
+)
+async def test_update_failed_translation_key(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    side_effect: ReolinkError,
+    translation_key: str,
+) -> None:
+    """Test the device update failure uses a key per error type."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    reolink_host.get_states.side_effect = side_effect
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data.device_coordinator
+    assert not coordinator.last_update_success
+    assert coordinator.last_exception.translation_key == translation_key
+    assert coordinator.last_exception.translation_placeholders == {
+        "host": reolink_host.host
+    }
 
 
 async def test_firmware_error_twice(

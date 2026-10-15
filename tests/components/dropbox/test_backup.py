@@ -279,7 +279,7 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        TEST_AGENT_ID: "Failed to list backups"
+        TEST_AGENT_ID: "Backup operation failed"
     }
 
 
@@ -301,7 +301,9 @@ async def test_agents_list_backups_reauth(
 
     assert response["success"]
     assert response["result"]["backups"] == []
-    assert response["result"]["agent_errors"] == {TEST_AGENT_ID: "Authentication error"}
+    assert response["result"]["agent_errors"] == {
+        TEST_AGENT_ID: "Authentication with the backup location failed"
+    }
 
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
@@ -391,7 +393,7 @@ async def test_agents_download_fail(
 
     assert resp.status == 500
     body = await resp.content.read()
-    assert b"Failed to get backup" in body
+    assert b"Backup operation failed" in body
 
 
 async def test_agents_download_not_found(
@@ -536,7 +538,7 @@ async def test_agents_upload_fail(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Failed to upload backup" in caplog.text
+    assert "Backup operation failed" in caplog.text
     mock_dropbox_client.delete_file.assert_awaited_once()
 
 
@@ -560,7 +562,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_dropbox_client.delete_file.await_count == 2
 
 
@@ -586,7 +588,14 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"}
+        "agent_error_translations": {
+            TEST_AGENT_ID: {
+                "translation_domain": "backup",
+                "translation_key": "agent_operation_failed",
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {TEST_AGENT_ID: "Backup operation failed"},
     }
 
 
@@ -609,7 +618,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_remove_backup_agents_listener(

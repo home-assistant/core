@@ -145,17 +145,16 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     return groups
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["group_type"],)
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, (entry.options["group_type"],)
     )
 

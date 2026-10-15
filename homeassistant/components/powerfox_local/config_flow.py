@@ -93,6 +93,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         self._set_confirm_only()
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"host": self._host},

@@ -418,6 +418,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="scan",
                 # The key is already on the vehicle; say so rather than prompt a re-pair.

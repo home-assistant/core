@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Tasmota from a config entry."""
     hass.data[DATA_UNSUB] = []
 
@@ -76,16 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, discovery_prefix, entry, tasmota_mqtt, async_discover_device
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
 
     # cleanup platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     # disable discovery
     await discovery.async_stop(hass)
@@ -102,8 +98,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for device in devices:
         await device_automation.async_remove_automations(hass, device.id)
-
-    return True
 
 
 async def _remove_device(

@@ -531,6 +531,9 @@
     },
     "relay_in_auto_mode": {
       "message": "This relay is currently in automatic mode. Change the mode to manual first to control it directly."
+    },
+    "setup_link_conflict": {
+      "message": "The device is already in use over different Modbus link settings, which one shared connection cannot honour: {error}"
     }
   },
   "issues": {

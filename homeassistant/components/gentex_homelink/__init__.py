@@ -15,7 +15,7 @@ from .coordinator import HomeLinkConfigEntry, HomeLinkCoordinator
 PLATFORMS: list[Platform] = [Platform.EVENT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> None:
     """Set up homelink from a config entry."""
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
     try:
@@ -51,10 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.async_on_unload(None)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal, override
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -70,15 +70,6 @@ SENSOR_DESCRIPTIONS = (
     ),
 )
 
-_DEVICE_INFO_MAPPING: dict[
-    Literal["manufacturer", "serial_number", "sw_version"],
-    Callable[[BRouteUpdateCoordinator], str | None],
-] = {
-    "manufacturer": lambda coordinator: coordinator.device_info_data.manufacturer_code,
-    "serial_number": lambda coordinator: coordinator.device_info_data.serial_number,
-    "sw_version": lambda coordinator: coordinator.device_info_data.echonet_version,
-}
-
 
 def _build_device_info(coordinator: BRouteUpdateCoordinator) -> DeviceInfo:
     """Build device information from coordinator data."""
@@ -86,9 +77,13 @@ def _build_device_info(coordinator: BRouteUpdateCoordinator) -> DeviceInfo:
         identifiers={(DOMAIN, coordinator.bid)},
         name=f"Route B Smart Meter {coordinator.bid}",
     )
-    for key, fn in _DEVICE_INFO_MAPPING.items():
-        if (value := fn(coordinator)) is not None:
-            device[key] = value
+    data = coordinator.device_info_data
+    if data.manufacturer_code is not None:
+        device.manufacturer = data.manufacturer_code
+    if data.serial_number is not None:
+        device.serial_number = data.serial_number
+    if data.echonet_version is not None:
+        device.sw_version = data.echonet_version
     return device
 
 

@@ -489,6 +489,72 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     assert calls[0].context is second_trigger_context
 
 
+async def test_automation_triggered_event_trace_ids(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the automation triggered event identifies the trace of its run."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "with_id",
+                    "alias": "with id",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {"event": "test_event2"},
+                },
+                {
+                    "alias": "without id",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {"event": "test_event2"},
+                },
+            ]
+        },
+    )
+    triggered_events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
+
+    hass.bus.async_fire("test_event")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": automation.DOMAIN, "item_id": "with_id"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    run_ids = [trace["run_id"] for trace in response["result"]]
+    assert len(run_ids) == 2
+
+    assert [
+        event.data
+        for event in triggered_events
+        if event.data[ATTR_ENTITY_ID] == "automation.with_id"
+    ] == [
+        {
+            ATTR_NAME: "with id",
+            ATTR_ENTITY_ID: "automation.with_id",
+            ATTR_SOURCE: "event 'test_event'",
+            "item_id": "with_id",
+            "run_id": run_id,
+        }
+        for run_id in run_ids
+    ]
+    # Without an id there is no item id to look up the trace by
+    assert [
+        event.data
+        for event in triggered_events
+        if event.data[ATTR_ENTITY_ID] == "automation.without_id"
+    ] == [
+        {
+            ATTR_NAME: "without id",
+            ATTR_ENTITY_ID: "automation.without_id",
+            ATTR_SOURCE: "event 'test_event'",
+        }
+    ] * 2
+
+
 async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the automation services for turning entities on/off."""
     entity_id = "automation.hello"
@@ -1916,6 +1982,167 @@ async def test_automation_with_error_in_script(
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
     assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
+
+
+@pytest.mark.parametrize("ignored", [False, True])
+async def test_automation_changed_entity_id_moves_service_not_found_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ignored: bool,
+) -> None:
+    """Test service not found issues follow an entity_id change."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "hello", suggested_object_id="hello"
+    )
+    entity_registry.async_get_or_create(
+        "automation", "automation", "hello_2", suggested_object_id="hello_2"
+    )
+    # Left by a deleted automation which had the same entity_id
+    deleted_issue_id = "automation.hello_service_not_found_test.other"
+    ir.async_create_issue(
+        hass,
+        automation.DOMAIN,
+        deleted_issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="service_not_found",
+        translation_placeholders={
+            "service": "test.other",
+            "entity_id": "automation.hello",
+            "name": "Deleted",
+            "edit": "/config/automation/edit/deleted",
+        },
+    )
+    deleted_issue = issue_registry.async_get_issue(automation.DOMAIN, deleted_issue_id)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "hello",
+                    "alias": "Hello",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {"action": "test.automation"},
+                },
+                {
+                    "id": "hello_2",
+                    "alias": "Hello 2",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {"action": "test.automation"},
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    old_issue_id = "automation.hello_service_not_found_test.automation"
+    other_issue_id = "automation.hello_2_service_not_found_test.automation"
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id)
+    other_issue = issue_registry.async_get_issue(automation.DOMAIN, other_issue_id)
+    assert other_issue
+    ir.async_ignore_issue(hass, automation.DOMAIN, old_issue_id, ignored)
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id) is None
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_service_not_found_test.automation"
+    )
+    assert issue
+    assert issue.is_persistent
+    assert (issue.dismissed_version is not None) is ignored
+    assert issue.translation_placeholders == {
+        "service": "test.automation",
+        "entity_id": "automation.renamed",
+        "name": "Hello",
+        "edit": "/config/automation/edit/hello",
+    }
+    # Another automation's issue is not moved, its id starts with the old entity_id
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, other_issue_id) == other_issue
+    )
+    # A deleted automation's issue is not moved, it has the old entity_id
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, deleted_issue_id)
+        == deleted_issue
+    )
+    assert (
+        issue_registry.async_get_issue(
+            automation.DOMAIN, "automation.renamed_service_not_found_test.other"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("ignored", [False, True])
+@pytest.mark.parametrize("destination_ignored", [False, True])
+async def test_automation_changed_entity_id_moves_service_not_found_issue_onto_stale(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ignored: bool,
+    destination_ignored: bool,
+) -> None:
+    """Test a moved issue keeps its ignored state over a stale issue at its new id."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "hello", suggested_object_id="hello"
+    )
+    new_issue_id = "automation.renamed_service_not_found_test.automation"
+    # Left by a deleted automation which had the new entity_id
+    ir.async_create_issue(
+        hass,
+        automation.DOMAIN,
+        new_issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="service_not_found",
+        translation_placeholders={
+            "service": "test.automation",
+            "entity_id": "automation.renamed",
+            "name": "Deleted",
+            "edit": "/config/automation/edit/deleted",
+        },
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, new_issue_id, destination_ignored)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello",
+                "alias": "Hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    old_issue_id = "automation.hello_service_not_found_test.automation"
+    ir.async_ignore_issue(hass, automation.DOMAIN, old_issue_id, ignored)
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id) is None
+    issue = issue_registry.async_get_issue(automation.DOMAIN, new_issue_id)
+    assert issue
+    assert (issue.dismissed_version is not None) is ignored
+    assert issue.translation_placeholders == {
+        "service": "test.automation",
+        "entity_id": "automation.renamed",
+        "name": "Hello",
+        "edit": "/config/automation/edit/hello",
+    }
 
 
 async def test_automation_with_error_in_script_2(
