@@ -89,6 +89,18 @@ def is_auth_error(err: PyiCloudAPIResponseException) -> bool:
     return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
 
 
+def _is_usable_location(location: dict[str, Any] | None) -> bool:
+    """Return whether a location carries everything the tracker reads."""
+    return location is not None and all(
+        location.get(key) is not None
+        for key in (
+            DEVICE_LOCATION_LATITUDE,
+            DEVICE_LOCATION_LONGITUDE,
+            DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+        )
+    )
+
+
 def _is_auth_failure(err: BaseException) -> bool:
     """Return True if iCloud rejected the session rather than the request."""
     if isinstance(
@@ -332,11 +344,7 @@ class IcloudAccount:
             # what it cannot use. Only a device reporting neither is of no
             # use to either.
             device_location = status.get(DEVICE_LOCATION)
-            has_location = (
-                bool(device_location)
-                and device_location.get(DEVICE_LOCATION_LATITUDE) is not None
-                and device_location.get(DEVICE_LOCATION_LONGITUDE) is not None
-            )
+            has_location = _is_usable_location(device_location)
             has_battery = (
                 status[DEVICE_BATTERY_STATUS] != "Unknown"
                 and status.get(DEVICE_BATTERY_LEVEL) is not None
@@ -700,11 +708,7 @@ class IcloudDevice:
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.
         location = self._status.get(DEVICE_LOCATION)
-        if (
-            location
-            and location.get(DEVICE_LOCATION_LATITUDE) is not None
-            and location.get(DEVICE_LOCATION_LONGITUDE) is not None
-        ):
+        if location and _is_usable_location(location):
             # Stored before it is announced: this runs off the event loop, so
             # the listener can read the device before the assignment lands,
             # find no location, skip it and never be told again.

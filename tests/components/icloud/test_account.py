@@ -338,21 +338,25 @@ async def test_a_device_without_battery_still_reports_its_location(
     assert device.battery_level is None
 
 
+@pytest.mark.parametrize(
+    "location",
+    [
+        pytest.param({"latitude": 60.2, "longitude": None}, id="one-coordinate"),
+        pytest.param({"latitude": 60.2, "longitude": 24.9}, id="no-accuracy"),
+    ],
+)
 async def test_half_a_location_is_not_stored(
     hass: HomeAssistant,
     mock_store: Mock,
+    location: dict[str, Any],
 ) -> None:
-    """Test that a fix with only one coordinate is never stored.
+    """Test that a fix missing anything the tracker reads is never stored.
 
-    The tracker reads both when it reports a position, so keeping half a fix
-    would fail there rather than here. The device is still kept for its
-    battery.
+    The tracker and the polling interval read both coordinates and the
+    accuracy, so keeping part of a fix would fail there rather than here. The
+    device is still kept for its battery.
     """
-    account = await _set_up_with(
-        hass,
-        mock_store,
-        DEVICE | {"location": {"latitude": 60.2, "longitude": None}},
-    )
+    account = await _set_up_with(hass, mock_store, DEVICE | {"location": location})
 
     device = account.devices[DEVICE["id"]]
     assert device.location is None
@@ -455,6 +459,7 @@ async def test_a_device_losing_its_battery_stops_reporting_a_level(
         pytest.param(None, id="no-location"),
         pytest.param({"latitude": 60.2, "longitude": None}, id="half-a-location"),
         pytest.param({"latitude": 60.2}, id="missing-longitude"),
+        pytest.param({"latitude": 60.2, "longitude": 24.9}, id="missing-accuracy"),
         pytest.param({}, id="empty-location"),
     ],
 )
