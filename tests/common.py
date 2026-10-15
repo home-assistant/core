@@ -1800,7 +1800,7 @@ def import_and_test_deprecated_constant(
     caplog: pytest.LogCaptureFixture,
     module: ModuleType,
     constant_name: str,
-    replacement_name: str,
+    replacement_name: str | None,
     replacement: Any,
     breaks_in_ha_version: str,
 ) -> None:
@@ -1812,6 +1812,11 @@ def import_and_test_deprecated_constant(
     - Assert the deprecated constant is included in the modules.__dir__()
     - Assert the deprecated constant is included in the modules.__all__()
     """
+    use_instead = (
+        f" Use {replacement_name} instead, please"
+        if replacement_name is not None
+        else " Please"
+    )
     value = import_deprecated_constant(module, constant_name)
     assert value == replacement
     assert (
@@ -1820,8 +1825,8 @@ def import_and_test_deprecated_constant(
         (
             f"The deprecated constant {constant_name} was used from "
             "test_constant_deprecation. It will be removed in HA Core "
-            f"{breaks_in_ha_version}. Use {replacement_name} instead, please report "
-            "it to the author of the 'test_constant_deprecation' custom integration"
+            f"{breaks_in_ha_version}.{use_instead} report it to the author of the "
+            "'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
 

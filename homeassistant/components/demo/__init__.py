@@ -32,6 +32,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.LAWN_MOWER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,

@@ -31,8 +31,10 @@ from .const import (  # noqa: F401
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
+    LOGBOOK_ENTRY_ITEM_ID,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
+    LOGBOOK_ENTRY_RUN_ID,
     LOGBOOK_ENTRY_SOURCE,
 )
 from .helpers import async_log_entry, log_entry  # noqa: F401

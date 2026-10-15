@@ -213,6 +213,7 @@ USB_DEPENDENTS = [
     "insteon",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
+    "marantz_rs232",
     "modem_callerid",
     "monoprice",
     "rainforest_raven",
