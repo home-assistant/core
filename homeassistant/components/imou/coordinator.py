@@ -20,6 +20,7 @@ from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=120)
+_QUOTA_CODE = "OP1013"
 
 type ImouConfigEntry = ConfigEntry[ImouDataUpdateCoordinator]
 
@@ -48,6 +49,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.devices_by_key: dict[str, ImouHaDevice] = {}
         self._devices_initialized = False
         self.new_device_callbacks: list[Callable[[list[ImouHaDevice]], None]] = []
+        self.open_api_quota_exceeded = False
 
     @property
     def devices(self) -> list[ImouHaDevice]:
@@ -93,6 +95,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
+            self.open_api_quota_exceeded = _quota_exceeded(err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="fetch_devices_failed",
@@ -104,6 +107,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._async_add_remove_devices(fresh_by_key)
         devices = list(self.devices_by_key.values())
         if not devices:
+            self.open_api_quota_exceeded = False
             return
 
         try:
@@ -120,10 +124,13 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
+            self.open_api_quota_exceeded = _quota_exceeded(err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_devices_failed",
             ) from err
+
+        self.open_api_quota_exceeded = False
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account.
@@ -161,3 +168,9 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 new_devices.append(fresh_by_key[device_key])
             for new_device_callback in self.new_device_callbacks:
                 new_device_callback(new_devices)
+
+
+def _quota_exceeded(error: BaseException) -> bool:
+    """Return True when the Open Platform monthly call limit is used up."""
+    text = getattr(error, "message", None) or str(error)
+    return _QUOTA_CODE in str(text).upper()
