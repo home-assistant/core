@@ -1,15 +1,17 @@
 """Test the KACO RS485 sensor platform."""
 
+from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485.testing import POWADOR_6400XI, CannedInverter, FakeBus
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
+from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # The library calls an inverter asleep after three consecutive misses.
 CYCLES_UNTIL_DARK = 4
@@ -26,11 +28,14 @@ def _entity_id(
     return entity_id
 
 
-async def _run_cycles(hass: HomeAssistant, entry: MockConfigEntry, count: int) -> None:
-    """Drive the coordinator directly rather than through the scheduler."""
+async def _run_cycles(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, count: int
+) -> None:
+    """Let the coordinator poll `count` times."""
     for _ in range(count):
-        await entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_all_entities(
@@ -45,6 +50,7 @@ async def test_all_entities(
 
 async def test_an_inverter_that_goes_dark_becomes_unavailable(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_bus: FakeBus,
@@ -55,7 +61,7 @@ async def test_an_inverter_that_goes_dark_becomes_unavailable(
     still_lit = _entity_id(entity_registry, entry_id, 4, "ac_power")
 
     mock_bus.silence(1)
-    await _run_cycles(hass, init_integration, CYCLES_UNTIL_DARK)
+    await _run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
 
     assert hass.states.get(dark).state == STATE_UNAVAILABLE
     assert hass.states.get(still_lit).state == "681"
@@ -63,6 +69,7 @@ async def test_an_inverter_that_goes_dark_becomes_unavailable(
 
 async def test_an_inverter_that_returns_reports_again(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_bus: FakeBus,
@@ -72,17 +79,18 @@ async def test_an_inverter_that_returns_reports_again(
     ac_power = _entity_id(entity_registry, entry_id, 1, "ac_power")
 
     mock_bus.silence(1)
-    await _run_cycles(hass, init_integration, CYCLES_UNTIL_DARK)
+    await _run_cycles(hass, freezer, CYCLES_UNTIL_DARK)
     assert hass.states.get(ac_power).state == STATE_UNAVAILABLE
 
     mock_bus.wake(1, POWADOR_6400XI)
-    await _run_cycles(hass, init_integration, 2)
+    await _run_cycles(hass, freezer, 2)
 
     assert hass.states.get(ac_power).state == "635"
 
 
 async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_bus: FakeBus,
@@ -100,7 +108,7 @@ async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
             replies={k: v for k, v in POWADOR_6400XI.replies.items() if k != "3"},
         ),
     )
-    await _run_cycles(hass, init_integration, 1)
+    await _run_cycles(hass, freezer, 1)
 
     assert hass.states.get(total_yield).state == "112706"
     assert (

@@ -1,15 +1,17 @@
 """Test setting the KACO RS485 entry up, and what happens when it fails."""
 
+from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485 import BusError
 from kaco_rs485.testing import FakeBus
 import pytest
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
+from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload_entry(
@@ -106,34 +108,37 @@ def _device(
 
 
 async def _polled(
-    hass: HomeAssistant, entry: MockConfigEntry, bus: FakeBus
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, bus: FakeBus
 ) -> set[int]:
     """Run one cycle and return the addresses it actually asked."""
     bus.requests.clear()
-    await entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     return {address for address, _ in bus.requests}
 
 
 async def test_a_disabled_inverter_is_dropped_from_the_poll_cycle(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     mock_bus: FakeBus,
 ) -> None:
     """Test disabling an inverter stops it costing bus time, not just hiding it."""
-    assert await _polled(hass, init_integration, mock_bus) == {1, 2, 4}
+    assert await _polled(hass, freezer, mock_bus) == {1, 2, 4}
 
     device_registry.async_update_device(
         _device(device_registry, init_integration, 2).id,
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
-    assert await _polled(hass, init_integration, mock_bus) == {1, 4}
+    assert await _polled(hass, freezer, mock_bus) == {1, 4}
 
 
 async def test_an_entry_with_every_inverter_disabled_does_not_open_the_port(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     mock_bus: FakeBus,
@@ -147,5 +152,5 @@ async def test_an_entry_with_every_inverter_disabled_does_not_open_the_port(
     await hass.config_entries.async_reload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert await _polled(hass, init_integration, mock_bus) == set()
+    assert await _polled(hass, freezer, mock_bus) == set()
     assert not mock_bus.opened

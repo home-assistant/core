@@ -140,8 +140,10 @@ async def test_a_port_that_will_not_open_can_be_corrected(
 
     mock_bus.open_error = None
     result = await _submit_port(hass, result["flow_id"])
-
     assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_a_port_that_dies_mid_scan_aborts(
