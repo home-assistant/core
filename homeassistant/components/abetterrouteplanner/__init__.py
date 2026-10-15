@@ -5,6 +5,10 @@ import logging
 from aioabrp import AbrpClient, TelemetryStream
 from aiohttp import ClientError
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -22,14 +26,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .auth import AbetterrouteplannerAuth
-from .const import ABRP_APP_KEY, DOMAIN
+from .const import ABRP_APP_KEY, DOMAIN, OAUTH2_CLIENT_ID
 from .coordinator import (
     AbetterrouteplannerConfigEntry,
     AbrpData,
     AbrpTelemetryCoordinator,
     async_fetch_garage,
 )
-from .oauth import AbetterrouteplannerOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,16 +43,25 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the A Better Routeplanner component."""
-    config_entry_oauth2_flow.async_register_implementation(
-        hass, DOMAIN, AbetterrouteplannerOAuth2Implementation(hass)
-    )
+    await async_import_built_in_credential(hass)
     return True
+
+
+async def async_import_built_in_credential(hass: HomeAssistant) -> None:
+    """Import the built-in public client, which needs no client secret."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(OAUTH2_CLIENT_ID, "", name="A Better Routeplanner"),
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
 ) -> bool:
     """Set up A Better Routeplanner from a config entry."""
+    # Restores the credential if it was deleted in the UI since startup.
+    await async_import_built_in_credential(hass)
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(

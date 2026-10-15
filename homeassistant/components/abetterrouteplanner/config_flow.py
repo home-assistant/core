@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import async_import_built_in_credential
 from .const import ABRP_APP_KEY, DOMAIN, OAUTH2_SCOPES
-from .oauth import AbetterrouteplannerOAuth2Implementation
 
 
 class AbetterrouteplannerFlowHandler(
@@ -44,21 +44,16 @@ class AbetterrouteplannerFlowHandler(
         return {**super().extra_authorize_data, "scope": " ".join(OAUTH2_SCOPES)}
 
     @override
-    async def async_step_pick_implementation(
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Register the built-in implementation, then pick one.
+        """Import the built-in client, then pick an implementation.
 
-        Starting a flow imports the config flow platform without running
-        ``async_setup``, so on a fresh install nothing is registered yet and the
-        flow has to register the built-in implementation itself. It builds a new
-        instance every time because the PKCE verifier is generated in the
-        constructor and RFC 7636 wants one per authorization request.
+        Starting a flow sets up dependencies but not this integration, so on a
+        fresh install ``async_setup`` has not imported the client yet.
         """
-        config_entry_oauth2_flow.async_register_implementation(
-            self.hass, DOMAIN, AbetterrouteplannerOAuth2Implementation(self.hass)
-        )
-        return await super().async_step_pick_implementation(user_input)
+        await async_import_built_in_credential(self.hass)
+        return await super().async_step_user(user_input)
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:

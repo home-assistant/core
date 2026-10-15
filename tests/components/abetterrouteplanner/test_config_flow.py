@@ -20,7 +20,6 @@ from homeassistant.components.abetterrouteplanner.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .conftest import REDIRECT_URI, USER_SUB, build_id_token, complete_oauth_callback
@@ -57,9 +56,9 @@ def _mock_token_post(aioclient_mock: AiohttpClientMocker) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_auth(hass: HomeAssistant) -> None:
-    """Set up the auth component so /auth/external/callback is registered."""
-    assert await async_setup_component(hass, "auth", {})
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Set up application credentials, which the flow imports the client into."""
+    assert await async_setup_component(hass, "application_credentials", {})
 
 
 def _compute_expected_challenge(verifier: str) -> str:
@@ -147,25 +146,6 @@ async def test_pkce_verifier_is_per_authorization(hass: HomeAssistant) -> None:
     assert first["type"] is FlowResultType.EXTERNAL_STEP
     assert second["type"] is FlowResultType.EXTERNAL_STEP
     assert _code_challenge(first["url"]) != _code_challenge(second["url"])
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_pkce_verifier_never_the_setup_implementation(
-    hass: HomeAssistant,
-) -> None:
-    """The implementation kept for token refresh never authorizes a flow."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    implementations = await config_entry_oauth2_flow.async_get_implementations(
-        hass, DOMAIN
-    )
-    kept = next(iter(implementations.values()))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert _code_challenge(result["url"]) != kept.extra_authorize_data["code_challenge"]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
