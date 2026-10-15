@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfIrradiance,
     UnitOfSoundPressure,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -50,7 +51,6 @@ from .const import (
     SensorEntityCapabilityAttribute,
     SensorEntityStateAttribute,
     SensorStateClass,
-    UnitOfVolumeFlowRate,
 )
 
 _LOGGER = logging.getLogger(__name__)
