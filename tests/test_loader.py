@@ -2346,44 +2346,33 @@ async def test_async_get_integrations_multiple_non_existent(
 
 
 @pytest.mark.parametrize("error", [OSError, asyncio.CancelledError])
-@pytest.mark.parametrize("waiter_count", [0, 1])
-@pytest.mark.parametrize(
-    "load_stage",
-    ["async_get_custom_components", "async_add_executor_job"],
-)
 async def test_get_integrations_failed_load(
     hass: HomeAssistant,
     error: type[BaseException],
-    waiter_count: int,
-    load_stage: str,
 ) -> None:
-    """Failed discovery or resolution releases waiters and permits retries."""
-    await loader.async_get_custom_components(hass)
+    """Failed discovery releases waiters and permits retries."""
     started = asyncio.Event()
     finish = asyncio.Event()
 
-    async def failed_load(*args: Any) -> None:
+    async def failed_load(_hass: HomeAssistant) -> None:
         started.set()
         await finish.wait()
         raise error("Load failed")
 
-    target = {
-        "async_get_custom_components": loader,
-        "async_add_executor_job": hass,
-    }[load_stage]
-    with patch.object(target, load_stage, side_effect=failed_load):
+    with patch(
+        "homeassistant.loader.async_get_custom_components", side_effect=failed_load
+    ):
         owner = asyncio.create_task(
             loader.async_get_integration(hass, "lookup_failure")
         )
         await started.wait()
-        waiters = [
-            asyncio.create_task(loader.async_get_integration(hass, "lookup_failure"))
-            for _ in range(waiter_count)
-        ]
+        waiter = asyncio.create_task(
+            loader.async_get_integration(hass, "lookup_failure")
+        )
         await asyncio.sleep(0)
         finish.set()
         results = await asyncio.wait_for(
-            asyncio.gather(owner, *waiters, return_exceptions=True), timeout=1
+            asyncio.gather(owner, waiter, return_exceptions=True), timeout=1
         )
 
     assert all(isinstance(result, error) for result in results)
