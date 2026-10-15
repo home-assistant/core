@@ -183,6 +183,8 @@ class FibaroController:
             manufacturer = None
 
         self._device_infos[main_device.fibaro_id] = DeviceInfo(
+            # The identifiers should hold a string fibaro_id, which needs a migration.
+            # mypy can't see that fibaro_id is an int, as pyfibaro lacks a py.typed
             identifiers={(DOMAIN, main_device.fibaro_id)},
             manufacturer=manufacturer,
             name=main_device.name,
@@ -203,7 +205,8 @@ class FibaroController:
 
     def get_all_device_identifiers(self) -> list[set[tuple[str, str]]]:
         """Get all identifiers of fibaro integration."""
-        return [device["identifiers"] for device in self._device_infos.values()]
+        # The identifiers should hold a string fibaro_id, which needs a migration
+        return [{(DOMAIN, fibaro_id)} for fibaro_id in self._device_infos]  # type: ignore[arg-type]
 
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id."""
