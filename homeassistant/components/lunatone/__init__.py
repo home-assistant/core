@@ -92,6 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         new_unique_id = info_api.data.uid.replace("-", "")
         if new_unique_id != entry.unique_id:
             await _update_unique_id(hass, entry, new_unique_id)
+            coordinator_info.previous_devices = find_devices(
+                dr.async_get(hass),
+                entry.entry_id,
+                re.compile(rf"{re.escape(new_unique_id)}-line\d+"),
+            )
 
     assert entry.unique_id
 

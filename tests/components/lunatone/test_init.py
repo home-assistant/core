@@ -294,6 +294,10 @@ async def test_config_entry_unique_id_update(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == expected_unique_id
+    assert config_entry.runtime_data.coordinator_info.previous_devices == {
+        f"{expected_unique_id}-line{line_id}"
+        for line_id in mock_lunatone_info.data.lines
+    }
 
     devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     for device in devices:
