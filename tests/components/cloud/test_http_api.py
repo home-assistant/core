@@ -2874,10 +2874,7 @@ async def test_download_support_package(
     )
 
     now = dt_util.utcnow()
-    # The logging is done with local time according to the system timezone. Set the
-    # fake time to 12:00 local time
-    tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=datetime.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -2994,8 +2991,7 @@ async def test_download_support_package_custom_components_error(
     )
 
     now = dt_util.utcnow()
-    tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=datetime.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -3119,8 +3115,7 @@ async def test_download_support_package_integration_load_error(
     )
 
     now = dt_util.utcnow()
-    tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=datetime.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
