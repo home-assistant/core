@@ -1,143 +1,267 @@
 """Tests for the Tank Utility sensor platform."""
 
-from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import requests
 
-from homeassistant.components.tank_utility.sensor import SENSOR_ATTRS
-from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.tank_utility.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    SENSOR_ATTRS,
+)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from .conftest import DEVICE_DATA, MOCK_DEVICE_ID, TEST_EMAIL, TEST_PASSWORD
 
-MOCK_DEVICE_ID = "device_1"
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-CONFIG = {
+YAML_CONFIG = {
     "sensor": {
         "platform": "tank_utility",
-        "email": "test@example.com",
-        "password": "test_password",
-        "devices": [MOCK_DEVICE_ID],
+        "email": TEST_EMAIL,
+        "password": TEST_PASSWORD,
     }
 }
 
-DEVICE_DATA = {
-    "name": "My Propane Tank",
-    "address": "123 Main St",
-    "capacity": 500,
-    "fuelType": "propane",
-    "orientation": "horizontal",
-    "status": "ok",
-    "lastReading": {
-        "tank": 78.43,
-        "time": 1600000000,
-        "time_iso": "2020-09-13T12:00:00Z",
-    },
-}
+
+def _mock_http_error(status_code: int) -> requests.exceptions.HTTPError:
+    """Create a mock HTTPError with a response."""
+    response = requests.Response()
+    response.status_code = status_code
+    return requests.exceptions.HTTPError(response=response)
 
 
-@pytest.fixture
-def mock_get_token() -> MagicMock:
-    """Mock auth.get_token."""
-    with patch(
-        "homeassistant.components.tank_utility.sensor.auth.get_token",
-        return_value="mock_token",
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_get_device_data() -> MagicMock:
-    """Mock tank_monitor.get_device_data."""
-    with patch(
-        "homeassistant.components.tank_utility.sensor.tank_monitor.get_device_data",
-        return_value=dict(DEVICE_DATA),
-    ) as mock:
-        yield mock
-
-
-async def test_setup_platform_success(
+@pytest.mark.usefixtures("mock_get_data")
+async def test_sensor_setup_and_attributes(
     hass: HomeAssistant,
-    mock_get_token: MagicMock,
-    mock_get_device_data: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test successful setup of Tank Utility sensor."""
-    assert await async_setup_component(hass, "sensor", CONFIG)
+    """Test successful setup of Tank Utility sensor entity and attributes."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
+    entity_id = "sensor.my_propane_tank"
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "78.4"
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
+    assert state.attributes["state_class"] is SensorStateClass.MEASUREMENT
+
     for attr in SENSOR_ATTRS:
         assert attr in state.attributes
+    assert state.attributes["capacity"] == 500
+    assert state.attributes["fuelType"] == "propane"
+
+    # Entity registry checks
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_DEVICE_ID}_tank"
+
+    # Device registry checks
+    assert entry.device_id is not None
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert (DOMAIN, MOCK_DEVICE_ID) in device.identifiers
+    assert device.name == "My Propane Tank"
+    assert device.manufacturer == "Tank Utility"
+    assert device.model == "Propane Monitor"
+    assert device.configuration_url == "https://data.tankutility.com"
 
 
-async def test_setup_platform_unauthorized(
+@pytest.mark.usefixtures("mock_get_data")
+async def test_sensor_polling_update(
     hass: HomeAssistant,
-    mock_get_token: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_get_data: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test setup with invalid credentials (401 error)."""
-    response = requests.Response()
-    response.status_code = requests.codes.unauthorized
-    mock_get_token.side_effect = requests.exceptions.HTTPError(response=response)
-
-    assert await async_setup_component(hass, "sensor", CONFIG)
+    """Test sensor value updates via coordinator periodic polling."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
-    assert state is None
+    entity_id = "sensor.my_propane_tank"
+    assert hass.states.get(entity_id).state == "78.4"
 
+    updated_device = dict(DEVICE_DATA)
+    updated_device["lastReading"] = dict(DEVICE_DATA["lastReading"])
+    updated_device["lastReading"]["tank"] = 65.23
+    mock_get_data.return_value = {MOCK_DEVICE_ID: updated_device}
 
-async def test_setup_platform_other_http_error(
-    hass: HomeAssistant,
-    mock_get_token: MagicMock,
-) -> None:
-    """Test setup with another HTTP error fails cleanly."""
-    response = requests.Response()
-    response.status_code = requests.codes.internal_server_error
-    mock_get_token.side_effect = requests.exceptions.HTTPError(response=response)
-
-    assert await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
-    assert state is None
-
-
-async def test_sensor_update_token_refresh(
-    hass: HomeAssistant,
-    mock_get_token: MagicMock,
-    mock_get_device_data: MagicMock,
-) -> None:
-    """Test token refresh on 401 during sensor update."""
-    assert await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
-    assert state is not None
-    assert state.state == "78.4"
-
-    unauthorized_response = requests.Response()
-    unauthorized_response.status_code = requests.codes.unauthorized
-
-    updated_data = dict(DEVICE_DATA)
-    updated_data["lastReading"] = dict(DEVICE_DATA["lastReading"])
-    updated_data["lastReading"]["tank"] = 65.2
-
-    mock_get_device_data.side_effect = [
-        requests.exceptions.HTTPError(response=unauthorized_response),
-        updated_data,
-    ]
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    # Critical: wait_background_tasks=True ensures polling task completes before assertions
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "65.2"
-    mock_get_token.assert_called_with("test@example.com", "test_password", force=True)
+
+
+@pytest.mark.usefixtures("mock_get_data")
+async def test_sensor_dynamic_device_discovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_data: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test discovery of a new device during a coordinator refresh."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_propane_tank") is not None
+    assert hass.states.get("sensor.tank_utility_device_2") is None
+
+    device_2_data = {
+        "name": "",
+        "address": "456 Oak St",
+        "capacity": 250,
+        "fuelType": "propane",
+        "orientation": "vertical",
+        "status": "ok",
+        "lastReading": {
+            "tank": 42.0,
+            "time": 1600000000,
+            "time_iso": "2020-09-13T12:00:00Z",
+        },
+    }
+    mock_get_data.return_value = {
+        MOCK_DEVICE_ID: dict(DEVICE_DATA),
+        "device_2": device_2_data,
+    }
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state_2 = hass.states.get("sensor.tank_utility_device_2")
+    assert state_2 is not None
+    assert state_2.state == "42.0"
+
+
+@pytest.mark.usefixtures("mock_get_data")
+async def test_sensor_none_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_data: MagicMock,
+) -> None:
+    """Test sensor state when reading has no tank percentage."""
+    no_reading_data = dict(DEVICE_DATA)
+    no_reading_data["lastReading"] = {}
+    mock_get_data.return_value = {MOCK_DEVICE_ID: no_reading_data}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_propane_tank")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_get_token", "mock_get_data")
+async def test_yaml_import_success(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test importing configuration from YAML creates an entry and deprecation issue."""
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+    }
+
+    # Verify deprecation issue was created
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN
+
+
+@pytest.mark.usefixtures("mock_get_token", "mock_get_data")
+async def test_yaml_import_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import when entry already exists still creates deprecation issue."""
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN
+
+
+@pytest.mark.usefixtures("mock_get_data")
+async def test_yaml_import_cannot_connect(
+    hass: HomeAssistant,
+    mock_get_token: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import connection error creates specific repair issue."""
+    mock_get_token.side_effect = requests.exceptions.ConnectTimeout
+
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN
+
+
+@pytest.mark.usefixtures("mock_get_data")
+async def test_yaml_import_invalid_auth(
+    hass: HomeAssistant,
+    mock_get_token: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import invalid auth creates specific repair issue."""
+    mock_get_token.side_effect = _mock_http_error(requests.codes.unauthorized)
+
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_invalid_auth"
+    )
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN
