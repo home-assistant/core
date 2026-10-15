@@ -4,6 +4,10 @@
       "description": "Use a price per energy unit (such as kWh) for a gas sensor that measures energy, or a price per volume unit (such as m³) for a gas sensor that measures volume. Until then, the gas cost is not calculated. The following price entities do not match the unit of their gas sensor:",
       "title": "Gas price unit does not match the gas sensor"
     },
+    "entity_heat_price_unit_mismatch": {
+      "description": "Use a price per energy unit (such as kWh) for a heat sensor that measures energy, a price per volume unit (such as L) for a heat sensor that measures fuel volume, or a price per mass unit (such as kg) for a heat sensor that measures fuel weight. Until then, the heating cost is not calculated. The following price entities do not match the unit of their heat sensor:",
+      "title": "Heat price unit does not match the heat sensor"
+    },
     "entity_negative_state": {
       "description": "The following entities have a negative state while a positive state is expected:",
       "title": "Entity has a negative state"
@@ -46,6 +50,18 @@
     },
     "entity_unexpected_unit_gas_price": {
       "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
+    "entity_unexpected_unit_heat": {
+      "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor, either of {volume_units} for a gas or volume sensor, or either of {mass_units} for a weight sensor):",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
+    "entity_unexpected_unit_heat_price": {
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
+    "entity_unexpected_unit_heat_rate": {
+      "description": "The following entities do not have an expected unit of measurement (either of {power_units} for a power sensor or either of {flow_rate_units} for a volume flow rate sensor):",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
     },
     "entity_unexpected_unit_volume_flow_rate": {

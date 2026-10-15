@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.energy import validate
 from homeassistant.components.energy.data import EnergyManager
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSON_DUMP
 
@@ -1358,4 +1358,257 @@ async def test_validation_device_consumption_water_recorder_not_tracked(
                 }
             ]
         ],
+    }
+
+
+@pytest.mark.usefixtures("mock_is_entity_recorded", "mock_get_metadata")
+async def test_validation_heat(
+    hass: HomeAssistant, mock_energy_manager: EnergyManager
+) -> None:
+    """Test validating heat sources."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_meter",
+                    "stat_rate": "sensor.heat_power",
+                    "number_energy_price": 0.12,
+                },
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heating_oil",
+                    "stat_rate": "sensor.heating_oil_flow",
+                    "entity_energy_price": "sensor.heating_oil_price",
+                },
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.pellets",
+                    "entity_energy_price": "sensor.pellets_price",
+                },
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_wrong_unit",
+                    "stat_rate": "sensor.heat_rate_wrong_unit",
+                    "entity_energy_price": "sensor.heat_price_wrong_unit",
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.heat_meter",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "GJ",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_power",
+        "5",
+        {
+            "device_class": "power",
+            "unit_of_measurement": "kW",
+            "state_class": "measurement",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heating_oil",
+        "10.10",
+        {
+            "device_class": "volume",
+            "unit_of_measurement": "L",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heating_oil_flow",
+        "2",
+        {
+            "device_class": "volume_flow_rate",
+            "unit_of_measurement": "L/h",
+            "state_class": "measurement",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heating_oil_price", "1.05", {"unit_of_measurement": "EUR/L"}
+    )
+    hass.states.async_set(
+        "sensor.pellets",
+        "10.10",
+        {
+            "device_class": "weight",
+            "unit_of_measurement": "kg",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.pellets_price", "0.35", {"unit_of_measurement": "EUR/kg"}
+    )
+    hass.states.async_set(
+        "sensor.heat_wrong_unit",
+        "10.10",
+        {
+            "device_class": "volume",
+            "unit_of_measurement": "mL",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_rate_wrong_unit",
+        "2",
+        {
+            "device_class": "power",
+            "unit_of_measurement": "beers",
+            "state_class": "measurement",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_price_wrong_unit", "1.05", {"unit_of_measurement": "EUR/mL"}
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [],
+            [],
+            [],
+            [
+                {
+                    "type": "entity_unexpected_unit_heat",
+                    "affected_entities": {("sensor.heat_wrong_unit", "mL")},
+                    "translation_placeholders": {
+                        "energy_units": ENERGY_UNITS_STRING,
+                        "volume_units": "CCF, ft³, m³, gal, L, MCF",
+                        "mass_units": "kg, lb",
+                    },
+                },
+                {
+                    "type": "entity_unexpected_unit_heat_price",
+                    "affected_entities": {("sensor.heat_price_wrong_unit", "EUR/mL")},
+                    "translation_placeholders": {
+                        "price_units": (
+                            f"{ENERGY_PRICE_UNITS_STRING},"
+                            " EUR/CCF, EUR/ft³, EUR/m³, EUR/gal,"
+                            " EUR/L, EUR/MCF, EUR/kg, EUR/lb"
+                        )
+                    },
+                },
+                {
+                    "type": "entity_unexpected_unit_heat_rate",
+                    "affected_entities": {("sensor.heat_rate_wrong_unit", "beers")},
+                    "translation_placeholders": {
+                        "power_units": ", ".join(tuple(UnitOfPower)),
+                        "flow_rate_units": ", ".join(tuple(UnitOfVolumeFlowRate)),
+                    },
+                },
+            ],
+        ],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
+@pytest.mark.parametrize(
+    ("usage_device_class", "usage_unit", "price_unit", "expected_issues"),
+    [
+        pytest.param(
+            "volume",
+            "L",
+            "EUR/kWh",
+            [
+                {
+                    "type": "entity_heat_price_unit_mismatch",
+                    "affected_entities": {("sensor.heat_price", "EUR/kWh")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="volume_usage_energy_price",
+        ),
+        pytest.param(
+            "energy",
+            "MWh",
+            "EUR/L",
+            [
+                {
+                    "type": "entity_heat_price_unit_mismatch",
+                    "affected_entities": {("sensor.heat_price", "EUR/L")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="energy_usage_volume_price",
+        ),
+        pytest.param(
+            "weight",
+            "kg",
+            "EUR/L",
+            [
+                {
+                    "type": "entity_heat_price_unit_mismatch",
+                    "affected_entities": {("sensor.heat_price", "EUR/L")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="mass_usage_volume_price",
+        ),
+        pytest.param(
+            "energy",
+            "kWh",
+            "EUR/kg",
+            [
+                {
+                    "type": "entity_heat_price_unit_mismatch",
+                    "affected_entities": {("sensor.heat_price", "EUR/kg")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="energy_usage_mass_price",
+        ),
+        pytest.param("volume", "L", "EUR/m³", [], id="volume_usage_volume_price"),
+        pytest.param("energy", "GJ", "EUR/kWh", [], id="energy_usage_energy_price"),
+        pytest.param("weight", "lb", "EUR/kg", [], id="mass_usage_mass_price"),
+        pytest.param("gas", "m³", "EUR/L", [], id="gas_usage_volume_price"),
+        pytest.param("volume", "gal", "EUR/L", [], id="gal_usage_liter_price"),
+    ],
+)
+@pytest.mark.usefixtures("mock_is_entity_recorded", "mock_get_metadata")
+async def test_validation_heat_price_unit_mismatch(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    usage_device_class: str,
+    usage_unit: str,
+    price_unit: str,
+    expected_issues: list[dict[str, Any]],
+) -> None:
+    """Test validating a heat price unit that does not match the usage unit."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": "sensor.heat_price",
+                    "number_energy_price": None,
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.heat_consumption",
+        "10.10",
+        {
+            "device_class": usage_device_class,
+            "unit_of_measurement": usage_unit,
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_price", "0.5", {"unit_of_measurement": price_unit}
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [expected_issues],
+        "device_consumption": [],
+        "device_consumption_water": [],
     }

@@ -8,6 +8,7 @@ import logging
 from typing import Any, Final, Literal, cast, override
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityCapabilityAttribute,
@@ -20,6 +21,7 @@ from homeassistant.components.sensor.recorder import (  # pylint: disable=home-a
 from homeassistant.const import (
     EntityStateAttribute,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfVolume,
 )
@@ -65,6 +67,20 @@ VALID_VOLUME_UNITS_WATER: set[str] = {
     UnitOfVolume.LITERS,
     UnitOfVolume.MILLE_CUBIC_FEET,
 }
+VALID_MASS_UNITS_HEAT: set[str] = {
+    UnitOfMass.KILOGRAMS,
+    UnitOfMass.POUNDS,
+}
+VALID_ENERGY_UNITS_HEAT = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.GALLONS,
+    UnitOfVolume.LITERS,
+    UnitOfVolume.MILLE_CUBIC_FEET,
+    *VALID_MASS_UNITS_HEAT,
+    *VALID_ENERGY_UNITS,
+}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -75,7 +91,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the energy sensors."""
-    sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
+    sensor_manager = SensorManager(
+        hass, await async_get_manager(hass), async_add_entities
+    )
     await sensor_manager.async_start()
 
 
@@ -83,7 +101,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas", "water"]
+    source_type: Literal["grid", "gas", "water", "heat"]
     flow_type: Literal["flow_from", "flow_to"] | None
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -117,6 +135,14 @@ SOURCE_ADAPTERS: Final = (
         "Cost",
         "cost",
     ),
+    SourceAdapter(
+        "heat",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
 )
 
 # Separate adapter for grid export compensation (needs different price field)
@@ -142,9 +168,13 @@ class SensorManager:
     """Class to handle creation/removal of sensor data."""
 
     def __init__(
-        self, manager: EnergyManager, async_add_entities: AddEntitiesCallback
+        self,
+        hass: HomeAssistant,
+        manager: EnergyManager,
+        async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize sensor manager."""
+        self.hass = hass
         self.manager = manager
         self.async_add_entities = async_add_entities
         self.current_entities: dict[tuple[str, str | None, str], EnergyCostSensor] = {}
@@ -164,10 +194,8 @@ class SensorManager:
         power_to_remove = dict(self.current_power_entities)
 
         async def finish() -> None:
-            if to_add:
-                self.async_add_entities(to_add)
-                await asyncio.wait(ent.add_finished for ent in to_add)
-
+            # Remove first, a gas source moved to heat hands its cost
+            # sensor entity_id over to the heat cost sensor.
             for key, entity in to_remove.items():
                 self.current_entities.pop(key)
                 await entity.async_remove()
@@ -175,6 +203,13 @@ class SensorManager:
             for power_key, power_entity in power_to_remove.items():
                 self.current_power_entities.pop(power_key)
                 await power_entity.async_remove()
+
+            if to_add:
+                for entity in to_add:
+                    if isinstance(entity, EnergyCostSensor):
+                        self._async_adopt_moved_gas_cost_sensor(entity)
+                self.async_add_entities(to_add)
+                await asyncio.wait(ent.add_finished for ent in to_add)
 
         # This guard is for the optional typing of EnergyManager.data.
         # In practice, data is always set to default preferences in async_update
@@ -251,6 +286,31 @@ class SensorManager:
             config,
         )
         to_add.append(self.current_entities[key])
+
+    @callback
+    def _async_adopt_moved_gas_cost_sensor(self, entity: EnergyCostSensor) -> None:
+        """Keep the cost sensor and its statistics of a gas source moved to heat."""
+        adapter = entity.adapter
+        stat_energy = entity.stat_energy
+        if (
+            adapter.source_type != "heat"
+            or ("gas", adapter.flow_type, stat_energy) in self.current_entities
+        ):
+            return
+
+        entity_registry = er.async_get(self.hass)
+        gas_unique_id = cost_sensor_unique_id(
+            self.hass, stat_energy, "gas", adapter.entity_id_suffix
+        )
+        if entity_id := entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, gas_unique_id
+        ):
+            entity_registry.async_update_entity(
+                entity_id,
+                new_unique_id=cost_sensor_unique_id(
+                    self.hass, stat_energy, "heat", adapter.entity_id_suffix
+                ),
+            )
 
     @callback
     def _process_grid_export_sensor(
@@ -355,6 +415,19 @@ class SensorManager:
         to_add.append(sensor)
 
 
+def cost_sensor_unique_id(
+    hass: HomeAssistant, stat_energy: str, source_type: str, suffix: str
+) -> str:
+    """Return the unique_id of the cost sensor of an energy meter."""
+    entity_registry = er.async_get(hass)
+    if registry_entry := entity_registry.async_get(stat_energy):
+        prefix = registry_entry.id
+    else:
+        prefix = stat_energy
+
+    return f"{prefix}_{source_type}_{suffix}"
+
+
 def _set_result_unless_done(future: asyncio.Future[None]) -> None:
     """Set the result of a future unless it is done."""
     if not future.done():
@@ -434,6 +507,11 @@ class EnergyCostSensor(SensorEntity):
                 default_price_unit = UnitOfVolume.CUBIC_METERS
             else:
                 default_price_unit = UnitOfVolume.GALLONS
+
+        elif self._adapter.source_type == "heat":
+            valid_units = VALID_ENERGY_UNITS_HEAT
+            # No conversion for heat, the meter may measure energy, volume or mass.
+            default_price_unit = None
 
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])
@@ -597,6 +675,8 @@ class EnergyCostSensor(SensorEntity):
         converter: type[unit_conversion.BaseUnitConverter]
         if energy_unit in VALID_ENERGY_UNITS:
             converter = unit_conversion.EnergyConverter
+        elif energy_unit in VALID_MASS_UNITS_HEAT:
+            converter = unit_conversion.MassConverter
         else:
             converter = unit_conversion.VolumeConverter
 
@@ -669,18 +749,25 @@ class EnergyCostSensor(SensorEntity):
         return self.hass.config.currency
 
     @property
+    def adapter(self) -> SourceAdapter:
+        """Return the source adapter."""
+        return self._adapter
+
+    @property
+    def stat_energy(self) -> str:
+        """Return the statistic_id of the energy meter."""
+        return cast(str, self._config[self._adapter.stat_energy_key])
+
+    @property
     @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the sensor."""
-        entity_registry = er.async_get(self.hass)
-        if registry_entry := entity_registry.async_get(
-            self._config[self._adapter.stat_energy_key]
-        ):
-            prefix = registry_entry.id
-        else:
-            prefix = self._config[self._adapter.stat_energy_key]
-
-        return f"{prefix}_{self._adapter.source_type}_{self._adapter.entity_id_suffix}"
+        return cost_sensor_unique_id(
+            self.hass,
+            self.stat_energy,
+            self._adapter.source_type,
+            self._adapter.entity_id_suffix,
+        )
 
 
 class EnergyPowerSensor(SensorEntity):

@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityStateAttribute,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -77,6 +78,49 @@ WATER_PRICE_UNITS = tuple(
 )
 WATER_UNIT_ERROR = "entity_unexpected_unit_water"
 WATER_PRICE_UNIT_ERROR = "entity_unexpected_unit_water_price"
+HEAT_USAGE_DEVICE_CLASSES = (
+    sensor.SensorDeviceClass.ENERGY,
+    # Allows moving a gas source to heat while keeping its statistics
+    sensor.SensorDeviceClass.GAS,
+    sensor.SensorDeviceClass.VOLUME,
+    sensor.SensorDeviceClass.WEIGHT,
+)
+# Gas meters and fuel volume, e.g. heating oil
+HEAT_VOLUME_UNITS = (
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.GALLONS,
+    UnitOfVolume.LITERS,
+    UnitOfVolume.MILLE_CUBIC_FEET,
+)
+HEAT_USAGE_UNITS: dict[str, tuple[UnitOfEnergy | UnitOfVolume | UnitOfMass, ...]] = {
+    sensor.SensorDeviceClass.ENERGY: ENERGY_USAGE_UNITS[
+        sensor.SensorDeviceClass.ENERGY
+    ],
+    sensor.SensorDeviceClass.GAS: HEAT_VOLUME_UNITS,
+    sensor.SensorDeviceClass.VOLUME: HEAT_VOLUME_UNITS,
+    # Fuel consumption, e.g. pellets or wood
+    sensor.SensorDeviceClass.WEIGHT: (
+        UnitOfMass.KILOGRAMS,
+        UnitOfMass.POUNDS,
+    ),
+}
+HEAT_PRICE_UNITS = tuple(
+    dict.fromkeys(f"/{unit}" for units in HEAT_USAGE_UNITS.values() for unit in units)
+)
+HEAT_UNIT_ERROR = "entity_unexpected_unit_heat"
+HEAT_PRICE_UNIT_ERROR = "entity_unexpected_unit_heat_price"
+HEAT_PRICE_UNIT_MISMATCH_ERROR = "entity_heat_price_unit_mismatch"
+HEAT_RATE_DEVICE_CLASSES = (
+    sensor.SensorDeviceClass.POWER,
+    sensor.SensorDeviceClass.VOLUME_FLOW_RATE,
+)
+HEAT_RATE_UNITS: dict[str, tuple[UnitOfPower | UnitOfVolumeFlowRate, ...]] = {
+    **POWER_USAGE_UNITS,
+    **VOLUME_FLOW_RATE_UNITS,
+}
+HEAT_RATE_UNIT_ERROR = "entity_unexpected_unit_heat_rate"
 
 
 def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | None:
@@ -113,6 +157,25 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
     if issue_type == WATER_PRICE_UNIT_ERROR:
         return {
             "price_units": ", ".join(f"{currency}{unit}" for unit in WATER_PRICE_UNITS),
+        }
+    if issue_type == HEAT_UNIT_ERROR:
+        return {
+            "energy_units": ", ".join(
+                HEAT_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]
+            ),
+            "volume_units": ", ".join(HEAT_VOLUME_UNITS),
+            "mass_units": ", ".join(HEAT_USAGE_UNITS[sensor.SensorDeviceClass.WEIGHT]),
+        }
+    if issue_type == HEAT_PRICE_UNIT_ERROR:
+        return {
+            "price_units": ", ".join(f"{currency}{unit}" for unit in HEAT_PRICE_UNITS),
+        }
+    if issue_type == HEAT_RATE_UNIT_ERROR:
+        return {
+            "power_units": ", ".join(HEAT_RATE_UNITS[sensor.SensorDeviceClass.POWER]),
+            "flow_rate_units": ", ".join(
+                HEAT_RATE_UNITS[sensor.SensorDeviceClass.VOLUME_FLOW_RATE]
+            ),
         }
     if issue_type == VOLUME_FLOW_RATE_UNIT_ERROR:
         return {
@@ -320,13 +383,18 @@ def _async_validate_price_entity(
 
 
 @callback
-def _async_validate_gas_price_unit_mismatch(
+def _async_validate_price_unit_mismatch(
     hass: HomeAssistant,
     usage_entity_id: str,
     price_entity_id: str,
     issues: ValidationIssues,
+    usage_units: Mapping[str, Sequence[str]],
+    mismatch_error: str,
 ) -> None:
-    """Validate that the gas price unit can be converted to the usage unit."""
+    """Validate that the price unit can be converted to the usage unit.
+
+    Units of different device classes in usage_units can't be converted.
+    """
     if (usage_state := hass.states.get(usage_entity_id)) is None or (
         price_state := hass.states.get(price_entity_id)
     ) is None:
@@ -337,16 +405,16 @@ def _async_validate_gas_price_unit_mismatch(
         price_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) or ""
     )
     price_usage_unit = price_unit.partition("/")[2]
-    energy_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]
-    volume_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.GAS]
+    usage_group = next(
+        (group for group in usage_units.values() if usage_unit in group), None
+    )
+    price_group = next(
+        (group for group in usage_units.values() if price_usage_unit in group), None
+    )
     # Unknown price units are reported by _async_validate_price_entity, and the
     # cost sensor still uses them as a price per meter unit
-    if (usage_unit in energy_units and price_usage_unit in volume_units) or (
-        usage_unit in volume_units and price_usage_unit in energy_units
-    ):
-        issues.add_issue(
-            hass, GAS_PRICE_UNIT_MISMATCH_ERROR, price_entity_id, price_unit
-        )
+    if usage_group is not None and price_group not in (None, usage_group):
+        issues.add_issue(hass, mismatch_error, price_entity_id, price_unit)
 
 
 @callback
@@ -625,11 +693,13 @@ def _validate_gas_source(
         )
         validate_calls.append(
             functools.partial(
-                _async_validate_gas_price_unit_mismatch,
+                _async_validate_price_unit_mismatch,
                 hass,
                 source["stat_energy_from"],
                 entity_energy_price,
                 source_result,
+                GAS_USAGE_UNITS,
+                GAS_PRICE_UNIT_MISMATCH_ERROR,
             )
         )
 
@@ -737,6 +807,92 @@ def _validate_water_source(
         )
 
 
+def _validate_heat_source(
+    hass: HomeAssistant,
+    source: data.HeatSourceType,
+    statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
+    wanted_statistics_metadata: set[str],
+    source_result: ValidationIssues,
+    validate_calls: list[functools.partial[None]],
+) -> None:
+    """Validate heat energy source."""
+    wanted_statistics_metadata.add(source["stat_energy_from"])
+    validate_calls.append(
+        functools.partial(
+            _async_validate_usage_stat,
+            hass,
+            statistics_metadata,
+            source["stat_energy_from"],
+            HEAT_USAGE_DEVICE_CLASSES,
+            HEAT_USAGE_UNITS,
+            HEAT_UNIT_ERROR,
+            source_result,
+        )
+    )
+
+    if (stat_cost := source.get("stat_cost")) is not None:
+        wanted_statistics_metadata.add(stat_cost)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_cost_stat,
+                hass,
+                statistics_metadata,
+                stat_cost,
+                source_result,
+            )
+        )
+    elif (entity_energy_price := source.get("entity_energy_price")) is not None:
+        validate_calls.append(
+            functools.partial(
+                _async_validate_price_entity,
+                hass,
+                entity_energy_price,
+                source_result,
+                HEAT_PRICE_UNITS,
+                HEAT_PRICE_UNIT_ERROR,
+            )
+        )
+        validate_calls.append(
+            functools.partial(
+                _async_validate_price_unit_mismatch,
+                hass,
+                source["stat_energy_from"],
+                entity_energy_price,
+                source_result,
+                HEAT_USAGE_UNITS,
+                HEAT_PRICE_UNIT_MISMATCH_ERROR,
+            )
+        )
+
+    if (
+        source.get("entity_energy_price") is not None
+        or source.get("number_energy_price") is not None
+    ):
+        validate_calls.append(
+            functools.partial(
+                _async_validate_auto_generated_cost_entity,
+                hass,
+                source["stat_energy_from"],
+                source_result,
+            )
+        )
+
+    if stat_rate := source.get("stat_rate"):
+        wanted_statistics_metadata.add(stat_rate)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_power_stat,
+                hass,
+                statistics_metadata,
+                stat_rate,
+                HEAT_RATE_DEVICE_CLASSES,
+                HEAT_RATE_UNITS,
+                HEAT_RATE_UNIT_ERROR,
+                source_result,
+            )
+        )
+
+
 async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
     """Validate the energy configuration."""
     manager: data.EnergyManager = await data.async_get_manager(hass)
@@ -776,6 +932,16 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
 
         elif source["type"] == "water":
             _validate_water_source(
+                hass,
+                source,
+                statistics_metadata,
+                wanted_statistics_metadata,
+                source_result,
+                validate_calls,
+            )
+
+        elif source["type"] == "heat":
+            _validate_heat_source(
                 hass,
                 source,
                 statistics_metadata,

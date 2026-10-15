@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfVolume,
 )
@@ -3167,3 +3168,169 @@ async def test_power_sensor_suggested_entity_id_taken(
         manager.data["energy_sources"][0]["stat_rate"]
         == "sensor.battery_power_inverted_2"
     )
+
+
+@pytest.mark.parametrize(
+    ("unit", "entity_energy_price", "number_energy_price", "expected_cost"),
+    [
+        pytest.param(UnitOfEnergy.KILO_WATT_HOUR, None, 0.5, "50.0", id="kwh_number"),
+        pytest.param(UnitOfEnergy.GIGA_JOULE, None, 0.5, "50.0", id="gj_number"),
+        pytest.param(UnitOfVolume.LITERS, None, 0.5, "50.0", id="liters_number"),
+        pytest.param(
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            "sensor.heat_price_per_kwh",
+            None,
+            "50000.0",
+            id="mwh_price_per_kwh",
+        ),
+        pytest.param(
+            UnitOfVolume.CUBIC_METERS,
+            "sensor.heat_price_per_liter",
+            None,
+            "50000.0",
+            id="m3_price_per_liter",
+        ),
+        pytest.param(UnitOfMass.KILOGRAMS, None, 0.5, "50.0", id="kg_number"),
+        pytest.param(
+            UnitOfMass.KILOGRAMS,
+            "sensor.heat_price_per_kg",
+            None,
+            "50.0",
+            id="kg_price_per_kg",
+        ),
+        pytest.param(
+            UnitOfMass.POUNDS,
+            "sensor.heat_price_per_kg",
+            None,
+            "22.6796185",
+            id="lb_price_per_kg",
+        ),
+    ],
+)
+async def test_cost_sensor_handle_heat(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    unit: str,
+    entity_energy_price: str | None,
+    number_energy_price: float | None,
+    expected_cost: str,
+) -> None:
+    """Test heat cost from a fixed price or a price entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "heat",
+            "stat_energy_from": "sensor.heat_consumption",
+            "stat_cost": None,
+            "entity_energy_price": entity_energy_price,
+            "number_energy_price": number_energy_price,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    hass.states.async_set(
+        "sensor.heat_price_per_kwh",
+        "0.5",
+        {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}"},
+    )
+    hass.states.async_set(
+        "sensor.heat_price_per_liter",
+        "0.5",
+        {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{UnitOfVolume.LITERS}"},
+    )
+    hass.states.async_set(
+        "sensor.heat_price_per_kg",
+        "0.5",
+        {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{UnitOfMass.KILOGRAMS}"},
+    )
+    hass.states.async_set("sensor.heat_consumption", 100, energy_attributes)
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.heat_consumption_cost")
+    assert state.state == "0.0"
+
+    hass.states.async_set("sensor.heat_consumption", 200, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.heat_consumption_cost")
+    assert float(state.state) == pytest.approx(float(expected_cost))
+
+
+async def test_cost_sensor_gas_source_moved_to_heat(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test moving a gas source to heat keeps the cost sensor and its statistics."""
+    now = dt_util.utcnow()
+
+    def _compile_statistics(_: Any) -> list[dict[str, Any]]:
+        with session_scope(hass=hass) as session:
+            return compile_statistics(
+                hass, session, now, now + timedelta(seconds=1), {}
+            ).platform_stats
+
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    source = {
+        "type": "gas",
+        "stat_energy_from": "sensor.pellets_energy",
+        "stat_cost": None,
+        "entity_energy_price": None,
+        "number_energy_price": 0.5,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(source)
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+    hass.states.async_set("sensor.pellets_energy", 100, energy_attributes)
+
+    await setup_integration(hass)
+
+    frozen_time.tick(TEST_TIME_ADVANCE_INTERVAL)
+    hass.states.async_set("sensor.pellets_energy", 200, energy_attributes)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.pellets_energy_cost").state == "50.0"
+
+    frozen_time.tick(TEST_TIME_ADVANCE_INTERVAL)
+    manager = await async_get_manager(hass)
+    await manager.async_update({"energy_sources": [{**source, "type": "heat"}]})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.pellets_energy_cost_2") is None
+    assert hass.states.get("sensor.pellets_energy_cost").state == "0.0"
+    cost_entries = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.platform == "energy"
+    ]
+    assert [(entry.entity_id, entry.unique_id) for entry in cost_entries] == [
+        ("sensor.pellets_energy_cost", "sensor.pellets_energy_heat_cost")
+    ]
+
+    frozen_time.tick(TEST_TIME_ADVANCE_INTERVAL)
+    hass.states.async_set("sensor.pellets_energy", 300, energy_attributes)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.pellets_energy_cost").state == "50.0"
+
+    # The cost statistic continues across the move: 50 EUR as gas + 50 EUR as heat
+    await async_wait_recording_done(hass)
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, "sensor.pellets_energy_cost")
+    assert statistics["stat"]["sum"] == 100.0

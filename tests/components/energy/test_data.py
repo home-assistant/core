@@ -10,6 +10,7 @@ from homeassistant.components.energy.data import (
     FLOW_FROM_GRID_SOURCE_SCHEMA,
     FLOW_TO_GRID_SOURCE_SCHEMA,
     GAS_SOURCE_SCHEMA,
+    HEAT_SOURCE_SCHEMA,
     POWER_CONFIG_SCHEMA,
     WATER_SOURCE_SCHEMA,
     EnergyManager,
@@ -1188,3 +1189,36 @@ async def test_water_allows_price_with_stat_cost_for_external_stat() -> None:
     )
     assert result["stat_cost"] == "external:water_cost"
     assert result["number_energy_price"] == 0.005
+
+
+@pytest.mark.parametrize(
+    "price",
+    [
+        pytest.param({"entity_energy_price": "sensor.heat_price"}, id="entity"),
+        pytest.param({"number_energy_price": 0.12}, id="number"),
+    ],
+)
+async def test_heat_rejects_price_for_external_stat(price: dict[str, Any]) -> None:
+    """Test that heat schema rejects a price for external statistics."""
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
+        HEAT_SOURCE_SCHEMA(
+            {
+                "type": "heat",
+                "stat_energy_from": "external:heat_consumption",
+                **price,
+            }
+        )
+
+
+async def test_heat_source_in_energy_source_schema() -> None:
+    """Test that a heat source is accepted by the energy source schema."""
+    source = {
+        "type": "heat",
+        "stat_energy_from": "sensor.district_heating",
+        "stat_rate": "sensor.district_heating_power",
+        "stat_cost": None,
+        "entity_energy_price": None,
+        "number_energy_price": 0.12,
+        "name": "District heating",
+    }
+    assert ENERGY_SOURCE_SCHEMA([source]) == [source]
