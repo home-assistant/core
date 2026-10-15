@@ -1354,8 +1354,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/ohmconnect/ @robbiet480
 /homeassistant/components/ohme/ @dan-r
 /tests/components/ohme/ @dan-r
-/homeassistant/components/ollama/ @synesthesiam
-/tests/components/ollama/ @synesthesiam
+/homeassistant/components/ollama/ @home-assistant/core
+/tests/components/ollama/ @home-assistant/core
 /homeassistant/components/ombi/ @larssont
 /homeassistant/components/omie/ @luuuis
 /tests/components/omie/ @luuuis
@@ -2084,8 +2084,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
-/homeassistant/components/voip/ @synesthesiam @jaminh
-/tests/components/voip/ @synesthesiam @jaminh
+/homeassistant/components/voip/ @home-assistant/core @jaminh
+/tests/components/voip/ @home-assistant/core @jaminh
 /homeassistant/components/volkszaehler/ @StefanSchoof
 /tests/components/volkszaehler/ @StefanSchoof
 /homeassistant/components/volumio/ @OnFreund
