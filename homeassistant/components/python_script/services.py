@@ -49,6 +49,10 @@ def discover_scripts(hass: HomeAssistant) -> None:
 
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
+        # Action names are lowercase, and the built-in reload action must stay
+        if name.lower() == SERVICE_RELOAD:
+            _LOGGER.warning("Skipping python_script '%s': name is reserved", name)
+            continue
         # Cannot be moved: action names come from the script files
         # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(
