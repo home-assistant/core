@@ -36,7 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import (  # noqa: F401
+from .const import (
     CREATE_EVENT_SERVICE,
     DATA_COMPONENT,
     DOMAIN,
@@ -79,11 +79,7 @@ from .helper import (
     has_timezone,
     validate_rrule,
 )
-from .services import (  # noqa: F401
-    CREATE_EVENT_SCHEMA,
-    async_create_event,
-    async_setup_services,
-)
+from .services import CREATE_EVENT_SCHEMA, async_setup_services
 
 # mypy: disallow-any-generics
 
@@ -129,6 +125,45 @@ CALENDAR_EVENT_SCHEMA = probatio.Schema(
     ),
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "CREATE_EVENT_SCHEMA",
+    "CREATE_EVENT_SERVICE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "EVENT_DESCRIPTION",
+    "EVENT_DURATION",
+    "EVENT_END",
+    "EVENT_END_DATE",
+    "EVENT_END_DATETIME",
+    "EVENT_IN",
+    "EVENT_IN_DAYS",
+    "EVENT_IN_WEEKS",
+    "EVENT_LOCATION",
+    "EVENT_RECURRENCE_ID",
+    "EVENT_RECURRENCE_RANGE",
+    "EVENT_RRULE",
+    "EVENT_START",
+    "EVENT_START_DATE",
+    "EVENT_START_DATETIME",
+    "EVENT_SUMMARY",
+    "EVENT_TIME_FIELDS",
+    "EVENT_TYPES",
+    "EVENT_UID",
+    "LIST_EVENT_FIELDS",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_GET_EVENTS",
+    "WEBSOCKET_EVENT_SCHEMA",
+    "CalendarEntity",
+    "CalendarEntityDescription",
+    "CalendarEntityFeature",
+    "CalendarEntityStateAttribute",
+    "CalendarEvent",
+    "CalendarEventStatus",
+    "extract_offset",
+    "is_offset_reached",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

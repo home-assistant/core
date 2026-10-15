@@ -135,7 +135,7 @@ def _validate_timespan(
     raise ValueError("Missing required fields to set start or end date/datetime")
 
 
-async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
+async def _async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
     """Add a new event to calendar."""
     # Convert parameters to format used by async_create_event
     (start, end) = _validate_timespan(call.data)
@@ -176,7 +176,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component.async_register_entity_service(
         CREATE_EVENT_SERVICE,
         CREATE_EVENT_SCHEMA,
-        async_create_event,
+        _async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
     component.async_register_entity_service(
