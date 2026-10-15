@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from gkphomepython.const import BOOST_DURATION_MAX, BOOST_DURATION_MIN
+from gkphomepython import BOOST_DURATION_MAX, BOOST_DURATION_MIN
 import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN

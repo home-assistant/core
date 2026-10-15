@@ -138,44 +138,33 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
 
     async def _async_fetch_thermostats(self) -> dict[str, Thermostat]:
         """Fetch all thermostats, keeping the last state of failing ones."""
-        results = await self.client.get_thermostats(self.installations.values())
-        if not results:
-            return {}
+        try:
+            result = await self.client.get_thermostats(self.installations.values())
+        except GkpAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
+        except GkpRateLimitError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                translation_placeholders={"retry_after": str(err.retry_after)},
+                retry_after=err.retry_after,
+            ) from err
 
-        previous = self.data or {}
-        thermostats: dict[str, Thermostat] = {}
-        failures = 0
-        rate_limit_error: GkpRateLimitError | None = None
-        for device_id, result in results.items():
-            if isinstance(result, Thermostat):
-                thermostats[device_id] = result
-                continue
-            if isinstance(result, GkpAuthError):
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="authentication_failed",
-                ) from result
-            if isinstance(result, GkpRateLimitError):
-                rate_limit_error = result
-            failures += 1
-            _LOGGER.debug("Failed to update device %s: %s", device_id, result)
-            if device_id in previous:
-                thermostats[device_id] = previous[device_id]
-
-        if failures == len(results):
-            if rate_limit_error is not None:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="rate_limited",
-                    translation_placeholders={
-                        "retry_after": str(rate_limit_error.retry_after)
-                    },
-                    retry_after=rate_limit_error.retry_after,
-                )
+        if result.errors and not result.thermostats:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_update_devices",
             )
+
+        thermostats = result.thermostats
+        previous = self.data or {}
+        for device_id, error in result.errors.items():
+            _LOGGER.debug("Failed to update device %s: %s", device_id, error)
+            if device_id in previous:
+                thermostats[device_id] = previous[device_id]
 
         _LOGGER.debug("Updated %d devices", len(thermostats))
         return thermostats

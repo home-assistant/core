@@ -5,7 +5,14 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from gkphomepython import GkpError, Installation, Thermostat
+from gkphomepython import (
+    GkpAuthError,
+    GkpError,
+    GkpRateLimitError,
+    Installation,
+    Thermostat,
+    ThermostatsResult,
+)
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -107,17 +114,19 @@ def mock_gkp_client(
 
         async def get_thermostats(
             installations: Iterable[Installation],
-        ) -> dict[str, Thermostat | GkpError]:
-            results: dict[str, Thermostat | GkpError] = {}
+        ) -> ThermostatsResult:
+            result = ThermostatsResult()
             for installation in installations:
                 for device_id in installation.device_ids:
                     try:
-                        results[device_id] = await client.get_thermostat(
+                        result.thermostats[device_id] = await client.get_thermostat(
                             device_id, installation
                         )
+                    except GkpAuthError, GkpRateLimitError:
+                        raise
                     except GkpError as err:
-                        results[device_id] = err
-            return results
+                        result.errors[device_id] = err
+            return result
 
         client.get_thermostats.side_effect = get_thermostats
 

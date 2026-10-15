@@ -40,8 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-ADJUSTABLE_MODES = (GkpMode.ECO, GkpMode.COMFORT, GkpMode.BOOST, GkpMode.AUTO)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -162,7 +160,7 @@ class GkpClimate(GkpEntity, ClimateEntity):
         """
         temperature: float = kwargs[ATTR_TEMPERATURE]
         mode = self.thermostat.mode
-        if mode is None or mode not in ADJUSTABLE_MODES:
+        if mode is None or not mode.setpoint_adjustable:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="setpoint_not_adjustable",
