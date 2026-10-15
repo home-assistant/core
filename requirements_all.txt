@@ -3500,7 +3500,7 @@ xiaomi-ble==1.16.1
 xiaomi-weather==0.1.0
 
 # homeassistant.components.knx
-xknx==3.20.0
+xknx==4.0.0
 
 # homeassistant.components.knx
 xknxproject==3.10.0

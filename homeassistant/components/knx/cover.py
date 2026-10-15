@@ -270,7 +270,7 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             self._attr_device_class = custom_device_class
 
 
-def _create_ui_cover(xknx: XKNX, conf: CoverKnxConfig, name: str) -> XknxCover:
+def _create_ui_cover(xknx: XKNX, conf: CoverKnxConfig, name: str | None) -> XknxCover:
     """Return a KNX Cover device to be used within XKNX."""
     return XknxCover(
         xknx=xknx,
@@ -308,7 +308,5 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config.entity,
         )
-        self._device = _create_ui_cover(
-            knx_module.xknx, config.knx, config.entity.xknx_name
-        )
+        self._device = _create_ui_cover(knx_module.xknx, config.knx, config.entity.name)
         self.init_base()

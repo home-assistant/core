@@ -62,6 +62,12 @@ async def test_activate_knx_scene(
     # different scene number - should not be recorded
     await knx.receive_write("1/1/1", (0x00,))
     assert len(events) == 4
+    # learn request for this scene number - should not be recorded
+    await knx.receive_write("1/1/1", (0x97,))
+    assert len(events) == 4
+    # activation after a learn request is recorded again
+    await knx.receive_write("1/1/1", (0x17,))
+    assert len(events) == 5
 
 
 async def test_scene_ui_create(
