@@ -2,6 +2,7 @@
 
 import ast
 
+from . import ast_parse_module
 from .model import Config, Integration
 from .serializer import format_python_namespace
 
@@ -12,7 +13,7 @@ def _uses_serial_port_selector(integration: Integration) -> bool:
     if not config_flow.is_file():
         return False
 
-    for node in ast.walk(ast.parse(config_flow.read_bytes())):
+    for node in ast.walk(ast_parse_module(config_flow)):
         if not isinstance(node, ast.Call):
             continue
         func = node.func
