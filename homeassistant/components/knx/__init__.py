@@ -278,9 +278,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     knx_module = hass.data[KNX_MODULE_KEY]
-    if not device_entry.identifiers.isdisjoint(
-        knx_module.interface_device.device_info["identifiers"]
-    ):
+    if device_entry.id == knx_module.interface_device.device.id:
         # can not remove interface device
         return False
     ui_unique_ids = knx_module.config_store.get_entity_uids()
