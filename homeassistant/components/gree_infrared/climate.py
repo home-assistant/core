@@ -525,20 +525,31 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self.hass, self._async_handle_timer_expiry(), "gree_infrared_timer_expiry"
         )
 
+    def _reconcile_overdue_timer_locked(self) -> None:
+        """Apply overdue timer power transition while holding the command lock.
+
+        Setters that acquire the lock after the deadline but before the expiry
+        background task must flip assumed HVAC power here; otherwise they still
+        read the pre-expiry mode, transmit power=True, and clear the deadline so
+        cleanup skips the transition.
+        """
+        if self._timer_deadline is None or dt_util.utcnow() < self._timer_deadline:
+            return
+        self._cancel_timer_expiry()
+        self._timer_deadline = None
+        self._state.timer_hours = None
+        self._attr_hvac_mode = (
+            self._last_active_hvac_mode
+            if self._attr_hvac_mode is HVACMode.OFF
+            else HVACMode.OFF
+        )
+        self.async_write_ha_state()
+        self._state.async_notify_switches()
+
     async def _async_handle_timer_expiry(self) -> None:
         """Publish expiry only after pending state has committed or rolled back."""
         async with self._state.command_lock:
-            if self._timer_deadline is None or dt_util.utcnow() < self._timer_deadline:
-                return
-            self._timer_deadline = None
-            self._state.timer_hours = None
-            self._attr_hvac_mode = (
-                self._last_active_hvac_mode
-                if self._attr_hvac_mode is HVACMode.OFF
-                else HVACMode.OFF
-            )
-            self.async_write_ha_state()
-            self._state.async_notify_switches()
+            self._reconcile_overdue_timer_locked()
 
     async def _async_send_state(
         self,
@@ -629,6 +640,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_option"
             )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             if (
                 option == "sleep"
                 and value
@@ -667,6 +680,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_fresh_air"
             )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             await self._async_set_options_locked(
                 {"fresh_air": int(_HA_FRESH_AIR_TO_LIB[option])}
             )
@@ -681,6 +696,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_timer"
             )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             hvac_mode = self._attr_hvac_mode
             if hvac_mode is not None:
                 await self._async_send_state(
@@ -709,6 +726,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_vane_position"
             )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             options: dict[str, Any] = {"swing_v_position": position}
             if position is not None:
                 options["swing_v"] = False
@@ -731,12 +750,16 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     async def async_turn_on(self) -> None:
         """Resume the last active mode instead of selecting a heating default."""
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             await self._async_set_hvac_mode_locked(self._last_active_hvac_mode)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             await self._async_set_hvac_mode_locked(hvac_mode)
 
     async def _async_set_hvac_mode_locked(self, hvac_mode: HVACMode) -> None:
@@ -760,6 +783,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature, switching the HVAC mode when one is given."""
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             temp = round(kwargs[ATTR_TEMPERATURE])
             hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
             cleared: dict[str, bool] = {}
@@ -788,6 +813,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             hvac_mode = self._attr_hvac_mode
             if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
                 await self._async_send_state(
@@ -804,6 +831,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         """Set vertical sweep."""
         self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             await self._async_set_options_locked(
                 {"swing_v": swing_mode == SWING_ON, "swing_v_position": None}
             )
@@ -818,6 +847,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             "horizontal_swing", swing_horizontal_mode, self.swing_horizontal_modes
         )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             swing_h = swing_horizontal_mode == SWING_ON
             await self._async_set_options_locked(
                 {"swing_h": swing_h, "swing_h_position": int(swing_h)}
@@ -834,6 +865,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_key="unsupported_horizontal_vane_position",
             )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             await self._async_set_options_locked(
                 {"swing_h_position": position, "swing_h": position != 0}
             )
@@ -861,6 +894,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 translation_domain=DOMAIN, translation_key="unsupported_yap1f_field"
             )
         async with self._state.command_lock:
+            self._reconcile_overdue_timer_locked()
+
             previous = getattr(self._state, key)
             await self._async_set_options_locked({key: value})
             if key == "fahrenheit" and value != previous:
