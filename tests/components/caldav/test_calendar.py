@@ -1407,6 +1407,47 @@ async def test_get_events_sorted(
     ]
 
 
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_calendar_holding(
+                CALENDAR_NAME,
+                [
+                    # 01:15 EST, after the clocks fell back
+                    _ics_event(
+                        "second", "DTSTART:20241103T061500Z\nDTEND:20241103T063000Z"
+                    ),
+                    # 01:30 EDT, before the clocks fell back
+                    _ics_event(
+                        "first", "DTSTART:20241103T053000Z\nDTEND:20241103T054500Z"
+                    ),
+                ],
+            )
+        ]
+    ],
+)
+async def test_get_events_sorted_dst_fallback(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+) -> None:
+    """Test events in the repeated hour are returned in chronological order."""
+    await setup_platform_cb()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}"
+        "?start=2024-11-03T00:00:00-04:00&end=2024-11-04T00:00:00-05:00"
+    )
+    assert response.status == HTTPStatus.OK
+    assert [event["summary"] for event in await response.json()] == [
+        "first",
+        "second",
+    ]
+
+
 @pytest.mark.parametrize("tz", [UTC])
 @pytest.mark.parametrize(
     ("service_data", "expected_ics_fields"),
