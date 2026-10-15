@@ -26,7 +26,7 @@ from .const import (
     ACCESS_TOKEN_EXPIRATION,
     GROUP_ID_ADMIN,
     LOGIN_FLOW_EXPIRATION,
-    MAX_LOGIN_FLOWS_PER_IP,
+    MAX_LOGIN_FLOWS,
     REFRESH_TOKEN_EXPIRATION,
 )
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
@@ -128,16 +128,10 @@ class AuthManagerFlowManager(
         for flow in list(self._progress.values()):
             if cast(LoginFlow, flow).created_at < expired:
                 self.async_abort(flow.flow_id)
-        if context is not None and (ip := context.get("ip_address")) is not None:
-            ip_flows = [
-                flow
-                for flow in self._progress.values()
-                if flow.context.get("ip_address") == ip
-            ]
-            # Abort the oldest flow instead of refusing new ones, so a client
-            # sharing the IP address can't lock others out.
-            if len(ip_flows) >= MAX_LOGIN_FLOWS_PER_IP:
-                self.async_abort(ip_flows[0].flow_id)
+        # Abort the oldest flow instead of refusing new ones, so flooding
+        # can't lock everyone out of logging in.
+        if len(self._progress) >= MAX_LOGIN_FLOWS:
+            self.async_abort(next(iter(self._progress)))
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {handler_key}")

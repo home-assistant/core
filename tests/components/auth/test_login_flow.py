@@ -8,7 +8,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.auth.const import LOGIN_FLOW_EXPIRATION, MAX_LOGIN_FLOWS_PER_IP
+from homeassistant.auth.const import LOGIN_FLOW_EXPIRATION
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -610,12 +610,13 @@ async def test_well_known_auth_info_allows_cors(
     assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
 
 
-async def test_login_flow_limit_per_ip(
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 3)
+async def test_login_flow_limit(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the oldest login flows of an IP address are aborted over the limit."""
+    """Test the oldest login flow is aborted when the limit is reached."""
     client = await async_setup_auth(hass, aiohttp_client)
     payload = {
         "client_id": CLIENT_ID,
@@ -624,7 +625,7 @@ async def test_login_flow_limit_per_ip(
     }
 
     flow_ids = []
-    for _ in range(MAX_LOGIN_FLOWS_PER_IP + 1):
+    for _ in range(4):
         resp = await client.post("/auth/login_flow", json=payload)
         assert resp.status == HTTPStatus.OK
         flow_ids.append((await resp.json())["flow_id"])
