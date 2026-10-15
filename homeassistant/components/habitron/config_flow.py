@@ -283,14 +283,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         old entry stays unable to ever adopt the identity that would resolve the
         duplicate. Its hub device still records the MAC, and that survives any
         move.
+
+        A live entry wins over an ignored one: a discovery sees both, and an
+        ignored entry for the hub must not take the update the live one needs.
         """
+        bound = [
+            entry
+            for entry in self._async_current_entries()
+            if unique_id in async_hub_macs(self.hass, entry)
+        ]
         return next(
-            (
-                entry
-                for entry in self._async_current_entries()
-                if unique_id in async_hub_macs(self.hass, entry)
-            ),
-            None,
+            (entry for entry in bound if entry.source != config_entries.SOURCE_IGNORE),
+            next(iter(bound), None),
         )
 
     async def _async_abort_if_host_configured(
@@ -380,6 +384,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_mac_address")
 
         await self.async_set_unique_id(unique_id)
+        # The identity match comes first: a live entry bound to this hub by its
+        # hub device has to get the new address even when an ignored entry
+        # carries the MAC as its id, which the unique-id check alone would pick.
+        if (
+            result := await self._async_abort_if_host_configured(
+                host_str, unique_id=unique_id
+            )
+        ) is not None:
+            return result
         # The entry registers an update listener that reloads on a data change,
         # so leave the reload to it: having both schedules two reloads and is
         # reported as breaking in 2026.12. An entry still sitting out its setup
@@ -393,12 +406,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: await self._async_stored_host(host_str)},
             reload_on_update=False,
         )
-        if (
-            result := await self._async_abort_if_host_configured(
-                host_str, unique_id=unique_id
-            )
-        ) is not None:
-            return result
 
         self.context["title_placeholders"] = {"name": host_str}
         return await self.async_step_discovery_confirm()
@@ -433,16 +440,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # with it its stored settings. Outside the try, since the
                 # aborts are raised as exceptions.
                 await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: await self._async_stored_host(host)},
-                    reload_on_update=False,
-                )
+                stored_host = await self._async_stored_host(host)
+                # Identity first, as in the discovery step: a live entry bound
+                # by its hub device wins over an ignored entry with the MAC.
                 if (
                     result := await self._async_abort_if_host_configured(
                         host, unique_id=unique_id
                     )
                 ) is not None:
                     return result
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: stored_host}, reload_on_update=False
+                )
                 return self.async_create_entry(title=info["title"], data=data)
 
         self._set_confirm_only()

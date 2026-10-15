@@ -2021,3 +2021,69 @@ async def test_discovery_confirm_aborts_when_the_hub_reports_no_mac(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_mac_address"
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+def _live_legacy_entry_retrying_beside_an_ignored_one(
+    hass: HomeAssistant,
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Add an ignored entry with the hub's MAC and a live legacy entry for it.
+
+    The live entry is keyed by a serial, records the MAC on its hub device and
+    is retrying at an address the hub has since left.
+    """
+    ignored = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_UID,
+        source=config_entries.SOURCE_IGNORE,
+        data={CONF_HOST: "192.168.1.98"},
+    )
+    ignored.add_to_hass(hass)
+    live = _entry_in_backoff(hass, MOCK_SERIAL, "192.168.1.99")
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=live.entry_id,
+        identifiers={(DOMAIN, MOCK_SERIAL)},
+        connections={(dr.CONNECTION_NETWORK_MAC, MOCK_MAC)},
+    )
+    return ignored, live
+
+
+async def test_ssdp_updates_the_live_entry_before_an_ignored_one(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A rediscovery before the legacy setup succeeds repairs the live entry.
+
+    The ignored entry carries the MAC as its id, but the live entry is the one
+    that needs the new address and a retry.
+    """
+    ignored, live = _live_legacy_entry_retrying_beside_an_ignored_one(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert live.data == {CONF_HOST: MOCK_HOST}
+    assert ignored.data == {CONF_HOST: "192.168.1.98"}
+    mock_reload.assert_called_once_with(live.entry_id)
+
+
+async def test_discovery_confirm_updates_the_live_entry_before_an_ignored_one(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """The confirmation step prefers the live entry as the discovery step does."""
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+    assert result["step_id"] == "discovery_confirm"
+    ignored, live = _live_legacy_entry_retrying_beside_an_ignored_one(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert live.data == {CONF_HOST: MOCK_HOST}
+    assert ignored.data == {CONF_HOST: "192.168.1.98"}
+    mock_reload.assert_called_once_with(live.entry_id)
