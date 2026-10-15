@@ -1,16 +1,112 @@
 """Support for NX584 alarm control panels."""
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+import asyncio
+from typing import Any
 
-from .const import DOMAIN
+from nx584 import client as nx584_client
+import requests
+from yarl import URL
+
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, Platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
+
+from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
+
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+
+DATA_IMPORT_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_import_lock")
+
+type NX584ConfigEntry = ConfigEntry[nx584_client.Client]
+
+
+def create_client(host: str, port: int) -> nx584_client.Client:
+    """Create a client for the NX584 server."""
+    return nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NX584 component."""
     async_setup_services(hass)
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
+    """Set up NX584 from a config entry."""
+    client = create_client(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    try:
+        await hass.async_add_executor_job(client.list_zones)
+    except requests.exceptions.ConnectionError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to the NX584 server at {entry.data[CONF_HOST]}"
+        ) from err
+
+    entry.runtime_data = client
+    await hass.config_entries.async_forward_entry_setups(
+        entry, entry.data.get(CONF_PLATFORMS, PLATFORMS)
+    )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry.data.get(CONF_PLATFORMS, PLATFORMS)
+    )
+
+
+async def async_import_yaml(
+    hass: HomeAssistant, platform: Platform, import_data: dict[str, Any]
+) -> None:
+    """Import a YAML platform into the config entry of its server."""
+    # The alarm and binary sensor platforms of one server import one at a time,
+    # so the second one merges into the entry the first one created.
+    async with hass.data.setdefault(DATA_IMPORT_LOCK, asyncio.Lock()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_PLATFORM: platform, **import_data},
+        )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": DEFAULT_NAME,
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )

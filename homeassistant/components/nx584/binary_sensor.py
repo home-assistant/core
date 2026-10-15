@@ -1,13 +1,15 @@
 """Support for exposing NX584 elements as sensors."""
 
+from collections.abc import Mapping
 import logging
 import threading
-import time
 from typing import Any, override
 
 from nx584 import client as nx584_client
 import probatio
 import requests
+from requests import PreparedRequest, Response
+from requests.adapters import HTTPAdapter
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -15,20 +17,26 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import NX584ConfigEntry, async_import_yaml, create_client
+from .const import CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES, DEFAULT_HOST, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE_ZONES = "exclude_zones"
-CONF_ZONE_TYPES = "zone_types"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 5007
 BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
+
+# How long the server holds an event request open when there is nothing new.
+EVENTS_POLL_TIMEOUT = 60
+# pynx584 sets no transport timeout, so a stalled server would block forever.
+EVENTS_REQUEST_TIMEOUT = EVENTS_POLL_TIMEOUT + 5
 
 ZONE_TYPES_SCHEMA = probatio.Schema(
     {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
@@ -51,41 +59,88 @@ def _zone_flags_indicate_bypass(zone_flags: list[str]) -> bool:
     return not BYPASS_ZONE_FLAGS.isdisjoint(zone_flags)
 
 
-def setup_platform(
+def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str]:
+    """Return the zones and the version of the server."""
+    return client.list_zones(), client.get_version()
+
+
+class _TimeoutAdapter(HTTPAdapter):
+    """Transport adapter that bounds every request of the watcher."""
+
+    @override
+    def send(
+        self,
+        request: PreparedRequest,
+        stream: bool = False,
+        timeout: Any = None,
+        verify: bool | str = True,
+        cert: Any = None,
+        proxies: Mapping[str, str] | None = None,
+    ) -> Response:
+        """Send the request with the watcher timeout."""
+        return super().send(
+            request, stream, EVENTS_REQUEST_TIMEOUT, verify, cert, proxies
+        )
+
+
+def create_watcher_client(host: str, port: int) -> nx584_client.Client:
+    """Create a client for the watcher thread whose requests time out."""
+    client = create_client(host, port)
+    client._session.mount("http://", _TimeoutAdapter())  # noqa: SLF001
+    return client
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the NX584 binary sensor platform."""
+    """Import the YAML platform into a config entry."""
+    await async_import_yaml(
+        hass,
+        Platform.BINARY_SENSOR,
+        {
+            CONF_HOST: config[CONF_HOST],
+            CONF_PORT: config[CONF_PORT],
+            CONF_EXCLUDE_ZONES: config[CONF_EXCLUDE_ZONES],
+            CONF_ZONE_TYPES: config[CONF_ZONE_TYPES],
+        },
+    )
 
-    host: str = config[CONF_HOST]
-    port: int = config[CONF_PORT]
-    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
-    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
 
-    try:
-        client = nx584_client.Client(f"http://{host}:{port}")
-        zones = client.list_zones()
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error("Unable to connect to NX584: %s", str(ex))
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NX584ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the NX584 zone sensors from a config entry."""
+    client = entry.runtime_data
+    exclude: list[int] = entry.options.get(CONF_EXCLUDE_ZONES, [])
+    zone_types: dict[str, str] = entry.options.get(CONF_ZONE_TYPES, {})
 
-    version = [int(v) for v in client.get_version().split(".")]
-    if version < [1, 1]:
+    zones, version = await hass.async_add_executor_job(_fetch_zones, client)
+    if [int(v) for v in version.split(".")] < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
         return
 
     zone_sensors = {
         zone["number"]: NX584ZoneSensor(
-            zone, zone_types.get(zone["number"], BinarySensorDeviceClass.OPENING)
+            zone,
+            BinarySensorDeviceClass(
+                zone_types.get(str(zone["number"]), BinarySensorDeviceClass.OPENING)
+            ),
         )
         for zone in zones
         if zone["number"] not in exclude
     }
     if zone_sensors:
-        add_entities(zone_sensors.values())
-        watcher = NX584Watcher(client, zone_sensors)
+        async_add_entities(zone_sensors.values())
+        watcher = NX584Watcher(
+            create_watcher_client(entry.data[CONF_HOST], entry.data[CONF_PORT]),
+            zone_sensors,
+        )
+        entry.async_on_unload(watcher.stop)
         watcher.start()
     else:
         _LOGGER.warning("No zones found on NX584")
@@ -105,7 +160,7 @@ class NX584ZoneSensor(BinarySensorEntity):
 
     @property
     @override
-    def name(self):
+    def name(self) -> str:
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
@@ -129,12 +184,17 @@ class NX584ZoneSensor(BinarySensorEntity):
 class NX584Watcher(threading.Thread):
     """Event listener thread to process NX584 events."""
 
-    def __init__(self, client, zone_sensors):
+    def __init__(self, client, zone_sensors) -> None:
         """Initialize NX584 watcher thread."""
         super().__init__()
         self.daemon = True
         self._client = client
         self._zone_sensors = zone_sensors
+        self._stop_event = threading.Event()
+
+    def stop(self) -> None:
+        """Ask the watcher to stop once the pending request returns."""
+        self._stop_event.set()
 
     def _process_zone_event(self, event):
         zone = event["zone"]
@@ -154,17 +214,23 @@ class NX584Watcher(threading.Thread):
 
     def _run(self):
         """Throw away any existing events so we don't replay history."""
-        self._client.get_events()
-        while True:
-            if events := self._client.get_events():
+        self._client.get_events(timeout=EVENTS_POLL_TIMEOUT)
+        while not self._stop_event.is_set():
+            events = self._client.get_events(timeout=EVENTS_POLL_TIMEOUT)
+            if events and not self._stop_event.is_set():
                 self._process_events(events)
 
     @override
     def run(self):
         """Run the watcher."""
-        while True:
+        while not self._stop_event.is_set():
             try:
                 self._run()
-            except requests.exceptions.ConnectionError:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ):
+                if self._stop_event.is_set():
+                    return
                 _LOGGER.error("Failed to reach NX584 server")
-                time.sleep(10)
+                self._stop_event.wait(10)
