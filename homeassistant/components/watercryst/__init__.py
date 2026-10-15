@@ -62,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
 
     try:
         info = await client.get_device_info()
-        initial_state = await client.get_state()
     except WTCApiUnauthorizedError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -110,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     measurements = WatercrystMeasurementsUpdateCoordinator(
         hass=hass, config_entry=entry, client=client, state=state
     )
-    if initial_state.online:
+    if state.data.online:
         await measurements.async_config_entry_first_refresh()
 
     entry.runtime_data = RuntimeData(
