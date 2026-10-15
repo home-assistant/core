@@ -18,6 +18,8 @@ type AsyncWebSocketCommandHandler = Callable[
 
 DOMAIN: Final = "websocket_api"
 URL: Final = "/api/websocket"
+# Pending entity state changes a client may stay above for PENDING_MSG_PEAK_TIME
+# seconds before it is disconnected, counted the same way as MAX_PENDING_MSG below.
 PENDING_MSG_PEAK: Final = 1024
 PENDING_MSG_PEAK_TIME: Final = 10
 # Maximum number of pending entity state changes at any given time, which is

@@ -255,7 +255,7 @@ class WebSocketHandler:
 
         peak_checker_active = self._peak_checker_unsub is not None
 
-        if queue_size_after_add <= PENDING_MSG_PEAK:
+        if self._pending_changes <= PENDING_MSG_PEAK:
             if peak_checker_active:
                 self._cancel_peak_checker()
             return
@@ -296,13 +296,13 @@ class WebSocketHandler:
         """Check that we are no longer above the write peak."""
         self._peak_checker_unsub = None
 
-        if len(self._message_queue) < PENDING_MSG_PEAK:
+        if self._pending_changes < PENDING_MSG_PEAK:
             return
 
         self._logger.error(
             (
                 "%s: Client unable to keep up with"
-                " pending messages. Stayed over %s for %s"
+                " pending messages. Stayed over %s pending entity changes for %s"
                 " seconds. The system's load is too high or an integration is"
                 " misbehaving; Last message was: %s"
             ),
