@@ -11,11 +11,7 @@ from typing import TYPE_CHECKING, Any, Self, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    ATTR_MODE,
-    CONF_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, async_get_hass_or_none, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -24,7 +20,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
 
-from .const import (  # noqa: F401
+from .const import (
     AMBIGUOUS_UNITS,
     ATTR_MAX,
     ATTR_MIN,
@@ -59,14 +55,18 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 __all__ = [
     "ATTR_MAX",
     "ATTR_MIN",
+    "ATTR_MODE",
     "ATTR_STEP",
     "ATTR_VALUE",
     "DEFAULT_MAX_VALUE",
     "DEFAULT_MIN_VALUE",
     "DEFAULT_STEP",
+    "DEVICE_CLASSES_SCHEMA",
+    "DEVICE_CLASS_UNITS",
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SET_VALUE",
     "NumberDeviceClass",
     "NumberEntity",
     "NumberEntityCapabilityAttribute",
@@ -173,6 +173,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: float | None = None
     _deprecated_number_entity_reported = False
+    _invalid_unit_of_measurement_reported = False
     _number_option_unit_of_measurement: str | None = None
 
     @override
@@ -337,7 +338,37 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def state(self) -> float | None:
         """Return the entity state."""
+        if not self._invalid_unit_of_measurement_reported:
+            self._validate_unit_of_measurement()
         return self.value
+
+    def _validate_unit_of_measurement(self) -> None:
+        """Warn once if the native unit is not valid for the device class."""
+        if (
+            (device_class := self.device_class) is None
+            or (units := DEVICE_CLASS_UNITS.get(device_class)) is None
+            or (native_unit_of_measurement := self.__native_unit_of_measurement_compat)
+            in units
+        ):
+            return
+
+        self._invalid_unit_of_measurement_reported = True
+        # This should raise in Home Assistant Core 2027.5
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using native unit of measurement '%s' which "
+                "is not a valid unit for the device class ('%s') it is using; "
+                "expected one of %s. This will stop working in Home Assistant "
+                "2027.5. Please update your configuration if your entity is "
+                "manually configured, otherwise %s"
+            ),
+            self.entity_id,
+            type(self),
+            native_unit_of_measurement,
+            device_class,
+            sorted(str(unit) if unit else "no unit of measurement" for unit in units),
+            self._suggest_report_issue(),
+        )
 
     @cached_property
     def native_unit_of_measurement(self) -> str | None:

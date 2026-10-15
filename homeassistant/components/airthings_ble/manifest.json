@@ -29,5 +29,5 @@
   "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["airthings-ble==1.2.0"]
+  "requirements": ["airthings-ble==1.3.1"]
 }
