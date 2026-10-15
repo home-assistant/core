@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
 
-from broadlink.exceptions import BroadlinkException, NetworkTimeoutError
+from broadlink_async.exceptions import BroadlinkException, NetworkTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -35,7 +35,7 @@ from . import BroadlinkDevice, MockSetup, get_device
 
 from tests.common import async_fire_time_changed
 
-REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
+REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage", "Study"]
 
 SUBDEVICE = "Living Room"
 

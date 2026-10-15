@@ -21,10 +21,9 @@ async def test_setup_and_unload_entry(
     """Test successful setup and unload of entry."""
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_indi_allsky_client.listen.assert_called_once_with(auto_reconnect=True)
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

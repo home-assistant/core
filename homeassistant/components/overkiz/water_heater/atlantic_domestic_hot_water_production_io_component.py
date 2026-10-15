@@ -41,7 +41,7 @@ OPERATION_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_OPERATION_MODE.items()}
 class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEntity):
     """Representation of io:AtlanticDomesticHotWaterProductionIOComponent."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
     _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
     _attr_supported_features = (
@@ -75,7 +75,7 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if current_temp := self.device.states.get(OverkizState.CORE_TEMPERATURE):
             return current_temp.value_as_float
@@ -84,7 +84,7 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         if target_temp := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE):
             return target_temp.value_as_float

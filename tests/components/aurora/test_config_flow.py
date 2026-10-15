@@ -38,6 +38,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aurora visibility"
     assert result["data"] == DATA
+    assert result["result"].unique_id == "10.2_-10.0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

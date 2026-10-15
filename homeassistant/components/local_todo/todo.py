@@ -1,7 +1,7 @@
 """A Local To-do todo platform."""
 
 import asyncio
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -57,9 +57,9 @@ def _migrate_calendar(calendar: Calendar) -> bool:
         return False
     migrated = False
     for todo in calendar.todos:
-        if todo.due is None or isinstance(todo.due, datetime.datetime):
+        if todo.due is None or isinstance(todo.due, dt.datetime):
             continue
-        todo.due += datetime.timedelta(days=1)
+        todo.due += dt.timedelta(days=1)
         migrated = True
     return migrated
 
@@ -129,8 +129,8 @@ def _convert_item(item: TodoItem) -> Todo:
     if item.status:
         todo.status = ICS_TODO_STATUS_MAP_INV[item.status]
     todo.due = item.due
-    if todo.due and not isinstance(todo.due, datetime.datetime):
-        todo.due += datetime.timedelta(days=1)
+    if todo.due and not isinstance(todo.due, dt.datetime):
+        todo.due += dt.timedelta(days=1)
     todo.description = item.description
     return todo
 
@@ -171,8 +171,8 @@ class LocalTodoListEntity(TodoListEntity):
         """Update entity state based on the local To-do items."""
         todo_items = []
         for item in self._calendar.todos:
-            if (due := item.due) and not isinstance(due, datetime.datetime):
-                due -= datetime.timedelta(days=1)
+            if (due := item.due) and not isinstance(due, dt.datetime):
+                due -= dt.timedelta(days=1)
             todo_items.append(
                 TodoItem(
                     uid=item.uid,

@@ -122,6 +122,7 @@ async def test_user_discovery_success_selection(
         "port": INPUT_PORT_EXTRA,
         "mac": format_mac(INPUT_MAC_EXTRA),
     }
+    assert result["result"].unique_id == format_mac(INPUT_MAC_EXTRA)
 
 
 async def test_user_discovery_duplicates(

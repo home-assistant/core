@@ -1115,7 +1115,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="temperature_unit",
+                    function_name="native_temperature_unit",
                     return_type="str",
                     mandatory=True,
                 ),
@@ -1145,12 +1145,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="current_temperature",
+                    function_name="native_current_temperature",
                     return_type=["float", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="target_temperature",
+                    function_name="native_target_temperature",
                     return_type=["float", None],
                     mandatory=True,
                 ),
@@ -1160,12 +1160,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="target_temperature_high",
+                    function_name="native_target_temperature_high",
                     return_type=["float", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="target_temperature_low",
+                    function_name="native_target_temperature_low",
                     return_type=["float", None],
                     mandatory=True,
                 ),
@@ -1304,6 +1304,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="max_humidity",
                     return_type="float",
                     mandatory=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreClimate",
+            matches=[
+                TypeHintMatch(
+                    function_name="extra_restore_state_data",
+                    return_type="ClimateExtraStoredData",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_last_climate_data",
+                    return_type=["ClimateExtraStoredData", None],
                 ),
             ],
         ),
@@ -2937,7 +2950,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="current_temperature",
+                    function_name="native_current_temperature",
                     return_type=["float", None],
                     mandatory=True,
                 ),
@@ -2972,22 +2985,22 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="target_temperature",
+                    function_name="native_target_temperature",
                     return_type=["float", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="target_temperature_high",
+                    function_name="native_target_temperature_high",
                     return_type=["float", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="target_temperature_low",
+                    function_name="native_target_temperature_low",
                     return_type=["float", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="temperature_unit",
+                    function_name="native_temperature_unit",
                     return_type="str",
                     mandatory=True,
                 ),

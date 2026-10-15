@@ -1,6 +1,7 @@
 """Common fixtures for the NeoPool tests."""
 
 from collections.abc import Generator
+from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,6 +20,7 @@ from homeassistant.components.neopool.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +28,12 @@ MOCK_HOST = "192.0.2.1"
 MOCK_PORT = DEFAULT_PORT
 MOCK_NAME = "Pool"
 MOCK_SERIAL = "1234567890"
+
+
+@asynccontextmanager
+async def _temp_unit_cm(hass: HomeAssistant, params: Any, unit_id: Any) -> Any:
+    """Stub async_get_temporary_unit, yielding a throwaway unit."""
+    yield MagicMock()
 
 
 MOCK_POOL_DATA: dict[str, Any] = {
@@ -118,10 +126,18 @@ def _timer_block(enable: int = 4) -> dict[str, Any]:
 
 
 MOCK_TIMER_BLOCKS: dict[str, dict[str, Any]] = {
+    "filtration1": _timer_block(),
+    "filtration2": _timer_block(),
+    "filtration3": _timer_block(),
     "relay_aux1": _timer_block(),
+    "relay_aux1b": _timer_block(),
     "relay_aux2": _timer_block(),
+    "relay_aux2b": _timer_block(),
     "relay_aux3": _timer_block(),
+    "relay_aux3b": _timer_block(),
     "relay_aux4": _timer_block(),
+    "relay_aux4b": _timer_block(),
+    "relay_light": _timer_block(),
 }
 
 
@@ -210,6 +226,31 @@ def mock_config_entry_switch() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_timers() -> MockConfigEntry:
+    """Return a config entry with the aux and light timer options enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
 def mock_config_entry_number() -> MockConfigEntry:
     """Return a config entry with the options the number platform gates on."""
     return MockConfigEntry(
@@ -289,7 +330,15 @@ def mock_neopool_client() -> Generator[MagicMock]:
             autospec=True,
         ) as mock_client_cls,
         patch(
-            "homeassistant.components.neopool.config_flow.async_probe_serial",
+            "homeassistant.components.neopool.async_get_unit",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+            side_effect=_temp_unit_cm,
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
             new=AsyncMock(return_value=MOCK_SERIAL),
         ),
     ):
@@ -309,8 +358,11 @@ def mock_neopool_client() -> Generator[MagicMock]:
         mock_client.async_set_manual_filtration = AsyncMock(return_value={})
         mock_client.async_set_binary_flag = AsyncMock(return_value={})
         mock_client.async_set_bitmask_flag = AsyncMock(return_value={})
+        mock_client.async_set_relay_activation_delay = AsyncMock(return_value={})
         mock_client.async_start_backwash = AsyncMock(return_value=None)
         mock_client.async_stop_backwash = AsyncMock(return_value=None)
+        mock_client.async_read_register = AsyncMock(return_value=[0])
+        mock_client.async_sync_device_time = AsyncMock(return_value={"value": 1})
         mock_client.close = AsyncMock()
         yield mock_client
 
@@ -352,8 +404,14 @@ def minimal_pool_data() -> dict[str, Any]:
 @pytest.fixture
 def mock_socket_connection() -> Generator[AsyncMock]:
     """Patch the lib probe in config_flow so we don't hit the network."""
-    with patch(
-        "homeassistant.components.neopool.config_flow.async_probe_serial",
-        new=AsyncMock(return_value=MOCK_SERIAL),
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+            side_effect=_temp_unit_cm,
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
+            new=AsyncMock(return_value=MOCK_SERIAL),
+        ) as mock,
+    ):
         yield mock

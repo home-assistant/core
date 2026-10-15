@@ -58,6 +58,9 @@
       "month_peak": {
         "name": "Month peak"
       },
+      "month_peak_time": {
+        "name": "Month peak time"
+      },
       "total_energy_export_tariff_kwh": {
         "name": "Energy export tariff {tariff}"
       },

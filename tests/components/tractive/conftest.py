@@ -2,138 +2,100 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
-from aiotractive.trackable_object import TrackableObject
+from aiotractive import PetStatus, Trackable, TrackerStatus, TractiveStatus
 from aiotractive.tracker import Tracker
 import pytest
 
-from homeassistant.components.tractive.const import DOMAIN, SERVER_UNAVAILABLE
+from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+
+TRACKER_ID = "device_id_123"
+PET_ID = "pet_id_123"
 
 
 @pytest.fixture
 def mock_tractive_client() -> Generator[AsyncMock]:
     """Mock a Tractive client."""
-
-    def send_hardware_event(
-        entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
-        """Send hardware event."""
-        if event is None:
-            event = {
-                "tracker_id": "device_id_123",
-                "hardware": {"battery_level": 88},
-                "tracker_state": "operational",
-                "tracker_state_reason": "POWER_SAVING",
-                "charging_state": "CHARGING",
-            }
-        entry.runtime_data.client._send_hardware_update(event)
-
-    def send_health_overview_event(
-        entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
-        """Send health overview event."""
-        if event is None:
-            event = {
-                "petId": "pet_id_123",
-                "sleep": {
-                    "minutesDaySleep": 100,
-                    "minutesNightSleep": 300,
-                    "minutesCalm": 122,
-                },
-                "activity": {"minutesGoal": 200, "minutesActive": 150},
-            }
-        entry.runtime_data.client.send_health_overview_update(event)
-
-    def send_position_event(
-        entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
-        """Send position event."""
-        if event is None:
-            event = {
-                "tracker_id": "device_id_123",
-                "position": {
-                    "latlong": [22.333, 44.555],
-                    "accuracy": 99,
-                    "sensor_used": "GPS",
-                },
-            }
-        entry.runtime_data.client._send_position_update(event)
-
-    def send_switch_event(entry: MockConfigEntry, event: dict[str, Any] | None = None):
-        """Send switch event."""
-        if event is None:
-            event = {
-                "tracker_id": "device_id_123",
-                "buzzer_control": {"active": True},
-                "led_control": {"active": False},
-                "live_tracking": {"active": True},
-            }
-        entry.runtime_data.client._send_switch_update(event)
-
-    def send_server_unavailable_event(hass: HomeAssistant) -> None:
-        """Send server unavailable event."""
-        async_dispatcher_send(hass, f"{SERVER_UNAVAILABLE}-12345")
-
     trackable_object = load_json_object_fixture("trackable_object.json", DOMAIN)
     tracker_details = load_json_object_fixture("tracker_details.json", DOMAIN)
-    tracker_hw_info = load_json_object_fixture("tracker_hw_info.json", DOMAIN)
-    tracker_pos_report = load_json_object_fixture("tracker_pos_report.json", DOMAIN)
 
-    with (
-        patch(
-            "homeassistant.components.tractive.aiotractive.Tractive", autospec=True
-        ) as mock_client,
-        patch(
-            "homeassistant.components.tractive.asyncio.sleep",
-            new_callable=AsyncMock,
-        ),
-    ):
+    status = TractiveStatus(
+        trackers={
+            TRACKER_ID: TrackerStatus(
+                battery_level=96,
+                tracker_state="operational",
+                battery_charging=False,
+                power_saving=True,
+                power_saving_zone=False,
+                latitude=33.222222,
+                longitude=44.555555,
+                accuracy=30,
+                sensor_used="KNOWN_WIFI",
+            )
+        },
+        pets={
+            PET_ID: PetStatus(
+                daily_goal=200,
+                minutes_active=150,
+                minutes_day_sleep=100,
+                minutes_night_sleep=300,
+                minutes_rest=122,
+            )
+        },
+    )
+
+    def notify(error: Exception | None = None) -> None:
+        """Call the update listener registered by the coordinator."""
+        client.subscribe_updates.call_args.args[0](error)
+
+    def set_tracker_status(**fields: Any) -> None:
+        """Update the tracker status and notify the coordinator."""
+        for key, value in fields.items():
+            setattr(status.trackers[TRACKER_ID], key, value)
+        notify()
+
+    def set_pet_status(**fields: Any) -> None:
+        """Update the pet status and notify the coordinator."""
+        pet = status.pets.setdefault(PET_ID, PetStatus())
+        for key, value in fields.items():
+            setattr(pet, key, value)
+        notify()
+
+    def set_switch(key: str) -> AsyncMock:
+        """Mock a switch command that updates the status like the library does."""
+
+        async def _set(active: bool) -> dict[str, Any]:
+            setattr(status.trackers[TRACKER_ID], key, active)
+            return {"pending": True}
+
+        return AsyncMock(side_effect=_set)
+
+    with patch("aiotractive.Tractive", autospec=True) as mock_client:
         client = mock_client.return_value
-        client.authenticate.return_value = {"user_id": "12345"}
-        client.trackable_objects.return_value = [
-            Mock(
-                spec=TrackableObject,
-                _id="xyz123",
-                type="pet",
-                details=AsyncMock(return_value=trackable_object),
-            ),
+        client.status = status
+        client.async_fetch_trackables.return_value = [
+            Trackable(
+                pet_id=PET_ID,
+                tracker_id=TRACKER_ID,
+                pet_details=trackable_object,
+                tracker_details=tracker_details,
+            )
         ]
+        client.async_fetch_status.return_value = status
         client.tracker.return_value = AsyncMock(
             spec=Tracker,
-            details=AsyncMock(return_value=tracker_details),
-            hw_info=AsyncMock(return_value=tracker_hw_info),
-            pos_report=AsyncMock(return_value=tracker_pos_report),
-            set_live_tracking_active=AsyncMock(return_value={"pending": True}),
-            set_buzzer_active=AsyncMock(return_value={"pending": True}),
-            set_led_active=AsyncMock(return_value={"pending": True}),
+            set_live_tracking_active=set_switch("live_tracking"),
+            set_buzzer_active=set_switch("buzzer"),
+            set_led_active=set_switch("led"),
         )
 
-        client.trackable_object.return_value = Mock(
-            spec=TrackableObject,
-            health_overview=AsyncMock(
-                return_value={
-                    "petId": "pet_id_123",
-                    "sleep": {
-                        "minutesDaySleep": 100,
-                        "minutesNightSleep": 300,
-                        "minutesCalm": 122,
-                    },
-                    "activity": {"minutesGoal": 200, "minutesActive": 150},
-                }
-            ),
-        )
-
-        client.send_hardware_event = send_hardware_event
-        client.send_health_overview_event = send_health_overview_event
-        client.send_position_event = send_position_event
-        client.send_switch_event = send_switch_event
-        client.send_server_unavailable_event = send_server_unavailable_event
+        client.set_tracker_status = set_tracker_status
+        client.set_pet_status = set_pet_status
+        client.send_error_event = notify
 
         yield client
 

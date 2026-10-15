@@ -85,6 +85,7 @@ async def test_user_selection_replaces_ignored(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == WATER_TIMER_SERVICE_INFO.address
 
 
 async def test_failed_connect(

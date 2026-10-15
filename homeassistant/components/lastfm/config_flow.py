@@ -29,7 +29,7 @@ PLACEHOLDERS = {
 
 CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Required(CONF_MAIN_USER): str,
     }
 )
