@@ -233,6 +233,13 @@ async def async_setup_default_agent(
     ha_start.async_at_started(hass, async_hass_started)
 
 
+# Errors that mean the sentence did not apply, as opposed to a failure to act on it
+_MATCH_ERROR_CODES = (
+    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+    intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+)
+
+
 class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
@@ -521,7 +528,7 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         *,
-        discard_match_error: bool = False,
+        discard_match_errors: bool = False,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -583,7 +590,7 @@ class DefaultAgent(ConversationEntity):
             user_input,
             chat_log,
             lang_intents,
-            discard_match_error=discard_match_error,
+            discard_match_errors=discard_match_errors,
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
@@ -604,7 +611,7 @@ class DefaultAgent(ConversationEntity):
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
         *,
-        discard_match_error: bool = False,
+        discard_match_errors: bool = False,
     ) -> intent.IntentResponse:
         """Handle one recognized intent and give it something to say."""
         language = user_input.language or self.hass.config.language
@@ -651,10 +658,6 @@ class DefaultAgent(ConversationEntity):
                     error_response_type, lang_intents, **error_response_args
                 ),
             )
-            if discard_match_error:
-                # The caller hands the turn to another agent, which must not see
-                # a tool call it did not make
-                return intent_response
         except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
@@ -673,6 +676,11 @@ class DefaultAgent(ConversationEntity):
                 intent.IntentResponseErrorCode.UNKNOWN,
                 self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
             )
+
+        if discard_match_errors and intent_response.error_code in _MATCH_ERROR_CODES:
+            # The caller hands the turn to another agent, which must not see
+            # a tool call it did not make
+            return intent_response
 
         if (
             (not intent_response.speech)
@@ -1641,16 +1649,9 @@ class DefaultAgent(ConversationEntity):
             return None
 
         response = await self._async_process_intent_result(
-            result, user_input, chat_log, discard_match_error=True
+            result, user_input, chat_log, discard_match_errors=True
         )
-        if (
-            response.response_type is intent.IntentResponseType.ERROR
-            and response.error_code
-            not in (
-                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                intent.IntentResponseErrorCode.UNKNOWN,
-            )
-        ):
+        if response.error_code in _MATCH_ERROR_CODES:
             # We ignore no matching errors
             return None
         return response

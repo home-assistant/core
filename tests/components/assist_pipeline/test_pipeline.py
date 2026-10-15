@@ -1264,9 +1264,9 @@ async def test_prefer_local_intents(
         )
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_prefer_local_intents_match_failed(
     hass: HomeAssistant,
-    init_components,
     mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
