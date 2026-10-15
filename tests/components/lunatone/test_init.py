@@ -106,6 +106,39 @@ async def test_load_config_entry_sensor_capability(
         mock_lunatone_sensors.async_update.assert_not_called()
 
 
+async def test_reload_without_sensor_capability_removes_dali_sensor_device(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test reload removes DALI sensor devices when sensor support is lost."""
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id = mock_config_entry.unique_id
+    assert unique_id is not None
+    dali_sensor_identifier = f"{unique_id}-line0-d24-address0"
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dali_sensor_identifier), mock_config_entry.entry_id
+    )
+    assert device_entry
+
+    mock_lunatone_info.data.tier = Tier.BASIC
+    mock_lunatone_info.data.emergency_light = True
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dali_sensor_identifier), mock_config_entry.entry_id
+    )
+    assert device_entry is None
+
+
 async def test_config_entry_not_ready_info_api_fail(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
