@@ -42,7 +42,7 @@ async def test_meter_pro_co2_display_time_offset_initial_state(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     with patch(
@@ -78,7 +78,7 @@ async def test_meter_pro_co2_set_display_time_offset(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=60)
@@ -131,7 +131,7 @@ async def test_set_display_time_offset_out_of_range(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=0)

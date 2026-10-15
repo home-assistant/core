@@ -167,22 +167,31 @@ async def test_set_preset_mode(
     assert state.state == expected_state
 
 
-@pytest.mark.parametrize("preset_mode", [PRESET_NONE, PRESET_AWAY])
+@pytest.mark.parametrize(
+    ("preset_mode", "exc_translation_key"),
+    [
+        (PRESET_NONE, "display_only_preset"),
+        (PRESET_AWAY, "display_only_preset"),
+        ("unspecified", "not_valid_preset_mode"),  # handled by ClimateEntity
+    ],
+)
 async def test_set_preset_mode_display_only_raises(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     preset_mode: str,
+    exc_translation_key: str,
 ) -> None:
     """Test display-only presets cannot be set."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    with pytest.raises(ServiceValidationError, match="Unable to set preset"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
             blocking=True,
         )
+    assert err.value.translation_key == exc_translation_key
 
 
 @pytest.mark.parametrize(

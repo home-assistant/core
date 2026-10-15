@@ -35,7 +35,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
+from homeassistant.const import ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -1126,7 +1126,7 @@ def async_register_addons_in_dev_reg(
             configuration_url=f"homeassistant://hassio/addon/{addon.slug}",
         )
         if manufacturer := addon_data.repository or addon.url:
-            params[ATTR_MANUFACTURER] = manufacturer
+            params.manufacturer = manufacturer
         dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
 

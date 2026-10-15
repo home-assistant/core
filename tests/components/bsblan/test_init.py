@@ -77,12 +77,38 @@ async def test_setup_minimal_mode_creates_outdated_firmware_issue(
     # but a repair issue recommends upgrading the firmware.
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
-    )
+    issue_id = f"outdated_firmware_{mock_config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "outdated_firmware"
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_reload_keeps_ignored_outdated_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test reloading keeps the outdated firmware issue and its ignore."""
+    mock_bsblan.json_api_version = "1.0"
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"outdated_firmware_{mock_config_entry.entry_id}"
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 async def test_setup_minimal_mode_restricts_to_single_circuit(

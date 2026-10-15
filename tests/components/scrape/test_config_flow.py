@@ -310,7 +310,7 @@ async def test_reconfigure_sensor_subentry(
         "homeassistant.components.rest.util.RestData",
         return_value=get_data,
     ):
-        await hass.config_entries.subentries.async_configure(
+        result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {
                 CONF_ADDITIONAL: {
@@ -321,6 +321,9 @@ async def test_reconfigure_sensor_subentry(
             },
         )
         await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "2021.12.10"

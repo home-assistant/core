@@ -102,7 +102,7 @@ uuid==1000000000.0.0
 # httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
 # version constraints on anyio and h11 are quite loose. Pin them so we can
 # directly link HA versions to these library versions.
-anyio==4.14.2
+anyio==4.15.1
 h11==0.16.0
 
 # Many libraries still depend on httpx/httpcore. Those imports are aliased to
@@ -244,6 +244,14 @@ python-backoff<2.4.0
 # (used by pydrawise) still imports
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
+
+# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# https://github.com/home-assistant/core/issues/185645
+# https://github.com/c-ares/c-ares/pull/1256
+pycares==5.0.1
+
+# pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
+pypasser<1.0.0
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

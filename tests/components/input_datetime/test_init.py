@@ -14,15 +14,17 @@ from homeassistant.components.input_datetime import (
     ATTR_EDITABLE,
     ATTR_TIME,
     ATTR_TIMESTAMP,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
     CONF_ID,
-    CONF_INITIAL,
     CONF_NAME,
     CONFIG_SCHEMA,
-    DEFAULT_TIME,
     DOMAIN,
     SERVICE_RELOAD,
+)
+from homeassistant.components.input_datetime.const import (
+    CONF_HAS_DATE,
+    CONF_HAS_TIME,
+    CONF_INITIAL,
+    DEFAULT_TIME,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

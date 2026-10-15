@@ -1,6 +1,7 @@
 """Proxy to handle account communication with Renault servers."""
 
 import asyncio
+import contextlib
 from datetime import timedelta
 import logging
 from time import time
@@ -8,17 +9,11 @@ from typing import TYPE_CHECKING
 
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import InvalidCredentialsException
+from renault_api.kamereon.exceptions import KamereonResponseException
 from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -38,15 +33,21 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def _get_filtered_vehicles(account: RenaultAccount) -> list[KamereonVehiclesLink]:
-    """Filter out vehicles with missing details.
+    """Get the vehicles, filtering out those with missing details.
 
-    May be due to new purchases, or issue with the Renault servers.
+    The vehicle list sometimes omits the details, so they are requested
+    separately. They may still be missing for new purchases, or due to an
+    issue with the Renault servers.
     """
     vehicles = await account.get_vehicles()
     if not vehicles.vehicleLinks:
         return []
     result: list[KamereonVehiclesLink] = []
     for link in vehicles.vehicleLinks:
+        if link.vehicleDetails is None and link.vin:
+            vehicle = await account.get_api_vehicle(link.vin)
+            with contextlib.suppress(KamereonResponseException):
+                link.vehicleDetails = await vehicle.get_details()
         if link.vehicleDetails is None:
             LOGGER.warning("Ignoring vehicle with missing details: %s", link.vin)
             continue
@@ -193,11 +194,11 @@ class RenaultHub:
         await vehicle.async_initialise()
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            identifiers=vehicle.device_info[ATTR_IDENTIFIERS],
-            manufacturer=vehicle.device_info[ATTR_MANUFACTURER],
-            name=vehicle.device_info[ATTR_NAME],
-            model=vehicle.device_info[ATTR_MODEL],
-            model_id=vehicle.device_info[ATTR_MODEL_ID],
+            identifiers=vehicle.device_info.identifiers,
+            manufacturer=vehicle.device_info.manufacturer,
+            name=vehicle.device_info.name,
+            model=vehicle.device_info.model,
+            model_id=vehicle.device_info.model_id,
             sw_version=None,  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle

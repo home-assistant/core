@@ -268,6 +268,7 @@ homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.harman_luxury.*
+homeassistant.components.hase_iq.*
 homeassistant.components.hdfury.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
@@ -378,6 +379,7 @@ homeassistant.components.logbook.*
 homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
+homeassistant.components.lorawan.*
 homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
@@ -386,6 +388,7 @@ homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
+homeassistant.components.marantz_rs232.*
 homeassistant.components.marketplace.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
@@ -556,6 +559,7 @@ homeassistant.components.slack.*
 homeassistant.components.sleep_as_android.*
 homeassistant.components.sleepiq.*
 homeassistant.components.sma.*
+homeassistant.components.smartyplants.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*
@@ -680,6 +684,7 @@ homeassistant.components.workday.*
 homeassistant.components.worldclock.*
 homeassistant.components.xbox.*
 homeassistant.components.xiaomi_ble.*
+homeassistant.components.xiaomi_weather.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
 homeassistant.components.yoto.*

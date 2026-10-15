@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DEFAULT_EVENT_TYPES, DOMAIN
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
@@ -83,10 +83,22 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-        self._matching_event_names = [
-            event.event
+        # Models without the schedule API have no descriptions, so fall back to
+        # the type a default event name implies.
+        described = {
+            event.event: event.event_type
             for event in self._door_station.event_descriptions
-            if event.event_type == description.doorbird_event_type
+        }
+        default_types = dict(DEFAULT_EVENT_TYPES)
+        self._matching_event_names = [
+            event_name
+            for event, event_name in zip(
+                self._door_station.events,
+                self._door_station.door_station_events,
+                strict=True,
+            )
+            if (described.get(event_name) or default_types.get(event))
+            == description.doorbird_event_type
         ]
 
     @override

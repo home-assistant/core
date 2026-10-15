@@ -84,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     """Set up a National Weather Service entry."""
     api_key = entry.data[CONF_API_KEY]
     location_entity_id: str | None = None
@@ -273,12 +273,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:

@@ -336,7 +336,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             # If TCC device pass the heatCoolMode value, otherwise
             # if LCC device can skip the mode altogether
             if self._attr_thermostat_type is LyricThermostatType.TCC:
-                mode = HVAC_MODES[device.changeable_values.heat_cool_mode]
+                mode = device.changeable_values.heat_cool_mode
             else:
                 mode = None
 
@@ -402,26 +402,20 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             # This is the behavior that happens with the native app as well,
             # so likely a bug in the api itself.
             if HVAC_MODES[self.device.changeable_values.mode] == HVACMode.OFF:
-                _LOGGER.debug(
-                    "HVAC mode passed to lyric: %s",
-                    HVAC_MODES[LYRIC_HVAC_MODE_COOL],
-                )
+                _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODE_HEAT)
                 await self._update_thermostat(
                     self.location,
                     self.device,
-                    mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                    mode=LYRIC_HVAC_MODE_HEAT,
                     auto_changeover_active=False,
                 )
                 # Sleep 3 seconds before proceeding
                 await asyncio.sleep(3)
-                _LOGGER.debug(
-                    "HVAC mode passed to lyric: %s",
-                    HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                )
+                _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODE_HEAT)
                 await self._update_thermostat(
                     self.location,
                     self.device,
-                    mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                    mode=LYRIC_HVAC_MODE_HEAT,
                     auto_changeover_active=True,
                 )
             else:
