@@ -3373,14 +3373,23 @@ async def test_cost_sensor_heat_saved_with_only_number_price(
     assert hass.states.get("sensor.heat_consumption_cost").state == "50.0"
 
 
-@pytest.mark.usefixtures("recorder_mock")
 async def test_cost_sensor_heat_moved_to_gas_and_back(
     setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    frozen_time: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test moving a heat source to gas and back keeps the heat cost sensor."""
+    """Test moving a heat source to gas and back keeps one cost statistic."""
+    now = dt_util.utcnow()
+
+    def _compile_statistics(_: Any) -> list[dict[str, Any]]:
+        with session_scope(hass=hass) as session:
+            return compile_statistics(
+                hass, session, now, now + timedelta(seconds=1), {}
+            ).platform_stats
+
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
@@ -3401,15 +3410,39 @@ async def test_cost_sensor_heat_moved_to_gas_and_back(
     hass.states.async_set("sensor.pellets_energy", 100, energy_attributes)
 
     await setup_integration(hass)
-    assert hass.states.get("sensor.pellets_energy_cost").state == "0.0"
-
     manager = await async_get_manager(hass)
-    await manager.async_update({"energy_sources": [{**source, "type": "gas"}]})
-    await hass.async_block_till_done()
-    await manager.async_update({"energy_sources": [source]})
-    await hass.async_block_till_done()
+
+    async def consume_50_eur(energy: int) -> None:
+        frozen_time.tick(TEST_TIME_ADVANCE_INTERVAL)
+        hass.states.async_set("sensor.pellets_energy", energy, energy_attributes)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.pellets_energy_cost").state == "50.0"
+
+    async def move_to(source_type: str) -> None:
+        frozen_time.tick(TEST_TIME_ADVANCE_INTERVAL)
+        await manager.async_update(
+            {"energy_sources": [{**source, "type": source_type}]}
+        )
+        await hass.async_block_till_done()
+
+    await consume_50_eur(200)
+    await move_to("gas")
+    await consume_50_eur(300)
+    await move_to("heat")
+    await consume_50_eur(400)
 
     assert "Error" not in caplog.text
-    hass.states.async_set("sensor.pellets_energy", 200, energy_attributes)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.pellets_energy_cost").state == "50.0"
+    assert hass.states.get("sensor.pellets_energy_cost_2") is None
+    cost_entries = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.platform == "energy"
+    ]
+    assert [(entry.entity_id, entry.unique_id) for entry in cost_entries] == [
+        ("sensor.pellets_energy_cost", "sensor.pellets_energy_heat_cost")
+    ]
+
+    await async_wait_recording_done(hass)
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, "sensor.pellets_energy_cost")
+    assert statistics["stat"]["sum"] == 150.0

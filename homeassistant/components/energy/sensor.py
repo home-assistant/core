@@ -145,6 +145,9 @@ SOURCE_ADAPTERS: Final = (
     ),
 )
 
+# Source types a source can be moved between while keeping its cost sensor
+MOVABLE_SOURCE_TYPES: Final = {"gas": "heat", "heat": "gas"}
+
 # Separate adapter for grid export compensation (needs different price field)
 GRID_EXPORT_ADAPTER: Final = SourceAdapter(
     "grid",
@@ -194,8 +197,8 @@ class SensorManager:
         power_to_remove = dict(self.current_power_entities)
 
         async def finish() -> None:
-            # Remove first, a gas source moved to heat hands its cost
-            # sensor entity_id over to the heat cost sensor.
+            # Remove first, a source moved between gas and heat hands its
+            # cost sensor entity_id over to the new cost sensor.
             for key, entity in to_remove.items():
                 self.current_entities.pop(key)
                 await entity.async_remove()
@@ -207,7 +210,7 @@ class SensorManager:
             if to_add:
                 for new_entity in to_add:
                     if isinstance(new_entity, EnergyCostSensor):
-                        self._async_adopt_moved_gas_cost_sensor(new_entity)
+                        self._async_adopt_moved_cost_sensor(new_entity)
                 self.async_add_entities(to_add)
                 await asyncio.wait(ent.add_finished for ent in to_add)
 
@@ -288,31 +291,37 @@ class SensorManager:
         to_add.append(self.current_entities[key])
 
     @callback
-    def _async_adopt_moved_gas_cost_sensor(self, entity: EnergyCostSensor) -> None:
-        """Keep the cost sensor and its statistics of a gas source moved to heat."""
+    def _async_adopt_moved_cost_sensor(self, entity: EnergyCostSensor) -> None:
+        """Keep the cost sensor and its statistics of a source moved between types.
+
+        A source moved between gas and heat keeps its meter, so the new cost
+        sensor takes over the registry entry of the former one.
+        """
         adapter = entity.adapter
         stat_energy = entity.stat_energy
+        former_type = MOVABLE_SOURCE_TYPES.get(adapter.source_type)
         if (
-            adapter.source_type != "heat"
-            or ("gas", adapter.flow_type, stat_energy) in self.current_entities
+            former_type is None
+            or (former_type, adapter.flow_type, stat_energy) in self.current_entities
         ):
             return
 
         entity_registry = er.async_get(self.hass)
-        heat_unique_id = cost_sensor_unique_id(
-            self.hass, stat_energy, "heat", adapter.entity_id_suffix
+        unique_id = cost_sensor_unique_id(
+            self.hass, stat_energy, adapter.source_type, adapter.entity_id_suffix
         )
-        # A heat source moved to gas and back still has its heat entry
-        if entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, heat_unique_id):
+        # Both entries exist if both types used the meter at the same time,
+        # their statistics can't be merged so the existing entry is kept.
+        if entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id):
             return
 
-        gas_unique_id = cost_sensor_unique_id(
-            self.hass, stat_energy, "gas", adapter.entity_id_suffix
+        former_unique_id = cost_sensor_unique_id(
+            self.hass, stat_energy, former_type, adapter.entity_id_suffix
         )
         if entity_id := entity_registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, gas_unique_id
+            SENSOR_DOMAIN, DOMAIN, former_unique_id
         ):
-            entity_registry.async_update_entity(entity_id, new_unique_id=heat_unique_id)
+            entity_registry.async_update_entity(entity_id, new_unique_id=unique_id)
 
     @callback
     def _process_grid_export_sensor(
