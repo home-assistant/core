@@ -69,15 +69,11 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
 
         # Add extra info if not the gateway device
         if device_id != gateway_id:
-            self._attr_device_info.update(
-                {
-                    ATTR_NAME: self.device.get(ATTR_NAME),
-                    "via_device_id": async_get_device_id_by_identifier(
-                        coordinator.hass,
-                        (DOMAIN, gateway_id),
-                        config_entry_id=entry.entry_id,
-                    ),
-                }
+            self._attr_device_info.name = self.device.get(ATTR_NAME)
+            self._attr_device_info.via_device_id = async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, gateway_id),
+                config_entry_id=entry.entry_id,
             )
 
     @property
