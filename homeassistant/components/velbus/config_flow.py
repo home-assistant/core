@@ -119,7 +119,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                         probatio.Required(CONF_TLS): bool,
                         probatio.Required(CONF_HOST): str,
                         probatio.Required(CONF_PORT): int,
-                        probatio.Optional(CONF_PASSWORD): str,
+                        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 suggested_values=user_input,

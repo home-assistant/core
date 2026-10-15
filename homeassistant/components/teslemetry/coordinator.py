@@ -374,15 +374,6 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         self.time_zone = zone
 
-    @override
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Return the current totals; there is nothing to fetch.
-
-        Only reached through the generic entity update service, which must not
-        fail on a coordinator the stream alone feeds.
-        """
-        return self.data
-
     def handle_stream_update(self, event: EnergyTotalsEvent) -> None:
         """Handle an energy_totals document from the stream."""
         data: dict[str, Any] = asdict(event.totals)

@@ -34,7 +34,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_TURN_ON,
         {
             probatio.Optional(ATTR_PERCENTAGE): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(ATTR_PRESET_MODE): cv.string,
         },
@@ -54,7 +54,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_INCREASE_SPEED,
         {
             probatio.Optional(ATTR_PERCENTAGE_STEP): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             )
         },
         "async_increase_speed",
@@ -64,7 +64,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_DECREASE_SPEED,
         {
             probatio.Optional(ATTR_PERCENTAGE_STEP): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             )
         },
         "async_decrease_speed",
@@ -86,7 +86,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_PERCENTAGE,
         {
             probatio.Required(ATTR_PERCENTAGE): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             )
         },
         "async_set_percentage",

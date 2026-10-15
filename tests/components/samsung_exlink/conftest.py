@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from samsung_exlink import MODELS, InputSource, PowerState, SamsungTV, TVState
+from samsung_exlink import MODELS, InputSource, PowerState, SamsungTV, TVModel, TVState
 
 from homeassistant.components.samsung_exlink.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_MODEL
@@ -17,9 +17,9 @@ from tests.common import MockConfigEntry
 class MockSamsungTV(SamsungTV):
     """Samsung TV test double built on the real controller object."""
 
-    def __init__(self, state: TVState) -> None:
+    def __init__(self, state: TVState, model: TVModel | None) -> None:
         """Initialize the mock TV."""
-        super().__init__(MOCK_DEVICE, model=MODELS[MOCK_MODEL])
+        super().__init__(MOCK_DEVICE, model=model)
         self._connected = True
         self._state = state
         self.connect = AsyncMock(side_effect=self._mock_connect)
@@ -31,6 +31,7 @@ class MockSamsungTV(SamsungTV):
         self.set_volume = AsyncMock()
         self.set_mute = AsyncMock()
         self.select_input_source = AsyncMock()
+        self.set_art_mode = AsyncMock()
 
     def mock_state(self, state: TVState | None) -> None:
         """Push a state update through the TV."""
@@ -66,9 +67,17 @@ def initial_tv_state() -> TVState:
 
 
 @pytest.fixture
-def mock_samsung_tv(initial_tv_state: TVState) -> MockSamsungTV:
+def tv_model() -> TVModel | None:
+    """Return the TV model for a test."""
+    return MODELS[MOCK_MODEL]
+
+
+@pytest.fixture
+def mock_samsung_tv(
+    initial_tv_state: TVState, tv_model: TVModel | None
+) -> MockSamsungTV:
     """Create a mock SamsungTV controller."""
-    return MockSamsungTV(initial_tv_state)
+    return MockSamsungTV(initial_tv_state, tv_model)
 
 
 @pytest.fixture

@@ -128,5 +128,5 @@ async def test_state_restored_on_restart(
 async def test_availability_follows_emitter(hass: HomeAssistant) -> None:
     """Test switch availability follows the infrared emitter."""
     await assert_availability_follows_source_entity(
-        hass, _ION_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, _ION_ENTITY_ID, [EMITTER_ENTITY_ID]
     )

@@ -1,10 +1,11 @@
 """Support for LIFX entities."""
 
-from typing import override
+from typing import NoReturn, override
 
 from lifx import mac_candidates_for_serial
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -93,3 +94,31 @@ class LIFXEntity(CoordinatorEntity[LIFXUpdateCoordinator]):
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
         super()._handle_coordinator_update()
+
+    async def async_refresh_before_merge(self) -> None:
+        """Read what a partial write is merged over, or refuse to write it."""
+        await self.coordinator.async_refresh()
+        if not self.coordinator.last_update_success:
+            # The coordinator keeps the state it last read, which is what the
+            # write would be merged over and would then be written back
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_read_state"
+            )
+
+    async def set_hev_cycle_state(
+        self, power: bool, duration: float | None = None
+    ) -> None:
+        """Reject the HEV action, since only a LIFX Clean bulb has HEV LEDs."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_hev",
+            translation_placeholders={"entity_id": self.entity_id},
+        )
+
+    def raise_no_infrared(self) -> NoReturn:
+        """Reject an infrared action, since only a LIFX Nightvision bulb has infrared LEDs."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_infrared",
+            translation_placeholders={"entity_id": self.entity_id},
+        )

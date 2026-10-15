@@ -11,6 +11,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
@@ -100,7 +101,7 @@ METER_CONFIG_SCHEMA = probatio.Schema(
                 CONF_METER_PERIODICALLY_RESETTING, default=True
             ): cv.boolean,
             probatio.Optional(CONF_TARIFFS, default=[]): probatio.All(
-                cv.ensure_list, probatio.Unique(), [cv.string]
+                probatio.EnsureList(), probatio.Unique(), [cv.string]
             ),
             probatio.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
             probatio.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
@@ -177,7 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Utility Meter from a config entry."""
 
     entity_registry = er.async_get(hass)
@@ -190,13 +191,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
-    except probatio.Invalid:
+    except probatio.Invalid as err:
         # The entity is identified by an unknown entity registry ID
-        _LOGGER.error(
-            "Failed to setup utility_meter for unknown entity %s",
-            entry.options[CONF_SOURCE_SENSOR],
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_entity",
+            translation_placeholders={"entity_id": entry.options[CONF_SOURCE_SENSOR]},
+        ) from err
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
@@ -231,25 +232,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, (Platform.SELECT, Platform.SENSOR)
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     platforms_to_unload = [Platform.SENSOR]
     if entry.options.get(CONF_TARIFFS):
         platforms_to_unload.append(Platform.SELECT)
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry,
         platforms_to_unload,
-    ):
-        hass.data[DATA_UTILITY].pop(entry.entry_id)
-
-    return unload_ok
+    )
+    hass.data[DATA_UTILITY].pop(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -281,5 +278,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

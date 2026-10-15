@@ -446,12 +446,13 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test BOX-linked entities survive a transient node list without node 1."""
     await setup_platform_integration(
-        hass, mock_config_entry, [Platform.FAN, Platform.SENSOR]
+        hass, mock_config_entry, [Platform.FAN, Platform.SELECT, Platform.SENSOR]
     )
 
     box_device = device_registry.async_get_device_by_identifier(
@@ -460,6 +461,7 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     )
     assert box_device is not None
     assert hass.states.get("fan.living") is not None
+    assert hass.states.get("select.living_ventilation_state") is not None
 
     mock_duco_client.async_get_nodes.return_value = [
         node for node in mock_sensor_nodes if node.node_id != BOX_NODE_ID
@@ -477,7 +479,11 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     state = hass.states.get("fan.living")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("select.living_ventilation_state")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
+    caplog.clear()
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
 
     await async_fire_coordinator_update(hass, freezer)
@@ -485,6 +491,10 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     state = hass.states.get("fan.living")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+    state = hass.states.get("select.living_ventilation_state")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert "does not generate unique IDs" not in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")

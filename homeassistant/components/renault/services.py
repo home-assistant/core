@@ -21,6 +21,16 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+class RenaultService(StrEnum):
+    """Service names."""
+
+    AC_CANCEL = "ac_cancel"
+    AC_SET_SCHEDULES = "ac_set_schedules"
+    AC_START = "ac_start"
+    CHARGE_SET_SCHEDULES = "charge_set_schedules"
+    CHARGE_START = "charge_start"
+
+
 class RenaultServiceArgument(StrEnum):
     """Service argument names."""
 
@@ -82,7 +92,7 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = probatio.Schema(
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
         probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
-            cv.ensure_list, [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
+            probatio.EnsureList(), [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
     }
 )
@@ -123,7 +133,7 @@ SERVICE_AC_SET_SCHEDULE_SCHEMA = probatio.Schema(
 SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
         probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
-            cv.ensure_list, [SERVICE_AC_SET_SCHEDULE_SCHEMA]
+            probatio.EnsureList(), [SERVICE_AC_SET_SCHEDULE_SCHEMA]
         ),
     }
 )
@@ -225,31 +235,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        "ac_cancel",
+        RenaultService.AC_CANCEL,
         ac_cancel,
         schema=SERVICE_VEHICLE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        "ac_start",
+        RenaultService.AC_START,
         ac_start,
         schema=SERVICE_AC_START_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        "charge_start",
+        RenaultService.CHARGE_START,
         charge_start,
         schema=SERVICE_CHARGE_START_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        "charge_set_schedules",
+        RenaultService.CHARGE_SET_SCHEDULES,
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        "ac_set_schedules",
+        RenaultService.AC_SET_SCHEDULES,
         ac_set_schedules,
         schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
     )

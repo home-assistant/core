@@ -1,7 +1,7 @@
 """Test the Theben Conexa Smartmeter gateway config flow."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 import aiohttp
 import pytest
@@ -218,3 +218,100 @@ async def test_same_gateway_different_user(
         mock_conexa_smgw.client,
     )
     assert len(mock_setup_entry.mock_calls) == 2
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication updates the password."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": mock_config_entry.title,
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        **TEST_CONFIG_DATA,
+        CONF_PASSWORD: "new-password",
+    }
+    mock_conexa_smgw.create.assert_called_with(
+        ANY, "1.1.1.1", "test-username", "new-password"
+    )
+
+
+@pytest.mark.parametrize(
+    ("network_side_effect", "create_side_effect", "expected_error"),
+    [
+        pytest.param(aiohttp.ClientError, None, "cannot_connect", id="cannot-connect"),
+        pytest.param(None, aiohttp.ClientError, "invalid_auth", id="invalid-auth"),
+        pytest.param(None, ValueError, "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+    network_side_effect: type[Exception] | None,
+    create_side_effect: type[Exception] | None,
+    expected_error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_conexa_smgw.network.side_effect = network_side_effect
+    mock_conexa_smgw.create.side_effect = create_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_conexa_smgw.network.side_effect = None
+    mock_conexa_smgw.create.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication aborts when the host now points to another gateway."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_conexa_smgw.client.gatewayInfo.smgwID = "other-gateway-id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == TEST_CONFIG_DATA

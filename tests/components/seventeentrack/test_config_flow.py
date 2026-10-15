@@ -54,6 +54,7 @@ async def test_create_entry(
         CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
         CONF_USERNAME: "someemail@gmail.com",
     }
+    assert result2["result"].unique_id == ACCOUNT_ID
 
 
 @pytest.mark.parametrize(

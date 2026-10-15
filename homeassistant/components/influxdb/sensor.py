@@ -134,7 +134,9 @@ _QUERY_SCHEMA = {
             probatio.Optional(CONF_RANGE_START, default=DEFAULT_RANGE_START): cv.string,
             probatio.Optional(CONF_RANGE_STOP, default=DEFAULT_RANGE_STOP): cv.string,
             probatio.Required(CONF_QUERY): cv.template,
-            probatio.Optional(CONF_IMPORTS): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(CONF_IMPORTS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(CONF_GROUP_FUNCTION): cv.string,
         }
     ),
