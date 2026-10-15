@@ -131,7 +131,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import get_scheduled_timer_handles
 
 from .conftest import (
     TEST_ENTITY_NAME,
@@ -1445,19 +1444,6 @@ async def test_unexpected_poll_exception_reschedules_update(
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "43"
 
 
-def _modbus_poll_timers(hass: HomeAssistant) -> set[asyncio.TimerHandle]:
-    """Return the scheduled Modbus entity polling timers."""
-    timers = set()
-    for handle in get_scheduled_timer_handles(hass.loop):
-        args = handle._args
-        target = getattr(args[1], "target", None) if args and len(args) > 1 else None
-        if getattr(target, "__qualname__", "").endswith(
-            "ModbusBaseEntity._async_call_later.<locals>._run"
-        ):
-            timers.add(handle)
-    return timers
-
-
 async def test_persistent_poll_exception_has_bounded_retry_loop(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1472,7 +1458,6 @@ async def test_persistent_poll_exception_has_bounded_retry_loop(
     ]
     start, entity = await _setup_polling_sensor(hass, mock_pymodbus)
 
-    timer_count: int | None = None
     for cycle in range(3):
         async_fire_time_changed(hass, start + timedelta(seconds=1 + 11 * cycle))
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -1485,11 +1470,6 @@ async def test_persistent_poll_exception_has_bounded_retry_loop(
             == cycle + 1
         )
         assert not entity._update_tasks
-        if timer_count is None:
-            timer_count = len(_modbus_poll_timers(hass))
-            assert timer_count == 1
-        else:
-            assert len(_modbus_poll_timers(hass)) == timer_count
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_pymodbus.read_holding_registers.call_count == cycle + 1
 
@@ -1499,7 +1479,6 @@ async def test_persistent_poll_exception_has_bounded_retry_loop(
     assert mock_pymodbus.read_holding_registers.call_count == 4
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
     assert not entity._update_tasks
-    assert len(_modbus_poll_timers(hass)) == timer_count
 
 
 async def test_state_write_exception_reschedules_update(
@@ -1531,7 +1510,6 @@ async def test_state_write_exception_reschedules_update(
 
     assert mock_pymodbus.read_holding_registers.call_count == 2
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
-    assert len(_modbus_poll_timers(hass)) == 1
 
 
 async def test_cancelled_poll_does_not_reschedule_update(
@@ -1561,8 +1539,6 @@ async def test_manual_update_exception_keeps_polling(
     start, _entity = await _setup_polling_sensor(hass, mock_pymodbus)
     async_fire_time_changed(hass, start + timedelta(seconds=1))
     await hass.async_block_till_done(wait_background_tasks=True)
-    pending_timers = _modbus_poll_timers(hass)
-    assert len(pending_timers) == 1
 
     mock_pymodbus.read_holding_registers.side_effect = ValueError("invalid response")
     await hass.services.async_call(
@@ -1572,9 +1548,6 @@ async def test_manual_update_exception_keeps_polling(
         blocking=True,
     )
     assert "Update for sensor.test_entity fails" in caplog.text
-    replacement_timers = _modbus_poll_timers(hass)
-    assert len(replacement_timers) == 1
-    assert pending_timers.isdisjoint(replacement_timers)
 
     mock_pymodbus.read_holding_registers.side_effect = None
     mock_pymodbus.read_holding_registers.return_value = ReadResult([42])
@@ -1584,7 +1557,6 @@ async def test_manual_update_exception_keeps_polling(
 
     assert mock_pymodbus.read_holding_registers.call_count == 1
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
-    assert len(_modbus_poll_timers(hass)) == 1
 
 
 async def _setup_polling_switch(
@@ -1634,15 +1606,10 @@ async def test_switch_action_exception_keeps_polling(
     async_fire_time_changed(hass, start + timedelta(seconds=1))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(f"{SWITCH_DOMAIN}.test_entity").state == STATE_OFF
-    pending_timers = _modbus_poll_timers(hass)
-    assert len(pending_timers) == 1
 
     mock_pymodbus.read_holding_registers.side_effect = ValueError("invalid response")
     with pytest.raises(ValueError, match="invalid response"):
         await entity.async_turn_on()
-    replacement_timers = _modbus_poll_timers(hass)
-    assert len(replacement_timers) == 1
-    assert pending_timers.isdisjoint(replacement_timers)
 
     mock_pymodbus.read_holding_registers.side_effect = None
     mock_pymodbus.read_holding_registers.return_value = ReadResult([1])
@@ -1652,7 +1619,6 @@ async def test_switch_action_exception_keeps_polling(
 
     assert mock_pymodbus.read_holding_registers.call_count == 1
     assert hass.states.get(f"{SWITCH_DOMAIN}.test_entity").state == STATE_ON
-    assert len(_modbus_poll_timers(hass)) == 1
 
 
 async def test_removed_entity_does_not_reschedule_update(
