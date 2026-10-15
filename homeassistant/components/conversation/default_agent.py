@@ -1167,7 +1167,9 @@ class DefaultAgent(ConversationEntity):
         self._intent_cache.clear()
 
     @override
-    async def async_prepare(self, language: str | None = None) -> None:
+    async def async_prepare(
+        self, language: str | None = None, *, strict_intents_only: bool = False
+    ) -> None:
         """Build what recognizing a sentence in a language needs."""
         if language is None:
             language = self.hass.config.language
@@ -1185,6 +1187,11 @@ class DefaultAgent(ConversationEntity):
             return
 
         await self._make_slot_lists()
+
+        # Strict recognition uses neither the unexposed names nor the gazetteer
+        if strict_intents_only:
+            return
+
         # Recognition builds this in the executor, but it reads loop-only state
         self._get_unexposed_entity_names()
 

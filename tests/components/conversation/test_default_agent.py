@@ -4013,3 +4013,38 @@ async def test_prepare_builds_what_recognition_needs(hass: HomeAssistant) -> Non
     mock_entity_names.assert_not_called()
     mock_rebuild_triggers.assert_not_called()
     mock_build_home.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_strict_intents_only(hass: HomeAssistant) -> None:
+    """Test a strict prepare skips what only the fallbacks use."""
+    hass.states.async_set(
+        "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "Kitchen light"}
+    )
+    get_agent_manager(hass).register_trigger(
+        ["it is party time"], AsyncMock(return_value="Party")
+    )
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    with (
+        patch.object(
+            agent, "_load_intents", wraps=agent._load_intents
+        ) as mock_load_intents,
+        patch.object(
+            agent, "_get_entity_name_tuples", wraps=agent._get_entity_name_tuples
+        ) as mock_entity_names,
+        patch.object(
+            agent, "_rebuild_trigger_intents", wraps=agent._rebuild_trigger_intents
+        ) as mock_rebuild_triggers,
+        patch.object(
+            gazetteer, "async_build_home", wraps=gazetteer.async_build_home
+        ) as mock_build_home,
+    ):
+        await conversation.async_prepare_intents(hass, "en")
+
+    mock_load_intents.assert_called_once_with("en")
+    # Only the exposed names, which strict recognition matches against
+    mock_entity_names.assert_called_once_with(exposed=True)
+    mock_rebuild_triggers.assert_called_once()
+    mock_build_home.assert_not_called()

@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, _Call, call, patch
 
 from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
@@ -2589,16 +2589,11 @@ def _stt_to_intent_input(
 
 
 @pytest.mark.parametrize(
-    ("prefer_local_intents", "continue_conversation_agent", "prepared_agents"),
+    ("prefer_local_intents", "continue_conversation_agent", "prepared_intents"),
     [
-        pytest.param(
-            True,
-            None,
-            [conversation.HOME_ASSISTANT_AGENT, "test-agent"],
-            id="prefer_local_intents",
-        ),
-        pytest.param(False, None, ["test-agent"], id="no_local_intents"),
-        pytest.param(True, "test-agent", ["test-agent"], id="intent_agent_only"),
+        pytest.param(True, None, [call(ANY, "en-US")], id="prefer_local_intents"),
+        pytest.param(False, None, [], id="no_local_intents"),
+        pytest.param(True, "test-agent", [], id="intent_agent_only"),
     ],
 )
 @pytest.mark.usefixtures("init_components")
@@ -2608,7 +2603,7 @@ async def test_stt_prepares_intent_agents(
     pipeline_data: assist_pipeline.pipeline.PipelineData,
     prefer_local_intents: bool,
     continue_conversation_agent: str | None,
-    prepared_agents: list[str],
+    prepared_intents: list[_Call],
 ) -> None:
     """Test speech-to-text prepares the agents that intent recognition uses."""
     pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
@@ -2638,6 +2633,9 @@ async def test_stt_prepares_intent_agents(
 
     with (
         patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_prepare_intents"
+        ) as mock_prepare_intents,
+        patch(
             "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_prepare_agent"
         ) as mock_prepare_agent,
         patch(
@@ -2649,9 +2647,8 @@ async def test_stt_prepares_intent_agents(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     # Recognition uses the STT language because the conversation language is '*'
-    assert mock_prepare_agent.mock_calls == [
-        call(hass, agent_id, "en-US") for agent_id in prepared_agents
-    ]
+    assert mock_prepare_intents.mock_calls == prepared_intents
+    assert mock_prepare_agent.mock_calls == [call(hass, "test-agent", "en-US")]
 
 
 @pytest.mark.usefixtures("init_components")

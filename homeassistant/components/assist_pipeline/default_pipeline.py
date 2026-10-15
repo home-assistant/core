@@ -587,9 +587,7 @@ class _DefaultPipelineProcessor:
             and self.host.pipeline.prefer_local_intents
             and not self._intent_agent_only
         ):
-            await conversation.async_prepare_agent(
-                self.host.hass, conversation.HOME_ASSISTANT_AGENT, language
-            )
+            await conversation.async_prepare_intents(self.host.hass, language)
         await conversation.async_prepare_agent(self.host.hass, agent_id, language)
 
     async def recognize_intent(
