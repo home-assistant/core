@@ -144,13 +144,17 @@ async def test_rssi_refreshes_on_wifi_only_message(
             {},
             id="legacy",
         ),
-        # j755840 style run stats
         pytest.param(
             {
                 "nScrubs": 1,
             },
             {"hr": 120, "min": 35, "sqft": 250},
             id="j755840",
+        ),
+        pytest.param(
+            {"hr": 120, "min": 35, "sqft": 250, "nScrubs": 1},
+            {"hr": 999, "min": 59, "sqft": 999, "nScrubs": 9},
+            id="bbrun_precedence",
         ),
     ],
 )
