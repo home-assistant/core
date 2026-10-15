@@ -215,10 +215,11 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
             # Plain values, including those in the __dict__ of an instance.
             value = static
         elif has_type(static, _SAFE_DESCRIPTORS):
-            value = static.__get__(found.instance, found.owner)  # pylint: disable=unnecessary-dunder-call
+            # Through its type, as a function can store a __get__ of its own.
+            value = type(static).__get__(static, found.instance, found.owner)  # pylint: disable=unnecessary-dunder-call
         elif type(static) is types.MemberDescriptorType and found.instance is not None:
             try:
-                value = static.__get__(found.instance, found.owner)  # pylint: disable=unnecessary-dunder-call
+                value = type(static).__get__(static, found.instance, found.owner)  # pylint: disable=unnecessary-dunder-call
             except AttributeError:
                 # A slot that is not set yet.
                 return _MISSING

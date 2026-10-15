@@ -603,6 +603,18 @@ async def test_signature(
             id="signature_colliding_global",
         ),
         pytest.param(
+            {"type": "debug_console/signature", "code": "shadowing.function("},
+            id="signature_function_own_get",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "shadowing.static.x"},
+            id="resolve_staticmethod_own_get",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "shadowing.klass("},
+            id="signature_classmethod_own_get",
+        ),
+        pytest.param(
             {"type": "debug_console/signature", "code": "doc_method("},
             id="signature_method_doc",
         ),
@@ -877,6 +889,25 @@ named_holder = NamedHolder()
 named_holder.__dict__[LoudName("loud_attribute")] = 1
 named_holder.__dict__[CollidingName("gamma", "beta")] = 1
 named_holder.beta = 1
+
+def own_get(*args):
+    ran.append("own get")
+
+def shadowed_function(self, value):
+    pass
+
+shadowed_function.__get__ = own_get
+shadowed_static = staticmethod(lambda value: None)
+shadowed_static.__get__ = own_get
+shadowed_class = classmethod(lambda cls, value: None)
+shadowed_class.__get__ = own_get
+
+class Shadowing:
+    function = shadowed_function
+    static = shadowed_static
+    klass = shadowed_class
+
+shadowing = Shadowing()
 
 class DocTrap:
     __doc__ = Descriptor()
