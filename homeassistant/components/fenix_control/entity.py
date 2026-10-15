@@ -30,7 +30,7 @@ class FenixControlEntity(CoordinatorEntity[FenixControlCoordinator]):
             )
             or None,
             manufacturer="FENIX",
-            model="TFT WiFi",
+            model="TFT Wi-Fi",
             model_id=device.model,
             sw_version=device.software_version,
             serial_number=device_id,

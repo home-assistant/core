@@ -62,7 +62,7 @@ async def async_setup_entry(
 
 
 class FenixControlClimate(FenixControlEntity, ClimateEntity):
-    """A FENIX TFT WiFi thermostat."""
+    """A FENIX TFT Wi-Fi thermostat."""
 
     _attr_name = None
     _attr_hvac_modes = list(HVAC_MODE_TO_PRESET_MODE)

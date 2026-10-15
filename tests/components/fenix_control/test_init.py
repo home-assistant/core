@@ -9,13 +9,15 @@ from pyfenixcontrol import (
     FenixControlResponseError,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fenix_control.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .conftest import INSTALLATION_ID
+from .conftest import DEVICE_ID, INSTALLATION_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -127,3 +129,15 @@ async def test_update_trigger_auth_error_starts_reauth(
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+async def test_device_info(
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the thermostat is registered as a device."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), init_integration.entry_id
+    )
+    assert device == snapshot
