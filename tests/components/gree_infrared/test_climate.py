@@ -1,6 +1,7 @@
 """Tests for the Gree Infrared climate platform."""
 
 import asyncio
+import contextlib
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
@@ -33,6 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.gree_infrared.const import CONF_HVAC_MODES, MODEL_YAP1F
+from homeassistant.components.gree_infrared.state import COALESCE_DELAY_SEC
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -77,6 +79,30 @@ _STORED_CLIMATE_DATA = {
     "native_target_temperature_low": None,
     "native_temperature_unit": UnitOfTemperature.CELSIUS,
 }
+
+
+async def _flush_coalesced(hass: HomeAssistant) -> None:
+    """Wait out the coalescing window, then drain the flush task."""
+    await asyncio.sleep(COALESCE_DELAY_SEC + 0.2)
+    await hass.async_block_till_done()
+
+
+async def _flush_now(hass: HomeAssistant, climate) -> None:
+    """Flush staged state immediately (freezer-safe: no real sleep).
+
+    Cancels the pending coalesce timer, then runs the flush coroutine
+    directly. Used by tests that freeze time, where loop.call_later-based
+    windows never expire on their own.
+    """
+    handle = climate._state._coalesce_handle
+    climate._state._coalesce_handle = None
+    if handle is not None:
+        handle.cancel()
+    if not climate._state.coalesce_dirty:
+        await hass.async_block_till_done()
+        return
+    await climate._async_flush_coalesced()
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -170,6 +196,7 @@ async def test_set_hvac_mode_off(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -201,15 +228,13 @@ async def test_failed_send_does_not_become_the_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
-    with (
-        patch.object(
-            mock_infrared_emitter_entity,
-            "async_send_command",
-            side_effect=HomeAssistantError,
-        ),
-        pytest.raises(HomeAssistantError),
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -217,6 +242,7 @@ async def test_failed_send_does_not_become_the_last_active_mode(
             {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
             blocking=True,
         )
+        await _flush_coalesced(hass)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -224,6 +250,7 @@ async def test_failed_send_does_not_become_the_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -255,6 +282,7 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -263,6 +291,7 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -393,12 +422,14 @@ async def test_set_hvac_mode_encodes_correctly(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: temp},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": fan},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -407,6 +438,7 @@ async def test_set_hvac_mode_encodes_correctly(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -459,6 +491,7 @@ async def test_set_hvac_mode_from_off_uses_defaults(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -477,6 +510,7 @@ async def test_set_temperature_sends_command_when_active(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -485,6 +519,7 @@ async def test_set_temperature_sends_command_when_active(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 26},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -517,6 +552,7 @@ async def test_set_temperature_sends_command_in_dry_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -525,6 +561,7 @@ async def test_set_temperature_sends_command_in_dry_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -548,6 +585,7 @@ async def test_set_temperature_no_command_when_off(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 22},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
 
@@ -568,6 +606,7 @@ async def test_set_fan_mode_sends_command_when_active(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -576,6 +615,7 @@ async def test_set_fan_mode_sends_command_when_active(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_HIGH},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -599,6 +639,7 @@ async def test_set_fan_mode_no_command_when_off(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_HIGH},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
 
@@ -645,6 +686,7 @@ async def test_received_fahrenheit_setpoint_survives_commands(
             },
             blocking=True,
         )
+        await _flush_coalesced(hass)
 
         assert len(mock_infrared_emitter_entity.send_command_calls) == 1
         command = mock_infrared_emitter_entity.send_command_calls[0]
@@ -669,6 +711,7 @@ async def test_received_fahrenheit_setpoint_survives_commands(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 24},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
 
     # The explicit target change dropped the wire value: a later command converts
@@ -680,6 +723,7 @@ async def test_received_fahrenheit_setpoint_survives_commands(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
 
     mock_infrared_receiver_entity._handle_received_signal(
@@ -710,6 +754,7 @@ async def test_received_fahrenheit_setpoint_survives_commands(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     command = mock_infrared_emitter_entity.send_command_calls[0]
     assert (command.temperature, command.fahrenheit) == (24, False)
 
@@ -719,6 +764,7 @@ async def test_received_fahrenheit_setpoint_survives_commands(
     assert climate is not None
     mock_infrared_emitter_entity.send_command_calls.clear()
     await climate.async_set_fahrenheit(True)
+    await _flush_coalesced(hass)
     assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
 
 
@@ -752,7 +798,9 @@ async def test_changing_fahrenheit_scale_drops_received_wire_temperature(
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await climate.async_set_fahrenheit(False)
+    await _flush_coalesced(hass)
     await climate.async_set_fahrenheit(True)
+    await _flush_coalesced(hass)
 
     assert mock_infrared_emitter_entity.send_command_calls[-1].temperature == 73
 
@@ -770,7 +818,7 @@ async def test_failed_scale_change_restores_received_wire_temperature(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
-    """A failed scale send restores the received wire setpoint."""
+    """A failed scale send keeps the staged scale; the next flush sends it."""
     mock_infrared_receiver_entity._handle_received_signal(
         InfraredReceivedSignal(
             timings=GreeAcCommand(
@@ -785,15 +833,13 @@ async def test_failed_scale_change_restores_received_wire_temperature(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
 
-    with (
-        patch.object(
-            mock_infrared_emitter_entity,
-            "async_send_command",
-            side_effect=RuntimeError("send failed"),
-        ),
-        pytest.raises(RuntimeError, match="send failed"),
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError("send failed"),
     ):
         await climate.async_set_fahrenheit(False)
+        await _flush_coalesced(hass)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -801,8 +847,9 @@ async def test_failed_scale_change_restores_received_wire_temperature(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     command = mock_infrared_emitter_entity.send_command_calls[-1]
-    assert (command.temperature, command.fahrenheit) == (74, True)
+    assert (command.temperature, command.fahrenheit) == (23, False)
 
 
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
@@ -829,6 +876,7 @@ async def test_timer_set_while_off_sends_off_state_timer_frame(
         {ATTR_ENTITY_ID: "number.gree_ac_timer", "value": 0.5},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert (
         len(mock_infrared_emitter_entity.send_command_calls) == previous_send_count + 1
@@ -861,10 +909,13 @@ async def test_mode_off_preserves_active_timer_frame(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_coalesced(hass)
     await climate.async_set_timer_hours(1.0)
+    await _flush_now(hass, climate)
     previous_deadline = climate._timer_deadline
 
     await climate.async_set_hvac_mode(HVACMode.OFF)
+    await _flush_coalesced(hass)
 
     command = GreeAcCommand.from_raw_timings(
         mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings(),
@@ -894,26 +945,20 @@ async def test_failed_timer_send_reschedules_previous_expiry(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     previous_deadline = climate._timer_deadline
     assert previous_deadline is not None
-    started = asyncio.Event()
-    release = asyncio.Event()
 
-    async def blocked_send(command: Any) -> None:
-        started.set()
-        await release.wait()
+    def failed_send(command: Any) -> None:
         raise HomeAssistantError("send failed")
 
-    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
-        timer_task = hass.async_create_task(climate.async_set_timer_hours(1.0))
-        await started.wait()
-        freezer.move_to(previous_deadline)
-        async_fire_time_changed(hass)
-        release.set()
-        with pytest.raises(HomeAssistantError):
-            await timer_task
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", failed_send):
+        await climate.async_set_timer_hours(1.0)
+        await _flush_now(hass, climate)
 
+    freezer.move_to(previous_deadline)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("number.gree_ac_timer")
@@ -932,10 +977,13 @@ async def test_timer_number_updates_after_full_state_send(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(2.0)
+    await _flush_now(hass, climate)
 
     freezer.move_to(freezer() + timedelta(hours=1))
     await climate.async_set_fan_mode(FAN_AUTO)
+    await _flush_now(hass, climate)
 
     assert climate._state.timer_hours == 1.0
     state = hass.states.get("number.gree_ac_timer")
@@ -982,6 +1030,7 @@ async def test_timer_expiry_updates_number_without_another_command(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     entity_id = "number.gree_ac_timer"
     assert hass.states.get(entity_id).state == "0.5"
 
@@ -1005,6 +1054,7 @@ async def test_turn_on_uses_remote_mode_received_while_waiting(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_coalesced(hass)
     await climate._state.command_lock.acquire()
     try:
         mock_infrared_receiver_entity._handle_received_signal(
@@ -1021,6 +1071,7 @@ async def test_turn_on_uses_remote_mode_received_while_waiting(
         climate._state.command_lock.release()
     await turn_on_task
     await hass.async_block_till_done()
+    await _flush_coalesced(hass)
 
     command = GreeAcCommand.from_raw_timings(
         mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings()
@@ -1046,57 +1097,56 @@ async def test_timer_expiry_during_failed_option_send(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Timer expiry cannot publish an option whose transmission later fails."""
+    """A failed option send keeps the staged option; expiry still clears the timer."""
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     deadline = climate._timer_deadline
     assert deadline is not None
-    started = asyncio.Event()
-    release = asyncio.Event()
 
-    async def blocked_send(command: Any) -> None:
-        started.set()
-        await release.wait()
+    def failed_send(command: Any) -> None:
         raise HomeAssistantError("send failed")
 
-    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
-        option_task = hass.async_create_task(climate.async_set_option("turbo", True))
-        await started.wait()
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", failed_send):
+        await climate.async_set_option("turbo", True)
         freezer.move_to(deadline)
         async_fire_time_changed(hass)
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-        release.set()
-        with pytest.raises(HomeAssistantError):
-            await option_task
+        await _flush_now(hass, climate)
 
     await hass.async_block_till_done()
-    assert not climate._state.turbo
-    assert hass.states.get("switch.gree_ac_turbo").state == "off"
+    assert climate._state.turbo
+    assert hass.states.get("switch.gree_ac_turbo").state == "on"
     assert hass.states.get("number.gree_ac_timer").state == "0.0"
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_timer_deadline_matches_quantized_duration_after_state_send(
-    mock_config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A full-state send restarts the local timer at its encoded duration."""
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     previous_deadline = climate._timer_deadline
 
     freezer.move_to(freezer() + timedelta(minutes=20))
     await climate.async_set_fan_mode(FAN_LOW)
+    await _flush_now(hass, climate)
 
     assert climate._timer_deadline == previous_deadline + timedelta(minutes=20)
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_failed_state_send_keeps_timer_deadline(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     freezer: FrozenDateTimeFactory,
@@ -1105,19 +1155,19 @@ async def test_failed_state_send_keeps_timer_deadline(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     freezer.move_to(freezer() + timedelta(minutes=20))
     previous_deadline = climate._timer_deadline
 
-    with (
-        patch.object(
-            mock_infrared_emitter_entity,
-            "async_send_command",
-            side_effect=HomeAssistantError,
-        ),
-        pytest.raises(HomeAssistantError),
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError,
     ):
         await climate.async_set_fan_mode(FAN_LOW)
+        await _flush_now(hass, climate)
 
     assert climate._timer_deadline == previous_deadline
 
@@ -1210,27 +1260,15 @@ async def test_option_validation_uses_mode_after_waiting_for_command_lock(
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
-    """An option queued behind a mode change validates against the new mode."""
+    """An option staged after a mode change validates against the new mode."""
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
-    started = asyncio.Event()
-    release = asyncio.Event()
-
-    async def blocked_send(command: Any) -> None:
-        started.set()
-        await release.wait()
-
-    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
-        mode_task = hass.async_create_task(climate.async_set_hvac_mode(HVACMode.HEAT))
-        await started.wait()
-        option_task = hass.async_create_task(climate.async_set_option("econo", True))
-        await asyncio.sleep(0)
-        release.set()
-        await mode_task
-        with pytest.raises(ServiceValidationError) as err:
-            await option_task
-        assert err.value.translation_key == "econo_not_available"
+    await climate.async_set_hvac_mode(HVACMode.HEAT)
+    with pytest.raises(ServiceValidationError) as err:
+        await climate.async_set_option("econo", True)
+    assert err.value.translation_key == "econo_not_available"
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
 
@@ -1255,6 +1293,7 @@ async def test_option_validation_uses_mode_after_waiting_for_command_lock(
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_option_mode_errors_have_translation_keys(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     option: str,
     mode: HVACMode,
@@ -1264,9 +1303,12 @@ async def test_option_mode_errors_have_translation_keys(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(mode)
+    await _flush_coalesced(hass)
 
     with pytest.raises(ServiceValidationError) as err:
         await climate.async_set_option(option, True)
+
+    await _flush_coalesced(hass)
 
     assert err.value.translation_key == translation_key
 
@@ -1378,7 +1420,7 @@ async def test_receiver_waits_for_in_flight_command(
         await asyncio.sleep(0)
         state = hass.states.get(_CLIMATE_ENTITY_ID)
         assert state is not None
-        assert state.state == HVACMode.OFF
+        assert state.state == HVACMode.COOL
 
         release.set()
         await send_task
@@ -1447,6 +1489,7 @@ async def test_set_hvac_mode_off_keeps_the_mode_seen_by_the_receiver(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1487,6 +1530,7 @@ async def test_receiver_off_signal_records_the_mode_it_carries(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1551,6 +1595,7 @@ async def test_last_active_mode_restored_on_restart_while_off(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1598,6 +1643,7 @@ async def test_last_active_mode_restored_from_unavailable_state(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1877,6 +1923,7 @@ async def test_set_temperature_with_hvac_mode(
         },
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1923,6 +1970,7 @@ async def test_fahrenheit_temperatures_round_trip(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 75},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1946,6 +1994,7 @@ async def test_set_temperature_with_hvac_mode_off_while_active(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -1958,6 +2007,7 @@ async def test_set_temperature_with_hvac_mode_off_while_active(
         },
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1995,6 +2045,8 @@ async def test_set_temperature_with_unsupported_hvac_mode(
             blocking=True,
         )
 
+    await _flush_coalesced(hass)
+
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
 
 
@@ -2030,12 +2082,14 @@ async def test_power_services_preserve_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -2043,6 +2097,7 @@ async def test_power_services_preserve_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.COOL
     assert len(mock_infrared_emitter_entity.send_command_calls) == 3
     off_command = mock_infrared_emitter_entity.send_command_calls[1]
@@ -2127,6 +2182,7 @@ async def test_cancelled_send_restores_state(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_fan_mode(FAN_LOW)
+    await _flush_now(hass, climate)
     expected_frame = mock_infrared_emitter_entity.send_command_calls[
         -1
     ].get_raw_timings()
@@ -2141,11 +2197,18 @@ async def test_cancelled_send_restores_state(
         await asyncio.Event().wait()
 
     with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
-        task = hass.async_create_task(getattr(climate, method)(*args, **kwargs))
+        await climate.async_set_fan_mode(FAN_LOW)
+        flush_task = hass.async_create_task(_flush_now(hass, climate))
         await started.wait()
+        task = hass.async_create_task(getattr(climate, method)(*args, **kwargs))
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
+        flush_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await flush_task
 
     assert climate.extra_restore_state_data.as_dict() == previous_data
     assert climate._timer_deadline == previous_deadline
@@ -2153,6 +2216,7 @@ async def test_cancelled_send_restores_state(
 
     # A later full-state send must not transmit any cancelled value.
     await climate.async_set_fan_mode(FAN_LOW)
+    await _flush_now(hass, climate)
     assert (
         mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings()
         == expected_frame
@@ -2185,6 +2249,7 @@ async def test_climate_rename_preserves_sibling_controls(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_coalesced(hass)
     entity_registry.async_update_entity(
         _CLIMATE_ENTITY_ID, new_entity_id="climate.renamed_gree_ac"
     )
@@ -2205,18 +2270,21 @@ async def test_climate_rename_preserves_sibling_controls(
         {ATTR_ENTITY_ID: "number.gree_ac_timer", "value": 0.5},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     await hass.services.async_call(
         "select",
         "select_option",
         {ATTR_ENTITY_ID: "select.gree_ac_fresh_air", "option": "level_1"},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     await hass.services.async_call(
         "switch",
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.gree_ac_turbo"},
         blocking=True,
     )
+    await _flush_coalesced(hass)
     assert hass.states.get("number.gree_ac_timer").state == "0.5"
     assert hass.states.get("select.gree_ac_fresh_air").state == "level_1"
     assert hass.states.get("switch.gree_ac_turbo").state == "on"
@@ -2239,7 +2307,9 @@ async def test_cancelled_timer_replacement_preserves_expiry(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     deadline = climate._timer_deadline
     assert deadline is not None
     sends = len(mock_infrared_emitter_entity.send_command_calls)
@@ -2250,11 +2320,18 @@ async def test_cancelled_timer_replacement_preserves_expiry(
         await asyncio.Event().wait()
 
     with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
-        task = hass.async_create_task(climate.async_set_timer_hours(1.0))
+        await climate.async_set_timer_hours(0.5)
+        flush_task = hass.async_create_task(_flush_now(hass, climate))
         await started.wait()
+        task = hass.async_create_task(climate.async_set_timer_hours(1.0))
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
+        flush_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await flush_task
 
     freezer.move_to(deadline)
     async_fire_time_changed(hass)
@@ -2272,33 +2349,21 @@ async def test_pending_option_stays_private_during_state_publication(
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
-    """An unrelated availability publication cannot expose an unaccepted option."""
+    """A staged option publishes optimistically; availability cannot hide it."""
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
-    started = asyncio.Event()
-    release = asyncio.Event()
+    await _flush_coalesced(hass)
+    assert hass.states.get("switch.gree_ac_turbo").state == "off"
 
-    async def blocked_send(command: GreeAcCommand) -> None:
-        assert command.turbo is True
-        started.set()
-        await release.wait()
-
-    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
-        task = hass.async_create_background_task(
-            climate.async_set_option("turbo", True), "pending turbo command"
-        )
-        await asyncio.wait_for(started.wait(), timeout=5)
-        try:
-            climate._state.async_notify_switches()
-            await hass.async_block_till_done(wait_background_tasks=False)
-            assert hass.states.get("switch.gree_ac_turbo").state == "off"
-            assert climate.extra_restore_state_data.as_dict()["turbo"] is False
-        finally:
-            release.set()
-            await task
-
+    await climate.async_set_option("turbo", True)
+    climate._state.async_notify_switches()
     await hass.async_block_till_done()
+    assert hass.states.get("switch.gree_ac_turbo").state == "on"
+    assert climate.extra_restore_state_data.as_dict()["turbo"] is True
+
+    await _flush_coalesced(hass)
+    assert mock_infrared_emitter_entity.send_command_calls[-1].turbo is True
     assert hass.states.get("switch.gree_ac_turbo").state == "on"
 
 
@@ -2345,7 +2410,9 @@ async def test_fan_edit_after_timer_deadline_reconciles_without_send(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     deadline = climate._timer_deadline
     assert deadline is not None
     sends_before = len(mock_infrared_emitter_entity.send_command_calls)
@@ -2357,6 +2424,7 @@ async def test_fan_edit_after_timer_deadline_reconciles_without_send(
         side_effect=HomeAssistantError("must not send"),
     ):
         await climate.async_set_fan_mode(FAN_LOW)
+        await _flush_now(hass, climate)
 
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -2386,8 +2454,11 @@ async def test_timer_expiry_updates_power_before_next_command(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_hvac_mode(initial_mode)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     sends = len(mock_infrared_emitter_entity.send_command_calls)
 
     freezer.move_to(freezer() + timedelta(minutes=30))
@@ -2399,11 +2470,13 @@ async def test_timer_expiry_updates_power_before_next_command(
     assert len(mock_infrared_emitter_entity.send_command_calls) == sends
 
     await climate.async_set_fan_mode(FAN_LOW)
+    await _flush_now(hass, climate)
     assert (
         len(mock_infrared_emitter_entity.send_command_calls) == sends + additional_sends
     )
     assert mock_infrared_emitter_entity.send_command_calls[-1].power
     await climate.async_turn_off()
+    await _flush_now(hass, climate)
     command = mock_infrared_emitter_entity.send_command_calls[-1]
     assert not command.power
     assert command.mode is GreeAcMode.COOL
@@ -2422,7 +2495,9 @@ async def test_overdue_timer_reconciled_before_queued_fan_edit(
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
     await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
     deadline = climate._timer_deadline
     assert deadline is not None
     sends_before = len(mock_infrared_emitter_entity.send_command_calls)
