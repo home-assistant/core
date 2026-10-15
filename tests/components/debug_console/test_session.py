@@ -8,14 +8,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.debug_console.const import SESSION_TIMEOUT
+from homeassistant.components.debug_console.session import DATA_SESSIONS
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import SESSION_ID, async_execute, async_send
 
-from tests.common import CLIENT_ID, MockConfigEntry, async_fire_time_changed
+from tests.common import CLIENT_ID, async_fire_time_changed
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 WAIT_FOREVER = "import asyncio\nawait asyncio.Event().wait()"
@@ -33,6 +33,12 @@ async def _async_start_waiting_execution(client: MockHAClientWebSocket) -> None:
 
     # Once a later command is done, the waiting execution is running.
     await async_execute(client, "1")
+
+
+async def _async_stop(hass: HomeAssistant) -> None:
+    """Stop Home Assistant, as far as the console sees it."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -152,27 +158,35 @@ async def test_invalid_session_id(
     assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_object_ids_unique_per_session(
     hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an object ID never finds an object of another session.
 
-    Also not of a session that replaced it, after the console got enabled again.
+    Also not of a session that replaced it, after it expired.
     """
-    result = await async_execute(websocket_client, "['first']")
+    first_client = await hass_ws_client(hass)
+    result = await async_execute(first_client, "['first']")
     first_id = result["result"]["object_id"]
 
     # Another session tracks an object too, which could get the same number.
     other = await async_send(
-        websocket_client,
+        first_client,
         {"type": "debug_console/execute", "session_id": "other", "code": "['other']"},
     )
 
     assert other["result"]["object_id"] != first_id
 
-    assert await hass.config_entries.async_reload(setup_integration.entry_id)
+    await first_client.close()
+    await hass.async_block_till_done()
+    freezer.tick(SESSION_TIMEOUT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client(hass)
     replacement = await async_execute(websocket_client, "['replacement']")
 
     assert replacement["result"]["object_id"] != first_id
@@ -189,75 +203,10 @@ async def test_object_ids_unique_per_session(
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
-async def test_stale_connection_keeps_new_session(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    freezer: FrozenDateTimeFactory,
-    setup_integration: MockConfigEntry,
+async def test_stopping_stops_reporting_an_error(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test a connection of a closed session does not expire its replacement."""
-    first_client = await hass_ws_client(hass)
-    second_client = await hass_ws_client(hass)
-    await async_execute(first_client, "x = 1")
-    await async_execute(second_client, "x = 1")
-
-    # Disabling and enabling again replaces the session, which only the first
-    # connection joins.
-    assert await hass.config_entries.async_reload(setup_integration.entry_id)
-    await async_execute(first_client, "answer = 42")
-
-    await first_client.close()
-    await second_client.close()
-    await hass.async_block_till_done()
-
-    # Coming back cancels the expiry, so nothing may expire the session.
-    third_client = await hass_ws_client(hass)
-    await async_execute(third_client, "answer")
-
-    freezer.tick(SESSION_TIMEOUT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    result = await async_execute(third_client, "answer")
-
-    assert result["result"] == {"type": "number", "value": "42"}
-
-
-async def test_disabling_stops_executions(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
-) -> None:
-    """Test disabling the console stops running code, and answers for it."""
-    await _async_start_waiting_execution(websocket_client)
-
-    assert await hass.config_entries.async_unload(setup_integration.entry_id)
-
-    msg = await websocket_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "execution_stopped"
-
-
-async def test_code_disabling_the_console(
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
-) -> None:
-    """Test code that disables the console itself finishes, and so does that."""
-    result = await async_execute(
-        websocket_client,
-        f"await hass.config_entries.async_unload({setup_integration.entry_id!r})",
-    )
-
-    assert result["result"] == {"type": "boolean", "value": True}
-    assert setup_integration.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_disabling_stops_reporting_an_error(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
-) -> None:
-    """Test disabling the console while an error is reported stops that too."""
+    """Test stopping Home Assistant while an error is reported stops that too."""
     reading = threading.Event()
     release = threading.Event()
 
@@ -277,23 +226,21 @@ async def test_disabling_stops_reporting_an_error(
             }
         )
         assert await hass.async_add_executor_job(reading.wait, 5)
+        (session,) = hass.data[DATA_SESSIONS].values()
+        (execution,) = session.executions
 
         try:
-            assert await hass.config_entries.async_unload(setup_integration.entry_id)
+            await _async_stop(hass)
         finally:
             release.set()
 
-    msg = await websocket_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "execution_stopped"
+    assert execution.cancelled()
 
 
-async def test_disabling_waits_for_cleanup(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
+async def test_stopping_waits_for_cleanup(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test disabling lets cancelled code clean up, with its names available."""
+    """Test stopping lets cancelled code clean up, with its names available."""
     await async_execute(websocket_client, "import asyncio\ncleaned_up = []")
     await websocket_client.send_json_auto_id(
         {
@@ -309,28 +256,26 @@ async def test_disabling_waits_for_cleanup(
         }
     )
     await async_execute(websocket_client, "1")
-    (session,) = setup_integration.runtime_data.values()
+    (session,) = hass.data[DATA_SESSIONS].values()
     cleaned_up = session.namespace["cleaned_up"]
 
-    assert await hass.config_entries.async_unload(setup_integration.entry_id)
+    await _async_stop(hass)
 
-    # Unloading itself waited for the cleanup, which also needed the names.
+    # Stopping waited for the cleanup, which also needed the names.
     assert cleaned_up == [True]
     assert not session.namespace
 
 
-async def test_disabling_releases_sessions(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
+async def test_stopping_releases_sessions(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test disabling lets go of sessions, even with their connections open."""
+    """Test stopping lets go of sessions, even with their connections open."""
     await async_execute(websocket_client, "data = [1]\ndata")
-    sessions = setup_integration.runtime_data
+    sessions = hass.data[DATA_SESSIONS]
     (session,) = sessions.values()
     (connection,) = session.connections
 
-    assert await hass.config_entries.async_unload(setup_integration.entry_id)
+    await _async_stop(hass)
 
     assert not sessions
     assert session.subscription_key not in connection.subscriptions
@@ -340,18 +285,15 @@ async def test_disabling_releases_sessions(
 
 
 async def test_stopping_closes_sessions(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    setup_integration: MockConfigEntry,
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test sessions close when Home Assistant stops, which unloads nothing."""
+    """Test sessions close when Home Assistant stops."""
     await _async_start_waiting_execution(websocket_client)
-    sessions = setup_integration.runtime_data
+    sessions = hass.data[DATA_SESSIONS]
     (session,) = sessions.values()
     (execution,) = session.executions
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
+    await _async_stop(hass)
 
     assert not sessions
     assert execution.cancelled()

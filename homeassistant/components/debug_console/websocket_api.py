@@ -14,7 +14,6 @@ from homeassistant.components.websocket_api import (
 from homeassistant.core import HomeAssistant, callback
 
 from .completion import async_complete, signature_hint
-from .const import DOMAIN
 from .execution import async_execute, is_incomplete
 from .inspection import USER_CODE_ERRORS, format_error, get_attribute, inspect_children
 from .safeguards import (
@@ -24,7 +23,7 @@ from .safeguards import (
     async_log_property_evaluation,
     async_warning_required,
 )
-from .session import async_get_session
+from .session import DATA_SESSIONS, async_get_session
 
 ERR_EXECUTION_STOPPED = "execution_stopped"
 ERR_WARNING_NOT_ACCEPTED = "warning_not_accepted"
@@ -34,46 +33,22 @@ SESSION_ID = probatio.All(str, probatio.Length(min=1, max=64))
 
 
 @callback
-def async_register_websocket_commands(hass: HomeAssistant) -> None:
-    """Register the websocket commands of the debug console."""
+def async_register_websocket_commands(hass: HomeAssistant, *, enabled: bool) -> None:
+    """Register the websocket commands of the debug console.
+
+    Only those to tell the frontend it is disabled, while it is.
+    """
+    websocket_api.async_register_command(hass, handle_info)
+    if not enabled:
+        return
+
     websocket_api.async_register_command(hass, handle_clear)
     websocket_api.async_register_command(hass, handle_complete)
     websocket_api.async_register_command(hass, handle_execute)
     websocket_api.async_register_command(hass, handle_get_attribute)
-    websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_inspect)
     websocket_api.async_register_command(hass, handle_signature)
     websocket_api.async_register_command(hass, handle_warning_accept)
-
-
-@callback
-def async_is_enabled(hass: HomeAssistant) -> bool:
-    """Return if the debug console is enabled, by its config entry."""
-    return bool(hass.config_entries.async_loaded_entries(DOMAIN))
-
-
-def _require_enabled(func: WebSocketCommandHandler) -> WebSocketCommandHandler:
-    """Refuse commands while the debug console is not enabled.
-
-    Websocket commands cannot be unregistered, so disabling the debug console
-    at runtime leaves them in place, refusing to run.
-    """
-
-    @wraps(func)
-    def with_enabled_check(
-        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-    ) -> None:
-        if not async_is_enabled(hass):
-            connection.send_error(
-                msg["id"],
-                websocket_api.ERR_NOT_ALLOWED,
-                "The debug console is not enabled",
-            )
-            return
-
-        func(hass, connection, msg)
-
-    return with_enabled_check
 
 
 def _require_accepted_warning(
@@ -100,15 +75,19 @@ def _require_accepted_warning(
 
 @websocket_api.websocket_command({probatio.Required("type"): "debug_console/info"})
 @websocket_api.require_admin
-@_require_enabled
 @callback
 def handle_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Return if the user has to accept the warning first."""
+    """Return if the console is enabled, and if the user has to accept the warning."""
+    enabled = DATA_SESSIONS in hass.data
     connection.send_result(
         msg["id"],
-        {"warning_required": async_warning_required(hass, connection.user.id)},
+        {
+            "enabled": enabled,
+            "warning_required": enabled
+            and async_warning_required(hass, connection.user.id),
+        },
     )
 
 
@@ -116,13 +95,12 @@ def handle_info(
     {probatio.Required("type"): "debug_console/warning/accept"}
 )
 @websocket_api.require_admin
-@_require_enabled
-@callback
-def handle_warning_accept(
+@websocket_api.async_response
+async def handle_warning_accept(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Store that the user accepted the warning."""
-    async_accept_warning(hass, connection.user.id)
+    await async_accept_warning(hass, connection.user.id)
     connection.send_result(msg["id"])
 
 
@@ -135,7 +113,6 @@ def handle_warning_accept(
     }
 )
 @websocket_api.require_admin
-@_require_enabled
 @_require_accepted_warning
 @websocket_api.async_response
 async def handle_execute(
@@ -146,7 +123,7 @@ async def handle_execute(
         connection.send_result(msg["id"], {"incomplete": True})
         return
 
-    async_log_execution(connection.user, msg["code"])
+    async_log_execution(connection, msg["code"])
     session = async_get_session(hass, connection, msg["session_id"])
 
     try:
@@ -169,7 +146,6 @@ async def handle_execute(
     }
 )
 @websocket_api.require_admin
-@_require_enabled
 @_require_accepted_warning
 @callback
 def handle_inspect(
@@ -183,7 +159,7 @@ def handle_inspect(
         )
         return
 
-    async_log_inspection(connection.user, value)
+    async_log_inspection(connection, value)
     try:
         result = inspect_children(session, value)
     except USER_CODE_ERRORS as err:
@@ -206,7 +182,6 @@ def handle_inspect(
     }
 )
 @websocket_api.require_admin
-@_require_enabled
 @_require_accepted_warning
 @callback
 def handle_get_attribute(
@@ -220,7 +195,7 @@ def handle_get_attribute(
         )
         return
 
-    async_log_property_evaluation(connection.user, value, msg["attribute"])
+    async_log_property_evaluation(connection, value, msg["attribute"])
     connection.send_result(msg["id"], get_attribute(session, value, msg["attribute"]))
 
 
@@ -232,7 +207,6 @@ def handle_get_attribute(
     }
 )
 @websocket_api.require_admin
-@_require_enabled
 @_require_accepted_warning
 @websocket_api.async_response
 async def handle_complete(
@@ -253,7 +227,6 @@ async def handle_complete(
     }
 )
 @websocket_api.require_admin
-@_require_enabled
 @_require_accepted_warning
 @callback
 def handle_signature(
@@ -273,7 +246,6 @@ def handle_signature(
     }
 )
 @websocket_api.require_admin
-@_require_enabled
 @_require_accepted_warning
 @callback
 def handle_clear(

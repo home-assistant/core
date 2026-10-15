@@ -11,9 +11,9 @@ import secrets
 from typing import Any
 
 from homeassistant.components.websocket_api import ActiveConnection
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, SESSION_TIMEOUT
 from .execution import console_print
@@ -97,17 +97,15 @@ class ConsoleSession:
             if not stopping:
                 self.namespace.clear()
 
-        # Code can close its own session, like by reloading the console. That
-        # execution finishes on its own, or it would stop the reload.
-        current = asyncio.current_task()
         for execution in stopping:
             execution.add_done_callback(_release_namespace)
-            if execution is not current:
-                execution.cancel()
+            execution.cancel()
 
 
 type ConsoleSessions = dict[tuple[str, str], ConsoleSession]
-type DebugConsoleConfigEntry = ConfigEntry[ConsoleSessions]
+
+# Only there while the console is enabled.
+DATA_SESSIONS: HassKey[ConsoleSessions] = HassKey(DOMAIN)
 
 
 @callback
@@ -116,10 +114,9 @@ def async_get_session(
 ) -> ConsoleSession:
     """Return a console session of the user, creating it when needed.
 
-    Only called while the console is enabled, so its config entry is loaded.
+    Only called while the console is enabled.
     """
-    entry: DebugConsoleConfigEntry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
-    sessions = entry.runtime_data
+    sessions = hass.data[DATA_SESSIONS]
     key = (connection.user.id, session_id)
 
     if (session := sessions.get(key)) is None:
@@ -148,13 +145,8 @@ def async_get_session(
 
 async def async_close_sessions(sessions: ConsoleSessions) -> None:
     """Close all sessions, and give code they still run a moment to clean up."""
-    # Not the execution closing them, which would wait on itself.
-    current = asyncio.current_task()
     executions = [
-        execution
-        for session in sessions.values()
-        for execution in session.executions
-        if execution is not current
+        execution for session in sessions.values() for execution in session.executions
     ]
 
     for session in sessions.values():

@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import logging
+import re
 from typing import Any
 from unittest.mock import patch
 
@@ -14,10 +15,11 @@ from homeassistant.components.debug_console.const import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import CONSOLE_COMMANDS
 
-from tests.common import CLIENT_ID, MockConfigEntry, MockUser
+from tests.common import CLIENT_ID, MockUser
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 SESSION_ID = "test-session"
@@ -34,6 +36,20 @@ def release_version() -> Generator[None]:
         yield
 
 
+def _logged_user(user: MockUser) -> str:
+    """Return a pattern of how a user is logged, with their login and address."""
+    return rf"{re.escape(user.name)} \(user {user.id}, refresh token \w+, from \S+\)"
+
+
+def _stored_acceptances(accepted: dict[str, Any]) -> dict[str, Any]:
+    """Return the storage of the console, with these acceptances."""
+    return {
+        "version": 1,
+        "key": DOMAIN,
+        "data": {CONF_WARNING_ACCEPTED: accepted},
+    }
+
+
 async def _async_send(
     websocket_client: MockHAClientWebSocket, command: dict[str, Any]
 ) -> dict[str, Any]:
@@ -46,13 +62,13 @@ async def _async_send(
 
 @pytest.mark.usefixtures("release_version")
 async def test_warning_required_until_accepted(
-    hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test the console refuses to run code until the user accepts the warning."""
     msg = await _async_send(websocket_client, {"type": "debug_console/info"})
-    assert msg["result"] == {"warning_required": True}
+    assert msg["result"] == {"enabled": True, "warning_required": True}
 
     msg = await _async_send(websocket_client, EXECUTE)
     assert not msg["success"]
@@ -62,13 +78,12 @@ async def test_warning_required_until_accepted(
     assert msg["success"]
 
     msg = await _async_send(websocket_client, {"type": "debug_console/info"})
-    assert msg["result"] == {"warning_required": False}
+    assert msg["result"] == {"enabled": True, "warning_required": False}
 
     msg = await _async_send(websocket_client, EXECUTE)
     assert msg["success"]
 
-    (entry,) = hass.config_entries.async_entries(DOMAIN)
-    acceptance = entry.data[CONF_WARNING_ACCEPTED][hass_admin_user.id]
+    acceptance = hass_storage[DOMAIN]["data"][CONF_WARNING_ACCEPTED][hass_admin_user.id]
     assert acceptance["version"] == WARNING_VERSION
 
 
@@ -77,7 +92,7 @@ async def test_no_warning_on_development_version(
 ) -> None:
     """Test development versions do not ask for the warning."""
     msg = await _async_send(websocket_client, {"type": "debug_console/info"})
-    assert msg["result"] == {"warning_required": False}
+    assert msg["result"] == {"enabled": True, "warning_required": False}
 
     msg = await _async_send(websocket_client, EXECUTE)
     assert msg["success"]
@@ -88,48 +103,41 @@ async def test_older_warning_needs_accepting_again(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test an acceptance of an older version of the warning no longer counts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_WARNING_ACCEPTED: {
-                hass_admin_user.id: {
-                    "version": WARNING_VERSION - 1,
-                    "accepted_at": "2026-01-01T00:00:00+00:00",
-                }
+    hass_storage[DOMAIN] = _stored_acceptances(
+        {
+            hass_admin_user.id: {
+                "version": WARNING_VERSION - 1,
+                "accepted_at": "2026-01-01T00:00:00+00:00",
             }
-        },
+        }
     )
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     client = await hass_ws_client(hass)
 
     msg = await _async_send(client, {"type": "debug_console/info"})
 
-    assert msg["result"] == {"warning_required": True}
+    assert msg["result"] == {"enabled": True, "warning_required": True}
 
 
 async def test_acceptance_of_removed_users_forgotten(
-    hass: HomeAssistant, hass_admin_user: MockUser
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_storage: dict[str, Any]
 ) -> None:
     """Test acceptances of removed users are forgotten, also while not loaded."""
     other_user = await hass.auth.async_create_user("Other admin")
     acceptance = {"version": WARNING_VERSION, "accepted_at": "2026-01-01"}
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_WARNING_ACCEPTED: {
-                hass_admin_user.id: acceptance,
-                other_user.id: acceptance,
-                "removed-while-unloaded": acceptance,
-            }
-        },
+    hass_storage[DOMAIN] = _stored_acceptances(
+        {
+            hass_admin_user.id: acceptance,
+            other_user.id: acceptance,
+            "removed-while-not-loaded": acceptance,
+        }
     )
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    assert set(entry.data[CONF_WARNING_ACCEPTED]) == {
+    assert set(hass_storage[DOMAIN]["data"][CONF_WARNING_ACCEPTED]) == {
         hass_admin_user.id,
         other_user.id,
     }
@@ -137,14 +145,18 @@ async def test_acceptance_of_removed_users_forgotten(
     await hass.auth.async_remove_user(other_user)
     await hass.async_block_till_done()
 
-    assert set(entry.data[CONF_WARNING_ACCEPTED]) == {hass_admin_user.id}
+    assert set(hass_storage[DOMAIN]["data"][CONF_WARNING_ACCEPTED]) == {
+        hass_admin_user.id
+    }
 
     # Removing a user who never accepted the warning changes nothing.
     never_accepted = await hass.auth.async_create_user("Never accepted")
     await hass.auth.async_remove_user(never_accepted)
     await hass.async_block_till_done()
 
-    assert set(entry.data[CONF_WARNING_ACCEPTED]) == {hass_admin_user.id}
+    assert set(hass_storage[DOMAIN]["data"][CONF_WARNING_ACCEPTED]) == {
+        hass_admin_user.id
+    }
 
 
 @pytest.mark.parametrize(
@@ -174,9 +186,15 @@ async def test_logging_executions(
 
     assert msg["success"]
     assert (
-        f"{hass_admin_user.name} ran code in the debug console:\nanswer = 42"
-        in caplog.text
-    ) is logged
+        bool(
+            re.search(
+                _logged_user(hass_admin_user)
+                + r" ran code in the debug console:\nanswer = 42",
+                caplog.text,
+            )
+        )
+        is logged
+    )
 
 
 @pytest.mark.usefixtures("release_version")
@@ -203,8 +221,9 @@ async def test_logging_inspection(
         )
 
     assert msg["success"]
-    assert f"{hass_admin_user.name} expanded a Thing in the debug console" in (
-        caplog.text
+    assert re.search(
+        _logged_user(hass_admin_user) + " expanded a Thing in the debug console",
+        caplog.text,
     )
 
 
@@ -236,8 +255,9 @@ async def test_logging_property_evaluation(
         )
 
     assert msg["success"]
-    assert f"{hass_admin_user.name} evaluated Thing.state in the debug console" in (
-        caplog.text
+    assert re.search(
+        _logged_user(hass_admin_user) + r" evaluated Thing\.state in the debug console",
+        caplog.text,
     )
 
 

@@ -7,14 +7,14 @@ import pytest
 
 from homeassistant.components.debug_console.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
 def default_version() -> Generator[None]:
-    """Run as a development version, but without enabling the console itself.
+    """Run as a release version, but without the safeguards of one.
 
     Each module reads the version on import, so each one is patched. Tests of
     the safeguards of release versions patch it again.
@@ -30,26 +30,15 @@ def default_version() -> Generator[None]:
 
 
 @pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return the config entry that enables the Debug console."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    return entry
-
-
-@pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Set up the Debug console, enabled by its config entry."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    return config_entry
+async def setup_integration(hass: HomeAssistant) -> None:
+    """Set up the Debug console, enabled in YAML."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
 
 @pytest.fixture
 async def websocket_client(
     hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
+    setup_integration: None,
     hass_ws_client: WebSocketGenerator,
 ) -> MockHAClientWebSocket:
     """Create a websocket client, with the Debug console set up."""
