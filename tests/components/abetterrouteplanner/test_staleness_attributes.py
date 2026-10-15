@@ -1,7 +1,7 @@
 """Tests for the ``last_reported_at`` / ``provider`` sensor attributes."""
 
 from datetime import UTC, datetime
-from typing import Any
+from unittest.mock import MagicMock
 
 from aioabrp import Telemetry
 from freezegun import freeze_time
@@ -13,7 +13,7 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_VEHICLE_ID, SENSOR_TEST_SUB, build_metric_value
+from .conftest import MOCK_VEHICLE_ID, SENSOR_TEST_SUB, build_metric_value, fire_frame
 
 from tests.common import MockConfigEntry
 
@@ -26,10 +26,11 @@ _OBJECT_ID_STEM = "rivian_r2_2027_standard_long_range"
 
 
 def _fire_voltage(
-    fake_stream: Any, voltage: float, *, provider: str | None = None
+    mock_telemetry_stream: MagicMock, voltage: float, *, provider: str | None = None
 ) -> None:
     """Drive a single-voltage live frame through the fake telemetry stream."""
-    fake_stream.fire_frame(
+    fire_frame(
+        mock_telemetry_stream,
         MOCK_VEHICLE_ID,
         Telemetry(voltage=build_metric_value(voltage, provider=provider)),
     )
@@ -62,12 +63,12 @@ async def _setup(
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """Stamp refreshes only on frames whose batch carries the voltage metric."""
 
@@ -83,8 +84,10 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     t3 = datetime(2026, 5, 24, 10, 10, 0, tzinfo=UTC)
 
     with freeze_time(t1):
-        fake_stream.fire_frame(
-            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0))
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(400.0)),
         )
         await hass.async_block_till_done()
 
@@ -94,7 +97,11 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
 
     with freeze_time(t2):
         # This batch carries soc only, so the voltage slot stays untouched.
-        fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(50.0)))
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(soc=build_metric_value(50.0)),
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get(VOLTAGE_ENTITY_ID)
@@ -102,8 +109,10 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     assert state.attributes.get("last_reported_at") == t1
 
     with freeze_time(t3):
-        fake_stream.fire_frame(
-            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(410.0))
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(410.0)),
         )
         await hass.async_block_till_done()
 
@@ -112,12 +121,12 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     assert state.attributes.get("last_reported_at") == t3
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_wire_time_is_preferred_over_receipt_time(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A reading carrying its own wire time is not stamped with arrival time."""
 
@@ -130,8 +139,10 @@ async def test_wire_time_is_preferred_over_receipt_time(
 
     wire = datetime(2026, 5, 20, 8, 0, 0, tzinfo=UTC)
     with freeze_time(datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)):
-        fake_stream.fire_frame(
-            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0, time=wire))
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(400.0, time=wire)),
         )
         await hass.async_block_till_done()
 
@@ -147,11 +158,11 @@ async def test_wire_time_is_preferred_over_receipt_time(
         pytest.param(None, None, id="provider_absent"),
     ],
 )
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_provider_attribute_follows_the_live_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     provider: str | None,
     expected: str | None,
 ) -> None:
@@ -159,7 +170,7 @@ async def test_provider_attribute_follows_the_live_frame(
 
     await _setup(hass, config_entry_with_vehicles)
 
-    _fire_voltage(fake_stream, 400.0, provider=provider)
+    _fire_voltage(mock_telemetry_stream, 400.0, provider=provider)
     await hass.async_block_till_done()
 
     state = hass.states.get(VOLTAGE_ENTITY_ID)

@@ -1,7 +1,6 @@
 """Tests for lazy entity creation on the aioabrp telemetry driver."""
 
-from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aioabrp import Telemetry
 import pytest
@@ -16,6 +15,7 @@ from .conftest import (
     MOCK_VEHICLE_ID_2,
     SENSOR_TEST_SUB,
     build_metric_value,
+    fire_frame,
 )
 
 from tests.common import MockConfigEntry
@@ -28,7 +28,7 @@ VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 
 
 async def _lazy_setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Set up the integration with the synchronous ``fake_stream`` double."""
+    """Set up the integration with the synchronous ``mock_telemetry_stream`` double."""
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
     entry.add_to_hass(hass)
@@ -55,7 +55,7 @@ async def test_stream_only_metric_creates_entity(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """The seed is empty; a power frame arrives over the stream."""
 
@@ -63,7 +63,11 @@ async def test_stream_only_metric_creates_entity(
 
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(1234.0)))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(1234.0)),
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(POWER_ENTITY_ID)
@@ -80,7 +84,7 @@ async def test_post_setup_frame_creates_entity(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """The seed is empty; voltage arrives only after setup completes."""
 
@@ -90,8 +94,10 @@ async def test_post_setup_frame_creates_entity(
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
     assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(voltage=build_metric_value(400.0)),
     )
     await hass.async_block_till_done()
 
@@ -115,7 +121,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """Two consecutive non-null power frames must create exactly one power entity."""
 
@@ -123,10 +129,18 @@ async def test_lazy_create_idempotent_on_repeated_frames(
 
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(5000.0)))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(5000.0)),
+    )
     await hass.async_block_till_done()
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(6000.0)))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(6000.0)),
+    )
     await hass.async_block_till_done()
 
     all_entries = er.async_entries_for_config_entry(
@@ -163,7 +177,7 @@ async def test_multi_vehicle_entity_isolation(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     active_vehicle_id: int,
     expected_entity_id: str,
     absent_entity_id: str,
@@ -175,8 +189,10 @@ async def test_multi_vehicle_entity_isolation(
 
     assert entity_registry.async_get(absent_entity_id) is None
 
-    fake_stream.fire_frame(
-        active_vehicle_id, Telemetry(voltage=build_metric_value(400.0))
+    fire_frame(
+        mock_telemetry_stream,
+        active_vehicle_id,
+        Telemetry(voltage=build_metric_value(400.0)),
     )
     await hass.async_block_till_done()
 
@@ -184,7 +200,7 @@ async def test_multi_vehicle_entity_isolation(
     assert entity_registry.async_get(absent_entity_id) is None
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_absent_metric_entities_not_created(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -206,7 +222,7 @@ async def test_soe_sensor_lazy_creates_on_first_frame(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """An ``soe`` frame lazy-creates the SoE sensor; native Wh, display kWh."""
 
@@ -214,7 +230,11 @@ async def test_soe_sensor_lazy_creates_on_first_frame(
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe") is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soe=build_metric_value(75000.0)))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(soe=build_metric_value(75000.0)),
+    )
     await hass.async_block_till_done()
 
     entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe")
@@ -233,7 +253,7 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """An ``odometer`` frame lazy-creates the odometer sensor; native m, display km."""
 
@@ -241,8 +261,10 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "odometer") is None
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(odometer=build_metric_value(123456.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(odometer=build_metric_value(123456.0)),
     )
     await hass.async_block_till_done()
 
@@ -263,7 +285,7 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A ``calibrated_ref_cons`` frame lazy-creates the ref-consumption sensor."""
 
@@ -274,8 +296,10 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
         is None
     )
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
     )
     await hass.async_block_till_done()
 
@@ -301,7 +325,7 @@ async def test_battery_capacity_sensor_lazy_creates_static(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A ``battery_capacity`` frame lazy-creates the capacity sensor as STATIC."""
 
@@ -311,8 +335,10 @@ async def test_battery_capacity_sensor_lazy_creates_static(
         _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_capacity") is None
     )
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(battery_capacity=build_metric_value(75000.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_capacity=build_metric_value(75000.0)),
     )
     await hass.async_block_till_done()
 
@@ -338,7 +364,7 @@ async def test_soh_sensor_lazy_creates_on_first_frame(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A ``soh`` frame lazy-creates the State-of-Health sensor (percent)."""
 
@@ -346,7 +372,9 @@ async def test_soh_sensor_lazy_creates_on_first_frame(
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh") is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(92.0)))
+    fire_frame(
+        mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(92.0))
+    )
     await hass.async_block_till_done()
 
     entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh")
@@ -371,7 +399,7 @@ async def test_battery_temperature_sensor_stays_primary_category(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """Battery Temperature stays primary (``entity_category is None``)."""
 
@@ -382,8 +410,10 @@ async def test_battery_temperature_sensor_stays_primary_category(
         is None
     )
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(battery_temperature=build_metric_value(22.5))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_temperature=build_metric_value(22.5)),
     )
     await hass.async_block_till_done()
 
@@ -405,13 +435,15 @@ async def test_soh_above_100_percent_surfaces_uncapped(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A post-recalibration SoH overshoot (> 100%) surfaces uncapped."""
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(105.0)))
+    fire_frame(
+        mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(105.0))
+    )
     await hass.async_block_till_done()
 
     entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh")
@@ -427,14 +459,16 @@ async def test_battery_capacity_recalibration_jump_updates_state(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A capacity recalibration jump is reflected in ``state.state``."""
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(battery_capacity=build_metric_value(75000.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_capacity=build_metric_value(75000.0)),
     )
     await hass.async_block_till_done()
 
@@ -444,8 +478,10 @@ async def test_battery_capacity_recalibration_jump_updates_state(
     assert first_state is not None
     assert first_state.state == "75.0"
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(battery_capacity=build_metric_value(74500.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_capacity=build_metric_value(74500.0)),
     )
     await hass.async_block_till_done()
 
@@ -460,15 +496,17 @@ async def test_new_sensor_multi_vehicle_isolation(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A metric frame for vehicle A must not create the entity on vehicle B."""
     entry = config_entry_with_vehicles
 
     await _lazy_setup(hass, entry)
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
     )
     await hass.async_block_till_done()
 
@@ -482,7 +520,11 @@ async def test_new_sensor_multi_vehicle_isolation(
     )
 
     # A frame for an id outside the garage must not mint an entity either.
-    fake_stream.fire_frame(_ABSENT_VEHICLE_ID, Telemetry(soc=build_metric_value(50.0)))
+    fire_frame(
+        mock_telemetry_stream,
+        _ABSENT_VEHICLE_ID,
+        Telemetry(soc=build_metric_value(50.0)),
+    )
     await hass.async_block_till_done()
 
     assert _unique_id_lookup(entity_registry, _ABSENT_VEHICLE_ID, "soc") is None

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aioabrp import (
     AbrpVehicle,
@@ -39,6 +39,8 @@ from .conftest import (
     SENSOR_TEST_SUB,
     build_metric_value,
     build_vehicle_model_display,
+    fire_connection,
+    fire_frame,
 )
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -64,7 +66,7 @@ async def _setup_integration(
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    Callers with a non-empty garage must also request ``fake_stream``, or a real
+    Callers with a non-empty garage must also request ``mock_telemetry_stream``, or a real
     TelemetryStream opens an SSE connection.
     """
     assert await async_setup_component(hass, "auth", {})
@@ -88,7 +90,7 @@ async def test_every_garage_vehicle_present_in_registries(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     vehicle_id: int,
 ) -> None:
     """Every vehicle in the garage gets a device and entities, with no opt-in step."""
@@ -104,7 +106,9 @@ async def test_every_garage_vehicle_present_in_registries(
     )
 
     # Entities are created lazily, so drive a frame for this vehicle.
-    fake_stream.fire_frame(vehicle_id, Telemetry(soc=build_metric_value(85.0)))
+    fire_frame(
+        mock_telemetry_stream, vehicle_id, Telemetry(soc=build_metric_value(85.0))
+    )
     await hass.async_block_till_done()
 
     assert (
@@ -133,13 +137,13 @@ async def test_empty_garage_creates_no_devices_or_entities(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Entity registry + states snapshot for the full per-vehicle metric set."""
@@ -148,7 +152,8 @@ async def test_telemetry_sensors_snapshot(
     # Every metric in one frame so the snapshot captures rendered states, with
     # time frozen so the receipt-stamped ``last_reported_at`` is deterministic.
     with freeze_time("2026-05-24T12:00:00+00:00"):
-        fake_stream.fire_frame(
+        fire_frame(
+            mock_telemetry_stream,
             MOCK_VEHICLE_ID,
             Telemetry(
                 soc=build_metric_value(85.0),
@@ -172,17 +177,19 @@ async def test_telemetry_sensors_snapshot(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_soc_native_value_is_percent(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """SoC surfaces the typed PERCENT ``MetricValue.value`` with one decimal."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(85.7)))
+    fire_frame(
+        mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(85.7))
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(SOC_ENTITY_ID)
@@ -191,18 +198,20 @@ async def test_soc_native_value_is_percent(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_available_follows_native_value(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """``available`` tracks ``native_value is not None``."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(12000.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(12000.0)),
     )
     await hass.async_block_till_done()
 
@@ -229,20 +238,22 @@ BATTERY_TEMP_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_battery_temp
     ],
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_range_sensor_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     range_m: float,
     expected_state: str,
 ) -> None:
     """Range sensor surfaces the meters ``MetricValue.value`` rendered in km."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(range=build_metric_value(range_m))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(range=build_metric_value(range_m)),
     )
     await hass.async_block_till_done()
 
@@ -261,20 +272,22 @@ async def test_range_sensor_state(
     ],
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_battery_temperature_sensor_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     temp_c: float,
     expected_state: str,
 ) -> None:
     """Battery Temperature sensor surfaces the Celsius ``MetricValue.value``."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(battery_temperature=build_metric_value(temp_c))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_temperature=build_metric_value(temp_c)),
     )
     await hass.async_block_till_done()
 
@@ -316,7 +329,7 @@ def _lookup_sensor_entity_id(
     )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_telemetry_stream")
 async def test_device_info_name_falls_back_to_typecode_when_unnamed(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -371,7 +384,7 @@ def _set_two_make_displays(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 @pytest.mark.parametrize(
     ("sensor_key", "metric", "value"),
@@ -396,15 +409,17 @@ async def test_telemetry_sensors_have_no_entity_category(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     sensor_key: str,
     metric: Metric,
     value: float,
 ) -> None:
     """These four sensors are primary vehicle data, not diagnostics."""
     await _setup_integration(hass, config_entry_with_vehicles)
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(**{metric.value: build_metric_value(value)})
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(**{metric.value: build_metric_value(value)}),
     )
     await hass.async_block_till_done()
 
@@ -418,18 +433,20 @@ async def test_telemetry_sensors_have_no_entity_category(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_calibrated_ref_cons_uses_short_display_name(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """The calibrated ref cons sensor's friendly name translates to the short form."""
     await _setup_integration(hass, config_entry_with_vehicles)
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
     )
     await hass.async_block_till_done()
 
@@ -445,7 +462,7 @@ async def test_calibrated_ref_cons_uses_short_display_name(
     assert entry.original_name == "Calibrated ref cons"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_telemetry_stream")
 async def test_per_vehicle_device_anchored_at_setup(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -487,7 +504,7 @@ async def test_per_vehicle_device_anchored_at_setup(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_no_type_code_entity_created(
     hass: HomeAssistant,
@@ -537,12 +554,12 @@ def test_charging_state_options_map_every_member(
     ],
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_charging_state_lazy_create_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     charging_state: ChargingState,
     expected_option: str,
 ) -> None:
@@ -551,7 +568,8 @@ async def test_charging_state_lazy_create_on_first_frame(
 
     assert hass.states.get(CHARGING_STATE_ENTITY_ID) is None
 
-    fake_stream.fire_frame(
+    fire_frame(
+        mock_telemetry_stream,
         MOCK_VEHICLE_ID,
         Telemetry(charging_state=build_metric_value(charging_state)),
     )
@@ -563,12 +581,12 @@ async def test_charging_state_lazy_create_on_first_frame(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_charging_state_registry_shape(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """The enum sensor is ENUM device_class, the 5 options, and no state_class."""
     description = _description_for(Metric.CHARGING_STATE)
@@ -578,7 +596,8 @@ async def test_charging_state_registry_shape(
     assert description.native_unit_of_measurement is None
 
     await _setup_integration(hass, config_entry_with_vehicles)
-    fake_stream.fire_frame(
+    fire_frame(
+        mock_telemetry_stream,
         MOCK_VEHICLE_ID,
         Telemetry(charging_state=build_metric_value(ChargingState.CHARGING_AC)),
     )
@@ -593,19 +612,20 @@ async def test_charging_state_registry_shape(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_charging_state_provider_and_stamp_attributes(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """The enum sensor surfaces ``provider`` + ``last_reported_at`` like numerics."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     stamp = datetime(2026, 5, 24, 12, 0, 0, tzinfo=UTC)
     with freeze_time(stamp):
-        fake_stream.fire_frame(
+        fire_frame(
+            mock_telemetry_stream,
             MOCK_VEHICLE_ID,
             Telemetry(
                 charging_state=build_metric_value(
@@ -641,22 +661,26 @@ def test_charging_state_options_cross_pinned() -> None:
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
 async def test_terminal_auth_failure_makes_sensors_unavailable(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A value that nothing can refresh stops being reported."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(12000.0))
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(12000.0)),
     )
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
 
-    fake_stream.fire_connection(ConnectionEvent(ConnectionState.AUTH_FAILED, "401"))
+    fire_connection(
+        mock_telemetry_stream, ConnectionEvent(ConnectionState.AUTH_FAILED, "401")
+    )
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "unavailable"

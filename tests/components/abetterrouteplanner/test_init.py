@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 import time
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
 from aiohttp import ClientError
@@ -12,7 +12,11 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.abetterrouteplanner import AbrpData
-from homeassistant.components.abetterrouteplanner.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.abetterrouteplanner.const import (
+    ABRP_APP_KEY,
+    DOMAIN,
+    OAUTH2_TOKEN,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -44,7 +48,7 @@ async def setup_integration(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_setup_and_unload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -69,7 +73,7 @@ async def test_setup_and_unload(
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_setup_token_refresh_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -164,7 +168,9 @@ async def test_setup_missing_implementation(
     assert hasattr(config_entry_oauth2_flow, "async_get_config_entry_implementation")
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_abrp_client", "mock_telemetry_stream"
+)
 async def test_full_flow_end_to_end(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -211,7 +217,9 @@ async def test_full_flow_end_to_end(
     assert unloaded_state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_abrp_client", "mock_telemetry_stream"
+)
 async def test_full_flow_stale_token_refresh_unauthorized(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -307,7 +315,7 @@ async def test_first_refresh_api_error_setup_retry(
     assert not hass.config_entries.flow.async_progress()
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
 async def test_setup_succeeds_with_degraded_device(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -345,7 +353,7 @@ async def test_setup_succeeds_with_degraded_device(
 async def test_stream_spawned_for_every_garage_vehicle(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """Setup spawns the telemetry stream covering the whole garage."""
     config_entry_with_vehicles.add_to_hass(hass)
@@ -355,22 +363,23 @@ async def test_stream_spawned_for_every_garage_vehicle(
 
     assert config_entry_with_vehicles.state is ConfigEntryState.LOADED
 
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]
-    assert stream.started is True
-    assert stream.name == config_entry_with_vehicles.title
-
-    runtime_data = config_entry_with_vehicles.runtime_data
-    assert isinstance(runtime_data, AbrpData)
-    assert runtime_data.stream is stream
+    mock_telemetry_stream.assert_called_once_with(
+        ANY,
+        ABRP_APP_KEY,
+        ANY,
+        [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2],
+        on_update=ANY,
+        on_connection_change=ANY,
+        name=config_entry_with_vehicles.title,
+    )
+    mock_telemetry_stream.return_value.start.assert_awaited_once()
 
 
 async def test_no_stream_when_garage_is_empty(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_abrp_client: AsyncMock,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """An account whose garage is empty spawns NO telemetry stream."""
     mock_abrp_client.return_value = []
@@ -380,17 +389,14 @@ async def test_no_stream_when_garage_is_empty(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert fake_stream.stream is None
-    runtime_data = config_entry.runtime_data
-    assert isinstance(runtime_data, AbrpData)
-    assert runtime_data.stream is None
+    mock_telemetry_stream.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_unload_stops_stream(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """Unloading an entry with a live stream stops it once the platforms unload."""
     config_entry_with_vehicles.add_to_hass(hass)
@@ -398,22 +404,20 @@ async def test_unload_stops_stream(
     assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.stopped is False
+    mock_telemetry_stream.return_value.stop.assert_not_awaited()
 
     assert await hass.config_entries.async_unload(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry_with_vehicles.state is ConfigEntryState.NOT_LOADED
-    assert stream.stopped is True
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_stream_stopped_when_platform_setup_raises(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A platform setup failure must not leak the stream's background task.
 
@@ -434,18 +438,16 @@ async def test_stream_stopped_when_platform_setup_raises(
 
     assert config_entry_with_vehicles.state is ConfigEntryState.SETUP_ERROR
 
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.started is True
-    assert stream.stopped is True
+    mock_telemetry_stream.return_value.start.assert_awaited_once()
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
-    ("platforms_unloaded", "expected_state", "expected_stopped"),
+    ("platforms_unloaded", "expected_state", "expected_stop_calls"),
     [
-        pytest.param(True, ConfigEntryState.NOT_LOADED, True, id="platforms_unloaded"),
+        pytest.param(True, ConfigEntryState.NOT_LOADED, 1, id="platforms_unloaded"),
         pytest.param(
-            False, ConfigEntryState.FAILED_UNLOAD, False, id="platforms_still_loaded"
+            False, ConfigEntryState.FAILED_UNLOAD, 0, id="platforms_still_loaded"
         ),
     ],
 )
@@ -453,10 +455,10 @@ async def test_stream_stopped_when_platform_setup_raises(
 async def test_stream_survives_a_failed_platform_unload(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
     platforms_unloaded: bool,
     expected_state: ConfigEntryState,
-    expected_stopped: bool,
+    expected_stop_calls: int,
 ) -> None:
     """The stream outlives an unload that left the entry's platforms loaded."""
     config_entry_with_vehicles.add_to_hass(hass)
@@ -464,9 +466,7 @@ async def test_stream_survives_a_failed_platform_unload(
     assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.stopped is False
+    mock_telemetry_stream.return_value.stop.assert_not_awaited()
 
     with patch.object(
         hass.config_entries,
@@ -480,7 +480,7 @@ async def test_stream_survives_a_failed_platform_unload(
 
     assert unloaded is platforms_unloaded
     assert config_entry_with_vehicles.state is expected_state
-    assert stream.stopped is expected_stopped
+    assert mock_telemetry_stream.return_value.stop.await_count == expected_stop_calls
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -489,7 +489,7 @@ async def test_duplicate_garage_entry_yields_one_stream_id(
     config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
     mock_abrp_vehicles: list[AbrpVehicle],
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A garage that repeats a vehicle subscribes that id only once."""
     mock_abrp_client.return_value = [*mock_abrp_vehicles, mock_abrp_vehicles[0]]
@@ -498,7 +498,15 @@ async def test_duplicate_garage_entry_yields_one_stream_id(
     assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
-    assert fake_stream.stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]
+    mock_telemetry_stream.assert_called_with(
+        ANY,
+        ANY,
+        ANY,
+        [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2],
+        on_update=ANY,
+        on_connection_change=ANY,
+        name=ANY,
+    )
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -508,7 +516,7 @@ async def test_vehicle_added_to_garage_appears_after_reload(
     mock_abrp_client: AsyncMock,
     mock_abrp_vehicles: list[AbrpVehicle],
     device_registry: dr.DeviceRegistry,
-    fake_stream: Any,
+    mock_telemetry_stream: MagicMock,
 ) -> None:
     """A vehicle added to the ABRP garage becomes a device on the next reload."""
     mock_abrp_client.return_value = mock_abrp_vehicles[:1]
@@ -535,4 +543,12 @@ async def test_vehicle_added_to_garage_appears_after_reload(
         )
         is not None
     )
-    assert fake_stream.stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]
+    mock_telemetry_stream.assert_called_with(
+        ANY,
+        ANY,
+        ANY,
+        [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2],
+        on_update=ANY,
+        on_connection_change=ANY,
+        name=ANY,
+    )

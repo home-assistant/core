@@ -7,7 +7,7 @@ from http import HTTPStatus
 import json
 import time
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioabrp import (
     AbrpApiError,
@@ -212,76 +212,25 @@ def mock_config_entry_with_vehicles(
     )
 
 
-class _StreamDriver:
-    """Test handle for driving a faked ``TelemetryStream`` synchronously."""
-
-    def __init__(self, cls: Any) -> None:
-        """Wrap the per-test fake stream class so the driver can find it."""
-        self._cls = cls
-
-    @property
-    def stream(self) -> Any:
-        """The most recently constructed fake stream (None before setup)."""
-        return self._cls.instances[-1] if self._cls.instances else None
-
-    def fire_frame(self, vehicle_id: int, telemetry: Telemetry) -> None:
-        """Invoke the coordinator's on_update with a typed Telemetry frame."""
-        assert self.stream is not None, (
-            "fire_frame called before TelemetryStream construction"
-        )
-        self.stream.on_update(vehicle_id, telemetry)
-
-    def fire_connection(self, event: ConnectionEvent) -> None:
-        """Invoke the coordinator's on_connection_change with a transition."""
-        assert self.stream is not None, (
-            "fire_connection called before TelemetryStream construction"
-        )
-        self.stream.on_connection_change(event)
+def fire_frame(
+    mock_telemetry_stream: MagicMock, vehicle_id: int, telemetry: Telemetry
+) -> None:
+    """Deliver a telemetry frame through the stream's on_update callback."""
+    assert mock_telemetry_stream.call_args is not None, "no stream was constructed"
+    mock_telemetry_stream.call_args.kwargs["on_update"](vehicle_id, telemetry)
 
 
-@pytest.fixture(name="fake_stream")
-def fake_stream() -> Generator[_StreamDriver]:
-    """Patch the integration's TelemetryStream with a synchronous test driver."""
+def fire_connection(mock_telemetry_stream: MagicMock, event: ConnectionEvent) -> None:
+    """Deliver a connection transition through on_connection_change."""
+    assert mock_telemetry_stream.call_args is not None, "no stream was constructed"
+    mock_telemetry_stream.call_args.kwargs["on_connection_change"](event)
 
-    class _FakeTelemetryStream:
-        """Test double for aioabrp.TelemetryStream."""
 
-        instances: list[Any] = []
-
-        def __init__(
-            self,
-            websession: Any,
-            api_key: str,
-            auth: Any,
-            vehicle_ids: list[int],
-            on_update: Any,
-            on_connection_change: Any,
-            *,
-            name: str | None = None,
-            backoff: Any = (5.0, 10.0, 30.0, 60.0),
-            watchdog_seconds: float = 300.0,
-            seed: dict[int, Telemetry] | None = None,
-        ) -> None:
-            """Record the injected callbacks and register this instance."""
-            self.vehicle_ids = list(vehicle_ids)
-            self.on_update = on_update
-            self.on_connection_change = on_connection_change
-            self.name = name
-            self.seed = seed
-            self.started = False
-            self.stopped = False
-            _FakeTelemetryStream.instances.append(self)
-
-        async def start(self) -> None:
-            """Awaitable no-op that records the start call."""
-            self.started = True
-
-        async def stop(self) -> None:
-            """Awaitable no-op that records the stop call."""
-            self.stopped = True
-
+@pytest.fixture
+def mock_telemetry_stream() -> Generator[MagicMock]:
+    """Patch the integration's TelemetryStream with an autospec mock."""
     with patch(
         "homeassistant.components.abetterrouteplanner.TelemetryStream",
-        _FakeTelemetryStream,
-    ):
-        yield _StreamDriver(_FakeTelemetryStream)
+        autospec=True,
+    ) as mock_stream:
+        yield mock_stream
