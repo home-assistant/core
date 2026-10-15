@@ -1,5 +1,7 @@
 """Define tests for the SimpliSafe config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 import logging
 from unittest.mock import patch
 
@@ -13,9 +15,20 @@ from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .common import USER_ID
+
 from tests.common import MockConfigEntry
 
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
+
+
+@contextmanager
+def _patch_setup_entry() -> Generator[None]:
+    """Patch the SimpliSafe entry setup."""
+    with patch(
+        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+    ):
+        yield
 
 
 async def test_duplicate_error(
@@ -38,6 +51,7 @@ async def test_duplicate_error(
         assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("setup_simplisafe")
 async def test_invalid_auth_code_length(hass: HomeAssistant) -> None:
     """Test that an invalid auth code length show the correct error."""
     result = await hass.config_entries.flow.async_init(
@@ -52,7 +66,14 @@ async def test_invalid_auth_code_length(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth_code_length"}
 
+    with _patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("setup_simplisafe")
 async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials show the correct error."""
     with patch(
@@ -71,6 +92,12 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth"}
+
+    with _patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(config_entry, hass: HomeAssistant) -> None:
@@ -175,6 +202,7 @@ async def test_step_user(
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == USER_ID
 
     if log_statement:
         assert any(m for m in caplog.messages if log_statement in m)
@@ -184,7 +212,8 @@ async def test_step_user(
     assert config_entry.data == {CONF_USERNAME: "12345", CONF_TOKEN: "token123"}
 
 
-async def test_unknown_error(hass: HomeAssistant, setup_simplisafe) -> None:
+@pytest.mark.usefixtures("setup_simplisafe")
+async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test that an unknown error shows ohe correct error."""
     with patch(
         "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
@@ -201,3 +230,9 @@ async def test_unknown_error(hass: HomeAssistant, setup_simplisafe) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
+
+    with _patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

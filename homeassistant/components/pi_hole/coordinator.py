@@ -72,12 +72,11 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
                         and hint.startswith("The API is hosted at ")
                         and "/admin/api" in hint
                     ):
-                        _LOGGER.warning(
+                        raise ConfigEntryAuthFailed(
                             "Pi-hole API v6 returned an error that "
                             "is expected when using v5 endpoints. "
                             "Please reconfigure your authentication"
                         )
-                        raise ConfigEntryAuthFailed
         except HoleError as err:
             if str(err) == "Authentication failed: Invalid password":
                 raise ConfigEntryAuthFailed(

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.watts.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -29,7 +30,11 @@ async def test_full_flow(
     assert "url" in result
     assert OAUTH2_AUTHORIZE in result.get("url", "")
     assert "response_type=code" in result.get("url", "")
-    assert "scope=" in result.get("url", "")
+    assert URL(result["url"]).query["scope"] == (
+        "openid offline_access "
+        "https://visionlogin.onmicrosoft.com/vision/homeassistant.read "
+        "https://visionlogin.onmicrosoft.com/vision/brand.watts"
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

@@ -16,10 +16,10 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "scene"
-DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
+from .const import DATA_COMPONENT, DOMAIN
+from .services import async_setup_services
+
 STATES: Final = "states"
 
 
@@ -58,6 +58,16 @@ PLATFORM_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "ATTR_TRANSITION",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "SERVICE_TURN_ON",
+    "STATES",
+    "BaseScene",
+    "Scene",
+]
+
 # mypy: disallow-any-generics
 
 
@@ -75,15 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         eager_start=True,
     )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {
-            ATTR_TRANSITION: probatio.All(
-                probatio.Coerce(float), probatio.Clamp(min=0, max=6553)
-            )
-        },
-        "_async_activate",
-    )
+    async_setup_services(hass)
 
     return True
 

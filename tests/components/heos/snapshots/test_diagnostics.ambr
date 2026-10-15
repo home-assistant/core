@@ -279,6 +279,7 @@
       'model_id': None,
       'name': 'Test Player',
       'name_by_user': None,
+      'next_name_part': None,
       'parent_device_id': None,
       'serial_number': '**REDACTED**',
       'sw_version': '1.0.0',
@@ -300,6 +301,7 @@
           'labels': list([
           ]),
           'name': None,
+          'next_name_part': 'device',
           'options': dict({
           }),
           'original_name': None,
