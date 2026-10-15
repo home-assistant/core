@@ -4,10 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unique_id_mismatch": "The device at this address is a different Nanoleaf device than the one configured.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "not_allowing_new_tokens": "Nanoleaf is not allowing new tokens, follow the instructions above.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -16,6 +18,14 @@
       "link": {
         "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing. For devices without a power button, such as the Skylight, select **Connect to API** in the device settings of the Nanoleaf app instead. Then select **Submit** within 30 seconds.",
         "title": "Link Nanoleaf"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::nanoleaf::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {
@@ -54,6 +64,14 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the Nanoleaf device."
+    },
+    "invalid_token": {
+      "message": "The access token for the Nanoleaf device is invalid. Please reauthenticate."
     }
   },
   "issues": {

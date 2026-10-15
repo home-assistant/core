@@ -5,6 +5,12 @@
     }
   },
   "exceptions": {
+    "entity_not_found": {
+      "message": "Image entity {entity_id} not found."
+    },
+    "image_unavailable": {
+      "message": "Unable to get image from {entity_id}."
+    },
     "path_not_allowed": {
       "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
     }

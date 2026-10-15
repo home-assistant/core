@@ -175,6 +175,8 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
+    # Cannot be moved: action names come from the configuration
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 

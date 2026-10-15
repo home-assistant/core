@@ -28,7 +28,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> None:
     """Set up Eurotronic Comet Blue from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
@@ -62,10 +62,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
             except TimeoutError as ex:
                 # This likely means PIN was incorrect on Linux and ESPHome backends
                 raise ConfigEntryError(
-                    "Failed to read battery level, likely due to incorrect PIN"
+                    translation_domain=DOMAIN,
+                    translation_key="incorrect_pin",
                 ) from ex
     except BleakError as ex:
-        raise ConfigEntryNotReady(f"Failed to get device info from '{address}'") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_get_device_info",
+            translation_placeholders={"address": address},
+        ) from ex
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -88,8 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Eurotronic Comet Blue integration."""
@@ -97,6 +100,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

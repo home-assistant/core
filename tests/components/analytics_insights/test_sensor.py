@@ -137,3 +137,7 @@ async def test_data_not_modified_without_previous_data(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        "Home Assistant Analytics reported no changes for addons.json, "
+        "but no previous data is available"
+    )

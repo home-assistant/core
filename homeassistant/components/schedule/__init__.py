@@ -1,10 +1,7 @@
 """Support for schedules in Home Assistant."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
-import itertools
-from typing import Any, Literal, override
+from typing import override
 
 import probatio
 
@@ -20,7 +17,6 @@ from homeassistant.const import (  # noqa: F401
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
-    CollectionEntity,
     DictStorageCollection,
     DictStorageCollectionWebsocket,
     IDManager,
@@ -29,10 +25,8 @@ from homeassistant.helpers.collection import (
     sync_entity_lifecycle,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
     ATTR_NEXT_EVENT,
@@ -48,118 +42,23 @@ from .const import (  # noqa: F401
     ScheduleEntityCapabilityAttribute,
     ScheduleEntityStateAttribute,
 )
+from .entity import Schedule
+from .schema import (
+    BASE_SCHEMA,
+    SCHEDULE_SCHEMA,
+    STORAGE_SCHEDULE_SCHEMA,
+    STORAGE_SCHEMA,
+)
 from .services import async_setup_services
 
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 1
 
 
-def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
-    """Validate the schedule of time ranges.
-
-    Ensure they have no overlap and the end time is greater than the start time.
-    """
-    # Empty schedule is valid
-    if not schedule:
-        return schedule
-
-    # Sort the schedule by start times
-    schedule = sorted(schedule, key=lambda time_range: time_range[CONF_FROM])
-
-    # Check if the start time of the next event is before
-    # the end time of the previous event
-    previous_to = None
-    for time_range in schedule:
-        if time_range[CONF_FROM] >= time_range[CONF_TO]:
-            raise probatio.Invalid(
-                f"Invalid time range, from {time_range[CONF_FROM]} is after"
-                f" {time_range[CONF_TO]}"
-            )
-
-        # Check if the from time of the event is after the to time of the previous event
-        if previous_to is not None and previous_to > time_range[CONF_FROM]:
-            raise probatio.Invalid("Overlapping times found in schedule")
-
-        previous_to = time_range[CONF_TO]
-
-    return schedule
-
-
-def deserialize_to_time(value: Any) -> Any:
-    """Convert 24:00 and 24:00:00 to time.max."""
-    if not isinstance(value, str):
-        return cv.time(value)
-
-    parts = value.split(":")
-    if len(parts) < 2:
-        return cv.time(value)
-    hour = int(parts[0])
-    minute = int(parts[1])
-
-    if hour == 24 and minute == 0:
-        return time.max
-
-    return cv.time(value)
-
-
-def serialize_to_time(value: Any) -> Any:
-    """Convert time.max to 24:00:00."""
-    if value == time.max:
-        return "24:00:00"
-    return probatio.Coerce(str)(value)
-
-
-BASE_SCHEMA: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
-    probatio.Optional(CONF_ICON): cv.icon,
-}
-
-# Extra data that the user can set on each time range
-CUSTOM_DATA_SCHEMA = probatio.Schema({str: probatio.Any(bool, str, int, float)})
-
-TIME_RANGE_SCHEMA: VolDictType = {
-    probatio.Required(CONF_FROM): cv.time,
-    probatio.Required(CONF_TO): deserialize_to_time,
-    probatio.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
-}
-
-# Serialize time in validated config
-STORAGE_TIME_RANGE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_FROM): probatio.Coerce(str),
-        probatio.Required(CONF_TO): serialize_to_time,
-        probatio.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
-    }
-)
-
-SCHEDULE_SCHEMA: VolDictType = {
-    probatio.Optional(day, default=[]): probatio.All(
-        probatio.EnsureList(), [TIME_RANGE_SCHEMA], valid_schedule
-    )
-    for day in CONF_ALL_DAYS
-}
-STORAGE_SCHEDULE_SCHEMA: VolDictType = {
-    probatio.Optional(day, default=[]): probatio.All(
-        probatio.EnsureList(),
-        [TIME_RANGE_SCHEMA],
-        valid_schedule,
-        [STORAGE_TIME_RANGE_SCHEMA],
-    )
-    for day in CONF_ALL_DAYS
-}
-
 # Validate YAML config
 CONFIG_SCHEMA = probatio.Schema(
     {DOMAIN: cv.schema_with_slug_keys(probatio.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
     extra=probatio.ALLOW_EXTRA,
-)
-# Validate storage config
-STORAGE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
-)
-# Validate + transform entity config
-ENTITY_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
 )
 
 
@@ -243,173 +142,3 @@ class ScheduleStorageCollection(DictStorageCollection):
         if data := await super()._async_load_data():
             data["items"] = [STORAGE_SCHEMA(item) for item in data["items"]]
         return data
-
-
-class Schedule(CollectionEntity):
-    """Schedule entity."""
-
-    _entity_component_unrecorded_attributes = frozenset(
-        {
-            ScheduleEntityCapabilityAttribute.EDITABLE,
-            ScheduleEntityStateAttribute.NEXT_EVENT,
-        }
-    )
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-    _attr_state: Literal["on", "off"]
-    _config: ConfigType
-    _next: datetime
-    _unsub_update: Callable[[], None] | None = None
-
-    def __init__(self, config: ConfigType, editable: bool) -> None:
-        """Initialize a schedule."""
-        self._config = ENTITY_SCHEMA(config)
-        self._attr_capability_attributes = {
-            ScheduleEntityCapabilityAttribute.EDITABLE: editable
-        }
-        self._attr_icon = self._config.get(CONF_ICON)
-        self._attr_name = self._config[CONF_NAME]
-        self._attr_unique_id = self._config[CONF_ID]
-
-        # Exclude any custom attributes that may be present
-        # on time ranges from recording.
-        self._unrecorded_attributes = self.all_custom_data_keys()
-        self._Entity__combined_unrecorded_attributes = (
-            self._entity_component_unrecorded_attributes | self._unrecorded_attributes
-        )
-
-    @classmethod
-    @override
-    def from_storage(cls, config: ConfigType) -> Schedule:
-        """Return entity instance initialized from storage."""
-        return cls(config, editable=True)
-
-    @classmethod
-    @override
-    def from_yaml(cls, config: ConfigType) -> Schedule:
-        """Return entity instance initialized from yaml."""
-        schedule = cls(config, editable=False)
-        schedule.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        return schedule
-
-    @override
-    async def async_update_config(self, config: ConfigType) -> None:
-        """Handle when the config is updated."""
-        self._config = ENTITY_SCHEMA(config)
-        self._attr_icon = config.get(CONF_ICON)
-        self._attr_name = config[CONF_NAME]
-        self._clean_up_listener()
-        self._update()
-
-    @callback
-    def _clean_up_listener(self) -> None:
-        """Remove the update timer."""
-        if self._unsub_update is not None:
-            self._unsub_update()
-            self._unsub_update = None
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        self.async_on_remove(self._clean_up_listener)
-        self._update()
-
-    def get_schedule(self) -> ConfigType:
-        """Return the schedule."""
-        return {d: self._config[d] for d in WEEKDAY_TO_CONF.values()}
-
-    @callback
-    def _update(self, _: datetime | None = None) -> None:
-        """Update the states of the schedule."""
-        now = dt_util.now()
-        todays_schedule = self._config.get(WEEKDAY_TO_CONF[now.weekday()], [])
-
-        # Determine current schedule state
-        for time_range in todays_schedule:
-            # The current time should be greater or equal to CONF_FROM.
-            if now.time() < time_range[CONF_FROM]:
-                continue
-            # The current time should be smaller (and not equal) to CONF_TO.
-            # Note that any time in the day is treated as smaller than time.max.
-            if now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max:
-                self._attr_state = STATE_ON
-                current_data = time_range.get(CONF_DATA)
-                break
-        else:
-            self._attr_state = STATE_OFF
-            current_data = None
-
-        # Find next event in the schedule, loop over each day (starting with
-        # the current day) until the next event has been found.
-        next_event = None
-        for day in range(8):  # 8 because we need to search today's weekday next week
-            day_schedule = self._config.get(
-                WEEKDAY_TO_CONF[(now.weekday() + day) % 7], []
-            )
-            times = sorted(
-                itertools.chain(
-                    *[
-                        [time_range[CONF_FROM], time_range[CONF_TO]]
-                        for time_range in day_schedule
-                    ]
-                )
-            )
-
-            if next_event := next(
-                (
-                    possible_next_event
-                    for timestamp in times
-                    if (
-                        possible_next_event := (
-                            datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
-                            + timedelta(days=day)
-                            if timestamp != time.max
-                            # Special case for midnight of the following day.
-                            else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)
-                            + timedelta(days=day + 1)
-                        )
-                    )
-                    > now
-                ),
-                None,
-            ):
-                # We have found the next event in this day, stop searching.
-                break
-
-        self._attr_extra_state_attributes = {
-            ScheduleEntityStateAttribute.NEXT_EVENT: next_event,
-        }
-
-        if current_data:
-            # Add each key/value pair in the data to the entity's state attributes
-            self._attr_extra_state_attributes.update(current_data)
-
-        self.async_write_ha_state()
-
-        if next_event:
-            self._unsub_update = async_track_point_in_utc_time(
-                self.hass,
-                self._update,
-                next_event,
-            )
-
-    def all_custom_data_keys(self) -> frozenset[str]:
-        """Return the set of all currently used custom data attribute keys."""
-        data_keys: set[str] = set()
-
-        for weekday in WEEKDAY_TO_CONF.values():
-            if not (weekday_config := self._config.get(weekday)):
-                continue  # this weekday is not configured
-
-            for time_range in weekday_config:
-                time_range_custom_data = time_range.get(CONF_DATA)
-
-                if not time_range_custom_data or not isinstance(
-                    time_range_custom_data, dict
-                ):
-                    continue  # this time range has no custom data, or it is not a dict
-
-                data_keys.update(time_range_custom_data.keys())
-
-        return frozenset(data_keys)

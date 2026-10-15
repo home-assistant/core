@@ -37,6 +37,7 @@ from uiprotect.data.public_devices import (
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
     PublicChime,
+    PublicDeviceModel,
     PublicHdrMode,
     PublicLcdMessage,
     PublicLight,
@@ -290,6 +291,16 @@ def public_rtsps_for(camera: Camera) -> RTSPSStreams:
     return RTSPSStreams(**urls)
 
 
+def bind_public_device_properties(public: Mock, model: type[PublicDeviceModel]) -> None:
+    """Evaluate the model's own reachability and model name.
+
+    A spec mock would otherwise return truthy mocks for these properties.
+    """
+    mock_type = type(public)
+    mock_type.is_reachable = model.is_reachable
+    mock_type.model_name = property(lambda obj: obj.type or model._MODEL_NAME)
+
+
 _PUBLIC_STORE_ATTRS: dict[ModelType, str] = {
     ModelType.CAMERA: "cameras",
     ModelType.LIGHT: "lights",
@@ -298,6 +309,8 @@ _PUBLIC_STORE_ATTRS: dict[ModelType, str] = {
     ModelType.VIEWPORT: "viewers",
     ModelType.FOB: "fobs",
     ModelType.LINK_STATION: "alarm_hubs",
+    ModelType.SIREN: "sirens",
+    ModelType.RELAY: "relays",
 }
 
 
@@ -308,7 +321,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens", "arm_profiles"):
+    for attr in (*_PUBLIC_STORE_ATTRS.values(), "arm_profiles"):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -327,7 +340,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     def _all_devices(*, include_nvr: bool = False) -> Iterator[Any]:
         if include_nvr and pb.nvr is not None:
             yield pb.nvr
-        for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens"):
+        for attr in _PUBLIC_STORE_ATTRS.values():
             yield from getattr(pb, attr).values()
 
     pb.store_for = Mock(side_effect=_store_for)
@@ -403,6 +416,7 @@ def make_public_sensor(
     advertises every capability.
     """
     public = Mock(spec=PublicSensor)
+    bind_public_device_properties(public, PublicSensor)
     public.id = sensor.id
     public.mac = sensor.mac
     public.name = sensor.name
@@ -542,6 +556,7 @@ def make_public_light(
     lds = light.light_device_settings
     lms = light.light_mode_settings
     public = Mock(spec=PublicLight)
+    bind_public_device_properties(public, PublicLight)
     public.id = light.id
     public.mac = light.mac
     public.name = light.name
@@ -627,6 +642,7 @@ def make_public_camera(
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
+    is_mic_enabled: bool = True,
     hdr_type: PublicHdrMode | None = None,
     lcd_message: PublicLcdMessage | None = None,
     active_patrol_slot: int | None = None,
@@ -646,6 +662,7 @@ def make_public_camera(
     the test. ``lcd_message`` defaults to none for the same reason.
     """
     public = Mock(spec=PublicCamera)
+    bind_public_device_properties(public, PublicCamera)
     public.id = camera.id
     public.mac = camera.mac
     public.name = camera.name
@@ -662,6 +679,7 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.is_mic_enabled = is_mic_enabled
     public.lcd_message = lcd_message
     public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
     # The doorbell text falls back to the default message of the private NVR.
@@ -836,6 +854,7 @@ def make_public_chime(
 ) -> Mock:
     """Build a public-API chime mirroring the private fixture's ring settings."""
     public = Mock(spec=PublicChime)
+    bind_public_device_properties(public, PublicChime)
     public.id = chime.id
     public.mac = chime.mac
     public.name = chime.name

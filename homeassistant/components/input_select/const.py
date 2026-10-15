@@ -14,6 +14,8 @@ DATA_INPUT_SELECT: HassKey[InputSelectData] = HassKey(DOMAIN)
 
 SERVICE_SET_OPTIONS: Final = "set_options"
 
+CONF_INITIAL = "initial"
+
 
 class InputSelectEntityStateAttribute(StrEnum):
     """State attributes for input select entities."""
