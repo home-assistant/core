@@ -9,11 +9,12 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_ACTIVITY,
     ATTR_ACTIVITY_LIST,
     ATTR_ALTERNATIVE,
@@ -55,6 +56,40 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+
+__all__ = [
+    "ATTR_ACTIVITY",
+    "ATTR_ACTIVITY_LIST",
+    "ATTR_ALTERNATIVE",
+    "ATTR_COMMAND",
+    "ATTR_COMMAND_TYPE",
+    "ATTR_CURRENT_ACTIVITY",
+    "ATTR_DELAY_SECS",
+    "ATTR_DEVICE",
+    "ATTR_HOLD_SECS",
+    "ATTR_NUM_REPEATS",
+    "ATTR_TIMEOUT",
+    "DEFAULT_DELAY_SECS",
+    "DEFAULT_HOLD_SECS",
+    "DEFAULT_NUM_REPEATS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_DELETE_COMMAND",
+    "SERVICE_LEARN_COMMAND",
+    "SERVICE_SEND_COMMAND",
+    "SERVICE_SYNC",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_OFF",
+    "STATE_ON",
+    "RemoteEntity",
+    "RemoteEntityDescription",
+    "RemoteEntityFeature",
+    "RemoteEntityStateAttribute",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
