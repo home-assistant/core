@@ -3334,3 +3334,82 @@ async def test_cost_sensor_gas_source_moved_to_heat(
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, "sensor.pellets_energy_cost")
     assert statistics["stat"]["sum"] == 100.0
+
+
+async def test_cost_sensor_heat_saved_with_only_number_price(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a heat source saved without entity_energy_price calculates costs."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    hass.states.async_set("sensor.heat_consumption", 100, energy_attributes)
+    await setup_integration(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption",
+                    "number_energy_price": 0.5,
+                }
+            ],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["energy_sources"][0]["entity_energy_price"] is None
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.heat_consumption", 200, energy_attributes)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.heat_consumption_cost").state == "50.0"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_cost_sensor_heat_moved_to_gas_and_back(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test moving a heat source to gas and back keeps the heat cost sensor."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    source = {
+        "type": "heat",
+        "stat_energy_from": "sensor.pellets_energy",
+        "stat_cost": None,
+        "entity_energy_price": None,
+        "number_energy_price": 0.5,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(source)
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+    hass.states.async_set("sensor.pellets_energy", 100, energy_attributes)
+
+    await setup_integration(hass)
+    assert hass.states.get("sensor.pellets_energy_cost").state == "0.0"
+
+    manager = await async_get_manager(hass)
+    await manager.async_update({"energy_sources": [{**source, "type": "gas"}]})
+    await hass.async_block_till_done()
+    await manager.async_update({"energy_sources": [source]})
+    await hass.async_block_till_done()
+
+    assert "Error" not in caplog.text
+    hass.states.async_set("sensor.pellets_energy", 200, energy_attributes)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.pellets_energy_cost").state == "50.0"

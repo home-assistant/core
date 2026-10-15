@@ -299,18 +299,20 @@ class SensorManager:
             return
 
         entity_registry = er.async_get(self.hass)
+        heat_unique_id = cost_sensor_unique_id(
+            self.hass, stat_energy, "heat", adapter.entity_id_suffix
+        )
+        # A heat source moved to gas and back still has its heat entry
+        if entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, heat_unique_id):
+            return
+
         gas_unique_id = cost_sensor_unique_id(
             self.hass, stat_energy, "gas", adapter.entity_id_suffix
         )
         if entity_id := entity_registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, gas_unique_id
         ):
-            entity_registry.async_update_entity(
-                entity_id,
-                new_unique_id=cost_sensor_unique_id(
-                    self.hass, stat_energy, "heat", adapter.entity_id_suffix
-                ),
-            )
+            entity_registry.async_update_entity(entity_id, new_unique_id=heat_unique_id)
 
     @callback
     def _process_grid_export_sensor(
