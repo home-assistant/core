@@ -305,7 +305,7 @@ async def test_timer_countdown_sends_remaining_and_expires(
     freezer: FrozenDateTimeFactory,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
-    """Full-state sends preserve timer deadline and clear an expired timer."""
+    """Full-state sends preserve timer deadline; overdue setters flip power off."""
     await _turn_on_cool(hass)
     await hass.services.async_call(
         "number",
@@ -321,6 +321,7 @@ async def test_timer_countdown_sends_remaining_and_expires(
         blocking=True,
     )
     assert _last_command(mock_infrared_emitter_entity).timer_hours == 1
+    sends_before_expiry = len(mock_infrared_emitter_entity.send_command_calls)
 
     freezer.move_to(freezer() + timedelta(hours=1))
     await hass.services.async_call(
@@ -329,7 +330,10 @@ async def test_timer_countdown_sends_remaining_and_expires(
         {ATTR_ENTITY_ID: _CLIMATE, "temperature": 26},
         blocking=True,
     )
-    assert _last_command(mock_infrared_emitter_entity).timer_hours is None
+    # Past the deadline the lock-held reconcile assumes timer-off before any
+    # temperature frame, so the unit stays off and no power-on IR is sent.
+    assert len(mock_infrared_emitter_entity.send_command_calls) == sends_before_expiry
+    assert hass.states.get(_CLIMATE).state == HVACMode.OFF
     assert (
         hass.config_entries.async_get_entry(ENTRY_ID).runtime_data.timer_hours is None
     )

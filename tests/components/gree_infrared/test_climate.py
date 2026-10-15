@@ -2289,38 +2289,37 @@ async def test_detached_climate_ignores_queued_received_signal(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
-@pytest.mark.parametrize("cancel_send", [False, True])
 @pytest.mark.usefixtures("init_integration")
-async def test_failed_send_after_timer_deadline_preserves_cleanup(
+async def test_fan_edit_after_timer_deadline_reconciles_without_send(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     freezer: FrozenDateTimeFactory,
-    cancel_send: bool,
 ) -> None:
-    """A send built after expiry cannot discard the pending timer publication."""
+    """Past the deadline, a fan edit flips assumed power before building a frame."""
     climate = mock_config_entry.runtime_data.climate
     assert climate is not None
     await climate.async_set_hvac_mode(HVACMode.COOL)
     await climate.async_set_timer_hours(0.5)
     deadline = climate._timer_deadline
     assert deadline is not None
+    sends_before = len(mock_infrared_emitter_entity.send_command_calls)
     freezer.move_to(deadline)
 
-    with (
-        patch.object(
-            mock_infrared_emitter_entity,
-            "async_send_command",
-            side_effect=asyncio.CancelledError if cancel_send else HomeAssistantError,
-        ),
-        pytest.raises(asyncio.CancelledError if cancel_send else HomeAssistantError),
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError("must not send"),
     ):
         await climate.async_set_fan_mode(FAN_LOW)
 
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.OFF
     assert hass.states.get("number.gree_ac_timer").state == "0.0"
     assert climate._timer_deadline is None
+    assert climate._attr_fan_mode == FAN_LOW
+    assert len(mock_infrared_emitter_entity.send_command_calls) == sends_before
 
 
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
@@ -2364,3 +2363,42 @@ async def test_timer_expiry_updates_power_before_next_command(
     assert not command.power
     assert command.mode is GreeAcMode.COOL
     assert command.timer_hours is None
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("init_integration")
+async def test_overdue_timer_reconciled_before_queued_fan_edit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A fan edit waiting ahead of expiry cleanup must not restart the unit."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    deadline = climate._timer_deadline
+    assert deadline is not None
+    sends_before = len(mock_infrared_emitter_entity.send_command_calls)
+
+    await climate._state.command_lock.acquire()
+    try:
+        fan_task = hass.async_create_task(climate.async_set_fan_mode(FAN_LOW))
+        await asyncio.sleep(0)
+        freezer.move_to(deadline)
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+    finally:
+        climate._state.command_lock.release()
+
+    await fan_task
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.OFF
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    assert climate._timer_deadline is None
+    assert climate._attr_fan_mode == FAN_LOW
+    # Fan edit while assumed off updates local fan only; no power-on frame.
+    assert len(mock_infrared_emitter_entity.send_command_calls) == sends_before
