@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_a_dongle": "[%key:component::neosol::config::error::not_a_dongle%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_a_dongle": "The device on this serial port did not identify itself as a Neosol dongle.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "usb_confirm": {
+        "description": "Do you want to set up the Neosol dongle that was just plugged in?"
+      },
+      "user": {
+        "data": {
+          "device": "Serial port"
+        },
+        "data_description": {
+          "device": "The serial port of the dongle. It is checked before the setup completes."
+        },
+        "description": "Select the serial port your Neosol dongle is plugged into."
+      }
+    }
+  },
+  "device": {
+    "dongle": {
+      "name": "Neosol dongle"
+    },
+    "shutter": {
+      "name": "Shutter {channel}"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not talk to the Neosol dongle on {port}: {error}"
+    },
+    "channel_table_failed": {
+      "message": "Could not read the channel list from the Neosol dongle: {error}"
+    },
+    "lost_connection": {
+      "message": "Lost the connection to the Neosol dongle: {error}"
+    },
+    "send_failed": {
+      "message": "Could not transmit on channel {channel}: {error}"
+    }
+  }
+}

@@ -45,6 +45,13 @@ USB = [
         "vid": "0572",
     },
     {
+        "description": "*keeloq*",
+        "domain": "neosol",
+        "manufacturer": "*profalux*",
+        "pid": "0003",
+        "vid": "10C4",
+    },
+    {
         "description": "*raven*",
         "domain": "rainforest_raven",
         "manufacturer": "*rainforest*",
@@ -216,6 +223,7 @@ USB_DEPENDENTS = [
     "marantz_rs232",
     "modem_callerid",
     "monoprice",
+    "neosol",
     "rainforest_raven",
     "rfxtrx",
     "route_b_smart_meter",

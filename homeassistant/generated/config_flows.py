@@ -534,6 +534,7 @@ FLOWS = {
         "neato",
         "nederlandse_spoorwegen",
         "neopool",
+        "neosol",
         "ness_alarm",
         "nest",
         "netatmo",
