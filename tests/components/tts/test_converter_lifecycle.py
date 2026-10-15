@@ -519,7 +519,10 @@ async def test_second_cancel_during_prespawn_close_preserves_primary_and_retriev
     try:
         with (
             patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
-            patch("homeassistant.components.tts._async_prepend_audio", return_value=Wrapper()),
+            patch(
+                "homeassistant.components.tts._async_prepend_audio",
+                return_value=Wrapper(),
+            ),
         ):
             owner = asyncio.create_task(anext(gen))
             await asyncio.wait_for(pulling.wait(), 3)
@@ -547,7 +550,9 @@ async def test_second_cancel_during_prespawn_close_preserves_primary_and_retriev
             if late_close == "error":
                 assert any(str(close_failure) in r.message for r in caplog.records)
             else:
-                assert not any("cleanup task failed" in r.message for r in caplog.records)
+                assert not any(
+                    "cleanup task failed" in r.message for r in caplog.records
+                )
     finally:
         release.set()
         if owner is not None:
@@ -1851,6 +1856,135 @@ async def test_failed_child_during_exhausted_source_close_is_primary(
         if owner is not None:
             await asyncio.gather(owner, return_exceptions=True)
         await asyncio.wait_for(source.closed.wait(), 5)
+
+
+@pytest.mark.parametrize("late_close", ["healthy", "error"])
+async def test_owner_cancel_during_final_exhausted_writer_wait_is_bounded(
+    ffmpeg_ready: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    late_close: str,
+) -> None:
+    """A zero-exit child cannot trap its owner in the writer's held close."""
+    close_entered = asyncio.Event()
+    close_cancelled = asyncio.Event()
+    final_wait = asyncio.Event()
+    release = asyncio.Event()
+    closed = asyncio.Event()
+    late_failure = RuntimeError("late exhausted source close sentinel")
+    processes = []
+    close_owner: asyncio.Task | None = None
+    owner: asyncio.Task | None = None
+    native_spawn = asyncio.create_subprocess_exec
+    native_wait = asyncio.wait
+
+    class Source(AsyncGenerator[bytes]):
+        def __init__(self) -> None:
+            self.pulled = False
+
+        async def __anext__(self) -> bytes:
+            if not self.pulled:
+                self.pulled = True
+                return b"R" * 100
+            raise StopAsyncIteration
+
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
+            return await anext(self)
+
+        async def athrow(self, *args) -> bytes:
+            raise StopAsyncIteration
+
+        async def aclose(self) -> None:
+            nonlocal close_owner
+            close_owner = asyncio.current_task()
+            close_entered.set()
+            while not release.is_set():
+                try:
+                    await release.wait()
+                except asyncio.CancelledError:
+                    close_cancelled.set()
+            closed.set()
+            if late_close == "error":
+                raise late_failure
+
+    async def spawn(*args, **kwargs):
+        process = await native_spawn(
+            sys.executable,
+            "-c",
+            "import sys;sys.stdin.buffer.read();sys.exit(0)",
+            **kwargs,
+        )
+        processes.append(process)
+        return process
+
+    class AsyncioProbe:
+        """Signal the last EOF wake; delegate all other asyncio operations."""
+
+        def __getattr__(self, name):
+            return getattr(asyncio, name)
+
+        async def wait(self, futures, **kwargs):
+            done, pending = await native_wait(futures, **kwargs)
+            if (
+                asyncio.current_task() is owner
+                and processes
+                and processes[0].returncode == 0
+                and close_entered.is_set()
+                and any(
+                    task.get_name() == "tts_ffmpeg_stdout"
+                    and task in done
+                    and task.result() == b""
+                    for task in futures
+                )
+            ):
+                # Once this EOF wake resumes, the zero-exit/exhausted path's
+                # next pending operation is the direct final writer await.
+                asyncio.get_running_loop().call_soon(final_wait.set)
+            return done, pending
+
+    source = Source()
+    try:
+        with (
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch.object(tts, "asyncio", AsyncioProbe()),
+        ):
+            owner = asyncio.create_task(
+                _collect(tts._async_convert_audio(ffmpeg_ready, None, source, "wav"))
+            )
+            await asyncio.wait_for(close_entered.wait(), 3)
+            await asyncio.wait_for(final_wait.wait(), 3)
+            assert source.pulled and not closed.is_set() and not owner.done()
+            assert processes[0].returncode == 0  # Actual OS exit, not a mock.
+            assert close_owner is not None and not close_owner.done()
+            owner.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await _observe(owner, 1.5)
+            assert close_cancelled.is_set()
+            assert not release.is_set() and not closed.is_set()
+            assert close_owner in ffmpeg_ready._background_tasks
+            assert not close_owner.done()
+            assert processes[0].returncode == 0
+            release.set()  # Only after finite owner outcome and HA ownership.
+            await asyncio.wait({close_owner}, timeout=3)
+            assert closed.is_set() and close_owner.done()
+            await asyncio.sleep(0)
+            if late_close == "error":
+                assert any(str(late_failure) in r.message for r in caplog.records)
+            else:
+                assert not any(
+                    "cleanup task failed" in r.message for r in caplog.records
+                )
+    finally:
+        release.set()
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        if close_owner is not None:
+            await asyncio.gather(close_owner, return_exceptions=True)
 
 
 async def test_normal_child_exit_waits_for_exhausted_source_close(

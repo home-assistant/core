@@ -863,7 +863,11 @@ async def _async_convert_audio(  # noqa: C901
         if writer_task is not None and not input_exhausted:
             raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
         if writer_task is not None:
-            await writer_task
+            # An owner cancellation must not reach a writer whose source close
+            # can suppress it indefinitely; the supervised teardown retrieves
+            # a late writer result after this wait is interrupted.
+            await asyncio.wait({writer_task})
+            writer_task.result()
         await stderr_task
         complete = True
     finally:
