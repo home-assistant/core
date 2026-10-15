@@ -1168,9 +1168,15 @@ class DefaultAgent(ConversationEntity):
 
     @override
     async def async_prepare(self, language: str | None = None) -> None:
-        """Load intents for a language."""
+        """Build what recognizing a sentence in a language needs."""
         if language is None:
             language = self.hass.config.language
+
+        # Sentence triggers do not depend on the language intents
+        if self._trigger_intents is None and self._trigger_intents_config.get(
+            "intents"
+        ):
+            self._rebuild_trigger_intents()
 
         lang_intents = await self.async_get_or_load_intents(language)
 
@@ -1179,6 +1185,11 @@ class DefaultAgent(ConversationEntity):
             return
 
         await self._make_slot_lists()
+        # Recognition builds this in the executor, but it reads loop-only state
+        self._get_unexposed_entity_names()
+
+        if self._gazetteer.supports(language):
+            await self._gazetteer.async_get_matcher()
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
