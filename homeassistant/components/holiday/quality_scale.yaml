@@ -63,7 +63,9 @@ rules:
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: done
+  entity-translations:
+    status: exempt
+    comment: The only entity uses the device name directly via _attr_name = None.
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: done
