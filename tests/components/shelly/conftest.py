@@ -537,6 +537,15 @@ Shelly.emitEvent("script_start");
     .replace(VAR_VERSION, str(BLE_SCAN_RESULT_VERSION)),
 ]
 
+MOCK_LEDSTRIP_EFFECTS = {
+    "solid": {"name": "Solid Color", "controls": ["rgb"]},
+    "blink": {"name": "Blink", "controls": ["rgb", "bg_rgb", "speed", "intensity"]},
+    "fade": {"name": "Fade", "controls": ["rgb", "speed"]},
+    "rainbow": {"name": "Rainbow", "controls": ["speed", "reverse"]},
+    "colorwipe": {"name": "Color Wipe", "controls": ["rgb", "speed", "reverse"]},
+    "ddp": {"name": "DDP Receiver", "controls": []},
+}
+
 
 @pytest.fixture(autouse=True)
 def mock_coap():
@@ -636,6 +645,7 @@ def _mock_rpc_device(version: str | None = None):
         ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
+        ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

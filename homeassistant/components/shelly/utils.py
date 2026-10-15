@@ -26,6 +26,7 @@ from aioshelly.const import (
     ShellyDevice,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
+from aioshelly.rpc_device.models import ShellyLedStripEffect
 from yarl import URL
 
 from homeassistant.components import network
@@ -807,6 +808,20 @@ async def get_rpc_scripts_event_types(
         script_events[script_id] = await get_rpc_script_event_types(device, script_id)
 
     return script_events
+
+
+def is_rpc_ledstrip_control_available(
+    effects: dict[str, ShellyLedStripEffect] | None,
+    status: dict[str, Any],
+    control: str,
+) -> bool:
+    """Return True if the current effect supports the control and reports it."""
+    return (
+        effects is not None
+        and (effect := effects.get(status["effect"])) is not None
+        and control in effect["controls"]
+        and control in status
+    )
 
 
 def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
