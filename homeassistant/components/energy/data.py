@@ -601,9 +601,11 @@ HEAT_SOURCE_SCHEMA = probatio.All(
             probatio.Required("type"): "heat",
             probatio.Required("stat_energy_from"): str,
             probatio.Optional("stat_rate"): str,
-            probatio.Optional("stat_cost"): probatio.Any(str, None),
-            probatio.Optional("entity_energy_price"): probatio.Any(str, None),
-            probatio.Optional("number_energy_price"): probatio.Any(
+            probatio.Optional("stat_cost", default=None): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price", default=None): probatio.Any(
+                str, None
+            ),
+            probatio.Optional("number_energy_price", default=None): probatio.Any(
                 probatio.Coerce(float), None
             ),
             probatio.Optional("name"): str,

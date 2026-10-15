@@ -1373,24 +1373,32 @@ async def test_validation_heat(
                     "type": "heat",
                     "stat_energy_from": "sensor.heat_meter",
                     "stat_rate": "sensor.heat_power",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
                     "number_energy_price": 0.12,
                 },
                 {
                     "type": "heat",
                     "stat_energy_from": "sensor.heating_oil",
                     "stat_rate": "sensor.heating_oil_flow",
+                    "stat_cost": None,
                     "entity_energy_price": "sensor.heating_oil_price",
+                    "number_energy_price": None,
                 },
                 {
                     "type": "heat",
                     "stat_energy_from": "sensor.pellets",
+                    "stat_cost": None,
                     "entity_energy_price": "sensor.pellets_price",
+                    "number_energy_price": None,
                 },
                 {
                     "type": "heat",
                     "stat_energy_from": "sensor.heat_wrong_unit",
                     "stat_rate": "sensor.heat_rate_wrong_unit",
+                    "stat_cost": None,
                     "entity_energy_price": "sensor.heat_price_wrong_unit",
+                    "number_energy_price": None,
                 },
             ]
         }
