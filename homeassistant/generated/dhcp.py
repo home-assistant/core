@@ -336,6 +336,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "electrasmart",
+        "hostname": "elrssid*",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
