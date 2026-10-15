@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
     """Set up an iCloud account from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -63,27 +63,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
 
     await hass.async_add_executor_job(account.setup)
 
-    # Refreshed before the platforms are forwarded so the calendars and lists
-    # are known by the time their platforms set up. This deliberately does not
-    # use async_config_entry_first_refresh: an account that fails to
-    # authenticate still loads and starts a reauth flow, and a calendar or
-    # Reminders outage should not take device tracking down with it. Anything
-    # missing from the first refresh appears on a later one through the
-    # coordinator listener.
     account.calendar_coordinator = IcloudCalendarCoordinator(hass, entry)
-    await account.calendar_coordinator.async_refresh()
-
     account.reminders_coordinator = IcloudRemindersCoordinator(hass, entry)
-    await account.reminders_coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_setup_photo_cache(hass, account)
 
-    return True
+    # The first calendars and reminders fetch can take minutes on a large
+    # account, which used to stall startup here, so it runs as a background
+    # task instead. The platforms registered their coordinator listeners
+    # during setup above, so whatever the first fetch brings back appears as it
+    # lands and lists that show up on later polls are added then. This
+    # deliberately does not use async_config_entry_first_refresh: an account
+    # that fails to authenticate still loads and starts a reauth flow, and a
+    # calendar or Reminders outage should not take device tracking down with it.
+    entry.async_create_background_task(
+        hass, _async_first_refresh(account), "icloud calendars and reminders refresh"
+    )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
+async def _async_first_refresh(account: IcloudAccount) -> None:
+    """Run the first calendars and reminders refresh off the setup path."""
+    assert account.calendar_coordinator is not None
+    assert account.reminders_coordinator is not None
+    await account.calendar_coordinator.async_refresh()
+    await account.reminders_coordinator.async_refresh()
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)

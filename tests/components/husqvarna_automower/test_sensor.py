@@ -1,6 +1,6 @@
 """Tests for sensor platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
@@ -13,6 +13,7 @@ from aioautomower.model import (
     WorkArea,
     WorkAreaType,
 )
+from aioautomower.model.model_mower import UNKNOWN_ERROR
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -65,7 +66,7 @@ async def test_cutting_blade_usage_time_sensor(
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_next_start_sensor(
     hass: HomeAssistant,
@@ -290,6 +291,7 @@ async def test_error_sensor(
         (MowerStates.ERROR, None, MowerStates.ERROR.lower()),
         (MowerStates.ERROR_AT_POWER_UP, None, MowerStates.ERROR_AT_POWER_UP.lower()),
         (MowerStates.FATAL_ERROR, None, MowerStates.FATAL_ERROR.lower()),
+        (MowerStates.ERROR, UNKNOWN_ERROR, STATE_UNKNOWN),
     ):
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].mower.error_key = error_key
@@ -298,6 +300,7 @@ async def test_error_sensor(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.garden_test_mower_1_error")
+        assert state is not None
         assert state.state == expected_state
 
 

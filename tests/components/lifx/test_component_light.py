@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from lifx import HSBK, CeilingLight, Device, LifxError
 import pytest
@@ -18,6 +18,7 @@ from homeassistant.components.lifx.const import (
     SERVICE_SET_HEV_CYCLE_STATE,
     SERVICE_SET_STATE,
 )
+from homeassistant.components.lifx.light import LIFXComponentLight
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_STEP_PCT,
@@ -164,6 +165,40 @@ async def test_components_disabled_by_default(
         assert entry.unique_id == f"{SERIAL}_{key}"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         assert hass.states.get(entity_id_for(key)) is None
+
+
+@pytest.mark.parametrize(("factory", "keys", "key", "turn_on", "turn_off"), ON_OFF)
+async def test_component_entity_id_changes_in_place(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    factory: Callable[[], Device],
+    keys: tuple[str, ...],
+    key: str,
+    turn_on: str,
+    turn_off: str,
+) -> None:
+    """Test a component keeps working under its new entity_id after a rename."""
+    device = await _setup_components(hass, entity_registry, factory, keys)
+    setattr(device.state, f"{key}_is_on", False)
+    await async_trigger_update(hass)
+    new_entity_id = f"light.renamed_{key}"
+
+    # An in-place rename does not add the entity to hass again
+    with patch.object(LIFXComponentLight, "async_added_to_hass") as added:
+        entity_registry.async_update_entity(
+            entity_id_for(key), new_entity_id=new_entity_id
+        )
+        await hass.async_block_till_done()
+    added.assert_not_called()
+
+    assert hass.states.get(entity_id_for(key)) is None
+    state = hass.states.get(new_entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: new_entity_id}, blocking=True
+    )
+    getattr(device, turn_on).assert_awaited_once()
 
 
 @pytest.mark.parametrize(("factory", "keys"), COMPONENTS)
@@ -330,7 +365,7 @@ async def test_uplight_turn_on_with_brightness(
 
     await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, "uplight", brightness=255)
 
-    device.turn_uplight_on.assert_awaited_once_with(HSBK(0.0, 0.0, 1.0, 3500), 0.0)
+    device.turn_uplight_on.assert_awaited_once_with([HSBK(0.0, 0.0, 1.0, 3500)], 0.0)
 
 
 @pytest.mark.parametrize(("factory", "keys", "key", "field", "turn_on"), MANY_ZONE)
@@ -475,7 +510,7 @@ async def test_turn_on_with_a_brightness_step(
         **{ATTR_BRIGHTNESS_STEP_PCT: 10},
     )
 
-    color, _ = device.turn_uplight_on.await_args.args
+    (color,), _ = device.turn_uplight_on.await_args.args
     assert color.brightness == pytest.approx(0.6, abs=0.01)
 
 
@@ -804,7 +839,7 @@ async def test_restored_colors_used_after_restart(
         blocking=True,
     )
 
-    device.turn_uplight_on.assert_awaited_once_with(HSBK(30.0, 0.5, 0.9, 3500), 0.0)
+    device.turn_uplight_on.assert_awaited_once_with([HSBK(30.0, 0.5, 0.9, 3500)], 0.0)
 
 
 @pytest.mark.parametrize(
@@ -866,7 +901,7 @@ async def test_dark_restored_colors_not_merged_onto(
 
     await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, "uplight", hs_color=(120.0, 50.0))
 
-    color, _ = device.turn_uplight_on.await_args.args
+    (color,), _ = device.turn_uplight_on.await_args.args
     assert color.hue == 120.0
     # The downlight's brightness is borrowed instead
     assert color.brightness == pytest.approx(0.5, abs=0.01)

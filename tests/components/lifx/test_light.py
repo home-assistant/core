@@ -38,6 +38,7 @@ from homeassistant.components.lifx.const import (
     ATTR_SKY_TYPE,
     ATTR_SPEED,
     ATTR_THEME,
+    DATA_LIFX_MANAGER,
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
@@ -119,6 +120,7 @@ OTHER_SERIAL = "d073d5aabbcc"
 OTHER_MAC_ADDRESS = "d0:73:d5:aa:bb:cc"
 OTHER_LABEL = "Other Bulb"
 OTHER_ENTITY_ID = "light.my_group_other_bulb"
+RENAMED_ENTITY_ID = "light.renamed_bulb"
 
 pytestmark = pytest.mark.usefixtures("mock_effect_conductor")
 
@@ -364,6 +366,42 @@ async def test_effect_pulse_uses_public_effect(
     assert effect.cycles == 4
     assert effect.color == HSBK(120.0, 0.5, 128 / 255, 3500)
     assert participants == [device]
+
+
+async def test_effect_service_follows_renamed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_effect_conductor: MagicMock,
+) -> None:
+    """Test effect services target a light by its new entity_id after a rename."""
+    device = create_mock_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    manager = hass.data[DATA_LIFX_MANAGER]
+
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    assert set(manager.entity_id_to_coordinator) == {RENAMED_ENTITY_ID}
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_PULSE,
+        {ATTR_ENTITY_ID: RENAMED_ENTITY_ID},
+        blocking=True,
+    )
+    _, participants = mock_effect_conductor.start.await_args.args
+    assert participants == [device]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_PULSE,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    # Unloading must unregister the new entity_id, not the old one
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert manager.entity_id_to_coordinator == {}
 
 
 async def test_effect_pulse_reads_color_before_merging(

@@ -8,10 +8,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import BaseAutomationEntity
+    from .entity import BaseAutomationEntity
 
 CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
+
+ATTR_SOURCE = "source"
+EVENT_AUTOMATION_RELOADED = "automation_reloaded"
+EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
 

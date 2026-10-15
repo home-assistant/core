@@ -21,6 +21,7 @@ from homeassistant.components.fronius.const import (
 )
 from homeassistant.components.fronius.coordinator import (
     FroniusModbusInverterUpdateCoordinator,
+    FroniusModbusSettingsUpdateCoordinator,
 )
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -681,6 +682,7 @@ async def test_turning_the_setting_off_frees_a_running_limit(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a limit stops reverting as soon as the setting is turned off.
 
@@ -704,8 +706,10 @@ async def test_turning_the_setting_off_frees_a_running_limit(
         await hass.async_block_till_done()
 
     assert config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT] is False
+    freezer.tick(FroniusModbusSettingsUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
-    await coordinator.async_refresh()
     controls = coordinator.modbus_inverter.controls
     assert controls.enabled is True
     assert controls.revert_seconds == 0

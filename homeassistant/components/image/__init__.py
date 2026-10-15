@@ -32,7 +32,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_FILENAME,
     DATA_COMPONENT,
     DOMAIN,
@@ -78,6 +78,25 @@ MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
     b"\xff\xd8\xff\xe2": "image/jpeg",
 }
 
+__all__ = [
+    "ATTR_FILENAME",
+    "DEFAULT_CONTENT_TYPE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "GET_IMAGE_TIMEOUT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SNAPSHOT",
+    "Image",
+    "ImageContentTypeError",
+    "ImageEntity",
+    "ImageEntityDescription",
+    "ImageEntityStateAttribute",
+    "async_get_image",
+    "infer_image_type",
+    "valid_image_content_type",
+]
+
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
@@ -109,13 +128,17 @@ def infer_image_type(content: bytes) -> str | None:
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
-    with suppress(asyncio.CancelledError, TimeoutError, ImageContentTypeError):
+    with suppress(TimeoutError, ImageContentTypeError):
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
                 return Image(content_type, image_bytes)
 
-    raise HomeAssistantError("Unable to get image")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="image_unavailable",
+        translation_placeholders={"entity_id": image_entity.entity_id},
+    )
 
 
 async def async_get_image(
@@ -127,7 +150,11 @@ async def async_get_image(
     component = hass.data[DATA_COMPONENT]
 
     if (image := component.get_entity(entity_id)) is None:
-        raise HomeAssistantError(f"Image entity {entity_id} not found")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="entity_not_found",
+            translation_placeholders={"entity_id": entity_id},
+        )
 
     return await _async_get_image(image, timeout)
 
