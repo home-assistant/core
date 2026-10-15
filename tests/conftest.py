@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager, suppress
-import datetime
+import datetime as dt
 import functools
 import gc
 import ipaddress
@@ -481,10 +481,10 @@ def verify_cleanup(
 
     try:
         # Verify the default time zone has been restored
-        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+        assert dt_util.DEFAULT_TIME_ZONE is dt.UTC
     finally:
         # Restore the default time zone to not break subsequent tests
-        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
+        dt_util.DEFAULT_TIME_ZONE = dt.UTC
 
     try:
         # Verify respx.mock has been cleaned up

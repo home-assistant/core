@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 def create_entry(
     hass: HomeAssistant,
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -13,12 +13,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
-    ATTR_DATETIME,
-    DATA_COMPONENT,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-)
+from .const import ATTR_DATETIME, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +24,13 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-__all__ = ["ATTR_DATETIME", "DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
+__all__ = [
+    "ATTR_DATETIME",
+    "DOMAIN",
+    "SERVICE_SET_VALUE",
+    "DateTimeEntity",
+    "DateTimeEntityDescription",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
