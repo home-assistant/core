@@ -69,12 +69,7 @@ def _zero_pad_mac(mac_address: str) -> str:
     Older versions of pyaprilaire dropped the leading zero of octets below
     0x10 (e.g. "b4:82:55:0:1a:5"), which format_mac passes through unchanged.
     """
-    octets = mac_address.split(":")
-
-    if len(octets) != 6 or not all(1 <= len(octet) <= 2 for octet in octets):
-        return mac_address
-
-    return format_mac(":".join(octet.zfill(2) for octet in octets))
+    return format_mac(":".join(octet.zfill(2) for octet in mac_address.split(":")))
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) -> None:

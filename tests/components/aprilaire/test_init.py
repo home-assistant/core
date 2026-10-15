@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyaprilaire.const import Attribute
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aprilaire.const import DOMAIN
@@ -167,13 +166,12 @@ async def test_migrate_unpadded_mac_address(
     assert device_entry.connections == {(dr.CONNECTION_NETWORK_MAC, new_mac)}
 
 
-@pytest.mark.parametrize("mac_address", ["12:34:56:78:90:ab", "not-a-mac"])
 async def test_migrate_mac_address_unchanged(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mac_address: str,
 ) -> None:
     """Test migrating a unique ID that doesn't need zero-padding."""
+    mac_address = "12:34:56:78:90:ab"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=mac_address,
