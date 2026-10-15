@@ -509,7 +509,8 @@ async def test_options_flow_required_api_key(
     "states",
     [
         pytest.param({"sensor.roof_azimuth": "270"}, id="usable"),
-        # A sensor that is merely offline is accepted; it is read on every update.
+        # A registered sensor that is merely offline is accepted; it is read on
+        # every update.
         pytest.param({}, id="no_state"),
         pytest.param({"sensor.roof_azimuth": "unavailable"}, id="unavailable"),
     ],
@@ -518,9 +519,13 @@ async def test_options_flow_required_api_key(
 async def test_subentry_flow_add_plane(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     states: dict[str, str],
 ) -> None:
     """Test adding a plane via subentry flow."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
     for entity_id, state in states.items():
         hass.states.async_set(entity_id, state, DEGREES)
     mock_config_entry.add_to_hass(hass)
@@ -793,11 +798,19 @@ async def test_subentry_flow_rejects_unusable_sensor(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "missing_sensor",
+    [
+        pytest.param("0123456789abcdef0123456789abcdef", id="unknown_uuid"),
+        pytest.param("sensor.missing", id="unknown_entity_id"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_flow_resolves_registry_uuid(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    missing_sensor: str,
 ) -> None:
     """Test a sensor selected by registry UUID is stored by its entity ID."""
     registry_entry = entity_registry.async_get_or_create(
@@ -818,14 +831,14 @@ async def test_subentry_flow_resolves_registry_uuid(
         result["flow_id"],
         user_input={
             CONF_DECLINATION: 30,
-            CONF_AZIMUTH_SENSOR: "0123456789abcdef0123456789abcdef",
+            CONF_AZIMUTH_SENSOR: missing_sensor,
             CONF_MODULES_POWER: 5100,
         },
     )
 
-    # A UUID that matches no entity is refused.
+    # A UUID or entity ID that matches no entity is refused.
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
+    assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_not_found"}
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -839,6 +852,40 @@ async def test_subentry_flow_resolves_registry_uuid(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
     assert result["title"] == "30° / sensor.roof_azimuth / 5100W"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_refuses_non_sensor_uuid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a non-sensor selected by registry UUID is refused, as by entity ID."""
+    registry_entry = entity_registry.async_get_or_create(
+        "input_number", "test", "compass", suggested_object_id="compass"
+    )
+    hass.states.async_set("input_number.compass", "200", DEGREES)
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"declination_source": "fixed", "azimuth_source": "sensor"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: registry_entry.id,
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

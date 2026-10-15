@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_AZIMUTH_SENSOR,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_DECLINATION_SENSOR,
     CONF_MODULES_POWER,
@@ -15,7 +16,12 @@ from homeassistant.components.forecast_solar.const import (
     SUBENTRY_TYPE_PLANE,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -169,6 +175,26 @@ async def test_coordinator_uses_last_reading_while_sensor_unreadable(
 
     assert coordinator.forecast.azimuth == 200 - 180
     assert f"Sensor {AZIMUTH_SENSOR} can be read again" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_last_reading_is_not_kept_across_a_reload(hass: HomeAssistant) -> None:
+    """Test a reload needs a readable sensor again, as the form text says."""
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(AZIMUTH_SENSOR, STATE_UNAVAILABLE, DEGREES)
+    await entry.runtime_data.async_refresh()
+
+    assert entry.runtime_data.last_update_success is True
+
+    hass.config_entries.async_update_entry(entry, options={CONF_DAMPING_MORNING: 0.5})
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")

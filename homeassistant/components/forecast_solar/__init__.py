@@ -208,13 +208,25 @@ def _async_refresh_on_home_move(
     )
 
 
-def _forecast_inputs(entry: ForecastSolarConfigEntry) -> tuple[Any, ...]:
+def _forecast_inputs(
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+) -> tuple[Any, ...]:
     """Return the entry values the forecast is built from."""
+    registry = er.async_get(hass)
+
+    def _sensor_ref(entity_id: str) -> str:
+        # Planes read their sensors on every update, so a rename needs no reload.
+        registry_entry = registry.async_get(entity_id)
+        return registry_entry.id if registry_entry else entity_id
+
     return (
         dict(entry.data),
         dict(entry.options),
         [
-            dict(subentry.data)
+            {
+                key: _sensor_ref(value) if key in SENSOR_KEYS else value
+                for key, value in subentry.data.items()
+            }
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
         ],
     )
@@ -224,14 +236,15 @@ def _forecast_inputs(entry: ForecastSolarConfigEntry) -> tuple[Any, ...]:
 def _async_reload_on_forecast_change(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> CALLBACK_TYPE:
-    """Reload on option and plane changes, but not on a title-only update."""
-    inputs = _forecast_inputs(entry)
+    """Reload on option and plane changes, but not on a title or sensor rename."""
+    inputs = _forecast_inputs(hass, entry)
     reloading = False
 
-    async def _async_reload() -> None:
+    async def _async_reload_if_changed() -> None:
         nonlocal reloading
         try:
-            await hass.config_entries.async_reload(entry.entry_id)
+            if _forecast_inputs(hass, entry) != inputs:
+                await hass.config_entries.async_reload(entry.entry_id)
         finally:
             # A reload that failed to unload leaves this listener in place.
             reloading = False
@@ -240,13 +253,14 @@ def _async_reload_on_forecast_change(
         hass: HomeAssistant, entry: ForecastSolarConfigEntry
     ) -> None:
         nonlocal reloading
-        # Renaming a sensor updates every plane reading it; one reload covers them all.
-        if not reloading and _forecast_inputs(entry) != inputs:
+        # Several updates may land before the check runs; one reload covers them all.
+        if not reloading:
             reloading = True
-            # Not eager: the caller may still be updating the other planes, and a
-            # reload that already unloaded the entry would make a flow reload again.
+            # Not eager: a rename updates the planes one by one, so they only compare
+            # equal once all are done, and a reload that already unloaded the entry
+            # would make a flow reload again.
             hass.async_create_task(
-                _async_reload(),
+                _async_reload_if_changed(),
                 f"forecast_solar reload {entry.entry_id}",
                 eager_start=False,
             )

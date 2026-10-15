@@ -308,11 +308,11 @@ async def test_coordinator_multi_plane_initialization(
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
-async def test_forecast_changes_reload_once_title_changes_do_not(
+async def test_forecast_changes_reload_once_titles_and_renames_do_not(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a title-only update doesn't reload, and one rename reloads once."""
+    """Test titles and sensor renames don't reload, and plane changes reload once."""
     entity_registry.async_get_or_create(
         "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
     )
@@ -367,10 +367,30 @@ async def test_forecast_changes_reload_once_title_changes_do_not(
 
         mock_reload.assert_not_called()
 
-        # Both planes read the renamed sensor, but a single reload covers them.
+        # Planes read their sensors on every update, so a rename needs no reload.
         entity_registry.async_update_entity(
             "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
         )
+        await hass.async_block_till_done()
+
+        mock_reload.assert_not_called()
+
+        hass.states.async_set(
+            "sensor.camper_azimuth", "200", {"unit_of_measurement": "°"}
+        )
+        await mock_config_entry.runtime_data.async_refresh()
+
+        forecast = mock_config_entry.runtime_data.forecast
+        assert forecast.azimuth == 200 - 180
+        assert [plane.azimuth for plane in forecast.planes] == [200 - 180]
+
+        # Both planes change before the reload runs, but a single reload covers them.
+        for subentry in list(mock_config_entry.subentries.values()):
+            hass.config_entries.async_update_subentry(
+                mock_config_entry,
+                subentry,
+                data=subentry.data | {CONF_MODULES_POWER: 6000},
+            )
         await hass.async_block_till_done()
 
     mock_reload.assert_called_once_with(mock_config_entry.entry_id)
@@ -455,15 +475,12 @@ async def test_plane_follows_renamed_sensor(
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
     assert subentry.title == renamed_title
 
-    hass.states.async_set("sensor.camper_azimuth", "100", {"unit_of_measurement": "°"})
-    # The reload the rename triggered failed while the new ID had no state; in
-    # production the entry's setup retry runs this once the sensor is readable.
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    hass.states.async_set("sensor.camper_azimuth", "200", {"unit_of_measurement": "°"})
+    await mock_config_entry.runtime_data.async_refresh()
 
+    # The rename didn't reload the entry; the next update reads the new ID.
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
-    assert subentry.title == renamed_title
+    assert mock_config_entry.runtime_data.forecast.azimuth == 200 - 180
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")

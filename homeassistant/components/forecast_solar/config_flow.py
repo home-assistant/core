@@ -26,7 +26,7 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     callback,
-    valid_entity_id,
+    split_entity_id,
 )
 from homeassistant.helpers import (
     config_validation as cv,
@@ -167,15 +167,21 @@ def _sensor_errors(
 ) -> dict[str, str]:
     """Return a form error per selected sensor that can't be read as an angle."""
     errors: dict[str, str] = {}
+    registry = er.async_get(hass)
     for sensor_key in SENSOR_KEYS:
         if (entity_id := plane_data.get(sensor_key)) is None:
             continue
-        if not valid_entity_id(entity_id):
-            # A registry UUID that matches no entity.
+        state = hass.states.get(entity_id)
+        # An unknown registry UUID, or an entity ID sent through the API that
+        # matches nothing; a registered sensor that loads late is accepted.
+        if state is None and registry.async_get(entity_id) is None:
+            errors[sensor_key] = "sensor_not_found"
+            continue
+        # A registry UUID bypasses the selector's domain filter.
+        if split_entity_id(entity_id)[0] != SENSOR_DOMAIN:
             errors[sensor_key] = "sensor_unusable"
             continue
         # A sensor that is merely unavailable is accepted; it is read on every update.
-        state = hass.states.get(entity_id)
         if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             continue
         try:
