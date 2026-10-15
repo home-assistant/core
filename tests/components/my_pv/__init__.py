@@ -22,6 +22,6 @@ async def setup_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     else:
         with patch("homeassistant.components.my_pv.PLATFORMS", platforms):
-            await hass.config_entries.async_setup(config_entry.entry_id)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
