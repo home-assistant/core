@@ -323,6 +323,20 @@ async def test_connection_failure_reports_are_deduplicated(
     assert caplog.text.count("Connection to UniFi Network restored") == 1
 
 
+async def test_connection_does_not_retry_after_stop(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure late failures cannot schedule reconnect work after shutdown."""
+    connection = config_entry_setup.runtime_data.connection
+
+    connection.stop()
+    connection.report_failure()
+
+    assert connection.available
+    assert connection._retry_handle is None
+    assert connection._attempt == 0
+
+
 async def test_failed_setup_cancels_connection_retry(
     config_entry_factory: ConfigEntryFactoryType,
 ) -> None:

@@ -57,6 +57,7 @@ class UnifiConnectionManager:
         self._reconnect_task: asyncio.Task[None] | None = None
         self._recovery_callback: Callable[[], None] | None = None
         self._reauth_required = False
+        self._stopped = False
 
     @callback
     def set_recovery_callback(self, callback_fn: Callable[[], None] | None) -> None:
@@ -68,7 +69,7 @@ class UnifiConnectionManager:
         self, err: Exception | None = None, *, log: bool = False
     ) -> None:
         """Mark the shared session unavailable and schedule one retry."""
-        if self._reauth_required:
+        if self._stopped or self._reauth_required:
             return
         if self._retry_handle is not None or (
             self._reconnect_task is not None and not self._reconnect_task.done()
@@ -136,6 +137,7 @@ class UnifiConnectionManager:
     @callback
     def stop(self) -> None:
         """Cancel pending reconnect work."""
+        self._stopped = True
         if self._retry_handle is not None:
             self._retry_handle.cancel()
             self._retry_handle = None
