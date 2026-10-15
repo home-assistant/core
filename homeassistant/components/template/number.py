@@ -80,6 +80,11 @@ NUMBER_YAML_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
 
 NUMBER_CONFIG_ENTRY_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+).extend(
+    {
+        # The unit of measurement selector returns None when no unit is set
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(None, cv.string),
+    }
 )
 
 
