@@ -71,6 +71,7 @@ async def test_bypass_services(
     ("side_effect", "return_value"),
     [
         pytest.param(requests.exceptions.ConnectionError, None, id="cannot_connect"),
+        pytest.param(requests.exceptions.ReadTimeout, None, id="timeout"),
         pytest.param(None, [], id="no_partitions"),
     ],
 )

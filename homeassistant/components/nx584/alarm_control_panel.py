@@ -89,7 +89,7 @@ class NX584Alarm(AlarmControlPanelEntity):
         try:
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
-        except requests.exceptions.ConnectionError as ex:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as ex:
             _LOGGER.error("Unable to connect to NX584: %s", ex)
             self._attr_available = False
             return
