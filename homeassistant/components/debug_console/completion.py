@@ -135,12 +135,7 @@ def signature_hint(namespace: dict[str, Any], code: str) -> dict[str, Any] | Non
 
     parameters = list(signature.parameters.values())
     active = _active_parameter(parameters, call.arguments)
-    # Not inspect.getdoc, which also searches classes when the doc is missing.
-    # Reading __doc__ of a class runs a descriptor stored there, so read it
-    # from the class itself.
-    value = _resolve(namespace, call.callee)
-    doc = class_dict(value).get("__doc__") if is_class(value) else value.__doc__
-    doc = inspect.cleandoc(doc) if type(doc) is str else ""
+    doc = _doc(_resolve(namespace, call.callee))
 
     return {
         "name": call.callee.rpartition(".")[2],
@@ -283,18 +278,42 @@ def _read_signature(target: Any) -> inspect.Signature:
     return inspect.signature(target, follow_wrapped=False)
 
 
+def _doc(value: Any) -> str:
+    """Return the docstring of a callable that passed _has_safe_signature.
+
+    Not inspect.getdoc, which also searches classes when the doc is missing.
+    A bound method reads it from what it binds, and a class runs a descriptor
+    stored as its __doc__, so both read it from where it is stored.
+    """
+    while type(value) is types.MethodType:
+        value = value.__func__
+
+    doc = class_dict(value).get("__doc__") if is_class(value) else value.__doc__
+    return inspect.cleandoc(doc) if type(doc) is str else ""
+
+
 def _without_annotations(function: types.FunctionType) -> types.FunctionType:
     """Return a copy of a function, with only the annotations stored as text.
 
-    Others are evaluated on request, by its __annotate__, which runs code.
+    Others are evaluated on request, by its __annotate__, which runs code. Its
+    defaults are copied too: code can set subclasses of tuple and dict, with
+    methods of their own. The copies read the storage underneath.
     """
+    defaults = function.__defaults__
+    if defaults is not None:
+        defaults = tuple.__getitem__(defaults, slice(None))
+
+    keyword_defaults = function.__kwdefaults__
+    if keyword_defaults is not None:
+        keyword_defaults = dict(dict.items(keyword_defaults))
+
     copy = types.FunctionType(
         function.__code__,
         function.__globals__,
         function.__name__,
-        function.__defaults__,
+        defaults,
         function.__closure__,
-        function.__kwdefaults__,
+        keyword_defaults,
     )
 
     if function.__annotate__ is None:

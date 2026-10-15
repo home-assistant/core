@@ -583,6 +583,18 @@ async def test_signature(
             id="resolve_dict_subclass",
         ),
         pytest.param(
+            {"type": "debug_console/signature", "code": "doc_method("},
+            id="signature_method_doc",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "defaults_trap("},
+            id="signature_default_containers",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "defaults_trap(c"},
+            id="keywords_default_containers",
+        ),
+        pytest.param(
             {"type": "debug_console/signature", "code": "evaluated_annotation("},
             id="signature_annotation",
         ),
@@ -801,6 +813,43 @@ class LoudDictHolder:
 
 loud_dict_holder = LoudDictHolder()
 loud_dict_holder.__dict__ = LoudDict(alpha=1)
+
+class DocTrap:
+    __doc__ = Descriptor()
+
+doc_method = types.MethodType(DocTrap, object())
+
+class LoudTuple(tuple):
+    def __len__(self):
+        ran.append("tuple len")
+        return super().__len__()
+
+    def __getitem__(self, index):
+        ran.append("tuple getitem")
+        return super().__getitem__(index)
+
+    def __iter__(self):
+        ran.append("tuple iter")
+        return super().__iter__()
+
+class LoudKeywordDefaults(dict):
+    def get(self, key, default=None):
+        ran.append("kwdefaults get")
+        return super().get(key, default)
+
+    def __getitem__(self, key):
+        ran.append("kwdefaults getitem")
+        return super().__getitem__(key)
+
+    def __contains__(self, key):
+        ran.append("kwdefaults contains")
+        return super().__contains__(key)
+
+def defaults_trap(alpha, beta=1, *, charlie=2):
+    pass
+
+defaults_trap.__defaults__ = LoudTuple((1,))
+defaults_trap.__kwdefaults__ = LoudKeywordDefaults(charlie=2)
 
 class AnnotationTrap:
     @property
