@@ -256,6 +256,12 @@ class IcloudAccount:
             return
 
         if self.api.requires_2fa:
+            if not code_can_be_delivered(self.api):
+                # Nothing for the user to act on, so retry rather than ask for
+                # a code that cannot be sent.
+                raise ConfigEntryNotReady(
+                    "iCloud asked for a verification code but has no way to send one"
+                )
             self._handle_auth_required(two_factor=True, keep_session=True)
             return
 

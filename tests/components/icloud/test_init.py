@@ -911,6 +911,32 @@ async def test_a_challenge_that_cannot_send_a_code_is_retried(
     ]
 
 
+async def test_a_flagged_challenge_that_cannot_send_a_code_is_retried(
+    hass: HomeAssistant, service_2fa: Mock
+) -> None:
+    """Test that setup is retried when the login ends in a challenge nothing can send.
+
+    This is the shape where the service reports the challenge itself instead of
+    raising it, and it has to be treated like the other two.
+    """
+    service_2fa.return_value.two_factor_delivery_method = "unknown"
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
 async def test_reauth_challenge_without_a_delivery_route_asks_for_the_password(
     hass: HomeAssistant, service_auth_required: Mock
 ) -> None:
@@ -1042,6 +1068,7 @@ async def test_an_undeliverable_challenge_drops_the_stored_session(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    await config_entry.start_reauth_flow(hass)
 
     flows = [
         flow
