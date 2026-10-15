@@ -445,8 +445,6 @@ RPC_SWITCHES = {
             "LedStrip.Set",
             {"id": id, "reverse": value},
         ),
-        supported=lambda _: True,
-        entity_category=EntityCategory.CONFIG,
         entity_class=RpcLedStripSwitch,
     ),
     "camera_privacy": RpcSwitchDescription(
