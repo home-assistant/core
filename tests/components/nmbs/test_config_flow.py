@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from mashumaro.exceptions import MissingField
 import pytest
 
 from homeassistant import config_entries
@@ -139,7 +140,7 @@ async def test_dont_abort_if_exists_when_vias_differs(
 async def test_unavailable_api(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
-    """Test starting a flow by user and api is unavailable."""
+    """Test the flow aborts when the API is unavailable."""
     mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -150,11 +151,21 @@ async def test_unavailable_api(
     assert result["reason"] == "api_unavailable"
 
 
-async def test_unavailable_api_timeout(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock
+@pytest.mark.parametrize(
+    "stations_side_effect",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
+        pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
+    ],
+)
+async def test_unavailable_api_errors(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    stations_side_effect: Exception | type[Exception],
 ) -> None:
-    """Test starting a flow by user and the api times out."""
-    mock_nmbs_client.get_stations.side_effect = TimeoutError
+    """Test the flow aborts when the station list cannot be fetched."""
+    mock_nmbs_client.get_stations.side_effect = stations_side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},

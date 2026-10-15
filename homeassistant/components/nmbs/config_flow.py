@@ -54,7 +54,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             choices = await self._fetch_stations_choices()
-        except CannotConnect, TimeoutError:
+        except CannotConnect, TimeoutError, ValueError, LookupError:
             return self.async_abort(reason="api_unavailable")
 
         errors: dict = {}
