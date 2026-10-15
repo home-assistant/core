@@ -634,6 +634,137 @@ async def test_reconfigure_subentry_thinking_options(
     } == expected_thinking_options
 
 
+@pytest.mark.parametrize(
+    ("code_execution_supported", "web_search_supported", "expected_tool_options"),
+    [
+        pytest.param(
+            True,
+            True,
+            {
+                CONF_CODE_EXECUTION: True,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_MAX_USES: 4,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+            id="all_tools",
+        ),
+        pytest.param(
+            False,
+            True,
+            {
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_MAX_USES: 4,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+            id="web_search_only",
+        ),
+        pytest.param(
+            True,
+            False,
+            {CONF_CODE_EXECUTION: True},
+            id="code_execution_only",
+        ),
+        pytest.param(False, False, {}, id="no_tools"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_subentry_server_tools(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    code_execution_supported: bool,
+    web_search_supported: bool,
+    expected_tool_options: dict[str, bool | int],
+) -> None:
+    """Test model changes hide unsupported tools and remove their saved options."""
+    model = next(
+        model for model in model_list if model.id.startswith("claude-haiku-4-5")
+    ).model_copy(deep=True)
+    assert model.capabilities is not None
+    assert not model.capabilities.code_execution.supported
+    model.capabilities.server_tools.code_execution.supported = code_execution_supported
+    model.capabilities.server_tools.web_search.supported = web_search_supported
+    model.capabilities.server_tools.supported = (
+        code_execution_supported or web_search_supported
+    )
+
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_CODE_EXECUTION: True,
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 4,
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            CONF_WEB_FETCH: True,
+            CONF_WEB_FETCH_MAX_USES: 6,
+        },
+    )
+    await hass.async_block_till_done()
+    mock_config_entry.runtime_data.async_set_updated_data([model])
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: "claude-haiku-4-5"}
+    )
+    assert result["step_id"] == "model"
+    tool_options = {
+        CONF_CODE_EXECUTION,
+        CONF_WEB_SEARCH,
+        CONF_WEB_SEARCH_MAX_USES,
+        CONF_WEB_SEARCH_USER_LOCATION,
+    }
+    assert set(result["data_schema"].schema) & tool_options == set(
+        expected_tool_options
+    )
+    assert CONF_WEB_FETCH in result["data_schema"].schema
+    assert CONF_WEB_FETCH_MAX_USES in result["data_schema"].schema
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            **expected_tool_options,
+            CONF_WEB_FETCH: True,
+            CONF_WEB_FETCH_MAX_USES: 6,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert {
+        option: subentry.data[option] for option in tool_options & subentry.data.keys()
+    } == expected_tool_options
+    assert {
+        CONF_WEB_SEARCH_CITY,
+        CONF_WEB_SEARCH_REGION,
+        CONF_WEB_SEARCH_COUNTRY,
+        CONF_WEB_SEARCH_TIMEZONE,
+    }.isdisjoint(subentry.data)
+    assert subentry.data[CONF_WEB_FETCH] is True
+    assert subentry.data[CONF_WEB_FETCH_MAX_USES] == 6
+
+
 @pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_web_search_user_location(
     hass: HomeAssistant,
@@ -848,6 +979,15 @@ async def test_invalid_model(
     assert options["type"] is FlowResultType.FORM
     assert not options["errors"]
     assert options["step_id"] == "model"
+
+    assert {
+        CONF_CODE_EXECUTION,
+        CONF_WEB_SEARCH,
+        CONF_WEB_SEARCH_MAX_USES,
+        CONF_WEB_SEARCH_USER_LOCATION,
+        CONF_WEB_FETCH,
+        CONF_WEB_FETCH_MAX_USES,
+    } <= options["data_schema"].schema.keys()
 
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
