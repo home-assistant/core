@@ -1,5 +1,6 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 
+import asyncio
 import logging
 from typing import Any, override
 
@@ -71,6 +72,7 @@ class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
         super().__init__(afsapi, config_entry)
 
         self._max_volume: int | None = None
+        self._navigation_lock = asyncio.Lock()
 
         self.__modes_by_label: dict[str, str] | None = None
         self.__sound_modes_by_label: dict[str, str] | None = None
@@ -375,10 +377,13 @@ class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse media library and preset stations."""
-        if not media_content_id:
-            return await browse_top_level(self._attr_source, self.fs_device)
+        async with self._navigation_lock:
+            if not media_content_id:
+                return await browse_top_level(self._attr_source, self.fs_device)
 
-        return await browse_node(self.fs_device, media_content_type, media_content_id)
+            return await browse_node(
+                self.fs_device, media_content_type, media_content_id
+            )
 
     @fs_command_exception_wrap
     @override
@@ -395,19 +400,24 @@ class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
 
         player_mode, media_type, *keys = media_id.split("/")
 
-        await self.async_select_source(player_mode)  # this also powers on the device
+        async with self._navigation_lock:
+            if player_mode != self.source:
+                await self.async_select_source(player_mode)
+            else:
+                # Setting the mode again clears the API's cached navigation path.
+                await self.async_turn_on()
 
-        if media_type == MEDIA_CONTENT_ID_PRESET:
-            if len(keys) != 1:
-                raise BrowseError("Presets can only have 1 level")
+            if media_type == MEDIA_CONTENT_ID_PRESET:
+                if len(keys) != 1:
+                    raise BrowseError("Presets can only have 1 level")
 
-            # Keys of presets are 0-based, while the list shown
-            # on the device starts from 1
-            preset = int(keys[0]) - 1
+                # Keys of presets are 0-based, while the list shown
+                # on the device starts from 1
+                preset = int(keys[0]) - 1
 
-            await self.fs_device.select_preset(preset)
-        else:
-            await self.fs_device.nav_select_item_via_path(keys)
+                await self.fs_device.select_preset(preset)
+            else:
+                await self.fs_device.nav_select_item_via_path(keys)
 
-        await self.async_update()
-        self._attr_media_content_id = media_id
+            await self.async_update()
+            self._attr_media_content_id = media_id
