@@ -1,5 +1,6 @@
 """Test the GKP integration initialization."""
 
+from collections.abc import Iterable
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -15,6 +16,8 @@ from gkphomepython import (
     GkpError,
     GkpMode,
     GkpRateLimitError,
+    Installation,
+    ThermostatsResult,
 )
 from gkphomepython.const import FIRST_REPORT_TIMEOUT, OFFLINE_AFTER
 import pytest
@@ -411,14 +414,17 @@ async def test_single_device_error_keeps_others(
 ) -> None:
     """Test one failing device does not prevent updating the others."""
     await setup_integration(hass, mock_config_entry)
-    get_thermostat = mock_gkp_client.get_thermostat.side_effect
+    get_thermostats = mock_gkp_client.get_thermostats.side_effect
 
-    async def fail_for_bedroom(device_id: str, installation: Any) -> Any:
-        if device_id == BEDROOM_ID:
-            raise GkpDeviceError("not found")
-        return await get_thermostat(device_id, installation)
+    async def fail_for_bedroom(
+        installations: Iterable[Installation],
+    ) -> ThermostatsResult:
+        result = await get_thermostats(installations)
+        del result.thermostats[BEDROOM_ID]
+        result.errors[BEDROOM_ID] = GkpDeviceError("not found")
+        return result
 
-    mock_gkp_client.get_thermostat.side_effect = fail_for_bedroom
+    mock_gkp_client.get_thermostats.side_effect = fail_for_bedroom
     device_contents[LIVING_ROOM_ID]["At"]["value"] = "734"
 
     await _tick(hass, freezer, UPDATE_INTERVAL)
