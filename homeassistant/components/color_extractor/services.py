@@ -91,8 +91,21 @@ def _get_bright_color(
             (red, green, blue, alpha if max(red, green, blue) >= threshold else 0)
             for red, green, blue, alpha in image.getdata()
         ]
-        if not any(alpha >= 125 for _, _, _, alpha in pixels):
+        qualifying_pixels = [
+            (red, green, blue)
+            for red, green, blue, alpha in pixels
+            if alpha >= 125
+        ]
+        if not qualifying_pixels:
             return None
+
+        # ColorThief ignores near-white pixels, so handle them directly
+        # when every qualifying pixel would otherwise be discarded.
+        if all(min(red, green, blue) > 250 for red, green, blue in qualifying_pixels):
+            return tuple(
+                round(sum(pixel[channel] for pixel in qualifying_pixels) / len(qualifying_pixels))
+                for channel in range(3)
+            )
 
         image.putdata(pixels)
         with io.BytesIO() as image_buffer:
