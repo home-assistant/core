@@ -6,7 +6,12 @@ from typing import Any, override
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_SHOW_ON_MAP, EntityStateAttribute, UnitOfTime
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SHOW_ON_MAP,
+    EntityStateAttribute,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -66,7 +71,8 @@ class NMBSSensor(NMBSEntity, SensorEntity):
         super().__init__(coordinator)
         self._show_on_map = coordinator.config_entry.data.get(CONF_SHOW_ON_MAP, False)
         self._attr_name = (
-            f"Train from {coordinator.station_from.standard_name}"
+            coordinator.config_entry.data.get(CONF_NAME)
+            or f"Train from {coordinator.station_from.standard_name}"
             f" to {coordinator.station_to.standard_name}"
         )
         unique_id = f"{coordinator.station_from.id}_{coordinator.station_to.id}"

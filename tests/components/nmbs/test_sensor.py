@@ -16,7 +16,12 @@ from homeassistant.components.nmbs.const import (
     DOMAIN,
 )
 from homeassistant.components.nmbs.coordinator import UPDATE_INTERVAL
-from homeassistant.const import CONF_SHOW_ON_MAP, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SHOW_ON_MAP,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -192,6 +197,30 @@ async def test_connection_sensor_show_on_map(
     assert state is not None
     assert state.attributes["latitude"] == 50.859663
     assert state.attributes["longitude"] == 4.360846
+
+
+@freeze_time(FROZEN_TIME)
+async def test_connection_sensor_keeps_custom_name(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the connection sensor keeps the name stored in an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My train to work",
+        data={
+            CONF_STATION_FROM: STATION_FROM,
+            CONF_STATION_TO: STATION_TO,
+            CONF_NAME: "My train to work",
+        },
+        unique_id=f"{STATION_FROM}_{STATION_TO}_named",
+    )
+    await _setup_entry(hass, entry)
+
+    state = hass.states.get(_get_entity_id(entity_registry, CONNECTION_UNIQUE_ID))
+    assert state is not None
+    assert state.name == "My train to work"
 
 
 @freeze_time(FROZEN_TIME)
