@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_COMPONENT, DOMAIN
-from .entity import (  # noqa: F401
+from .entity import (
     InfraredCommand,
     InfraredDeviceClass,
     InfraredEmitterEntity,
@@ -31,6 +31,7 @@ from .helpers import (
 __all__ = [
     "DOMAIN",
     "InfraredCommand",
+    "InfraredDeviceClass",
     "InfraredEmitterConsumerEntity",
     "InfraredEmitterEntity",
     "InfraredEmitterEntityDescription",
