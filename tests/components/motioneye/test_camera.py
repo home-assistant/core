@@ -266,6 +266,7 @@ async def test_get_still_image_without_camera(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     camera = get_camera_from_entity_id(hass, TEST_CAMERA_ENTITY_ID)
+    # Dropping the camera from the coordinator data would remove the device and entity
     camera._camera = None
 
     assert await camera.async_camera_image() is None
