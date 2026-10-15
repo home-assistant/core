@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.components.lunatone.coordinator import (
     DEFAULT_DEVICES_UPDATE_INTERVAL,
     DEFAULT_INFO_UPDATE_INTERVAL,
@@ -86,6 +87,56 @@ async def test_device_added_after_setup(
 
     entity = hass.states.get(entity_id)
     assert entity
+
+
+async def test_light_added_after_line_device(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a light is added after its line device is registered."""
+    await setup_integration(hass, mock_config_entry)
+
+    new_device = deepcopy(mock_lunatone_devices.data.devices[-1])
+    new_device.id = 7
+    new_device.name = "Device 7"
+    new_device.line = 2
+    mock_lunatone_devices.data.devices.append(new_device)
+
+    freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("light.device_7")
+    assert state is None
+
+    info_data = deepcopy(mock_lunatone_info.data)
+    info_data.lines["2"] = deepcopy(info_data.lines["1"])
+    mock_lunatone_info.data = info_data
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("light.device_7")
+    assert state
+    assert mock_config_entry.unique_id
+    line_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-line2"),
+        mock_config_entry.entry_id,
+    )
+    assert line_device is not None
+    light_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-device7"),
+        mock_config_entry.entry_id,
+    )
+    assert light_device is not None
+    assert light_device.via_device_id == line_device.id
 
 
 async def test_turn_on_off(

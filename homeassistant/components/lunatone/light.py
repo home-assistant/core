@@ -1,7 +1,7 @@
 """Platform for Lunatone light integration."""
 
-import contextlib
 from collections.abc import Callable
+import contextlib
 from functools import partial
 from typing import Any, override
 
@@ -95,10 +95,17 @@ async def async_setup_entry(
     @callback
     def _check_light_entities() -> None:
         entity_builder: dict[str, Callable[[], LightEntity]] = {}
+        device_registry = dr.async_get(hass)
         for devices in coordinator_devices.data.values():
             for device in devices.values():
                 line_id = device.data.line
                 device_id = device.data.id
+                parent_device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{config_entry_unique_id}-line{line_id}"),
+                    config_entry.entry_id,
+                )
+                if parent_device is None:
+                    continue
                 unique_id = LunatoneLight.construct_unique_id(
                     config_entry_unique_id, device_id
                 )
@@ -115,6 +122,9 @@ async def async_setup_entry(
     _check_light_entities()
     config_entry.async_on_unload(
         coordinator_devices.async_add_listener(_check_light_entities)
+    )
+    config_entry.async_on_unload(
+        coordinator_info.async_add_listener(_check_light_entities)
     )
 
 
