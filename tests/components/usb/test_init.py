@@ -154,6 +154,98 @@ async def test_is_serial_port_present(hass: HomeAssistant) -> None:
         assert not await usb.async_is_serial_port_present(hass, "/dev/ttyUSB0")
 
 
+MOVED_RADIO_BY_ID = "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
+MOVED_RADIO_PROXY = (
+    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
+    "?port_udev_id=usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
+)
+
+
+def _zbt2_at(device: str) -> USBDevice:
+    return USBDevice(
+        device=device,
+        vid="303A",
+        pid="4001",
+        serial_number="10B41DE589E4",
+        manufacturer="Nabu Casa",
+        description="ZBT-2",
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_path", "ports", "expected"),
+    [
+        pytest.param(
+            MOVED_RADIO_BY_ID,
+            [_zbt2_at(MOVED_RADIO_PROXY)],
+            MOVED_RADIO_PROXY,
+            id="host_to_proxy",
+        ),
+        pytest.param(
+            MOVED_RADIO_PROXY,
+            [_zbt2_at(MOVED_RADIO_BY_ID)],
+            MOVED_RADIO_BY_ID,
+            id="proxy_to_host",
+        ),
+        pytest.param(
+            MOVED_RADIO_PROXY,
+            [
+                _zbt2_at(
+                    MOVED_RADIO_PROXY.replace("01M0EP649N48N88Z52ZG2B21VT", "other")
+                )
+            ],
+            MOVED_RADIO_PROXY.replace("01M0EP649N48N88Z52ZG2B21VT", "other"),
+            id="proxy_to_proxy",
+        ),
+        pytest.param(
+            MOVED_RADIO_BY_ID,
+            [_zbt2_at(MOVED_RADIO_BY_ID), _zbt2_at(MOVED_RADIO_PROXY)],
+            None,
+            id="still_present",
+        ),
+        pytest.param(MOVED_RADIO_BY_ID, [], None, id="gone"),
+        pytest.param(
+            MOVED_RADIO_BY_ID,
+            [
+                _zbt2_at(MOVED_RADIO_PROXY),
+                _zbt2_at(
+                    MOVED_RADIO_PROXY.replace("01M0EP649N48N88Z52ZG2B21VT", "other")
+                ),
+            ],
+            None,
+            id="ambiguous",
+        ),
+        pytest.param(
+            "/dev/ttyUSB0", [_zbt2_at(MOVED_RADIO_PROXY)], None, id="raw_path"
+        ),
+        pytest.param(
+            "socket://192.168.1.10:6638",
+            [_zbt2_at(MOVED_RADIO_PROXY)],
+            None,
+            id="socket",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_find_moved_serial_port(
+    hass: HomeAssistant,
+    device_path: str,
+    ports: list[USBDevice],
+    expected: str | None,
+) -> None:
+    """A device is followed by its udev link name to exactly one new place."""
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    # Nothing is known before the first scan
+    assert usb.async_find_moved_serial_port(hass, device_path) is None
+
+    with patch_scanned_serial_ports(return_value=ports):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert usb.async_find_moved_serial_port(hass, device_path) == expected
+
+
 async def test_notify_serial_ports_changed_with_aiousbwatcher(
     hass: HomeAssistant,
 ) -> None:

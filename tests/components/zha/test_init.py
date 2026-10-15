@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 import typing
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 import zoneinfo
 
 import pytest
@@ -457,6 +457,45 @@ async def test_device_path_migration_to_unique_path(
         config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
         == "/dev/serial/by-id/coordinator-symlink"
     )
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_device_path_follows_moved_radio(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A radio found at a new path at setup is followed there."""
+    config_entry.add_to_hass(hass)
+
+    old_path = "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
+    new_path = (
+        "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
+        "?port_udev_id=usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
+    )
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_DEVICE: {**config_entry.data[CONF_DEVICE], CONF_DEVICE_PATH: old_path},
+        },
+    )
+
+    with patch(
+        "homeassistant.components.zha.async_find_moved_serial_port",
+        return_value=new_path,
+    ) as mock_find_moved:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_find_moved.mock_calls == [call(hass, old_path)]
+    assert f"Following ZHA device path from {old_path} to {new_path}" in caplog.text
+    assert config_entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: new_path,
+        CONF_BAUDRATE: 115200,
+        CONF_FLOW_CONTROL: "hardware",
+    }
     assert config_entry.state is ConfigEntryState.LOADED
 
 

@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 import fnmatch
 import os
+from urllib.parse import parse_qs, urlsplit
 
 from serialx import SerialPortInfo, list_serial_ports
 
@@ -10,6 +11,8 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.loader import USBMatcher
 
 from .models import SerialDevice, USBDevice
+
+SERIAL_BY_ID_DIR = "/dev/serial/by-id/"
 
 
 def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
@@ -54,6 +57,21 @@ def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevic
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return [usb_serial_device_from_port(port) for port in list_serial_ports()]
+
+
+def serial_path_udev_id(path: str) -> str | None:
+    """Return the udev by-id link name of the device behind a serial port path."""
+
+    # A by-id link names the device directly, a serial proxy URL carries the same name
+    # as `port_udev_id`, so a device is recognized when it moves between the two
+    if path.startswith(SERIAL_BY_ID_DIR):
+        return path.removeprefix(SERIAL_BY_ID_DIR)
+
+    query = parse_qs(urlsplit(path).query)
+    if "port_udev_id" in query:
+        return query["port_udev_id"][0]
+
+    return None
 
 
 def usb_device_from_path(device_path: str) -> USBDevice | None:

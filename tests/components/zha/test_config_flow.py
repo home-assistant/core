@@ -964,6 +964,97 @@ async def test_discovery_via_usb_same_device_already_setup(hass: HomeAssistant) 
     assert result["reason"] == "single_instance_allowed"
 
 
+MOVED_RADIO_BY_ID = "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
+MOVED_RADIO_PROXY = (
+    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
+    "?port_udev_id=usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
+)
+MOVED_RADIO_DISCOVERY = UsbServiceInfo(
+    device=MOVED_RADIO_PROXY,
+    pid="4001",
+    vid="303A",
+    serial_number="10B41DE589E4",
+    description="ZBT-2",
+    manufacturer="Nabu Casa",
+)
+
+
+@pytest.mark.parametrize(
+    ("state", "reloads"),
+    [
+        (ConfigEntryState.LOADED, 1),
+        (ConfigEntryState.SETUP_RETRY, 1),
+        (ConfigEntryState.NOT_LOADED, 0),
+    ],
+)
+async def test_discovery_via_usb_follows_moved_radio(
+    hass: HomeAssistant, state: ConfigEntryState, reloads: int
+) -> None:
+    """A configured radio discovered at another path is followed there."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_BY_ID, CONF_BAUDRATE: 115200}
+        },
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, state)
+
+    with (
+        patch(
+            "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
+            side_effect=lambda path: path,
+        ),
+        patch(
+            "homeassistant.components.zha.config_flow.usb.async_find_moved_serial_port",
+            return_value=MOVED_RADIO_PROXY,
+        ) as mock_find_moved,
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=MOVED_RADIO_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert mock_find_moved.mock_calls == [call(hass, MOVED_RADIO_BY_ID)]
+    assert entry.data == {
+        CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_PROXY, CONF_BAUDRATE: 115200}
+    }
+    assert mock_reload.mock_calls == [call(entry.entry_id)] * reloads
+
+
+async def test_discovery_via_usb_does_not_follow_present_radio(
+    hass: HomeAssistant,
+) -> None:
+    """A second radio that cannot be told apart from the configured one is new."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_BY_ID}},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
+            side_effect=lambda path: path,
+        ),
+        patch(
+            "homeassistant.components.zha.config_flow.usb.async_find_moved_serial_port",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=MOVED_RADIO_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert entry.data == {CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_BY_ID}}
+
+
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> None:
