@@ -23,10 +23,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(autouse=True)
 def no_bus_pacing() -> Generator[None]:
-    """Remove the library's real-time pacing.
-
-    Properties of a shared medium, exercised in the library's own tests.
-    """
+    """Remove the library's pacing delays."""
     with (
         patch(
             "homeassistant.components.kaco_rs485.config_flow.scan",

@@ -56,7 +56,6 @@ SENSORS: tuple[KacoSensorDescription, ...] = (
         key="total_yield",
         translation_key="total_yield",
         device_class=SensorDeviceClass.ENERGY,
-        # kWh on xi; the same field is Wh on blueplanet, which discovery rejects.
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda s: s.totals.total_yield_raw if s.totals else None,

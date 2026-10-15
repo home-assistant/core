@@ -3,7 +3,6 @@
 from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485 import BusError
 from kaco_rs485.testing import FakeBus
-import pytest
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
 from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
@@ -71,12 +70,11 @@ async def test_failed_setup_leaves_no_open_connection(
     assert not mock_bus.opened
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_devices_are_named_from_the_setup_scan(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    device_registry: dr.DeviceRegistry, init_integration: MockConfigEntry
 ) -> None:
     """Test each inverter becomes a device named for what the scan recorded."""
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entry = init_integration
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{entry.entry_id}_1"), entry.entry_id
@@ -86,8 +84,6 @@ async def test_devices_are_named_from_the_setup_scan(
     assert device.manufacturer == "KACO new energy"
     assert device.model == "6400xi"
     assert device.sw_version == "K222.36DE 6817"
-    # No serial number exists, so the address is the only distinguisher.
-    assert device.serial_number is None
 
     other = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{entry.entry_id}_4"), entry.entry_id

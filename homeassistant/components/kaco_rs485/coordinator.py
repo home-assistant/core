@@ -1,8 +1,4 @@
-"""Polling coordinator.
-
-The library paces the bus itself, so this only owns the connection, runs one
-cycle per interval, and reopens the port when it goes away.
-"""
+"""Coordinator for the KACO RS485 integration."""
 
 from datetime import timedelta
 from typing import override
@@ -16,7 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_ADDRESSES, DOMAIN, LOGGER
 
-# Between cycles, not between requests — the library paces those itself.
 SCAN_INTERVAL = timedelta(seconds=30)
 
 type KacoRs485ConfigEntry = ConfigEntry[KacoRs485Coordinator]
@@ -50,9 +45,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
     def _enabled_addresses(self) -> list[int]:
         """Return the addresses whose device has not been disabled.
 
-        One inverter costs a request pair and the pacing gaps around it, so a
-        disabled one is dropped from the cycle rather than merely hidden: on a
-        shared wire that time is what the others need.
+        Disabled inverters are not polled, so they cost no bus time.
         """
         registry = dr.async_get(self.hass)
         return [
@@ -113,11 +106,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
         return states
 
     def _log_availability(self, states: dict[int, InverterState]) -> None:
-        """Log once per inverter going dark, and once on its return.
-
-        The coordinator covers the bus itself going away; this is the case
-        where the poll succeeded but one inverter stopped answering.
-        """
+        """Log once per inverter going dark, and once on its return."""
         for address, state in states.items():
             dark = not state.available
             if dark == self._reported_dark.get(address, False):

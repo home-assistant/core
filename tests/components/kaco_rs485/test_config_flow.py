@@ -92,7 +92,6 @@ async def test_a_bus_with_only_unsupported_units_says_so(
     assert result["description_placeholders"]["unsupported"] == "3"
 
 
-@pytest.mark.usefixtures("mock_bus")
 async def test_a_blueplanet_alongside_xi_units_is_simply_skipped(
     hass: HomeAssistant, mock_bus: FakeBus
 ) -> None:

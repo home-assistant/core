@@ -23,9 +23,7 @@ rules:
     comment: This integration does not provide any triggers.
   entity-event-setup:
     status: exempt
-    comment: >-
-      local_polling; entities rely solely on CoordinatorEntity's built-in
-      lifecycle, with no manual event subscriptions.
+    comment: Entities do not subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -74,12 +72,7 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: >-
-      All four sensors in this initial platform are primary readings that a user
-      adds the integration to get. The follow-up PR adding the full command `0`
-      and `3` field set is where less popular entities start being disabled.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations:

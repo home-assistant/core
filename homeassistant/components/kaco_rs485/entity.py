@@ -34,8 +34,7 @@ class KacoRs485Entity(CoordinatorEntity[KacoRs485Coordinator]):
         self._address = address
 
         entry = coordinator.config_entry
-        # From the entry, not the poll: at night there is nothing to read.
-        recorded = entry.data[CONF_INVERTERS].get(str(address), {})
+        recorded = entry.data[CONF_INVERTERS][str(address)]
         model = recorded.get(CONF_MODEL)
 
         self._attr_device_info = DeviceInfo(

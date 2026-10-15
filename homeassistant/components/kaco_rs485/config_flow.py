@@ -1,9 +1,4 @@
-"""Config flow.
-
-`SerialPortSelector` covers both local devices and ESPHome proxies, so no host
-or key is stored. Addresses are scanned for rather than asked: they are set in
-each inverter's own display menu and nothing announces them.
-"""
+"""Config flow for the KACO RS485 integration."""
 
 import asyncio
 from typing import Any, Self, override
@@ -48,7 +43,7 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._port = await self._stable_path(user_input[CONF_PORT])
             self._scan_task = None
-            # No unique id available: xi units return zero bytes for `s`.
+            # No unique ID: the inverters expose no serial number.
             self._async_abort_entries_match({CONF_PORT: self._port})
             if self.hass.config_entries.flow.async_has_matching_flow(self):
                 return self.async_abort(reason="already_in_progress")
@@ -78,14 +73,7 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Run the bus scan as a background task, showing progress.
-
-        Not inline: every empty address costs a full reply timeout, so a
-        sparse bus takes a minute.
-
-        Re-entrant — the task handle is cleared in `async_step_user`, never
-        here, or a re-entry would start a second scan.
-        """
+        """Scan the bus in the background, showing progress."""
         assert self._port is not None
 
         if self._scan_task is None:
@@ -109,17 +97,13 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_cannot_connect(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Report a port that could not be opened.
-
-        A step of its own because a progress step may only hand off to another
-        step, and `user` would re-scan the same dead port.
-        """
+        """Abort after the port failed during the scan."""
         return self.async_abort(reason="cannot_connect")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show what the scan found and let the user adjust it."""
+        """Show what the scan found."""
         assert self._port is not None
         assert self._result is not None
 
@@ -127,14 +111,12 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not supported:
             if unsupported := self._result.unsupported:
-                # It answered; "nothing answered" sends them back for the same.
                 return self.async_abort(
                     reason="only_unsupported",
                     description_placeholders={
                         "unsupported": ", ".join(str(d.address) for d in unsupported)
                     },
                 )
-            # Silence means a wiring fault or dusk, and we cannot tell which.
             return self.async_abort(reason="no_inverters")
 
         if user_input is not None:
@@ -156,19 +138,13 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # Every inverter found is added. One that should not be polled is
-        # disabled afterwards, which drops it from the cycle as well.
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={"found": ", ".join(_label(d) for d in supported)},
         )
 
     async def _stable_path(self, port: str) -> str:
-        """Resolve a local device to its /dev/serial/by-id path.
-
-        `/dev/ttyUSB0` is assigned in probe order, so replugging renumbers it.
-        The by-id path encodes the adapter's USB serial and survives that.
-        """
+        """Resolve a local device to its stable /dev/serial/by-id path."""
         if not port.startswith("/dev/"):
             return port
         try:
@@ -178,11 +154,7 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
             return port
 
     async def _title(self, port: str) -> str:
-        """Name the entry after the port's description, not its URL.
-
-        A proxied port is an opaque URL naming another integration's entry id;
-        `usb` already knows it as, say, "AtomS3 Lite RS485 (RS-485)".
-        """
+        """Name the entry after the port's description, falling back to its path."""
         try:
             ports = await usb.async_scan_serial_ports(self.hass)
         except OSError:
@@ -195,11 +167,7 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
         return port
 
     async def _scan(self, port: str) -> ScanResult | None:
-        """Probe the whole bus, or return None if the port could not be used.
-
-        Reports rather than raises: a failed progress task leaves Home
-        Assistant to decide what to do with the exception.
-        """
+        """Probe the whole bus, or return None if the port failed."""
         LOGGER.debug("Scanning %s for KACO inverters", port)
 
         def report(done: int, total: int) -> None:
