@@ -35,18 +35,40 @@ async def test_user_input_step() -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "return_value", "log_message"),
     [
-        ResponseTimeoutError(FunctionalDomain.IDENTIFICATION, 2, 30),
-        NackError(NackStatus.GENERIC_ERROR, NackStatus.GENERIC_ERROR.value),
+        pytest.param(
+            ResponseTimeoutError(FunctionalDomain.IDENTIFICATION, 2, 30),
+            None,
+            "Timed out after 30 seconds waiting for the MAC address",
+            id="timeout",
+        ),
+        pytest.param(
+            NackError(NackStatus.GENERIC_ERROR, NackStatus.GENERIC_ERROR.value),
+            None,
+            "Thermostat rejected the MAC address request: Request was NACKed"
+            " with status GENERIC_ERROR (0x01)",
+            id="nack",
+        ),
+        pytest.param(
+            None,
+            {},
+            "MAC address missing from the thermostat response",
+            id="missing",
+        ),
     ],
 )
 async def test_config_flow_invalid_data(
-    client: AprilaireClient, side_effect: Exception
+    client: AprilaireClient,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: Exception | None,
+    return_value: dict[str, str] | None,
+    log_message: str,
 ) -> None:
     """Test that the flow shows an error when the MAC address can't be read."""
 
     client.read_mac_address_and_wait.side_effect = side_effect
+    client.read_mac_address_and_wait.return_value = return_value
 
     show_form_mock = Mock()
     set_unique_id_mock = AsyncMock()
@@ -69,6 +91,7 @@ async def test_config_flow_invalid_data(
     client.read_mac_address_and_wait.assert_called_once_with(30)
     client.read_thermostat_iaq_available_and_wait.assert_not_called()
     client.stop_listen.assert_called_once()
+    assert log_message in caplog.text
 
     show_form_mock.assert_called_once_with(
         step_id="user",

@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import pyaprilaire.client
-from pyaprilaire.client import AprilaireResponseError
+from pyaprilaire.client import AprilaireResponseError, NackError, ResponseTimeoutError
 from pyaprilaire.const import MODELS, Attribute
 
 from homeassistant.config_entries import ConfigEntry
@@ -114,11 +114,22 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
             try:
                 data = await self.client.read_mac_address_and_wait(WAIT_TIMEOUT)
-            except AprilaireResponseError:
-                data = None
+            except ResponseTimeoutError:
+                _LOGGER.error(
+                    "Timed out after %d seconds waiting for the MAC address",
+                    WAIT_TIMEOUT,
+                )
+                await ready_callback(False)
+
+                return False
+            except NackError as err:
+                _LOGGER.error("Thermostat rejected the MAC address request: %s", err)
+                await ready_callback(False)
+
+                return False
 
             if not data or Attribute.MAC_ADDRESS not in data:
-                _LOGGER.error("Missing MAC address")
+                _LOGGER.error("MAC address missing from the thermostat response")
                 await ready_callback(False)
 
                 return False
