@@ -69,5 +69,6 @@ class LocalCalendarStore(CalendarStore):
     async def async_remove(self) -> None:
         """Remove persisted data and prevent further writes."""
         self._store.make_read_only()
+        # Wait for active writes before removing the file.
         await self.async_flush()
         await self._store.async_remove()
