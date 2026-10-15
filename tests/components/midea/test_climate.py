@@ -49,6 +49,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
@@ -149,7 +150,7 @@ async def test_midea_ac_climate_setup_and_services(
             (
                 "set_raw_target_temperature",
                 {
-                    "target_temperature": 23.1,
+                    "target_temperature": 23.0,
                     "hvac_mode": HVACMode.COOL,
                     "zone": None,
                 },
@@ -413,7 +414,7 @@ async def test_midea_c3_climate_setup_and_services(
             (
                 "set_raw_target_temperature",
                 {
-                    "target_temperature": 21.4,
+                    "target_temperature": 21.0,
                     "hvac_mode": HVACMode.COOL,
                     "zone": 0,
                 },
@@ -606,6 +607,52 @@ async def test_ac_set_temperature_without_hvac_mode(
             (
                 "set_raw_target_temperature",
                 {"target_temperature": 23.0, "hvac_mode": None, "zone": None},
+            )
+        ],
+        device,
+    )
+
+
+@pytest.mark.parametrize(
+    ("temperature_step", "temperature_f", "expected_c"),
+    [
+        pytest.param(0.5, 75, 24.0, id="halves_round_up"),
+        pytest.param(0.5, 74, 23.5, id="halves_round_down"),
+        pytest.param(1, 74, 23.0, id="whole"),
+    ],
+)
+async def test_ac_set_temperature_fahrenheit_rounds_to_step(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    temperature_step: float,
+    temperature_f: float,
+    expected_c: float,
+) -> None:
+    """Test a °F target is rounded to the device step after conversion to °C."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 2,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+        },
+    )
+    device.temperature_step = temperature_step
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
+
+    await _assert_service_calls(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_TEMPERATURE: temperature_f},
+        [
+            (
+                "set_raw_target_temperature",
+                {"target_temperature": expected_c, "hvac_mode": None, "zone": None},
             )
         ],
         device,

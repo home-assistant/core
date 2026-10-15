@@ -248,7 +248,10 @@ class MideaClimate(MideaEntity, ClimateEntity):
         """Midea Climate set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
-        temperature = kwargs[ATTR_TEMPERATURE]
+        # Unit-converted targets (e.g. from °F) must land on the device step,
+        # as midea-local truncates rather than rounds when encoding.
+        step = self.target_temperature_step or PRECISION_HALVES
+        temperature = round(kwargs[ATTR_TEMPERATURE] / step) * step
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
         if hvac_mode == HVACMode.OFF:
             self.turn_off()
