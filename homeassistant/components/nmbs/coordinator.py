@@ -98,38 +98,39 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             _LOGGER.debug("Unable to parse %s: %s", feed, err)
             return None
 
-    def _config_entry_entities(self) -> list[er.RegistryEntry]:
-        """Return the entity registry entries of this config entry."""
-        return er.async_entries_for_config_entry(
-            er.async_get(self.hass), self.config_entry.entry_id
-        )
-
-    def _connection_entity_enabled(self) -> bool:
-        """Return True if the connection entity is enabled or not yet registered."""
-        entries = self._config_entry_entities()
-        return not entries or any(
-            entry.disabled_by is None
-            and entry.unique_id.startswith(CONNECTION_UNIQUE_ID_PREFIX)
+    def _connection_entity_enabled(self, entries: list[er.RegistryEntry]) -> bool:
+        """Return True if the connection entity is enabled or not registered."""
+        connection_entries = [
+            entry
             for entry in entries
+            if entry.unique_id.startswith(CONNECTION_UNIQUE_ID_PREFIX)
+        ]
+        return not connection_entries or any(
+            entry.disabled_by is None for entry in connection_entries
         )
 
-    def _liveboard_entity_enabled(self, station: StationDetails) -> bool:
+    def _liveboard_entity_enabled(
+        self, station: StationDetails, entries: list[er.RegistryEntry]
+    ) -> bool:
         """Return True if the liveboard entity for the station is enabled."""
         prefix = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station.id}_"
         return any(
             entry.disabled_by is None and entry.unique_id.startswith(prefix)
-            for entry in self._config_entry_entities()
+            for entry in entries
         )
 
     @override
     async def _async_update_data(self) -> NMBSData:
         """Fetch the next connection and the departures of enabled liveboards."""
+        entries = er.async_entries_for_config_entry(
+            er.async_get(self.hass), self.config_entry.entry_id
+        )
         stations = [
             station
             for station in (self.station_from, self.station_to)
-            if self._liveboard_entity_enabled(station)
+            if self._liveboard_entity_enabled(station, entries)
         ]
-        fetch_connection = self._connection_entity_enabled()
+        fetch_connection = self._connection_entity_enabled(entries)
         async with asyncio.TaskGroup() as task_group:
             connection_task = (
                 task_group.create_task(

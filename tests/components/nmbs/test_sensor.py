@@ -544,6 +544,23 @@ async def test_disabled_connection_is_not_fetched(
     assert mock_nmbs_client.get_liveboard.call_count == 0
 
 
+async def test_removed_connection_entity_is_fetched(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the coordinator fetches connections when the entity was removed."""
+    await _setup_entry(hass, mock_config_entry)
+    assert mock_nmbs_client.get_connections.call_count == 1
+
+    entity_registry.async_remove(_get_entity_id(entity_registry, CONNECTION_UNIQUE_ID))
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_nmbs_client.get_connections.call_count == 2
+
+
 async def test_sensors_unavailable_when_api_fails(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
