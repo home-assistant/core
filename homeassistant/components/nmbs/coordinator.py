@@ -9,6 +9,7 @@ from typing import override
 from pyrail import iRail
 from pyrail.models import (
     ConnectionDetails,
+    ConnectionsApiResponse,
     LiveboardApiResponse,
     LiveboardDeparture,
     StationDetails,
@@ -19,12 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_TO,
+    CONNECTION_UNIQUE_ID_PREFIX,
     DOMAIN,
     LIVEBOARD_UNIQUE_ID_PREFIX,
     NMBS_STATION_DATA,
@@ -42,6 +44,7 @@ class NMBSData:
     """Data fetched by the NMBS coordinator."""
 
     connection: ConnectionDetails | None
+    failed_connection: bool
     next_departures: dict[str, LiveboardDeparture | None]
     failed_liveboards: set[str]
 
@@ -84,6 +87,20 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self.station_to = station_to
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
 
+    async def _async_fetch_connection(self) -> ConnectionsApiResponse | None:
+        """Fetch connections, returning None when the request fails."""
+        try:
+            return await self.client.get_connections(
+                self.station_from.id, self.station_to.id
+            )
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timeout while fetching the connection from %s to %s",
+                self.station_from.standard_name,
+                self.station_to.standard_name,
+            )
+            return None
+
     async def _async_fetch_liveboard(
         self, station: StationDetails
     ) -> LiveboardApiResponse | None:
@@ -96,15 +113,27 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             )
             return None
 
+    def _config_entry_entities(self) -> list[er.RegistryEntry]:
+        """Return the entity registry entries of this config entry."""
+        return er.async_entries_for_config_entry(
+            er.async_get(self.hass), self.config_entry.entry_id
+        )
+
+    def _connection_entity_enabled(self) -> bool:
+        """Return True if the connection entity is enabled or not yet registered."""
+        entries = self._config_entry_entities()
+        return not entries or any(
+            entry.disabled_by is None
+            and entry.unique_id.startswith(CONNECTION_UNIQUE_ID_PREFIX)
+            for entry in entries
+        )
+
     def _liveboard_entity_enabled(self, station: StationDetails) -> bool:
         """Return True if the liveboard entity for the station is enabled."""
-        registry = er.async_get(self.hass)
         prefix = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station.id}_"
         return any(
             entry.disabled_by is None and entry.unique_id.startswith(prefix)
-            for entry in er.async_entries_for_config_entry(
-                registry, self.config_entry.entry_id
-            )
+            for entry in self._config_entry_entities()
         )
 
     @override
@@ -115,34 +144,33 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             for station in (self.station_from, self.station_to)
             if self._liveboard_entity_enabled(station)
         ]
-        try:
-            async with asyncio.TaskGroup() as task_group:
-                connections_task = task_group.create_task(
-                    self.client.get_connections(
-                        self.station_from.id, self.station_to.id
-                    )
-                )
-                liveboard_tasks = {
-                    station.id: task_group.create_task(
-                        self._async_fetch_liveboard(station)
-                    )
-                    for station in stations
-                }
-        except* TimeoutError as err:
-            raise UpdateFailed(
-                f"Timeout while fetching data from the iRail API: {err.exceptions[0]}"
-            ) from err
-        connections_response = connections_task.result()
-        if connections_response is None:
-            raise UpdateFailed("Unable to fetch data from the iRail API")
+        fetch_connection = self._connection_entity_enabled()
+        async with asyncio.TaskGroup() as task_group:
+            connection_task = (
+                task_group.create_task(self._async_fetch_connection())
+                if fetch_connection
+                else None
+            )
+            liveboard_tasks = {
+                station.id: task_group.create_task(self._async_fetch_liveboard(station))
+                for station in stations
+            }
+        connections_response = (
+            connection_task.result() if connection_task is not None else None
+        )
+        failed_connection = fetch_connection and connections_response is None
 
-        upcoming = [
-            connection
-            for connection in connections_response.connections
-            if not connection.departure.left
-        ]
-        if self.exclude_vias:
-            upcoming = [connection for connection in upcoming if not connection.vias]
+        upcoming: list[ConnectionDetails] = []
+        if connections_response is not None:
+            upcoming = [
+                connection
+                for connection in connections_response.connections
+                if not connection.departure.left
+            ]
+            if self.exclude_vias:
+                upcoming = [
+                    connection for connection in upcoming if not connection.vias
+                ]
 
         next_departures: dict[str, LiveboardDeparture | None] = {}
         failed_liveboards: set[str] = set()
@@ -161,6 +189,7 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
 
         return NMBSData(
             connection=upcoming[0] if upcoming else None,
+            failed_connection=failed_connection,
             next_departures=next_departures,
             failed_liveboards=failed_liveboards,
         )

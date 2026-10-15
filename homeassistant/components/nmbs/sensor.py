@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import LIVEBOARD_UNIQUE_ID_PREFIX
+from .const import CONNECTION_UNIQUE_ID_PREFIX, LIVEBOARD_UNIQUE_ID_PREFIX
 from .coordinator import NMBSConfigEntry, NMBSCoordinator
 from .entity import NMBSEntity
 
@@ -78,7 +78,13 @@ class NMBSSensor(NMBSEntity, SensorEntity):
         unique_id = f"{coordinator.station_from.id}_{coordinator.station_to.id}"
         vias = "_excl_vias" if coordinator.exclude_vias else ""
         # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = f"nmbs_connection_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = f"{CONNECTION_UNIQUE_ID_PREFIX}{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the coordinator and the connection feed succeeded."""
+        return super().available and not self.coordinator.data.failed_connection
 
     @property
     def connection(self) -> ConnectionDetails | None:

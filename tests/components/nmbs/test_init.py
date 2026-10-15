@@ -82,14 +82,14 @@ async def test_setup_entry_connections_api_unavailable(
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the entry is retried when the coordinator cannot fetch data."""
+    """Test the entry loads when the connections API is unavailable."""
     mock_nmbs_client.get_connections.return_value = None
     mock_config_entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_unknown_station(

@@ -445,6 +445,84 @@ async def test_enabled_liveboard_is_fetched(
     mock_nmbs_client.get_liveboard.assert_called_once_with(STATION_FROM)
 
 
+@pytest.mark.parametrize(
+    ("connection_side_effect", "connection_return_value"),
+    [
+        pytest.param(None, None, id="api_failure"),
+        pytest.param(TimeoutError, None, id="timeout"),
+    ],
+)
+async def test_connection_failure_only_affects_its_sensor(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    connection_side_effect: type[Exception] | None,
+    connection_return_value: ConnectionsApiResponse | None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed connection only affects the connection sensor."""
+    freezer.move_to(FROZEN_TIME)
+    await _setup_entry(hass, mock_config_entry)
+    await _enable_liveboards(hass, entity_registry, mock_config_entry)
+
+    from_id = _get_entity_id(entity_registry, LIVEBOARD_FROM_UNIQUE_ID)
+    from_state = hass.states.get(from_id)
+    assert from_state is not None
+    assert from_state.state == "Track 3 - Blankenberge"
+
+    mock_nmbs_client.get_connections.side_effect = connection_side_effect
+    mock_nmbs_client.get_connections.return_value = connection_return_value
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    connection_state = hass.states.get(
+        _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
+    )
+    assert connection_state is not None
+    assert connection_state.state == STATE_UNAVAILABLE
+
+    from_state = hass.states.get(from_id)
+    assert from_state is not None
+    assert from_state.state == "Track 3 - Blankenberge"
+
+    mock_nmbs_client.get_connections.side_effect = None
+    mock_nmbs_client.get_connections.return_value = ConnectionsApiResponse.from_dict(
+        await async_load_json_object_fixture(hass, "connections.json", DOMAIN)
+    )
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    connection_state = hass.states.get(
+        _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
+    )
+    assert connection_state is not None
+    assert connection_state.state == "20"
+
+
+async def test_disabled_connection_is_not_fetched(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the coordinator stops fetching connections when the entity is disabled."""
+    await _setup_entry(hass, mock_config_entry)
+    assert mock_nmbs_client.get_connections.call_count == 1
+
+    entity_registry.async_update_entity(
+        _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID),
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_nmbs_client.get_connections.call_count == 1
+    assert mock_nmbs_client.get_liveboard.call_count == 0
+
+
 async def test_sensors_unavailable_when_api_fails(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
