@@ -158,20 +158,35 @@ class TargetTriggerFormat(TriggerFormat):
             CONF_TARGET: {"entity_id": entity_id},
         }
         if offset:
-            options: dict[str, Any] = {}
-            # Convert signed offset to offset + offset_type
-            if offset < datetime.timedelta(0):
-                options[CONF_OFFSET] = -offset
-                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_BEFORE
-            else:
-                options[CONF_OFFSET] = offset
-                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_AFTER
-            trigger_data[CONF_OPTIONS] = options
+            trigger_data[CONF_OPTIONS] = {CONF_OFFSET: offset}
+        return trigger_data
+
+
+@dataclass
+class TargetOffsetTypeTriggerFormat(TargetTriggerFormat):
+    """Target trigger format with a positive offset and an offset type."""
+
+    id: str = "target_offset_type"
+
+    def get_trigger_data(
+        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+    ) -> dict[str, Any]:
+        """Get the trigger configuration data."""
+        trigger_data = super().get_trigger_data(entity_id, event_type)
+        if offset:
+            trigger_data[CONF_OPTIONS] = {
+                CONF_OFFSET: abs(offset),
+                CONF_OFFSET_TYPE: OFFSET_TYPE_BEFORE
+                if offset < datetime.timedelta(0)
+                else OFFSET_TYPE_AFTER,
+            }
         return trigger_data
 
 
 TRIGGER_FORMATS = [LegacyTriggerFormat(), TargetTriggerFormat()]
 TRIGGER_FORMAT_IDS = [fmt.id for fmt in TRIGGER_FORMATS]
+OFFSET_TRIGGER_FORMATS = [*TRIGGER_FORMATS, TargetOffsetTypeTriggerFormat()]
+OFFSET_TRIGGER_FORMAT_IDS = [fmt.id for fmt in OFFSET_TRIGGER_FORMATS]
 
 
 @pytest.fixture(params=TRIGGER_FORMATS, ids=TRIGGER_FORMAT_IDS)
@@ -446,6 +461,9 @@ async def test_event_start_trigger(
 
 
 @pytest.mark.parametrize(
+    "trigger_format", OFFSET_TRIGGER_FORMATS, ids=OFFSET_TRIGGER_FORMAT_IDS
+)
+@pytest.mark.parametrize(
     ("offset_delta"),
     [
         datetime.timedelta(hours=-1),
@@ -515,6 +533,9 @@ async def test_event_end_trigger(
         ]
 
 
+@pytest.mark.parametrize(
+    "trigger_format", OFFSET_TRIGGER_FORMATS, ids=OFFSET_TRIGGER_FORMAT_IDS
+)
 @pytest.mark.parametrize(
     ("offset_delta"),
     [
