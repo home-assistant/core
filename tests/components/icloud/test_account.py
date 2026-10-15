@@ -281,6 +281,44 @@ async def test_a_failed_locate_does_not_cost_the_poll(
     assert "device1" in account.devices
 
 
+async def test_a_rejected_session_on_locate_reaches_the_caller(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    mock_icloud_service: MagicMock,
+) -> None:
+    """Test that a locate refused for authentication is not treated as best effort.
+
+    Only a failure to locate is swallowed. A rejected session is what the
+    caller acts on, by logging in again or asking the user, so it has to be
+    raised instead of leaving every later poll to fail the same way.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+    service = mock_icloud_service.return_value
+
+    with patch.object(account, "_schedule_next_fetch"):
+        await hass.async_add_executor_job(account.setup)
+
+        service.devices.refresh = Mock(
+            side_effect=PyiCloudFailedLoginException("rejected")
+        )
+        with pytest.raises(PyiCloudFailedLoginException):
+            await hass.async_add_executor_job(account.update_devices)
+
+
 async def test_a_poll_with_no_devices_still_schedules_the_next_one(
     hass: HomeAssistant,
     mock_store: Mock,
