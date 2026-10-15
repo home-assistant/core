@@ -107,6 +107,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 
     def _register_service() -> None:
+        # Cannot be moved: the integration is disabled
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             SERVICE_NAME,

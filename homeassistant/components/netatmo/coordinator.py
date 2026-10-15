@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from itertools import islice
 import logging
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 import pyatmo
@@ -61,6 +61,9 @@ from .device import (
     async_sync_home_disabled_state,
     netatmo_module_parents,
 )
+
+if TYPE_CHECKING:
+    from .webhook import NetatmoWebhookManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,6 +159,7 @@ class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
     account: pyatmo.AsyncAccount
+    webhook_manager: NetatmoWebhookManager
     _interval_factor: int
 
     def __init__(
@@ -170,7 +174,8 @@ class NetatmoDataHandler:
         self.auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
-        self._webhook: bool = False
+        self._webhook_delivering: bool = False
+        self.webhook_registered: bool = False
         if config_entry.data["auth_implementation"] == cloud.DOMAIN:
             self._interval_factor = CLOUD_FACTOR
             self._rate_limit = CLOUD_LIMIT
@@ -276,11 +281,11 @@ class NetatmoDataHandler:
         """Handle webhook events."""
         if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
             _LOGGER.debug("%s webhook successfully registered", MANUFACTURER)
-            self._webhook = True
+            self._webhook_delivering = True
 
         elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_DEACTIVATION:
             _LOGGER.debug("%s webhook unregistered", MANUFACTURER)
-            self._webhook = False
+            self._webhook_delivering = False
 
         elif event["data"][WEBHOOK_PUSH_TYPE] in CAMERA_CONNECTION_WEBHOOKS:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
@@ -382,9 +387,9 @@ class NetatmoDataHandler:
             _LOGGER.debug("Publisher %s removed", signal_name)
 
     @property
-    def webhook(self) -> bool:
-        """Return the webhook state."""
-        return self._webhook
+    def webhook_delivering(self) -> bool:
+        """Return whether a delivery has proven the webhook works."""
+        return self._webhook_delivering
 
     async def async_dispatch(self) -> None:
         """Dispatch the creation of entities."""

@@ -56,5 +56,10 @@
         "name": "Version"
       }
     }
+  },
+  "exceptions": {
+    "address_lookup_failed": {
+      "message": "Unable to look up the address of Minecraft server {host}"
+    }
   }
 }

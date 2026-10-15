@@ -31,7 +31,10 @@ _EXEC_FAILED_CODE = 127
 # brace expansion (dash/ash do not). "~" and "#" are kept because they are
 # position-dependent (tilde expands at a word start, "#" starts a comment) and a
 # flat membership test cannot check position, so we over-warn to stay safe.
+# Quoted or backslash-escaped characters are literal and do not count.
 _SHELL_FEATURE_CHARS = frozenset("|&;<>()$`*?[]{}~#\n")
+# Inside double quotes the shell still expands these.
+_DOUBLE_QUOTED_SHELL_FEATURE_CHARS = frozenset("$`")
 _DEPRECATION_ISSUE_BREAKS_IN = "2027.4.0"
 _LEARN_MORE_URL = "https://www.home-assistant.io/integrations/command_line/"
 _ISSUE_ID_PREFIX = "shell_command_template_"
@@ -41,8 +44,35 @@ _ASSIGNMENT_PREFIX = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 
 
 def _has_shell_features(command: str) -> bool:
-    """Return True if command contains shell metacharacters."""
-    return any(c in _SHELL_FEATURE_CHARS for c in command)
+    """Return True if command contains shell metacharacters outside quotes.
+
+    Also returns True for escapes that /bin/sh and shlex.split unquote
+    differently, so the exec path never sees different arguments than the shell.
+    """
+    quote: str | None = None
+    chars = iter(command)
+    for c in chars:
+        if quote == "'":
+            if c == "'":
+                quote = None
+        elif c == "\\":
+            escaped = next(chars, "")
+            # shlex keeps an escaped newline (sh drops it) and, inside double
+            # quotes, keeps the backslash before "$" and "`" (sh drops it).
+            if escaped == "\n" or (
+                quote == '"' and escaped in _DOUBLE_QUOTED_SHELL_FEATURE_CHARS
+            ):
+                return True
+        elif quote == '"':
+            if c == '"':
+                quote = None
+            elif c in _DOUBLE_QUOTED_SHELL_FEATURE_CHARS:
+                return True
+        elif c in "'\"":
+            quote = c
+        elif c in _SHELL_FEATURE_CHARS:
+            return True
+    return False
 
 
 @callback
@@ -247,6 +277,13 @@ def render_template_args(
 
     prog, args = command.split(" ", 1)
     args_compiled = Template(args, hass)
+    if args_compiled.is_static:
+        # Rendering would still strip a trailing newline (from a YAML block
+        # scalar), making a plain command look like a substituted template.
+        issue_id = build_shell_template_issue_id(platform, name)
+        _update_issue(hass, issue_id, prog, platform, name, create=False)
+        LOGGER.debug("Running command: %s", command)
+        return command
 
     try:
         # parse_result=False keeps the output a string; the args are executed as a

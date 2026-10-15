@@ -1,7 +1,7 @@
 {
   "domain": "solaredge",
   "name": "SolarEdge",
-  "codeowners": ["@frenck", "@bdraco", "@tronikos"],
+  "codeowners": ["@bdraco", "@tronikos"],
   "config_flow": true,
   "dependencies": ["recorder"],
   "dhcp": [

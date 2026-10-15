@@ -19,6 +19,7 @@ from .common import setup_platform
 from tests.common import MockConfigEntry, snapshot_platform
 
 CAMERA_ENTITY_ID = "camera.test_cam"
+RENAMED_CAMERA_ENTITY_ID = "camera.renamed_cam"
 
 
 @pytest.fixture(autouse=True)
@@ -137,23 +138,58 @@ async def test_timeline_capture_after_entity_removed(
     mock_update_image_location.assert_not_called()
 
 
-async def test_timeline_capture_after_entity_readded(
+async def test_timeline_capture_after_entity_id_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_update_image_location: MagicMock,
 ) -> None:
-    """Test a re-added camera handles each timeline capture event once."""
+    """Test a renamed camera handles each timeline capture event once."""
     config_entry = await setup_platform(hass, CAMERA_DOMAIN)
 
-    # Changing the entity_id removes and re-adds the same entity object.
+    # The entity_id is changed in place, the timeline subscription is kept.
     entity_registry.async_update_entity(
-        CAMERA_ENTITY_ID, new_entity_id="camera.renamed_cam"
+        CAMERA_ENTITY_ID, new_entity_id=RENAMED_CAMERA_ENTITY_ID
     )
     await hass.async_block_till_done()
-    assert hass.states.get("camera.renamed_cam")
+    assert hass.states.get(RENAMED_CAMERA_ENTITY_ID)
 
     callbacks = _timeline_capture_callbacks(config_entry)
     assert len(callbacks) == 1
 
     await _fire_capture(hass, callbacks)
     mock_update_image_location.assert_called_once()
+
+
+async def test_capture_image_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the capture image service follows an entity_id change."""
+    config_entry = await setup_platform(hass, CAMERA_DOMAIN)
+    entity_registry.async_update_entity(
+        CAMERA_ENTITY_ID, new_entity_id=RENAMED_CAMERA_ENTITY_ID
+    )
+    await hass.async_block_till_done()
+
+    with patch("jaraco.abode.devices.camera.Camera.capture") as mock_capture:
+        await hass.services.async_call(
+            DOMAIN,
+            "capture_image",
+            {ATTR_ENTITY_ID: CAMERA_ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_capture.assert_not_called()
+
+        await hass.services.async_call(
+            DOMAIN,
+            "capture_image",
+            {ATTR_ENTITY_ID: RENAMED_CAMERA_ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_capture.assert_called_once()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert "Unable to remove unknown dispatcher" not in caplog.text

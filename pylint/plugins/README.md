@@ -105,6 +105,7 @@ Every check has a code following the
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
+| `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -143,7 +144,17 @@ Every check has a code following the
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
-
+| `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
+| `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
+| `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
+| `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
+| `W7445` | [`home-assistant-test-flow-start-helper`](#w7445-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
+| `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
+| `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
+| `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
+| `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
+| `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
+| `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
 
 ## `home_assistant_logger` checker
 
@@ -310,6 +321,92 @@ entry unload, and avoids key collisions in the shared `hass.data` dictionary.
 
 See the [runtime-data quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data)
 for migration guidance.
+
+
+## `home_assistant_coordinator_config_entry` checker
+
+Checks how a `DataUpdateCoordinator` handles its config entry.
+
+### `W7447`: `home-assistant-coordinator-untyped-config-entry`
+
+When an integration defines a typed config entry, such as
+`type MyConfigEntry = ConfigEntry[MyCoordinator]`, its coordinators should use
+it for the `config_entry` class annotation and `__init__` argument, so
+`self.config_entry.runtime_data` is typed as well:
+
+```python
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    config_entry: MyConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
+        ...
+```
+
+When the alias lives in `__init__.py`, import it in the coordinator under
+`if TYPE_CHECKING:` to avoid a circular import, or move it to
+`coordinator.py`.
+
+### `W7448`: `home-assistant-coordinator-redundant-config-entry`
+
+`DataUpdateCoordinator.__init__` stores the `config_entry` it is given, so a
+coordinator that passes `config_entry` to `super().__init__` doesn't need to
+assign `self.config_entry` itself. To narrow its type, annotate it on the
+class instead.
+
+
+## `home_assistant_coordinator_entity_available` checker
+
+Checks `available` overrides on coordinator entities.
+
+### `W7449`: `home-assistant-coordinator-entity-available`
+
+`CoordinatorEntity.available` returns `coordinator.last_update_success`, so the
+entity becomes unavailable when an update fails. An override that takes its
+availability only from `coordinator.data` keeps the entity available with the
+data of the last successful update, because the coordinator keeps that data
+when an update fails:
+
+```python
+@property
+def available(self) -> bool:
+    return super().available and self.device_id in self.coordinator.data
+```
+
+Properties and methods of the entity and the coordinator are followed, so
+`self.data` or `self.coordinator.get_device(...)` reading `coordinator.data`
+count as coordinator data.
+
+Overrides with a source of their own, such as a client, a device, a websocket
+or `_attr_available`, are not flagged. Neither are entities of a push
+coordinator, one that never sets an `update_interval` and gets its data
+through `async_set_updated_data`: its `last_update_success` doesn't show
+whether the device is reachable.
+
+
+## `home_assistant_log_and_raise` checker
+
+Checks for errors that are logged and then raised to Home Assistant.
+
+### `W7450`: `home-assistant-log-and-raise`
+
+Home Assistant already reports the exceptions an integration raises to it:
+config entry setup logs `ConfigEntryNotReady`, `ConfigEntryAuthFailed` and
+`ConfigEntryError`, a coordinator logs `UpdateFailed`, and a failing action
+returns `HomeAssistantError` or `ServiceValidationError` to the caller.
+Logging the error at warning level or higher before raising it reports it
+twice, and for `ConfigEntryNotReady` on every retry:
+
+```python
+except MyDeviceError as err:
+    raise UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+    ) from err
+```
+
+Put the details in the exception or log them at debug level. Exceptions that
+an integration defines itself, such as a config flow's `CannotConnect`, are
+not checked.
 
 
 ## `home_assistant_async_load_fixtures` checker
@@ -517,6 +614,73 @@ it, unless the receiver is known to be something other than a coordinator,
 such as a mock.
 
 
+## `home_assistant_tests_config_flow_unique_id` checker
+
+Detects config flow tests that create an entry without checking its unique ID.
+
+### `W7440`: `home-assistant-tests-config-flow-unique-id`
+
+When the integration's config flow calls `async_set_unique_id`, a happy path
+test in `tests/components/<domain>/test_config_flow.py` that asserts a
+`CREATE_ENTRY` result should also assert the unique ID of the new entry:
+
+```python
+assert result["type"] is FlowResultType.CREATE_ENTRY
+assert result["result"].unique_id == "1234"
+```
+
+An assert that references `unique_id` or a `snapshot` counts as a check.
+Results of options and subentry flows are ignored, as those don't set a
+unique ID; results that can't be traced, such as those returned by a helper,
+are checked. Tests that start an options or subentry flow are skipped, as
+they run the config flow only as setup. Tests that recover from an error are
+skipped too: they make a mock raise an exception through `side_effect` or
+expect non-empty `errors`. Resetting a `side_effect` to `None`, replacing a
+method with a function or a mock, or returning a list of values doesn't count
+as an error.
+
+
+## `home_assistant_tests_config_flow_error_recovery` checker
+
+Detects config flow tests that show an error but never prove the user can
+recover from it.
+
+### `W7441`: `home-assistant-tests-config-flow-error-recovery`
+
+A config flow test that asserts a step shows an error should then fix the
+cause and finish the flow, so the test proves the flow recovers:
+
+```python
+assert result["errors"] == {"base": "cannot_connect"}
+
+mock_client.connect.side_effect = None
+result = await hass.config_entries.flow.async_configure(
+    result["flow_id"], USER_INPUT
+)
+assert result["type"] is FlowResultType.CREATE_ENTRY
+```
+
+Only `tests/components/<domain>/test_config_flow.py` modules are checked.
+Any error counts, on any field and in any flow (user, discovery, reauth,
+reconfigure, options, subentry): `errors == {...}`, `errors["base"] == ...`,
+`"base" in errors`, a bare `assert result["errors"]` and `errors != {}`, also
+through a local alias such as `errors = result["errors"]`. A test is flagged
+when, after an error assertion, it never asserts that a result has type
+`CREATE_ENTRY` or aborted with a `*_successful` reason (as reauth and
+reconfigure flows do); every error needs its own. A finishing assertion in a
+branch that cannot run after the error, such as the `else` of the `if` that
+shows the error, does not count, and neither does one after a new flow is
+started with `async_init`: that flow is not the one that showed the error.
+
+Helper functions from the integration's own tests are followed, both for
+showing the error (such as `assert_form_error(result, "cannot_connect")`) and
+for finishing the flow, with the arguments they are called with. A reason
+taken from a test argument counts when all its `pytest.mark.parametrize`
+values end with `_successful`.
+
+See the [config-flow-test-coverage quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow-test-coverage).
+
+
 ## `home_assistant_enforce_utcnow` checker
 
 Ensures the Home Assistant helper is used to get the current UTC time.
@@ -704,6 +868,46 @@ literal defaults `None`, `True`, and `False` are checked; other default
 values are not flagged.
 
 
+## `home_assistant_redundant_translation_key` checker
+
+Detects entity descriptions and entity classes whose `translation_key` only
+repeats the name the `device_class` already provides.
+
+### `W7442`: `home-assistant-redundant-translation-key`
+
+Entities on the `binary_sensor`, `button`, `event`, `number`, `sensor` and
+`update` platforms are named after their device class when they have no
+name of their own. The name comes from `entity_component.<device_class>.name`
+in the platform's `strings.json`. Sensors with the `enum` device class are
+the exception.
+
+An entity description that sets a `device_class` and a `translation_key`
+whose name translates to the same string adds nothing:
+
+```python
+SensorEntityDescription(
+    key="power",
+    translation_key="power",  # "Power", the same as the device class name
+    device_class=SensorDeviceClass.POWER,
+)
+```
+
+The same goes for an entity class that sets `_attr_translation_key` and
+`_attr_device_class` in its body.
+
+When the key is used for nothing else, remove it and its `strings.json`
+entry. When it also holds other translations (such as states, state
+attributes or the unit of measurement) or icons, or the integration's code
+reads it, keep the key and remove only its `name`.
+
+Entities with an explicit `name` (or `_attr_name`) are skipped, as that name
+takes over once the translated name is gone. So are translated names that
+another translation references with `[%key:...%]`.
+
+Other platforms, such as `switch`, don't fall back to the device class name,
+so they are not checked.
+
+
 ## `home_assistant_duplicate_const` checker
 
 Detects constants in integration modules that duplicate one already exported
@@ -738,9 +942,28 @@ Detects services registered inside `async_setup_entry` rather than
 Services should be registered in `async_setup` so they are available for
 automation validation even when no config entry is loaded. Registrations
 inside helper functions that are called from `async_setup_entry` are
-caught too.
+caught too, as are calls to the conventional `async_setup_services` helper
+from `services.py`.
 
 See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
+
+
+## `home_assistant_actions_services_module` checker
+
+Detects actions registered outside the integration's `services.py`.
+
+### `W7452`: `home-assistant-action-registered-outside-services-module`
+
+Actions should be registered in `services.py`, from `async_setup_services`
+(called from `async_setup`) or `setup_services` (called from a synchronous
+`setup`). Module-level functions in `services.py` that are called from these
+functions may register actions too.
+
+### `W7453`: `home-assistant-invalid-setup-services`
+
+`async_setup_services` should be a synchronous function decorated with
+`@callback`, and `setup_services` a synchronous function that is not, since
+it runs in the executor. Both should only take `hass`.
 
 
 ## `home_assistant_exception_translations` checker
@@ -749,6 +972,11 @@ Ensures `HomeAssistantError` and its subclasses use the translation system
 (`translation_domain`, `translation_key`) instead of hardcoded English
 strings. Also verifies that referenced translation keys exist in the
 integration's `strings.json` and that placeholders match.
+
+`translation_domain` may be a string literal, the integration's own `DOMAIN`,
+or a constant that resolves to a string, such as
+`from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN`. Keys
+and placeholders are then checked against that domain's `strings.json`.
 
 ### `W7417`: `home-assistant-exception-not-translated`
 
@@ -832,6 +1060,39 @@ Only aliases imported from `homeassistant.helpers` are tracked. The
 checker is scoped to test modules; `conftest.py` files (where the
 fixtures themselves are defined) and `tests.helpers` (which exercises the
 registry helpers directly) are exempt.
+
+
+## `home_assistant_tests_user_flow_no_data` checker
+
+Detects tests that pass a `data` argument when initializing a user config
+flow. In production a user flow is always started without data — only
+discovery flows (zeroconf, dhcp, ssdp, ...) receive `data`. Passing `data`
+to a user flow init therefore exercises a code path that cannot happen in
+reality.
+
+### `R7405`: `home-assistant-tests-user-flow-no-data`
+
+A `hass.config_entries.flow.async_init(...)` or
+`hass.config_entries.subentries.async_init(...)` call passes a `data`
+keyword argument while its `context` sets the source to the user source.
+The user source is recognized as `SOURCE_USER`, `config_entries.SOURCE_USER`,
+or the literal `"user"`, and the `context` may be a dict literal or a
+`ConfigFlowContext(source=...)` call:
+
+```python
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": SOURCE_USER},
+    data={CONF_HOST: "127.0.0.1"},  # <-- flagged
+)
+```
+
+Only the config-entry flow managers (`config_entries.flow` and
+`config_entries.subentries`) are checked, so unrelated `async_init` methods
+are not flagged. Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`),
+dynamic source values (a variable rather than a known user source), and user
+flows without
+`data` are not flagged. The checker is scoped to test modules.
 
 
 ## `home_assistant_test_determinism` checker
@@ -1085,3 +1346,41 @@ Detects config flow classes that set `CONNECTION_CLASS`.
 
 `CONNECTION_CLASS` is no longer used by Home Assistant and should not be set
 on config flows. Remove the attribute.
+
+## `home-assistant-step_id-match-method` checker
+
+Detects config flows using a `step_id` parameter different than the method it is
+currently in.
+
+### `W7443`: `home-assistant-step_id-match-method`
+
+Check the `step_id` parameter for all calls to `async_show_form`,
+`async_external_step`, `async_show_progress` and `async_show_menu`.
+The `step_id` parameter should be same as the method it is in.
+For example: `step_id="user"` should be used in `async_step_user`
+
+
+## `home_assistant_flow_start_helpers` checker
+
+Enforces the use of `MockConfigEntry` helpers to start reauth and
+reconfigure flows in integration tests.
+
+### `W7445`: `home-assistant-test-flow-start-helper`
+
+Tests must not start a reauth or reconfigure flow by calling
+`hass.config_entries.flow.async_init` with a hand-built `context`
+(`"source": SOURCE_REAUTH` / `SOURCE_RECONFIGURE`). Use
+`entry.start_reauth_flow(hass)` or `entry.start_reconfigure_flow(hass)`
+instead; they build the same context Home Assistant uses at runtime.
+
+```python
+# Bad
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+    data=entry.data,
+)
+
+# Good
+result = await entry.start_reauth_flow(hass)
+```

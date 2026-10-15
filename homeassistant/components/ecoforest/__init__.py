@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) -> None:
     """Set up Ecoforest from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -38,8 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) ->
             translation_placeholders={"host": host},
         ) from err
     except EcoforestConnectionError as err:
-        _LOGGER.error("Error communicating with device %s", host)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from err
 
     coordinator = EcoforestCoordinator(hass, entry, api)
 
@@ -49,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

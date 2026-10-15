@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
     DHW_MODE,
+    SELECT_DHW_MODE,
     SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
     SELECT_SCHEDULE,
@@ -219,4 +220,52 @@ async def test_anna_select_dhw_mode(
         "bfb5ee0a88e14e5f97bfa725a760cc49",
         "boost",
         5,
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+async def test_anna_select_dhw_mode_with_two_options(
+    hass: HomeAssistant,
+    mock_smile_anna: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing the DHW mode select with two options."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
+            ATTR_OPTION: "comfort",
+        },
+        blocking=True,
+    )
+    mock_smile_anna.set_dhw_mode.assert_called_once_with(
+        DHW_MODE,
+        "1cbf783bb11e4a7c8a6843dee3a86927",
+        "comfort",
+        2,
+    )
+
+
+async def test_anna_select_dhw_mode_select_with_two_options(
+    hass: HomeAssistant,
+    mock_smile_anna_p1: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing the select_dhw_mode select with two options."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
+            ATTR_OPTION: "eco",
+        },
+        blocking=True,
+    )
+    mock_smile_anna_p1.set_select.assert_called_once_with(
+        SELECT_DHW_MODE,
+        "36b937e44ad145bab165fa0fe99d742d",
+        "eco",
+        "on",
     )

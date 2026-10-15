@@ -2,11 +2,11 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect.data import Camera, DoorbellMessageType, LCDMessage
-from uiprotect.data.public_devices import PublicLcdMessage
+from uiprotect.data import Camera, DoorbellMessageType, LCDMessage, ModelType
+from uiprotect.data.public_devices import PublicDoorbellSettings, PublicLcdMessage
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.text import CAMERA
@@ -176,3 +176,35 @@ async def test_text_public_only_no_doorbell_text(
         )
         is None
     )
+
+
+async def test_text_camera_default_from_public_nvr(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Without a message the doorbell text shows the public NVR default."""
+    nvr = ufp.api.public_bootstrap.nvr
+    nvr.model = ModelType.NVR
+    nvr.doorbell_settings = PublicDoorbellSettings(
+        default_message_text="Public Default"
+    )
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    public = make_public_camera(doorbell, lcd_message=None)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.TEXT, doorbell, CAMERA[0]
+    )
+    assert hass.states.get(entity_id).state == "Public Default"
+
+    nvr.doorbell_settings = PublicDoorbellSettings(default_message_text="Changed")
+    msg = Mock()
+    msg.new_obj = nvr
+    msg.old_obj = None
+    msg.changed_data = {"doorbellSettings": {"defaultMessageText": "Changed"}}
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "Changed"
