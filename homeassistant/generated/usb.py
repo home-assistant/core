@@ -211,6 +211,7 @@ USB_DEPENDENTS = [
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "insteon",
+    "kaco_rs485",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
     "marantz_rs232",
