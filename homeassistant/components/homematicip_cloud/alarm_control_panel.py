@@ -22,6 +22,9 @@ from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
+# arm anyway checks and then arms in two calls, a disarm must not run in between
+PARALLEL_UPDATES = 1
+
 CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 

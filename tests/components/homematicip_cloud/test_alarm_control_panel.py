@@ -1,5 +1,6 @@
 """Tests for HomematicIP Cloud alarm control panel."""
 
+import asyncio
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -219,6 +220,66 @@ async def test_hmip_alarm_control_panel_arm_anyway(
     home.set_security_zones_activation_with_ignore_list_async.assert_awaited_once_with(
         expected_internal, True
     )
+
+
+async def test_hmip_alarm_control_panel_arm_anyway_waits_for_disarm(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test that a disarm sent during arm_anyway runs after it, not in between."""
+    entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    home = mock_hap.home
+    await _async_refuse_arming(hass, home, _blocked("3014F7110000000000000001"))
+
+    recheck_started = asyncio.Event()
+    release_recheck = asyncio.Event()
+    calls: list[str] = []
+
+    async def set_zones_activation(internal: bool, external: bool) -> Mock:
+        calls.append("disarm" if not external else "recheck")
+        if not external:
+            return Mock(success=True, json={})
+        recheck_started.set()
+        await release_recheck.wait()
+        return _blocked("3014F7110000000000000001")
+
+    async def set_zones_activation_with_ignore_list(
+        internal: bool, external: bool
+    ) -> Mock:
+        calls.append("arm")
+        return Mock(success=True, json={})
+
+    home.set_security_zones_activation_async.side_effect = set_zones_activation
+    home.set_security_zones_activation_with_ignore_list_async.side_effect = (
+        set_zones_activation_with_ignore_list
+    )
+
+    arm = hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN,
+            SERVICE_ARM_ANYWAY,
+            {ATTR_ENTITY_ID: entity_id, ATTR_MODE: "away"},
+            blocking=True,
+        )
+    )
+    await recheck_started.wait()
+    disarm = hass.async_create_task(
+        hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_disarm",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    release_recheck.set()
+    await arm
+    await disarm
+
+    assert calls == ["recheck", "arm", "disarm"]
 
 
 async def test_hmip_alarm_control_panel_arm_anyway_rechecks(
