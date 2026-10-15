@@ -191,6 +191,29 @@ async def test_a_port_added_by_another_flow_during_the_scan_is_rejected(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_bus")
+async def test_a_port_added_during_the_title_lookup_is_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_serial_ports: AsyncMock,
+) -> None:
+    """Test a flow that finishes while this one names the entry wins the port."""
+    result = await _scan(hass)
+    assert result["step_id"] == "confirm"
+
+    ports = mock_serial_ports.return_value
+
+    async def _added_meanwhile(hass: HomeAssistant) -> list[AsyncMock]:
+        mock_config_entry.add_to_hass(hass)
+        return ports
+
+    mock_serial_ports.side_effect = _added_meanwhile
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_an_inverter_whose_type_could_not_be_read_is_still_offered(
     hass: HomeAssistant, mock_bus: FakeBus
 ) -> None:

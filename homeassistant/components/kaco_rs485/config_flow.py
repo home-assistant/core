@@ -130,10 +130,11 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_inverters")
 
         if user_input is not None:
-            # Another flow may have added this port while this one scanned.
+            title = await self._title(self._port)
+            # Another flow may have added this port while this one awaited.
             self._async_abort_entries_match({CONF_PORT: self._port})
             return self.async_create_entry(
-                title=await self._title(self._port),
+                title=title,
                 data={
                     CONF_PORT: self._port,
                     CONF_ADDRESSES: [d.address for d in supported],
