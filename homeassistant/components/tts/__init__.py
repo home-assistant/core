@@ -81,12 +81,14 @@ __all__ = [
     "ATTR_PREFERRED_SAMPLE_RATE",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
+    "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "SERVICE_CLEAR_CACHE",
     "Provider",
     "ResultStream",
     "SampleFormat",
+    "TTSAudioRequest",
     "TTSAudioResponse",
     "TextToSpeechEntity",
     "TtsAudioType",
@@ -94,6 +96,7 @@ __all__ = [
     "async_default_engine",
     "async_get_media_source_audio",
     "generate_media_source_id",
+    "get_engine_instance",
 ]
 
 _LOGGER = logging.getLogger(__name__)
