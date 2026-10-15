@@ -42,7 +42,11 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            client = AsyncApiClient(auth=AsyncAuth(client=get_async_client(self.hass), api_key=user_input[CONF_API_KEY]))
+            client = AsyncApiClient(
+                auth=AsyncAuth(
+                    client=get_async_client(self.hass), api_key=user_input[CONF_API_KEY]
+                )
+            )
 
             try:
                 info = await client.get_device_info()
@@ -63,7 +67,9 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info.biocat_serial)
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=info.name or info.biocat_serial, data=user_input)
+                return self.async_create_entry(
+                    title=info.name or info.biocat_serial, data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=_STEP_USER_DATA_SCHEMA, errors=errors

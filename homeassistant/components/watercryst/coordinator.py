@@ -68,7 +68,7 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
             TimeoutError,
         ) as err:
             raise UpdateFailed(
-                f"Failed to update {self.name} ({type(err).__name__}): {err}",
+                f"Failed to update {self.name}, ({type(err).__name__}): {err}",
                 retry_after=60,
             ) from err
         except WTCApiUnauthorizedError as err:
