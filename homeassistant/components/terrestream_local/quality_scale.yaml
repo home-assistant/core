@@ -2,7 +2,13 @@ rules:
   action-setup:
     status: exempt
     comment: The initial sensor platform defines no custom actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: done
+    comment: >-
+      Local snapshots are polled every 15 seconds because they also contain
+      illuminance readings with a 20-second acquisition validity budget.
+      This cadence also renews the 60-second controller lease. Protocol:
+      https://github.com/terrestream/terrestream/blob/client-v0.1.1/docs/protocol.md
   brands:
     status: done
     comment: >-

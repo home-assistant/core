@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.parametrize(
     ("elapsed", "expected_epochs"),
     [
-        pytest.param(5, [1767225600], id="five-second-poll"),
+        pytest.param(15, [1767225600], id="fifteen-second-poll"),
         pytest.param(59.999, [1767225600], id="before-deadline"),
         pytest.param(60, [1767225600, 1767225660], id="at-deadline"),
         pytest.param(65, [1767225600, 1767225665], id="after-deadline"),

@@ -1,12 +1,14 @@
 """Test measurement availability and controller lifecycle."""
 
 from datetime import timedelta
+from time import monotonic
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from terrestream_local.errors import AuthenticationError, ClientError
+from terrestream_local.models import Snapshot
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -18,6 +20,57 @@ from .conftest import UUID
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY = "sensor.terrestream_indoor_air_quality_sensor_carbon_dioxide"
+
+
+async def test_polling_preserves_illuminance_freshness(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Reduce polling while refreshing light before its 20-second expiry."""
+    freezer.move_to("2026-01-01T00:00:00.500000+00:00")
+    snapshot: Snapshot = mock_client.refresh.return_value
+    lifetimes = dict.fromkeys(snapshot["measurements"], 60.0)
+    lifetimes["illuminance"] = 20.0
+    received = 0.0
+
+    def remaining(key: str) -> float:
+        return max(0, lifetimes[key] - (monotonic() - received))
+
+    async def refresh() -> Snapshot:
+        nonlocal received
+        received = monotonic()
+        return snapshot
+
+    mock_client.refresh.side_effect = refresh
+    mock_client.measurement_remaining.side_effect = remaining
+    mock_client.measurement_available.side_effect = lambda key: remaining(key) > 0
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    light = "sensor.terrestream_indoor_air_quality_sensor_illuminance"
+    assert hass.states.get(light).state == "100"
+    mock_client.refresh.reset_mock()
+
+    freezer.tick(14)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_client.refresh.assert_not_awaited()
+    assert hass.states.get(light).state == "100"
+
+    snapshot["measurements"]["illuminance"]["value"] = 200
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_client.refresh.assert_awaited_once()
+    assert hass.states.get(light).state == "200"
+
+    freezer.tick(6)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_client.refresh.assert_awaited_once()
+    assert hass.states.get(light).state == "200"
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_sensors_and_unload(
@@ -82,7 +135,7 @@ async def test_measurement_expiry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_client.measurement_available.return_value = False
-    freezer.tick(6)
+    freezer.tick(16)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
@@ -164,7 +217,7 @@ async def test_revoked_pairing_during_refresh(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_client.refresh.side_effect = AuthenticationError("revoked")
-    freezer.tick(6)
+    freezer.tick(16)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE

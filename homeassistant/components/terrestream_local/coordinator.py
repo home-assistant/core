@@ -32,7 +32,7 @@ class TerrestreamCoordinator(DataUpdateCoordinator[Snapshot]):
             _LOGGER,
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=15),
         )
         self.client = client
         self._next_clock = 0.0
