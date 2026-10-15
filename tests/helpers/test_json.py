@@ -179,9 +179,9 @@ def test_json_dumps_date_time_subclasses() -> None:
 
     d = CustomDate(2026, 8, 23)
     t = CustomTime(12, 30, 45)
-    dt = CustomDatetime(2026, 8, 23, 12, 30, 45)
+    date_time = CustomDatetime(2026, 8, 23, 12, 30, 45)
 
-    assert json_dumps({"date": d, "time": t, "datetime": dt}) == (
+    assert json_dumps({"date": d, "time": t, "datetime": date_time}) == (
         '{"date":"2026-08-23","time":"12:30:45","datetime":"2026-08-23T12:30:45"}'
     )
 
