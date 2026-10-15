@@ -1,7 +1,8 @@
 """Tests for the NX584 config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from nx584 import client as nx584_client
 import pytest
 import requests
 
@@ -49,6 +50,7 @@ async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
         pytest.param(
             requests.exceptions.ConnectionError, "cannot_connect", id="cannot_connect"
         ),
+        pytest.param(requests.exceptions.Timeout, "cannot_connect", id="timeout"),
         pytest.param(Exception, "unknown", id="unknown"),
     ],
 )
@@ -74,6 +76,30 @@ async def test_user_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
     )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_stalled_server(
+    hass: HomeAssistant, stalled_server: int
+) -> None:
+    """Test the user flow reports a server that never answers as unreachable."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.1", CONF_PORT: stalled_server}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # The server answers again.
+    with patch.object(nx584_client, "Client"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "127.0.0.1", CONF_PORT: stalled_server}
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -180,6 +206,7 @@ async def test_import_flow_merges_into_existing_entry(
         pytest.param(
             requests.exceptions.ConnectionError, "cannot_connect", id="cannot_connect"
         ),
+        pytest.param(requests.exceptions.Timeout, "cannot_connect", id="timeout"),
         pytest.param(Exception, "unknown", id="unknown"),
     ],
 )

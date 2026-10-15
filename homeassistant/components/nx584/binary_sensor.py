@@ -1,6 +1,5 @@
 """Support for exposing NX584 elements as sensors."""
 
-from collections.abc import Mapping
 import logging
 import threading
 from typing import Any, override
@@ -8,8 +7,6 @@ from typing import Any, override
 from nx584 import client as nx584_client
 import probatio
 import requests
-from requests import PreparedRequest, Response
-from requests.adapters import HTTPAdapter
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -35,7 +32,7 @@ BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
 # How long the server holds an event request open when there is nothing new.
 EVENTS_POLL_TIMEOUT = 60
-# pynx584 sets no transport timeout, so a stalled server would block forever.
+# The watcher requests must outlast the long-poll of the server.
 EVENTS_REQUEST_TIMEOUT = EVENTS_POLL_TIMEOUT + 5
 
 ZONE_TYPES_SCHEMA = probatio.Schema(
@@ -64,30 +61,9 @@ def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str
     return client.list_zones(), client.get_version()
 
 
-class _TimeoutAdapter(HTTPAdapter):
-    """Transport adapter that bounds every request of the watcher."""
-
-    @override
-    def send(
-        self,
-        request: PreparedRequest,
-        stream: bool = False,
-        timeout: Any = None,
-        verify: bool | str = True,
-        cert: Any = None,
-        proxies: Mapping[str, str] | None = None,
-    ) -> Response:
-        """Send the request with the watcher timeout."""
-        return super().send(
-            request, stream, EVENTS_REQUEST_TIMEOUT, verify, cert, proxies
-        )
-
-
 def create_watcher_client(host: str, port: int) -> nx584_client.Client:
-    """Create a client for the watcher thread whose requests time out."""
-    client = create_client(host, port)
-    client._session.mount("http://", _TimeoutAdapter())  # noqa: SLF001
-    return client
+    """Create a client for the watcher thread that outlasts the long-poll."""
+    return create_client(host, port, EVENTS_REQUEST_TIMEOUT)
 
 
 async def async_setup_platform(

@@ -55,7 +55,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_validate(host, port)
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -111,7 +111,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._async_validate(host, port)
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unexpected exception")

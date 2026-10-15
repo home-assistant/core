@@ -1,10 +1,13 @@
 """Support for NX584 alarm control panels."""
 
 import asyncio
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, override
 
 from nx584 import client as nx584_client
 import requests
+from requests import PreparedRequest, Response
+from requests.adapters import HTTPAdapter
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -16,7 +19,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN
+from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN, REQUEST_TIMEOUT
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
@@ -28,9 +31,38 @@ DATA_IMPORT_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_import_lock")
 type NX584ConfigEntry = ConfigEntry[nx584_client.Client]
 
 
-def create_client(host: str, port: int) -> nx584_client.Client:
-    """Create a client for the NX584 server."""
-    return nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
+class _TimeoutAdapter(HTTPAdapter):
+    """Transport adapter that bounds every request of a client."""
+
+    def __init__(self, timeout: float) -> None:
+        """Initialize the adapter with the timeout of every request."""
+        super().__init__()
+        self._timeout = timeout
+
+    @override
+    def send(
+        self,
+        request: PreparedRequest,
+        stream: bool = False,
+        timeout: Any = None,
+        verify: bool | str = True,
+        cert: Any = None,
+        proxies: Mapping[str, str] | None = None,
+    ) -> Response:
+        """Send the request with the timeout of the adapter."""
+        return super().send(request, stream, self._timeout, verify, cert, proxies)
+
+
+def create_client(
+    host: str, port: int, timeout: float | None = None
+) -> nx584_client.Client:
+    """Create a client for the NX584 server whose requests time out."""
+    client = nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
+    # pynx584 sets no transport timeout, so a stalled server would block forever.
+    client._session.mount(  # noqa: SLF001
+        "http://", _TimeoutAdapter(timeout or REQUEST_TIMEOUT)
+    )
+    return client
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -44,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> boo
     client = create_client(entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
         await hass.async_add_executor_job(client.list_zones)
-    except requests.exceptions.ConnectionError as err:
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to the NX584 server at {entry.data[CONF_HOST]}"
         ) from err
