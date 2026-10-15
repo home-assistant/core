@@ -683,6 +683,20 @@
         }
       },
       "name": "Navigate to destination"
+    },
+    "navigate_to_waypoints": {
+      "description": "Sets vehicle navigation to an ordered list of Google Place IDs. The last place is the final destination.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to send the trip to.",
+          "name": "Vehicle"
+        },
+        "place_ids": {
+          "description": "Google Place IDs in travel order, without the refId: prefix. The last ID is the final destination.",
+          "name": "Place IDs"
+        }
+      },
+      "name": "Navigate to waypoints"
     }
   }
 }

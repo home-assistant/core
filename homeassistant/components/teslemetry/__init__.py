@@ -27,6 +27,7 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
+from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue, StreamSink
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
@@ -718,6 +719,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 ble_address,
             )
 
+            if isinstance(vehicle_api, VehicleRouter):
+                ble_broadcast_glue = BleBroadcastStreamGlue(
+                    vehicle_api.primary, cast(StreamSink, stream_vehicle)
+                )
+                entry.async_on_unload(ble_broadcast_glue.stop)
+
             vehicles.append(
                 TeslemetryVehicleData(
                     api=vehicle_api,
@@ -795,6 +802,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             ) = await _async_resolve_local_control(
                 hass, entry, bool(battery), site_id, energy_site
             )
+
+            if isinstance(energy_site_api, EnergySiteRouter):
+                info_coordinator.enable_local_polling(energy_site_api.primary)
+                if live_coordinator is not None:
+                    live_coordinator.enable_local_polling(energy_site_api.primary)
 
             energysites.append(
                 TeslemetryEnergyData(
