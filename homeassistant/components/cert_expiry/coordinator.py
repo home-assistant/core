@@ -6,7 +6,6 @@ import ssl
 from typing import override
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,6 +35,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         self.host = host
         self.port = port
         self._ssl_context = ssl_context
+        self._verify_ssl = ssl_context.verify_mode == ssl.CERT_REQUIRED
         self.cert_error: ValidationFailure | None = None
         self.is_cert_valid = False
 
@@ -58,7 +58,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
                 self.hass,
                 self.host,
                 self.port,
-                verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, True),
+                verify_ssl=self._verify_ssl,
                 ssl_context=self._ssl_context,
             )
         except TemporaryFailure as err:
@@ -70,5 +70,5 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             return None
 
         self.cert_error = None
-        self.is_cert_valid = self.config_entry.data.get(CONF_VERIFY_SSL, True)
+        self.is_cert_valid = self._verify_ssl
         return timestamp

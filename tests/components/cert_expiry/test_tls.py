@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import ssl
 from unittest.mock import Mock, patch
@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import pytest_socket
 
@@ -23,9 +24,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.util.dt import utcnow
 from homeassistant.util.ssl import create_client_context, get_default_context
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("socket_enabled")
 
@@ -308,6 +310,75 @@ async def test_private_ca_tls_sensor(
     assert get_default_context().get_ca_certs(binary_form=True) == shared_certificates
 
 
+@pytest.mark.parametrize(
+    ("initial_verification", "initial_bundle"),
+    [
+        pytest.param(False, "empty", id="enable-without-reload"),
+        pytest.param(True, "issuer", id="disable-without-reload"),
+    ],
+)
+@pytest.mark.parametrize(
+    "certificate", [pytest.param("private-ca", id="private-ca")], indirect=True
+)
+@pytest.mark.freeze_time("2026-01-01")
+async def test_entry_update_keeps_tls_verification(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    certificate: x509.Certificate,
+    ca_certificate: x509.Certificate,
+    tls_port: int,
+    server_context: ssl.SSLContext,
+    initial_verification: bool,
+    initial_bundle: str,
+) -> None:
+    """Report the cached context's verification mode until the entry reloads."""
+    sni_callback = Mock(return_value=None)
+    server_context.set_servername_callback(sni_callback)
+    bundles = {
+        "empty": "",
+        "issuer": ca_certificate.public_bytes(serialization.Encoding.PEM).decode(
+            "ascii"
+        ),
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: tls_port,
+            CONF_VERIFY_SSL: initial_verification,
+            CONF_CA_CERTIFICATES: bundles[initial_bundle],
+        },
+        unique_id=f"localhost:{tls_port}",
+    )
+    entry.add_to_hass(hass)
+    entity_id = f"sensor.localhost_{tls_port}_cert_expiry"
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+    initial_handshakes = sni_callback.call_count
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == certificate.not_valid_after_utc.isoformat()
+    assert state.attributes["is_valid"] is initial_verification
+
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_VERIFY_SSL: not initial_verification}
+    )
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass, utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data is coordinator
+    assert sni_callback.call_count == initial_handshakes + 1
+    assert sni_callback.call_args.args[1] == "localhost"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == certificate.not_valid_after_utc.isoformat()
+    assert state.attributes["is_valid"] is initial_verification
+    assert state.attributes["error"] is None
+
+
 @pytest.mark.parametrize("certificate", ["private-ca"], indirect=True)
 @pytest.mark.usefixtures("ignore_tls_client_abort")
 async def test_private_ca_hostname_mismatch(
@@ -354,6 +425,22 @@ async def test_private_ca_hostname_mismatch(
             ("timestamp", False, True),
             (STATE_UNKNOWN, False, False),
             id="enable-verification",
+        ),
+        pytest.param(
+            "private-ca",
+            (False, "issuer"),
+            (True, "issuer"),
+            ("timestamp", False, True),
+            ("timestamp", True, True),
+            id="enable-verification-same-expiry",
+        ),
+        pytest.param(
+            "private-ca",
+            (True, "issuer"),
+            (False, "issuer"),
+            ("timestamp", True, True),
+            ("timestamp", False, True),
+            id="disable-verification-same-expiry",
         ),
         pytest.param(
             "private-ca",
@@ -445,6 +532,7 @@ async def test_reconfigure_tls_settings(
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    coordinator = entry.runtime_data
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -469,6 +557,7 @@ async def test_reconfigure_tls_settings(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data is not coordinator
     assert entry.entry_id == entry_id
     assert entry.unique_id == f"localhost:{tls_port}"
     state = hass.states.get(entity_id)
