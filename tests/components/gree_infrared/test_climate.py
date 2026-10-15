@@ -2286,3 +2286,81 @@ async def test_detached_climate_ignores_queued_received_signal(
     climate._state.command_lock.release()
     await task
     assert climate.extra_restore_state_data.as_dict() == before
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize("cancel_send", [False, True])
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_send_after_timer_deadline_preserves_cleanup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+    cancel_send: bool,
+) -> None:
+    """A send built after expiry cannot discard the pending timer publication."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    deadline = climate._timer_deadline
+    assert deadline is not None
+    freezer.move_to(deadline)
+
+    with (
+        patch.object(
+            mock_infrared_emitter_entity,
+            "async_send_command",
+            side_effect=asyncio.CancelledError if cancel_send else HomeAssistantError,
+        ),
+        pytest.raises(asyncio.CancelledError if cancel_send else HomeAssistantError),
+    ):
+        await climate.async_set_fan_mode(FAN_LOW)
+
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    assert climate._timer_deadline is None
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize(
+    ("initial_mode", "expected_mode", "additional_sends"),
+    [(HVACMode.COOL, HVACMode.OFF, 0), (HVACMode.OFF, HVACMode.COOL, 1)],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_expiry_updates_power_before_next_command(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+    initial_mode: HVACMode,
+    expected_mode: HVACMode,
+    additional_sends: int,
+) -> None:
+    """The device timer changes assumed power without sending another frame."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_hvac_mode(initial_mode)
+    await climate.async_set_timer_hours(0.5)
+    sends = len(mock_infrared_emitter_entity.send_command_calls)
+
+    freezer.move_to(freezer() + timedelta(minutes=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == expected_mode
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    assert len(mock_infrared_emitter_entity.send_command_calls) == sends
+
+    await climate.async_set_fan_mode(FAN_LOW)
+    assert (
+        len(mock_infrared_emitter_entity.send_command_calls) == sends + additional_sends
+    )
+    assert mock_infrared_emitter_entity.send_command_calls[-1].power
+    await climate.async_turn_off()
+    command = mock_infrared_emitter_entity.send_command_calls[-1]
+    assert not command.power
+    assert command.mode is GreeAcMode.COOL
+    assert command.timer_hours is None

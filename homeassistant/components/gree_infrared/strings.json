@@ -10,9 +10,11 @@
     "step": {
       "reconfigure": {
         "data": {
+          "generic_options": "[%key:component::gree_infrared::config::step::user::data::generic_options%]",
           "model": "[%key:component::gree_infrared::config::step::user::data::model%]"
         },
         "data_description": {
+          "generic_options": "[%key:component::gree_infrared::config::step::user::data_description::generic_options%]",
           "model": "[%key:component::gree_infrared::config::step::user::data_description::model%]"
         },
         "description": "Select the remote model used by this AC. Existing infrared bindings and entities are preserved.",

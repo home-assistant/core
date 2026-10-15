@@ -498,9 +498,6 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             return self._state.timer_hours
         remaining = (self._timer_deadline - dt_util.utcnow()).total_seconds() / 3600
         if remaining <= 0:
-            self._cancel_timer_expiry()
-            self._timer_deadline = None
-            self._state.timer_hours = None
             return None
         return max(0.5, int(remaining * 2 + 0.5) / 2)
 
@@ -535,6 +532,12 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 return
             self._timer_deadline = None
             self._state.timer_hours = None
+            self._attr_hvac_mode = (
+                self._last_active_hvac_mode
+                if self._attr_hvac_mode is HVACMode.OFF
+                else HVACMode.OFF
+            )
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     async def _async_send_state(

@@ -269,11 +269,19 @@ async def test_user_flow_form_serialized_by_rest_api(
     "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
 )
 @pytest.mark.parametrize("model", [MODEL_YAP1F, MODEL_GENERIC])
+@pytest.mark.parametrize("generic_options", [False, True])
 async def test_reconfigure_model(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, model: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    generic_options: bool,
 ) -> None:
     """Changing the remote profile preserves the entry and its IR bindings."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_GENERIC_OPTIONS: not generic_options},
+    )
     original_data = dict(mock_config_entry.data)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -281,15 +289,24 @@ async def test_reconfigure_model(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert (
+        result["data_schema"]({CONF_MODEL: model})[CONF_GENERIC_OPTIONS]
+        is not generic_options
+    )
 
     with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_MODEL: model}
+            result["flow_id"],
+            user_input={CONF_MODEL: model, CONF_GENERIC_OPTIONS: generic_options},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {**original_data, CONF_MODEL: model}
+    assert mock_config_entry.data == {
+        **original_data,
+        CONF_MODEL: model,
+        CONF_GENERIC_OPTIONS: generic_options,
+    }
     assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
     reload.assert_awaited_once_with(mock_config_entry.entry_id)
