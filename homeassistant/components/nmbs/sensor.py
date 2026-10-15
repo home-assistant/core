@@ -16,7 +16,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONNECTION_UNIQUE_ID_PREFIX, LIVEBOARD_UNIQUE_ID_PREFIX
+from .const import (
+    CONNECTION_FEED,
+    CONNECTION_UNIQUE_ID_PREFIX,
+    LIVEBOARD_UNIQUE_ID_PREFIX,
+)
 from .coordinator import NMBSConfigEntry, NMBSCoordinator
 from .entity import NMBSEntity
 
@@ -84,7 +88,10 @@ class NMBSSensor(NMBSEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return True if the coordinator and the connection feed succeeded."""
-        return super().available and not self.coordinator.data.failed_connection
+        return (
+            super().available
+            and CONNECTION_FEED not in self.coordinator.data.failed_feeds
+        )
 
     @property
     def connection(self) -> ConnectionDetails | None:
@@ -186,7 +193,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
         """Return True if the coordinator and the liveboard feed succeeded."""
         return (
             super().available
-            and self._station.id not in self.coordinator.data.failed_liveboards
+            and self._station.id not in self.coordinator.data.failed_feeds
         )
 
     @property

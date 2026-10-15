@@ -1,19 +1,15 @@
 """Data update coordinator for the NMBS integration."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
-from typing import override
+from typing import TypeVar, override
 
 from pyrail import iRail
-from pyrail.models import (
-    ConnectionDetails,
-    ConnectionsApiResponse,
-    LiveboardApiResponse,
-    LiveboardDeparture,
-    StationDetails,
-)
+from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,6 +22,7 @@ from .const import (
     CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_TO,
+    CONNECTION_FEED,
     CONNECTION_UNIQUE_ID_PREFIX,
     DOMAIN,
     LIVEBOARD_UNIQUE_ID_PREFIX,
@@ -33,6 +30,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+ApiResponseT = TypeVar("ApiResponseT")
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
@@ -44,9 +43,8 @@ class NMBSData:
     """Data fetched by the NMBS coordinator."""
 
     connection: ConnectionDetails | None
-    failed_connection: bool
     next_departures: dict[str, LiveboardDeparture | None]
-    failed_liveboards: set[str]
+    failed_feeds: set[str]
 
 
 def _find_station(hass: HomeAssistant, station_id: str) -> StationDetails | None:
@@ -87,30 +85,17 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self.station_to = station_to
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
 
-    async def _async_fetch_connection(self) -> ConnectionsApiResponse | None:
-        """Fetch connections, returning None when the request fails."""
+    async def _async_fetch_feed(
+        self, feed: str, fetch: Callable[[], Awaitable[ApiResponseT | None]]
+    ) -> ApiResponseT | None:
+        """Fetch a feed, returning None when the request fails."""
         try:
-            return await self.client.get_connections(
-                self.station_from.id, self.station_to.id
-            )
+            return await fetch()
         except TimeoutError:
-            _LOGGER.debug(
-                "Timeout while fetching the connection from %s to %s",
-                self.station_from.standard_name,
-                self.station_to.standard_name,
-            )
+            _LOGGER.debug("Timeout while fetching %s", feed)
             return None
-
-    async def _async_fetch_liveboard(
-        self, station: StationDetails
-    ) -> LiveboardApiResponse | None:
-        """Fetch a liveboard, returning None when the request fails."""
-        try:
-            return await self.client.get_liveboard(station.id)
-        except TimeoutError:
-            _LOGGER.debug(
-                "Timeout while fetching the liveboard of %s", station.standard_name
-            )
+        except (ValueError, LookupError) as err:
+            _LOGGER.debug("Unable to parse %s: %s", feed, err)
             return None
 
     def _config_entry_entities(self) -> list[er.RegistryEntry]:
@@ -147,18 +132,35 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         fetch_connection = self._connection_entity_enabled()
         async with asyncio.TaskGroup() as task_group:
             connection_task = (
-                task_group.create_task(self._async_fetch_connection())
+                task_group.create_task(
+                    self._async_fetch_feed(
+                        f"the connection from {self.station_from.standard_name}"
+                        f" to {self.station_to.standard_name}",
+                        partial(
+                            self.client.get_connections,
+                            self.station_from.id,
+                            self.station_to.id,
+                        ),
+                    )
+                )
                 if fetch_connection
                 else None
             )
             liveboard_tasks = {
-                station.id: task_group.create_task(self._async_fetch_liveboard(station))
+                station.id: task_group.create_task(
+                    self._async_fetch_feed(
+                        f"the liveboard of {station.standard_name}",
+                        partial(self.client.get_liveboard, station.id),
+                    )
+                )
                 for station in stations
             }
         connections_response = (
             connection_task.result() if connection_task is not None else None
         )
-        failed_connection = fetch_connection and connections_response is None
+        failed_feeds: set[str] = set()
+        if fetch_connection and connections_response is None:
+            failed_feeds.add(CONNECTION_FEED)
 
         upcoming: list[ConnectionDetails] = []
         if connections_response is not None:
@@ -173,14 +175,13 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
                 ]
 
         next_departures: dict[str, LiveboardDeparture | None] = {}
-        failed_liveboards: set[str] = set()
         for station in (self.station_from, self.station_to):
             if (liveboard_task := liveboard_tasks.get(station.id)) is None:
                 next_departures[station.id] = None
                 continue
             liveboard = liveboard_task.result()
             if liveboard is None:
-                failed_liveboards.add(station.id)
+                failed_feeds.add(station.id)
                 next_departures[station.id] = None
                 continue
             next_departures[station.id] = (
@@ -189,7 +190,6 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
 
         return NMBSData(
             connection=upcoming[0] if upcoming else None,
-            failed_connection=failed_connection,
             next_departures=next_departures,
-            failed_liveboards=failed_liveboards,
+            failed_feeds=failed_feeds,
         )

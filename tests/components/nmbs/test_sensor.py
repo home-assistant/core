@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from mashumaro.exceptions import MissingField
 from pyrail.models import ConnectionsApiResponse, LiveboardApiResponse
 import pytest
 
@@ -74,6 +75,16 @@ def _liveboard_api_failure() -> LiveboardApiResponse | None:
 def _liveboard_timeout() -> LiveboardApiResponse | None:
     """Simulate a liveboard request that times out."""
     raise TimeoutError
+
+
+def _liveboard_decoding_error() -> LiveboardApiResponse | None:
+    """Simulate a liveboard response with an invalid field."""
+    raise ValueError("Unexpected response schema")
+
+
+def _liveboard_missing_field() -> LiveboardApiResponse | None:
+    """Simulate a liveboard response that misses a required field."""
+    raise MissingField("delay", "datetime", "LiveboardDeparture")
 
 
 @freeze_time(FROZEN_TIME)
@@ -360,6 +371,8 @@ async def test_liveboard_sensor_no_delay(
     [
         pytest.param(_liveboard_api_failure, id="api_failure"),
         pytest.param(_liveboard_timeout, id="timeout"),
+        pytest.param(_liveboard_decoding_error, id="decoding_error"),
+        pytest.param(_liveboard_missing_field, id="missing_field"),
     ],
 )
 async def test_liveboard_failure_only_affects_its_sensor(
@@ -450,6 +463,14 @@ async def test_enabled_liveboard_is_fetched(
     [
         pytest.param(None, None, id="api_failure"),
         pytest.param(TimeoutError, None, id="timeout"),
+        pytest.param(
+            ValueError("Unexpected response schema"), None, id="decoding_error"
+        ),
+        pytest.param(
+            MissingField("delay", "datetime", "ConnectionDetails"),
+            None,
+            id="missing_field",
+        ),
     ],
 )
 async def test_connection_failure_only_affects_its_sensor(
@@ -457,7 +478,7 @@ async def test_connection_failure_only_affects_its_sensor(
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    connection_side_effect: type[Exception] | None,
+    connection_side_effect: Exception | type[Exception] | None,
     connection_return_value: ConnectionsApiResponse | None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
