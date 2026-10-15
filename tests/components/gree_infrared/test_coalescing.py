@@ -1,8 +1,14 @@
 """Coalescing tests: rapid changes share one IR frame (one beep)."""
 
 import asyncio
+import contextlib
+from unittest.mock import patch
 
-from infrared_protocols.commands.gree_ac import GreeAcFanSpeed, GreeAcMode
+from infrared_protocols.commands.gree_ac import (
+    GreeAcCommand,
+    GreeAcFanSpeed,
+    GreeAcMode,
+)
 import pytest
 
 from homeassistant.components.climate import HVACMode
@@ -18,6 +24,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import ENTRY_ID
 
+from tests.common import MockConfigEntry
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 _CLIMATE = "climate.gree_ac"
@@ -145,3 +152,44 @@ async def test_calls_separated_by_window_send_twice(
     assert mock_infrared_emitter_entity.send_command_calls[1].fan is (
         GreeAcFanSpeed.LOW
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unload_with_in_flight_flush_keeps_cancellation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Cancelling the unload task propagates while an in-flight flush runs."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    state = climate._state
+    started = asyncio.Event()
+
+    async def blocked_send(command: GreeAcCommand) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
+            blocking=True,
+        )
+        await asyncio.sleep(COALESCE_DELAY_SEC + 0.2)
+        await started.wait()
+        in_flight = state._coalesce_task
+        assert in_flight is not None and not in_flight.done()
+        unload_task = hass.async_create_task(
+            state.async_unload_coalesced_flush(climate._async_flush_coalesced)
+        )
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        unload_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await unload_task
+
+    in_flight.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await in_flight
