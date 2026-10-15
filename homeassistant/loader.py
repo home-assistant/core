@@ -1679,10 +1679,7 @@ async def async_get_integrations(
 
     except BaseException as err:
         for domain, future in needed.items():
-            if future.done():
-                continue
-            if cache.get(domain) is future:
-                del cache[domain]
+            del cache[domain]
             future.set_exception(err)
             # Retrieve the exception even when there are no concurrent callers.
             future.exception()
