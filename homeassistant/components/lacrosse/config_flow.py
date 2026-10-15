@@ -11,7 +11,6 @@ from serial import SerialException
 from homeassistant.components import usb
 from homeassistant.config_entries import (
     ConfigEntry,
-    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -113,21 +112,11 @@ def _receiver_data(user_input: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def _step_receiver_data_schema(
-    defaults: dict[str, Any] | None = None,
-) -> probatio.Schema:
+def _step_receiver_data_schema() -> probatio.Schema:
     """Return the schema for the receiver configuration step."""
-    defaults = defaults or {}
     optional_fields: dict[Any, Any] = {}
     for key in RECEIVER_OPTION_KEYS:
-        marker = probatio.Optional(key)
-        if (suggested_value := defaults.get(key)) is not None:
-            if key == CONF_FREQUENCY:
-                suggested_value /= 1000
-            marker = probatio.Optional(
-                key, description={"suggested_value": suggested_value}
-            )
-        optional_fields[marker] = probatio.Any(
+        optional_fields[probatio.Optional(key)] = probatio.Any(
             cv.boolean
             if key == CONF_JEELINK_LED
             else cv.positive_float
@@ -138,15 +127,8 @@ def _step_receiver_data_schema(
 
     return probatio.Schema(
         {
-            probatio.Required(
-                CONF_DEVICE,
-                description={"suggested_value": defaults[CONF_DEVICE]}
-                if CONF_DEVICE in defaults
-                else {},
-            ): SerialPortSelector(),
-            probatio.Required(
-                CONF_BAUD, default=defaults.get(CONF_BAUD, DEFAULT_BAUD)
-            ): cv.positive_int,
+            probatio.Required(CONF_DEVICE): SerialPortSelector(),
+            probatio.Required(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
             **optional_fields,
         }
     )
@@ -315,75 +297,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=_step_receiver_data_schema(),
             errors=errors or None,
         )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Update the receiver configuration."""
-        entry = self._get_reconfigure_entry()
-        self._data = dict(entry.data)
-        self._sensors = {
-            key: sensor
-            for subentry in entry.subentries.values()
-            for key, sensor in subentry.data[CONF_SENSORS].items()
-        }
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            old_receiver = self._data[CONF_DEVICE]
-            user_input[CONF_DEVICE] = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, user_input[CONF_DEVICE]
-            )
-            self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
-            data = _receiver_data(user_input)
-            unload_receiver = (
-                old_receiver == data[CONF_DEVICE]
-                and entry.state is ConfigEntryState.LOADED
-            )
-            if unload_receiver and not await self.hass.config_entries.async_unload(
-                entry.entry_id
-            ):
-                errors["base"] = "unknown"
-            elif error := await _async_test_connection(self.hass, data):
-                errors["base"] = error
-                if unload_receiver:
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-            else:
-                self._data = data
-                self._async_update_receiver_devices(
-                    old_receiver, user_input[CONF_DEVICE]
-                )
-                result = self.async_update_and_abort(
-                    entry,
-                    title=self._data[CONF_DEVICE],
-                    data=self._data,
-                )
-                if entry.state is not ConfigEntryState.LOADED:
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                return result
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=_step_receiver_data_schema(self._data),
-            errors=errors or None,
-        )
-
-    def _async_update_receiver_devices(
-        self, old_receiver: str, new_receiver: str
-    ) -> None:
-        """Update sensor device identifiers for a changed receiver."""
-        if old_receiver == new_receiver:
-            return
-
-        device_registry = dr.async_get(self.hass)
-        entry_id = self._get_reconfigure_entry().entry_id
-        for sensor_id in {sensor[CONF_ID] for sensor in self._sensors.values()}:
-            if device := device_registry.async_get_device_by_identifier(
-                (DOMAIN, f"{old_receiver}_{sensor_id}"), entry_id
-            ):
-                device_registry.async_update_device(
-                    device.id,
-                    new_identifiers={(DOMAIN, f"{new_receiver}_{sensor_id}")},
-                )
 
 
 class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
