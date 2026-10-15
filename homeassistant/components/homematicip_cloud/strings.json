@@ -125,6 +125,9 @@
       "today_rain": {
         "name": "Today rain"
       },
+      "water_flow": {
+        "name": "Water flow"
+      },
       "window_state": {
         "name": "Window state",
         "state": {
