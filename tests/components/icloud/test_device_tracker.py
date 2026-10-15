@@ -1,16 +1,19 @@
 """Tests for the iCloud device tracker."""
 
 from datetime import timedelta
+import itertools
 import math
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.icloud.account import IcloudDevice
 from homeassistant.components.icloud.const import DEFAULT_MAX_INTERVAL, DOMAIN
 from homeassistant.components.icloud.device_tracker import IcloudTrackerEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from .const import MOCK_CONFIG, USERNAME
@@ -83,6 +86,36 @@ def test_tracker_reads_the_location_once(attribute: str, expected: float) -> Non
     tracker = IcloudTrackerEntity(MagicMock(), device)
 
     assert getattr(tracker, attribute) == expected
+
+
+@pytest.mark.usefixtures("locating_service")
+async def test_a_location_cleared_during_a_state_write_does_not_change_it(
+    hass: HomeAssistant,
+) -> None:
+    """Test that one state write is made from one location.
+
+    The poll clears a stale location from the executor while the event loop may
+    be writing the state, and the state write reads the coordinates and the
+    accuracy one after the other. A location that is gone after the first read
+    must not leave the rest of the write with half a fix, which can come out as
+    not_home instead of unknown.
+    """
+    config_entry = await setup_account(hass)
+    account = config_entry.runtime_data
+    fix = location(is_old=False, age=timedelta(0))
+
+    with patch.object(
+        IcloudDevice,
+        "location",
+        new_callable=PropertyMock,
+        side_effect=itertools.chain([fix], itertools.repeat(None)),
+    ):
+        async_dispatcher_send(hass, account.signal_device_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_LATITUDE] == 1.0
+    assert state.attributes[ATTR_LONGITUDE] == 2.0
 
 
 async def test_stale_location_cleared(
