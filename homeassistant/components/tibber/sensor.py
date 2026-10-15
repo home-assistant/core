@@ -732,7 +732,7 @@ class TibberSensor(SensorEntity):
             manufacturer=MANUFACTURER,
         )
         if self._model is not None:
-            device_info["model"] = self._model
+            device_info.model = self._model
         return device_info
 
 
