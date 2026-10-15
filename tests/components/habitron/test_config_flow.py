@@ -1840,3 +1840,32 @@ async def test_user_flow_retry_reload_dials_the_corrected_address(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert dialed == ["192.168.1.99", MOCK_HOST]
+
+
+@pytest.mark.parametrize(("unique_id", "recorded_macs"), _HUB_A_BINDINGS)
+async def test_discovery_confirm_aborts_once_another_entry_owns_the_hub(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    unique_id: str,
+    recorded_macs: tuple[str, ...],
+) -> None:
+    """An entry that claims the hub while the form is open is kept, not replaced.
+
+    A carried-over entry can adopt the MAC in its setup after the discovery
+    checked for it. Creating the entry then would replace that one and drop its
+    stored settings.
+    """
+    result = await _start_ssdp_flow(hass, {ATTR_UPNP_UDN: MOCK_UDN})
+    assert result["step_id"] == "discovery_confirm"
+
+    entry = _entry_bound_to_hub_a(hass, unique_id, *recorded_macs)
+    hass.config_entries.async_update_entry(entry, options={"keep": True})
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.options == {"keep": True}

@@ -402,10 +402,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            data = {CONF_HOST: self._discovered_device.get("ip")}
+            host = self._discovered_device["ip"]
+            data = {CONF_HOST: host}
             try:
                 info = await validate_input(self.hass, data)
-                return self.async_create_entry(title=info["title"], data=data)
             except CannotConnect, HostNotFound:
                 # A briefly-offline hub or an unresolved discovery host should be
                 # retryable via the confirmation form, not aborted.
@@ -413,6 +413,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
+            else:
+                # Checked again: while the form was open, a carried-over entry
+                # may have adopted this MAC in its setup. Creating the entry now
+                # would replace that one, and with it its stored settings.
+                # Outside the try, since the abort is raised as an exception.
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: await self._async_stored_host(host)},
+                    reload_on_update=False,
+                )
+                if (unique_id := self.unique_id) is not None and (
+                    result := await self._async_abort_if_host_configured(
+                        host, unique_id=unique_id
+                    )
+                ) is not None:
+                    return result
+                return self.async_create_entry(title=info["title"], data=data)
 
         self._set_confirm_only()
         return self.async_show_form(

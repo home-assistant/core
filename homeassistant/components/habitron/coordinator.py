@@ -294,8 +294,8 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         that no other entry owns it (both through :func:`async_hub_macs`), and
         moving the entry onto it.
 
-        An ignored entry for the hub is removed first; the checks and the move
-        then run with no await in between: a
+        After the wrong-hub check, an ignored entry for the hub is removed; the
+        ownership check and the move then run with no await in between: a
         second entry for the same hub that is set up concurrently -- two entries
         carried over from the custom integration under a serial and a host
         fallback -- must find the MAC taken, not pass the check as well.
@@ -312,15 +312,6 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         # Only the LAN MAC identifies a hub: every SmartHub has one, and the
         # other interfaces it may report are not part of its identity.
         hub_macs = {self.uid}
-
-        # An ignored entry for this hub is replaced, as a config flow adding the
-        # hub would do. Leaving it would give two entries the same unique id,
-        # and a rediscovery could then update the ignored one instead of this.
-        for ignored in self.hass.config_entries.async_entries(
-            DOMAIN, include_ignore=True
-        ):
-            if ignored.source == SOURCE_IGNORE and ignored.unique_id == self.uid:
-                await self.hass.config_entries.async_remove(ignored.entry_id)
 
         # Every check runs before the first registry write, so a refused setup
         # leaves the registry untouched.
@@ -341,6 +332,18 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
                     "found": self.uid,
                 },
             )
+        # Only once the hub is known to be this entry's own: an ignored entry
+        # for this hub is replaced, as a config flow adding the hub would do.
+        # Leaving it would give two entries the same unique id, and a
+        # rediscovery could then update the ignored one instead of this.
+        for ignored in self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=True
+        ):
+            if ignored.source == SOURCE_IGNORE and ignored.unique_id == self.uid:
+                await self.hass.config_entries.async_remove(ignored.entry_id)
+
+        # From here on no await: the ownership check and the move belong
+        # together, or a concurrent setup could pass the check as well.
         if any(
             not bound_elsewhere.isdisjoint(hub_macs)
             for other in self.hass.config_entries.async_entries(DOMAIN)

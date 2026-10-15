@@ -746,3 +746,23 @@ async def test_resolve_uid_ignores_another_hubs_entry(hass: HomeAssistant) -> No
 
     assert entry.unique_id == MOCK_UID
     assert other.unique_id == _HUB_B
+
+
+async def test_wrong_hub_keeps_that_hubs_ignored_entry(hass: HomeAssistant) -> None:
+    """A refused hub's ignored entry stays, so discovery keeps ignoring it.
+
+    DHCP can hand the stored address to a hub the user chose to ignore. Setup
+    refuses that hub, and must not delete the user's choice on the way.
+    """
+    ignored = MockConfigEntry(domain=DOMAIN, unique_id=_HUB_B, source="ignore")
+    ignored.add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_UID)
+    entry.add_to_hass(hass)
+    coord = HbtnCoordinator(hass, entry)
+    coord.host = MOCK_HOST
+    coord.hub = _hub(**_HUB_B_MODEL)
+
+    with pytest.raises(ConfigEntryNotReady):
+        await coord._async_resolve_uid()
+
+    assert hass.config_entries.async_get_entry(ignored.entry_id) is ignored
