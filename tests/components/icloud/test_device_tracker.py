@@ -19,12 +19,14 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 ENTITY_ID = "device_tracker.iphone"
 
 
-def location(*, is_old: bool, age: timedelta) -> dict:
+def location(
+    *, is_old: bool, age: timedelta, latitude: float = 1.0, longitude: float = 2.0
+) -> dict:
     """Return a location fix of a given age, as iCloud reports it."""
     fixed_at = dt_util.utcnow() - age
     return {
-        "latitude": 1.0,
-        "longitude": 2.0,
+        "latitude": latitude,
+        "longitude": longitude,
         "horizontalAccuracy": 10,
         "isOld": is_old,
         "timeStamp": fixed_at.timestamp() * 1000,
@@ -137,14 +139,19 @@ async def test_cached_location_without_a_timestamp_is_kept(
     _, status = locating_service
     await setup_account(hass)
 
-    fix = location(is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3))
+    fix = location(
+        is_old=True,
+        age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3),
+        latitude=3.0,
+        longitude=4.0,
+    )
     del fix["timeStamp"]
     status["location"] = fix
     await next_fetch(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_LATITUDE] == 1.0
-    assert state.attributes[ATTR_LONGITUDE] == 2.0
+    assert state.attributes[ATTR_LATITUDE] == 3.0
+    assert state.attributes[ATTR_LONGITUDE] == 4.0
 
 
 async def test_tracker_is_created_once_a_stale_first_fix_is_replaced(
@@ -233,10 +240,13 @@ async def test_cached_location_with_an_unusable_timestamp_is_kept(
     await setup_account(hass)
 
     status["location"] = location(
-        is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
+        is_old=True,
+        age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3),
+        latitude=3.0,
+        longitude=4.0,
     ) | {"timeStamp": timestamp}
     await next_fetch(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_LATITUDE] == 1.0
-    assert state.attributes[ATTR_LONGITUDE] == 2.0
+    assert state.attributes[ATTR_LATITUDE] == 3.0
+    assert state.attributes[ATTR_LONGITUDE] == 4.0
