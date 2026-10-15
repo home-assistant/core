@@ -1078,7 +1078,7 @@ async def test_generic_workaround(
 _ADDITIONAL_SOURCES_IDENTIFIER = "test_camera_unique_id"
 _ADDITIONAL_SOURCES_EXPECTED = [
     "rtsp://stream",
-    "doorbird://user:secret@1.2.3.4:80",
+    "http://user:secret@1.2.3.4/audio",
     f"ffmpeg:{_ADDITIONAL_SOURCES_IDENTIFIER}#audio=opus#query=log_level=debug",
 ]
 
@@ -1120,7 +1120,7 @@ async def test_additional_stream_sources(
     camera = init_test_integration
     assert get_camera_identifier(camera) == _ADDITIONAL_SOURCES_IDENTIFIER
     camera.set_additional_stream_sources(
-        ["doorbird://user:secret@1.2.3.4:80", "unsupported://user:secret@1.2.3.4"]
+        ["http://user:secret@1.2.3.4/audio", "unsupported://user:secret@1.2.3.4"]
     )
     rest_client.streams.list.return_value = streams
 

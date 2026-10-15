@@ -2,11 +2,10 @@
 
 import datetime
 import logging
+import re
 from typing import override
-from urllib.parse import urlsplit
 
 import aiohttp
-from doorbirdpy import DoorBird
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -21,15 +20,23 @@ _LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
 _LIVE_INTERVAL = datetime.timedelta(seconds=45)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
+_PASSWORD_IN_URL = re.compile(r"(://[^:/@\s]+:)[^@\s]*@")
 
 
-def _get_backchannel_url(device: DoorBird) -> str:
-    """Return the go2rtc doorbird source used to transmit audio to the device."""
-    # go2rtc only takes host and credentials and posts to audio-transmit.cgi itself
+def _get_backchannel_source(transmit_url: str) -> str:
+    """Return the go2rtc source that transmits audio to the device.
+
+    ffmpeg reads the G.711 µ-law audio go2rtc writes to its stdin and posts it
+    to the audio-transmit endpoint with Content-Type audio/basic.
+    """
+    # Stream one plain body right away: preemptive basic auth, no 100-continue,
+    # no chunked encoding, like go2rtc's own DoorBird source
     return (
-        urlsplit(device.live_audio_transmit_url)
-        ._replace(scheme="doorbird", path="")
-        .geturl()
+        "exec:ffmpeg -hide_banner -f mulaw -ar 8000 -ac 1 -i - -c:a copy"
+        " -f mulaw -flush_packets 1 -method POST -content_type audio/basic"
+        " -auth_type basic -send_expect_100 0 -icy 0 -chunked_post 0"
+        ' -headers "Content-Length: 9999999"'
+        f" {transmit_url}#backchannel=1#audio=pcmu/8000"
     )
 
 
@@ -102,7 +109,21 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         if not self._stream_url:
             return []
         device = self._door_station.device
-        return [device.live_audio_url, _get_backchannel_url(device)]
+        sources = [
+            device.live_audio_url,
+            _get_backchannel_source(device.live_audio_transmit_url),
+        ]
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            audio, backchannel = (
+                _PASSWORD_IN_URL.sub(r"\1***@", source) for source in sources
+            )
+            _LOGGER.debug(
+                "%s audio source: %s, two way audio source: %s",
+                self.entity_id,
+                audio,
+                backchannel,
+            )
+        return sources
 
     @override
     async def async_camera_image(

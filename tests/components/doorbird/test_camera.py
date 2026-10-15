@@ -1,5 +1,7 @@
 """Test DoorBird cameras."""
 
+import logging
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -55,7 +57,15 @@ async def test_doorbird_cameras(
             True,
             [
                 "http://friend:password@1.2.3.4:80/bha-api/audio-receive.cgi",
-                "doorbird://friend:password@1.2.3.4:80",
+                (
+                    "exec:ffmpeg -hide_banner -f mulaw -ar 8000 -ac 1 -i - -c:a copy"
+                    " -f mulaw -flush_packets 1 -method POST"
+                    " -content_type audio/basic -auth_type basic"
+                    " -send_expect_100 0 -icy 0 -chunked_post 0"
+                    ' -headers "Content-Length: 9999999"'
+                    " http://friend:password@1.2.3.4:80/bha-api/audio-transmit.cgi"
+                    "#backchannel=1#audio=pcmu/8000"
+                ),
             ],
             id="live",
         ),
@@ -75,3 +85,26 @@ async def test_doorbird_camera_audio(
     camera = get_camera_from_entity_id(hass, entity_id)
     assert camera.supports_two_way_audio is supports_two_way_audio
     assert await camera.additional_stream_sources() == additional_stream_sources
+
+
+async def test_doorbird_camera_audio_sources_logged(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the audio sources are logged without the password."""
+    caplog.set_level(logging.DEBUG, "homeassistant.components.doorbird")
+    await doorbird_mocker()
+    camera = get_camera_from_entity_id(hass, "camera.mydoorbird_live")
+
+    await camera.additional_stream_sources()
+
+    assert (
+        "camera.mydoorbird_live audio source:"
+        " http://friend:***@1.2.3.4:80/bha-api/audio-receive.cgi" in caplog.text
+    )
+    assert (
+        " http://friend:***@1.2.3.4:80/bha-api/audio-transmit.cgi"
+        "#backchannel=1#audio=pcmu/8000" in caplog.text
+    )
+    assert "password" not in caplog.text

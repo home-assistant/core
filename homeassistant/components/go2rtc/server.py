@@ -59,7 +59,6 @@ webrtc:
 
 _APP_MODULES = (
     "api",
-    "doorbird",  # DoorBird two way audio
     "exec",  # Execution module for ffmpeg
     "ffmpeg",
     "http",
