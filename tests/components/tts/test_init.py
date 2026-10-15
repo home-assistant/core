@@ -2606,6 +2606,43 @@ async def test_stream_preferred_options_handled_by_engine(
     )
 
 
+async def test_stream_conversion_keeps_options_handled_by_engine(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test that a conversion for one option keeps the ones the engine handled."""
+    mock_tts_entity._supported_options = [
+        tts.ATTR_PREFERRED_FORMAT,
+        tts.ATTR_PREFERRED_BITRATE,
+    ]
+    mock_tts_entity.get_tts_audio = Mock(return_value=("mp3", MOCK_DATA))
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(
+        hass,
+        mock_tts_entity.entity_id,
+        options={
+            tts.ATTR_PREFERRED_FORMAT: "mp3",
+            tts.ATTR_PREFERRED_BITRATE: 48,
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
+        },
+    )
+
+    async def converted_audio() -> AsyncGenerator[bytes]:
+        yield MOCK_DATA
+
+    with patch(
+        "homeassistant.components.tts._async_convert_audio",
+        return_value=converted_audio(),
+    ) as mock_convert_audio:
+        stream.async_set_message("beer")
+        result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+
+    assert result_data == MOCK_DATA
+    # The engine cannot set the sample rate, so ffmpeg must keep its bitrate
+    assert mock_convert_audio.call_args.kwargs["to_sample_rate"] == 16000
+    assert mock_convert_audio.call_args.kwargs["to_bitrate"] == 48
+
+
 async def test_stream_override(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:

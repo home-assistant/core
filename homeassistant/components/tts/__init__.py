@@ -1273,6 +1273,19 @@ class SpeechManager:
         options = dict(options or {})
         supported_options = engine_instance.supported_options or []
 
+        # Options the engine handles itself must not trigger a conversion, but a
+        # conversion needed for another reason still has to keep them.
+        convert_options = {
+            option
+            for option in (
+                ATTR_PREFERRED_SAMPLE_RATE,
+                ATTR_PREFERRED_SAMPLE_CHANNELS,
+                ATTR_PREFERRED_SAMPLE_BYTES,
+                ATTR_PREFERRED_BITRATE,
+            )
+            if options.get(option) is not None and option not in supported_options
+        }
+
         # Extract preferred format options.
         #
         # These options are used by Assist pipelines, etc. to get a format that
@@ -1287,7 +1300,7 @@ class SpeechManager:
             final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
 
         if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
-            sample_rate = None
+            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
         else:
             sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
 
@@ -1295,7 +1308,7 @@ class SpeechManager:
             sample_rate = int(sample_rate)
 
         if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
-            sample_channels = None
+            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
         else:
             sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
 
@@ -1303,7 +1316,7 @@ class SpeechManager:
             sample_channels = int(sample_channels)
 
         if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
-            sample_bytes = None
+            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
         else:
             sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
 
@@ -1311,7 +1324,7 @@ class SpeechManager:
             sample_bytes = int(sample_bytes)
 
         if ATTR_PREFERRED_BITRATE in supported_options:
-            bitrate = None
+            bitrate = options.get(ATTR_PREFERRED_BITRATE)
         else:
             bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
 
@@ -1369,14 +1382,8 @@ class SpeechManager:
 
         # Only convert if we have a preferred format different than the
         # expected format from the TTS system, or if a specific sample
-        # rate/format/channel count is requested.
-        needs_conversion = (
-            (final_extension != extension)
-            or (sample_rate is not None)
-            or (sample_channels is not None)
-            or (sample_bytes is not None)
-            or (bitrate is not None)
-        )
+        # rate/format/channel count is requested that the engine does not handle.
+        needs_conversion = (final_extension != extension) or bool(convert_options)
 
         if needs_conversion:
             data_gen = _async_convert_audio(
