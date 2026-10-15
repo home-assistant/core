@@ -272,20 +272,14 @@ class _TranslationCache:
         }
 
         # English is always the fallback language so we load them first
-        invalid_english = self._build_category_cache(
-            language,
-            components,
-            translation_by_language_strings[LOCALE_EN],
-            resource_language=LOCALE_EN,
+        self._build_category_cache(
+            language, components, translation_by_language_strings[LOCALE_EN]
         )
 
         if language != LOCALE_EN:
             # Now overlay the requested language on top of the English
             self._build_category_cache(
-                language,
-                components,
-                translation_by_language_strings[language],
-                excluded_resources=invalid_english,
+                language, components, translation_by_language_strings[language]
             )
 
             loaded_english_components = loaded.setdefault(LOCALE_EN, set())
@@ -306,8 +300,11 @@ class _TranslationCache:
         language: str,
         updated_resources: dict[str, str],
         cached_resources: dict[str, str] | None = None,
-    ) -> set[str]:
-        """Remove malformed or mismatched resources and return their keys."""
+    ) -> dict[str, str]:
+        """Validate if updated resources have same placeholders as cached resources."""
+        if cached_resources is None:
+            return updated_resources
+
         mismatches: set[str] = set()
 
         for key, value in updated_resources.items():
@@ -319,7 +316,7 @@ class _TranslationCache:
                 )
                 mismatches.add(key)
                 continue
-            if cached_resources is None or key not in cached_resources:
+            if key not in cached_resources:
                 continue
             updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
 
@@ -342,7 +339,7 @@ class _TranslationCache:
         for mismatch in mismatches:
             del updated_resources[mismatch]
 
-        return mismatches
+        return updated_resources
 
     @callback
     def _build_category_cache(
@@ -350,12 +347,8 @@ class _TranslationCache:
         language: str,
         components: set[str],
         translation_strings: dict[str, dict[str, Any]],
-        *,
-        resource_language: str | None = None,
-        excluded_resources: set[str] | None = None,
-    ) -> set[str]:
-        """Extract valid resources into the cache and return invalid keys."""
-        invalid_resources: set[str] = set()
+    ) -> None:
+        """Extract resources into the cache."""
         resource: dict[str, Any] | str
         cached = self.cache_data.cache.setdefault(language, {})
         categories = {
@@ -377,17 +370,8 @@ class _TranslationCache:
 
                 prefix = f"component.{component}.{category}."
                 flat = recursive_flatten(prefix, resource)
-                if excluded_resources:
-                    for key in excluded_resources.intersection(flat):
-                        del flat[key]
-                invalid_resources.update(
-                    self._validate_placeholders(
-                        resource_language or language, flat, component_cache
-                    )
-                )
+                flat = self._validate_placeholders(language, flat, component_cache)
                 component_cache.update(flat)
-
-        return invalid_resources
 
 
 async def async_get_translations(
