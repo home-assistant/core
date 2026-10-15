@@ -33,7 +33,7 @@ from .coordinator import (
 )
 
 _PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
+    Platform.SENSOR
 ]
 
 
