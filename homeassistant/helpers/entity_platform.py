@@ -473,9 +473,6 @@ class EntityPlatform:
         """Set up a platform via config file or config entry.
 
         async_create_setup_awaitable creates an awaitable that sets up platform.
-
-        Returns False only if the setup failed. A setup that is retried is not a
-        failure.
         """
         current_platform.set(self)
         logger = self.logger
@@ -541,7 +538,7 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return True
+            return False
         except TimeoutError:
             logger.error(
                 (

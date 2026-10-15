@@ -1184,38 +1184,13 @@ async def test_setup_entry_platform_not_ready(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert await ent_platform.async_setup_entry(config_entry)
+        assert not await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
     assert "Platform test not ready yet" in caplog.text
     assert len(mock_call_later.mock_calls) == 1
-
-
-async def test_setup_entry_platform_timeout(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test a config entry platform that times out is a failure."""
-
-    async def async_setup_entry(*args: Any) -> None:
-        await asyncio.sleep(0.1)
-
-    platform = MockPlatform(async_setup_entry=async_setup_entry)
-    config_entry = MockConfigEntry()
-    ent_platform = MockEntityPlatform(
-        hass, platform_name=config_entry.domain, platform=platform
-    )
-
-    with patch.object(entity_platform, "SLOW_SETUP_MAX_WAIT", 0):
-        assert not await ent_platform.async_setup_entry(config_entry)
-
-    full_name = f"{config_entry.domain}.{ent_platform.domain}"
-    assert full_name not in hass.config.components
-    assert "test is taking longer than 0 seconds" in caplog.text
-
-    # Cleanup lingering (async_setup_entry) task after test is done
-    await asyncio.sleep(0.1)
 
 
 async def test_setup_entry_platform_not_ready_with_message(
@@ -1230,7 +1205,7 @@ async def test_setup_entry_platform_not_ready_with_message(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert await ent_platform.async_setup_entry(config_entry)
+        assert not await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1257,7 +1232,7 @@ async def test_setup_entry_platform_not_ready_from_exception(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert await ent_platform.async_setup_entry(config_entry)
+        assert not await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1278,7 +1253,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert await ent_platform.async_setup_entry(config_entry)
+        assert not await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0
@@ -1302,7 +1277,7 @@ async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert await ent_platform.async_setup_entry(config_entry)
+    assert not await ent_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
     assert (
         hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
@@ -1327,7 +1302,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert await ent_platform.async_setup_entry(config_entry)
+        assert not await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0

@@ -112,7 +112,7 @@ async def test_setup_failed(
     assert len(all_states) == 0
     assert "[name(http://0.0.0.0:10000/sony)] Unable to connect" in caplog.text
     assert "Platform songpal not ready yet: Unable to do POST request" in caplog.text
-    assert not any(x.levelno == logging.ERROR for x in caplog.records)
+    assert "Failed to set up the songpal media_player platform" in caplog.text
     caplog.clear()
 
     utcnow = dt_util.utcnow()
