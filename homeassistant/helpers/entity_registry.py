@@ -2549,15 +2549,6 @@ class EntityRegistry(BaseRegistry):
                     entity_id_parts=tuple(EntityNamePart(part) for part in parts_data)
                 )
 
-        self.entities = entities
-        self.deleted_entities = deleted_entities
-        self.settings = settings
-        self._entities_data = entities.data
-
-        # Persist entities moved off a split pre-migration composite device
-        if migrated_composite_device:
-            self.async_schedule_save()
-
         # A stored derived disabled_by can be stale, when an earlier version
         # handled it incorrectly or when not all registries were saved before a
         # shutdown, so derive it again from the loaded state.
@@ -2585,7 +2576,14 @@ class EntityRegistry(BaseRegistry):
                 entry, disabled_by=disabled_by, modified_at=utcnow()
             )
             disabled_by_changed = True
-        if disabled_by_changed:
+
+        self.entities = entities
+        self.deleted_entities = deleted_entities
+        self.settings = settings
+        self._entities_data = entities.data
+
+        # Persist entities repaired on load
+        if migrated_composite_device or disabled_by_changed:
             self.async_schedule_save()
 
         self._loaded_event.set()
