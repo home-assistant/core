@@ -37,7 +37,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class GkpRuntimeData:
     """Runtime data for GKP integration."""
 
-    auth: GkpAuth
     hub_coordinator: GkpHubCoordinator
     device_coordinators: dict[str, GkpDeviceCoordinator]
     client: GkpClient
@@ -105,8 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> bool:
 
     await oauth_session.async_ensure_token_valid()
 
-    auth = GkpAuth(oauth_session)
-    client = GkpClient(auth, aiohttp_client.async_get_clientsession(hass))
+    client = GkpClient(
+        GkpAuth(oauth_session), aiohttp_client.async_get_clientsession(hass)
+    )
     hub_coordinator = GkpHubCoordinator(hass, client, entry)
 
     await hub_coordinator.async_config_entry_first_refresh()
@@ -117,7 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> bool:
     )
 
     entry.runtime_data = GkpRuntimeData(
-        auth=auth,
         hub_coordinator=hub_coordinator,
         device_coordinators=device_coordinators,
         client=client,
