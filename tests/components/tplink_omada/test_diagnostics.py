@@ -9,7 +9,7 @@ from tplink_omada_client.clients import OmadaWirelessClient
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_array_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -21,8 +21,8 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics payload and redaction."""
-    connected_clients_data = json.loads(
-        await async_load_fixture(hass, "connected-clients.json", DOMAIN)
+    connected_clients_data = await async_load_json_array_fixture(
+        hass, "connected-clients.json", DOMAIN
     )
 
     controller = init_integration.runtime_data

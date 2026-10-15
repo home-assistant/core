@@ -21,6 +21,7 @@ from roborock.data import (
     ZeoSpin,
     ZeoTemperature,
 )
+from roborock.data.b01_q7.b01_q7_code_mappings import CleanRepeatMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import YXCleanType
 from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
@@ -132,6 +133,16 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         options_lambda=lambda _: list(CleanPathPreferenceMapping.keys()),
         entity_category=EntityCategory.CONFIG,
     ),
+    RoborockB01SelectDescription(
+        key="cleaning_cycles",
+        translation_key="cleaning_cycles",
+        api_fn=lambda api, value: api.set_repeat_state(
+            CleanRepeatMapping.from_value(value)
+        ),
+        value_fn=lambda data: data.repeat_state.value if data.repeat_state else None,
+        options_lambda=lambda _: [option.value for option in CleanRepeatMapping],
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
 
 
@@ -158,7 +169,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         value_fn=lambda api: api.status.mop_route_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            [mode.value for mode in api.status.mop_route_options]
+            [mode.display_name for mode in api.status.mop_route_options]
             if api.status.mop_route_options
             else None
         ),
@@ -180,7 +191,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
             else None
         ),
         parameter_lambda=lambda key, _: [
-            RoborockDockDustCollectionModeCode.as_dict().get(key)
+            RoborockDockDustCollectionModeCode.as_dict()[key]
         ],
         is_dock_entity=True,
     ),

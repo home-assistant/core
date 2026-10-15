@@ -148,6 +148,20 @@ async def test_manual_update_entity(
             id="last_self_test_missing",
         ),
         pytest.param(
+            # The transfer fields only appear after a transfer to or from the
+            # battery since the daemon started.
+            MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_transfer_to_battery",
+            MOCK_MINIMAL_STATUS | {"XONBATT": "1970-01-01 00:00:00 +0000"},
+            id="xonbatt_missing",
+        ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_transfer_from_battery",
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
+            id="xoffbatt_missing",
+        ),
+        pytest.param(
             MOCK_MINIMAL_STATUS | {"XOFFBATT": "N/A"},
             "sensor.apc_ups_transfer_from_battery",
             MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},

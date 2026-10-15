@@ -3,7 +3,7 @@
 from typing import Any
 
 from aiohttp.web import Response
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -19,9 +19,9 @@ from .store import remove_live_activity_token, store_live_activity_token
 @WEBHOOK_COMMANDS.register("live_activity_token")
 @validate_schema(
     {
-        vol.Required(ATTR_TAG): cv.string,
-        vol.Required(ATTR_PUSH_TOKEN): cv.string,
-        vol.Required(ATTR_LIVE_ACTIVITY_EXPIRES_AT): cv.positive_float,
+        probatio.Required(ATTR_TAG): cv.string,
+        probatio.Required(ATTR_PUSH_TOKEN): cv.string,
+        probatio.Required(ATTR_LIVE_ACTIVITY_EXPIRES_AT): cv.positive_float,
     }
 )
 async def webhook_update_live_activity_token(
@@ -41,7 +41,7 @@ async def webhook_update_live_activity_token(
 @WEBHOOK_COMMANDS.register("live_activity_dismissed")
 @validate_schema(
     {
-        vol.Required(ATTR_TAG): cv.string,
+        probatio.Required(ATTR_TAG): cv.string,
     }
 )
 async def webhook_live_activity_dismissed(

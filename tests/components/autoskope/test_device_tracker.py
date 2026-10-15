@@ -190,6 +190,7 @@ async def test_reauth_failure(
 
 async def test_vehicle_name_update(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_autoskope_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
@@ -197,7 +198,6 @@ async def test_vehicle_name_update(
     """Test device name updates in device registry when vehicle is renamed."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "12345"), mock_config_entry.entry_id
     )

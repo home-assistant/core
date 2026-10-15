@@ -477,6 +477,38 @@ async def test_value_template_fails(
     [
         {
             DOMAIN: {
+                "binary_sensor": {
+                    "name": "Parking brake",
+                    "state_topic": "state-topic",
+                    "default_entity_id": "sensor.park_brake",
+                }
+            }
+        },
+    ],
+)
+async def test_default_entity_id_with_wrong_domain(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a default_entity_id whose domain does not match the entity."""
+    await mqtt_mock_entry()
+
+    # The domain of the entity wins; the user is told about the mismatch
+    assert hass.states.get("binary_sensor.park_brake") is not None
+    assert hass.states.get("sensor.park_brake") is None
+    assert (
+        "The default_entity_id sensor.park_brake of a binary_sensor entity has "
+        "the sensor domain; using binary_sensor.park_brake as the default instead"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",

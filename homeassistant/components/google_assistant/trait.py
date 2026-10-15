@@ -1385,11 +1385,23 @@ class TemperatureSettingTrait(_Trait):
 
         modes = self.climate_google_modes
 
+        features = attrs.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+        has_setpoint = features & (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+
+        # A climate entity that can neither set a target temperature nor switch
+        # between modes (e.g. a template climate that only mirrors sensors) can
+        # only be queried; tell Google so it doesn't offer controls that fail.
+        if not has_setpoint and len(modes) <= 1:
+            response["queryOnlyTemperatureSetting"] = True
+
         # Some integrations don't support modes (e.g. opentherm), but Google doesn't
         # support changing the temperature if we don't have any modes. If there's
         # only one Google doesn't support changing it, so the default mode here is
         # only cosmetic.
-        if len(modes) == 0:
+        if len(modes) == 0 and has_setpoint:
             modes.append("heat")
 
         if "off" in modes and any(

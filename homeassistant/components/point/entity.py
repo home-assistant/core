@@ -37,7 +37,7 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
         if parent := dr.async_get(coordinator.hass).async_get_device_by_identifier(
             (DOMAIN, device["home"]), coordinator.config_entry.entry_id
         ):
-            self._attr_device_info["via_device_id"] = parent.id
+            self._attr_device_info.via_device_id = parent.id
         if self.device_class:
             self._attr_name = f"{self._name} {self.device_class.capitalize()}"
 

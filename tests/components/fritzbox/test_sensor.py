@@ -171,3 +171,43 @@ async def test_next_change_sensors(
     state = hass.states.get(f"{base_name}_current_scheduled_preset")
     assert state
     assert state.state == expected_states[3]
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value", "entity_id", "expected_state"),
+    [
+        pytest.param(
+            "power", None, f"{ENTITY_ID}_power", STATE_UNKNOWN, id="power_missing"
+        ),
+        pytest.param("power", 0, f"{ENTITY_ID}_power", "0.0", id="power_zero"),
+        pytest.param(
+            "voltage", None, f"{ENTITY_ID}_voltage", STATE_UNKNOWN, id="voltage_missing"
+        ),
+        pytest.param(
+            "current", None, f"{ENTITY_ID}_current", STATE_UNKNOWN, id="current_missing"
+        ),
+        pytest.param(
+            "energy", None, f"{ENTITY_ID}_energy", STATE_UNKNOWN, id="energy_missing"
+        ),
+        pytest.param("energy", 0, f"{ENTITY_ID}_energy", "0.0", id="energy_zero"),
+    ],
+)
+async def test_powermeter_missing_values(
+    hass: HomeAssistant,
+    fritz: Mock,
+    attribute: str,
+    value: int | None,
+    entity_id: str,
+    expected_state: str,
+) -> None:
+    """Test powermeter sensors do not report 0 for missing values."""
+    device = FritzDeviceSwitchMock()
+    setattr(device, attribute, value)
+
+    await setup_config_entry(
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state

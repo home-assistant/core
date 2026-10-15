@@ -7,7 +7,7 @@ import math
 from typing import Any, override
 
 import numpy as np
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -72,30 +72,32 @@ def _validate_min_max(data: dict[str, Any]) -> dict[str, Any]:
         and CONF_MAX_SAMPLES in data
         and data[CONF_MAX_SAMPLES] < data[CONF_MIN_SAMPLES]
     ):
-        raise vol.Invalid("min_samples must be smaller than or equal to max_samples")
+        raise probatio.Invalid(
+            "min_samples must be smaller than or equal to max_samples"
+        )
     return data
 
 
-SENSOR_SCHEMA = vol.All(
-    vol.Schema(
+SENSOR_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_ATTRIBUTE): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_INVERT, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
-            vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
-            vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
-            vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_ATTRIBUTE): cv.string,
+            probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            probatio.Optional(CONF_FRIENDLY_NAME): cv.string,
+            probatio.Optional(CONF_INVERT, default=False): cv.boolean,
+            probatio.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
+            probatio.Optional(CONF_MIN_GRADIENT, default=0.0): probatio.Coerce(float),
+            probatio.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
+            probatio.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
     _validate_min_max,
 )
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
+    {probatio.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
 

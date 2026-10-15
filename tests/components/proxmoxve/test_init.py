@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -181,9 +182,6 @@ async def test_migration_v1_to_v3(
     entry.add_to_hass(hass)
     assert entry.version == 1
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-
     vm_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_vm_100")},
@@ -327,7 +325,7 @@ async def test_offline_node(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that an offline node doesn't cause the entire update to fail."""
+    """Test that an offline or unknown state node doesn't cause the entire update to fail."""
     mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
     await setup_integration(hass, mock_config_entry)
 
@@ -339,12 +337,19 @@ async def test_offline_node(
     state = hass.states.get("binary_sensor.pve3_status")
     assert state.state == STATE_OFF
 
+    state = hass.states.get("sensor.pve3_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.pve4_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
+
 
 async def test_new_vm_creates_entity(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a VM appearing after initial load gets an entity created."""
     mock_proxmox_client._node_mock.qemu.get.return_value = []
@@ -359,9 +364,9 @@ async def test_new_vm_creates_entity(
         await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
     )
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         len(
@@ -378,6 +383,7 @@ async def test_new_container_creates_entity(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a container appearing after initial load gets an entity created."""
     mock_proxmox_client._node_mock.lxc.get.return_value = []
@@ -392,9 +398,9 @@ async def test_new_container_creates_entity(
         await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
     )
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         len(
@@ -488,7 +494,7 @@ async def test_new_node_registers_device_before_children(
 
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entry_id = mock_config_entry.entry_id
     node_device = device_registry.async_get_device_by_identifier(
@@ -513,6 +519,7 @@ async def test_stale_devices_removed(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that devices are removed when their resource disappears."""
     await setup_integration(hass, mock_config_entry)
@@ -533,9 +540,9 @@ async def test_stale_devices_removed(
         if vm["vmid"] != 100
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         device_registry.async_get_device_by_identifier(

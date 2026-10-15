@@ -1,6 +1,6 @@
 """Services for the Blink integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
@@ -40,7 +40,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SAVE_RECENT_CLIPS,
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(CONF_FILE_PATH): cv.string},
+        schema={probatio.Required(CONF_FILE_PATH): cv.string},
         func="save_recent_clips",
     )
     service.async_register_platform_entity_service(
@@ -48,6 +48,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SAVE_VIDEO,
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(CONF_FILENAME): cv.string},
+        schema={probatio.Required(CONF_FILENAME): cv.string},
         func="save_video",
     )

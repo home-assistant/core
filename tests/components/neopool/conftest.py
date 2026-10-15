@@ -1,12 +1,18 @@
 """Common fixtures for the NeoPool tests."""
 
 from collections.abc import Generator
+from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
     DEFAULT_PORT,
@@ -14,6 +20,7 @@ from homeassistant.components.neopool.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -21,6 +28,12 @@ MOCK_HOST = "192.0.2.1"
 MOCK_PORT = DEFAULT_PORT
 MOCK_NAME = "Pool"
 MOCK_SERIAL = "1234567890"
+
+
+@asynccontextmanager
+async def _temp_unit_cm(hass: HomeAssistant, params: Any, unit_id: Any) -> Any:
+    """Stub async_get_temporary_unit, yielding a throwaway unit."""
+    yield MagicMock()
 
 
 MOCK_POOL_DATA: dict[str, Any] = {
@@ -63,6 +76,8 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "MBF_PAR_INTELLIGENT_INTERVALS": 4,
     "MBF_PAR_INTELLIGENT_TT_NEXT_INTERVAL": 7200,
     "MBF_PAR_FILTVALVE_REMAINING": 0,
+    "MBF_PAR_FILTVALVE_INTERVAL": 150,
+    "MBF_PAR_FILTVALVE_MODE": 0,
     "HIDRO_POLARITY": 0,
     "ION_POLARITY": 0,
     "PH_PUMP_STATUS": "off",
@@ -76,7 +91,17 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "pH pump active": False,
     "pH acid pump active": False,
     "Filtration Pump": False,
+    "pH Acid Pump": False,
+    # Measurement / module "active" bits. The controller keeps measuring the
+    # probes regardless of filtration state, so these read True even though the
+    # filtration pump above is off.
+    "pH measurement active": True,
+    "Redox measurement active": True,
+    "Chlorine measurement active": True,
+    "Conductivity measurement active": True,
+    "HIDRO Module active": True,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
+    "MBF_PAR_HIDRO_COVER_ENABLE": 0x0000,
     "Pool Cover": 0,
     "CELL_RUNTIME_TOTAL": 0x00010000,
     "CELL_RUNTIME_PART": 0x00000E10,
@@ -84,6 +109,49 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "CELL_RUNTIME_POLB": 0x00000708,
     "CELL_RUNTIME_POL_CHANGES": 0x00000007,
 }
+
+
+# Aux timer blocks default to manual mode (enable=4) so switch writes pass the
+# guard; auto-mode tests override the returned mode per case.
+def _timer_block(enable: int = 4) -> dict[str, Any]:
+    """Return a timer block dict for the mock read_all_timers."""
+    return {
+        "enable": enable,
+        "on": 0,
+        "interval": 0,
+        "period": 0,
+        "countdown": 0,
+        "stop": None,
+    }
+
+
+MOCK_TIMER_BLOCKS: dict[str, dict[str, Any]] = {
+    "filtration1": _timer_block(),
+    "filtration2": _timer_block(),
+    "filtration3": _timer_block(),
+    "relay_aux1": _timer_block(),
+    "relay_aux1b": _timer_block(),
+    "relay_aux2": _timer_block(),
+    "relay_aux2b": _timer_block(),
+    "relay_aux3": _timer_block(),
+    "relay_aux3b": _timer_block(),
+    "relay_aux4": _timer_block(),
+    "relay_aux4b": _timer_block(),
+    "relay_light": _timer_block(),
+}
+
+
+def _read_all_timers(
+    enabled_timers: list[str] | None = None, **_kwargs: Any
+) -> dict[str, dict[str, Any]]:
+    """Return the requested timer blocks, mirroring the library contract."""
+    if enabled_timers is None:
+        return {name: dict(block) for name, block in MOCK_TIMER_BLOCKS.items()}
+    return {
+        name: dict(MOCK_TIMER_BLOCKS[name])
+        for name in enabled_timers
+        if name in MOCK_TIMER_BLOCKS
+    }
 
 
 @pytest.fixture
@@ -133,6 +201,127 @@ def mock_config_entry_light() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_switch() -> MockConfigEntry:
+    """Return a config entry with the option-gated switches enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_timers() -> MockConfigEntry:
+    """Return a config entry with the aux and light timer options enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_number() -> MockConfigEntry:
+    """Return a config entry with the options the number platform gates on."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={CONF_USE_COVER_SENSOR: True},
+    )
+
+
+@pytest.fixture
+def mock_config_entry_binary_sensor() -> MockConfigEntry:
+    """Return a config entry with the options the binary_sensor platform gates on."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: True,
+            CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_binary_sensor_no_options() -> MockConfigEntry:
+    """Return a config entry with every binary_sensor option disabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: False,
+            CONF_USE_COVER_SENSOR: False,
+            CONF_USE_AUX1: False,
+            CONF_USE_AUX2: False,
+            CONF_USE_AUX3: False,
+            CONF_USE_AUX4: False,
+        },
+    )
+
+
+@pytest.fixture
 def mock_neopool_client() -> Generator[MagicMock]:
     """Patch the NeoPoolModbusClient and return a configurable mock instance."""
     with (
@@ -141,13 +330,21 @@ def mock_neopool_client() -> Generator[MagicMock]:
             autospec=True,
         ) as mock_client_cls,
         patch(
-            "homeassistant.components.neopool.config_flow.async_probe_serial",
+            "homeassistant.components.neopool.async_get_unit",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+            side_effect=_temp_unit_cm,
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
             new=AsyncMock(return_value=MOCK_SERIAL),
         ),
     ):
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
-        mock_client.read_all_timers = AsyncMock(return_value={})
+        mock_client.read_all_timers = AsyncMock(side_effect=_read_all_timers)
         mock_client.connection_stats = {
             "host": MOCK_HOST,
             "port": MOCK_PORT,
@@ -158,6 +355,14 @@ def mock_neopool_client() -> Generator[MagicMock]:
             "success_rate_percent": 100.0,
         }
         mock_client.async_set_relay_state = AsyncMock(return_value={})
+        mock_client.async_set_manual_filtration = AsyncMock(return_value={})
+        mock_client.async_set_binary_flag = AsyncMock(return_value={})
+        mock_client.async_set_bitmask_flag = AsyncMock(return_value={})
+        mock_client.async_set_relay_activation_delay = AsyncMock(return_value={})
+        mock_client.async_start_backwash = AsyncMock(return_value=None)
+        mock_client.async_stop_backwash = AsyncMock(return_value=None)
+        mock_client.async_read_register = AsyncMock(return_value=[0])
+        mock_client.async_sync_device_time = AsyncMock(return_value={"value": 1})
         mock_client.close = AsyncMock()
         yield mock_client
 
@@ -199,8 +404,14 @@ def minimal_pool_data() -> dict[str, Any]:
 @pytest.fixture
 def mock_socket_connection() -> Generator[AsyncMock]:
     """Patch the lib probe in config_flow so we don't hit the network."""
-    with patch(
-        "homeassistant.components.neopool.config_flow.async_probe_serial",
-        new=AsyncMock(return_value=MOCK_SERIAL),
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+            side_effect=_temp_unit_cm,
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
+            new=AsyncMock(return_value=MOCK_SERIAL),
+        ) as mock,
+    ):
         yield mock

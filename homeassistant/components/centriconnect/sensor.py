@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
     UnitOfTemperature,
 )
 from homeassistant.const import (
@@ -24,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import CentriConnectConfigEntry, CentriConnectCoordinator
 from .entity import CentriConnectBaseEntity

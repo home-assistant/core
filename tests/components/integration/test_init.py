@@ -148,11 +148,13 @@ async def test_setup_and_remove_config_entry(
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
-async def test_entry_changed(hass: HomeAssistant, platform) -> None:
+async def test_entry_changed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    platform,
+) -> None:
     """Test reconfiguring."""
-
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     def _create_mock_entity(domain: str, name: str) -> er.RegistryEntry:
         config_entry = MockConfigEntry(
@@ -168,11 +170,11 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
             domain, "test", name, suggested_object_id=name, device_id=device_entry.id
         )
 
-    def _get_device_config_entries(entry: er.RegistryEntry) -> set[str]:
+    def _get_device_config_entry_id(entry: er.RegistryEntry) -> str:
         assert entry.device_id
         device = device_registry.async_get(entry.device_id)
         assert device
-        return device.config_entries
+        return device.config_entry_id
 
     # Set up entities, with backing devices and config entries
     input_entry = _create_mock_entity("sensor", "input")
@@ -195,8 +197,8 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.entry_id not in _get_device_config_entries(input_entry)
-    assert config_entry.entry_id not in _get_device_config_entries(valid_entry)
+    assert _get_device_config_entry_id(input_entry) != config_entry.entry_id
+    assert _get_device_config_entry_id(valid_entry) != config_entry.entry_id
     integration_entity_entry = entity_registry.async_get("sensor.input_my_integration")
     assert integration_entity_entry.device_id == input_entry.device_id
 
@@ -207,8 +209,8 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
 
     # Check that the device association has updated
-    assert config_entry.entry_id not in _get_device_config_entries(input_entry)
-    assert config_entry.entry_id not in _get_device_config_entries(valid_entry)
+    assert _get_device_config_entry_id(input_entry) != config_entry.entry_id
+    assert _get_device_config_entry_id(valid_entry) != config_entry.entry_id
     integration_entity_entry = entity_registry.async_get("sensor.input_my_integration")
     assert integration_entity_entry.device_id == valid_entry.device_id
 
@@ -232,7 +234,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert integration_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
@@ -280,7 +282,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert integration_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
@@ -305,7 +307,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     # Check that the integration config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     # Check that the integration config entry is not removed
     assert integration_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -332,7 +334,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert integration_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
@@ -355,7 +357,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the integration config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     # Check that the integration config entry is not removed
     assert integration_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -388,9 +390,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert integration_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert integration_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != integration_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
@@ -413,9 +415,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check that the derivative config entry is not in any of the devices
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert integration_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != integration_config_entry.entry_id
 
     # Check that the integration config entry is not removed
     assert integration_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -442,7 +444,7 @@ async def test_async_handle_source_entity_new_entity_id(
     assert integration_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
@@ -462,7 +464,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
 
     # Check that the integration config entry is not removed
     assert integration_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -506,7 +508,7 @@ async def test_migration_1_1(
     # Check that the helper config entry is not in the device and the helper entity
     # is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != integration_config_entry.entry_id
     integration_entity_entry = entity_registry.async_get(
         "sensor.mock_title_my_integration"
     )

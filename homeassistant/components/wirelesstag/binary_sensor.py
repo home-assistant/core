@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 from wirelesstagpy import SensorTag, constants as WT_CONSTANTS
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,8 +39,8 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        probatio.Required(CONF_MONITORED_CONDITIONS, default=[]): probatio.All(
+            probatio.EnsureList(), [probatio.In(SENSOR_TYPES)]
         )
     }
 )

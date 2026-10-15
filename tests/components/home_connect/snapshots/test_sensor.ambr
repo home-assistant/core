@@ -3975,6 +3975,68 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[sensor.hob_alarm_clock_elapsed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hob_alarm_clock_elapsed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm clock elapsed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Alarm clock elapsed',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_clock_elapsed',
+    'unique_id': 'BOSCH-HCS000000-68A40E000000-BSH.Common.Event.AlarmClockElapsed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hob_alarm_clock_elapsed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob Alarm clock elapsed',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hob_alarm_clock_elapsed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[sensor.hob_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4035,6 +4097,130 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.hob_favorite_long_press-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hob_favorite_long_press',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite long press',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Favorite long press',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_long_press',
+    'unique_id': 'BOSCH-HCS000000-68A40E000000-BSH.Common.Event.Favorite.002.ExternalTrigger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hob_favorite_long_press-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob Favorite long press',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hob_favorite_long_press',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hob_favorite_short_press-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hob_favorite_short_press',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite short press',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Favorite short press',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_short_press',
+    'unique_id': 'BOSCH-HCS000000-68A40E000000-BSH.Common.Event.Favorite.001.ExternalTrigger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hob_favorite_short_press-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob Favorite short press',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hob_favorite_short_press',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[sensor.hob_operation_state-entry]
@@ -4109,6 +4295,68 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.hob_pre_heat_finished-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hob_pre_heat_finished',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pre-heat finished',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Pre-heat finished',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preheat_finished',
+    'unique_id': 'BOSCH-HCS000000-68A40E000000-Cooking.Oven.Event.PreheatFinished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hob_pre_heat_finished-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob Pre-heat finished',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hob_pre_heat_finished',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[sensor.hood_door-entry]
