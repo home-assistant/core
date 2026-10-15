@@ -43,6 +43,15 @@ def _patch_success(user_id: str = "user_id") -> Generator[None]:
         yield
 
 
+def _rate_limit_error() -> aiotractive.exceptions.TractiveError:
+    """Return a Tractive error caused by an HTTP 429 response."""
+    error = aiotractive.exceptions.TractiveError()
+    error.__cause__ = aiohttp.ClientResponseError(
+        None, (), status=HTTPStatus.TOO_MANY_REQUESTS
+    )
+    return error
+
+
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -212,15 +221,6 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-def _rate_limit_error() -> aiotractive.exceptions.TractiveError:
-    """Return a Tractive error caused by an HTTP 429 response."""
-    error = aiotractive.exceptions.TractiveError()
-    error.__cause__ = aiohttp.ClientResponseError(
-        None, (), status=HTTPStatus.TOO_MANY_REQUESTS
-    )
-    return error
 
 
 @pytest.mark.parametrize(
