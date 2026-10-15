@@ -4,8 +4,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
@@ -20,7 +18,6 @@ from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1842,69 +1839,42 @@ async def test_list_serial_ports_os_error(
     assert "Permission denied" in response["error"]["message"]
 
 
-async def _async_list_serial_integrations(
-    hass_ws_client: WebSocketGenerator, hass: HomeAssistant
-) -> list[str]:
-    """Return the result of the `usb/list_serial_integrations` command."""
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
-    response = await ws_client.receive_json()
-
-    assert response["success"]
-    return response["result"]
-
-
 @pytest.mark.usefixtures("setup_usb")
 async def test_list_serial_integrations(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test listing the integrations configurable with a serial port."""
-    result = await _async_list_serial_integrations(hass_ws_client, hass)
+    """Test listing the integrations whose config flow uses SerialPortSelector."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
+    response = await ws_client.receive_json()
 
+    assert response["success"]
+    result = response["result"]
     assert result == sorted(result)
-    assert {"alarmdecoder", "elkm1", "zha"} <= set(result)
-    assert not {"bluetooth", "esphome", "hue"} & set(result)
+    assert {"dsmr", "zha"} <= set(result)
+    assert not {"alarmdecoder", "bluetooth", "esphome", "rfxtrx", "zwave_js"} & set(
+        result
+    )
 
 
 @pytest.mark.usefixtures("setup_usb")
-@pytest.mark.parametrize(
-    ("domain", "manifest", "listed"),
-    [
-        pytest.param("custom_serial", {"dependencies": ["usb"]}, True, id="dependency"),
-        pytest.param(
-            "custom_serial",
-            {"after_dependencies": ["usb"]},
-            True,
-            id="after_dependency",
-        ),
-        pytest.param("custom_serial", {}, False, id="no_dependency"),
-        pytest.param("zha", {}, False, id="core_override_without_usb"),
-    ],
-)
-async def test_list_serial_integrations_custom(
+async def test_list_serial_integrations_custom_override(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    domain: str,
-    manifest: dict[str, Any],
-    listed: bool,
 ) -> None:
-    """Test listing custom integrations configurable with a serial port."""
-    integration = Integration(
-        hass,
-        f"custom_components.{domain}",
-        Path(hass.config.config_dir) / "custom_components" / domain,
-        MockModule(domain, partial_manifest=manifest).mock_manifest(),
-    )
-
+    """Test a core integration overridden by a custom integration is not listed."""
     with patch(
-        "homeassistant.components.usb.consumers.async_get_custom_components",
-        return_value={domain: integration},
+        "homeassistant.components.usb.async_get_custom_components",
+        return_value={"zha": Mock()},
     ):
-        result = await _async_list_serial_integrations(hass_ws_client, hass)
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
+        response = await ws_client.receive_json()
 
-    assert (domain in result) is listed
-    assert "elkm1" in result
+    assert response["success"]
+    assert "zha" not in response["result"]
+    assert "dsmr" in response["result"]
 
 
 async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:
