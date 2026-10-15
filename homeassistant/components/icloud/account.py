@@ -94,6 +94,7 @@ class IcloudAccount:
         self._owner_fullname: str | None = None
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
+        self._reported_device_ids: set[str] = set()
         self._retried_fetch = False
         self._config_entry = config_entry
 
@@ -206,10 +207,12 @@ class IcloudAccount:
 
         # Gets devices infos
         new_device = False
+        reported_device_ids: set[str] = set()
         for device in api_devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
+            reported_device_ids.add(device_id)
 
             if (
                 status[DEVICE_BATTERY_STATUS] == "Unknown"
@@ -231,6 +234,10 @@ class IcloudAccount:
                 self._devices[device_id] = IcloudDevice(self, device, status)
                 self._devices[device_id].update(status)
                 new_device = True
+
+        # Only a complete read replaces what the account reports, so a
+        # half-failed fetch cannot make every device look stale.
+        self._reported_device_ids = reported_device_ids
 
         if (
             DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
@@ -388,6 +395,11 @@ class IcloudAccount:
     def devices(self) -> dict[str, Any]:
         """Return the account devices."""
         return self._devices
+
+    @property
+    def reported_device_ids(self) -> set[str]:
+        """Return the device ids iCloud reported on the last complete fetch."""
+        return self._reported_device_ids
 
     @property
     def signal_device_new(self) -> str:

@@ -5,11 +5,14 @@ from unittest.mock import Mock, patch
 from pyicloud.exceptions import PyiCloudFailedLoginException
 import pytest
 
+from homeassistant.components.icloud import async_remove_config_entry_device
 from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .const import MOCK_CONFIG, USERNAME
+from .conftest import MockAppleDevice
+from .const import DEVICE_2, MOCK_CONFIG, USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -105,3 +108,48 @@ async def test_unique_id_set_on_setup(hass: HomeAssistant) -> None:
 
     assert config_entry.unique_id == USERNAME
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_icloud_service")
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    icloud_devices: list[MockAppleDevice],
+) -> None:
+    """Test a device can be removed only once iCloud stopped reporting it."""
+    iphone = icloud_devices[0]
+    icloud_devices.append(MockAppleDevice(DEVICE_2))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # The first calendars and reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps it from outliving the test.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    iphone_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device1"), config_entry.entry_id
+    )
+    ipad_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device2"), config_entry.entry_id
+    )
+    assert iphone_entry is not None
+    assert ipad_entry is not None
+
+    # iCloud still reports the iPhone, so deleting it would only come back.
+    assert not await async_remove_config_entry_device(hass, config_entry, iphone_entry)
+
+    icloud_devices.remove(iphone)
+    await hass.async_add_executor_job(config_entry.runtime_data.update_devices)
+    await hass.async_block_till_done()
+
+    assert await async_remove_config_entry_device(hass, config_entry, iphone_entry)
+    assert not await async_remove_config_entry_device(hass, config_entry, ipad_entry)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # Without a loaded account nothing can be confirmed as gone from iCloud.
+    assert not await async_remove_config_entry_device(hass, config_entry, iphone_entry)
