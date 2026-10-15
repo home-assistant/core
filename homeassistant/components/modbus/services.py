@@ -110,7 +110,7 @@ async def _async_stop_hub(service: ServiceCall) -> None:
 async def _async_reload_config(call: ServiceCall) -> None:
     """Reload Modbus."""
     hass = call.hass
-    # Without YAML hubs there is nothing to close, but YAML may have been added
+    # Setup may have failed on a broken config the user has since fixed
     hubs = hass.data.get(DATA_MODBUS_HUBS, {})
     for hub in hubs.values():
         await hub.async_close()
@@ -131,9 +131,16 @@ async def _async_reload_config(call: ServiceCall) -> None:
 
 
 @callback
+def async_setup_reload_service(hass: HomeAssistant) -> None:
+    """Register the Modbus reload action, only useful with a YAML config."""
+    # Needs the config to know if YAML is used, which async_setup_services lacks
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _async_reload_config)
+
+
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Modbus services."""
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _async_reload_config)
     hass.services.async_register(
         DOMAIN,
         SERVICE_WRITE_REGISTER,

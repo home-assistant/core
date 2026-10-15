@@ -9,7 +9,7 @@ from .connection import async_get_temporary_unit, async_get_unit
 from .const import DATA_MODBUS_HUBS, DOMAIN
 from .modbus import ModbusHub, async_modbus_setup
 from .schemas import CONFIG_SCHEMA
-from .services import async_setup_services
+from .services import async_setup_reload_service, async_setup_services
 
 __all__ = [
     "CONFIG_SCHEMA",
@@ -51,4 +51,5 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
+    async_setup_reload_service(hass)
     return await async_modbus_setup(hass, config)

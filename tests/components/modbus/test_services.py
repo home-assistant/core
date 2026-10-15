@@ -46,7 +46,6 @@ HUB_CONFIG = {
 }
 
 SERVICES = (
-    SERVICE_RELOAD,
     SERVICE_WRITE_REGISTER,
     SERVICE_WRITE_COIL,
     SERVICE_STOP,
@@ -77,6 +76,25 @@ async def test_services_registered_without_yaml(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, service)
+
+
+@pytest.mark.usefixtures("mock_pymodbus")
+@pytest.mark.parametrize(
+    ("config", "registered"),
+    [
+        pytest.param({}, False, id="no_yaml"),
+        pytest.param({DOMAIN: []}, True, id="yaml_without_hubs"),
+        pytest.param(HUB_CONFIG, True, id="yaml_hub"),
+    ],
+)
+async def test_reload_registered_only_with_yaml(
+    hass: HomeAssistant, config: dict, registered: bool
+) -> None:
+    """Test the reload action exists only with a Modbus YAML section."""
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_RELOAD) is registered
 
 
 @pytest.mark.parametrize(("service", "data"), HUB_SERVICES)
@@ -169,7 +187,7 @@ async def test_service_after_failed_reload_raises(
 @pytest.mark.parametrize(
     "start_config",
     [
-        pytest.param({}, id="no_hubs"),
+        pytest.param({DOMAIN: []}, id="no_hubs"),
         pytest.param(HUB_CONFIG, id="yaml_hub"),
     ],
 )
@@ -207,6 +225,25 @@ async def test_reload_yaml(
         for platform in async_get_platforms(hass, DOMAIN)
         for entity in platform.entities.values()
     ] == expected_entities
+
+
+@pytest.mark.usefixtures("mock_pymodbus")
+async def test_reload_after_failed_setup(hass: HomeAssistant) -> None:
+    """Test a reload sets the hubs up when the startup setup failed."""
+    with patch(
+        "homeassistant.components.modbus.modbus.ModbusHub.async_setup",
+        return_value=False,
+    ):
+        assert not await async_setup_component(hass, DOMAIN, HUB_CONFIG)
+        await hass.async_block_till_done()
+    assert DATA_MODBUS_HUBS not in hass.data
+
+    yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert set(hass.data[DATA_MODBUS_HUBS]) == {"testModbus"}
 
 
 TEST_HUB_A = "hub_a"
