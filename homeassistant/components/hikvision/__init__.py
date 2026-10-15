@@ -1,7 +1,5 @@
 """The Hikvision integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
 from xml.etree.ElementTree import ParseError
@@ -17,9 +15,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
@@ -27,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
 
 
 @dataclass
@@ -47,7 +46,7 @@ class HikvisionData:
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Set up Hikvision from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -144,6 +143,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     # Start the event stream
     await hass.async_add_executor_job(camera.start_stream)
 
+    async def _async_stop_stream(event: Event) -> None:
+        await hass.async_add_executor_job(camera.disconnect)
+
+    # pyHik's stream thread is non-daemonic and publishes straight into hass, so
+    # it has to be joined before the event loop closes. Starting it yields, so
+    # the stop event may already have been fired by the time we get here, and
+    # listening for it now would never hear it.
+    if hass.is_stopping:
+        await hass.async_add_executor_job(camera.disconnect)
+        raise ConfigEntryNotReady("Home Assistant is stopping")
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_stream)
+    )
+
     # Register the main device before platforms that use via_device
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -156,13 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Stop the event stream
-        await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Stop the event stream
+    await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)

@@ -1,7 +1,5 @@
 """Provides device automations for homekit devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from typing import TYPE_CHECKING, Any
 
@@ -9,7 +7,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
@@ -43,8 +41,8 @@ CONF_SUBTYPE = "subtype"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Required(CONF_SUBTYPE): vol.In(TRIGGER_SUBTYPES),
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Required(CONF_SUBTYPE): probatio.In(TRIGGER_SUBTYPES),
     }
 )
 
@@ -209,7 +207,10 @@ TRIGGER_FINDERS = {
 async def async_setup_triggers_for_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Triggers aren't entities as they have no state, but we still need to set them up for a config entry."""
+    """Set up triggers for a config entry.
+
+    Triggers aren't entities as they have no state.
+    """
     hkid = config_entry.data["AccessoryPairingID"]
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 

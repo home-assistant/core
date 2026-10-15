@@ -1,10 +1,9 @@
 """NINA sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -146,6 +145,7 @@ class NinaSensor(NinaEntity, SensorEntity):
         self._attr_unique_id = f"{region}-{slot_id}-{self.entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if self._get_active_warnings_count() <= self._warning_index:
@@ -154,6 +154,7 @@ class NinaSensor(NinaEntity, SensorEntity):
         return self._get_warning_data().is_valid and super().available
 
     @property
+    @override
     def native_value(self) -> str | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._get_warning_data())

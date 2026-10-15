@@ -1,0 +1,19 @@
+{
+  "details": {
+    "id": 1,
+    "name": "Test Site",
+    "accountId": 1,
+    "status": "Active",
+    "peakPower": 5.5,
+    "lastUpdateTime": "2025-01-01",
+    "installationDate": "2024-01-01",
+    "ptoDate": null,
+    "notes": "",
+    "type": "Optimizers & Inverters",
+    "primaryModule": {
+      "manufacturerName": "TestManufacturer",
+      "modelName": "TestModel",
+      "maximumPower": 350.0
+    }
+  }
+}

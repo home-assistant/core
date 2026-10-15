@@ -7,8 +7,6 @@
   "config": {
     "abort": {
       "already_configured": "This user is already configured for this Immich instance.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The provided API key does not match the configured user."
     },
     "error": {
@@ -87,6 +85,9 @@
     }
   },
   "exceptions": {
+    "account_not_loaded": {
+      "message": "The Immich account `{unique_id}` is not loaded."
+    },
     "album_not_found": {
       "message": "Album with ID `{album_id}` not found ({error})."
     },
@@ -102,11 +103,17 @@
     "identifier_unresolvable": {
       "message": "Could not parse identifier: {identifier}"
     },
+    "missing_api_permission": {
+      "message": "Missing API permission ({msg})."
+    },
     "not_configured": {
       "message": "Immich is not configured."
     },
     "only_local_media_supported": {
       "message": "Only local media files are currently supported."
+    },
+    "search_requires_account": {
+      "message": "Select an Immich account to search."
     },
     "update_error": {
       "message": "An error occurred while retrieving data from your Immich instance: {error}"

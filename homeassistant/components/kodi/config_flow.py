@@ -1,12 +1,11 @@
 """Config flow for Kodi integration."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -102,6 +101,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._ssl: bool | None = DEFAULT_SSL
         self._discovery_name: str | None = None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -153,6 +153,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -233,17 +234,64 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_ws_port_form(errors)
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with new credentials."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await validate_http(self.hass, {**reauth_entry.data, **user_input})
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_USERNAME,
+                    description={
+                        "suggested_value": reauth_entry.data.get(CONF_USERNAME)
+                    },
+                ): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+            }
+        )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=schema,
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            errors=errors,
+        )
+
     @callback
     def _show_credentials_form(
         self, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USERNAME, description={"suggested_value": self._username}
                 ): str,
-                vol.Optional(
-                    CONF_PASSWORD, description={"suggested_value": self._password}
+                probatio.Optional(
+                    probatio.Secret(CONF_PASSWORD),
+                    description={"suggested_value": self._password},
                 ): str,
             }
         )
@@ -256,11 +304,11 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_user_form(self, errors=None):
         default_port = self._port or DEFAULT_PORT
         default_ssl = self._ssl or DEFAULT_SSL
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=self._host): str,
-                vol.Required(CONF_PORT, default=default_port): int,
-                vol.Required(CONF_SSL, default=default_ssl): bool,
+                probatio.Required(CONF_HOST, default=self._host): str,
+                probatio.Required(CONF_PORT, default=default_port): int,
+                probatio.Required(CONF_SSL, default=default_ssl): bool,
             }
         )
 
@@ -271,9 +319,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _show_ws_port_form(self, errors=None):
         suggestion = self._ws_port or DEFAULT_WS_PORT
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_WS_PORT, description={"suggested_value": suggestion}
                 ): int
             }

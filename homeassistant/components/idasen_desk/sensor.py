@@ -1,9 +1,8 @@
 """Representation of Idasen Desk sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -68,6 +67,7 @@ class IdasenDeskSensor(IdasenDeskEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator)

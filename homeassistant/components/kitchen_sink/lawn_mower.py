@@ -1,6 +1,6 @@
 """Demo platform that has a couple fake lawn mowers."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -57,7 +57,8 @@ async def async_setup_platform(
                 LawnMowerActivity.DOCKED,
                 LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
-                | LawnMowerEntityFeature.START_MOWING,
+                | LawnMowerEntityFeature.START_MOWING
+                | LawnMowerEntityFeature.STOP,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_006",
@@ -66,6 +67,12 @@ async def async_setup_platform(
                 LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
                 | LawnMowerEntityFeature.START_MOWING,
+            ),
+            DemoLawnMower(
+                "kitchen_sink_mower_007",
+                "Mower can stop",
+                LawnMowerActivity.MOWING,
+                LawnMowerEntityFeature.STOP | LawnMowerEntityFeature.START_MOWING,
             ),
         ]
     )
@@ -96,17 +103,26 @@ class DemoLawnMower(LawnMowerEntity):
         self._attr_supported_features = features
         self._attr_activity = activity
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         self._attr_activity = LawnMowerActivity.MOWING
         self.async_write_ha_state()
 
+    @override
     async def async_dock(self) -> None:
         """Start docking."""
         self._attr_activity = LawnMowerActivity.DOCKED
         self.async_write_ha_state()
 
+    @override
     async def async_pause(self) -> None:
         """Pause mower."""
         self._attr_activity = LawnMowerActivity.PAUSED
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop(self) -> None:
+        """Stop mower."""
+        self._attr_activity = LawnMowerActivity.IDLE
         self.async_write_ha_state()

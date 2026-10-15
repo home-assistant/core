@@ -1,8 +1,6 @@
 """Provide add-on management."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.hassio import AddonError, AddonManager
 from homeassistant.core import HomeAssistant, callback
@@ -53,6 +51,7 @@ def _redact_sensitive_option_values(message: str, config: dict[str, Any]) -> str
 class ZwaveAddonManager(AddonManager):
     """Addon manager for Z-Wave JS with redacted option errors."""
 
+    @override
     async def async_set_addon_options(self, config: dict[str, Any]) -> None:
         """Set add-on options."""
         try:

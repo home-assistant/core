@@ -1,10 +1,8 @@
 """Support for monitoring the Deluge BitTorrent client API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,7 +27,8 @@ def get_state(data: dict[str, float], key: str) -> str | float:
     protocol_upload = data[DelugeGetSessionStatusKeys.DHT_UPLOAD_RATE.value]
     protocol_download = data[DelugeGetSessionStatusKeys.DHT_DOWNLOAD_RATE.value]
 
-    # if key is CURRENT_STATUS, we just return whether we are uploading / downloading / idle
+    # if key is CURRENT_STATUS, we just return whether
+    # we are uploading / downloading / idle
     if key == DelugeSensorType.CURRENT_STATUS_SENSOR:
         if upload > 0 and download > 0:
             return "seeding_and_downloading"
@@ -152,6 +151,7 @@ class DelugeSensor(DelugeEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value(self.coordinator.data[Platform.SENSOR])

@@ -1,6 +1,7 @@
 """Exceptions for fitbit API calls.
 
-These exceptions exist to provide common exceptions for the async and sync client libraries.
+These exceptions provide common exceptions for the async
+and sync client libraries.
 """
 
 from homeassistant.exceptions import HomeAssistantError

@@ -1,10 +1,8 @@
 """Config flow for Islamic Prayer Times integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -12,14 +10,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 
 from .const import (
@@ -48,12 +45,14 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,7 +65,7 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title=NAME,
                 data={
                     CONF_LATITUDE: lat,
                     CONF_LONGITUDE: lon,
@@ -79,10 +78,9 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=NAME): TextSelector(),
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION, default=home_location
                     ): LocationSelector(),
                 }
@@ -101,7 +99,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CALC_METHOD,
                 default=self.config_entry.options.get(
                     CONF_CALC_METHOD, DEFAULT_CALC_METHOD
@@ -113,7 +111,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     translation_key=CONF_CALC_METHOD,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_LAT_ADJ_METHOD,
                 default=self.config_entry.options.get(
                     CONF_LAT_ADJ_METHOD, DEFAULT_LAT_ADJ_METHOD
@@ -125,7 +123,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     translation_key=CONF_LAT_ADJ_METHOD,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_MIDNIGHT_MODE,
                 default=self.config_entry.options.get(
                     CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE
@@ -137,7 +135,7 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     translation_key=CONF_MIDNIGHT_MODE,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SCHOOL,
                 default=self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL),
             ): SelectSelector(
@@ -149,4 +147,6 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
             ),
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

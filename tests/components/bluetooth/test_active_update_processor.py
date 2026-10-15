@@ -1,10 +1,8 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from bleak import BleakError
 import pytest
@@ -17,6 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.active_update_processor import (
     ActiveBluetoothProcessorCoordinator,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -424,3 +423,44 @@ async def test_no_polling_after_stop_event(hass: HomeAssistant) -> None:
     assert needs_poll_calls == 1
 
     cancel()
+
+
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_scan_interval_and_duration_forwarded(hass: HomeAssistant) -> None:
+    """Test scan_interval and scan_duration reach the bluetooth manager."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    def _update_method(service_info: BluetoothServiceInfoBleak):
+        return {"testdata": 0}
+
+    def _poll_needed(*args, **kwargs):
+        return False
+
+    async def _poll(*args, **kwargs):
+        return {"testdata": 1}
+
+    coordinator = ActiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
+        scan_interval=165.0,
+        scan_duration=10.0,
+    )
+
+    cancel_scan = MagicMock()
+    with patch.object(
+        HomeAssistantBluetoothManager,
+        "async_register_active_scan",
+        return_value=cancel_scan,
+    ) as mock_register:
+        cancel = coordinator.async_start()
+
+    mock_register.assert_called_once_with("aa:bb:cc:dd:ee:ff", 165.0, 10.0)
+    cancel_scan.assert_not_called()
+
+    cancel()
+    cancel_scan.assert_called_once()

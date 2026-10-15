@@ -1,7 +1,5 @@
 """The test for the DNS IP sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -50,8 +48,8 @@ async def test_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -93,8 +91,8 @@ async def test_legacy_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
+        side_effect=[RetrieveDNS(), RetrieveDNS()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -137,10 +135,10 @@ async def test_sensor_no_response(
     )
     entry.add_to_hass(hass)
 
-    dns_mock = RetrieveDNS()
+    dns_mock_ipv4 = RetrieveDNS()
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=dns_mock,
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
+        return_value=dns_mock_ipv4,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -149,10 +147,10 @@ async def test_sensor_no_response(
 
     assert state.state == "1.1.1.1"
 
-    dns_mock.error = DNSError()
+    dns_mock_ipv4.error = DNSError()
     with patch(
         "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=dns_mock,
+        return_value=dns_mock_ipv4,
     ):
         freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
@@ -160,7 +158,6 @@ async def test_sensor_no_response(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        # Allows 2 retries before going unavailable
         state = hass.states.get("sensor.home_assistant_io")
         assert state.state == "1.1.1.1"
         assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
@@ -197,10 +194,10 @@ async def test_sensor_timeout(
     )
     entry.add_to_hass(hass)
 
-    dns_mock = RetrieveDNS()
+    dns_mock_ipv4 = RetrieveDNS()
     with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=dns_mock,
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
+        return_value=dns_mock_ipv4,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -212,7 +209,7 @@ async def test_sensor_timeout(
     with (
         patch(
             "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-            return_value=dns_mock,
+            return_value=dns_mock_ipv4,
         ),
         patch(
             "homeassistant.components.dnsip.sensor.asyncio.timeout",
@@ -223,7 +220,6 @@ async def test_sensor_timeout(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        # Allows 2 retries before going unavailable
         state = hass.states.get("sensor.home_assistant_io")
         assert state.state == "1.1.1.1"
         assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
@@ -238,3 +234,38 @@ async def test_sensor_timeout(
 
     state = hass.states.get("sensor.home_assistant_io")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_handle_cname(hass: HomeAssistant) -> None:
+    """Test CNAME records are dropped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: False,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("sensor.home_assistant_io")
+
+    assert state1.state == "1.1.1.1"
+    assert state1.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]

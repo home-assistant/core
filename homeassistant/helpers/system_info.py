@@ -1,7 +1,5 @@
 """Helper to gather system info."""
 
-from __future__ import annotations
-
 from functools import cache
 from getpass import getuser
 import logging
@@ -96,11 +94,17 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         # Local import to avoid circular dependencies
         from homeassistant.components import hassio  # noqa: PLC0415
 
-        if not (info := hassio.get_info(hass)):
+        try:
+            info = hassio.get_info(hass)
+        except hassio.HassioNotReadyError:
             _LOGGER.warning("No Home Assistant Supervisor info available")
             info = {}
 
-        host = hassio.get_host_info(hass) or {}
+        try:
+            host = hassio.get_host_info(hass)
+        except hassio.HassioNotReadyError:
+            _LOGGER.warning("No Home Assistant Supervisor host info available")
+            host = {}
         info_object["supervisor"] = info.get("supervisor")
         info_object["host_os"] = host.get("operating_system")
         info_object["docker_version"] = info.get("docker")

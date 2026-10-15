@@ -1,9 +1,8 @@
 """Config flow for World Air Quality Index (WAQI) integration."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiowaqi import (
     WAQIAirQuality,
@@ -11,7 +10,7 @@ from aiowaqi import (
     WAQIClient,
     WAQIConnectionError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -35,6 +34,10 @@ from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MAP = "map"
+
+API_KEY_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 async def get_by_station_number(
@@ -60,12 +63,29 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_STATION: StationFlowHandler}
 
+    async def _async_validate_api_key(self, api_key: str) -> dict[str, str]:
+        """Validate the API key."""
+        client = WAQIClient(session=async_get_clientsession(self.hass))
+        client.authenticate(api_key)
+        try:
+            await client.get_by_ip()
+        except WAQIAuthenticationError:
+            return {"base": "invalid_auth"}
+        except WAQIConnectionError:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -73,18 +93,9 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
-            client = WAQIClient(session=async_get_clientsession(self.hass))
-            client.authenticate(user_input[CONF_API_KEY])
-            try:
-                await client.get_by_ip()
-            except WAQIAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except WAQIConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (
+                errors := await self._async_validate_api_key(user_input[CONF_API_KEY])
+            ):
                 return self.async_create_entry(
                     title="World Air Quality Index",
                     data={
@@ -94,8 +105,57 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=API_KEY_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        return await self._async_step_update_api_key(
+            "reauth_confirm", self._get_reauth_entry(), user_input
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration with a new API key."""
+        return await self._async_step_update_api_key(
+            "reconfigure", self._get_reconfigure_entry(), user_input
+        )
+
+    async def _async_step_update_api_key(
+        self, step_id: str, entry: ConfigEntry, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Validate a new API key and store it in an existing entry."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            # Skips the entry being updated, so re-entering its key is allowed
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
+            if not (
+                errors := await self._async_validate_api_key(user_input[CONF_API_KEY])
+            ):
+                # A loaded entry is reloaded by its update listener when data changes
+                reload = (
+                    entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                    or not entry.update_listeners
+                )
+                result = self.async_update_and_abort(
+                    entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
+
+        return self.async_show_form(
+            step_id=step_id, data_schema=API_KEY_SCHEMA, errors=errors
         )
 
 
@@ -134,9 +194,9 @@ class StationFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id=CONF_MAP,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LOCATION): LocationSelector(),
+                        probatio.Required(CONF_LOCATION): LocationSelector(),
                     }
                 ),
                 {
@@ -170,7 +230,7 @@ class StationFlowHandler(ConfigSubentryFlow):
                 return await self._async_create_entry(measuring_station)
         return self.async_show_form(
             step_id=CONF_STATION_NUMBER,
-            data_schema=vol.Schema({vol.Required(CONF_STATION_NUMBER): int}),
+            data_schema=probatio.Schema({probatio.Required(CONF_STATION_NUMBER): int}),
             errors=errors,
         )
 

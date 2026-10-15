@@ -1,18 +1,14 @@
 """ONVIF switches for controlling cameras."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
 
@@ -65,11 +61,11 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ONVIFConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a ONVIF switch platform."""
-    device = hass.data[DOMAIN][config_entry.unique_id]
+    device = config_entry.runtime_data
 
     async_add_entities(
         ONVIFSwitch(device, description)
@@ -92,6 +88,7 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
         self._attr_unique_id = f"{self.mac_or_serial}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._attr_is_on = True
@@ -100,6 +97,7 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
             profile, self.entity_description.turn_on_data
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._attr_is_on = False

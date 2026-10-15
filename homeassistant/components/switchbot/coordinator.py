@@ -1,11 +1,9 @@
 """Provides the switchbot DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import switchbot
 from switchbot import SwitchbotModel
@@ -88,6 +86,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         await self.device.update()
 
     @callback
+    @override
     def _async_handle_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
@@ -97,6 +96,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         _LOGGER.info("Device %s is unavailable", self.device_name)
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,

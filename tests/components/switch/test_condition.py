@@ -4,14 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.switch.condition import CONDITIONS
 from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -32,21 +35,41 @@ async def target_input_booleans(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_boolean")
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
-    "condition",
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "switch.is_off",
-        "switch.is_on",
+        ("switch.is_off", {}, True, True),
+        ("switch.is_on", {}, True, True),
     ],
 )
-async def test_switch_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_switch_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the switch conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that switch conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("switch"),
@@ -91,7 +114,6 @@ async def test_switch_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("switch"),
@@ -163,7 +185,6 @@ CONDITION_STATES_ALL = [
 ]
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_boolean"),
@@ -195,7 +216,6 @@ async def test_input_boolean_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_boolean"),
@@ -227,11 +247,10 @@ async def test_input_boolean_state_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_switch_condition_evaluates_both_domains(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the switch condition evaluates both switch and input_boolean entities."""
+    """Test switch condition evaluates both switch and input_boolean."""
     entity_id_switch = "switch.test_switch"
     entity_id_input_boolean = "input_boolean.test_input_boolean"
 
@@ -247,15 +266,15 @@ async def test_switch_condition_evaluates_both_domains(
     )
 
     # Both off - condition should be false
-    assert condition(hass) is False
+    assert condition.async_check() is False
 
     # switch entity turns on - condition should be true
     hass.states.async_set(entity_id_switch, STATE_ON)
     await hass.async_block_till_done()
-    assert condition(hass) is True
+    assert condition.async_check() is True
 
     # Reset switch, turn on input_boolean - condition should still be true
     hass.states.async_set(entity_id_switch, STATE_OFF)
     hass.states.async_set(entity_id_input_boolean, STATE_ON)
     await hass.async_block_till_done()
-    assert condition(hass) is True
+    assert condition.async_check() is True

@@ -1,7 +1,5 @@
 """Tests for ESPHome dynamic encryption key generation."""
 
-from __future__ import annotations
-
 import base64
 
 from homeassistant.components.esphome.encryption_key_storage import (

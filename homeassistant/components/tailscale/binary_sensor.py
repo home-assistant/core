@@ -1,9 +1,8 @@
 """Support for Tailscale binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from tailscale import Device as TailscaleDevice
 
@@ -30,6 +29,13 @@ class TailscaleBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
+    TailscaleBinarySensorEntityDescription(
+        key="connected_to_control",
+        translation_key="connected_to_control",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.connected_to_control,
+    ),
     TailscaleBinarySensorEntityDescription(
         key="update_available",
         translation_key="client",
@@ -120,6 +126,7 @@ class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
     entity_description: TailscaleBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data[self.device_id])

@@ -1,7 +1,5 @@
 """Hass.io Add-on ingress service."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
@@ -22,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.async_ import create_eager_task
 
-from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .const import DATA_HASSIO_HOST, X_HASS_SOURCE, X_INGRESS_PATH
 from .http import should_compress
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,8 +50,9 @@ DISABLED_TIMEOUT = ClientTimeout(total=None)
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
-    """Auth setup."""
+def async_setup_ingress_view(hass: HomeAssistant) -> None:
+    """Set up the Hass.io ingress HTTP view."""
+    host = hass.data[DATA_HASSIO_HOST]
     websession = async_get_clientsession(hass)
 
     hassio_ingress = HassIOIngress(host, websession)
@@ -198,7 +197,8 @@ class HassIOIngress(HomeAssistantView):
             # otherwise aiohttp < 3.9.0 may generate an invalid "0\r\n\r\n" chunk
             # This also avoids setting content_type for empty responses.
             if must_be_empty_body(request.method, result.status):
-                # If upstream contains content-type, preserve it (e.g. for HEAD requests)
+                # If upstream contains content-type, preserve it
+                # (e.g. for HEAD requests)
                 # Note: This still is omitting content-length. We can't simply forward
                 # the upstream length since the proxy might change the body length
                 # (e.g. due to compression).

@@ -1,8 +1,6 @@
 """Provide oauth implementations for the Teslemetry integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -27,11 +25,13 @@ class TeslemetryImplementation(
         )
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Teslemetry OAuth2"
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         data: dict = {
@@ -41,6 +41,7 @@ class TeslemetryImplementation(
         return data
 
     @property
+    @override
     def extra_token_resolve_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the token resolve request."""
         data: dict = {

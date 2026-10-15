@@ -1,10 +1,10 @@
 """Config flows for the EnOcean integration."""
 
 import glob
-from typing import Any
+from typing import Any, override
 
 from enocean_async import Gateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.components.usb import (
@@ -23,9 +23,9 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
 
-MANUAL_SCHEMA = vol.Schema(
+MANUAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): cv.string,
+        probatio.Required(CONF_DEVICE): cv.string,
     }
 )
 
@@ -58,6 +58,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the EnOcean config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         unique_id = usb_unique_id_from_service_info(discovery_info)
@@ -111,6 +112,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.create_enocean_entry(import_data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -133,9 +135,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="detect",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             options=devices,
                             translation_key="devices",

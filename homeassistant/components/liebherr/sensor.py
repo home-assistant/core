@@ -1,9 +1,8 @@
 """Sensor platform for Liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
@@ -113,6 +112,7 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
             self._attr_translation_key = self._get_zone_translation_key()
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (temp_control := self.temperature_control) is None:
@@ -120,6 +120,7 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
         return self.entity_description.unit_fn(temp_control)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current value."""
         # temperature_control is guaranteed to exist when entity is available
@@ -127,6 +128,7 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
         return self.entity_description.value_fn(self.temperature_control)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.temperature_control is not None

@@ -3,10 +3,9 @@
 Support for QR code for guest WLANs.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.wlans import Wlans
@@ -56,7 +55,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
-        name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         unique_id_fn=lambda hub, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,
@@ -97,6 +95,7 @@ class UnifiImageEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         super().__init__(obj_id, hub, description)
         ImageEntity.__init__(self, hub.hass)
 
+    @override
     def image(self) -> bytes | None:
         """Return bytes of image."""
         if self.current_image is None:
@@ -106,6 +105,7 @@ class UnifiImageEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         return self.current_image
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""
         description = self.entity_description

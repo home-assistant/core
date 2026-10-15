@@ -1,11 +1,10 @@
 """Support for Nederlandse Spoorwegen public transport."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from ns_api import Trip
 
@@ -15,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -110,9 +109,11 @@ class NSBinarySensor(CoordinatorEntity[NSDataUpdateCoordinator], BinarySensorEnt
             name=coordinator.name,
             manufacturer=INTEGRATION_TITLE,
             model=ROUTE_MODEL,
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not (trip := self.coordinator.data.first_trip):

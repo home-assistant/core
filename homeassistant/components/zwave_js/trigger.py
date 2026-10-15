@@ -1,7 +1,5 @@
 """Z-Wave JS trigger dispatcher."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger
 

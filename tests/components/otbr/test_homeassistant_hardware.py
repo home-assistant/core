@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningAddon,
     OwningIntegration,
 )
+from homeassistant.components.otbr import DOMAIN
 from homeassistant.components.otbr.homeassistant_hardware import async_get_firmware_info
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -27,14 +28,17 @@ from . import TEST_COPROCESSOR_VERSION
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-DEVICE_PATH = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9ab1da1ea4b3ed11956f4eaca7669f5d-if00-port0"
+DEVICE_PATH = (
+    "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+    "_9ab1da1ea4b3ed11956f4eaca7669f5d-if00-port0"
+)
 
 
 async def test_get_firmware_info(hass: HomeAssistant) -> None:
     """Test `async_get_firmware_info`."""
 
     otbr = MockConfigEntry(
-        domain="otbr",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data={
             "url": "http://core_openthread_border_router:8888",
@@ -86,7 +90,7 @@ async def test_get_firmware_info_ignored(hass: HomeAssistant) -> None:
     """Test `async_get_firmware_info` with ignored entry."""
 
     otbr = MockConfigEntry(
-        domain="otbr",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data={},
         version=1,
@@ -101,7 +105,7 @@ async def test_get_firmware_info_no_coprocessor_version(hass: HomeAssistant) -> 
     """Test `async_get_firmware_info` with no coprocessor version support."""
 
     otbr = MockConfigEntry(
-        domain="otbr",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data={
             "url": "http://core_openthread_border_router:8888",
@@ -168,7 +172,7 @@ async def test_hardware_firmware_info_provider_notification(
 ) -> None:
     """Test that the OTBR provides hardware and firmware information."""
     otbr = MockConfigEntry(
-        domain="otbr",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data={
             "url": "http://core_openthread_border_router:8888",
@@ -226,7 +230,7 @@ async def test_get_firmware_info_remote_otbr(hass: HomeAssistant) -> None:
     """Test `async_get_firmware_info` with no coprocessor version support."""
 
     otbr = MockConfigEntry(
-        domain="otbr",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data={
             "url": "http://192.168.1.10:8888",

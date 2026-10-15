@@ -1,7 +1,5 @@
 """Test the sonos config flow."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
@@ -63,6 +61,7 @@ async def test_user_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sonos"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == DOMAIN
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -117,6 +116,7 @@ async def test_zeroconf_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sonos"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == DOMAIN
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -178,6 +178,7 @@ async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Sonos"
     assert result["data"] == {}
+    assert result["result"].unique_id == DOMAIN
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -231,6 +232,7 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sonos"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == DOMAIN
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

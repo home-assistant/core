@@ -1,7 +1,5 @@
 """The Big Ass Fans integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 
 from aiobafi6 import Device, Service
@@ -29,7 +27,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> None:
     """Set up Big Ass Fans from a config entry."""
     ip_address = entry.data[CONF_IP_ADDRESS]
 
@@ -42,7 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
             await device.async_wait_available()
     except DeviceUUIDMismatchError as ex:
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {ip_address}; expected {entry.unique_id}, found {device.dns_sd_uuid}"
+            f"Unexpected device found at {ip_address}; expected"
+            f" {entry.unique_id}, found {device.dns_sd_uuid}"
         ) from ex
     except TimeoutError as ex:
         run_future.cancel()
@@ -56,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
     entry.async_on_unload(_async_cancel_run)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

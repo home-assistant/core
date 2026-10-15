@@ -8,10 +8,10 @@ import pytest
 from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.components.victron_remote_monitoring.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -76,6 +76,7 @@ def mock_vrm_client() -> Generator[AsyncMock]:
         end=CONST_FORECAST_END // 1000,
         records=[(x // 1000, y) for x, y in CONST_FORECAST_RECORDS],
         custom_dt_now=fake_dt_now,
+        time_zone=datetime.UTC,
         site_id=123456,
     )
     consumption_agg = ForecastAggregations(
@@ -83,6 +84,7 @@ def mock_vrm_client() -> Generator[AsyncMock]:
         end=CONST_FORECAST_END // 1000,
         records=[(x // 1000, y) for x, y in CONST_FORECAST_RECORDS],
         custom_dt_now=fake_dt_now,
+        time_zone=datetime.UTC,
         site_id=123456,
     )
 

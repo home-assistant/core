@@ -90,9 +90,8 @@ async def test_event(
     start_time_str = "2024-09-04T15:32:53.892+00:00"
     start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f%z")
     freezer.move_to(start_time)
-    on_event_cb = mock_ring_event_listener_class.return_value.add_notification_callback.call_args.args[
-        0
-    ]
+    listener = mock_ring_event_listener_class.return_value
+    on_event_cb = listener.add_notification_callback.call_args.args[0]
 
     # Default state is unknown
     entity_id = f"event.{device_name}_{alert_kind}"

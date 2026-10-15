@@ -1,10 +1,8 @@
 """Number platform for Saunum Leil Sauna Control Unit."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysaunum import (
     DEFAULT_DURATION,
@@ -109,10 +107,12 @@ class LeilSaunaNumber(LeilSaunaEntity, NumberEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         # Prevent changing certain settings when session is active

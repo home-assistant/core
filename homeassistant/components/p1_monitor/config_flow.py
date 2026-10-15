@@ -1,11 +1,9 @@
 """Config flow for P1 Monitor integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from p1monitor import P1Monitor, P1MonitorError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -25,6 +23,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -54,16 +53,16 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): TextSelector(),
-                    vol.Required(CONF_PORT, default=80): vol.All(
+                    probatio.Required(CONF_HOST): TextSelector(),
+                    probatio.Required(CONF_PORT, default=80): probatio.All(
                         NumberSelector(
                             NumberSelectorConfig(
                                 min=1, max=65535, mode=NumberSelectorMode.BOX
                             ),
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
                 }
             ),

@@ -1,10 +1,10 @@
 """Event platform for OpenDisplay devices — button press/release events."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -60,7 +60,7 @@ async def async_setup_entry(
         entity_registry, entry.entry_id
     ):
         if (
-            entity_entry.domain == "event"
+            entity_entry.domain == EVENT_DOMAIN
             and entity_entry.unique_id.startswith(button_unique_id_prefix)
             and entity_entry.unique_id not in active_unique_ids
         ):
@@ -78,6 +78,7 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
     _last_processed_data: object | None = None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Fire events for button transitions reported by this coordinator update."""
         data = self.coordinator.data

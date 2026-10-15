@@ -1,7 +1,5 @@
 """Utils for Spotify."""
 
-from __future__ import annotations
-
 from spotifyaio import Image
 import yarl
 

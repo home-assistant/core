@@ -1,13 +1,12 @@
 """Sense Coordinators."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -67,12 +66,12 @@ class SenseTrendCoordinator(SenseCoordinator):
         """Initialize."""
         super().__init__(hass, config_entry, gateway, "Trends", TREND_UPDATE_RATE)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the trend data."""
         try:
             await self._gateway.update_trend_data()
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
-            _LOGGER.warning("Sense authentication expired")
             raise ConfigEntryAuthFailed(err) from err
         except SENSE_CONNECT_EXCEPTIONS as err:
             raise UpdateFailed(err) from err
@@ -90,11 +89,14 @@ class SenseRealtimeCoordinator(SenseCoordinator):
         """Initialize."""
         super().__init__(hass, config_entry, gateway, "Realtime", ACTIVE_UPDATE_RATE)
 
+    @override
     async def _async_update_data(self) -> None:
         """Retrieve latest state."""
         try:
             await self._gateway.update_realtime()
         except SENSE_TIMEOUT_EXCEPTIONS as ex:
-            _LOGGER.error("Timeout retrieving data: %s", ex)
+            raise UpdateFailed(f"Timeout retrieving realtime data: {ex}") from ex
         except SENSE_WEBSOCKET_EXCEPTIONS as ex:
-            _LOGGER.error("Failed to update data: %s", ex)
+            raise UpdateFailed(f"Failed to update realtime data: {ex}") from ex
+        except SenseAPIException as ex:
+            raise UpdateFailed(f"API error retrieving realtime data: {ex}") from ex

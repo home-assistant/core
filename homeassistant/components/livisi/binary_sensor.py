@@ -1,8 +1,6 @@
 """Code to handle a Livisi Binary Sensor."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -61,6 +59,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
         super().__init__(config_entry, coordinator, device)
         self._capability_id = self.capabilities[capability_name]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -98,6 +97,7 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
             else BinarySensorDeviceClass.WINDOW
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Get current state."""
         await super().async_added_to_hass()

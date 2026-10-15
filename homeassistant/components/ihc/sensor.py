@@ -1,6 +1,6 @@
 """Support for IHC sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -56,6 +56,7 @@ class IHCSensor(IHCEntity, SensorEntity):
         if unit in TEMPERATURE_UNITS:
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
+    @override
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""
         self._attr_native_value = value

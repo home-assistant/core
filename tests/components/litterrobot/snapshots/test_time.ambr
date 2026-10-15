@@ -1,0 +1,701 @@
+# serializer version: 1
+# name: test_litter_robot_5_all_entities[time.test_friday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_friday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Friday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Friday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_friday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_friday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_friday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Friday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_friday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '08:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_friday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_friday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Friday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Friday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_friday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_friday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_friday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Friday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_friday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_monday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_monday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Monday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_monday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_monday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_monday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Monday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_monday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '07:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_monday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_monday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Monday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_monday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_monday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_monday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Monday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_monday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_saturday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_saturday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Saturday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Saturday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_saturday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_saturday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_saturday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Saturday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_saturday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '08:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_saturday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_saturday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Saturday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Saturday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_saturday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_saturday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_saturday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Saturday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_saturday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_sunday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_sunday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sunday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_sunday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_sunday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_sunday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sunday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_sunday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '07:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_sunday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_sunday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sunday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_sunday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_sunday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_sunday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sunday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_sunday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_thursday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_thursday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thursday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thursday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_thursday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_thursday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_thursday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thursday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_thursday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '07:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_thursday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_thursday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thursday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thursday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_thursday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_thursday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_thursday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thursday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_thursday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_tuesday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_tuesday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tuesday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tuesday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_tuesday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_tuesday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_tuesday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tuesday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_tuesday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '07:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_tuesday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_tuesday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tuesday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tuesday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_tuesday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_tuesday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_tuesday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tuesday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_tuesday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_wednesday_sleep_mode_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_wednesday_sleep_mode_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wednesday sleep mode end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wednesday sleep mode end time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_end_time_wednesday',
+    'unique_id': 'LR5C010001-sleep_mode_end_time_wednesday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_wednesday_sleep_mode_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Wednesday sleep mode end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_wednesday_sleep_mode_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '07:00:00',
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_wednesday_sleep_mode_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.test_wednesday_sleep_mode_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wednesday sleep mode start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wednesday sleep mode start time',
+    'platform': 'litterrobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode_start_time_wednesday',
+    'unique_id': 'LR5C010001-sleep_mode_start_time_wednesday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_litter_robot_5_all_entities[time.test_wednesday_sleep_mode_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Wednesday sleep mode start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.test_wednesday_sleep_mode_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22:00:00',
+  })
+# ---

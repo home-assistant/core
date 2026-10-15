@@ -1,7 +1,5 @@
 """Tests for the NRGkick binary sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

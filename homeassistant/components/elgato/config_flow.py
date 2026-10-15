@@ -1,11 +1,9 @@
 """Config flow to configure the Elgato Light integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from elgato import Elgato, ElgatoError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -28,6 +26,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     serial_number: str
     mac: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -44,6 +43,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -60,6 +60,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._async_create_entry()
 
         self._set_confirm_only()
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"serial_number": self.serial_number},
@@ -97,9 +98,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
                         default=self._get_reconfigure_entry().data[CONF_HOST],
                     ): str,
@@ -108,6 +109,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -141,9 +143,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    probatio.Required(CONF_HOST): str,
                 }
             ),
             errors=errors or {},

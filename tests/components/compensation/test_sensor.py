@@ -10,6 +10,7 @@ from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -24,9 +25,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_fixture_path
+from tests.common import (
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+    get_fixture_path,
+)
 
 TEST_OBJECT_ID = "test_compensation"
 TEST_ENTITY_ID = "sensor.test_compensation"
@@ -45,6 +51,21 @@ TEST_CONFIG = {
     "unit_of_measurement": "a",
     **TEST_BASE_CONFIG,
 }
+
+
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        SENSOR_DOMAIN,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 async def async_setup_compensation(hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -353,19 +374,18 @@ async def test_non_numerical_states_from_source_entity(
 
 async def test_source_state_none(hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
-    config = {
-        "sensor": [
-            {
-                "platform": "template",
-                "sensors": {
-                    "uncompensated": {
-                        "value_template": "{{ states.sensor.test_state.state }}"
-                    }
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "uncompensated",
+                    "state": "{{ states.sensor.test_state.state }}",
                 },
-            },
-        ]
-    }
-    await async_setup_component(hass, "sensor", config)
+            }
+        },
+    )
     await async_setup_compensation(hass, TEST_CONFIG)
 
     hass.states.async_set("sensor.test_state", 4)

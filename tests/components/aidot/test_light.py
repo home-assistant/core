@@ -1,0 +1,357 @@
+"""Test the aidot device."""
+
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock
+
+from aidot.const import CONF_DEVICE_LIST
+from aidot.device_client import DeviceStatusData
+from aidot.exceptions import AidotAuthFailed
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
+    ATTR_RGBW_COLOR,
+    LightEntityFeature,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import async_init_integration
+from .const import ENTITY_LIGHT, LIGHT_DOMAIN
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+async def test_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await async_init_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_turn_on(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn on."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        blocking=True,
+    )
+    mocked_device_client.async_turn_on.assert_called_once()
+
+
+async def test_turn_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn off."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        blocking=True,
+    )
+    mocked_device_client.async_turn_off.assert_called_once()
+
+
+async def test_turn_on_brightness(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn on brightness."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    mocked_device_client.async_set_brightness.assert_called_once()
+    mocked_device_client.async_turn_on.assert_not_called()
+
+
+async def test_turn_on_with_color_temp(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn on with color temp."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 3000},
+        blocking=True,
+    )
+    mocked_device_client.async_set_cct.assert_called_once()
+
+
+async def test_turn_on_with_rgbw(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn on with rgbw."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        blocking=True,
+    )
+    mocked_device_client.async_set_rgbw.assert_called_once()
+
+
+async def test_effect_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test light exposes preset names as effects."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Sunrise (2)", "Party"]
+
+    await async_init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.attributes[ATTR_EFFECT_LIST] == ["Sunrise", "Sunrise (2)", "Party"]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & LightEntityFeature.EFFECT
+
+
+async def test_turn_on_with_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn on with effect."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Party"]
+
+    await async_init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_EFFECT: "Party"},
+        blocking=True,
+    )
+
+    mocked_device_client.async_set_effect.assert_called_once_with("Party")
+    assert hass.states.get(ENTITY_LIGHT).attributes[ATTR_EFFECT] == "Party"
+
+
+async def test_turn_on_with_brightness_and_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test brightness and effect are both applied when sent together."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Party"]
+
+    await async_init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100, ATTR_EFFECT: "Party"},
+        blocking=True,
+    )
+
+    mocked_device_client.async_set_brightness.assert_called_once_with(100)
+    mocked_device_client.async_set_effect.assert_called_once_with("Party")
+    mocked_device_client.async_turn_on.assert_not_called()
+    assert hass.states.get(ENTITY_LIGHT).attributes[ATTR_EFFECT] == "Party"
+
+
+async def test_turn_on_with_color_clears_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test setting a color clears the active effect state."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Party"]
+    mocked_device_client.status.effect = "Party"
+
+    await async_init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGBW_COLOR: (0, 0, 255, 0)},
+        blocking=True,
+    )
+
+    mocked_device_client.async_set_rgbw.assert_called_once_with((0, 0, 255, 0))
+    mocked_device_client.async_turn_on.assert_not_called()
+    assert hass.states.get(ENTITY_LIGHT).attributes[ATTR_EFFECT] is None
+
+
+async def test_effect_state_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test reported effect is reflected in state."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Party"]
+    await async_init_integration(hass, mock_config_entry)
+
+    status = Mock(spec=DeviceStatusData)
+    status.online = True
+    status.on = True
+    status.dimming = 255
+    status.cct = 3000
+    status.rgbw = (255, 255, 255, 255)
+    status.effect = "Party"
+
+    coordinator = mock_config_entry.runtime_data.device_coordinators["device_id"]
+    coordinator.async_set_updated_data(status)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).attributes[ATTR_EFFECT] == "Party"
+
+
+@pytest.mark.parametrize(
+    ("color_data", "applied_call", "ignored_call"),
+    [
+        pytest.param(
+            {ATTR_RGBW_COLOR: (0, 0, 255, 0)},
+            "async_set_rgbw",
+            "async_set_cct",
+            id="rgbw",
+        ),
+        pytest.param(
+            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            "async_set_cct",
+            "async_set_rgbw",
+            id="color_temp",
+        ),
+    ],
+)
+async def test_turn_on_with_brightness_and_color(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+    color_data: dict[str, Any],
+    applied_call: str,
+    ignored_call: str,
+) -> None:
+    """Test brightness and color are both applied when sent together."""
+    await async_init_integration(hass, mock_config_entry)
+
+    # Scenes send brightness and color in a single call.
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100, **color_data},
+        blocking=True,
+    )
+
+    mocked_device_client.async_set_brightness.assert_called_once_with(100)
+    getattr(mocked_device_client, applied_call).assert_called_once()
+    getattr(mocked_device_client, ignored_call).assert_not_called()
+    mocked_device_client.async_turn_on.assert_not_called()
+
+
+async def test_light_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test light becomes unavailable when device goes offline."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    # Simulate device going offline
+    status = Mock(spec=DeviceStatusData)
+    status.online = False
+    status.on = False
+    status.dimming = 0
+    status.cct = 0
+    status.rgbw = (0, 0, 0, 0)
+    status.effect = ""
+
+    # Trigger coordinator update via callback
+    coordinator = mock_config_entry.runtime_data.device_coordinators["device_id"]
+    coordinator.async_set_updated_data(status)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+
+async def test_coordinator_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    patch_aidot_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator handles auth failure during update."""
+    await async_init_integration(hass, mock_config_entry)
+
+    patch_aidot_client.async_get_all_device = AsyncMock(side_effect=AidotAuthFailed())
+    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    patch_aidot_client.async_get_all_device.assert_awaited_once()
+
+
+async def test_coordinator_device_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    patch_aidot_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test coordinator handles device removal."""
+    await async_init_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_LIGHT) is not None
+
+    # Return empty device list
+    patch_aidot_client.async_get_all_device.return_value = {CONF_DEVICE_LIST: []}
+    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entity should no longer exist after device removal
+    assert entity_registry.async_get(ENTITY_LIGHT) is None

@@ -153,7 +153,8 @@ async def test_sensor(
             212,
             253,
         ),
-        # The unique_id doesn't match that of the mobile app's battery temperature sensor
+        # The unique_id doesn't match that of the mobile app's
+        # battery temperature sensor
         (
             "battery_temp",
             US_CUSTOMARY_SYSTEM,

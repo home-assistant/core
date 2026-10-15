@@ -1,7 +1,5 @@
 """Test the Saunum binary sensor platform."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from freezegun.api import FrozenDateTimeFactory

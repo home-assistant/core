@@ -1,7 +1,5 @@
 """The laundrify integration."""
 
-from __future__ import annotations
-
 import logging
 
 from laundrify_aio import LaundrifyAPI
@@ -19,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) -> None:
     """Set up laundrify from a config entry."""
 
     session = async_get_clientsession(hass)
@@ -40,16 +38,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s", entry.version)
@@ -63,5 +59,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LaundrifyConfigEntry) 
             )
 
     _LOGGER.debug("Migration successful")
-
-    return True

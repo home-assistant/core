@@ -1,14 +1,10 @@
 """Helper classes for Google Generative AI integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import io
 import wave
 
 from homeassistant.exceptions import HomeAssistantError
-
-from .const import LOGGER
 
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
@@ -50,7 +46,6 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
 
     """
     if not mime_type.lower().startswith("audio/l"):
-        LOGGER.warning("Received unexpected MIME type %s", mime_type)
         raise HomeAssistantError(f"Unsupported audio MIME type: {mime_type}")
 
     bits_per_sample = 16
@@ -61,7 +56,8 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
     for param in parts:  # Skip the main type part
         param = param.strip()
         if param.lower().startswith("rate="):
-            # Handle cases like "rate=" with no value or non-integer value and keep rate as default
+            # Handle cases like "rate=" with no value or
+            # non-integer value and keep rate as default
             with suppress(ValueError, IndexError):
                 rate_str = param.split("=", 1)[1]
                 rate = int(rate_str)

@@ -1,8 +1,6 @@
 """Support for SwitchBee cover."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from switchbee.api.central_unit import SwitchBeeError, SwitchBeeTokenError
 from switchbee.const import SomfyCommand
@@ -58,14 +56,17 @@ class SwitchBeeSomfyEntity(SwitchBeeDeviceEntity[SwitchBeeSomfy], CoverEntity):
                 f"Failed to fire {command} for {self.name}, {exp!s}"
             ) from exp
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         return await self._fire_somfy_command(SomfyCommand.UP)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         return await self._fire_somfy_command(SomfyCommand.DOWN)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop a moving cover."""
         return await self._fire_somfy_command(SomfyCommand.MY)
@@ -84,6 +85,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
     _attr_is_closed: bool | None = None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_from_coordinator()
@@ -109,6 +111,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
             self._attr_is_closed = False
         super()._handle_coordinator_update()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self.current_cover_position == 100:
@@ -116,6 +119,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
 
         await self.async_set_cover_position(position=100)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self.current_cover_position == 0:
@@ -123,6 +127,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
 
         await self.async_set_cover_position(position=0)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop a moving cover."""
         # to stop the shutter, we just interrupt it with any state during operation
@@ -133,6 +138,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
         # fetch data from the Central Unit to get the new position
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
         if (

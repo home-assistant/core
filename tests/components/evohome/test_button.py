@@ -3,8 +3,6 @@
 All evohome systems have a controller and at least one zone.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 

@@ -1,10 +1,8 @@
 """Ecovacs sensor module."""
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field, fields, replace
+from typing import Any, Self, override
 
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan, DeviceType
 from deebot_client.device import Device
@@ -35,10 +33,10 @@ from homeassistant.const import (
     UnitOfArea,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
 
 from . import EcovacsConfigEntry
 from .const import LEGACY_SUPPORTED_LIFESPANS, SUPPORTED_LIFESPANS
@@ -52,6 +50,14 @@ from .util import get_name_key, get_options, get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
+class EcovacsSensorDeviceTypeOverride:
+    """Description values, which differ for a specific device type."""
+
+    native_unit_of_measurement: str | UndefinedType | None = UNDEFINED
+    translation_key: str | UndefinedType | None = UNDEFINED
+
+
+@dataclass(kw_only=True, frozen=True)
 class EcovacsSensorEntityDescription[EventT: Event](
     EcovacsCapabilityEntityDescription,
     SensorEntityDescription,
@@ -59,15 +65,23 @@ class EcovacsSensorEntityDescription[EventT: Event](
     """Ecovacs sensor entity description."""
 
     value_fn: Callable[[EventT], StateType]
-    native_unit_of_measurement_fn: Callable[[DeviceType], str | None] | None = None
+    device_type_overrides: Mapping[DeviceType, EcovacsSensorDeviceTypeOverride] = field(
+        default_factory=dict
+    )
 
+    def get_for(self, device: DeviceType) -> Self:
+        """Get entity description for specific device type."""
+        if (overrides := self.device_type_overrides.get(device)) is None:
+            return self
 
-@callback
-def get_area_native_unit_of_measurement(device_type: DeviceType) -> str | None:
-    """Get the area native unit of measurement based on device type."""
-    if device_type is DeviceType.MOWER:
-        return UnitOfArea.SQUARE_CENTIMETERS
-    return UnitOfArea.SQUARE_METERS
+        return replace(
+            self,
+            **{
+                f.name: value
+                for f in fields(overrides)
+                if (value := getattr(overrides, f.name)) is not UNDEFINED
+            },
+        )
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
@@ -78,8 +92,14 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         value_fn=lambda e: e.area,
         translation_key="stats_area",
         device_class=SensorDeviceClass.AREA,
-        native_unit_of_measurement_fn=get_area_native_unit_of_measurement,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         suggested_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        device_type_overrides={
+            DeviceType.MOWER: EcovacsSensorDeviceTypeOverride(
+                native_unit_of_measurement=UnitOfArea.SQUARE_CENTIMETERS,
+                translation_key="stats_area_mower",
+            )
+        },
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
@@ -89,6 +109,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_type_overrides={
+            DeviceType.MOWER: EcovacsSensorDeviceTypeOverride(
+                translation_key="stats_time_mower",
+            )
+        },
     ),
     # TotalStats
     EcovacsSensorEntityDescription[TotalStatsEvent](
@@ -99,6 +124,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.AREA,
         native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_type_overrides={
+            DeviceType.MOWER: EcovacsSensorDeviceTypeOverride(
+                translation_key="total_stats_area_mower",
+            )
+        },
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
@@ -109,6 +139,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_type_overrides={
+            DeviceType.MOWER: EcovacsSensorDeviceTypeOverride(
+                translation_key="total_stats_time_mower",
+            )
+        },
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
@@ -116,6 +151,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         key="total_stats_cleanings",
         translation_key="total_stats_cleanings",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_type_overrides={
+            DeviceType.MOWER: EcovacsSensorDeviceTypeOverride(
+                translation_key="total_stats_cleanings_mower",
+            )
+        },
     ),
     EcovacsSensorEntityDescription[BatteryEvent](
         capability_fn=lambda caps: caps.battery,
@@ -276,19 +316,14 @@ class EcovacsSensor(
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""
-        super().__init__(device, capability, entity_description, **kwargs)
-        if (
-            entity_description.native_unit_of_measurement_fn
-            and (
-                native_unit_of_measurement
-                := entity_description.native_unit_of_measurement_fn(
-                    device.capabilities.device_type
-                )
-            )
-            is not None
-        ):
-            self._attr_native_unit_of_measurement = native_unit_of_measurement
+        super().__init__(
+            device,
+            capability,
+            entity_description.get_for(device.capabilities.device_type),
+            **kwargs,
+        )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -312,6 +347,7 @@ class EcovacsLifespanSensor(
 
     entity_description: EcovacsLifespanSensorEntityDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -339,6 +375,7 @@ class EcovacsErrorSensor(
         entity_category=EntityCategory.DIAGNOSTIC,
     )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -367,6 +404,7 @@ class EcovacsLegacyBatterySensor(EcovacsLegacyEntity, SensorEntity):
         super().__init__(device)
         self._attr_unique_id = f"{device.vacuum['did']}_battery_status"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
@@ -376,6 +414,7 @@ class EcovacsLegacyBatterySensor(EcovacsLegacyEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         if (status := self.device.battery_status) is not None:
@@ -383,6 +422,7 @@ class EcovacsLegacyBatterySensor(EcovacsLegacyEntity, SensorEntity):
         return None
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return icon_for_battery_level(
@@ -409,6 +449,7 @@ class EcovacsLegacyLifespanSensor(EcovacsLegacyEntity, SensorEntity):
             value = int(value * 100)
         self._attr_native_value = value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
 

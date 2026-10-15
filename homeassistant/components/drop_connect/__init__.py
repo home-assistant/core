@@ -1,7 +1,5 @@
 """The drop_connect integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -9,8 +7,9 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE
+from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import DROPConfigEntry, DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,13 +22,15 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) -> None:
     """Set up DROP from a config entry."""
 
     # Make sure MQTT integration is enabled and the client is available.
     if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="mqtt_not_available",
+        )
 
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None
@@ -57,11 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) 
 
     config_entry.runtime_data = drop_data_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: DROPConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

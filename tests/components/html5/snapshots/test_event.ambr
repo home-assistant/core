@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'clicked',
         'received',
         'closed',
@@ -45,13 +45,13 @@
 # name: test_setup[event.my_desktop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'clicked',
         'received',
         'closed',
       ]),
-      'friendly_name': 'my-desktop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-desktop',
     }),
     'context': <ANY>,
     'entity_id': 'event.my_desktop',

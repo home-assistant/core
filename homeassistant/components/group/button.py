@@ -1,10 +1,8 @@
 """Platform allowing several button entities to be grouped into one single button."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -37,9 +35,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = BUTTON_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -113,6 +111,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
+    @override
     async def async_press(self) -> None:
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
@@ -124,6 +123,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the button group state."""
         # Set group as unavailable if all members are unavailable or missing

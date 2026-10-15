@@ -1,10 +1,8 @@
 """Cloud onboarding views."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -67,6 +65,7 @@ class CloudForgotPasswordView(
     name = "api:onboarding:cloud:forgot_password"
 
     @ensure_not_done
+    @override
     async def post(self, request: web.Request) -> web.Response:
         """Handle forgot password request."""
         return await super()._post(request)
@@ -79,6 +78,7 @@ class CloudLoginView(NoAuthBaseOnboardingView, cloud_http.CloudLoginView):
     name = "api:onboarding:cloud:login"
 
     @ensure_not_done
+    @override
     async def post(self, request: web.Request) -> web.Response:
         """Handle login request."""
         return await super()._post(request)
@@ -91,6 +91,7 @@ class CloudLogoutView(NoAuthBaseOnboardingView, cloud_http.CloudLogoutView):
     name = "api:onboarding:cloud:logout"
 
     @ensure_not_done
+    @override
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         return await super()._post(request)

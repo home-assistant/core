@@ -1,11 +1,9 @@
 """Config flow for Forecast.Solar integration."""
 
-from __future__ import annotations
-
 import re
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -15,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -37,31 +35,31 @@ from .const import (
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 
-PLANE_SCHEMA = vol.Schema(
+PLANE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DECLINATION): vol.All(
+        probatio.Required(CONF_DECLINATION): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=90, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_AZIMUTH): vol.All(
+        probatio.Required(CONF_AZIMUTH): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=360, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_MODULES_POWER): vol.All(
+        probatio.Required(CONF_MODULES_POWER): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
@@ -74,6 +72,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> ForecastSolarOptionFlowHandler:
@@ -82,19 +81,21 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_PLANE: PlaneSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title="",
                 data={
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
@@ -107,7 +108,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                             CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                         },
-                        "title": f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                        "title": (
+                            f"{user_input[CONF_DECLINATION]}°"
+                            f" / {user_input[CONF_AZIMUTH]}°"
+                            f" / {user_input[CONF_MODULES_POWER]}W"
+                        ),
                         "unique_id": None,
                     },
                 ],
@@ -116,15 +121,13 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_NAME): str,
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
                     }
                 ).extend(PLANE_SCHEMA.schema),
                 {
-                    CONF_NAME: self.hass.config.location_name,
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
                     CONF_DECLINATION: DEFAULT_DECLINATION,
@@ -162,23 +165,23 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_API_KEY,
+                    probatio.Required(
+                        probatio.Secret(CONF_API_KEY),
                         default=suggested_api_key,
                     )
                     if planes_count > 1
-                    else vol.Optional(
-                        CONF_API_KEY,
+                    else probatio.Optional(
+                        probatio.Secret(CONF_API_KEY),
                         description={"suggested_value": suggested_api_key},
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_MORNING, DEFAULT_DAMPING
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -187,14 +190,14 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(float),
+                        probatio.Coerce(float),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DAMPING_EVENING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_EVENING, DEFAULT_DAMPING
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -203,16 +206,16 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(float),
+                        probatio.Coerce(float),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_INVERTER_SIZE,
                         description={
                             "suggested_value": self.config_entry.options.get(
                                 CONF_INVERTER_SIZE
                             )
                         },
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=1,
@@ -220,7 +223,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
                 }
             ),
@@ -244,7 +247,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
                 data={
                     CONF_DECLINATION: user_input[CONF_DECLINATION],
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
@@ -280,7 +287,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                     CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                 },
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
             ):
                 if not entry.update_listeners:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)

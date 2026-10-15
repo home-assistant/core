@@ -1,8 +1,7 @@
 """Support for Modern Forms switches."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
@@ -23,15 +22,18 @@ async def async_setup_entry(
     """Set up Modern Forms sensor based on a config entry."""
     coordinator = entry.runtime_data
 
-    sensors: list[ModernFormsSensor] = [
-        ModernFormsFanTimerRemainingTimeSensor(entry.entry_id, coordinator),
-    ]
+    sensors: list[ModernFormsSensor] = []
 
-    # Only setup light sleep timer sensor if light unit installed
-    if coordinator.data.info.light_type:
+    if coordinator.data.has_sleep_timer():
         sensors.append(
-            ModernFormsLightTimerRemainingTimeSensor(entry.entry_id, coordinator)
+            ModernFormsFanTimerRemainingTimeSensor(entry.entry_id, coordinator)
         )
+
+        # Only setup light sleep timer sensor if light unit installed
+        if coordinator.data.info.light_type:
+            sensors.append(
+                ModernFormsLightTimerRemainingTimeSensor(entry.entry_id, coordinator)
+            )
 
     async_add_entities(sensors)
 
@@ -69,6 +71,7 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(
@@ -99,6 +102,7 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(

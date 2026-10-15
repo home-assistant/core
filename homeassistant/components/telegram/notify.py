@@ -1,11 +1,9 @@
 """Telegram platform for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -44,7 +42,7 @@ ATTR_DOCUMENT = "document"
 CONF_CHAT_ID = "chat_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_CHAT_ID): vol.Coerce(int)}
+    {probatio.Required(CONF_CHAT_ID): probatio.Coerce(int)}
 )
 
 
@@ -79,6 +77,7 @@ class TelegramNotificationService(BaseNotificationService):
         self._chat_id = chat_id
         self.hass = hass
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         service_data = {ATTR_CHAT_ID: kwargs.get(ATTR_TARGET, self._chat_id)}

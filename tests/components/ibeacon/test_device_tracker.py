@@ -148,7 +148,7 @@ async def test_device_tracker_random_address(hass: HomeAssistant) -> None:
 async def test_device_tracker_random_address_infrequent_changes(
     hass: HomeAssistant,
 ) -> None:
-    """Test creating and updating device_tracker with a random mac that only changes once per day."""
+    """Test device_tracker with a random mac changing once per day."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )

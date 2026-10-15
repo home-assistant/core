@@ -3,26 +3,20 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientConnectionError, AirGradientError, Config
+from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import async_load_config_fixture, load_config_fixture, setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -80,8 +74,8 @@ async def test_cloud_creates_no_button(
 
     assert len(hass.states.async_all()) == 0
 
-    mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        await async_load_fixture(hass, "get_config_local.json", DOMAIN)
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_local.json")
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -90,8 +84,8 @@ async def test_cloud_creates_no_button(
 
     assert len(hass.states.async_all()) == 2
 
-    mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        await async_load_fixture(hass, "get_config_cloud.json", DOMAIN)
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_cloud.json")
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -102,15 +96,43 @@ async def test_cloud_creates_no_button(
 
 
 @pytest.mark.parametrize(
+    ("model", "entity_count"),
+    [
+        pytest.param("P-1PSG", 2, id="known"),
+        pytest.param("P-UNKNOWN", 0, id="unknown"),
+    ],
+)
+async def test_v1_action_capabilities(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    entity_count: int,
+) -> None:
+    """Test V1 actions require declared model capabilities."""
+    mock_v1_airgradient_client.get_current_measures.return_value.model = model
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert len(hass.states.async_all()) == entity_count
+
+
+@pytest.mark.parametrize(
     ("exception", "error_message"),
     [
         (
             AirGradientConnectionError("Something happened"),
-            "An error occurred while communicating with the Airgradient device: Something happened",
+            "An error occurred while communicating with the"
+            " Airgradient device: Something happened",
         ),
         (
             AirGradientError("Something else happened"),
-            "An unknown error occurred while communicating with the Airgradient device: Something else happened",
+            "An unknown error occurred while communicating"
+            " with the Airgradient device:"
+            " Something else happened",
         ),
     ],
 )

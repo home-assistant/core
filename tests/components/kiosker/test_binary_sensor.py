@@ -1,10 +1,9 @@
 """Test the Kiosker binary sensors."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -16,6 +15,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -24,7 +24,9 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    mock_kiosker_api.blackout_get.return_value = SimpleNamespace(visible=True)
+    mock_kiosker_api.blackout_get.return_value = SimpleNamespace(
+        visible=True, dismissible=True
+    )
     mock_kiosker_api.screensaver_get_state.return_value = SimpleNamespace(visible=False)
 
     with patch("homeassistant.components.kiosker._PLATFORMS", [Platform.BINARY_SENSOR]):

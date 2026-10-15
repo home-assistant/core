@@ -1,11 +1,14 @@
 """OpenDisplay test fixtures."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.opendisplay import BASE_PLATFORMS, FLEX_PLATFORMS
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from . import (
     BUTTON_DEVICE_CONFIG,
@@ -164,3 +167,37 @@ def mock_encrypted_config_entry() -> MockConfigEntry:
         title=TEST_TITLE,
         data={CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
     )
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms to set up for the test. Override in test modules to scope setup."""
+    return [*FLEX_PLATFORMS]
+
+
+@pytest.fixture
+def setup_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
+) -> Callable[[], Awaitable[None]]:
+    """Return an async callable that sets up the integration with `platforms` only."""
+
+    async def _setup() -> None:
+        # intersect the platform lists to ensure we don't set up a platform that is not defined for the device type during tests
+        flex_platforms = [p for p in FLEX_PLATFORMS if p in platforms]
+        base_platforms = [p for p in BASE_PLATFORMS if p in platforms]
+
+        mock_config_entry.add_to_hass(hass)
+        with (
+            patch(
+                "homeassistant.components.opendisplay.BASE_PLATFORMS", base_platforms
+            ),
+            patch(
+                "homeassistant.components.opendisplay.FLEX_PLATFORMS", flex_platforms
+            ),
+        ):
+            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return _setup

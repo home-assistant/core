@@ -1,7 +1,5 @@
 """The launch_library component."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +10,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: LaunchLibraryConfigEntry
-) -> bool:
+) -> None:
     """Set up this integration using UI."""
 
     coordinator = LaunchLibraryCoordinator(hass, entry)
@@ -22,11 +20,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: LaunchLibraryConfigEntry
-) -> bool:
+) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

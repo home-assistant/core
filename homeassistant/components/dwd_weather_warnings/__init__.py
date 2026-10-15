@@ -1,7 +1,5 @@
 """The dwd_weather_warnings component."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -11,22 +9,22 @@ from .coordinator import DwdWeatherWarningsConfigEntry, DwdWeatherWarningsCoordi
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: DwdWeatherWarningsConfigEntry
-) -> bool:
+) -> None:
     """Set up a config entry."""
     device_registry = dr.async_get(hass)
-    if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
-        device_registry.async_clear_config_entry(entry.entry_id)
+    if device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    ):
+        device_registry.async_clear_config_entry(entry.entry_id, entry.domain)
     coordinator = DwdWeatherWarningsCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: DwdWeatherWarningsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

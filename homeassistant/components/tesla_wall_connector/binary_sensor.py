@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -75,6 +76,7 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
         super().__init__(wall_connectord_data)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
 

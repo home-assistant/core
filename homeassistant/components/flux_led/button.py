@@ -1,6 +1,6 @@
 """Support for Magic home button."""
 
-from __future__ import annotations
+from typing import override
 
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.protocol import RemoteConfig
@@ -66,6 +66,7 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Send out a command."""
         if self.entity_description.key == _RESTART_KEY:

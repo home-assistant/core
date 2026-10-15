@@ -1,10 +1,8 @@
 """YoLink Switch."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import (
@@ -165,6 +163,7 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         return state_value == "open" if state_value is not None else None
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
         if (state_value := state.get("state")) is not None:
@@ -192,10 +191,12 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_state_change("open")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.call_state_change("close")

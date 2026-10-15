@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for Met.no integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any, Self
+from typing import Any, Self, override
 
 import metno
 
@@ -112,6 +110,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> MetWeatherData:
         """Fetch data from Met."""
         try:

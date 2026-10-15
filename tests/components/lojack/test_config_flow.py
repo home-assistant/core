@@ -1,6 +1,6 @@
 """Tests for the LoJack config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from lojack_api import ApiError, AuthenticationError
 import pytest
@@ -16,10 +16,9 @@ from .const import TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow(
-    hass: HomeAssistant,
-    mock_lojack_client: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_lojack_client: MagicMock
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -53,10 +52,10 @@ async def test_full_user_flow(
         (Exception("Unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_lojack_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:

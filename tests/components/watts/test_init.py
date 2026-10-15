@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.watts.const import (
-    DISCOVERY_INTERVAL_MINUTES,
+    DISCOVERY_INTERVAL_SECONDS,
     DOMAIN,
     FAST_POLLING_INTERVAL_SECONDS,
     OAUTH2_TOKEN,
@@ -57,14 +57,13 @@ async def test_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup with authentication failure."""
     config_entry = MockConfigEntry(
-        domain="watts",
+        domain=DOMAIN,
         unique_id="test-device-id",
         data={
             "device_id": "test-device-id",
@@ -87,14 +86,13 @@ async def test_setup_entry_auth_failed(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup when network is temporarily unavailable."""
     config_entry = MockConfigEntry(
-        domain="watts",
+        domain=DOMAIN,
         unique_id="test-device-id",
         data={
             "device_id": "test-device-id",
@@ -136,14 +134,13 @@ async def test_setup_entry_hub_coordinator_update_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_server_error_5xx(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup when server returns error."""
     config_entry = MockConfigEntry(
-        domain="watts",
+        domain=DOMAIN,
         unique_id="test-device-id",
         data={
             "device_id": "test-device-id",
@@ -206,10 +203,16 @@ async def test_dynamic_device_creation(
     """Test new devices are created dynamically."""
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_123")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_456")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_123"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
+    )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_789")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "thermostat_789"), mock_config_entry.entry_id
+        )
         is None
     )
 
@@ -233,17 +236,17 @@ async def test_dynamic_device_creation(
     current_devices = list(mock_watts_client.discover_devices.return_value)
     mock_watts_client.discover_devices.return_value = [*current_devices, new_device]
 
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    new_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_789")}
+    new_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_789"), mock_config_entry.entry_id
     )
     assert new_device_entry is not None
     assert new_device_entry.name == "Kitchen Thermostat"
 
-    state = hass.states.get("climate.kitchen_thermostat")
+    state = hass.states.get("climate.kitchen_kitchen_thermostat")
     assert state is not None
 
 
@@ -257,11 +260,11 @@ async def test_stale_device_removal(
     """Test stale devices are removed dynamically."""
     await setup_integration(hass, mock_config_entry)
 
-    device_123 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_123")}
+    device_123 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_123"), mock_config_entry.entry_id
     )
-    device_456 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
+    device_456 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
     )
     assert device_123 is not None
     assert device_456 is not None
@@ -273,13 +276,13 @@ async def test_stale_device_removal(
         d for d in current_devices if d.device_id != "thermostat_456"
     ]
 
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Verify thermostat_456 has been removed
-    device_456_after_removal = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
+    device_456_after_removal = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
     )
     assert device_456_after_removal is None
 
@@ -302,7 +305,7 @@ async def test_hub_coordinator_update_errors(
     """Test hub coordinator handles errors during regular update."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -312,7 +315,7 @@ async def test_hub_coordinator_update_errors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -331,7 +334,7 @@ async def test_device_coordinator_refresh_error(
     """Test device coordinator handles refresh error."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -340,7 +343,7 @@ async def test_device_coordinator_refresh_error(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 23.5,
         },
         blocking=True,
@@ -354,6 +357,6 @@ async def test_device_coordinator_refresh_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

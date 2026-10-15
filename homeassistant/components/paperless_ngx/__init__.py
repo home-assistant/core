@@ -29,7 +29,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> None:
     """Set up Paperless-ngx from a config entry."""
 
     api = await _get_paperless_api(hass, entry)
@@ -42,7 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     try:
         await status_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        # Catch the error so the integration doesn't fail just because status coordinator fails.
+        # Catch the error so the integration doesn't fail
+        # just because status coordinator fails.
         LOGGER.warning("Could not initialize status coordinator: %s", err)
 
     entry.runtime_data = PaperlessData(
@@ -52,12 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> None:
     """Unload paperless-ngx config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _get_paperless_api(
@@ -66,7 +65,7 @@ async def _get_paperless_api(
 ) -> Paperless:
     """Create and initialize paperless-ngx API."""
 
-    api = Paperless(
+    api = Paperless(  # type: ignore[abstract]
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True)),

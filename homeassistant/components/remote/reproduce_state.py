@@ -1,7 +1,5 @@
 """Reproduce an Remote state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
@@ -16,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

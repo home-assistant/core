@@ -1,10 +1,8 @@
 """Config flow for Version integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SOURCE
@@ -42,6 +40,7 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Version config flow."""
         self._entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -51,12 +50,12 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
             self._entry_data = DEFAULT_CONFIGURATION.copy()
             return self.async_show_form(
                 step_id=STEP_USER,
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_VERSION_SOURCE,
                             default=VERSION_SOURCE_LOCAL,
-                        ): vol.In(VERSION_SOURCE_MAP.keys())
+                        ): probatio.In(VERSION_SOURCE_MAP.keys())
                     }
                 ),
             )
@@ -64,10 +63,7 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input[CONF_SOURCE] = VERSION_SOURCE_MAP[user_input[CONF_VERSION_SOURCE]]
         self._entry_data.update(user_input)
 
-        if not self.show_advanced_options or user_input[CONF_SOURCE] in (
-            "local",
-            "haio",
-        ):
+        if user_input[CONF_SOURCE] in ("local", "haio"):
             return self.async_create_entry(
                 title=self._config_entry_name,
                 data=self._entry_data,
@@ -85,34 +81,36 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
                 "supervisor",
                 "container",
             ):
-                data_schema = vol.Schema(
+                data_schema = probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_CHANNEL, default=DEFAULT_CHANNEL.title()
-                        ): vol.In(VALID_CHANNELS),
+                        ): probatio.In(VALID_CHANNELS),
                     }
                 )
                 if self._entry_data[CONF_SOURCE] == "supervisor":
                     data_schema = data_schema.extend(
                         {
-                            vol.Required(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(
-                                VALID_IMAGES
-                            ),
-                            vol.Required(CONF_BOARD, default=DEFAULT_BOARD): vol.In(
-                                VALID_BOARDS
-                            ),
+                            probatio.Required(
+                                CONF_IMAGE, default=DEFAULT_IMAGE
+                            ): probatio.In(VALID_IMAGES),
+                            probatio.Required(
+                                CONF_BOARD, default=DEFAULT_BOARD
+                            ): probatio.In(VALID_BOARDS),
                         }
                     )
                 else:
                     data_schema = data_schema.extend(
                         {
-                            vol.Required(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(
-                                VALID_CONTAINER_IMAGES
-                            )
+                            probatio.Required(
+                                CONF_IMAGE, default=DEFAULT_IMAGE
+                            ): probatio.In(VALID_CONTAINER_IMAGES)
                         }
                     )
             else:
-                data_schema = vol.Schema({vol.Required(CONF_BETA, default=False): bool})
+                data_schema = probatio.Schema(
+                    {probatio.Required(CONF_BETA, default=False): bool}
+                )
 
             return self.async_show_form(
                 step_id=STEP_VERSION_SOURCE,

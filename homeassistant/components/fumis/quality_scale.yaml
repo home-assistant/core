@@ -12,9 +12,13 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not have any custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers: done
   entity-event-setup:
     status: exempt
     comment: Entities of this integration do not explicitly subscribe to events.
@@ -41,7 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info:
     status: exempt
@@ -62,7 +66,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.

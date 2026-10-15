@@ -57,6 +57,14 @@ def mock_teltasync_client(mock_teltasync: MagicMock) -> MagicMock:
     return mock_teltasync.return_value
 
 
+@pytest.fixture(name="rut240_device_info")
+def fixture_rut240_device_info() -> UnauthorizedStatusData:
+    """Load the unauthorized payload returned by RUT240 firmware 7.6."""
+    return UnauthorizedStatusData(
+        **load_json_object_fixture("device_info_rut240.json", DOMAIN)
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""

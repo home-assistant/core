@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pylamarzocco.const import FirmwareType, MachineState, WidgetType
 from pylamarzocco.models import MachineStatus
@@ -30,6 +30,7 @@ class LaMarzoccoEntityDescription(EntityDescription):
     available_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
     supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
     bt_offline_mode: bool = False
+    bt_shot_timer: bool = False
 
 
 class LaMarzoccoBaseEntity(
@@ -76,6 +77,7 @@ class LaMarzoccoBaseEntity(
             self._attr_device_info.update(DeviceInfo(connections=connections))
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         machine_state = (
@@ -101,8 +103,14 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     entity_description: LaMarzoccoEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
+        if (
+            self.entity_description.bt_shot_timer
+            and self.coordinator.device.bluetooth_shot_counter_active
+        ):
+            return self.entity_description.available_fn(self.coordinator)
         if (
             self.entity_description.bt_offline_mode
             and self.bluetooth_coordinator is not None
@@ -123,6 +131,7 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         self.entity_description = entity_description
         self.bluetooth_coordinator = bluetooth_coordinator
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added to hass."""
         await super().async_added_to_hass()

@@ -1,7 +1,5 @@
 """Test the Ruuvi BLE sensors."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

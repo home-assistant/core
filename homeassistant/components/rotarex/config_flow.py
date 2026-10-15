@@ -1,10 +1,10 @@
 """Config flow for Rotarex integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rotarex_dimes_srg_api import InvalidAuth, RotarexApi, RotarexConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -15,12 +15,12 @@ from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): selector.TextSelector(
+        probatio.Required(CONF_EMAIL): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.EMAIL)
         ),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -30,6 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rotarex."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

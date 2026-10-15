@@ -1,7 +1,5 @@
 """Backup manager for the Backup integration."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections import defaultdict
@@ -17,7 +15,7 @@ import shutil
 import sys
 import tarfile
 import time
-from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
 from securetar import SecureTarArchive, atomic_contents_add
@@ -74,8 +72,10 @@ from .store import BackupStore
 from .util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    iter_upload_chunks,
     make_backup_dir,
     read_backup,
+    receive_file,
     validate_password,
     validate_password_stream,
 )
@@ -1006,7 +1006,6 @@ class BackupManager:
         contents: aiohttp.BodyPartReader,
     ) -> str:
         """Receive and store a backup file from upload."""
-        contents.chunk_size = BUF_SIZE
         suggested_filename = contents.filename or "backup.tar"
         safe_filename = PureWindowsPath(suggested_filename).name
         if (
@@ -1024,7 +1023,7 @@ class BackupManager:
         )
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
-            stream=contents,
+            stream=iter_upload_chunks(contents),
             suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(
@@ -1189,10 +1188,10 @@ class BackupManager:
                 "Cannot include all addons and specify specific addons"
             )
 
+        kind = "Automatic" if with_automatic_settings else "Custom"
         backup_name = (
-            (name if name is None else name.strip())
-            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
-        )
+            name if name is None else name.strip()
+        ) or f"{kind} backup {HAVERSION}"
         extra_metadata = extra_metadata or {}
 
         try:
@@ -1289,7 +1288,8 @@ class BackupManager:
             )
             if not agent_errors:
                 if with_automatic_settings:
-                    # create backup was successful, update last_completed_automatic_backup
+                    # create backup was successful, update
+                    # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
                     self.store.save()
                 backup_success = True
@@ -1713,6 +1713,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         self._hass = hass
         self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
 
+    @override
     async def async_create_backup(
         self,
         *,
@@ -1958,6 +1959,48 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             ) from err
         return (tar_file_path, stat_result.st_size)
 
+    async def _receive_and_move_backup(
+        self,
+        *,
+        agent_ids: list[str],
+        stream: AsyncIterator[bytes],
+        temp_file: Path,
+    ) -> tuple[AgentBackup, Path]:
+        """Receive the upload into temp_file, validate it, and move it into place.
+
+        Remove temp_file on any failure, including cancellation from a client
+        disconnect, so a partial or unparsable upload does not orphan a
+        potentially large temp file.
+        """
+        async_add_executor_job = self._hass.async_add_executor_job
+        try:
+            await receive_file(self._hass, stream, temp_file)
+            try:
+                backup = await async_add_executor_job(read_backup, temp_file)
+            except (
+                OSError,
+                tarfile.TarError,
+                json.JSONDecodeError,
+                KeyError,
+                InvalidBackupFilename,
+            ) as err:
+                LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
+                raise
+
+            manager = self._hass.data[DATA_MANAGER]
+            if self._local_agent_id in agent_ids:
+                local_agent = manager.local_backup_agents[self._local_agent_id]
+                tar_file_path = local_agent.get_new_backup_path(backup)
+                await async_add_executor_job(make_backup_dir, tar_file_path.parent)
+                await async_add_executor_job(shutil.move, temp_file, tar_file_path)
+            else:
+                tar_file_path = temp_file
+        except Exception, asyncio.CancelledError:
+            await async_add_executor_job(temp_file.unlink, True)
+            raise
+        return backup, tar_file_path
+
+    @override
     async def async_receive_backup(
         self,
         *,
@@ -1970,27 +2013,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
-        f = await async_add_executor_job(temp_file.open, "wb")
-        try:
-            async for chunk in stream:
-                await async_add_executor_job(f.write, chunk)
-        finally:
-            await async_add_executor_job(f.close)
-
-        try:
-            backup = await async_add_executor_job(read_backup, temp_file)
-        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
-            LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
-            raise
-
-        manager = self._hass.data[DATA_MANAGER]
-        if self._local_agent_id in agent_ids:
-            local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_new_backup_path(backup)
-            await async_add_executor_job(make_backup_dir, tar_file_path.parent)
-            await async_add_executor_job(shutil.move, temp_file, tar_file_path)
-        else:
-            tar_file_path = temp_file
+        backup, tar_file_path = await self._receive_and_move_backup(
+            agent_ids=agent_ids, stream=stream, temp_file=temp_file
+        )
 
         async def send_backup() -> AsyncIterator[bytes]:
             f = await async_add_executor_job(tar_file_path.open, "rb")
@@ -2016,6 +2041,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_restore_backup(
         self,
         backup_id: str,
@@ -2094,6 +2120,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
 
+    @override
     async def async_resume_restore_progress_after_restart(
         self,
         *,
@@ -2142,6 +2169,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         on_progress(IdleEvent())
 
+    @override
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 
@@ -2159,7 +2187,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             return
 
         LOGGER.info(
-            "Adjusting backup settings to not include addons, folders or supervisor locations"
+            "Adjusting backup settings to not include addons,"
+            " folders or supervisor locations"
         )
         automatic_agents = [
             agent_id

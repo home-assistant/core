@@ -1,11 +1,9 @@
 """Mastodon platform for sensor components."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from mastodon.Mastodon import Account, Instance, InstanceV2
 
@@ -110,11 +108,13 @@ class MastodonSensorEntity(MastodonEntity, SensorEntity):
     entity_description: MastodonSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.instance)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         return (
@@ -124,6 +124,7 @@ class MastodonSensorEntity(MastodonEntity, SensorEntity):
         )
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         return (

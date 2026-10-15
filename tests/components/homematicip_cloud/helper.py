@@ -44,7 +44,9 @@ def get_and_check_entity_basics(
     assert ha_state is not None
     if device_model:
         assert ha_state.attributes[ATTR_MODEL_TYPE] == device_model
-    assert ha_state.name == entity_name
+    assert ha_state.name == entity_name, (
+        f"Expected '{entity_name}', got '{ha_state.name}'"
+    )
 
     hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
 
@@ -77,7 +79,9 @@ async def async_manipulate_test_data(
                 None,
             )
             assert functional_channel is not None, (
-                f"No functional channel with index {channel_real_index} found in hmip_device.functionalChannels"
+                f"No functional channel with index"
+                f" {channel_real_index} found in"
+                " hmip_device.functionalChannels"
             )
         else:
             functional_channel = channels[channel]

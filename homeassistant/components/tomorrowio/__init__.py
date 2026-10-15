@@ -1,6 +1,5 @@
 """The Tomorrow.io integration."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from pytomorrowio import TomorrowioV4
 
@@ -17,7 +16,7 @@ from .coordinator import TomorrowioDataUpdateCoordinator
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Tomorrow.io API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -36,22 +35,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    api_key = config_entry.data[CONF_API_KEY]
-    coordinator: TomorrowioDataUpdateCoordinator = hass.data[DOMAIN][api_key]
-    # If this is true, we can remove the coordinator
-    if await coordinator.async_unload_entry(config_entry):
-        await coordinator.async_shutdown()
-        hass.data[DOMAIN].pop(api_key)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        api_key = config_entry.data[CONF_API_KEY]
+        coordinator: TomorrowioDataUpdateCoordinator = hass.data[DOMAIN][api_key]
+        # If this is true, we can remove the coordinator
+        if await coordinator.async_unload_entry(config_entry):
+            await coordinator.async_shutdown()
+            hass.data[DOMAIN].pop(api_key)
+            if not hass.data[DOMAIN]:
+                hass.data.pop(DOMAIN)

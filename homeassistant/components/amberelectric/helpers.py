@@ -14,12 +14,15 @@ DESCRIPTOR_MAP: dict[str, str] = {
 
 
 def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
-    """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
+    """Return the snake case versions of descriptor names.
+
+    Returns None if the name is not recognized.
+    """
     if descriptor in DESCRIPTOR_MAP:
         return DESCRIPTOR_MAP[descriptor]
     return None
 
 
 def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
+    """Convert cents per kWh to dollars per kWh."""
+    return cents / 100

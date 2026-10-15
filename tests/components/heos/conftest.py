@@ -1,7 +1,5 @@
 """Configuration for HEOS tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from ipaddress import ip_address
 from unittest.mock import Mock, patch

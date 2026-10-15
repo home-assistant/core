@@ -1,4 +1,6 @@
-"""Tests for the diagnostics data provided by the Google Generative AI Conversation integration."""
+"""Tests for the Google Generative AI Conversation diagnostics."""
+
+from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -8,7 +10,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
@@ -21,6 +22,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
 )
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -52,7 +54,8 @@ async def test_diagnostics(
             CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
         },
     )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("google.genai.models.AsyncModels.get"):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot

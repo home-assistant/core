@@ -6,6 +6,7 @@ import pytest
 import python_otbr_api
 
 from homeassistant.components import otbr, thread
+from homeassistant.components.otbr import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -85,7 +86,7 @@ async def test_get_info_no_entry(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test async_get_info."""
-    await async_setup_component(hass, "otbr", {})
+    await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     await websocket_client.send_json_auto_id({"type": "otbr/info"})
 
@@ -175,7 +176,7 @@ async def test_create_network_no_entry(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test create network."""
-    await async_setup_component(hass, "otbr", {})
+    await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     await websocket_client.send_json_auto_id(
         {"type": "otbr/create_network", "extended_address": "blah"}
@@ -470,7 +471,7 @@ async def test_set_network_no_entry(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test set network."""
-    await async_setup_component(hass, "otbr", {})
+    await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     await websocket_client.send_json_auto_id(
         {
@@ -761,7 +762,7 @@ async def test_set_channel_no_entry(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test set channel."""
-    await async_setup_component(hass, "otbr", {})
+    await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     await websocket_client.send_json_auto_id(
         {

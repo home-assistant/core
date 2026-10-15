@@ -1,10 +1,9 @@
 """Support for alarm control panels that can be controlled through IFTTT."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -13,19 +12,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_STATE,
-    CONF_CODE,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_OPTIMISTIC
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_EVENT, DOMAIN, SERVICE_PUSH_ALARM_STATE, SERVICE_TRIGGER
+from .const import ATTR_EVENT, DATA_IFTTT_ALARM, DOMAIN, SERVICE_TRIGGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +29,6 @@ ALLOWED_STATES = [
     AlarmControlPanelState.ARMED_HOME,
 ]
 
-DATA_IFTTT_ALARM = "ifttt_alarm"
 DEFAULT_NAME = "Home"
 
 CONF_EVENT_AWAY = "event_arm_away"
@@ -53,19 +45,15 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_EVENT_AWAY, default=DEFAULT_EVENT_AWAY): cv.string,
-        vol.Optional(CONF_EVENT_HOME, default=DEFAULT_EVENT_HOME): cv.string,
-        vol.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
-        vol.Optional(CONF_EVENT_DISARM, default=DEFAULT_EVENT_DISARM): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        probatio.Optional(CONF_EVENT_AWAY, default=DEFAULT_EVENT_AWAY): cv.string,
+        probatio.Optional(CONF_EVENT_HOME, default=DEFAULT_EVENT_HOME): cv.string,
+        probatio.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
+        probatio.Optional(CONF_EVENT_DISARM, default=DEFAULT_EVENT_DISARM): cv.string,
+        probatio.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
     }
-)
-
-PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_STATE): cv.string}
 )
 
 
@@ -101,25 +89,6 @@ def setup_platform(
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
     add_entities([alarmpanel])
 
-    async def push_state_update(service: ServiceCall) -> None:
-        """Set the service state as device state attribute."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        state = service.data.get(ATTR_STATE)
-        devices = hass.data[DATA_IFTTT_ALARM]
-        if entity_ids:
-            devices = [d for d in devices if d.entity_id in entity_ids]
-
-        for device in devices:
-            device.push_alarm_state(state)
-            device.async_schedule_update_ha_state()
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_PUSH_ALARM_STATE,
-        push_state_update,
-        schema=PUSH_ALARM_STATE_SERVICE_SCHEMA,
-    )
-
 
 class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
@@ -153,6 +122,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         self._optimistic = optimistic
 
     @property
+    @override
     def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
@@ -161,24 +131,28 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._check_code(code):
             return
         self.set_alarm_state(self._event_disarm, AlarmControlPanelState.DISARMED)
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_away, AlarmControlPanelState.ARMED_AWAY)
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_home, AlarmControlPanelState.ARMED_HOME)
 
+    @override
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._check_code(code):

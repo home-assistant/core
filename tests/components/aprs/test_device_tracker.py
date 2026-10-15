@@ -311,7 +311,11 @@ def test_aprs_listener_rx_msg_object(mock_ais: MagicMock) -> None:
     see = Mock()
 
     sample_msg = aprslib.parse(
-        "CEEWO2-14>APLWS2,qAU,CEEWO2-15:;V4310251 *121203h5105.72N/00131.89WO085/024/A=033178!w&,!Clb=3.5m/s calibration 21% 404.40MHz Type=RS41 batt=2.7V Details on http://radiosondy.info/"
+        "CEEWO2-14>APLWS2,qAU,CEEWO2-15:;V4310251 "
+        "*121203h5105.72N/00131.89WO085/024/A=033178"
+        "!w&,!Clb=3.5m/s calibration 21% 404.40MHz "
+        "Type=RS41 batt=2.7V Details on "
+        "http://radiosondy.info/"
     )
 
     listener = device_tracker.AprsListenerThread(
@@ -326,7 +330,11 @@ def test_aprs_listener_rx_msg_object(mock_ais: MagicMock) -> None:
         attributes={
             "gps_accuracy": 0,
             "altitude": 10112.654400000001,
-            "comment": "Clb=3.5m/s calibration 21% 404.40MHz Type=RS41 batt=2.7V Details on http://radiosondy.info/",
+            "comment": (
+                "Clb=3.5m/s calibration 21% 404.40MHz"
+                " Type=RS41 batt=2.7V Details on"
+                " http://radiosondy.info/"
+            ),
             "course": 85,
             "speed": 44.448,
         },

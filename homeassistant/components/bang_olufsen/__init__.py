@@ -1,7 +1,5 @@
 """The Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from aiohttp.client_exceptions import (
@@ -21,8 +19,9 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, BeoModel
 from .services import async_setup_services
+from .util import get_remotes
 from .websocket import BeoWebsocket
 
 
@@ -52,20 +51,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Set up from a config entry."""
 
     # Remove casts to str
     assert entry.unique_id
-
-    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=entry.title,
-        model=entry.data[CONF_MODEL],
-    )
 
     client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
 
@@ -83,6 +73,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
+    # Create device now as BeoWebsocket needs a device for
+    # debug logging, firing events etc.
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        model=entry.data[CONF_MODEL],
+    )
+
+    # Create devices for paired Beoremote One remotes
+    for remote in await get_remotes(client):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{remote.serial_number}_{entry.unique_id}")},
+            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{entry.unique_id}",
+            model=BeoModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device_id=device.id,
+        )
+
     websocket = BeoWebsocket(hass, entry, client)
 
     # Add the websocket and API client
@@ -94,13 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     # This ensures that the initial WebSocket notifications are dispatched to entities
     await client.connect_notifications(remote_control=True, reconnect=True)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Unload a config entry."""
     # Close the API client and WebSocket notification listener
     entry.runtime_data.client.disconnect_notifications()
     await entry.runtime_data.client.close_api_client()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

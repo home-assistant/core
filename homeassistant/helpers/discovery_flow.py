@@ -1,7 +1,5 @@
 """The discovery flow helper."""
 
-from __future__ import annotations
-
 from collections.abc import Coroutine
 import dataclasses
 from typing import TYPE_CHECKING, Any, NamedTuple, Self

@@ -1,7 +1,5 @@
 """The zamg component."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -12,7 +10,7 @@ from .coordinator import ZamgConfigEntry, ZamgDataUpdateCoordinator
 PLATFORMS = (Platform.SENSOR, Platform.WEATHER)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZamgConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZamgConfigEntry) -> None:
     """Set up Zamg from config entry."""
     await _async_migrate_entries(hass, entry)
 
@@ -26,12 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZamgConfigEntry) -> bool
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ZamgConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZamgConfigEntry) -> None:
     """Unload ZAMG config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_migrate_entries(

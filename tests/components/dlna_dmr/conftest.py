@@ -1,7 +1,5 @@
 """Fixtures for DLNA tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import Mock, create_autospec, patch, seal

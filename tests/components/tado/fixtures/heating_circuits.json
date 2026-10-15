@@ -1,0 +1,12 @@
+[
+  {
+    "number": 1,
+    "driverSerialNo": "RU1234567890",
+    "driverShortSerialNo": "RU1234"
+  },
+  {
+    "number": 2,
+    "driverSerialNo": "RU0987654321",
+    "driverShortSerialNo": "RU5678"
+  }
+]

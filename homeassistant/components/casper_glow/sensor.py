@@ -1,8 +1,7 @@
 """Casper Glow integration sensor platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
+from typing import override
 
 from pycasperglow import GlowState
 
@@ -53,6 +52,7 @@ class CasperGlowBatterySensor(CasperGlowEntity, SensorEntity):
         if coordinator.device.state.battery_level is not None:
             self._attr_native_value = coordinator.device.state.battery_level.percentage
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback when entity is added."""
         await super().async_added_to_hass()
@@ -95,6 +95,7 @@ class CasperGlowDimmingEndTimeSensor(CasperGlowEntity, SensorEntity):
         """Calculate projected dimming end time from remaining milliseconds."""
         return utcnow() + timedelta(milliseconds=remaining_ms)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback when entity is added."""
         await super().async_added_to_hass()

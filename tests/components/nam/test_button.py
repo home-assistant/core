@@ -62,7 +62,7 @@ async def test_button_press(hass: HomeAssistant) -> None:
     assert state.state == now.isoformat()
 
 
-@pytest.mark.parametrize(("exc"), [ApiError("API Error"), ClientError])
+@pytest.mark.parametrize(("exc"), [ApiError("API Error"), ClientError, TimeoutError])
 async def test_button_press_exc(hass: HomeAssistant, exc: Exception) -> None:
     """Test button press when exception occurs."""
     await init_integration(hass)
@@ -74,7 +74,8 @@ async def test_button_press_exc(hass: HomeAssistant, exc: Exception) -> None:
         ),
         pytest.raises(
             HomeAssistantError,
-            match="An error occurred while calling action for button.nettigo_air_monitor_restart",
+            match="An error occurred while calling action for"
+            " button.nettigo_air_monitor_restart",
         ),
     ):
         await hass.services.async_call(

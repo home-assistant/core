@@ -1,8 +1,7 @@
 """Base entity class for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -43,6 +42,7 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
         """Update state attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
 

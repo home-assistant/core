@@ -1,29 +1,30 @@
 """Config flow for the Hydrawise integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
-from pydrawise import auth as pydrawise_auth, hybrid
+import probatio
+from pydrawise import APIError, auth as pydrawise_auth, hybrid
 from pydrawise.exceptions import NotAuthorizedError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 
 from .const import APP_ID, DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PASSWORD): str, vol.Required(CONF_API_KEY): str}
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+    }
 )
 
 
@@ -33,6 +34,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -108,23 +110,19 @@ async def _authenticate(
     auth = pydrawise_auth.HybridAuth(username, password, api_key)
     try:
         await auth.check()
+        api = hybrid.HybridClient(auth, app_id=APP_ID)
+        # Don't fetch zones because we don't need them yet.
+        user = await api.get_user(fetch_zones=False)
     except NotAuthorizedError:
         errors["base"] = "invalid_auth"
     except TimeoutError:
         errors["base"] = "timeout_connect"
-
-    if errors:
-        return unique_id, errors
-
-    try:
-        api = hybrid.HybridClient(auth, app_id=APP_ID)
-        # Don't fetch zones because we don't need them yet.
-        user = await api.get_user(fetch_zones=False)
-    except TimeoutError:
-        errors["base"] = "timeout_connect"
-    except ClientError as ex:
+    except (APIError, ClientError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
         errors["base"] = "cannot_connect"
+    except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
     else:
         unique_id = f"hydrawise-{user.customer_id}"
 

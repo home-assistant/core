@@ -1,0 +1,317 @@
+# serializer version: 1
+# name: test_image_content[image.mock_title_active_contour]
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1260.0 -1260.0 2520.0 2520.0"><path d="M 0.0,0.0 0.0,-900.0 1200.0,-0.0 0.0,900.0 -600.0,0.0 Z" fill="#03a9f4" fill-opacity="0.3" stroke="#03a9f4" stroke-width="12.60" stroke-linejoin="round"/><path d="M 0.0,0.0 495.0,-495.0" stroke="#ff9800" stroke-width="18.90" stroke-linecap="round"/><circle r="25.20" fill="#ff9800"/></svg>'
+# ---
+# name: test_image_content[image.mock_title_contour_1]
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1260.0 -1260.0 2520.0 2520.0"><path d="M 0.0,0.0 0.0,-900.0 1200.0,-0.0 0.0,900.0 -600.0,0.0 Z" fill="#03a9f4" fill-opacity="0.3" stroke="#03a9f4" stroke-width="12.60" stroke-linejoin="round"/><circle r="25.20" fill="#ff9800"/></svg>'
+# ---
+# name: test_setup[image.mock_title_active_contour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.mock_title_active_contour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active contour',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active contour',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_contour',
+    'unique_id': '00000000-0000-0000-0000-000000000003-active_contour',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[image.mock_title_active_contour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.mock_title_active_contour?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Active contour',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.mock_title_active_contour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T01:00:00+00:00',
+  })
+# ---
+# name: test_setup[image.mock_title_contour_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.mock_title_contour_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 1',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0b12-0b0e-421a-84e5-ddbf75dc6de4:1:segment1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[image.mock_title_contour_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.mock_title_contour_1?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.mock_title_contour_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T01:00:00+00:00',
+  })
+# ---
+# name: test_setup[image.mock_title_contour_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.mock_title_contour_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 2',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0b12-0b0e-421a-84e5-ddbf75dc6de4:1:segment2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[image.mock_title_contour_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.mock_title_contour_2?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.mock_title_contour_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T01:00:00+00:00',
+  })
+# ---
+# name: test_setup[image.mock_title_contour_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.mock_title_contour_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 3',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 3',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0b12-0b0e-421a-84e5-ddbf75dc6de4:1:segment3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[image.mock_title_contour_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.mock_title_contour_3?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.mock_title_contour_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-01T01:00:00+00:00',
+  })
+# ---
+# name: test_setup[image.mock_title_contour_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.mock_title_contour_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 4',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 4',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0b12-0b0e-421a-84e5-ddbf75dc6de4:1:segment4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[image.mock_title_contour_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.mock_title_contour_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[image.mock_title_contour_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.mock_title_contour_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 5',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 5',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0b12-0b0e-421a-84e5-ddbf75dc6de4:1:segment5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[image.mock_title_contour_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 5',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.mock_title_contour_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

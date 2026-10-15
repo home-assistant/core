@@ -1,10 +1,11 @@
 """The tests for the InfluxDB component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
 import logging
+import math
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
@@ -13,7 +14,13 @@ import pytest
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import (
+    CONF_PATH,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_STANDBY,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -167,7 +174,7 @@ async def test_setup_config_full(
     full_config.update(config_update)
     full_config.update(config_ext)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == full_config
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -311,7 +318,7 @@ async def test_setup_config_ssl(
         patch("os.access", return_value=True),
         patch("os.path.isfile", return_value=True),
     ):
-        mock_entry = MockConfigEntry(domain="influxdb", data=config)
+        mock_entry = MockConfigEntry(domain=DOMAIN, data=config)
 
         mock_entry.add_to_hass(hass)
 
@@ -319,6 +326,46 @@ async def test_setup_config_ssl(
         await hass.async_block_till_done()
 
         assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "expected_path"),
+    [
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {CONF_PATH: "/"},
+            None,
+            id="root_path_excluded",
+        ),
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {CONF_PATH: "/custom_path"},
+            "/custom_path",
+            id="custom_path_included",
+        ),
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {},
+            None,
+            id="no_path_excluded",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_config_path(
+    hass: HomeAssistant, mock_client, config_ext: dict, expected_path: str | None
+) -> None:
+    """Test that path='/' is not passed to InfluxDBClient, but other paths are."""
+    config = BASE_V1_CONFIG.copy()
+    config.update(config_ext)
+
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_client.call_args.kwargs.get(CONF_PATH) == expected_path
 
 
 @pytest.mark.parametrize(
@@ -351,7 +398,7 @@ async def test_setup_minimal_config_no_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == BASE_V1_CONFIG
 
     assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -396,7 +443,7 @@ async def test_setup_minimal_config_with_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == config_base
 
     assert issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -459,7 +506,7 @@ async def test_setup_no_import_when_config_entry_exist(
     config["influxdb"].update(config_ext)
 
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
     mock_entry.add_to_hass(hass)
@@ -481,7 +528,7 @@ async def _setup(
 ) -> None:
     """Prepare client for next test and return event handler method."""
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config,
     )
 
@@ -573,6 +620,77 @@ async def test_event_listener(
         assert write_api.call_count == 1
         assert write_api.call_args == get_mock_call(body)
         write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
+    [
+        (
+            {
+                "influxdb": {
+                    "override_measurement": "state\nlog",
+                    "tags_attributes": ["room"],
+                    "tags": {"site": "first\nfloor"},
+                }
+            },
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            {
+                "influxdb": {
+                    "override_measurement": "state\nlog",
+                    "tags_attributes": ["room"],
+                    "tags": {"site": "first\nfloor"},
+                }
+            },
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_multiline_strings(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    get_mock_call: Callable[..., Any],
+) -> None:
+    """Test line breaks in strings are replaced, line protocol has no escape for them."""
+    await _setup(hass, mock_client, config_ext, get_write_api)
+
+    hass.states.async_set(
+        "fake.entity_id",
+        "Avenida de Logroño, 50\n28002 Madrid\r\nEspaña",
+        {"address": "line one\nline two", "room": "living\nroom"},
+    )
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    body = [
+        {
+            "measurement": "state log",
+            "tags": {
+                "domain": "fake",
+                "entity_id": "entity_id",
+                "room": "living room",
+                "site": "first floor",
+            },
+            "time": ANY,
+            "fields": {
+                "state": "Avenida de Logroño, 50 28002 Madrid España",
+                "address_str": "line one line two",
+            },
+        }
+    ]
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
 
 
 @pytest.mark.parametrize(
@@ -1162,7 +1280,7 @@ async def test_event_listener_filtered_allowlist(
 async def test_event_listener_filtered_denylist(
     hass: HomeAssistant, mock_client, config_base, get_write_api, get_mock_call
 ) -> None:
-    """Test the event listener against a domain/glob denylist with an entity id allowlist."""
+    """Test event listener with domain/glob denylist and entity allowlist."""
     await _setup(hass, mock_client, config_base, get_write_api)
     write_api = get_write_api(mock_client)
 
@@ -1806,20 +1924,56 @@ async def test_event_listener_backlog_full(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+@pytest.mark.parametrize(
+    ("attributes", "fields"),
+    [
+        pytest.param(
+            {"value": "value_str"}, {"value__str": "value_str"}, id="state-value"
+        ),
+        pytest.param({"time": 42}, {"time_": 42.0}, id="numeric-time"),
+        pytest.param({"time": "42.5"}, {"time_": 42.5}, id="numeric-string-time"),
+        pytest.param(
+            {"time": "2026-09-28T08:10:53.050Z"},
+            {
+                "time_str": "2026-09-28T08:10:53.050Z",
+                "time_": 20260928081053.05,
+            },
+            id="timestamp-time",
+        ),
+        pytest.param({"time": "unknown"}, {"time_str": "unknown"}, id="string-time"),
+        pytest.param({"time": math.inf}, {}, id="nonfinite-time"),
+        pytest.param(
+            {"time_": 84, "time": 42},
+            {"time_": 84.0, "time__": 42.0},
+            id="reserved-name-conflict",
+        ),
+        pytest.param(
+            {"time": 42, "time_": 84},
+            {"time_": 84.0, "time__": 42.0},
+            id="renamed-field-conflict",
+        ),
+    ],
+)
 async def test_event_listener_attribute_name_conflict(
-    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    get_mock_call: Callable[..., Any],
+    attributes: dict[str, Any],
+    fields: dict[str, Any],
 ) -> None:
-    """Test the event listener when an attribute conflicts with another field."""
+    """Test attributes that conflict with an existing or reserved field name."""
     await _setup(hass, mock_client, config_ext, get_write_api)
     body = [
         {
             "measurement": "fake.something",
             "tags": {"domain": "fake", "entity_id": "something"},
             "time": ANY,
-            "fields": {"value": 1, "value__str": "value_str"},
+            "fields": {"value": 1, **fields},
         }
     ]
-    hass.states.async_set("fake.something", 1, {"value": "value_str"})
+    hass.states.async_set("fake.something", 1, attributes)
     await hass.async_block_till_done()
     await async_wait_for_queue_to_process(hass)
 
@@ -1895,7 +2049,7 @@ async def test_connection_failure_on_startup(
     write_api.side_effect = test_exception
 
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
 

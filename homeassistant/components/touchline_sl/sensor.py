@@ -1,9 +1,8 @@
 """Roth Touchline SL sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pytouchlinesl import Zone
 
@@ -82,6 +81,7 @@ class TouchlineSLSensor(TouchlineSLZoneEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.zone)

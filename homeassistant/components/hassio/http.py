@@ -1,7 +1,5 @@
 """HTTP Support for Hass.io."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import os
@@ -24,11 +22,9 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from homeassistant.components.http import (
     KEY_AUTHENTICATED,
-    KEY_HASS,
     KEY_HASS_USER,
     HomeAssistantView,
 )
-from homeassistant.components.onboarding import async_is_onboarded
 
 from .const import X_HASS_SOURCE
 
@@ -53,16 +49,7 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
-# fmt: off
-# Onboarding can upload backups and restore it
-PATHS_NOT_ONBOARDED = re.compile(
-    r"^(?:"
-    r"|backups/[a-f0-9]{8}(/info|/new/upload|/download|/restore/full|/restore/partial)?"
-    r"|backups/new/upload"
-    r")$"
-)
-
-# Authenticated users manage backups + download logs, changelog and documentation
+# Admin users manage backups + download logs, changelog and documentation
 PATHS_ADMIN = re.compile(
     r"^(?:"
     r"|backups/[a-f0-9]{8}(/info|/download|/restore/full|/restore/partial)?"
@@ -142,26 +129,18 @@ class HassIOView(HomeAssistantView):
         """Return a client request with proxy origin for Hass.io supervisor.
 
         Use cases:
-        - Onboarding allows restoring backups
         - Load Supervisor panel and add-on logo unauthenticated
-        - User upload/restore backups
+        - Admin users upload/restore backups and access logs
         """
         # No bullshit
         if path != unquote(path):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        hass = request.app[KEY_HASS]
         is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
         authorized = is_admin
 
         if is_admin:
             allowed_paths = PATHS_ADMIN
-
-        elif not async_is_onboarded(hass):
-            allowed_paths = PATHS_NOT_ONBOARDED
-
-            # During onboarding we need the user to manage backups
-            authorized = True
 
         else:
             # Either unauthenticated or not an admin
@@ -199,29 +178,28 @@ class HassIOView(HomeAssistantView):
                 headers[RANGE] = request.headers[RANGE]
 
         try:
-            client = await self._websession.request(
+            async with self._websession.request(
                 method=request.method,
                 url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
                 data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
-            )
+            ) as client:
+                # Stream response
+                response = web.StreamResponse(
+                    status=client.status, headers=_response_header(client)
+                )
+                response.content_type = client.content_type
 
-            # Stream response
-            response = web.StreamResponse(
-                status=client.status, headers=_response_header(client)
-            )
-            response.content_type = client.content_type
-
-            if should_compress(response.content_type, path):
-                response.enable_compression()
-            await response.prepare(request)
-            # In testing iter_chunked, iter_any, and iter_chunks:
-            # iter_chunks was the best performing option since
-            # it does not have to do as much re-assembly
-            async for data, _ in client.content.iter_chunks():
-                await response.write(data)
+                if should_compress(response.content_type, path):
+                    response.enable_compression()
+                await response.prepare(request)
+                # In testing iter_chunked, iter_any, and iter_chunks:
+                # iter_chunks was the best performing option since
+                # it does not have to do as much re-assembly
+                async for data, _ in client.content.iter_chunks():
+                    await response.write(data)
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)

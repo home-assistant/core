@@ -1,7 +1,5 @@
 """Utility helpers for the Teltonika integration."""
 
-from __future__ import annotations
-
 from yarl import URL
 
 

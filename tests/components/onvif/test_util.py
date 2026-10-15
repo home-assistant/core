@@ -30,9 +30,13 @@ def test_build_event_entity_names_unique_names() -> None:
     result = build_event_entity_names(events)
 
     assert result == {
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/CellMotionDetector/Motion_00000_00000_00000": "Cell Motion Detection",
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/PeopleDetector/People_00000_00000_00000": "Person Detection",
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/MyRuleDetector/VehicleDetect_00000": "Vehicle Detection",
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "CellMotionDetector/Motion_00000_00000_00000": ("Cell Motion Detection"),
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/PeopleDetector/People_00000_00000_00000": (
+            "Person Detection"
+        ),
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "MyRuleDetector/VehicleDetect_00000": "Vehicle Detection",
     }
 
 
@@ -103,11 +107,16 @@ def test_build_event_entity_names_mixed_events() -> None:
     result = build_event_entity_names(events)
 
     assert result == {
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/CellMotionDetector/People_00000_00000_00000": "Person Detection 1",
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/CellMotionDetector/People_00000_00000_00100": "Person Detection 2",
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/CellMotionDetector/Tamper_00000_00000_00000": "Tamper Detection",
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/CellMotionDetector/LineCross_00000_00000_00000": "Line Detector Crossed 1",
-        f"{TEST_DEVICE_UID}_tns1:RuleEngine/CellMotionDetector/LineCross_00000_00000_00100": "Line Detector Crossed 2",
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "CellMotionDetector/People_00000_00000_00000": ("Person Detection 1"),
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "CellMotionDetector/People_00000_00000_00100": ("Person Detection 2"),
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "CellMotionDetector/Tamper_00000_00000_00000": ("Tamper Detection"),
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "CellMotionDetector/LineCross_00000_00000_00000": ("Line Detector Crossed 1"),
+        f"{TEST_DEVICE_UID}_tns1:RuleEngine/"
+        "CellMotionDetector/LineCross_00000_00000_00100": ("Line Detector Crossed 2"),
     }
 
 

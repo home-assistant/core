@@ -1,7 +1,5 @@
 """Functional utility functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from copy import deepcopy
 from operator import contains
@@ -177,7 +175,9 @@ class FunctionalExtension(BaseTemplateExtension):
                         if isinstance(dict_in_list, dict):
                             if ATTR_ENTITY_ID in dict_in_list:
                                 raise ValueError(
-                                    f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
+                                    "Response dictionary already"
+                                    " contains key"
+                                    f" '{ATTR_ENTITY_ID}'"
                                 )
                             dict_in_list[ATTR_ENTITY_ID] = entity_id
                             dict_in_list["value_key"] = value_key

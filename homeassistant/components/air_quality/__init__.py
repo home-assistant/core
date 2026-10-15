@@ -1,13 +1,11 @@
 """Component for handling Air Quality data for your location."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Final, final
+from typing import Final, final, override
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+from homeassistant.const import UnitOfDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -50,6 +48,25 @@ PROP_TO_ATTR: Final[dict[str, str]] = {
     "particulate_matter_2_5": ATTR_PM_2_5,
     "sulphur_dioxide": ATTR_SO2,
 }
+
+__all__ = [
+    "ATTR_AQI",
+    "ATTR_CO",
+    "ATTR_CO2",
+    "ATTR_N2O",
+    "ATTR_NO",
+    "ATTR_NO2",
+    "ATTR_OZONE",
+    "ATTR_PM_0_1",
+    "ATTR_PM_2_5",
+    "ATTR_PM_10",
+    "ATTR_SO2",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "AirQualityEntity",
+]
+
 
 # mypy: disallow-any-generics
 
@@ -133,6 +150,7 @@ class AirQualityEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, str | int | float]:
         """Return the state attributes."""
         data: dict[str, str | int | float] = {}
@@ -144,11 +162,13 @@ class AirQualityEntity(Entity):
         return data
 
     @property
+    @override
     def state(self) -> StateType:
         """Return the current state."""
         return self.particulate_matter_2_5
 
     @property
+    @override
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        return UnitOfDensity.MICROGRAMS_PER_CUBIC_METER

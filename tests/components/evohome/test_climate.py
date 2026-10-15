@@ -3,8 +3,6 @@
 All evohome systems have controllers and at least one zone.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -22,8 +20,6 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.evohome.climate import PRESET_RESET
-from homeassistant.components.evohome.const import DOMAIN, RESET_BREAKS_IN_HA_VERSION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -32,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -117,9 +112,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("HeatingOff", until=None)
+            mock_fcn.assert_awaited_once_with("heating_off", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Off", until=None)
+            mock_fcn.assert_awaited_once_with("off", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -136,9 +131,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("Auto", until=None)
+            mock_fcn.assert_awaited_once_with("auto", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Heat", until=None)
+            mock_fcn.assert_awaited_once_with("heat", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -187,9 +182,9 @@ async def test_ctl_turn_off(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("HeatingOff", until=None)
+            mock_fcn.assert_awaited_once_with("heating_off", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Off", until=None)
+            mock_fcn.assert_awaited_once_with("off", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -206,7 +201,7 @@ async def test_ctl_invalid_system_mode(
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.InvalidSystemModeError("Unsupported mode: xxx"),
+            side_effect=evo_exc.InvalidModeRequestError("Unsupported mode: xxx"),
         ),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
@@ -220,6 +215,31 @@ async def test_ctl_invalid_system_mode(
         )
 
     assert exc_info.value.translation_key == "invalid_system_mode"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_ctl_authentication_failed(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test an authentication failure is raised, rather than only logged."""
+
+    # AuthenticationFailedError is a subclass of ApiCallFailedError, which is only logged
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=evo_exc.AuthenticationFailedError("Authentication failed"),
+        ),
+        pytest.raises(evo_exc.AuthenticationFailedError),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -244,42 +264,13 @@ async def test_ctl_turn_on(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("Auto", until=None)
+            mock_fcn.assert_awaited_once_with("auto", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Heat", until=None)
+            mock_fcn.assert_awaited_once_with("heat", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     assert results == snapshot
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_preset_reset_deprecated(
-    hass: HomeAssistant,
-    ctl_id: str,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test deprecated warning when using the Reset preset on controllers."""
-
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-                ATTR_PRESET_MODE: PRESET_RESET,
-            },
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
-
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_preset_reset")
-    assert issue is not None
-    assert issue.translation_key == "deprecated_preset_reset"
-    assert issue.translation_placeholders == {
-        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
-    }
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

@@ -1,11 +1,10 @@
 """Support for Tuya event entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.event import (
-    TuyaEventDefinition,
+    EventDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
@@ -27,11 +26,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaEventEntityDescription(EventEntityDescription):
+class TuyaEventEntityDescription(TuyaEntityDescription, EventEntityDescription):
     """Describe a Tuya Event entity."""
 
     wrapper_class: type[DPCodeTypeInformationWrapper] = SimpleEventEnumWrapper
@@ -42,15 +41,15 @@ class TuyaEventEntityDescription(EventEntityDescription):
 # end up being events.
 EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
     DeviceCategory.SP: (
+        # Neither of these reports the doorbell being rung, which is what the
+        # doorbell device class stands for; they carry what it sent along
         TuyaEventEntityDescription(
             key=DPCode.ALARM_MESSAGE,
-            device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_message",
             wrapper_class=Base64Utf8StringEventWrapper,
         ),
         TuyaEventEntityDescription(
             key=DPCode.DOORBELL_PIC,
-            device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_picture",
             wrapper_class=Base64Utf8RawEventWrapper,
         ),
@@ -151,20 +150,21 @@ async def async_setup_entry(
 class TuyaEventEntity(TuyaEntity, EventEntity):
     """Tuya Event Entity."""
 
-    entity_description: EventEntityDescription
+    entity_description: TuyaEventEntityDescription
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EventEntityDescription,
-        definition: TuyaEventDefinition,
+        description: TuyaEventEntityDescription,
+        definition: EventDefinition,
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.event_wrapper
         self._attr_event_types = definition.event_wrapper.options
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

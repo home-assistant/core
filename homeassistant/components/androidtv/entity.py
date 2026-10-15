@@ -1,7 +1,5 @@
 """Base AndroidTV Entity."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -10,8 +8,6 @@ from typing import Any, Concatenate
 from androidtv.exceptions import LockNotAcquiredException
 
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -96,10 +92,9 @@ def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
                 # it doesn't happen over and over again.
                 if self.available:
                     _LOGGER.error(
-                        (
-                            "Unexpected exception executing an ADB command. ADB connection"
-                            " re-establishing attempt in the next update. Error: %s"
-                        ),
+                        "Unexpected exception executing an ADB"
+                        " command. ADB connection re-establishing"
+                        " attempt in the next update. Error: %s",
                         err,
                     )
 
@@ -138,13 +133,13 @@ class AndroidTVEntity(Entity):
             name=device_name,
         )
         if self.unique_id:
-            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
+            self._attr_device_info.identifiers = {(DOMAIN, self.unique_id)}
         if manufacturer := info.get(ATTR_MANUFACTURER):
-            self._attr_device_info[ATTR_MANUFACTURER] = manufacturer
+            self._attr_device_info.manufacturer = manufacturer
         if sw_version := info.get(ATTR_SW_VERSION):
-            self._attr_device_info[ATTR_SW_VERSION] = sw_version
+            self._attr_device_info.sw_version = sw_version
         if mac := get_androidtv_mac(info):
-            self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
+            self._attr_device_info.connections = {(CONNECTION_NETWORK_MAC, mac)}
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:

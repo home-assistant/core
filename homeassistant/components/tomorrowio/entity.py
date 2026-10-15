@@ -1,7 +1,5 @@
 """The Tomorrow.io integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pytomorrowio.const import CURRENT

@@ -1,7 +1,5 @@
 """Test the MySensors config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -33,6 +31,13 @@ GATEWAY_TYPE_TO_STEP = {
     CONF_GATEWAY_TYPE_TCP: "gw_tcp",
     CONF_GATEWAY_TYPE_SERIAL: "gw_serial",
     CONF_GATEWAY_TYPE_MQTT: "gw_mqtt",
+}
+VALID_INPUT = {
+    CONF_DEVICE: "127.0.0.1",
+    CONF_PERSISTENCE_FILE: "asdf.json",
+    CONF_TOPIC_IN_PREFIX: "bla",
+    CONF_TOPIC_OUT_PREFIX: "blub",
+    CONF_VERSION: "2.4",
 }
 
 
@@ -76,6 +81,7 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -114,7 +120,9 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     flow_id = step["flow_id"]
 
     with (
-        patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
+        patch(
+            # mock is_serial_port because otherwise the test will
+            # be platform dependent (/dev/ttyACMx vs COMx)
             "homeassistant.components.mysensors.config_flow.is_serial_port",
             return_value=True,
         ),
@@ -137,6 +145,7 @@ async def test_config_serial(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -176,6 +185,7 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -221,6 +231,29 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     assert errors
     assert errors.get("base") == "cannot_connect"
     assert len(mock_setup_entry.mock_calls) == 0
+
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "2.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -343,9 +376,9 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("mqtt")
 async def test_config_invalid(
     hass: HomeAssistant,
-    mqtt: None,
     gateway_type: ConfGatewayType,
     expected_step_id: str,
     user_input: dict[str, Any],
@@ -383,6 +416,25 @@ async def test_config_invalid(
     assert err_field in errors
     assert errors[err_field] == err_string
     assert len(mock_setup_entry.mock_calls) == 0
+
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input | {err_field: VALID_INPUT[err_field]},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

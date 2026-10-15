@@ -12,7 +12,7 @@ from homeassistant.components.airvisual import (
     INTEGRATION_TYPE_NODE_PRO,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.airvisual_pro.const import DOMAIN as AIRVISUAL_PRO_DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,

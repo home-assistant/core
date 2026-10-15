@@ -1,11 +1,10 @@
 """Support for HDMI CEC devices as switches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-from pycec.const import POWER_OFF, POWER_ON
+from pycec.commands import CecCommand
+from pycec.const import CMD_STANDBY, POWER_OFF, POWER_ON
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -44,15 +43,17 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
         CecEntity.__init__(self, device, logical)
         self.entity_id = f"{SWITCH_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self._device.turn_on()
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        self._device.turn_off()
+        self._device.send_command(CecCommand(CMD_STANDBY, dst=self._logical_address))
         self._attr_is_on = False
         self.async_write_ha_state()
 

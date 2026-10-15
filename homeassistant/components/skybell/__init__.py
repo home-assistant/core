@@ -1,7 +1,5 @@
 """Support for the Skybell HD Doorbell."""
 
-from __future__ import annotations
-
 import asyncio
 
 from aioskybell import Skybell
@@ -23,7 +21,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> None:
     """Set up Skybell from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
@@ -54,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> b
     entry.runtime_data = device_coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

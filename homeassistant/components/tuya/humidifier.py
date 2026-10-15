@@ -1,12 +1,10 @@
 """Support for Tuya (de)humidifiers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.humidifier import (
-    TuyaHumidifierDefinition,
+    HumidifierDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -23,12 +21,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import ActionDPCodeNotFoundError
 
 
 @dataclass(frozen=True)
-class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
+class TuyaHumidifierEntityDescription(
+    TuyaEntityDescription, HumidifierEntityDescription
+):
     """Describe an Tuya (de)humidifier entity."""
 
     # DPCode, to use. If None, the key will be used as DPCode
@@ -101,7 +101,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaHumidifierEntityDescription,
-        definition: TuyaHumidifierDefinition,
+        definition: HumidifierDefinition,
     ) -> None:
         """Init Tuya (de)humidifier."""
         super().__init__(device, device_manager, description)
@@ -126,25 +126,30 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             self._attr_available_modes = definition.mode_wrapper.options
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the device is on or off."""
         return self._read_wrapper(self._switch_wrapper)
 
     @property
+    @override
     def mode(self) -> str | None:
         """Return the current mode."""
         return self._read_wrapper(self._mode_wrapper)
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._read_wrapper(self._current_humidity_wrapper)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch_wrapper is None:
@@ -154,6 +159,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             )
         await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch_wrapper is None:
@@ -163,6 +169,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             )
         await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._target_humidity_wrapper is None:
@@ -172,6 +179,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             )
         await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         await self._async_send_wrapper_updates(self._mode_wrapper, mode)

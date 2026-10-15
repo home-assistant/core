@@ -1,11 +1,9 @@
 """Remote platform for the jvc_projector integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from jvcprojector import command as cmd
 
@@ -16,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
+
+POWER_SLEEP = 1
 
 COMMANDS: list[str] = [
     cmd.Remote.MENU,
@@ -85,22 +85,26 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self.coordinator.data.get(cmd.Power.name) in ON_STATUS
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.device.set(cmd.Power, cmd.Power.ON)
-        await asyncio.sleep(1)
+        await asyncio.sleep(POWER_SLEEP)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.set(cmd.Power, cmd.Power.OFF)
-        await asyncio.sleep(1)
+        await asyncio.sleep(POWER_SLEEP)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a remote command to the device."""
         for send_command in command:

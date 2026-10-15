@@ -1,13 +1,11 @@
 """Preference management for camera component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Final, cast
 
 from homeassistant.components.stream import Orientation
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
@@ -47,6 +45,52 @@ class CameraPreferences:
     async def async_load(self) -> None:
         """Initialize the camera preferences."""
         self._preload_prefs = await self._store.async_load() or {}
+        self._hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_entity_registry_updated,
+            event_filter=self._async_entity_registry_filter,
+        )
+
+    @callback
+    def _async_entity_registry_filter(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
+        """Filter entity registry events for removed or renamed cameras."""
+        return (
+            event_data["action"] == "remove"
+            or (event_data["action"] == "update" and "old_entity_id" in event_data)
+        ) and split_entity_id(event_data["entity_id"])[0] == DOMAIN
+
+    @callback
+    def _async_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Drop or move the preferences of a removed or renamed camera."""
+        data = event.data
+        if data["action"] == "remove":
+            self._dynamic_stream_settings_by_entity_id.pop(data["entity_id"], None)
+            if self._preload_prefs.pop(data["entity_id"], None) is not None:
+                self._store.async_delay_save(lambda: self._preload_prefs, 0)
+            return
+
+        assert data["action"] == "update"
+        old_entity_id = data["old_entity_id"]
+        new_entity_id = data["entity_id"]
+
+        # Keep the same object, a running Stream holds a reference to it
+        if settings := self._dynamic_stream_settings_by_entity_id.pop(
+            old_entity_id, None
+        ):
+            self._dynamic_stream_settings_by_entity_id[new_entity_id] = settings
+        else:
+            self._dynamic_stream_settings_by_entity_id.pop(new_entity_id, None)
+
+        old_prefs = self._preload_prefs.pop(old_entity_id, None)
+        new_prefs = self._preload_prefs.pop(new_entity_id, None)
+        if old_prefs is not None:
+            self._preload_prefs[new_entity_id] = old_prefs
+        if old_prefs is not None or new_prefs is not None:
+            self._store.async_delay_save(lambda: self._preload_prefs, 0)
 
     async def async_update(
         self,
@@ -102,7 +146,10 @@ class CameraPreferences:
                 bool,
                 self._preload_prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False),
             ),
-            orientation=er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM),
+            # Stored in the entity registry, where it is loaded as a plain int
+            orientation=Orientation(
+                er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM)
+            ),
         )
         self._dynamic_stream_settings_by_entity_id[entity_id] = settings
         return settings

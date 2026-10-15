@@ -1,13 +1,17 @@
 """Config flow for NRGkick integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from nrgkick_api import NRGkickAPI
-import voluptuous as vol
+from nrgkick_api import (
+    NRGkickAPI,
+    NRGkickAPIDisabledError,
+    NRGkickAuthenticationError,
+    NRGkickConnectionError,
+    NRGkickInvalidResponseError,
+)
+import probatio
 import yarl
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,14 +26,6 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .api import (
-    NRGkickApiClientApiDisabledError,
-    NRGkickApiClientAuthenticationError,
-    NRGkickApiClientCommunicationError,
-    NRGkickApiClientError,
-    NRGkickApiClientInvalidResponseError,
-    async_api_call,
-)
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,33 +40,35 @@ def _normalize_host(value: str) -> str:
 
     value = value.strip()
     if not value:
-        raise vol.Invalid("host is required")
+        raise probatio.Invalid("host is required")
     if "://" in value:
         try:
             url = yarl.URL(cv.url(value))
         except ValueError as err:
-            raise vol.Invalid("invalid url") from err
+            raise probatio.Invalid("invalid url") from err
         if not url.host:
-            raise vol.Invalid("invalid url")
+            raise probatio.Invalid("invalid url")
         if url.port is not None:
             return f"{url.host}:{url.port}"
         return url.host
     return value.strip("/").split("/", 1)[0]
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(autocomplete="off")),
+        probatio.Required(CONF_HOST): TextSelector(
+            TextSelectorConfig(autocomplete="off")
+        ),
     }
 )
 
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="off")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -92,8 +90,8 @@ async def validate_input(
         session=session,
     )
 
-    await async_api_call(api.test_connection())
-    info = await async_api_call(api.get_info(["general"], raw=True))
+    await api.test_connection()
+    info = await api.get_info(["general"], raw=True)
 
     device_name = info.get("general", {}).get("device_name")
     if not device_name:
@@ -101,7 +99,7 @@ async def validate_input(
 
     serial = info.get("general", {}).get("serial_number")
     if not serial:
-        raise NRGkickApiClientInvalidResponseError
+        raise NRGkickInvalidResponseError("Device did not report a serial number")
 
     return {
         "title": device_name,
@@ -132,15 +130,15 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         try:
             return await validate_input(self.hass, host), False
-        except NRGkickApiClientApiDisabledError:
+        except NRGkickAPIDisabledError:
             errors["base"] = "json_api_disabled"
-        except NRGkickApiClientAuthenticationError:
+        except NRGkickAuthenticationError:
             return None, True
-        except NRGkickApiClientInvalidResponseError:
+        except NRGkickInvalidResponseError:
             errors["base"] = "invalid_response"
-        except NRGkickApiClientCommunicationError:
+        except NRGkickConnectionError:
             errors["base"] = "cannot_connect"
-        except NRGkickApiClientError:
+        except Exception:
             _LOGGER.exception("Unexpected error")
             errors["base"] = "unknown"
         return None, False
@@ -157,19 +155,20 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             return await validate_input(
                 self.hass, host, username=username, password=password
             )
-        except NRGkickApiClientApiDisabledError:
+        except NRGkickAPIDisabledError:
             errors["base"] = "json_api_disabled"
-        except NRGkickApiClientAuthenticationError:
+        except NRGkickAuthenticationError:
             errors["base"] = "invalid_auth"
-        except NRGkickApiClientInvalidResponseError:
+        except NRGkickInvalidResponseError:
             errors["base"] = "invalid_response"
-        except NRGkickApiClientCommunicationError:
+        except NRGkickConnectionError:
             errors["base"] = "cannot_connect"
-        except NRGkickApiClientError:
+        except Exception:
             _LOGGER.exception("Unexpected error")
             errors["base"] = "unknown"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -178,7 +177,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 host = _normalize_host(user_input[CONF_HOST])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "cannot_connect"
             else:
                 info, needs_auth = await self._async_validate_host(host, errors)
@@ -281,7 +280,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 host = _normalize_host(user_input[CONF_HOST])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "cannot_connect"
             else:
                 info, needs_auth = await self._async_validate_host(host, errors)
@@ -349,6 +348,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -384,18 +384,15 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, self._discovered_host)
-        except NRGkickApiClientAuthenticationError:
+        except NRGkickAuthenticationError:
             self._pending_host = self._discovered_host
             return await self.async_step_user_auth()
-        except NRGkickApiClientApiDisabledError:
+        except NRGkickAPIDisabledError:
             # mDNS metadata may be stale; fall back to the enable guidance.
             return await self.async_step_zeroconf_enable_json_api()
-        except (
-            NRGkickApiClientCommunicationError,
-            NRGkickApiClientInvalidResponseError,
-        ):
+        except NRGkickConnectionError, NRGkickInvalidResponseError:
             return self.async_abort(reason="cannot_connect")
-        except NRGkickApiClientError:
+        except Exception:
             _LOGGER.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 
@@ -426,7 +423,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_enable_json_api",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "name": self._discovered_name,
                 "device_ip": _normalize_host(self._discovered_host),
@@ -450,7 +447,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "name": self._discovered_name,
                 "device_ip": self._discovered_host,

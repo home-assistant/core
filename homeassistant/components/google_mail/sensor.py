@@ -1,7 +1,5 @@
 """Support for Google Mail Sensors."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 from googleapiclient.http import HttpRequest

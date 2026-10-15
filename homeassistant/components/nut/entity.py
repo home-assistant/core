@@ -1,7 +1,5 @@
 """Base entity for the NUT integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import cast
 

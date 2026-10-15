@@ -1,24 +1,20 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from aiohttp import web
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
-import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -29,11 +25,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    ATTR_COLOR_BW,
     CAMERA_WEB_SESSION_TIMEOUT,
-    CAMERAS,
+    CBW,
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
+    MOV,
     RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
@@ -49,64 +47,10 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 STREAM_SOURCE_LIST = ["snapshot", "mjpeg", "rtsp"]
 
-_ATTR_PTZ_TT = "travel_time"
-_ATTR_PTZ_MOV = "movement"
-_MOV = [
-    "zoom_out",
-    "zoom_in",
-    "right",
-    "left",
-    "up",
-    "down",
-    "right_down",
-    "right_up",
-    "left_down",
-    "left_up",
-]
 _ZOOM_ACTIONS = ["ZoomWide", "ZoomTele"]
 _MOVE_1_ACTIONS = ["Right", "Left", "Up", "Down"]
 _MOVE_2_ACTIONS = ["RightDown", "RightUp", "LeftDown", "LeftUp"]
 _ACTION = _ZOOM_ACTIONS + _MOVE_1_ACTIONS + _MOVE_2_ACTIONS
-
-_DEFAULT_TT = 0.2
-
-_ATTR_PRESET = "preset"
-_ATTR_COLOR_BW = "color_bw"
-
-_CBW_COLOR = "color"
-_CBW_AUTO = "auto"
-_CBW_BW = "bw"
-_CBW = [_CBW_COLOR, _CBW_AUTO, _CBW_BW]
-
-_SRV_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-_SRV_GOTO_SCHEMA = _SRV_SCHEMA.extend(
-    {vol.Required(_ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1))}
-)
-_SRV_CBW_SCHEMA = _SRV_SCHEMA.extend({vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)})
-_SRV_PTZ_SCHEMA = _SRV_SCHEMA.extend(
-    {
-        vol.Required(_ATTR_PTZ_MOV): vol.In(_MOV),
-        vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
-    }
-)
-
-CAMERA_SERVICES = {
-    "enable_recording": (_SRV_SCHEMA, "async_enable_recording", ()),
-    "disable_recording": (_SRV_SCHEMA, "async_disable_recording", ()),
-    "enable_audio": (_SRV_SCHEMA, "async_enable_audio", ()),
-    "disable_audio": (_SRV_SCHEMA, "async_disable_audio", ()),
-    "enable_motion_recording": (_SRV_SCHEMA, "async_enable_motion_recording", ()),
-    "disable_motion_recording": (_SRV_SCHEMA, "async_disable_motion_recording", ()),
-    "goto_preset": (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
-    "set_color_bw": (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
-    "start_tour": (_SRV_SCHEMA, "async_start_tour", ()),
-    "stop_tour": (_SRV_SCHEMA, "async_stop_tour", ()),
-    "ptz_control": (
-        _SRV_PTZ_SCHEMA,
-        "async_ptz_control",
-        (_ATTR_PTZ_MOV, _ATTR_PTZ_TT),
-    ),
-}
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
@@ -188,6 +132,7 @@ class AmcrestCam(Camera):
         finally:
             self._snapshot_task = None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -212,6 +157,7 @@ class AmcrestCam(Camera):
         except CannotSnapshot:
             return None
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
@@ -260,11 +206,13 @@ class AmcrestCam(Camera):
     # Entity property overrides
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this camera."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
@@ -275,10 +223,11 @@ class AmcrestCam(Camera):
                 self._motion_recording_enabled
             )
         if self._color_bw is not None:
-            attr[_ATTR_COLOR_BW] = self._color_bw
+            attr[ATTR_COLOR_BW] = self._color_bw
         return attr
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
@@ -286,30 +235,36 @@ class AmcrestCam(Camera):
     # Camera property overrides
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._is_recording
 
     @property
+    @override
     def brand(self) -> str | None:
         """Return the camera brand."""
         return self._brand
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
     @property
+    @override
     def model(self) -> str | None:
         """Return the camera model."""
         return self._model
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return self._rtsp_url
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if on."""
         return self.is_streaming
@@ -321,16 +276,9 @@ class AmcrestCam(Camera):
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
+    @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to signals and add camera to list."""
-        self._unsub_dispatcher.extend(
-            async_dispatcher_connect(
-                self.hass,
-                service_signal(service, self.entity_id),
-                getattr(self, callback_name),
-            )
-            for service, (_, callback_name, _) in CAMERA_SERVICES.items()
-        )
+        """Subscribe to signals."""
         self._unsub_dispatcher.append(
             async_dispatcher_connect(
                 self.hass,
@@ -338,11 +286,10 @@ class AmcrestCam(Camera):
                 self.async_on_demand_update,
             )
         )
-        self.hass.data[DATA_AMCREST][CAMERAS].append(self.entity_id)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
-        """Remove camera from list and disconnect from signals."""
-        self.hass.data[DATA_AMCREST][CAMERAS].remove(self.entity_id)
+        """Disconnect from signals."""
         for unsub_dispatcher in self._unsub_dispatcher:
             unsub_dispatcher()
 
@@ -396,18 +343,22 @@ class AmcrestCam(Camera):
 
     # Other Camera method overrides
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self._async_enable_video(False)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self._async_enable_video(True)
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self._async_enable_motion_detection(True)
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         await self._async_enable_motion_detection(False)
@@ -456,7 +407,7 @@ class AmcrestCam(Camera):
 
     async def async_ptz_control(self, movement: str, travel_time: float) -> None:
         """Move or zoom camera in specified direction."""
-        code = _ACTION[_MOV.index(movement)]
+        code = _ACTION[MOV.index(movement)]
 
         kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
         if code in _MOVE_1_ACTIONS:
@@ -527,7 +478,8 @@ class AmcrestCam(Camera):
 
     async def _async_set_recording(self, enable: bool) -> None:
         rec_mode = {"Automatic": 0, "Manual": 1}
-        # The property has a str type, but setter has int type, which causes mypy confusion
+        # The property has a str type, but setter has int type,
+        # which causes mypy confusion
         await self._api.async_set_record_mode(
             rec_mode["Manual" if enable else "Automatic"]
         )
@@ -545,7 +497,8 @@ class AmcrestCam(Camera):
         return await self._api.async_is_motion_detector_on()
 
     async def _async_set_motion_detection(self, enable: bool) -> None:
-        # The property has a str type, but setter has bool type, which causes mypy confusion
+        # The property has a str type, but setter has bool type,
+        # which causes mypy confusion
         await self._api.async_set_motion_detection(enable)
 
     async def _async_enable_motion_detection(self, enable: bool) -> None:
@@ -613,10 +566,10 @@ class AmcrestCam(Camera):
             )
 
     async def _async_get_color_mode(self) -> str:
-        return _CBW[await self._api.async_day_night_color]
+        return CBW[await self._api.async_day_night_color]
 
     async def _async_set_color_mode(self, cbw: str) -> None:
-        await self._api.async_set_day_night_color(_CBW.index(cbw), channel=0)
+        await self._api.async_set_day_night_color(CBW.index(cbw), channel=0)
 
     async def _async_set_color_bw(self, cbw: str) -> None:
         """Set camera color mode."""

@@ -23,11 +23,8 @@ async def avoid_wait() -> AsyncGenerator[None]:
         yield
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_madvr_client: AsyncMock) -> None:
     """Test full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -47,15 +44,13 @@ async def test_full_flow(
     }
     assert result["result"].unique_id == MOCK_MAC
     mock_madvr_client.open_connection.assert_called_once()
-    mock_madvr_client.async_add_tasks.assert_called_once()
-    mock_madvr_client.async_cancel_tasks.assert_called_once()
+    mock_madvr_client.async_add_tasks.assert_not_called()
+    mock_madvr_client.async_cancel_tasks.assert_not_called()
+    mock_madvr_client.close_connection.assert_called_once()
 
 
-async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_errors(hass: HomeAssistant, mock_madvr_client: AsyncMock) -> None:
     """Test error handling in config flow."""
     mock_madvr_client.open_connection.side_effect = TimeoutError
 
@@ -104,9 +99,9 @@ async def test_flow_errors(
 
     # Verify method calls
     assert mock_madvr_client.open_connection.call_count == 4
-    assert mock_madvr_client.async_add_tasks.call_count == 2
-    # the first call will not call this due to timeout as expected
-    assert mock_madvr_client.async_cancel_tasks.call_count == 2
+    assert mock_madvr_client.async_add_tasks.call_count == 0
+    assert mock_madvr_client.async_cancel_tasks.call_count == 0
+    assert mock_madvr_client.close_connection.call_count == 4
 
 
 async def test_duplicate(
@@ -132,6 +127,7 @@ async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -150,6 +146,7 @@ async def test_reconfigure_flow(
         result["flow_id"],
         {CONF_HOST: new_host, CONF_PORT: new_port},
     )
+    await hass.async_block_till_done()
 
     # should get the abort with success result
     assert result["type"] is FlowResultType.ABORT
@@ -161,8 +158,10 @@ async def test_reconfigure_flow(
 
     # Verify that the connection was tested
     mock_madvr_client.open_connection.assert_called()
-    mock_madvr_client.async_add_tasks.assert_called()
-    mock_madvr_client.async_cancel_tasks.assert_called()
+    mock_madvr_client.async_add_tasks.assert_not_called()
+    mock_madvr_client.async_cancel_tasks.assert_not_called()
+    mock_madvr_client.close_connection.assert_called()
+    mock_setup_entry.assert_awaited_once()
 
 
 async def test_reconfigure_new_device(
@@ -197,6 +196,7 @@ async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test error handling in reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -232,5 +232,11 @@ async def test_reconfigure_flow_errors(
         result["flow_id"],
         {CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_madvr_client.open_connection.call_count == 3
+    assert mock_madvr_client.async_add_tasks.call_count == 0
+    assert mock_madvr_client.async_cancel_tasks.call_count == 0
+    assert mock_madvr_client.close_connection.call_count == 3
+    mock_setup_entry.assert_awaited_once()

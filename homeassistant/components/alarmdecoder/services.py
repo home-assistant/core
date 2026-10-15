@@ -1,8 +1,6 @@
 """Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -26,7 +24,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "alarm_toggle_chime",
         entity_domain=ALARM_CONTROL_PANEL_DOMAIN,
         schema={
-            vol.Required(ATTR_CODE): cv.string,
+            probatio.Required(ATTR_CODE): cv.string,
         },
         func="alarm_toggle_chime",
     )
@@ -37,7 +35,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "alarm_keypress",
         entity_domain=ALARM_CONTROL_PANEL_DOMAIN,
         schema={
-            vol.Required(ATTR_KEYPRESS): cv.string,
+            probatio.Required(ATTR_KEYPRESS): cv.string,
         },
         func="alarm_keypress",
     )

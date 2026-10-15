@@ -88,7 +88,7 @@ async def test_user_discovery_success_selection(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
-    """Test user form transitions via selection to creation if zcc discovery succeeds has multiple hosts."""
+    """Test user form to creation when discovery finds multiple hosts."""
 
     discovery_mock.discovers.return_value = [
         ControlPointDescription(host=INPUT_HOST, port=INPUT_PORT),
@@ -122,6 +122,7 @@ async def test_user_discovery_success_selection(
         "port": INPUT_PORT_EXTRA,
         "mac": format_mac(INPUT_MAC_EXTRA),
     }
+    assert result["result"].unique_id == format_mac(INPUT_MAC_EXTRA)
 
 
 async def test_user_discovery_duplicates(

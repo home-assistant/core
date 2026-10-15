@@ -8,19 +8,40 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import ApiError, ReolinkError
 from reolink_aio.software_version import NewSoftwareVersion
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.update import POLL_AFTER_INSTALL, POLL_PROGRESS
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
 
 TEST_DOWNLOAD_URL = "https://reolink.com/test"
 TEST_RELEASE_NOTES = "bugfix 1, bugfix 2"
@@ -213,6 +234,7 @@ async def test_external_firmware_update_detected(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
+    freezer: FrozenDateTimeFactory,
     entity_name: str,
 ) -> None:
     """Test that external firmware updates (via Reolink app) are detected."""
@@ -224,7 +246,11 @@ async def test_external_firmware_update_detected(
     )
     reolink_host.firmware_update_available.return_value = new_firmware
 
-    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
+    # The binary sensors keep the device coordinator polling
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.BINARY_SENSOR, Platform.UPDATE],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
@@ -236,9 +262,9 @@ async def test_external_firmware_update_detected(
     reolink_host.camera_sw_version.return_value = "v3.3.0.226_23031644"
     reolink_host.firmware_update_available.return_value = False
 
-    # Trigger device coordinator update (simulates regular polling)
-    await config_entry.runtime_data.device_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # The firmware coordinator should have been refreshed, and update should be cleared
     assert hass.states.get(entity_id).state == STATE_OFF

@@ -40,6 +40,7 @@ async def test_entry_setup_unload(
 @pytest.mark.usefixtures("mock_openrgb_client")
 async def test_remove_config_entry_device_server(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that server device cannot be removed."""
@@ -48,9 +49,8 @@ async def test_remove_config_entry_device_server(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
-    server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
 
     assert server_device is not None
@@ -66,6 +66,7 @@ async def test_remove_config_entry_device_server(
 @pytest.mark.usefixtures("mock_openrgb_client")
 async def test_remove_config_entry_device_still_connected(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that connected devices cannot be removed."""
@@ -73,8 +74,6 @@ async def test_remove_config_entry_device_still_connected(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
 
     # Get a device that's in coordinator.data (still connected)
     devices = dr.async_entries_for_config_entry(
@@ -85,6 +84,7 @@ async def test_remove_config_entry_device_still_connected(
         None,
     )
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if rgb_device:
         # Try to remove device that's still connected - should be blocked
         result = await async_remove_config_entry_device(
@@ -107,6 +107,9 @@ async def test_remove_config_entry_device_disconnected(
 
     # Create a device that's not in coordinator.data (disconnected)
     entry_id = mock_config_entry.entry_id
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
     disconnected_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={
@@ -125,7 +128,7 @@ async def test_remove_config_entry_device_disconnected(
             )
         },
         name="Old Disconnected Device",
-        via_device=(DOMAIN, entry_id),
+        via_device_id=server_device.id,
     )
 
     # Try to remove disconnected device - should succeed
@@ -149,6 +152,9 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
     await hass.async_block_till_done()
 
     entry_id = mock_config_entry.entry_id
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
 
     # Create a device with identifiers from multiple domains
     device_with_multiple_identifiers = device_registry.async_get_or_create(
@@ -170,10 +176,11 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
             ),  # This is a disconnected OpenRGB device
         },
         name="Multi-Domain Device",
-        via_device=(DOMAIN, entry_id),
+        via_device_id=server_device.id,
     )
 
-    # Try to remove device - should succeed because the OpenRGB identifier is disconnected
+    # Try to remove device - should succeed because the OpenRGB
+    # identifier is disconnected
     result = await async_remove_config_entry_device(
         hass, mock_config_entry, device_with_multiple_identifiers
     )
@@ -241,8 +248,7 @@ async def test_reconnection_on_update_failure(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that disconnect and connect were called (reconnection happened)
     mock_openrgb_client.disconnect.assert_called_once()
@@ -290,9 +296,7 @@ async def test_reconnection_fails_second_attempt(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that the light became unavailable after failed reconnection
     state = hass.states.get("light.ene_dram")
@@ -335,8 +339,7 @@ async def test_normal_update_without_errors(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that disconnect and connect were NOT called (no reconnection needed)
     mock_openrgb_client.disconnect.assert_not_called()

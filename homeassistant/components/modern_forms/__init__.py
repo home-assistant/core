@@ -1,30 +1,42 @@
 """The Modern Forms integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
-import logging
 from typing import Any, Concatenate
 
 from aiomodernforms import ModernFormsConnectionError, ModernFormsError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ModernFormsConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Modern Forms integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ModernFormsConfigEntry) -> None:
     """Set up a Modern Forms device from a config entry."""
 
     # Create Modern Forms instance for this entry
@@ -36,14 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ModernFormsConfigEntry) 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ModernFormsConfigEntry
-) -> bool:
+) -> None:
     """Unload Modern Forms config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def modernforms_exception_handler[
@@ -55,7 +65,7 @@ def modernforms_exception_handler[
     """Decorate Modern Forms calls to handle Modern Forms exceptions.
 
     A decorator that wraps the passed in function, catches Modern Forms errors,
-    and handles the availability of the device in the data coordinator.
+    and raises translated HomeAssistantError exceptions.
     """
 
     async def handler(
@@ -66,11 +76,17 @@ def modernforms_exception_handler[
             self.coordinator.async_update_listeners()
 
         except ModernFormsConnectionError as error:
-            _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
 
         except ModernFormsError as error:
-            _LOGGER.error("Invalid response from API: %s", error)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error
 
     return handler

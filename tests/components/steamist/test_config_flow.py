@@ -64,6 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127.0.0.1"
     assert result2["data"] == {
@@ -125,6 +126,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+        ),
+        patch(
+            "homeassistant.components.steamist.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
@@ -145,6 +165,25 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+        ),
+        patch(
+            "homeassistant.components.steamist.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery(hass: HomeAssistant) -> None:
@@ -193,6 +232,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEVICE_NAME
     assert result3["data"] == DEFAULT_ENTRY_DATA
+    assert result3["result"].unique_id == FORMATTED_MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -213,7 +253,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
-    """Test we get the form with discovery and abort for dhcp source when we get both."""
+    """Test we get discovery form and abort for dhcp when we get both."""
 
     with _patch_discovery(), _patch_status(MOCK_ASYNC_GET_STATUS_INACTIVE):
         result = await hass.config_entries.flow.async_init(
@@ -277,6 +317,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["result"].unique_id == FORMATTED_MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -308,12 +349,13 @@ async def test_discovered_by_dhcp(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["result"].unique_id == FORMATTED_MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
 
 async def test_discovered_by_dhcp_discovery_fails(hass: HomeAssistant) -> None:
-    """Test we can setup when discovered from dhcp but then we cannot get the device name."""
+    """Test setup when discovered from dhcp but cannot get device name."""
 
     with (
         _patch_discovery(no_device=True),
@@ -360,7 +402,7 @@ async def test_discovered_by_dhcp_discovery_finds_non_steamist_device(
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     hass: HomeAssistant, source, data
 ) -> None:
-    """Test we can setup when discovered from dhcp or discovery and add a missing unique id."""
+    """Test setup from dhcp/discovery adds a missing unique id."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS})
     config_entry.add_to_hass(hass)
 
@@ -393,7 +435,7 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
 async def test_discovered_by_dhcp_or_discovery_existing_unique_id_does_not_reload(
     hass: HomeAssistant, source, data
 ) -> None:
-    """Test we can setup when discovered from dhcp or discovery and it does not reload."""
+    """Test setup from dhcp/discovery with existing unique id skips reload."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=DEFAULT_ENTRY_DATA, unique_id=FORMATTED_MAC_ADDRESS
     )

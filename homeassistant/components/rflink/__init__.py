@@ -1,32 +1,23 @@
 """Support for Rflink devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import logging
 
+import probatio
 from rflink.protocol import create_rflink_connection
 from serial import SerialException
-import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_COMMAND,
-    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGGING_CHANGED,
+    Platform,
 )
-from homeassistant.core import (
-    CoreState,
-    Event,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.core import CoreState, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -34,18 +25,26 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
+from .binary_sensor import RFLINK_PLATFORM as BINARY_SENSOR_PLATFORM
 from .const import (
     DATA_DEVICE_REGISTER,
     DATA_ENTITY_GROUP_LOOKUP,
     DATA_ENTITY_LOOKUP,
+    DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_ID,
     EVENT_KEY_SENSOR,
     SIGNAL_AVAILABILITY,
+    SIGNAL_EVENT,
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
 )
+from .cover import RFLINK_PLATFORM as COVER_PLATFORM
 from .entity import RflinkCommand
+from .light import RFLINK_PLATFORM as LIGHT_PLATFORM
+from .sensor import RFLINK_PLATFORM as SENSOR_PLATFORM
+from .services import async_setup_services
+from .switch import RFLINK_PLATFORM as SWITCH_PLATFORM
 from .utils import identify_event_type
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,38 +61,65 @@ CONNECTION_TIMEOUT = 10
 
 RFLINK_GROUP_COMMANDS = ["allon", "alloff"]
 
-DOMAIN = "rflink"
+BINARY_SENSOR_PS = probatio.Schema(
+    BINARY_SENSOR_PLATFORM,
+    extra=probatio.ALLOW_EXTRA,
+)
 
-SERVICE_SEND_COMMAND = "send_command"
+COVER_PS = probatio.Schema(
+    COVER_PLATFORM,
+    extra=probatio.ALLOW_EXTRA,
+)
 
-SIGNAL_EVENT = "rflink_event"
+LIGHT_PS = probatio.Schema(
+    LIGHT_PLATFORM,
+    extra=probatio.ALLOW_EXTRA,
+)
 
+SENSOR_PS = probatio.Schema(
+    SENSOR_PLATFORM,
+    extra=probatio.ALLOW_EXTRA,
+)
 
-CONFIG_SCHEMA = vol.Schema(
+SWITCH_PS = probatio.Schema(
+    SWITCH_PLATFORM,
+    extra=probatio.ALLOW_EXTRA,
+)
+
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
-                vol.Optional(
+                probatio.Required(CONF_PORT): probatio.Any(probatio.Port(), cv.string),
+                probatio.Optional(CONF_HOST): cv.string,
+                probatio.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+                probatio.Optional(
                     CONF_KEEPALIVE_IDLE, default=DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
                 ): int,
-                vol.Optional(CONF_IGNORE_DEVICES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_IGNORE_DEVICES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
+                probatio.Optional(Platform.BINARY_SENSOR.value): BINARY_SENSOR_PS,
+                probatio.Optional(Platform.COVER.value): COVER_PS,
+                probatio.Optional(Platform.LIGHT.value): LIGHT_PS,
+                probatio.Optional(Platform.SENSOR.value): SENSOR_PS,
+                probatio.Optional(Platform.SWITCH.value): SWITCH_PS,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SEND_COMMAND_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): cv.string, vol.Required(CONF_COMMAND): cv.string}
-)
+ALLOWED_PLATFORMS = [
+    Platform.BINARY_SENSOR.value,
+    Platform.COVER.value,
+    Platform.LIGHT.value,
+    Platform.SENSOR.value,
+    Platform.SWITCH.value,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -109,28 +135,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    async def async_send_command(call: ServiceCall) -> None:
-        """Send Rflink command."""
-        _LOGGER.debug("Rflink command for %s", str(call.data))
-        if not (
-            await RflinkCommand.send_command(
-                call.data.get(CONF_DEVICE_ID), call.data.get(CONF_COMMAND)
-            )
-        ):
-            _LOGGER.error("Failed Rflink command for %s", str(call.data))
-        else:
-            async_dispatcher_send(
-                hass,
-                SIGNAL_EVENT,
-                {
-                    EVENT_KEY_ID: call.data.get(CONF_DEVICE_ID),
-                    EVENT_KEY_COMMAND: call.data.get(CONF_COMMAND),
-                },
-            )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEND_COMMAND, async_send_command, schema=SEND_COMMAND_SCHEMA
-    )
+    async_setup_services(hass)
 
     @callback
     def event_callback(event):
@@ -298,5 +303,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Listen to EVENT_LOGGING_CHANGED to manage the RFDEBUG
     hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
+
+    # Load RFLink platforms definitions
+    for pltfrm in ALLOWED_PLATFORMS:
+        if pltfrm in config[DOMAIN]:
+            _LOGGER.debug("Loading Rflink platform '%s'", pltfrm)
+            hass.async_create_task(
+                async_load_platform(
+                    hass, pltfrm, DOMAIN, config[DOMAIN][pltfrm], config
+                ),
+                eager_start=False,
+            )
 
     return True

@@ -25,18 +25,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Google Maps Travel Time from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate an old config entry."""
 
     if config_entry.version == 1:
@@ -57,7 +56,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Invalid time format found while migrating: %s. The old config never worked. Reset to default (empty)",
+                        "Invalid time format found while migrating: %s."
+                        " The old config never worked."
+                        " Reset to default (empty)",
                         options[CONF_TIME],
                     )
                     options[CONF_TIME] = None
@@ -67,4 +68,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.version,
             config_entry.minor_version,
         )
-    return True

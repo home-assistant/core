@@ -1,10 +1,9 @@
 """The nuki component."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -21,13 +20,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import NukiConfigEntry, NukiCoordinator, NukiEntryData
 from .helpers import NukiWebhookException, parse_id
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +41,15 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
+
+
+def _get_bridge_data(
+    host: str, token: str, port: int, encrypted_token: bool
+) -> tuple[NukiBridge, list[NukiLock], list[NukiOpener], dict[str, Any]]:
+    """Get Nuki bridge and bridge data."""
+    bridge = NukiBridge(host, token, port, encrypted_token, DEFAULT_TIMEOUT)
+    locks, openers = _get_bridge_devices(bridge)
+    return bridge, locks, openers, bridge.info()
 
 
 async def _create_webhook(
@@ -143,7 +157,16 @@ def _remove_webhook(bridge: NukiBridge, entry_id: str) -> None:
             bridge.callback_remove(item["id"])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nuki Bridge integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Set up the Nuki entry."""
 
     # Migration of entry unique_id
@@ -155,23 +178,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, **params)
 
     try:
-        bridge = await hass.async_add_executor_job(
-            NukiBridge,
+        bridge, locks, openers, info = await hass.async_add_executor_job(
+            _get_bridge_data,
             entry.data[CONF_HOST],
             entry.data[CONF_TOKEN],
             entry.data[CONF_PORT],
             entry.data.get(CONF_ENCRYPT_TOKEN, True),
-            DEFAULT_TIMEOUT,
         )
-
-        locks, openers = await hass.async_add_executor_job(_get_bridge_devices, bridge)
     except InvalidCredentialsException as err:
         raise exceptions.ConfigEntryAuthFailed from err
     except RequestException as err:
         raise exceptions.ConfigEntryNotReady from err
 
     # Device registration for the bridge
-    info = bridge.info()
     bridge_id = parse_id(info["ids"]["hardwareId"])
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
@@ -221,10 +240,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
 
@@ -244,4 +261,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> boo
             f"Unable to remove callback. Error communicating with Bridge: {err}"
         ) from err
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

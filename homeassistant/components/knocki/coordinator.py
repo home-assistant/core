@@ -1,5 +1,7 @@
 """Update coordinator for Knocki integration."""
 
+from typing import override
+
 from knocki import Event, KnockiClient, KnockiConnectionError, Trigger
 
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
@@ -31,11 +33,15 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[int, Trigger]]):
         self.client = client
         self._known_triggers: set[tuple[str, int]] = set()
 
+    @override
     async def _async_update_data(self) -> dict[int, Trigger]:
         try:
             triggers = await self.client.get_triggers()
         except KnockiConnectionError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from exc
         current_triggers = {
             (trigger.device_id, trigger.details.trigger_id) for trigger in triggers
         }

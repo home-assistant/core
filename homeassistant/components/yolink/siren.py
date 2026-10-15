@@ -1,10 +1,8 @@
 """YoLink Siren."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_SIREN
@@ -85,6 +83,7 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         self._attr_is_on = self.entity_description.value(
@@ -98,10 +97,12 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
         self._attr_is_on = self.entity_description.value("alert" if state else "normal")
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_state_change(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.call_state_change(False)

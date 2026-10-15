@@ -1,7 +1,5 @@
 """Data models for the Home Assistant Labs integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Self, TypedDict
 

@@ -1,6 +1,6 @@
 """Binary sensor platform for the UniFi Access integration."""
 
-from __future__ import annotations
+from typing import override
 
 from unifi_access_api import Door, DoorPositionStatus
 
@@ -58,6 +58,7 @@ class UnifiAccessDoorPositionBinarySensor(UnifiAccessEntity, BinarySensorEntity)
         super().__init__(coordinator, door, "access_door_dps")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the door is open."""
         return self._door.door_position_status == DoorPositionStatus.OPEN

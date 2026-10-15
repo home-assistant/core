@@ -1,7 +1,5 @@
 """The Coinbase integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -40,7 +38,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 type CoinbaseConfigEntry = ConfigEntry[CoinbaseData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> None:
     """Set up Coinbase from a config entry."""
 
     instance = await hass.async_add_executor_job(create_and_update_instance, entry)
@@ -48,12 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def create_and_update_instance(entry: CoinbaseConfigEntry) -> CoinbaseData:
@@ -65,7 +61,8 @@ def create_and_update_instance(entry: CoinbaseConfigEntry) -> CoinbaseData:
         raise ConfigEntryAuthFailed(
             "Your Coinbase API key appears to be for the deprecated v2 API. "
             "Please reconfigure with a new API key created for the v3 API. "
-            "Visit https://www.coinbase.com/developer-platform to create new credentials."
+            "Visit https://www.coinbase.com/developer-platform"
+            " to create new credentials."
         )
 
     client = RESTClient(

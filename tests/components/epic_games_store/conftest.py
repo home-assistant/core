@@ -35,7 +35,7 @@ def mock_service_christmas_special():
 
 @pytest.fixture(name="service_attribute_not_found")
 def mock_service_attribute_not_found():
-    """Mock a successful service returning a not found attribute error with free & discount games."""
+    """Mock a successful service returning a not found attribute error."""
     with patch(
         "homeassistant.components.epic_games_store.coordinator.EpicGamesStoreAPI"
     ) as service_mock:

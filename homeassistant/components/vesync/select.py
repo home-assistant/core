@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
@@ -181,10 +182,12 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return an option."""
         return self.entity_description.current_option_fn(self.device)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):

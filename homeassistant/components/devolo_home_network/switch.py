@@ -1,10 +1,8 @@
 """Platform for switch integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import WifiGuestAccessGet
@@ -98,10 +96,12 @@ class DevoloSwitchEntity[_DataT: _DataType](
         super().__init__(entry, coordinator)
 
     @property
+    @override
     def is_on(self) -> bool:
         """State of the switch."""
         return self.entity_description.is_on_func(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
@@ -122,6 +122,7 @@ class DevoloSwitchEntity[_DataT: _DataType](
         finally:
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         try:

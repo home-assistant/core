@@ -1,15 +1,13 @@
 """Config flow to configure the Twente Milieu integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from twentemilieu import (
     TwenteMilieu,
     TwenteMilieuAddressError,
     TwenteMilieuConnectionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ID
@@ -29,16 +27,17 @@ class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_POST_CODE): str,
-                    vol.Required(CONF_HOUSE_NUMBER): str,
-                    vol.Optional(CONF_HOUSE_LETTER): str,
+                    probatio.Required(CONF_POST_CODE): str,
+                    probatio.Required(CONF_HOUSE_NUMBER): str,
+                    probatio.Optional(CONF_HOUSE_LETTER): str,
                 }
             ),
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,11 +1,9 @@
 """Provides device automations for Philips Hue events."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.resource import ResourceTypes
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -39,9 +37,9 @@ if TYPE_CHECKING:
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): str,
-        vol.Required(CONF_SUBTYPE): vol.Union(int, str),
-        vol.Optional(CONF_UNIQUE_ID): str,
+        probatio.Required(CONF_TYPE): str,
+        probatio.Required(CONF_SUBTYPE): probatio.Union(int, str),
+        probatio.Optional(CONF_UNIQUE_ID): str,
     }
 )
 
@@ -89,6 +87,8 @@ def async_get_triggers(
 
     # Get Hue device id from device identifier
     hue_dev_id = get_hue_device_id(device_entry)
+    if hue_dev_id is None or hue_dev_id not in api.devices:
+        return []
     # extract triggers from all button resources of this Hue device
     triggers: list[dict[str, Any]] = []
     model_id = api.devices[hue_dev_id].product_data.product_name

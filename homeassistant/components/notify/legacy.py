@@ -1,7 +1,5 @@
 """Handle legacy notification platforms."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine, Mapping
 from functools import partial
@@ -287,6 +285,8 @@ class BaseNotificationService:
                 ):
                     continue
                 self.registered_targets[target_name] = target
+                # Cannot be moved: actions are registered per legacy platform
+                # pylint: disable-next=home-assistant-action-registered-outside-services-module
                 self.hass.services.async_register(
                     DOMAIN,
                     target_name,
@@ -314,6 +314,7 @@ class BaseNotificationService:
         if self.hass.services.has_service(DOMAIN, self._service_name):
             return
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self.hass.services.async_register(
             DOMAIN,
             self._service_name,

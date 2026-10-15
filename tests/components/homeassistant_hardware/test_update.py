@@ -1,7 +1,5 @@
 """Test Home Assistant Hardware firmware update entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 import dataclasses
@@ -10,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -32,6 +30,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     OwningIntegration,
 )
 from homeassistant.components.update import UpdateDeviceClass
@@ -178,7 +177,7 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     def __init__(
         self,
@@ -577,7 +576,10 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
             FirmwareInfo(
                 device=TEST_DEVICE,
                 firmware_type=ApplicationType.SPINEL,
-                firmware_version="SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57",
+                firmware_version=(
+                    "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4;"
+                    " EFR32; Oct 21 2024 14:40:57"
+                ),
                 owners=[],
                 source="probe",
             ),
@@ -609,7 +611,8 @@ async def test_early_firmware_check_on_unknown_state(
     )
     await hass.async_block_till_done()
 
-    # The entity should immediately show update available (no manual update_entity call needed)
+    # The entity should immediately show update available (no manual update_entity call
+    # needed)
     state = hass.states.get(TEST_UPDATE_ENTITY_ID)
     assert state is not None
     assert state.state == "on"

@@ -1,34 +1,28 @@
 """Component to allow numeric input for platforms."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
 from datetime import timedelta
 import logging
 from math import ceil, floor
-from typing import TYPE_CHECKING, Any, Self, final
+from typing import TYPE_CHECKING, Any, Self, final, override
 
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    async_get_hass_or_none,
-    callback,
+from homeassistant.const import (  # noqa: F401
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, async_get_hass_or_none, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     AMBIGUOUS_UNITS,
@@ -36,6 +30,7 @@ from .const import (  # noqa: F401
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
+    DATA_COMPONENT,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
@@ -45,13 +40,14 @@ from .const import (  # noqa: F401
     SERVICE_SET_VALUE,
     UNIT_CONVERTERS,
     NumberDeviceClass,
+    NumberEntityCapabilityAttribute,
     NumberMode,
 )
+from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -73,6 +69,7 @@ __all__ = [
     "PLATFORM_SCHEMA_BASE",
     "NumberDeviceClass",
     "NumberEntity",
+    "NumberEntityCapabilityAttribute",
     "NumberEntityDescription",
     "NumberExtraStoredData",
     "NumberMode",
@@ -90,39 +87,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_ws_api(hass)
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
-        async_set_value,
-    )
+    async_setup_services(hass)
 
     return True
-
-
-async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to set a new value."""
-    value = service_call.data["value"]
-    if value < entity.min_value or value > entity.max_value:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="out_of_range",
-            translation_placeholders={
-                "value": value,
-                "entity_id": entity.entity_id,
-                "min_value": str(entity.min_value),
-                "max_value": str(entity.max_value),
-            },
-        )
-
-    try:
-        native_value = entity.convert_to_native_value(value)
-        # Clamp to the native range
-        native_value = min(
-            max(native_value, entity.native_min_value), entity.native_max_value
-        )
-        await entity.async_set_native_value(native_value)
-    except NotImplementedError:
-        await entity.async_set_value(value)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -183,7 +150,12 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+        {
+            NumberEntityCapabilityAttribute.MIN,
+            NumberEntityCapabilityAttribute.MAX,
+            NumberEntityCapabilityAttribute.STEP,
+            NumberEntityCapabilityAttribute.MODE,
+        }
     )
 
     entity_description: NumberEntityDescription
@@ -201,8 +173,10 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: float | None = None
     _deprecated_number_entity_reported = False
+    _invalid_unit_of_measurement_reported = False
     _number_option_unit_of_measurement: str | None = None
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
@@ -232,6 +206,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 report_issue,
             )
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the number entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -240,6 +215,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.async_registry_entry_updated()
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         device_class = self.device_class
@@ -250,12 +226,15 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.native_max_value, ceil_decimal, device_class
         )
         return {
-            ATTR_MIN: min_value,
-            ATTR_MAX: max_value,
-            ATTR_STEP: self._calculate_step(min_value, max_value),
-            ATTR_MODE: self.mode,
+            NumberEntityCapabilityAttribute.MIN: min_value,
+            NumberEntityCapabilityAttribute.MAX: max_value,
+            NumberEntityCapabilityAttribute.STEP: self._calculate_step(
+                min_value, max_value
+            ),
+            NumberEntityCapabilityAttribute.MODE: self.mode,
         }
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -264,6 +243,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self.device_class is not None
 
     @cached_property
+    @override
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -355,9 +335,40 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> float | None:
         """Return the entity state."""
+        if not self._invalid_unit_of_measurement_reported:
+            self._validate_unit_of_measurement()
         return self.value
+
+    def _validate_unit_of_measurement(self) -> None:
+        """Warn once if the native unit is not valid for the device class."""
+        if (
+            (device_class := self.device_class) is None
+            or (units := DEVICE_CLASS_UNITS.get(device_class)) is None
+            or (native_unit_of_measurement := self.__native_unit_of_measurement_compat)
+            in units
+        ):
+            return
+
+        self._invalid_unit_of_measurement_reported = True
+        # This should raise in Home Assistant Core 2027.5
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using native unit of measurement '%s' which "
+                "is not a valid unit for the device class ('%s') it is using; "
+                "expected one of %s. This will stop working in Home Assistant "
+                "2027.5. Please update your configuration if your entity is "
+                "manually configured, otherwise %s"
+            ),
+            self.entity_id,
+            type(self),
+            native_unit_of_measurement,
+            device_class,
+            sorted(str(unit) if unit else "no unit of measurement" for unit in units),
+            self._suggest_report_issue(),
+        )
 
     @cached_property
     def native_unit_of_measurement(self) -> str | None:
@@ -383,6 +394,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         if self._number_option_unit_of_measurement:
@@ -406,9 +418,12 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             if native_unit_of_measurement is not None:
                 raise ValueError(
-                    f"Number entity {type(self)} from integration '{self.platform.platform_name}' "
-                    f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
-                    f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
+                    f"Number entity {type(self)} from integration"
+                    f" '{self.platform.platform_name}' has a"
+                    " translation key for unit_of_measurement"
+                    f" '{unit_of_measurement}', but also has a"
+                    " native_unit_of_measurement"
+                    f" '{native_unit_of_measurement}'"
                 )
             return unit_of_measurement
 
@@ -501,6 +516,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return value
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         if TYPE_CHECKING:
@@ -529,6 +545,7 @@ class NumberExtraStoredData(ExtraStoredData):
     native_unit_of_measurement: str | None
     native_value: float | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the number data."""
         return dataclasses.asdict(self)
@@ -552,6 +569,7 @@ class RestoreNumber(NumberEntity, RestoreEntity):
     """Mixin class for restoring previous number state."""
 
     @property
+    @override
     def extra_restore_state_data(self) -> NumberExtraStoredData:
         """Return number specific state data to be restored."""
         return NumberExtraStoredData(

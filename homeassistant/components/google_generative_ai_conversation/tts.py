@@ -1,9 +1,7 @@
 """Text to speech support for Google Generative AI."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from google.genai import types
 from google.genai.errors import APIError, ClientError
@@ -20,8 +18,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
-from .entity import GoogleGenerativeAILLMBaseEntity
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_TEMPERATURE,
+    LOGGER,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TTS_MODEL,
+)
+from .entity import GoogleGenerativeAILLMBaseEntity, supports_custom_sampling
 from .helpers import convert_to_wav
 
 
@@ -178,22 +182,30 @@ class GoogleGenerativeAITextToSpeechEntity(
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
 
     @cached_property
+    @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
             ATTR_VOICE: self._supported_voices[0].voice_id,
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        config = self.create_generate_content_config()
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
+        config = types.GenerateContentConfig()
+        if supports_custom_sampling(model):
+            config.temperature = self.subentry.data.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            )
         config.response_modalities = ["AUDIO"]
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(
@@ -230,13 +242,16 @@ class GoogleGenerativeAITextToSpeechEntity(
 
         try:
             response = await self._genai_client.aio.models.generate_content(
-                model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
+                model=model,
                 contents=message,
                 config=config,
             )
 
             data, mime_type = _extract_audio_parts(response)
         except (APIError, ClientError, ValueError, TypeError) as exc:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Error during TTS: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
+        if mime_type == "audio/wav":
+            return "wav", data
         return "wav", convert_to_wav(data, mime_type)

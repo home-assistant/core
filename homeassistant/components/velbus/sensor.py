@@ -1,9 +1,8 @@
 """Support for Velbus sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
 from velbusaio.properties import LightValue
@@ -41,6 +40,7 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: float(channel.get_counter_state()),
         unit_fn=lambda channel: channel.get_unit(),
     ),
     "temperature": VelbusSensorEntityDescription(
@@ -59,7 +59,11 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         icon="mdi:counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda channel: float(channel.get_counter_state()),
+        value_fn=lambda channel: (
+            float(channel.energy)
+            if hasattr(channel, "energy") and channel.energy is not None
+            else None
+        ),
         unit_fn=lambda channel: channel.get_counter_unit(),
         unique_id_suffix="-counter",
     ),
@@ -119,6 +123,7 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_name = f"{self._attr_name}-counter"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._channel)

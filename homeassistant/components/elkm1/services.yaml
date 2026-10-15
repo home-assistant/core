@@ -161,3 +161,15 @@ sensor_zone_trigger:
     entity:
       integration: elkm1
       domain: sensor
+
+switch_output_turn_on_for:
+  target:
+    entity:
+      integration: elkm1
+      domain: switch
+  fields:
+    duration:
+      example: 42
+      required: true
+      selector:
+        duration:

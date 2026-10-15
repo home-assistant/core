@@ -1,25 +1,24 @@
 """Config flow for Starlink."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from starlink_grpc import ChannelContext, GrpcError, get_id
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS, default="192.168.100.1:9200"): str}
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_IP_ADDRESS, default="192.168.100.1:9200"): str}
 )
 
 
 class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """The configuration flow for a Starlink system."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,5 +1,7 @@
 """The Minecraft Server binary sensor platform."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -59,11 +61,13 @@ class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntit
         self._attr_is_on = False
 
     @property
+    @override
     def available(self) -> bool:
         """Return binary sensor availability."""
         return True
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return binary sensor state."""
         return self.coordinator.last_update_success

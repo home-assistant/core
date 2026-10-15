@@ -1,14 +1,12 @@
 """Provides diagnostics for Overkiz."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyoverkiz.enums import APIType
 from pyoverkiz.obfuscate import obfuscate_id
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from . import OverkizDataConfigEntry
 from .const import CONF_API_TYPE, CONF_HUB
@@ -21,13 +19,13 @@ async def async_get_config_entry_diagnostics(
     client = entry.runtime_data.coordinator.client
 
     data = {
-        "setup": await client.get_diagnostic_data(),
+        **await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
         "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if client.api_type == APIType.CLOUD:
+    if client.server_config.api_type == APIType.CLOUD:
         execution_history = [
             repr(execution) for execution in await client.get_execution_history()
         ]
@@ -37,9 +35,13 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: OverkizDataConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: OverkizDataConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
+    if TYPE_CHECKING:
+        # overkiz does not create child devices
+        assert isinstance(device, DeviceEntry)
+
     client = entry.runtime_data.coordinator.client
 
     device_url = min(device.identifiers)[1]
@@ -51,13 +53,13 @@ async def async_get_device_diagnostics(
             "device_url": obfuscate_id(device_url),
             "model": device.model,
         },
-        "setup": await client.get_diagnostic_data(),
+        **await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
         "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if client.api_type == APIType.CLOUD:
+    if client.server_config.api_type == APIType.CLOUD:
         data["execution_history"] = [
             repr(execution)
             for execution in await client.get_execution_history()

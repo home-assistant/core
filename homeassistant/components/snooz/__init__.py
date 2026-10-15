@@ -1,21 +1,36 @@
 """The Snooz component."""
 
-from __future__ import annotations
-
+from dataclasses import replace
 import logging
 
+from pysnooz import parse_snooz_advertisement
 from pysnooz.device import SnoozDevice
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_last_service_info,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .models import SnoozConfigEntry, SnoozConfigurationData
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Snooz integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
     """Set up Snooz device from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     token: str = entry.data[CONF_TOKEN]
@@ -23,18 +38,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
     # transitions info logs are verbose. Only enable warnings
     logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
-    if not (ble_device := async_ble_device_from_address(hass, address)):
+    if (service_info := async_last_service_info(hass, address)) is None or (
+        advertisement := parse_snooz_advertisement(service_info)
+    ) is None:
         raise ConfigEntryNotReady(
-            f"Could not find Snooz with address {address}. Try power cycling the device"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
-    device = SnoozDevice(ble_device, token)
+    ble_device = service_info.device
+    device = SnoozDevice(ble_device, replace(advertisement, password=token))
 
     entry.runtime_data = SnoozConfigurationData(ble_device, device, entry.title)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    return True
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
@@ -43,10 +69,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: SnoozConfigEntry) -
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # also called by fan entities, but do it here too for good measure
-        await entry.runtime_data.device.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # also called by fan entities, but do it here too for good measure
+    await entry.runtime_data.device.async_disconnect()

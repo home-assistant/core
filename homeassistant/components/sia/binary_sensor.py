@@ -1,10 +1,9 @@
 """Module for SIA Binary Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pysiaalarm import SIAEvent
 
@@ -83,7 +82,9 @@ ENTITY_DESCRIPTION_CONNECTIVITY = SIABinarySensorEntityDescription(
 )
 
 
-def generate_binary_sensors(entry: ConfigEntry) -> Iterable[SIABinarySensor]:
+def generate_binary_sensors(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> Iterable[SIABinarySensor]:
     """Generate binary sensors.
 
     For each Account there is one power sensor with zone == 0.
@@ -94,12 +95,16 @@ def generate_binary_sensors(entry: ConfigEntry) -> Iterable[SIABinarySensor]:
         zones = entry.options[CONF_ACCOUNTS][account][CONF_ZONES]
 
         yield SIABinarySensorConnectivity(
-            entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_CONNECTIVITY
+            hass, entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_CONNECTIVITY
         )
-        yield SIABinarySensor(entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_POWER)
+        yield SIABinarySensor(
+            hass, entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_POWER
+        )
         for zone in range(1, zones + 1):
-            yield SIABinarySensor(entry, account, zone, ENTITY_DESCRIPTION_SMOKE)
-            yield SIABinarySensor(entry, account, zone, ENTITY_DESCRIPTION_MOISTURE)
+            yield SIABinarySensor(hass, entry, account, zone, ENTITY_DESCRIPTION_SMOKE)
+            yield SIABinarySensor(
+                hass, entry, account, zone, ENTITY_DESCRIPTION_MOISTURE
+            )
 
 
 async def async_setup_entry(
@@ -108,7 +113,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SIA binary sensors from a config entry."""
-    async_add_entities(generate_binary_sensors(entry))
+    async_add_entities(generate_binary_sensors(hass, entry))
 
 
 class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
@@ -116,6 +121,7 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
 
     entity_description: SIABinarySensorEntityDescription
 
+    @override
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         if last_state is not None and last_state.state is not None:
@@ -126,6 +132,7 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
             elif last_state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
 
+    @override
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the binary sensor.
 
@@ -145,6 +152,7 @@ class SIABinarySensorConnectivity(SIABinarySensor):
     """Class for Connectivity Sensor."""
 
     @callback
+    @override
     def async_post_interval_update(self, _) -> None:
         """Update state after a ping interval. Overwritten from sia entity base."""
         self._attr_is_on = False

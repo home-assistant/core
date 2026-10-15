@@ -1,8 +1,6 @@
 """Cover entity platform for Tailwind."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from gotailwind import (
     TailwindDoorAlreadyInStateError,
@@ -51,12 +49,14 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return (
             self.coordinator.data.doors[self.door_id].state == TailwindDoorState.CLOSED
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door.
 
@@ -91,6 +91,7 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             self._attr_is_opening = False
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door.
 

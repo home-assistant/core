@@ -1,7 +1,5 @@
 """Test the Smhi config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from pysmhi import SmhiForecastException

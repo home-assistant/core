@@ -1,10 +1,8 @@
 """Config flow for Husqvarna Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import random
-from typing import Any
+from typing import Any, override
 
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
@@ -13,7 +11,7 @@ from bleak_retry_connector import get_device
 from gardena_bluetooth.const import ScanService
 from gardena_bluetooth.parse import ProductType
 from gardena_bluetooth.scan import async_get_manufacturer_data
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -22,16 +20,16 @@ from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from .const import DOMAIN, LOGGER
 
-BLUETOOTH_SCHEMA = vol.Schema(
+BLUETOOTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADDRESS): str,
-        vol.Required(CONF_PIN): str,
+        probatio.Required(CONF_ADDRESS): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
@@ -71,7 +69,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             await async_get_manufacturer_data({discovery_info.address})
         )[discovery_info.address]
 
-        if manufacturer_data.product_type != ProductType.MOWER:
+        if manufacturer_data.product_type is not ProductType.MOWER:
             LOGGER.debug(
                 "Unsupported device: %s (%s)", manufacturer_data, discovery_info
             )
@@ -82,6 +80,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Supported device: %s", manufacturer_data)
         return True
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -130,6 +129,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,12 +158,21 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.address
 
+        if device is None:
+            LOGGER.debug("Could not find device with address '%s'", self.address)
+            return None
+
         try:
             (manufacturer, device_type, _model) = await Mower(
                 channel_id, self.address
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:
             LOGGER.exception("Failed to probe device (%s): %s", self.address, exception)
+            return None
+
+        # The library returns None for the values it couldn't read
+        if manufacturer is None or device_type is None:
+            LOGGER.debug("Failed to read the device info of %s", self.address)
             return None
 
         title = manufacturer + " " + device_type

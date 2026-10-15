@@ -1,7 +1,5 @@
 """Constants used by Tessie integration."""
 
-from __future__ import annotations
-
 from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"

@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_account": "The account belongs to a different home than the one configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The password for {username} is no longer valid. Please enter the new password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "brand": "Brand",
@@ -51,6 +59,15 @@
       "requested_compressor_speed": {
         "name": "Requested compressor speed"
       },
+      "room_iq_battery": {
+        "name": "RoomIQ battery"
+      },
+      "room_iq_humidity": {
+        "name": "RoomIQ humidity"
+      },
+      "room_iq_temperature": {
+        "name": "RoomIQ temperature"
+      },
       "system_status": {
         "name": "System status"
       },
@@ -71,6 +88,11 @@
       "room_iq_sensor": {
         "name": "Include {sensor_name}"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Access error from Nexia service, please check credentials"
     }
   },
   "services": {

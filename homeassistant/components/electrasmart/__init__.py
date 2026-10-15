@@ -1,7 +1,5 @@
 """The Electra Air Conditioner integration."""
 
-from __future__ import annotations
-
 from electrasmart.api import ElectraAPI, ElectraApiError
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +17,7 @@ type ElectraSmartConfigEntry = ConfigEntry[ElectraAPI]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ElectraSmartConfigEntry
-) -> bool:
+) -> None:
     """Set up Electra Smart Air Conditioner from a config entry."""
     api = ElectraAPI(
         async_get_clientsession(hass), entry.data[CONF_IMEI], entry.data[CONF_TOKEN]
@@ -32,14 +30,13 @@ async def async_setup_entry(
     entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.runtime_data = api
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ElectraSmartConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(

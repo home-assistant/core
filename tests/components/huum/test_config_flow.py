@@ -45,11 +45,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_huum_client")
+@pytest.mark.usefixtures("mock_huum_client", "mock_setup_entry")
 async def test_signup_flow_already_set_up(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that we handle already existing entities with same id."""
     mock_config_entry.add_to_hass(hass)
@@ -79,12 +77,9 @@ async def test_signup_flow_already_set_up(
         (Forbidden, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_huum_errors(
-    hass: HomeAssistant,
-    mock_huum_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    raises: Exception,
-    error_base: str,
+    hass: HomeAssistant, mock_huum_client: AsyncMock, raises: Exception, error_base: str
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -255,10 +250,10 @@ async def test_reconfigure_flow_already_configured(
         (Forbidden, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_huum_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     raises: Exception,
     error_base: str,

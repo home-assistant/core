@@ -1,11 +1,9 @@
 """Config flow for the Duck DNS integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN, CONF_NAME
@@ -18,25 +16,27 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN
 from .helpers import update_duckdns
-from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DOMAIN): TextSelector(
+        probatio.Required(CONF_DOMAIN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, suffix=".duckdns.org")
         ),
-        vol.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str,
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str}
+)
 
 
 class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Duck DNS."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -69,18 +69,6 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"url": "https://www.duckdns.org/"},
         )
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from yaml."""
-
-        self._async_abort_entries_match({CONF_DOMAIN: import_info[CONF_DOMAIN]})
-        result = await self.async_step_user(import_info)
-        if errors := result.get("errors"):
-            deprecate_yaml_issue(self.hass, import_success=False)
-            return self.async_abort(reason=errors["base"])
-
-        deprecate_yaml_issue(self.hass, import_success=True)
-        return result
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

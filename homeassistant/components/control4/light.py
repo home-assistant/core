@@ -1,11 +1,8 @@
 """Platform for Control4 Lights."""
 
-from __future__ import annotations
-
 import asyncio
-from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
@@ -22,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
+from .const import CONTROL4_ENTITY_TYPE, SCAN_INTERVAL
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -40,7 +37,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Control4 lights from a config entry."""
     runtime_data = entry.runtime_data
-    _LOGGER.debug("Scan interval = %s", runtime_data.scan_interval)
 
     async def async_update_data_non_dimmer() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director for non-dimmer lights."""
@@ -65,7 +61,7 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_non_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=SCAN_INTERVAL,
         config_entry=entry,
     )
     dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
@@ -73,7 +69,7 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=SCAN_INTERVAL,
         config_entry=entry,
     )
 
@@ -117,7 +113,7 @@ async def async_setup_entry(
             item_coordinator = non_dimmer_coordinator
         else:
             director = runtime_data.director
-            item_variables = await director.getItemVariables(item_id)
+            item_variables = await director.get_item_variables(item_id)
             _LOGGER.warning(
                 (
                     "Couldn't get light state data for %s, skipping setup. Available"
@@ -184,11 +180,13 @@ class Control4Light(Control4Entity, LightEntity):
     def _create_api_object(self):
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Light(self.runtime_data.director, self._idx)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether this light is on or off."""
         if self._is_dimmer:
@@ -199,6 +197,7 @@ class Control4Light(Control4Entity, LightEntity):
         return self.coordinator.data[self._idx][CONTROL4_NON_DIMMER_VAR] > 0
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
@@ -208,12 +207,14 @@ class Control4Light(Control4Entity, LightEntity):
         return None
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._is_dimmer:
             return LightEntityFeature.TRANSITION
         return LightEntityFeature(0)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         c4_light = self._create_api_object()
@@ -226,10 +227,10 @@ class Control4Light(Control4Entity, LightEntity):
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
                 brightness = 100
-            await c4_light.rampToLevel(brightness, transition_length)
+            await c4_light.ramp_to_level(brightness, transition_length)
         else:
             transition_length = 0
-            await c4_light.setLevel(100)
+            await c4_light.set_level(100)
         if transition_length == 0:
             transition_length = 1000
         delay_time = (transition_length / 1000) + 0.7
@@ -237,6 +238,7 @@ class Control4Light(Control4Entity, LightEntity):
         await asyncio.sleep(delay_time)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         c4_light = self._create_api_object()
@@ -245,10 +247,10 @@ class Control4Light(Control4Entity, LightEntity):
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
                 transition_length = 0
-            await c4_light.rampToLevel(0, transition_length)
+            await c4_light.ramp_to_level(0, transition_length)
         else:
             transition_length = 0
-            await c4_light.setLevel(0)
+            await c4_light.set_level(0)
         if transition_length == 0:
             transition_length = 1500
         delay_time = (transition_length / 1000) + 0.7

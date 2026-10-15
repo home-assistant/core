@@ -1,9 +1,8 @@
 """Binary Sensor platform for Sun integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -84,10 +83,12 @@ class SunBinarySensor(BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return value of binary sensor."""
         return self.entity_description.value_fn(self.sun)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register signal listener when added to hass."""
         await super().async_added_to_hass()

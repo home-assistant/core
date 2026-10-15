@@ -9,7 +9,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
@@ -18,6 +17,7 @@ from homeassistant.components.energyid.const import (
 from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
     EnergyIDSensorMappingFlowHandler,
 )
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -29,6 +29,15 @@ TEST_PROVISIONING_SECRET = "test_prov_secret"
 TEST_RECORD_NUMBER = "site_12345"
 TEST_RECORD_NAME = "My Test Site"
 MAX_POLLING_ATTEMPTS = 60
+
+
+def _mock_claimed_client() -> MagicMock:
+    """Return a mocked WebhookClient for a claimed device."""
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = TEST_RECORD_NUMBER
+    mock_client.recordName = TEST_RECORD_NAME
+    return mock_client
 
 
 @pytest.fixture(name="mock_polling_interval", autouse=True)
@@ -83,7 +92,8 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
 
         # Check unique_id is set correctly
         entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
-        # For initially claimed devices, unique_id should be the device_id, not record_number
+        # For initially claimed devices, unique_id should be
+        # the device_id, not record_number
         assert entry.unique_id.startswith("homeassistant_eid_")
         assert CONF_DEVICE_ID in entry.data
         assert entry.data[CONF_DEVICE_ID] == entry.unique_id
@@ -138,6 +148,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
         assert final_result["title"] == TEST_RECORD_NAME
         assert final_result["description"] == "add_sensor_mapping_hint"
@@ -185,7 +196,8 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # After timeout, polling stops and user continues - should see external step again
+        # After timeout, polling stops and user continues
+        # - should see external step again
         assert mock_unclaimed_client.authenticate.call_count == 1
         assert result_after_timeout["type"] is FlowResultType.EXTERNAL_STEP
         assert result_after_timeout["step_id"] == "auth_and_claim"
@@ -327,6 +339,19 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "cannot_connect"
 
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=_mock_claimed_client(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
     """Test unexpected error during authentication."""
@@ -350,6 +375,19 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "unknown_auth_error"
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=_mock_claimed_client(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_external_step_claimed_during_display(
@@ -392,7 +430,8 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
 
-        # User continues immediately - device is claimed, polling task should be cancelled
+        # User continues immediately - device is claimed,
+        # polling task should be cancelled
         result_claimed = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
@@ -403,6 +442,7 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -431,7 +471,8 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
         )
         assert result2["type"] is FlowResultType.EXTERNAL_STEP
 
-        # User continues immediately - device still not claimed, polling task should be cancelled
+        # User continues immediately - device still not claimed,
+        # polling task should be cancelled
         result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         assert result3["type"] is FlowResultType.EXTERNAL_STEP
         assert result3["step_id"] == "auth_and_claim"
@@ -465,11 +506,7 @@ async def test_config_flow_reauth_success(
         return_value=mock_client,
     ):
         # Start reauth flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm"
 
@@ -534,6 +571,18 @@ async def test_config_flow_client_response_error(
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == expected_error
 
+        mock_client.authenticate = AsyncMock(return_value=True)
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
     """Test reauth flow when device needs to be claimed."""
@@ -560,11 +609,7 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
             return_value=mock_client,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         # Check initial reauth form
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -593,7 +638,7 @@ async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
 
 
 async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
-    """Test that polling stops when invalid_auth error occurs during auth_and_claim polling."""
+    """Test polling stops on invalid_auth error during auth_and_claim."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -644,7 +689,7 @@ async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
 
 
 async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> None:
-    """Test that polling stops when cannot_connect error occurs during auth_and_claim polling."""
+    """Test polling stops on cannot_connect error during auth_and_claim."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -691,7 +736,7 @@ async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> Non
 
 
 async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None:
-    """Test that auth_and_claim step handles authentication errors during polling attempts."""
+    """Test auth_and_claim handles auth errors during polling."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -750,6 +795,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
     """Test that reauth flow shows error when authentication fails with 401."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=TEST_RECORD_NUMBER,
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
@@ -772,14 +818,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.config_flow.WebhookClient",
         return_value=mock_client,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_entry.entry_id,
-            },
-            data=mock_entry.data,
-        )
+        result = await mock_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
@@ -793,9 +832,23 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "invalid_auth"
 
+        mock_client.authenticate.side_effect = None
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"
+
 
 async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None:
-    """Test that polling is cancelled when authentication fails during auth_and_claim."""
+    """Test polling is cancelled when auth fails during auth_and_claim."""
     call_count = 0
     auth_call_count = 0
 
@@ -865,7 +918,7 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
 
 
 async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
-    """Test that polling is cancelled when device becomes claimed successfully during auth_and_claim."""
+    """Test polling is cancelled when device becomes claimed successfully."""
     call_count = 0
     auth_call_count = 0
 
@@ -924,6 +977,7 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result_done["type"] is FlowResultType.CREATE_ENTRY
 
         # Verify polling was cancelled - the auth count should not increase

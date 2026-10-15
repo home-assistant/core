@@ -92,4 +92,4 @@ async def test_setup_entry_errors(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state == expcted_entry_state
+        assert entry.state is expcted_entry_state

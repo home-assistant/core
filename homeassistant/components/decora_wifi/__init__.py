@@ -1,7 +1,5 @@
 """The Leviton Decora Wi-Fi integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 
@@ -19,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 PLATFORMS = [Platform.LIGHT]
 
@@ -40,7 +38,7 @@ def _login_and_get_switches(email: str, password: str) -> DecoraWifiData:
     success = session.login(email, password)
 
     if success is None:
-        raise ConfigEntryAuthFailed("Invalid credentials for myLeviton account")
+        raise ConfigEntryError("Invalid credentials for myLeviton account")
 
     perms = session.user.get_residential_permissions()
     all_switches: list[IotSwitch] = []
@@ -59,7 +57,7 @@ def _login_and_get_switches(email: str, password: str) -> DecoraWifiData:
     return DecoraWifiData(session, all_switches)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -> None:
     """Set up Leviton Decora Wi-Fi from a config entry."""
     try:
         data = await hass.async_add_executor_job(
@@ -83,9 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -> None:
     """Unload a Decora Wi-Fi config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

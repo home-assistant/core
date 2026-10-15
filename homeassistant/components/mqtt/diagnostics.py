@@ -1,26 +1,22 @@
 """Diagnostics support for MQTT."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components import device_tracker
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from . import debug_info, is_connected
 
 REDACT_CONFIG = {CONF_PASSWORD, CONF_USERNAME}
-REDACT_STATE_DEVICE_TRACKER = {ATTR_LATITUDE, ATTR_LONGITUDE}
+REDACT_STATE_DEVICE_TRACKER = {
+    EntityStateAttribute.LATITUDE,
+    EntityStateAttribute.LONGITUDE,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -31,7 +27,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: ConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     return _async_get_diagnostics(hass, entry, device)
@@ -41,7 +37,7 @@ async def async_get_device_diagnostics(
 def _async_get_diagnostics(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    device: DeviceEntry | None = None,
+    device: AnyDeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     redacted_config = {
@@ -73,7 +69,9 @@ def _async_get_diagnostics(
 
 
 @callback
-def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str, Any]:
+def _async_device_as_dict(
+    hass: HomeAssistant, device: AnyDeviceEntry
+) -> dict[str, Any]:
     """Represent an MQTT device as a dictionary."""
 
     # Gather information how this MQTT device is represented in Home Assistant

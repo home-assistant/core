@@ -1,7 +1,5 @@
 """The Firefly III integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -10,7 +8,7 @@ from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> None:
     """Set up Firefly III from a config entry."""
 
     coordinator = FireflyDataUpdateCoordinator(hass, entry)
@@ -19,9 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> b
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

@@ -7,27 +7,31 @@ from typing import Any
 
 from aiohasupervisor import SupervisorClient, SupervisorError
 from aiohasupervisor.models import (
+    Folder,
     FullBackupOptions,
     FullRestoreOptions,
     PartialBackupOptions,
     PartialRestoreOptions,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_LOCATION, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
-    async_get_hass_or_none,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
+    issue_registry as ir,
     selector,
+)
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_admin_service,
 )
 from homeassistant.util.dt import now
 
@@ -41,14 +45,13 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
-    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,
-    MAIN_COORDINATOR,
+    ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
     SupervisorEntityModel,
 )
-from .coordinator import HassioMainDataUpdateCoordinator, get_addons_info
+from .handler import get_supervisor_client
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -67,89 +70,134 @@ SERVICE_RESTORE_PARTIAL = "restore_partial"
 SERVICE_MOUNT_RELOAD = "mount_reload"
 
 
-VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+VALID_ADDON_SLUG = probatio.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+
+# Legacy alias used by the Supervisor API for the homeassistant flag, kept
+# for backwards compatibility with existing automations.
+LEGACY_FOLDER_HOMEASSISTANT = "homeassistant"
 
 
-def valid_addon(value: Any) -> str:
-    """Validate value is a valid addon slug."""
-    value = VALID_ADDON_SLUG(value)
-    hass = async_get_hass_or_none()
+def _normalize_partial_options_data(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
+    """Map legacy aliases used by both partial backup and partial restore handlers."""
+    if ATTR_APPS in data:
+        data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+    if ATTR_FOLDERS in data:
+        folders: set[Any] = set(data[ATTR_FOLDERS])
+        if LEGACY_FOLDER_HOMEASSISTANT in folders:
+            folders.discard(LEGACY_FOLDER_HOMEASSISTANT)
+            if data.get(ATTR_HOMEASSISTANT) is False:
+                raise ServiceValidationError(
+                    f"{ATTR_HOMEASSISTANT}=False conflicts with the legacy "
+                    f"{LEGACY_FOLDER_HOMEASSISTANT!r} entry in {ATTR_FOLDERS}"
+                )
+            data[ATTR_HOMEASSISTANT] = True
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+                breaks_in_ha_version="2026.12.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+            )
+        if folders:
+            data[ATTR_FOLDERS] = folders
+        else:
+            data.pop(ATTR_FOLDERS)
+    return data
 
-    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
-        raise vol.Invalid("Not a valid app slug")
-    return value
 
+SCHEMA_NO_DATA = probatio.Schema({})
 
-SCHEMA_NO_DATA = vol.Schema({})
-
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
+SCHEMA_ADDON = probatio.Schema({probatio.Required(ATTR_ADDON): VALID_ADDON_SLUG})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
+    {probatio.Required(ATTR_INPUT): probatio.Any(dict, cv.string)}
 )
 
-SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): valid_addon})
+SCHEMA_APP = probatio.Schema({probatio.Required(ATTR_APP): VALID_ADDON_SLUG})
 
 SCHEMA_APP_STDIN = SCHEMA_APP.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
+    {probatio.Required(ATTR_INPUT): probatio.Any(dict, cv.string)}
 )
 
-SCHEMA_BACKUP_FULL = vol.Schema(
+SCHEMA_BACKUP_FULL = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             ATTR_NAME, default=lambda: now().strftime("%Y-%m-%d %H:%M:%S")
         ): cv.string,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-        vol.Optional(ATTR_COMPRESSED): cv.boolean,
-        vol.Optional(ATTR_LOCATION): vol.All(
+        probatio.Optional(ATTR_PASSWORD): cv.string,
+        probatio.Optional(ATTR_COMPRESSED): cv.boolean,
+        probatio.Optional(ATTR_LOCATION): probatio.All(
             cv.string, lambda v: None if v == "/backup" else v
         ),
-        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
+        probatio.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
     }
 )
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [cv.string], vol.Unique(), vol.Coerce(set)
+        probatio.Optional(ATTR_HOMEASSISTANT): cv.boolean,
+        probatio.Optional(ATTR_FOLDERS): probatio.All(
+            probatio.EnsureList(),
+            [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
-        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_APPS, "apps_or_addons"): probatio.All(
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
         # Legacy "addons", "apps" is preferred
-        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_ADDONS, "apps_or_addons"): probatio.All(
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
     }
 )
 
-SCHEMA_RESTORE_FULL = vol.Schema(
+SCHEMA_RESTORE_FULL = probatio.Schema(
     {
-        vol.Required(ATTR_SLUG): cv.slug,
-        vol.Optional(ATTR_PASSWORD): cv.string,
+        probatio.Required(ATTR_SLUG): cv.slug,
+        probatio.Optional(ATTR_PASSWORD): cv.string,
     }
 )
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [cv.string], vol.Unique(), vol.Coerce(set)
+        probatio.Optional(ATTR_HOMEASSISTANT): cv.boolean,
+        probatio.Optional(ATTR_FOLDERS): probatio.All(
+            probatio.EnsureList(),
+            [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
-        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_APPS, "apps_or_addons"): probatio.All(
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
         # Legacy "addons", "apps" is preferred
-        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
+        probatio.Exclusive(ATTR_ADDONS, "apps_or_addons"): probatio.All(
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
     }
 )
 
-SCHEMA_MOUNT_RELOAD = vol.Schema(
+SCHEMA_MOUNT_RELOAD = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
+        probatio.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
             selector.DeviceSelectorConfig(
                 filter=selector.DeviceFilterSelectorConfig(
                     integration=DOMAIN,
@@ -162,10 +210,9 @@ SCHEMA_MOUNT_RELOAD = vol.Schema(
 
 
 @callback
-def async_setup_services(
-    hass: HomeAssistant, supervisor_client: SupervisorClient
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Supervisor services."""
+    supervisor_client = get_supervisor_client(hass)
     async_register_app_services(hass, supervisor_client)
     async_register_host_services(hass, supervisor_client)
     async_register_backup_restore_services(hass, supervisor_client)
@@ -196,8 +243,8 @@ def async_register_app_services(
             ) from err
 
     for service in simple_app_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_app_service_handler, schema=SCHEMA_APP
+        async_register_admin_service(
+            hass, DOMAIN, service, async_simple_app_service_handler, schema=SCHEMA_APP
         )
 
     async def async_app_stdin_service_handler(service: ServiceCall) -> None:
@@ -220,7 +267,8 @@ def async_register_app_services(
                 f"Failed to write stdin to app {app_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_APP_STDIN,
         async_app_stdin_service_handler,
@@ -247,8 +295,12 @@ def async_register_app_services(
             ) from err
 
     for service in simple_addon_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_addon_service_handler, schema=SCHEMA_ADDON
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            async_simple_addon_service_handler,
+            schema=SCHEMA_ADDON,
         )
 
     async def async_addon_stdin_service_handler(service: ServiceCall) -> None:
@@ -256,7 +308,8 @@ def async_register_app_services(
         addon_slug = service.data[ATTR_ADDON]
         data: dict | str = service.data[ATTR_INPUT]
 
-        # See explanation for why we make strings into json in async_app_stdin_service_handler
+        # See explanation for why we make strings into json
+        # in async_app_stdin_service_handler
         data = json.dumps(data)
         payload = data.encode(encoding="utf-8")
 
@@ -267,7 +320,8 @@ def async_register_app_services(
                 f"Failed to write stdin to app {addon_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_ADDON_STDIN,
         async_addon_stdin_service_handler,
@@ -294,8 +348,12 @@ def async_register_host_services(
             raise HomeAssistantError(f"Failed to {action} the host: {err}") from err
 
     for service in simple_host_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_host_service_handler, schema=SCHEMA_NO_DATA
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            async_simple_host_service_handler,
+            schema=SCHEMA_NO_DATA,
         )
 
 
@@ -319,7 +377,8 @@ def async_register_backup_restore_services(
 
         return {"backup": backup.slug}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_BACKUP_FULL,
         async_full_backup_service_handler,
@@ -331,9 +390,7 @@ def async_register_backup_restore_services(
         service: ServiceCall,
     ) -> ServiceResponse:
         """Handler for create partial backup service. Returns the new backup's ID."""
-        data = service.data.copy()
-        if ATTR_APPS in data:
-            data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+        data = _normalize_partial_options_data(hass, service.data.copy())
         options = PartialBackupOptions(**data)
 
         try:
@@ -345,7 +402,8 @@ def async_register_backup_restore_services(
 
         return {"backup": backup.slug}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_BACKUP_PARTIAL,
         async_partial_backup_service_handler,
@@ -367,7 +425,8 @@ def async_register_backup_restore_services(
                 f"Failed to full restore from backup {backup_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RESTORE_FULL,
         async_full_restore_service_handler,
@@ -378,8 +437,7 @@ def async_register_backup_restore_services(
         """Handler for partial restore service."""
         data = service.data.copy()
         backup_slug = data.pop(ATTR_SLUG)
-        if ATTR_APPS in data:
-            data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+        data = _normalize_partial_options_data(hass, data)
         options = PartialRestoreOptions(**data)
 
         try:
@@ -389,7 +447,8 @@ def async_register_backup_restore_services(
                 f"Failed to partial restore from backup {backup_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RESTORE_PARTIAL,
         async_partial_restore_service_handler,
@@ -402,24 +461,15 @@ def async_register_network_storage_services(
     hass: HomeAssistant, supervisor_client: SupervisorClient
 ) -> None:
     """Register network storage (or mount) services."""
-    dev_reg = dr.async_get(hass)
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        coordinator: HassioMainDataUpdateCoordinator | None = None
+        # A mount is always a main device, and the check below reads its model
+        device, _ = async_get_device_and_config_entry(
+            hass, DOMAIN, service.data[ATTR_DEVICE_ID], include_child_devices=False
+        )
 
-        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mount_reload_unknown_device_id",
-            )
-
-        if (
-            device.name is None
-            or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(MAIN_COORDINATOR)) is None
-            or coordinator.entry_id not in device.config_entries
-        ):
+        if device.name is None or device.model != SupervisorEntityModel.MOUNT:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_invalid_device",
@@ -434,6 +484,6 @@ def async_register_network_storage_services(
                 translation_placeholders={"name": device.name, "error": str(error)},
             ) from error
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
     )

@@ -1,12 +1,10 @@
 """Support for command line covers."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.components.cover import CoverEntity
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntity
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
@@ -28,7 +26,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
-from .utils import async_call_shell_with_timeout, async_check_output_or_log
+from .utils import (
+    async_call_shell_with_timeout,
+    async_check_output_or_log,
+    create_platform_yaml_not_supported_issue,
+)
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -41,6 +43,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up cover controlled by shell commands."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, COVER_DOMAIN)
         return
 
     covers = []
@@ -98,6 +101,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -127,6 +131,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         return success
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
@@ -134,6 +139,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         return None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -154,7 +160,8 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             LOGGER.warning(
-                "Updating Command Line Cover %s took longer than the scheduled update interval %s",
+                "Updating Command Line Cover %s took longer than"
+                " the scheduled update interval %s",
                 self.name,
                 self._scan_interval,
             )
@@ -190,16 +197,19 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         """
         await self._update_entity_state(dt_util.now())
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._async_move_cover(self._command_open)
         await self._update_entity_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._async_move_cover(self._command_close)
         await self._update_entity_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_move_cover(self._command_stop)

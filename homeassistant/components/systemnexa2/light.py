@@ -1,6 +1,6 @@
 """Light entity for the SystemNexa2 integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -42,6 +42,7 @@ class SystemNexa2Light(SystemNexa2Entity, LightEntity):
             key="light",
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         # Check if we're setting brightness
@@ -53,11 +54,13 @@ class SystemNexa2Light(SystemNexa2Entity, LightEntity):
         else:
             await self.coordinator.async_turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.async_turn_off()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         if self.coordinator.data.state is None:
@@ -66,6 +69,7 @@ class SystemNexa2Light(SystemNexa2Entity, LightEntity):
         return self.coordinator.data.state > 0
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light (0-255)."""
         if self.coordinator.data.state is None:

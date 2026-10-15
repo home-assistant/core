@@ -11,7 +11,6 @@ call_method:
         text:
     parameters:
       example: '["loadtracks", "album.titlesearch=Revolver"]'
-      advanced: true
       selector:
         object:
 call_query:
@@ -27,6 +26,5 @@ call_query:
         text:
     parameters:
       example: '["0", "20", "search:Revolver"]'
-      advanced: true
       selector:
         object:

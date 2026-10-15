@@ -1,28 +1,20 @@
 """Support for Plex media server monitoring."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from plexapi.exceptions import NotFound
 import requests.exceptions
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_SERVER_IDENTIFIER,
-    DOMAIN,
-    PLEX_UPDATE_LIBRARY_SIGNAL,
-    PLEX_UPDATE_SENSOR_SIGNAL,
-)
-from .helpers import get_plex_server, pretty_title
+from .const import DOMAIN, PLEX_UPDATE_LIBRARY_SIGNAL, PLEX_UPDATE_SENSOR_SIGNAL
+from .helpers import PlexConfigEntry, pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -52,12 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PlexConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex sensor from a config entry."""
-    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    plexserver = get_plex_server(hass, server_id)
+    plexserver = config_entry.runtime_data.server
     sensors: list[SensorEntity] = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():
@@ -82,7 +73,8 @@ class PlexSensor(SensorEntity):
 
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
-        self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._server = plex_server
         self.async_refresh_sensor = Debouncer(
@@ -93,6 +85,7 @@ class PlexSensor(SensorEntity):
             function=self._async_refresh_sensor,
         ).async_call
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         server_id = self._server.machine_identifier
@@ -111,11 +104,13 @@ class PlexSensor(SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._server.sensor_attributes
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return DeviceInfo(
@@ -149,6 +144,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._attr_name = f"{self.server_name} Library - {plex_library_section.title}"
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.async_on_remove(
@@ -205,6 +201,7 @@ class PlexLibrarySectionSensor(SensorEntity):
             self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.unique_id is None:

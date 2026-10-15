@@ -1,9 +1,7 @@
 """Support for Sinch notifications."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from clx.xms.api import MtBatchTextSmsResult
 from clx.xms.client import Client
@@ -13,7 +11,7 @@ from clx.xms.exceptions import (
     UnauthorizedException,
     UnexpectedResponseException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -24,6 +22,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -40,11 +39,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SERVICE_PLAN_ID): cv.string,
-        vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
-        vol.Optional(CONF_DEFAULT_RECIPIENTS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Required(CONF_SERVICE_PLAN_ID): cv.string,
+        probatio.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
+        probatio.Optional(CONF_DEFAULT_RECIPIENTS, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )
@@ -68,6 +67,7 @@ class SinchNotificationService(BaseNotificationService):
         self.sender = config[CONF_SENDER]
         self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
@@ -91,17 +91,17 @@ class SinchNotificationService(BaseNotificationService):
                 _LOGGER.debug(
                     'Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id
                 )
-        except ErrorResponseException as ex:
-            _LOGGER.error(
-                "Caught ErrorResponseException. Response code: %s (%s)",
-                ex.error_code,
-                ex,
-            )
-        except NotFoundException as ex:
-            _LOGGER.error("Caught NotFoundException (request URL: %s)", ex.url)
         except UnauthorizedException as ex:
-            _LOGGER.error(
-                "Caught UnauthorizedException (service plan: %s)", ex.service_plan_id
-            )
-        except UnexpectedResponseException as ex:
-            _LOGGER.error("Caught UnexpectedResponseException: %s", ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unauthorized",
+            ) from ex
+        except (
+            ErrorResponseException,
+            NotFoundException,
+            UnexpectedResponseException,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from ex

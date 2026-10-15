@@ -1,18 +1,17 @@
 """Support for MQTT valve devices."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import valve
 from homeassistant.components.valve import (
     DEVICE_CLASSES_SCHEMA,
     ValveEntity,
     ValveEntityFeature,
+    ValveEntityStateAttribute,
     ValveState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -70,7 +69,7 @@ DEFAULT_NAME = "MQTT Valve"
 
 MQTT_VALVE_ATTRIBUTES_BLOCKED = frozenset(
     {
-        valve.ATTR_CURRENT_POSITION,
+        ValveEntityStateAttribute.CURRENT_POSITION,
     }
 )
 
@@ -94,7 +93,7 @@ RESET_CLOSING_OPENING = "reset_opening_closing"
 def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
     """Validate config options and set defaults."""
     if config[CONF_REPORTS_POSITION] and any(key in config for key in NO_POSITION_KEYS):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Options `payload_open`, `payload_close`, `state_open` and "
             "`state_closed` are not allowed if the valve reports a position."
         )
@@ -103,35 +102,35 @@ def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_CLOSE): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_OPEN): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_STOP): vol.Any(cv.string, None),
-        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_STATE_CLOSED): cv.string,
-        vol.Optional(CONF_STATE_CLOSING, default=ValveState.CLOSING): cv.string,
-        vol.Optional(CONF_STATE_OPEN): cv.string,
-        vol.Optional(CONF_STATE_OPENING, default=ValveState.OPENING): cv.string,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(CONF_PAYLOAD_CLOSE): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_OPEN): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_STOP): probatio.Any(cv.string, None),
+        probatio.Optional(
+            CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED
+        ): probatio.Coerce(int),
+        probatio.Optional(
+            CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN
+        ): probatio.Coerce(int),
+        probatio.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_STATE_CLOSED): cv.string,
+        probatio.Optional(CONF_STATE_CLOSING, default=ValveState.CLOSING): cv.string,
+        probatio.Optional(CONF_STATE_OPEN): cv.string,
+        probatio.Optional(CONF_STATE_OPENING, default=ValveState.OPENING): cv.string,
+        probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, _validate_and_add_defaults)
+PLATFORM_SCHEMA_MODERN = probatio.All(_PLATFORM_SCHEMA_BASE, _validate_and_add_defaults)
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     _validate_and_add_defaults,
 )
 
@@ -165,10 +164,12 @@ class MqttValve(MqttEntity, ValveEntity):
     _tilt_optimistic: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """Set up valve from config."""
         self._attr_reports_position = config[CONF_REPORTS_POSITION]
@@ -273,7 +274,7 @@ class MqttValve(MqttEntity, ValveEntity):
                     self._range, float(position_payload)
                 )
             except ValueError:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Ignoring non numeric payload '%s' received on topic '%s'",
                     position_payload,
                     msg.topic,
@@ -281,9 +282,9 @@ class MqttValve(MqttEntity, ValveEntity):
             else:
                 percentage_payload = min(max(percentage_payload, 0), 100)
                 self._attr_current_valve_position = percentage_payload
-                # Reset closing and opening if the valve is fully opened or fully closed
-                if state is None and percentage_payload in (0, 100):
-                    state = RESET_CLOSING_OPENING
+                # Reset opening/closing when a position update is received
+                # without an explicit opening/closing transitional state.
+                state = state or RESET_CLOSING_OPENING
                 position_set = True
         if state_payload and state is None and not position_set:
             _LOGGER.warning(
@@ -292,8 +293,6 @@ class MqttValve(MqttEntity, ValveEntity):
                 msg.topic,
                 state_payload,
             )
-            return
-        if state is None:
             return
         self._update_state(state)
 
@@ -337,6 +336,7 @@ class MqttValve(MqttEntity, ValveEntity):
             self._process_binary_valve_update(msg, state_payload)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -350,10 +350,12 @@ class MqttValve(MqttEntity, ValveEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_open_valve(self) -> None:
         """Move the valve up.
 
@@ -368,6 +370,7 @@ class MqttValve(MqttEntity, ValveEntity):
             self._update_state(ValveState.OPEN)
             self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self) -> None:
         """Move the valve down.
 
@@ -382,6 +385,7 @@ class MqttValve(MqttEntity, ValveEntity):
             self._update_state(ValveState.CLOSED)
             self.async_write_ha_state()
 
+    @override
     async def async_stop_valve(self) -> None:
         """Stop valve positioning.
 
@@ -390,6 +394,7 @@ class MqttValve(MqttEntity, ValveEntity):
         payload = self._command_template(self._config[CONF_PAYLOAD_STOP])
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         percentage_position = position

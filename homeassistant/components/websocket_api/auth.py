@@ -1,13 +1,11 @@
 """Handle the auth of a connection."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp.web import Request
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
@@ -29,11 +27,11 @@ TYPE_AUTH_INVALID: Final = "auth_invalid"
 TYPE_AUTH_OK: Final = "auth_ok"
 TYPE_AUTH_REQUIRED: Final = "auth_required"
 
-AUTH_MESSAGE_SCHEMA: Final = vol.Schema(
+AUTH_MESSAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required("type"): TYPE_AUTH,
-        vol.Exclusive("api_password", "auth"): str,
-        vol.Exclusive("access_token", "auth"): str,
+        probatio.Required("type"): TYPE_AUTH,
+        probatio.Exclusive("api_password", "auth"): str,
+        probatio.Exclusive("access_token", "auth"): str,
     }
 )
 
@@ -78,6 +76,7 @@ class AuthPhase:
             self._send_message,
             self._request[KEY_HASS_USER],
             refresh_token=None,
+            remote=self._request.remote,
         )
         await self._send_bytes_text(AUTH_OK_MESSAGE)
         self._logger.debug("Auth OK (unix socket)")
@@ -87,7 +86,7 @@ class AuthPhase:
         """Handle authentication."""
         try:
             valid_msg = AUTH_MESSAGE_SCHEMA(msg)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             error_msg = (
                 f"Auth message incorrectly formatted: {humanize_error(msg, err)}"
             )
@@ -111,6 +110,7 @@ class AuthPhase:
                 self._send_message,
                 refresh_token.user,
                 refresh_token,
+                remote=self._request.remote,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(

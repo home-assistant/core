@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, call, patch
 
-from pyloadapi import CannotConnect, InvalidAuth
+from pyloadapi import CannotConnect, InvalidAuth, ParserError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,7 +12,7 @@ from homeassistant.components.pyload.button import PyLoadButtonEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -85,8 +85,12 @@ async def test_button_press(
 
 
 @pytest.mark.parametrize(
-    ("side_effect"),
-    [CannotConnect, InvalidAuth],
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(CannotConnect, "service_call_exception", id="cannot_connect"),
+        pytest.param(InvalidAuth, "service_call_auth_exception", id="invalid_auth"),
+        pytest.param(ParserError, "setup_parse_exception", id="parser_error"),
+    ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_press_errors(
@@ -94,7 +98,8 @@ async def test_button_press_errors(
     config_entry: MockConfigEntry,
     mock_pyloadapi: AsyncMock,
     entity_registry: er.EntityRegistry,
-    side_effect: Exception,
+    side_effect: type[Exception],
+    translation_key: str,
 ) -> None:
     """Test button press method."""
 
@@ -113,10 +118,12 @@ async def test_button_press_errors(
     mock_pyloadapi.restart.side_effect = side_effect
 
     for entity_entry in entity_entries:
-        with pytest.raises(ServiceValidationError):
+        with pytest.raises(HomeAssistantError) as exc_info:
             await hass.services.async_call(
                 BUTTON_DOMAIN,
                 SERVICE_PRESS,
                 {ATTR_ENTITY_ID: entity_entry.entity_id},
                 blocking=True,
             )
+        assert type(exc_info.value) is HomeAssistantError
+        assert exc_info.value.translation_key == translation_key

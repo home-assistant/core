@@ -1,17 +1,17 @@
 """Module for SIA Base Entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityDescription
@@ -56,6 +56,7 @@ class SIABaseEntity(RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: ConfigEntry,
         account: str,
         zone: int,
@@ -78,13 +79,18 @@ class SIABaseEntity(RestoreEntity):
         self._attr_device_info = DeviceInfo(
             name=self._attr_name,
             identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(DOMAIN, f"{entry.data[CONF_PORT]}_{account}"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, f"{self.port}_{self.account}"),
+                config_entry_id=entry.entry_id,
+            ),
         )
 
         self._post_interval_update_cb_canceller: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
 
@@ -109,6 +115,7 @@ class SIABaseEntity(RestoreEntity):
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -118,7 +125,7 @@ class SIABaseEntity(RestoreEntity):
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
-        """Listen to dispatcher events for this port and account and update state and attributes.
+        """Listen to dispatcher events for this port and account, update state.
 
         If the event is for either the zone or the 0 zone (hub zone),
         then handle it further.

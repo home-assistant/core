@@ -1,10 +1,9 @@
 """Coordinator for the Philips TV integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from haphilipsjs import (
     AutenticationFailure,
@@ -87,8 +86,10 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _notify_wanted(self):
         """Return if the notify feature should be active.
 
-        We only run it when TV is considered fully on. When powerstate is in standby, the TV
-        will go in low power states and seemingly break the http server in odd ways.
+        We only run it when TV is considered fully on.
+        When powerstate is in standby, the TV will go in low
+        power states and seemingly break the http server in
+        odd ways.
         """
         return (
             self.api.on
@@ -125,11 +126,13 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._notify_future = asyncio.create_task(self._notify_task())
 
     @callback
+    @override
     def _unschedule_refresh(self) -> None:
         """Remove data update."""
         super()._unschedule_refresh()
         self._async_notify_stop()
 
+    @override
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:

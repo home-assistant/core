@@ -1,10 +1,8 @@
 """Sensor platform for the Rotarex integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from rotarex_dimes_srg_api import RotarexSyncData
 
@@ -96,12 +94,14 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the tank is still reported and has synchronized data."""
         tank = self.coordinator.data.get(self._tank_id)
         return super().available and tank is not None and tank.latest_sync is not None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         latest_sync = self.coordinator.data[self._tank_id].latest_sync

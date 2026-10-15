@@ -1,7 +1,5 @@
 """Expose regular shell commands as services."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
@@ -9,7 +7,7 @@ import logging
 import shlex
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 import homeassistant.config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -35,8 +33,8 @@ COMMAND_TIMEOUT = 60
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(cv.string)}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: cv.schema_with_slug_keys(cv.string)}, extra=probatio.ALLOW_EXTRA
 )
 
 
@@ -97,9 +95,6 @@ def _make_handler(
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except TimeoutError as err:
-            _LOGGER.error(
-                "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
-            )
             if process:
                 with suppress(TypeError):
                     process.kill()
@@ -147,9 +142,6 @@ def _make_handler(
                 if stderr_data:
                     service_response["stderr"] = stderr_data.decode("utf-8").strip()
             except UnicodeDecodeError as err:
-                _LOGGER.exception(
-                    "Unable to handle non-utf8 output of command: `%s`", cmd
-                )
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="non_utf8_output",
@@ -180,6 +172,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             _LOGGER.warning("Skipping shell_command entry '%s': name is reserved", name)
             continue
+        # Cannot be moved: action names come from the configuration
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             name,
@@ -191,13 +185,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Reload shell_command from YAML configuration."""
         try:
             raw_config = await conf_util.async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Error loading configuration.yaml: %s", err)
             return
 
         try:
             new_conf = CONFIG_SCHEMA(raw_config).get(DOMAIN, {})
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.error("Invalid shell_command configuration: %s", err)
             return
 
@@ -221,6 +216,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "Skipping shell_command entry '%s': name is reserved", name
                 )
                 continue
+            # Cannot be moved: action names come from the configuration
+            # pylint: disable-next=home-assistant-action-registered-outside-services-module
             hass.services.async_register(
                 DOMAIN,
                 name,
@@ -228,6 +225,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 supports_response=SupportsResponse.OPTIONAL,
             )
 
+    # Should be adjusted to register actions in async_setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service_helper.async_register_admin_service(
         hass,
         DOMAIN,

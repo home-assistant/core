@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "notify": {
+      "notify": {
+        "default": "mdi:television"
+      }
+    }
+  },
+  "services": {
+    "send_message": {
+      "service": "mdi:television"
+    }
+  }
+}

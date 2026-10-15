@@ -1,7 +1,7 @@
 """Provides fan entities for Home Connect."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import EventKey, OptionKey
 
@@ -21,9 +21,21 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+_FAN_SPEED_PERCENTAGE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+)
+_FAN_SPEED_MODE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+)
+
 FAN_SPEED_MODE_OPTIONS = {
-    "auto": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
-    "manual": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    "auto": (
+        "HeatingVentilationAirConditioning"
+        ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+    ),
+    "manual": (
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual"
+    ),
 }
 FAN_SPEED_MODE_OPTIONS_INVERTED = {v: k for k, v in FAN_SPEED_MODE_OPTIONS.items()}
 
@@ -98,6 +110,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             "Updated %s (fan mode), new state: %s", self.entity_id, self.preset_mode
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -108,17 +121,18 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             )
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the speed percentage and speed mode values."""
         option_value = None
-        option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
-        if event := self.appliance.events.get(EventKey(option_key)):
+        if event := self.appliance.events.get(EventKey(_FAN_SPEED_PERCENTAGE_KEY)):
             option_value = event.value
         self._attr_percentage = (
             cast(int, option_value) if option_value is not None else None
         )
 
     @property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Return the supported features for this fan entity."""
         features = FanEntityFeature(0)
@@ -137,8 +151,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
     def update_preset_mode(self) -> None:
         """Set the preset mode value."""
         option_value = None
-        option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
-        if event := self.appliance.events.get(EventKey(option_key)):
+        if event := self.appliance.events.get(EventKey(_FAN_SPEED_MODE_KEY)):
             option_value = event.value
         self._attr_preset_mode = (
             FAN_SPEED_MODE_OPTIONS_INVERTED.get(cast(str, option_value))
@@ -169,6 +182,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
                 if value in self._original_speed_modes_keys
             ]
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await super().async_set_option_with_key(
@@ -181,6 +195,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             percentage,
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target fan mode."""
         await super().async_set_option_with_key(
@@ -192,6 +207,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and any(

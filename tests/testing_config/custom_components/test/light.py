@@ -98,6 +98,6 @@ class MockLight(MockToggleEntity, LightEntity):
             ]:
                 setattr(self, key, value)
             if key == "white":
-                setattr(self, "brightness", value)
+                self.brightness = value
             if key in TURN_ON_ARG_TO_COLOR_MODE:
                 self._attr_color_mode = TURN_ON_ARG_TO_COLOR_MODE[key]

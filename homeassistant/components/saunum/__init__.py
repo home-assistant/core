@@ -1,7 +1,5 @@
 """The Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 from pysaunum import SaunumClient, SaunumConnectionError, SaunumTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,14 +32,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> None:
     """Set up Saunum Leil Sauna from a config entry."""
     host = entry.data[CONF_HOST]
 
     try:
         client = await SaunumClient.create(host)
     except (SaunumConnectionError, SaunumTimeoutError) as exc:
-        raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from exc
 
     entry.async_on_unload(client.async_close)
 
@@ -52,9 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

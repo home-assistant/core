@@ -1,9 +1,7 @@
 """Support for Powerview scenes from a Powerview hub."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopvapi.helpers.constants import ATTR_NAME
 from aiopvapi.resources.scene import Scene as PvScene
@@ -31,7 +29,10 @@ async def async_setup_entry(
     pv_entry = entry.runtime_data
     pvscenes: list[PowerViewScene] = []
     for scene in pv_entry.scene_data.values():
-        room_name = getattr(pv_entry.room_data.get(scene.room_id), ATTR_NAME, "")
+        room_name = ", ".join(
+            getattr(pv_entry.room_data.get(room_id), ATTR_NAME, "")
+            for room_id in scene.room_id
+        )
         pvscenes.append(
             PowerViewScene(pv_entry.coordinator, pv_entry.device_info, room_name, scene)
         )
@@ -56,6 +57,7 @@ class PowerViewScene(HDEntity, Scene):
         self._attr_name = scene.name
         self._attr_extra_state_attributes = {STATE_ATTRIBUTE_ROOM_NAME: room_name}
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         shades = await self._scene.activate()

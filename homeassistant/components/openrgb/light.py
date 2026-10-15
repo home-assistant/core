@@ -1,9 +1,7 @@
 """OpenRGB light platform."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from openrgb.orgb import Device
 from openrgb.utils import ModeColors, ModeData, RGBColor
@@ -19,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -101,7 +100,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             model=f"{self.device.metadata.description} ({self.device.type.name})",
             sw_version=self.device.metadata.version,
             serial_number=self.device.metadata.serial,
-            via_device=(DOMAIN, coordinator.entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.entry_id),
+                config_entry_id=coordinator.entry_id,
+            ),
         )
 
         modes = [mode.name for mode in self.device.modes]
@@ -187,7 +190,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             # If mode is Off, retain previous color mode to avoid changing the UI
             color_mode = self._attr_color_mode
         else:
-            # If the current mode is not Off and does not support color, change to ON/OFF mode
+            # If the current mode is not Off and does not support
+            # color, change to ON/OFF mode
             color_mode = ColorMode.ONOFF
 
         if not on_by_color:
@@ -224,6 +228,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             self._attr_is_on = on_by_color
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.available:
@@ -236,6 +241,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         self._update_events.clear()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the light is available."""
         return super().available and self.device_key in self.coordinator.data
@@ -309,6 +315,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                     },
                 ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         mode = None
@@ -360,8 +367,9 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             and (self._attr_brightness is None or self._attr_rgb_color is None)
         )
 
-        # If color/brightness restoration require color support but mode doesn't support it,
-        # switch to a color-capable mode
+        # If color/brightness restoration require color support
+        # but mode doesn't support it, switch to a color-capable
+        # mode
         if need_to_apply_color and not mode_supports_color:
             mode = self._preferred_no_effect_mode
 
@@ -393,12 +401,18 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
         await self._async_refresh_data()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if self._supports_off_mode:
             await self._async_apply_mode(OpenRGBMode.OFF)
         else:
-            # If the device does not support Off mode, set color to black
+            # If the device does not support Off mode, set color to black.
+            # Color writes are ignored while a mode without PER_LED color
+            # support (e.g. a firmware effect) is active — switch to the
+            # preferred no-effect mode first so the black actually lands.
+            if self._mode not in self._supports_color_modes:
+                await self._async_apply_mode(self._preferred_no_effect_mode)
             await self._async_apply_color(OFF_COLOR, 0)
 
         await self._async_refresh_data()

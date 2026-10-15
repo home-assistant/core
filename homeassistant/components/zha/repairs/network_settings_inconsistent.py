@@ -1,16 +1,13 @@
 """ZHA repair for inconsistent network settings."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 from zigpy.backups import NetworkBackup
 
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads_object
@@ -124,7 +121,7 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return self.async_show_menu(
             step_id="init",
@@ -136,7 +133,7 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
 
     async def async_step_use_new_settings(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> RepairsFlowResult:
         """Step to use the new settings found on the radio."""
         async with self._radio_mgr.create_zigpy_app(connect=False) as app:
             app.backups.add_backup(self._new_state)
@@ -146,7 +143,7 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
 
     async def async_step_restore_old_settings(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> RepairsFlowResult:
         """Step to restore the most recent backup."""
         await self._radio_mgr.restore_backup(self._old_state)
 

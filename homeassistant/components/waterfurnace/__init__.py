@@ -1,23 +1,21 @@
 """Support for WaterFurnace geothermal systems."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
-import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, INTEGRATION_TITLE
+from .const import DOMAIN
 from .coordinator import (
     WaterFurnaceCoordinator,
     WaterFurnaceDeviceData,
@@ -26,72 +24,10 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+
 type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceDeviceData]]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import the WaterFurnace configuration from YAML."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass, config))
-
-    return True
-
-
-async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config[DOMAIN],
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.8.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2026.8.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
-    )
 
 
 async def _async_setup_coordinator(
@@ -131,7 +67,7 @@ async def _async_setup_coordinator(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
-) -> bool:
+) -> None:
     """Set up WaterFurnace from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -156,19 +92,17 @@ async def async_setup_entry(
     entry.runtime_data = dict(results)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
-) -> bool:
+) -> None:
     """Unload a WaterFurnace config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 2:
@@ -176,17 +110,26 @@ async def async_migrate_entry(
         client = WaterFurnace(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
         try:
             await hass.async_add_executor_job(client.login)
-        except WFCredentialError, WFException:
-            _LOGGER.error("Failed to login during migration to account_id")
-            return False
+        except WFCredentialError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            ) from err
+        except WFException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+                translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            ) from err
 
         if client.account_id is None:
-            _LOGGER.error("Account ID is invalid during migration")
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_account_id",
+            )
 
         hass.config_entries.async_update_entry(
             entry, unique_id=str(client.account_id), minor_version=2
         )
         _LOGGER.info("Migrated config entry unique_id to account_id")
-
-    return True

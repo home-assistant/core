@@ -1,7 +1,5 @@
 """Test Tuya valve platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -10,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
@@ -17,9 +16,9 @@ from homeassistant.components.valve import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MockDeviceListener, check_selective_state_update, initialize_entry
+from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -31,6 +30,39 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.parametrize("mock_device_code", ["sfkzq_ed7frwissyqrejic"])
+async def test_single_channel_device_has_no_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device exposing a single channel keeps its entities on the device."""
+    for channel in range(2, 9):
+        for container in (
+            mock_device.function,
+            mock_device.status_range,
+            mock_device.status,
+        ):
+            container.pop(f"switch_{channel}", None)
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert not dr.async_child_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get("valve.jie_hashui_fa_valve")
+    assert entity_entry
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert entity_entry.device_id == device_entry.id
+
+
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -71,7 +103,7 @@ async def test_selective_state_update(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -82,9 +114,9 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_listener,
+        notification_helper,
         freezer,
-        entity_id="valve.jie_hashui_fa_valve_1",
+        entity_id="valve.jie_hashui_fa_channel_1_valve",
         dpcode="switch_1",
         initial_state="open",
         updates=updates,
@@ -119,7 +151,7 @@ async def test_action(
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test valve action."""
-    entity_id = "valve.jie_hashui_fa_valve_1"
+    entity_id = "valve.jie_hashui_fa_channel_1_valve"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
@@ -159,7 +191,7 @@ async def test_state(
     expected_state: str,
 ) -> None:
     """Test valve state."""
-    entity_id = "valve.jie_hashui_fa_valve_1"
+    entity_id = "valve.jie_hashui_fa_channel_1_valve"
     mock_device.status["switch_1"] = initial_status
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

@@ -1,0 +1,419 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Madimack Elite V3 Pool Heat Pump",
+  "category": "znrb",
+  "product_id": "8ln34bg8u4y6rdda",
+  "product_name": "Madimack Elite V3 Pool Heat Pump",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:00",
+  "active_time": "2024-10-05T23:24:35+00:00",
+  "create_time": "2024-10-05T23:24:35+00:00",
+  "update_time": "2024-10-05T23:24:35+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "heating", "cold"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 104,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["f", "c"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {},
+      "report_type": null
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "heating", "cold"]
+      },
+      "report_type": null
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {},
+      "report_type": null
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 104,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["f", "c"]
+      },
+      "report_type": null
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 250,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "compressor_strength": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 150,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_top": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 104,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_bottom": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 104,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_coiler": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 250,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_venting": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 250,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_effluent": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 250,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_around": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -22,
+        "max": 250,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    }
+  },
+  "status": {
+    "switch": false,
+    "mode": "heating",
+    "child_lock": false,
+    "temp_set": 31,
+    "temp_unit_convert": "c",
+    "temp_current": -22,
+    "compressor_strength": 0,
+    "temp_top": 40,
+    "temp_bottom": 18,
+    "temp_coiler": 22,
+    "temp_venting": 22,
+    "temp_effluent": 22,
+    "temp_around": 24
+  },
+  "set_up": true,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "switch",
+      "config_item": {
+        "statusFormat": {
+          "switch": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "mode",
+      "config_item": {
+        "statusFormat": {
+          "mode": "$"
+        },
+        "valueDesc": {
+          "range": ["auto", "heating", "cold"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "3": {
+      "value_convert": "default",
+      "status_code": "child_lock",
+      "config_item": {
+        "statusFormat": {
+          "child_lock": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "4": {
+      "value_convert": "default",
+      "status_code": "temp_set",
+      "config_item": {
+        "statusFormat": {
+          "temp_set": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 104,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "6": {
+      "value_convert": "default",
+      "status_code": "temp_unit_convert",
+      "config_item": {
+        "statusFormat": {
+          "temp_unit_convert": "$"
+        },
+        "valueDesc": {
+          "range": ["f", "c"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "16": {
+      "value_convert": "default",
+      "status_code": "temp_current",
+      "config_item": {
+        "statusFormat": {
+          "temp_current": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 250,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "20": {
+      "value_convert": "default",
+      "status_code": "compressor_strength",
+      "config_item": {
+        "statusFormat": {
+          "compressor_strength": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 150,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "21": {
+      "value_convert": "default",
+      "status_code": "temp_top",
+      "config_item": {
+        "statusFormat": {
+          "temp_top": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 104,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "22": {
+      "value_convert": "default",
+      "status_code": "temp_bottom",
+      "config_item": {
+        "statusFormat": {
+          "temp_bottom": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 104,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "23": {
+      "value_convert": "default",
+      "status_code": "temp_coiler",
+      "config_item": {
+        "statusFormat": {
+          "temp_coiler": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 250,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "24": {
+      "value_convert": "default",
+      "status_code": "temp_venting",
+      "config_item": {
+        "statusFormat": {
+          "temp_venting": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 250,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "25": {
+      "value_convert": "default",
+      "status_code": "temp_effluent",
+      "config_item": {
+        "statusFormat": {
+          "temp_effluent": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 250,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    },
+    "26": {
+      "value_convert": "default",
+      "status_code": "temp_around",
+      "config_item": {
+        "statusFormat": {
+          "temp_around": "$"
+        },
+        "valueDesc": {
+          "unit": "",
+          "min": -22,
+          "max": 250,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8ln34bg8u4y6rdda"
+      }
+    }
+  }
+}

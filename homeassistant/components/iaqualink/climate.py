@@ -1,9 +1,7 @@
 """Support for Aqualink Thermostats."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from iaqualink.device import AqualinkThermostat
 from iaqualink.systems.iaqua.device import AqualinkState
@@ -57,7 +55,7 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
     ) -> None:
         """Initialize AquaLink thermostat."""
         super().__init__(coordinator, dev)
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
             if dev.unit == "F"
             else UnitOfTemperature.CELSIUS
@@ -66,6 +64,7 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
         self._attr_max_temp = dev.max_temperature
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         if self.dev.is_on is True:
@@ -73,16 +72,22 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
         return HVACMode.OFF
 
     @refresh_system
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Turn the underlying heater switch on or off."""
         if hvac_mode == HVACMode.HEAT:
-            await await_or_reraise(self.dev.turn_on())
+            await await_or_reraise(
+                self.hass, self.coordinator.config_entry, self.dev.turn_on()
+            )
         elif hvac_mode == HVACMode.OFF:
-            await await_or_reraise(self.dev.turn_off())
+            await await_or_reraise(
+                self.hass, self.coordinator.config_entry, self.dev.turn_off()
+            )
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current HVAC action."""
         state = AqualinkState(self.dev._heater.state)  # noqa: SLF001
@@ -93,17 +98,24 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
         return HVACAction.OFF
 
     @property
-    def target_temperature(self) -> float:
+    @override
+    def native_target_temperature(self) -> float:
         """Return the current target temperature."""
         return float(self.dev.state)
 
     @refresh_system
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await await_or_reraise(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
+        await await_or_reraise(
+            self.hass,
+            self.coordinator.config_entry,
+            self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])),
+        )
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.dev.current_temperature != "":
             return float(self.dev.current_temperature)

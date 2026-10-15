@@ -1,7 +1,5 @@
 """Helper to test significant Humidifier state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -10,13 +8,13 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import ATTR_ACTION, ATTR_CURRENT_HUMIDITY, ATTR_HUMIDITY, ATTR_MODE
+from .const import HumidifierEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_ACTION,
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_HUMIDITY,
-    ATTR_MODE,
+    HumidifierEntityStateAttribute.ACTION,
+    HumidifierEntityStateAttribute.CURRENT_HUMIDITY,
+    HumidifierEntityStateAttribute.HUMIDITY,
+    HumidifierEntityStateAttribute.MODE,
 }
 
 
@@ -42,7 +40,10 @@ def async_check_significant_change(
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     for attr_name in changed_attrs:
-        if attr_name in [ATTR_ACTION, ATTR_MODE]:
+        if attr_name in [
+            HumidifierEntityStateAttribute.ACTION,
+            HumidifierEntityStateAttribute.MODE,
+        ]:
             return True
 
         old_attr_value = old_attrs.get(attr_name)

@@ -1,22 +1,21 @@
 """Intents for the humidifier integration."""
 
-from __future__ import annotations
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
-    ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
-    DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SERVICE_TURN_ON,
     HumidifierEntityFeature,
 )
+from .const import DOMAIN, HumidifierEntityCapabilityAttribute
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"
@@ -34,11 +33,14 @@ class HumidityHandler(intent.IntentHandler):
     intent_type = INTENT_HUMIDITY
     description = "Set desired humidity level"
     slot_schema = {
-        vol.Required("name"): intent.non_empty_string,
-        vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        probatio.Required("name"): intent.non_empty_string,
+        probatio.Required("humidity"): probatio.All(
+            probatio.Coerce(int), probatio.Range(0, 100)
+        ),
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -89,11 +91,12 @@ class SetModeHandler(intent.IntentHandler):
     intent_type = INTENT_MODE
     description = "Set humidifier mode"
     slot_schema = {
-        vol.Required("name"): intent.non_empty_string,
-        vol.Required("mode"): cv.string,
+        probatio.Required("name"): intent.non_empty_string,
+        probatio.Required("mode"): cv.string,
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -115,7 +118,10 @@ class SetModeHandler(intent.IntentHandler):
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]
 
-        if mode not in (state.attributes.get(ATTR_AVAILABLE_MODES) or []):
+        if mode not in (
+            state.attributes.get(HumidifierEntityCapabilityAttribute.AVAILABLE_MODES)
+            or []
+        ):
             raise intent.IntentHandleError(
                 f"Entity {state.name} does not support {mode} mode"
             )

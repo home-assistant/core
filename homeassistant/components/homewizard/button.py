@@ -1,5 +1,7 @@
 """Support for HomeWizard buttons."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -34,6 +36,7 @@ class HomeWizardIdentifyButton(HomeWizardEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_identify"
 
     @homewizard_exception_handler
+    @override
     async def async_press(self) -> None:
         """Identify the device."""
         await self.coordinator.api.identify()

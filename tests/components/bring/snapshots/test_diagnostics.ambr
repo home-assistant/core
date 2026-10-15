@@ -242,9 +242,16 @@
                 'attributes': list([
                   dict({
                     'content': dict({
+                      'activeFrom': None,
+                      'activeTo': None,
+                      'companyBrn': None,
                       'convenient': True,
                       'discounted': True,
+                      'newItemIcon': None,
+                      'newItemSection': None,
+                      'source': None,
                       'urgent': True,
+                      'uuid': None,
                     }),
                     'type': 'PURCHASE_CONDITIONS',
                   }),
@@ -257,9 +264,16 @@
                 'attributes': list([
                   dict({
                     'content': dict({
+                      'activeFrom': None,
+                      'activeTo': None,
+                      'companyBrn': None,
                       'convenient': True,
                       'discounted': True,
+                      'newItemIcon': None,
+                      'newItemSection': None,
+                      'source': None,
                       'urgent': True,
+                      'uuid': None,
                     }),
                     'type': 'PURCHASE_CONDITIONS',
                   }),
@@ -296,9 +310,16 @@
                 'attributes': list([
                   dict({
                     'content': dict({
+                      'activeFrom': None,
+                      'activeTo': None,
+                      'companyBrn': None,
                       'convenient': True,
                       'discounted': True,
+                      'newItemIcon': None,
+                      'newItemSection': None,
+                      'source': None,
                       'urgent': True,
+                      'uuid': None,
                     }),
                     'type': 'PURCHASE_CONDITIONS',
                   }),
@@ -311,9 +332,16 @@
                 'attributes': list([
                   dict({
                     'content': dict({
+                      'activeFrom': None,
+                      'activeTo': None,
+                      'companyBrn': None,
                       'convenient': True,
                       'discounted': True,
+                      'newItemIcon': None,
+                      'newItemSection': None,
+                      'source': None,
                       'urgent': True,
+                      'uuid': None,
                     }),
                     'type': 'PURCHASE_CONDITIONS',
                   }),

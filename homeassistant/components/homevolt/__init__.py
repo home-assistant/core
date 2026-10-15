@@ -1,7 +1,5 @@
 """The Homevolt integration."""
 
-from __future__ import annotations
-
 from homevolt import Homevolt
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
@@ -10,10 +8,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> None:
     """Set up Homevolt from a config entry."""
     host: str = entry.data[CONF_HOST]
     password: str | None = entry.data.get(CONF_PASSWORD)
@@ -28,14 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.client.close_connection()
-
-    return unload_ok
+    await entry.runtime_data.client.close_connection()

@@ -1,11 +1,9 @@
 """Switch platform for Tessie integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from tessie_api import (
     disable_sentry_mode,
@@ -130,15 +128,18 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
             self._attr_unique_id = f"{vehicle.vin}-{description.unique_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the Switch."""
         return self.entity_description.value_func(self._value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         await self.run(self.entity_description.on_func())
         self.set((self.entity_description.key, True))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         await self.run(self.entity_description.off_func())
@@ -159,12 +160,14 @@ class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, SwitchEntity):
             "components_disallow_charge_from_grid_with_solar_installed",
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         # When disallow_charge_from_grid_with_solar_installed is missing, its Off.
         # But this sensor is flipped to match how the Tesla app works.
         self._attr_is_on = not self.get(self.key, False)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         await handle_command(
@@ -175,6 +178,7 @@ class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         await handle_command(
@@ -198,17 +202,20 @@ class TessieStormModeSwitchEntity(TessieEnergyEntity, SwitchEntity):
             data, data.info_coordinator, "user_settings_storm_mode_enabled"
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
         self._attr_is_on = bool(self._value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         await handle_command(self.api.storm_mode(enabled=True))
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         await handle_command(self.api.storm_mode(enabled=False))

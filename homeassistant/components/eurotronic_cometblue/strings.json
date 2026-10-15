@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "No Comet Blue Bluetooth TRVs discovered.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_devices_found": "No Comet Blue Bluetooth TRVs discovered."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -35,6 +34,116 @@
       "sync_time": {
         "name": "Sync time"
       }
+    },
+    "number": {
+      "comfort_setpoint": {
+        "name": "Comfort setpoint"
+      },
+      "eco_setpoint": {
+        "name": "Eco setpoint"
+      },
+      "offset": {
+        "name": "Setpoint offset"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_adjust_during_holiday": {
+      "message": "Cannot adjust TRV remotely, manually disable holiday mode on TRV first"
+    },
+    "cannot_get_device_info": {
+      "message": "Failed to get device info from {address}"
+    },
+    "command_failed": {
+      "message": "Error sending command to {name}: {error}"
+    },
+    "device_not_found": {
+      "message": "Could not find Comet Blue device with address {address}: {reason}"
+    },
+    "display_only_preset": {
+      "message": "Unable to set preset {preset_mode}, display only."
+    },
+    "holiday_start_not_future": {
+      "message": "Start date (rounded up to the next hour) must be in the future"
+    },
+    "incorrect_pin": {
+      "message": "Failed to read battery level, likely due to an incorrect PIN"
+    },
+    "invalid_command_payload": {
+      "message": "Invalid payload {payload} for {name}: {error}"
+    },
+    "invalid_half_precision": {
+      "message": "value {value} is not a half precision float, remainder is {remainder}"
+    },
+    "invalid_schedule_time_range": {
+      "message": "Invalid time range {index}, {start} is after {end}"
+    },
+    "missing_schedule_times": {
+      "message": "Missing from/to in entry"
+    },
+    "overlapping_schedule_times": {
+      "message": "Overlapping times found in schedule, {start} is earlier than previous entry {previous_end} ends"
+    },
+    "update_failed": {
+      "message": "An unexpected error occurred while communicating with the TRV: {error}"
+    }
+  },
+  "services": {
+    "get_schedule": {
+      "description": "Retrieves the configured heating time ranges of one or multiple devices.",
+      "name": "Get schedule"
+    },
+    "set_holiday": {
+      "description": "Sets holiday/away mode on one or multiple devices.",
+      "fields": {
+        "from": {
+          "description": "Start of the away mode.",
+          "name": "From"
+        },
+        "temperature": {
+          "description": "Temperature during away mode.",
+          "name": "Temperature"
+        },
+        "to": {
+          "description": "End of the away mode.",
+          "name": "To"
+        }
+      },
+      "name": "Set holiday/away mode"
+    },
+    "set_schedule": {
+      "description": "Sets the configured heating time ranges of one or multiple devices. Days not included will be left unchanged.",
+      "fields": {
+        "friday": {
+          "description": "Heating time periods for Friday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::friday%]"
+        },
+        "monday": {
+          "description": "Heating time periods for Monday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::monday%]"
+        },
+        "saturday": {
+          "description": "Heating time periods for Saturday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::saturday%]"
+        },
+        "sunday": {
+          "description": "Heating time periods for Sunday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::sunday%]"
+        },
+        "thursday": {
+          "description": "Heating time periods for Thursday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::thursday%]"
+        },
+        "tuesday": {
+          "description": "Heating time periods for Tuesday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::tuesday%]"
+        },
+        "wednesday": {
+          "description": "Heating time periods for Wednesday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::wednesday%]"
+        }
+      },
+      "name": "Set schedule"
     }
   }
 }

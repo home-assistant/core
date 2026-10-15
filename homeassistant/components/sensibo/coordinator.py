@@ -1,9 +1,7 @@
 """DataUpdateCoordinator for the Sensibo integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysensibo import SensiboClient
 from pysensibo.exceptions import AuthenticationError, SensiboError
@@ -82,6 +80,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
         )
         return (new_devices, remove_devices, new_added_devices)
 
+    @override
     async def _async_update_data(self) -> SensiboData:
         """Fetch data from Sensibo."""
         try:
@@ -111,12 +110,11 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
             LOGGER.debug("Removing stale devices: %s", stale_devices)
             device_registry = dr.async_get(self.hass)
             for _id in stale_devices:
-                device = device_registry.async_get_device(identifiers={(DOMAIN, _id)})
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, _id), self.config_entry.entry_id
+                )
                 if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
         self.previous_devices = current_devices
 
         return data

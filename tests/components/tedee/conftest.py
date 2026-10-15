@@ -1,9 +1,6 @@
 """Fixtures for Tedee integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiotedee.models import TedeeBridge, TedeeLock
@@ -15,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 WEBHOOK_ID = "bq33efxmdi3vxy55q2wbnudbra7iv8mjrq9x0gea33g4zqtd87093pwveg8xcb33"
 
@@ -68,7 +65,7 @@ def mock_tedee() -> Generator[MagicMock]:
         tedee.register_webhook.return_value = 1
         tedee.delete_webhooks.return_value = None
 
-        locks_json = json.loads(load_fixture("locks.json", DOMAIN))
+        locks_json = load_json_array_fixture("locks.json", DOMAIN)
 
         lock_list = [TedeeLock.from_dict(lock) for lock in locks_json]
         tedee.locks_dict = {lock.id: lock for lock in lock_list}

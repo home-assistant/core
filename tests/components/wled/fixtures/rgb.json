@@ -1,5 +1,8 @@
 {
   "state": {
+    "AudioReactive": {
+      "on": false
+    },
     "on": true,
     "bri": 128,
     "transition": 7,
@@ -64,7 +67,7 @@
         "spc": 0,
         "of": 0,
         "on": true,
-        "frz": false,
+        "frz": true,
         "bri": 255,
         "cct": 127,
         "set": 0,

@@ -1,9 +1,8 @@
 """Support for Roku sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from rokuecp.models import Device as RokuDevice
 
@@ -63,6 +62,7 @@ class RokuSensorEntity(RokuEntity, SensorEntity):
     entity_description: RokuSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

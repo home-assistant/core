@@ -1,10 +1,9 @@
 """Support for Honeywell Lyric sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -16,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -37,6 +36,14 @@ LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_PERMANENT_HOLD: "Held Permanently",
     PRESET_TEMPORARY_HOLD: "Held Temporarily",
     PRESET_VACATION_HOLD: "Holiday",
+}
+
+PRIORITY_STATUS_OPTIONS = {
+    PRESET_NO_HOLD: "no_hold",
+    PRESET_TEMPORARY_HOLD: "temporary_hold",
+    PRESET_HOLD_UNTIL: "hold_until",
+    PRESET_PERMANENT_HOLD: "permanent_hold",
+    PRESET_VACATION_HOLD: "vacation_hold",
 }
 
 
@@ -103,6 +110,13 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         ),
     ),
     LyricSensorEntityDescription(
+        key="schedule_status",
+        translation_key="schedule_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.schedule_status,
+        suitable_fn=lambda device: device.schedule_status,
+    ),
+    LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
         value_fn=lambda device: get_setpoint_status(
@@ -134,6 +148,14 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         value_fn=lambda room, _: room.room_avg_humidity,
         suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
+    LyricSensorAccessoryEntityDescription(
+        key="room_average_temperature",
+        translation_key="room_average_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda room, _: room.room_avg_temp,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
+    ),
 ]
 
 
@@ -144,11 +166,13 @@ def get_setpoint_status(status: str, time: str) -> str | None:
     return LYRIC_SETPOINT_STATUS_NAMES.get(status)
 
 
-def get_datetime_from_future_time(time_str: str) -> datetime:
+def get_datetime_from_future_time(time_str: str | None) -> datetime | None:
     """Get datetime from future time provided."""
+    if time_str is None:
+        return None
     time = dt_util.parse_time(time_str)
     if time is None:
-        raise ValueError(f"Unable to parse time {time_str}")
+        return None
     now = dt_util.utcnow()
     if time <= now.time():
         now = now + timedelta(days=1)
@@ -188,6 +212,14 @@ async def async_setup_entry(
         if accessory_sensor.suitable_fn(room, accessory)
     )
 
+    async_add_entities(
+        LyricPriorityStatusSensor(coordinator, location, device)
+        for location in coordinator.data.locations
+        for device in location.devices
+        if device.device_class == "Thermostat"
+        and coordinator.data.rooms_dict.get(device.mac_id)
+    )
+
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Define a Honeywell Lyric sensor."""
@@ -216,6 +248,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.device)
@@ -252,6 +285,39 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.room, self.accessory)
+
+
+class LyricPriorityStatusSensor(LyricDeviceEntity, SensorEntity):
+    """Define a Honeywell Lyric room priority hold status sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "priority_status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(PRIORITY_STATUS_OPTIONS.values())
+
+    def __init__(
+        self,
+        coordinator: LyricDataUpdateCoordinator,
+        location: LyricLocation,
+        device: LyricDevice,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            f"{device.mac_id}_priority_status",
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the state."""
+        priority = self.coordinator.data.priorities_dict.get(self._mac_id)
+        if priority is None:
+            return None
+        return PRIORITY_STATUS_OPTIONS.get(priority.status)

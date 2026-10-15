@@ -194,7 +194,8 @@ async def test_uncomplete_todo_item(
     [
         (
             ERROR_NOT_FOUND,
-            r"Unable to update the score for your Habitica to-do `.+`, please try again",
+            r"Unable to update the score for your Habitica"
+            r" to-do `.+`, please try again",
             ServiceValidationError,
         ),
         (
@@ -451,7 +452,8 @@ async def test_add_todo_item_exception(
     habitica.create_task.side_effect = exception
     with pytest.raises(
         expected_exception=expected_exception,
-        # match="Unable to create new to-do `test-summary` for Habitica, please try again",
+        # match="Unable to create new to-do `test-summary`
+        # for Habitica, please try again",
         match=exc_msg,
     ):
         await hass.services.async_call(
@@ -567,7 +569,8 @@ async def test_delete_completed_todo_items(
     [
         (
             ERROR_NOT_FOUND,
-            "Unable to delete completed to-do items from Habitica to-do list, please try again",
+            "Unable to delete completed to-do items from"
+            " Habitica to-do list, please try again",
             ServiceValidationError,
         ),
         (

@@ -1,7 +1,5 @@
 """Support for the Fibaro devices."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 import logging
@@ -24,7 +22,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceInfo
 from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
@@ -188,8 +186,12 @@ class FibaroController:
             identifiers={(DOMAIN, main_device.fibaro_id)},
             manufacturer=manufacturer,
             name=main_device.name,
-            via_device=(DOMAIN, self.hub_serial),
         )
+
+    def link_main_devices_to_hub(self, via_device_id: str) -> None:
+        """Link all main devices to the hub via device."""
+        for device_info in self._device_infos.values():
+            device_info.via_device_id = via_device_id
 
     def get_device_info(self, device: DeviceModel) -> DeviceInfo:
         """Get the device info by fibaro device id."""
@@ -304,7 +306,7 @@ def init_controller(data: Mapping[str, Any]) -> FibaroController:
     return FibaroController(client, info, data[CONF_IMPORT_PLUGINS])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
     """Set up the Fibaro Component.
 
     The unique id of the config entry is the serial number of the home center.
@@ -323,7 +325,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
     # register the hub device info separately as the hub has sometimes no entities
     fibaro_info = controller.read_fibaro_info()
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    hub_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller.hub_serial)},
         serial_number=controller.hub_serial,
@@ -334,23 +336,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
         configuration_url=controller.get_frontend_url(),
         connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
     )
+    controller.link_main_devices_to_hub(hub_device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("Shutting down Fibaro connection")
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    entry.runtime_data.disconnect()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        entry.runtime_data.disconnect()
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: FibaroConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: FibaroConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a device entry from fibaro integration.
 

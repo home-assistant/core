@@ -1,10 +1,8 @@
 """Sensors for the Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -82,7 +80,6 @@ PAIRED_SENSOR_DESCRIPTIONS = (
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_AVG_CURRENT,
-        translation_key="current",
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
@@ -185,6 +182,7 @@ class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     entity_description: PairedSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -196,6 +194,7 @@ class ValveControllerSensor(ValveControllerEntity, SensorEntity):
     entity_description: ValveControllerSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

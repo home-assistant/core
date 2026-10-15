@@ -1,6 +1,6 @@
 """Support for IQVIA."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
@@ -30,6 +30,7 @@ class IQVIAEntity(CoordinatorEntity[IqviaUpdateCoordinator]):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if not self.coordinator.last_update_success:
@@ -38,6 +39,7 @@ class IQVIAEntity(CoordinatorEntity[IqviaUpdateCoordinator]):
         self.update_from_latest_data()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

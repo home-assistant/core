@@ -1,10 +1,9 @@
 """Platform for Kostal Plenticore select widgets."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -105,6 +104,7 @@ class PlenticoreDataSelect(
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -114,6 +114,7 @@ class PlenticoreDataSelect(
             and self.data_id in self.coordinator.data[self.module_id]
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
@@ -123,11 +124,13 @@ class PlenticoreDataSelect(
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
         self.coordinator.stop_fetch_data(self.module_id, self.data_id, self.options)
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         for all_option in self.options:
@@ -140,6 +143,7 @@ class PlenticoreDataSelect(
         self.async_write_ha_state()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.available:

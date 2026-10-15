@@ -1,10 +1,9 @@
 """Coordinator for Home Assistant Backup integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -35,12 +34,12 @@ class BackupCoordinatorData:
 class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
     """Class to retrieve backup status."""
 
-    config_entry: ConfigEntry
+    config_entry: BackupConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BackupConfigEntry,
         backup_manager: BackupManager,
     ) -> None:
         """Initialize coordinator."""
@@ -66,6 +65,7 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
         self._last_event = event
         self.config_entry.async_create_task(self.hass, self.async_refresh())
 
+    @override
     async def _async_update_data(self) -> BackupCoordinatorData:
         """Update backup manager data."""
         return BackupCoordinatorData(

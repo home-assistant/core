@@ -1,7 +1,5 @@
 """Helpers to deal with bayesian observations."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import uuid
 
@@ -39,7 +37,8 @@ class Observation:
     def to_dict(self) -> dict[str, str | float | bool | None]:
         """Represent Class as a Dict for easier serialization."""
 
-        # Needed because dataclasses asdict() can't serialize Templates and ignores Properties.
+        # Needed because dataclasses asdict() can't serialize
+        # Templates and ignores Properties.
         dic = {
             CONF_PLATFORM: self.platform,
             CONF_ENTITY_ID: self.entity_id,

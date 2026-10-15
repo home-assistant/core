@@ -1,20 +1,13 @@
 """The Aladdin Connect Genie integration."""
 
-from __future__ import annotations
-
-import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     device_registry as dr,
-)
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
 )
 
 from . import api
@@ -26,30 +19,17 @@ PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AladdinConnectConfigEntry
-) -> bool:
+) -> None:
     """Set up Aladdin Connect Genie from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    try:
-        await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     client = AladdinConnectClient(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
@@ -64,19 +44,17 @@ async def async_setup_entry(
 
     remove_stale_devices(hass, entry)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AladdinConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: AladdinConnectConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config."""
     if config_entry.version < CONFIG_FLOW_VERSION:
         config_entry.async_start_reauth(hass)
@@ -87,8 +65,6 @@ async def async_migrate_entry(
             version=CONFIG_FLOW_VERSION,
             minor_version=CONFIG_FLOW_MINOR_VERSION,
         )
-
-    return True
 
 
 def remove_stale_devices(
@@ -110,6 +86,4 @@ def remove_stale_devices(
                 break
 
         if device_id and device_id not in all_device_ids:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)

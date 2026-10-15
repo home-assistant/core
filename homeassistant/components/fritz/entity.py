@@ -1,10 +1,8 @@
 """AVM FRITZ!Tools entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fritzconnection.lib.fritzstatus import FritzStatus
 
@@ -52,24 +50,6 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         raise NotImplementedError
 
 
-class FritzBoxBaseEntity:
-    """Fritz host entity base class."""
-
-    def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
-        """Init device info class."""
-        self._avm_wrapper = avm_wrapper
-        self._device_name = device_name
-        self.mac_address = self._avm_wrapper.mac
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self._avm_wrapper.unique_id)},
-        )
-
-
 @dataclass(frozen=True, kw_only=True)
 class FritzEntityDescription(EntityDescription):
     """Fritz entity base description."""
@@ -95,6 +75,7 @@ class FritzBoxBaseCoordinatorEntity(CoordinatorEntity[AvmWrapper]):
         self._device_name = device_name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -106,6 +87,7 @@ class FritzBoxBaseCoordinatorEntity(CoordinatorEntity[AvmWrapper]):
             )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(

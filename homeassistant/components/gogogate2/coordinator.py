@@ -1,7 +1,5 @@
 """Coordinator for GogoGate2 component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging

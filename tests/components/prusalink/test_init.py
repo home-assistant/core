@@ -3,21 +3,49 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from httpx import ConnectError
+from httpx2 import ConnectError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
 from homeassistant.components.prusalink import DOMAIN
-from homeassistant.components.prusalink.config_flow import ConfigFlow
+from homeassistant.components.prusalink.config_flow import PrusaLinkConfigFlow
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("mock_api")
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test device info is populated with serial and firmware."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.serial_number == "serial-1337"
+    assert device.sw_version == "6.1.2+11023"
+
+    # `location` from /api/v1/info is set as suggested_area; the device gets
+    # placed in that area (created on the fly when not pre-existing).
+    assert device.area_id is not None
+    area = area_registry.async_get_area(device.area_id)
+    assert area is not None
+    assert area.name == "Workshop"
 
 
 async def test_unloading(
@@ -146,7 +174,7 @@ async def test_migration_fails_on_future_version(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
-        version=ConfigFlow.VERSION + 1,
+        version=PrusaLinkConfigFlow.VERSION + 1,
     )
     entry.add_to_hass(hass)
 

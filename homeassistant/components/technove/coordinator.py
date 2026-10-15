@@ -1,8 +1,13 @@
 """DataUpdateCoordinator for TechnoVE."""
 
-from __future__ import annotations
+from typing import override
 
-from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
+from technove import (
+    Station as TechnoVEStation,
+    TechnoVE,
+    TechnoVEConnectionError,
+    TechnoVEError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -34,11 +39,20 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> TechnoVEStation:
         """Fetch data from TechnoVE."""
         try:
             station = await self.technove.update()
+        except TechnoVEConnectionError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
         except TechnoVEError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error
 
         return station

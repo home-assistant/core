@@ -1,11 +1,11 @@
 """Config flow for Subaru integration."""
 
-from __future__ import annotations
-
-from datetime import datetime
+from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+import time
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from subarulink import (
     Controller as SubaruAPI,
     InvalidCredentials,
@@ -13,9 +13,13 @@ from subarulink import (
     SubaruException,
 )
 from subarulink.const import COUNTRY_CAN, COUNTRY_USA
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -25,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_UPDATE_ENABLED, DOMAIN
 from .coordinator import SubaruConfigEntry
@@ -32,7 +37,10 @@ from .coordinator import SubaruConfigEntry
 _LOGGER = logging.getLogger(__name__)
 CONF_CONTACT_METHOD = "contact_method"
 CONF_VALIDATION_CODE = "validation_code"
-PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN): str})
+PIN_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_PIN)): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,6 +53,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         self.config_data: dict[str, Any] = {CONF_PIN: None}
         self.controller: SubaruAPI | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -75,22 +84,22 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME) if user_input else "",
                     ): str,
-                    vol.Required(
-                        CONF_PASSWORD,
+                    probatio.Required(
+                        probatio.Secret(CONF_PASSWORD),
                         default=user_input.get(CONF_PASSWORD) if user_input else "",
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_COUNTRY,
                         default=user_input.get(CONF_COUNTRY)
                         if user_input
                         else COUNTRY_USA,
-                    ): vol.In([COUNTRY_CAN, COUNTRY_USA]),
+                    ): probatio.In([COUNTRY_CAN, COUNTRY_USA]),
                 }
             ),
             errors=error,
@@ -98,6 +107,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SubaruConfigEntry,
     ) -> OptionsFlowHandler:
@@ -110,10 +120,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         data: contains values provided by the user.
         """
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        now = datetime.now()
         if not data.get(CONF_DEVICE_ID):
-            data[CONF_DEVICE_ID] = int(now.timestamp())
-        date = now.strftime("%Y-%m-%d")
+            data[CONF_DEVICE_ID] = int(time.time())
+        date = dt_util.now().strftime("%Y-%m-%d")
         device_name = "Home Assistant: Added " + date
 
         self.controller = SubaruAPI(
@@ -149,9 +158,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_two_factor_validate()
             return self.async_abort(reason="two_factor_request_failed")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_CONTACT_METHOD): vol.In(
+                probatio.Required(CONF_CONTACT_METHOD): probatio.In(
                     list(self.controller.contact_methods.values())
                 )
             }
@@ -169,20 +178,24 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.controller
         if user_input:
             try:
-                vol.Match(r"^[0-9]{6}$")(user_input[CONF_VALIDATION_CODE])
+                probatio.Match(r"^[0-9]{6}$")(user_input[CONF_VALIDATION_CODE])
                 if await self.controller.submit_auth_code(
                     user_input[CONF_VALIDATION_CODE]
                 ):
+                    if self.source == SOURCE_REAUTH:
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(), data=self.config_data
+                        )
                     if self.controller.is_pin_required():
                         return await self.async_step_pin()
                     return self.async_create_entry(
                         title=self.config_data[CONF_USERNAME], data=self.config_data
                     )
                 error = {"base": "incorrect_validation_code"}
-            except vol.Invalid:
+            except probatio.Invalid:
                 error = {"base": "bad_validation_code_format"}
 
-        data_schema = vol.Schema({vol.Required(CONF_VALIDATION_CODE): str})
+        data_schema = probatio.Schema({probatio.Required(CONF_VALIDATION_CODE): str})
         return self.async_show_form(
             step_id="two_factor_validate", data_schema=data_schema, errors=error
         )
@@ -196,9 +209,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.controller
         if user_input and self.controller.update_saved_pin(user_input[CONF_PIN]):
             try:
-                vol.Match(r"[0-9]{4}")(user_input[CONF_PIN])
+                probatio.Match(r"[0-9]{4}")(user_input[CONF_PIN])
                 await self.controller.test_pin()
-            except vol.Invalid:
+            except probatio.Invalid:
                 error = {"base": "bad_pin_format"}
             except InvalidPIN:
                 error = {"base": "incorrect_pin"}
@@ -209,6 +222,46 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self.config_data[CONF_USERNAME], data=self.config_data
                 )
         return self.async_show_form(step_id="pin", data_schema=PIN_SCHEMA, errors=error)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            # connect() returns False without raising when no vehicles are found
+            self.config_data = {**reauth_entry.data, **user_input}
+            try:
+                await self.validate_login_creds(self.config_data)
+            except InvalidCredentials:
+                errors["base"] = "invalid_auth"
+            except SubaruException as ex:
+                _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
+                errors["base"] = "cannot_connect"
+            else:
+                if TYPE_CHECKING:
+                    assert self.controller
+                if not self.controller.device_registered:
+                    _LOGGER.debug("2FA validation is required")
+                    return await self.async_step_two_factor()
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data=self.config_data
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(OptionsFlow):
@@ -221,9 +274,9 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_UPDATE_ENABLED,
                     default=self.config_entry.options.get(CONF_UPDATE_ENABLED, False),
                 ): cv.boolean,

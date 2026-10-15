@@ -1,8 +1,6 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyfritzhome.devicetypes import FritzhomeTrigger
 
@@ -56,16 +54,19 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome switches."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.data.switch_state  # type: ignore [no-any-return]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.check_lock_state()
         await self.hass.async_add_executor_job(self.data.set_switch_state_on, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.check_lock_state()
@@ -73,7 +74,7 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
         await self.coordinator.async_refresh()
 
     def check_lock_state(self) -> None:
-        """Raise an Error if manual switching via FRITZ!Box user interface is disabled."""
+        """Raise an Error if manual switching via FRITZ!Box is disabled."""
         if self.data.lock:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -85,11 +86,13 @@ class FritzboxTrigger(FritzBoxEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome triggers."""
 
     @property
+    @override
     def data(self) -> FritzhomeTrigger:
         """Return the trigger data entity."""
         return self.coordinator.data.triggers[self.ain]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
@@ -101,10 +104,12 @@ class FritzboxTrigger(FritzBoxEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the trigger is active."""
         return self.data.active  # type: ignore [no-any-return]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the trigger."""
         await self.hass.async_add_executor_job(
@@ -112,6 +117,7 @@ class FritzboxTrigger(FritzBoxEntity, SwitchEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Deactivate the trigger."""
         await self.hass.async_add_executor_job(

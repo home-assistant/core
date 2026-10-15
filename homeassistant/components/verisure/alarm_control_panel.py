@@ -1,8 +1,7 @@
 """Support for Verisure alarm control panels."""
 
-from __future__ import annotations
-
 import asyncio
+from typing import override
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -11,6 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -42,6 +42,7 @@ class VerisureAlarm(
     )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
@@ -53,6 +54,7 @@ class VerisureAlarm(
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self.coordinator.config_entry.data[CONF_GIID]
@@ -65,6 +67,12 @@ class VerisureAlarm(
             self.coordinator.verisure.request, command_data
         )
         LOGGER.debug("Verisure set arm state %s", state)
+        if arm_state is None or "data" not in arm_state:
+            await self.coordinator.async_refresh()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_state_failed",
+            )
         result = None
         attempts = 0
         while result is None:
@@ -79,6 +87,8 @@ class VerisureAlarm(
                     list(arm_state["data"].values())[0], state
                 ),
             )
+            if transaction is None:
+                continue
             result = (
                 transaction.get("data", {})
                 .get("installation", {})
@@ -90,6 +100,7 @@ class VerisureAlarm(
             self._attr_alarm_state = ALARM_STATE_TO_HA.get(state)
             self.async_write_ha_state()
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._attr_alarm_state = AlarmControlPanelState.DISARMING
@@ -98,6 +109,7 @@ class VerisureAlarm(
             "DISARMED", self.coordinator.verisure.disarm(code)
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._attr_alarm_state = AlarmControlPanelState.ARMING
@@ -106,6 +118,7 @@ class VerisureAlarm(
             "ARMED_HOME", self.coordinator.verisure.arm_home(code)
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._attr_alarm_state = AlarmControlPanelState.ARMING
@@ -122,11 +135,13 @@ class VerisureAlarm(
         self._attr_changed_by = self.coordinator.data["alarm"].get("name")
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_alarm_attributes()
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

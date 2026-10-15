@@ -1,10 +1,8 @@
 """Support for Samsung Printers with SyncThru web interface."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pysyncthru import SyncThru, SyncthruState
 
@@ -155,11 +153,13 @@ class SyncThruSensor(SyncthruEntity, SensorEntity):
     entity_description: SyncThruSensorDescription
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:

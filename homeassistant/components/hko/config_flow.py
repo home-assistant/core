@@ -1,13 +1,11 @@
 """Config flow for Hong Kong Observatory integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 import logging
-from typing import Any
+from typing import Any, override
 
 from hko import HKO, LOCATIONS, HKOError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LOCATION
@@ -24,9 +22,9 @@ def get_loc_name(item):
     return item[KEY_LOCATION]
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION, default=DEFAULT_LOCATION): SelectSelector(
+        probatio.Required(CONF_LOCATION, default=DEFAULT_LOCATION): SelectSelector(
             SelectSelectorConfig(options=list(map(get_loc_name, LOCATIONS)), sort=True)
         )
     }
@@ -38,6 +36,7 @@ class HKOConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

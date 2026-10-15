@@ -1,8 +1,6 @@
 """Support for locks through the SmartThings cloud API."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Command
 
@@ -44,6 +42,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
 
     _attr_name = None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self.execute_device_command(
@@ -51,6 +50,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
             Command.LOCK,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self.execute_device_command(
@@ -59,6 +59,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
         )
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return (
@@ -66,6 +67,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         state_attrs = {}

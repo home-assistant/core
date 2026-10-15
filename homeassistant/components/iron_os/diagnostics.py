@@ -1,7 +1,5 @@
 """Diagnostics platform for IronOS integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_ADDRESS

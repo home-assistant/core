@@ -4,14 +4,16 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.scene.trigger import TRIGGERS
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -24,15 +26,11 @@ async def target_scenes(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "scene")
 
 
-@pytest.mark.parametrize("trigger_key", ["scene.activated"])
-async def test_scene_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the scene triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "activated": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -56,7 +54,11 @@ async def test_scene_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("scene"),

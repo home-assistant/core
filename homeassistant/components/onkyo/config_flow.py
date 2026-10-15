@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioonkyo import ReceiverInfo
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import (
@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
@@ -47,8 +47,6 @@ from .util import get_meaning
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE = "device"
-
 INPUT_SOURCES_DEFAULT: list[InputSource] = []
 LISTENING_MODES_DEFAULT: list[ListeningMode] = []
 INPUT_SOURCES_ALL_MEANINGS = {
@@ -57,22 +55,24 @@ INPUT_SOURCES_ALL_MEANINGS = {
 LISTENING_MODES_ALL_MEANINGS = {
     get_meaning(listening_mode): listening_mode for listening_mode in ListeningMode
 }
-STEP_MANUAL_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
-STEP_RECONFIGURE_SCHEMA = vol.Schema(
+STEP_MANUAL_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
+STEP_RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Required(OPTION_VOLUME_RESOLUTION): vol.In(VOLUME_RESOLUTION_ALLOWED),
+        probatio.Required(OPTION_VOLUME_RESOLUTION): probatio.In(
+            VOLUME_RESOLUTION_ALLOWED
+        ),
     }
 )
 STEP_CONFIGURE_SCHEMA = STEP_RECONFIGURE_SCHEMA.extend(
     {
-        vol.Required(OPTION_INPUT_SOURCES): SelectSelector(
+        probatio.Required(OPTION_INPUT_SOURCES): SelectSelector(
             SelectSelectorConfig(
                 options=list(INPUT_SOURCES_ALL_MEANINGS),
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
-        vol.Required(OPTION_LISTENING_MODES): SelectSelector(
+        probatio.Required(OPTION_LISTENING_MODES): SelectSelector(
             SelectSelectorConfig(
                 options=list(LISTENING_MODES_ALL_MEANINGS),
                 multiple=True,
@@ -89,6 +89,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     _receiver_info: ReceiverInfo
     _discovered_infos: dict[str, ReceiverInfo]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -181,11 +182,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="eiscp_discovery",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_DEVICE): vol.In(discovered_names)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(discovered_names)}
             ),
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -336,24 +338,25 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: OnkyoConfigEntry) -> OptionsFlowWithReload:
         """Return the options flow."""
         return OnkyoOptionsFlowHandler()
 
 
-OPTIONS_STEP_INIT_SCHEMA = vol.Schema(
+OPTIONS_STEP_INIT_SCHEMA = probatio.Schema(
     {
-        vol.Required(OPTION_MAX_VOLUME): NumberSelector(
+        probatio.Required(OPTION_MAX_VOLUME): NumberSelector(
             NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)
         ),
-        vol.Required(OPTION_INPUT_SOURCES): SelectSelector(
+        probatio.Required(OPTION_INPUT_SOURCES): SelectSelector(
             SelectSelectorConfig(
                 options=list(INPUT_SOURCES_ALL_MEANINGS),
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
-        vol.Required(OPTION_LISTENING_MODES): SelectSelector(
+        probatio.Required(OPTION_LISTENING_MODES): SelectSelector(
             SelectSelectorConfig(
                 options=list(LISTENING_MODES_ALL_MEANINGS),
                 multiple=True,
@@ -473,24 +476,26 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
         input_sources_schema_dict: dict[Any, Selector] = {}
         for input_source, input_source_name in self._input_sources.items():
             input_sources_schema_dict[
-                vol.Required(get_meaning(input_source), default=input_source_name)
+                probatio.Required(get_meaning(input_source), default=input_source_name)
             ] = TextSelector()
 
         listening_modes_schema_dict: dict[Any, Selector] = {}
         for listening_mode, listening_mode_name in self._listening_modes.items():
             listening_modes_schema_dict[
-                vol.Required(get_meaning(listening_mode), default=listening_mode_name)
+                probatio.Required(
+                    get_meaning(listening_mode), default=listening_mode_name
+                )
             ] = TextSelector()
 
         return self.async_show_form(
             step_id="names",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(OPTION_INPUT_SOURCES): section(
-                        vol.Schema(input_sources_schema_dict)
+                    probatio.Required(OPTION_INPUT_SOURCES): section(
+                        probatio.Schema(input_sources_schema_dict)
                     ),
-                    vol.Required(OPTION_LISTENING_MODES): section(
-                        vol.Schema(listening_modes_schema_dict)
+                    probatio.Required(OPTION_LISTENING_MODES): section(
+                        probatio.Schema(listening_modes_schema_dict)
                     ),
                 }
             ),

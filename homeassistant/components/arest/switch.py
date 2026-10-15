@@ -1,13 +1,11 @@
 """Support for an exposed aREST RESTful API of a device."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -27,21 +25,21 @@ CONF_INVERT = "invert"
 
 DEFAULT_NAME = "aREST switch"
 
-PIN_FUNCTION_SCHEMA = vol.Schema(
+PIN_FUNCTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_INVERT, default=False): cv.boolean,
     }
 )
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PINS, default={}): vol.Schema(
+        probatio.Required(CONF_RESOURCE): cv.url,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PINS, default={}): probatio.Schema(
             {cv.string: PIN_FUNCTION_SCHEMA}
         ),
-        vol.Optional(CONF_FUNCTIONS, default={}): vol.Schema(
+        probatio.Optional(CONF_FUNCTIONS, default={}): probatio.Schema(
             {cv.string: PIN_FUNCTION_SCHEMA}
         ),
     }
@@ -127,6 +125,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         except ValueError:
             _LOGGER.error("Response invalid")
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         request = requests.get(
@@ -138,6 +137,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         else:
             _LOGGER.error("Can't turn on function %s at %s", self._func, self._resource)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         request = requests.get(
@@ -173,6 +173,7 @@ class ArestSwitchPin(ArestSwitchBase):
 
         self.__set_pin_output()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         turn_on_payload = int(not self.invert)
@@ -184,6 +185,7 @@ class ArestSwitchPin(ArestSwitchBase):
         else:
             _LOGGER.error("Can't turn on pin %s at %s", self._pin, self._resource)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         turn_off_payload = int(self.invert)

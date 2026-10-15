@@ -1,12 +1,10 @@
 """Support for Open Hardware Monitor Sensor Platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -41,7 +39,10 @@ OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
+    {
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=8085): probatio.Port(),
+    }
 )
 
 

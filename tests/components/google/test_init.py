@@ -1,22 +1,22 @@
 """The tests for the Google Calendar component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import datetime
 import http
+import re
 import time
 from typing import Any
 from unittest.mock import Mock, patch
 import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.google import DOMAIN
-from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
+from homeassistant.components.google.services import SERVICE_CREATE_EVENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
@@ -25,6 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
@@ -167,6 +168,7 @@ async def test_calendar_yaml_missing_required_fields(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -181,6 +183,7 @@ async def test_invalid_calendar_yaml(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 async def test_calendar_yaml_error(
@@ -289,36 +292,36 @@ async def test_multiple_config_entries(
     [
         (
             {},
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
                 "start_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
             {
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
                 "start_date_time": "2022-04-01T06:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end datetimes must both be specified",
         ),
         (
             {
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -326,8 +329,8 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T06:00:00",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -335,7 +338,7 @@ async def test_multiple_config_entries(
                 "end_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -343,7 +346,7 @@ async def test_multiple_config_entries(
                 "start_date": "2022-04-01",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -351,7 +354,7 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -361,7 +364,7 @@ async def test_multiple_config_entries(
                     "weeks": 2,
                 }
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "two or more values in the same group of exclusion 'event_types'",
         ),
         (
@@ -372,8 +375,8 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -383,8 +386,8 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
     ],
     ids=[
@@ -419,7 +422,7 @@ async def test_add_event_invalid_params(
     mock_events_list({})
     assert await component_setup()
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await add_event_call_service(date_fields)
 
 
@@ -451,6 +454,7 @@ async def test_add_event_date_in_x(
     end_timedelta: datetime.timedelta,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[[dict[str, Any]], Awaitable[None]],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
@@ -458,9 +462,13 @@ async def test_add_event_date_in_x(
     mock_events_list({})
     assert await component_setup()
 
-    now = datetime.datetime.now()
-    start_date = now + start_timedelta
-    end_date = now + end_timedelta
+    # Freeze at 2025-06-15 03:00 UTC which is 2025-06-14 21:00 in America/Regina
+    # (the test timezone). This ensures dt_util.now().date() returns June 14
+    # while a naive datetime.now().date() would return June 15 in UTC.
+    freezer.move_to("2025-06-15 03:00:00+00:00")
+    today = datetime.date(2025, 6, 14)
+    start_date = today + start_timedelta
+    end_date = today + end_timedelta
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -472,8 +480,8 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
-        "start": {"date": start_date.date().isoformat()},
-        "end": {"date": end_date.date().isoformat()},
+        "start": {"date": start_date.isoformat()},
+        "end": {"date": end_date.isoformat()},
     }
 
 
@@ -533,7 +541,7 @@ async def test_add_event_date_time(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
+    start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
@@ -596,7 +604,7 @@ async def test_unsupported_create_event(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
+    start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
     entity_id = "calendar.backyard_light"

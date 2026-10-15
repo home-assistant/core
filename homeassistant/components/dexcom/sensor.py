@@ -1,6 +1,7 @@
 """Support for Dexcom sensors."""
 
-from __future__ import annotations
+from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
@@ -33,6 +34,9 @@ async def async_setup_entry(
     username = config_entry.data[CONF_USERNAME]
     async_add_entities(
         [
+            DexcomGlucoseReadingTimeSensor(
+                coordinator, username, config_entry.entry_id
+            ),
             DexcomGlucoseTrendSensor(coordinator, username, config_entry.entry_id),
             DexcomGlucoseValueSensor(coordinator, username, config_entry.entry_id),
         ],
@@ -79,10 +83,35 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         super().__init__(coordinator, username, entry_id, "value")
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.mg_dl
+        return None
+
+
+class DexcomGlucoseReadingTimeSensor(DexcomSensorEntity):
+    """Representation of a Dexcom glucose reading time sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "glucose_reading_time"
+
+    def __init__(
+        self,
+        coordinator: DexcomCoordinator,
+        username: str,
+        entry_id: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, username, entry_id, "reading_time")
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.datetime
         return None
 
 
@@ -100,6 +129,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
         super().__init__(coordinator, username, entry_id, "trend")
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
@@ -107,6 +137,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (

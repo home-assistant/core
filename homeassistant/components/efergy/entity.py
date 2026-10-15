@@ -1,7 +1,5 @@
 """The Efergy integration."""
 
-from __future__ import annotations
-
 from pyefergy import Efergy
 
 from homeassistant.helpers import device_registry as dr

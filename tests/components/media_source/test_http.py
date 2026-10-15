@@ -6,7 +6,12 @@ import pytest
 import yarl
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    MediaClass,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -92,7 +97,9 @@ async def test_websocket_resolve_media(
             {
                 "id": 1,
                 "type": "media_source/resolve_media",
-                "media_content_id": f"{const.URI_SCHEME}{media_source.DOMAIN}/local/{filename}",
+                "media_content_id": (
+                    f"{const.URI_SCHEME}{media_source.DOMAIN}/local/{filename}"
+                ),
             }
         )
 
@@ -124,4 +131,73 @@ async def test_websocket_resolve_media(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "resolve_media_failed"
+    assert msg["error"]["message"] == "test"
+
+
+async def test_websocket_search_media(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test search media websocket."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    search_media = SearchMedia(
+        result=[
+            media_source.models.BrowseMediaSource(
+                domain=media_source.DOMAIN,
+                identifier="/media/test.mp3",
+                title="test.mp3",
+                media_class=MediaClass.MUSIC,
+                media_content_type="audio/mpeg",
+                can_play=True,
+                can_expand=False,
+            )
+        ]
+    )
+
+    with patch(
+        "homeassistant.components.media_source.http.async_search_media",
+        return_value=search_media,
+    ) as mock_search:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_source/search_media",
+                "media_content_id": f"{const.URI_SCHEME}{media_source.DOMAIN}",
+                "search_query": "test",
+                "media_filter_classes": ["music"],
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["id"] == 1
+    assert msg["result"] == search_media.as_dict()
+
+    # The query is built from the websocket message, coercing the filter classes
+    query = mock_search.call_args[0][2]
+    assert isinstance(query, SearchMediaQuery)
+    assert query.search_query == "test"
+    assert query.media_filter_classes == [MediaClass.MUSIC]
+
+    with patch(
+        "homeassistant.components.media_source.http.async_search_media",
+        side_effect=BrowseError("test"),
+    ):
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "media_source/search_media",
+                "media_content_id": "invalid",
+                "search_query": "test",
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "search_media_failed"
     assert msg["error"]["message"] == "test"

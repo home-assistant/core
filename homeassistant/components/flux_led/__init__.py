@@ -1,7 +1,5 @@
 """The Flux LED/MagicLight integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any, Final, cast
@@ -48,6 +46,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .services import async_setup_services
 from .util import mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,8 +86,8 @@ def async_wifi_bulb_for_host(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[FLUX_LED_DISCOVERY] = []
+    async_setup_services(hass)
+    hass.data[FLUX_LED_DISCOVERY] = []
 
     @callback
     def _async_start_background_discovery(*_: Any) -> None:
@@ -156,7 +155,7 @@ async def _async_update_listener(
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> None:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
     discovery_cached = True
@@ -193,7 +192,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> b
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
         if not mac_matches_by_one(mac, entry.unique_id):
-            # The device is offline and another flux_led device is now using the ip address
+            # The device is offline and another flux_led device
+            # is now using the ip address
             raise ConfigEntryNotReady(
                 f"Unexpected device found at {host}; Expected {entry.unique_id}, found"
                 f" {mac}"
@@ -239,15 +239,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> b
             _async_handle_discovered_device,
         )
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> None:
     """Unload a config entry."""
     device = entry.runtime_data.device
     platforms = PLATFORMS_BY_TYPE[device.device_type]
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        # Make sure we probe the device again in case something has changed externally
-        async_clear_discovery_cache(hass, entry.data[CONF_HOST])
-        await device.async_stop()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)
+    # Make sure we probe the device again in case something has changed externally
+    async_clear_discovery_cache(hass, entry.data[CONF_HOST])
+    await device.async_stop()

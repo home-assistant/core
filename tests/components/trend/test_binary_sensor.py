@@ -112,32 +112,47 @@ async def test_trend_setup_from_yaml_with_unique_id(
 
 
 @pytest.mark.parametrize(
-    ("states", "inverted", "expected_state"),
+    ("states", "inverted", "expected_state", "source_entity_id"),
     [
-        (["1", "2"], False, STATE_ON),
-        (["2", "1"], False, STATE_OFF),
-        (["1", "2"], True, STATE_OFF),
-        (["2", "1"], True, STATE_ON),
+        (["1", "2"], False, STATE_ON, "sensor.test_state"),
+        (["2", "1"], False, STATE_OFF, "sensor.test_state"),
+        (["1", "2"], True, STATE_OFF, "sensor.test_state"),
+        (["2", "1"], True, STATE_ON, "sensor.test_state"),
+        (["1", "2"], False, STATE_ON, "counter.people"),
     ],
-    ids=["up", "down", "up inverted", "down inverted"],
+    ids=[
+        "sensor up",
+        "sensor down",
+        "sensor up inverted",
+        "sensor down inverted",
+        "counter up",
+    ],
 )
 async def test_basic_trend(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    setup_component: ComponentSetup,
     states: list[str],
     inverted: bool,
     expected_state: str,
+    source_entity_id: str,
 ) -> None:
     """Test trend with a basic setup."""
-    await setup_component(
-        {
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            **config_entry.options,
+            "name": "test_trend_sensor",
+            "entity_id": source_entity_id,
             "invert": inverted,
         },
+        title="test_trend_sensor",
     )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     for state in states:
-        hass.states.async_set("sensor.test_state", state)
+        hass.states.async_set(source_entity_id, state)
         await hass.async_block_till_done()
 
     assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
@@ -413,14 +428,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     trend_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Trend",
-            "entity_id": "sensor.test_source",
+            "entity_id": source_entity.entity_id,
             "invert": False,
         },
         title="Trend",
@@ -430,9 +445,55 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity = entity_registry.async_get("binary_sensor.trend")
+    trend_entity = entity_registry.async_get("binary_sensor.mock_title_trend")
     assert trend_entity is not None
     assert trend_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Trend."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "trend",
+                "sensors": {
+                    "trend": {
+                        "entity_id": "sensor.test_source",
+                        "unique_id": "trend_yaml",
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    trend_entity = entity_registry.async_get("binary_sensor.trend")
+    assert trend_entity is not None
+    assert trend_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 @pytest.mark.parametrize(

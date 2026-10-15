@@ -1,9 +1,7 @@
 """Support for the SamsungTV remote."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant, callback
@@ -33,11 +31,13 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
     _attr_name = None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._attr_is_on = self.coordinator.is_on
         self.async_write_ha_state()
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device.
 

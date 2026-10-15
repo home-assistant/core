@@ -9,7 +9,7 @@
       }),
       'domain': 'workday',
       'entry_id': '1',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
         'add_holidays': list([
           '2022-12-01',
@@ -23,7 +23,6 @@
           'holiday',
         ]),
         'language': 'de',
-        'name': 'Workday Sensor',
         'province': 'BW',
         'remove_holidays': list([
           '2022-12-04',
@@ -42,7 +41,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Mock Title',
+      'title': 'Workday Sensor DE BW',
       'unique_id': None,
       'version': 1,
     }),

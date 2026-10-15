@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
@@ -62,8 +62,12 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
                 is MachineState.BREWING
             )
         ),
-        available_fn=lambda coordinator: not coordinator.websocket_terminated,
+        available_fn=lambda coordinator: (
+            not coordinator.websocket_terminated
+            or coordinator.device.bluetooth_shot_counter_active
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        bt_shot_timer=True,
     ),
     LaMarzoccoBinarySensorEntityDescription(
         key="backflush_enabled",
@@ -95,6 +99,15 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
     ),
 )
 
+BLUETOOTH_CONNECTED = LaMarzoccoBinarySensorEntityDescription(
+    key="bluetooth_connected",
+    translation_key="bluetooth_connected",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    is_on_fn=(lambda machine: machine.bluetooth_connected),
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -103,14 +116,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensor entities."""
     coordinator = entry.runtime_data.config_coordinator
+    bluetooth_coordinator = entry.runtime_data.bluetooth_coordinator
 
-    async_add_entities(
-        LaMarzoccoBinarySensorEntity(
-            coordinator, description, entry.runtime_data.bluetooth_coordinator
-        )
+    entities = [
+        LaMarzoccoBinarySensorEntity(coordinator, description, bluetooth_coordinator)
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    )
+    ]
+    if bluetooth_coordinator is not None:
+        entities.append(
+            LaMarzoccoBluetoothConnectedEntity(
+                coordinator, BLUETOOTH_CONNECTED, bluetooth_coordinator
+            )
+        )
+    async_add_entities(entities)
 
 
 class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
@@ -119,6 +138,17 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     entity_description: LaMarzoccoBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.device)
+
+
+class LaMarzoccoBluetoothConnectedEntity(LaMarzoccoBinarySensorEntity):
+    """Binary sensor showing whether Bluetooth is connected to the machine."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True, the connection state is known even if Bluetooth updates fail."""
+        return True

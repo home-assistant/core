@@ -158,9 +158,10 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: HueConfigEntry) -
                         ent.entity_id, new_unique_id=new_unique_id
                     )
                 except ValueError:
-                    # assume edge case where the entity was already migrated in a previous run
-                    # which got aborted somehow and we do not want
-                    # to crash the entire integration init
+                    # assume edge case where the entity was already
+                    # migrated in a previous run which got aborted
+                    # somehow and we do not want to crash the entire
+                    # integration init
                     LOGGER.warning(
                         "Skip migration of %s because it already exists",
                         ent.entity_id,
@@ -203,9 +204,10 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: HueConfigEntry) -
             try:
                 ent_reg.async_update_entity(ent.entity_id, new_unique_id=new_unique_id)
             except ValueError:
-                # assume edge case where the entity was already migrated in a previous run
-                # which got aborted somehow and we do not want
-                # to crash the entire integration init
+                # assume edge case where the entity was already
+                # migrated in a previous run which got aborted
+                # somehow and we do not want to crash the entire
+                # integration init
                 LOGGER.warning(
                     "Skip migration of %s because it already exists",
                     ent.entity_id,

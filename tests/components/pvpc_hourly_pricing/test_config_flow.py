@@ -13,7 +13,7 @@ from homeassistant.components.pvpc_hourly_pricing.const import (
     DOMAIN,
     TARIFFS,
 )
-from homeassistant.const import CONF_API_TOKEN, CONF_NAME
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -45,7 +45,6 @@ async def test_config_flow(
     freezer.move_to(_MOCK_TIME_VALID_RESPONSES)
     await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
-        CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
         ATTR_POWER: 4.6,
         ATTR_POWER_P3: 5.75,
@@ -183,7 +182,6 @@ async def test_reauth(
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
     await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
-        CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
         ATTR_POWER: 4.6,
         ATTR_POWER_P3: 5.75,

@@ -1,7 +1,5 @@
 """Provide functionality for TTS."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass, field
@@ -15,14 +13,15 @@ import os
 from pathlib import Path
 import re
 import secrets
+import struct
 from time import monotonic
 from typing import Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
-from mutagen.id3 import ID3, TextFrame as ID3Text
+from mutagen.id3 import TALB, TIT2, TPE1, Encoding
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
@@ -37,20 +36,19 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
-    ServiceCall,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_CACHE,
     ATTR_LANGUAGE,
+    ATTR_MEDIA_PLAYER_ENTITY_ID,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
     CONF_CACHE,
@@ -63,6 +61,7 @@ from .const import (
     DEFAULT_TIME_MEMORY,
     DOMAIN,
     MEDIA_SOURCE_STREAM_PATH,
+    SERVICE_CLEAR_CACHE,
     TtsAudioType,
 )
 from .entity import TextToSpeechEntity, TTSAudioRequest, TTSAudioResponse
@@ -70,9 +69,11 @@ from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, parse_media_source_id
 from .models import Voice
+from .services import async_setup_services
 
 __all__ = [
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_BITRATE",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_BYTES",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
@@ -101,7 +102,7 @@ ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
 ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
-ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+ATTR_PREFERRED_BITRATE = "preferred_bitrate"
 ATTR_VOICE = "voice"
 
 _DEFAULT_FORMAT = "mp3"
@@ -110,11 +111,22 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_RATE,
     ATTR_PREFERRED_SAMPLE_CHANNELS,
     ATTR_PREFERRED_SAMPLE_BYTES,
+    ATTR_PREFERRED_BITRATE,
+}
+
+# Streaming WAV sources write a header before the sample rate and length of the
+# audio are known, so the data chunk size is left as a placeholder.
+_WAV_STREAMING_DATA_SIZES: Final[set[int]] = {0, 0xFFFFFFFF}
+_WAV_FORMAT_PCM: Final = 1
+_WAV_HEADER_MAX_BYTES: Final = 4096
+_WAV_PCM_FFMPEG_FORMATS: Final[dict[int, str]] = {
+    8: "u8",  # 8-bit WAV samples are unsigned
+    16: "s16le",
+    24: "s24le",
+    32: "s32le",
 }
 
 CONF_LANG = "language"
-
-SERVICE_CLEAR_CACHE = "clear_cache"
 
 _RE_LEGACY_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}"
@@ -123,8 +135,6 @@ _RE_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_(tts\.[a-z0-9_]+)\.[a-z0-9]{3,4}"
 )
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
-
-SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 
 FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
@@ -142,7 +152,7 @@ class TTSCache:
     """If an error occurred while loading, contains the error."""
 
     _consumers: list[asyncio.Queue[bytes | None]] | None = None
-    """A queue for each current consumer to notify of new data while the generator is loading."""
+    """Queue for consumers to receive data while loading."""
 
     def __init__(
         self,
@@ -311,6 +321,110 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     return languages
 
 
+class _IncompleteWavHeader(Exception):
+    """Error to indicate more data is needed to parse a WAV header."""
+
+
+@dataclass(frozen=True)
+class _StreamingPcmInfo:
+    """Sample format of a streaming WAV source."""
+
+    ffmpeg_format: str
+    sample_rate: int
+    sample_channels: int
+
+    # Audio that was read past the end of the WAV header.
+    leftover: bytes
+
+
+def _parse_streaming_wav_header(header: bytes) -> _StreamingPcmInfo | None:
+    """Parse the header of a streaming WAV source.
+
+    Returns None if the audio cannot be fed to ffmpeg as raw samples, and raises
+    _IncompleteWavHeader if more data is needed to decide.
+    """
+    if len(header) < 12:
+        raise _IncompleteWavHeader
+    if header[0:4] != b"RIFF" or header[8:12] != b"WAVE":
+        return None
+
+    bits_per_sample: int | None = None
+    sample_rate = 0
+    sample_channels = 0
+    pos = 12
+
+    while True:
+        if len(header) < pos + 8:
+            raise _IncompleteWavHeader
+
+        chunk_id = header[pos : pos + 4]
+        (chunk_size,) = struct.unpack_from("<I", header, pos + 4)
+        chunk_start = pos + 8
+
+        if chunk_id == b"data":
+            # A known size means chunks may follow the audio, which would be fed
+            # to ffmpeg as if they were samples.
+            if bits_per_sample is None or chunk_size not in _WAV_STREAMING_DATA_SIZES:
+                return None
+            if (
+                ffmpeg_format := _WAV_PCM_FFMPEG_FORMATS.get(bits_per_sample)
+            ) is None or not (sample_rate and sample_channels):
+                return None
+            return _StreamingPcmInfo(
+                ffmpeg_format=ffmpeg_format,
+                sample_rate=sample_rate,
+                sample_channels=sample_channels,
+                leftover=header[chunk_start:],
+            )
+
+        if len(header) < chunk_start + chunk_size:
+            raise _IncompleteWavHeader
+
+        if chunk_id == b"fmt ":
+            if chunk_size < 16:
+                return None
+            format_tag, sample_channels, sample_rate, _byte_rate, _align, bits = (
+                struct.unpack_from("<HHIIHH", header, chunk_start)
+            )
+            if format_tag != _WAV_FORMAT_PCM:
+                return None
+            bits_per_sample = bits
+
+        # Chunks are word aligned.
+        pos = chunk_start + chunk_size + (chunk_size % 2)
+
+
+async def _async_read_streaming_wav_header(
+    audio_input: AsyncGenerator[bytes],
+) -> tuple[_StreamingPcmInfo | None, bytes]:
+    """Read a streaming WAV header from a generator.
+
+    Returns the sample format, if usable, and everything read from the generator.
+    """
+    buffer = b""
+    async for chunk in audio_input:
+        buffer += chunk
+        try:
+            if (pcm_info := _parse_streaming_wav_header(buffer)) is not None:
+                return pcm_info, buffer
+        except _IncompleteWavHeader:
+            if len(buffer) <= _WAV_HEADER_MAX_BYTES:
+                continue
+        return None, buffer
+
+    return None, buffer
+
+
+async def _async_prepend_audio(
+    prefix: bytes, audio_input: AsyncGenerator[bytes]
+) -> AsyncGenerator[bytes]:
+    """Yield already read audio before the rest of a generator."""
+    if prefix:
+        yield prefix
+    async for chunk in audio_input:
+        yield chunk
+
+
 async def _async_convert_audio(
     hass: HomeAssistant,
     from_extension: str | None,
@@ -319,14 +433,43 @@ async def _async_convert_audio(
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
     to_sample_bytes: int | None = None,
+    to_bitrate: int | None = None,
 ) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
     is_input_gen = not isinstance(audio_input, (str, Path))
 
+    is_streaming_wav = is_input_gen and from_extension == "wav"
+
+    pcm_info: _StreamingPcmInfo | None = None
+    if is_streaming_wav:
+        # Unwrapping the container lets ffmpeg start streaming immediately
+        # instead of buffering ahead to inspect the WAV file.
+        assert isinstance(audio_input, AsyncGenerator)
+        pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
+        audio_input = _async_prepend_audio(
+            pcm_info.leftover if pcm_info else consumed, audio_input
+        )
+
     command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
-    if from_extension:
+    if pcm_info is not None:
+        command.extend(
+            [
+                "-f",
+                pcm_info.ffmpeg_format,
+                "-ar",
+                str(pcm_info.sample_rate),
+                "-ac",
+                str(pcm_info.sample_channels),
+            ]
+        )
+    elif from_extension:
         command.extend(["-f", from_extension])
+
+    if is_streaming_wav:
+        # The stream parameters are known, so minimize probing latency for live
+        # TTS audio.
+        command.extend(["-probesize", "32"])
 
     if is_input_gen:
         # Async generator
@@ -343,11 +486,19 @@ async def _async_convert_audio(
     if to_sample_channels is not None:
         command.extend(["-ac", str(to_sample_channels)])
     if to_extension == "mp3":
-        # Max quality for MP3.
-        command.extend(["-q:a", "0"])
+        if to_bitrate is not None:
+            # Constant bitrate. Some hardware decoders cannot handle the
+            # variable bitrate that -q:a produces.
+            command.extend(["-b:a", f"{to_bitrate}k"])
+        else:
+            # Max quality for MP3.
+            command.extend(["-q:a", "0"])
     if to_sample_bytes == 2:
         # 16-bit samples.
         command.extend(["-sample_fmt", "s16"])
+    # Do not write the muxer's own encoder metadata; metadata from the input
+    # is still copied.
+    command.extend(["-fflags", "+bitexact"])
     command.append("pipe:1")  # Send output to stdout.
 
     process = await asyncio.create_subprocess_exec(
@@ -395,6 +546,7 @@ async def _async_convert_audio(
         if retcode != 0:
             assert process.stderr
             stderr_data = await process.stderr.read()
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(stderr_data.decode())
             raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
@@ -434,28 +586,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     platform_setups = await async_setup_legacy(hass, config)
 
-    component.async_register_entity_service(
-        "speak",
-        {
-            vol.Required(ATTR_MEDIA_PLAYER_ENTITY_ID): cv.comp_entity_ids,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_CACHE, default=DEFAULT_CACHE): cv.boolean,
-            vol.Optional(ATTR_LANGUAGE): cv.string,
-            vol.Optional(ATTR_OPTIONS): dict,
-        },
-        "async_speak",
-    )
-
-    async def async_clear_cache_handle(service: ServiceCall) -> None:
-        """Handle clear cache service call."""
-        await tts.async_clear_cache()
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CLEAR_CACHE,
-        async_clear_cache_handle,
-        schema=SCHEMA_SERVICE_CLEAR_CACHE,
-    )
+    async_setup_services(hass)
 
     for setup in platform_setups:
         # Tasks are created as tracked tasks to ensure startup
@@ -522,6 +653,18 @@ class ResultStream:
         return asyncio.Future()
 
     @callback
+    def _async_mark_used(self) -> None:
+        """Keep the stream available now that its result is about to be used.
+
+        A pipeline creates its stream when the run starts, for example before
+        waiting for a wake word, which can be longer ago than the memory cache
+        keeps an unused stream around.
+        """
+        self.last_used = monotonic()
+        self._manager.token_to_stream[self.token] = self
+        self._manager.token_to_stream_cleanup.schedule()
+
+    @callback
     def async_set_message(self, message: str) -> None:
         """Set message to be generated.
 
@@ -529,6 +672,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -547,6 +691,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -574,25 +719,47 @@ class ResultStream:
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
+        self._async_mark_used()
         self._override_media_path = Path(media_path)
+
+    @property
+    def _needs_conversion(self) -> bool:
+        """Return if the result requires conversion to a preferred format."""
+        return any(
+            self.options.get(option) is not None
+            for option in (
+                ATTR_PREFERRED_FORMAT,
+                ATTR_PREFERRED_SAMPLE_RATE,
+                ATTR_PREFERRED_SAMPLE_CHANNELS,
+                ATTR_PREFERRED_SAMPLE_BYTES,
+                ATTR_PREFERRED_BITRATE,
+            )
+        )
+
+    @callback
+    def async_get_media_path(self) -> Path | None:
+        """Return the path to the result on disk, if available."""
+        if self._override_media_path is not None:
+            # An override that needs conversion no longer matches the file on
+            # disk, so the result is only available through the stream.
+            if self._needs_conversion:
+                return None
+            return self._override_media_path
+
+        if not self.use_file_cache or not self._result_cache.done():
+            return None
+
+        return self._manager.async_get_cache_file_path(
+            self._result_cache.result().cache_key
+        )
 
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
         assert self._override_media_path is not None
 
         preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
-        to_sample_rate = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
-        to_sample_channels = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
-        to_sample_bytes = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
 
-        needs_conversion = (
-            (preferred_format is not None)
-            or (to_sample_rate is not None)
-            or (to_sample_channels is not None)
-            or (to_sample_bytes is not None)
-        )
-
-        if not needs_conversion:
+        if not self._needs_conversion:
             # Read file directly (no conversion)
             yield await self.hass.async_add_executor_job(
                 self._override_media_path.read_bytes
@@ -611,9 +778,14 @@ class ResultStream:
             to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
             to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
+            to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
         async for chunk in converted_audio:
             yield chunk
+
+    def delete(self) -> None:
+        """Remove the result stream from the manager."""
+        self._manager.async_delete_result_stream(self.token)
 
 
 def _hash_options(options: dict) -> str:
@@ -748,6 +920,13 @@ class SpeechManager:
         await task
 
     @callback
+    def async_get_cache_file_path(self, cache_key: str) -> Path | None:
+        """Return the path to a cached TTS file, if it is in the file cache."""
+        if not (filename := self.file_cache.get(cache_key)):
+            return None
+        return Path(self.cache_dir) / filename
+
+    @callback
     def async_register_legacy_engine(
         self, engine: str, provider: Provider, config: ConfigType
     ) -> None:
@@ -776,7 +955,11 @@ class SpeechManager:
             or engine_instance.supported_languages is None
             or language not in engine_instance.supported_languages
         ):
-            raise HomeAssistantError(f"Language '{language}' not supported")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="language_not_supported",
+                translation_placeholders={"language": str(language)},
+            )
 
         options = options or {}
         supported_options = engine_instance.supported_options or []
@@ -796,7 +979,11 @@ class SpeechManager:
                 invalid_opts.append(option_name)
 
         if invalid_opts:
-            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_options",
+                translation_placeholders={"options": ", ".join(invalid_opts)},
+            )
 
         return language, merged_options
 
@@ -812,6 +999,11 @@ class SpeechManager:
         return stream
 
     @callback
+    def async_delete_result_stream(self, token: str) -> None:
+        """Delete a result stream given a token."""
+        self.token_to_stream.pop(token, None)
+
+    @callback
     def async_create_result_stream(
         self,
         engine: str,
@@ -821,7 +1013,11 @@ class SpeechManager:
     ) -> ResultStream:
         """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
@@ -863,7 +1059,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
@@ -900,7 +1100,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
@@ -1044,6 +1248,14 @@ class SpeechManager:
         if sample_bytes is not None:
             sample_bytes = int(sample_bytes)
 
+        if ATTR_PREFERRED_BITRATE in supported_options:
+            bitrate = options.get(ATTR_PREFERRED_BITRATE)
+        else:
+            bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
+
+        if bitrate is not None:
+            bitrate = int(bitrate)
+
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
@@ -1062,7 +1274,12 @@ class SpeechManager:
 
             if data is None or extension is None:
                 raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
+                    translation_domain=DOMAIN,
+                    translation_key="no_tts_audio",
+                    translation_placeholders={
+                        "engine": str(engine_instance.name),
+                        "message": message,
+                    },
                 )
 
             async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:
@@ -1096,6 +1313,7 @@ class SpeechManager:
             or (sample_rate is not None)
             or (sample_channels is not None)
             or (sample_bytes is not None)
+            or (bitrate is not None)
         )
 
         if needs_conversion:
@@ -1107,6 +1325,7 @@ class SpeechManager:
                 to_sample_rate=sample_rate,
                 to_sample_channels=sample_channels,
                 to_sample_bytes=sample_bytes,
+                to_bitrate=bitrate,
             )
 
         async for chunk in data_gen:
@@ -1159,25 +1378,14 @@ class SpeechManager:
         try:
             tts_file = mutagen.File(data_bytes)
             if tts_file is not None:
-                if not tts_file.tags:
+                # An ID3 tag with no frames is falsy but present, and adding
+                # another one raises.
+                if tts_file.tags is None:
                     tts_file.add_tags()
-                if isinstance(tts_file.tags, ID3):
-                    tts_file["artist"] = ID3Text(
-                        encoding=3,
-                        text=artist,  # type: ignore[no-untyped-call]
-                    )
-                    tts_file["album"] = ID3Text(
-                        encoding=3,
-                        text=album,  # type: ignore[no-untyped-call]
-                    )
-                    tts_file["title"] = ID3Text(
-                        encoding=3,
-                        text=message,  # type: ignore[no-untyped-call]
-                    )
-                else:
-                    tts_file["artist"] = artist
-                    tts_file["album"] = album
-                    tts_file["title"] = message
+                tts_file.tags.add(TPE1(encoding=Encoding.UTF8, text=artist))  # type: ignore[no-untyped-call]
+                tts_file.tags.add(TALB(encoding=Encoding.UTF8, text=album))  # type: ignore[no-untyped-call]
+                tts_file.tags.add(TIT2(encoding=Encoding.UTF8, text=message))  # type: ignore[no-untyped-call]
+                data_bytes.seek(0)
                 tts_file.save(data_bytes)
         except mutagen.MutagenError as err:
             _LOGGER.error("ID3 tag error: %s", err)
@@ -1302,7 +1510,6 @@ class TextToSpeechView(HomeAssistantView):
                     await response.prepare(request)
 
                 await response.write(data)
-        # pylint: disable=broad-except
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error streaming tts: %s", err)
 
@@ -1317,8 +1524,8 @@ class TextToSpeechView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/list",
-        vol.Optional("country"): str,
-        vol.Optional("language"): str,
+        probatio.Optional("country"): str,
+        probatio.Optional("language"): str,
     }
 )
 @callback
@@ -1369,7 +1576,7 @@ def websocket_list_engines(
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/get",
-        vol.Required("engine_id"): str,
+        probatio.Required("engine_id"): str,
     }
 )
 @callback
@@ -1414,8 +1621,8 @@ def websocket_get_engine(
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/voices",
-        vol.Required("engine_id"): str,
-        vol.Required("language"): str,
+        probatio.Required("engine_id"): str,
+        probatio.Required("language"): str,
     }
 )
 @callback

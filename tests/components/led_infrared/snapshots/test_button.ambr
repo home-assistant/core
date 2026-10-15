@@ -1,0 +1,1651 @@
+# serializer version: 1
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_down',
+    'unique_id': '1234567890_brightness_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_up',
+    'unique_id': '1234567890_brightness_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_2h-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_2h',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer 2h',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer 2h',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_2h',
+    'unique_id': '1234567890_timer_2h',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_2h-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer 2h',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_2h',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_4h-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_4h',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer 4h',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer 4h',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_4h',
+    'unique_id': '1234567890_timer_4h',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_4h-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer 4h',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_4h',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_6h-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_6h',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer 6h',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer 6h',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_6h',
+    'unique_id': '1234567890_timer_6h',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_6h-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer 6h',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_6h',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_8h-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_8h',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer 8h',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer 8h',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_8h',
+    'unique_id': '1234567890_timer_8h',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][button.led_infrared_via_test_ir_emitter_timer_8h-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer 8h',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_8h',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_down',
+    'unique_id': '1234567890_brightness_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_up',
+    'unique_id': '1234567890_brightness_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer',
+    'unique_id': '1234567890_timer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_24_key][button.led_infrared_via_test_ir_emitter_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_down',
+    'unique_id': '1234567890_brightness_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_24_key][button.led_infrared_via_test_ir_emitter_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_24_key][button.led_infrared_via_test_ir_emitter_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_up',
+    'unique_id': '1234567890_brightness_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_24_key][button.led_infrared_via_test_ir_emitter_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_down',
+    'unique_id': '1234567890_brightness_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_up',
+    'unique_id': '1234567890_brightness_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_quick-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_quick',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Quick',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quick',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'quick',
+    'unique_id': '1234567890_quick',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_quick-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Quick',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_quick',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_slow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_slow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Slow',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Slow',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'slow',
+    'unique_id': '1234567890_slow',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_slow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Slow',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_slow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_100-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_100',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White brightness 100%',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White brightness 100%',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_brightness_100',
+    'unique_id': '1234567890_white_brightness_100',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_100-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White brightness 100%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_100',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_25-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_25',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White brightness 25%',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White brightness 25%',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_brightness_25',
+    'unique_id': '1234567890_white_brightness_25',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_25-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White brightness 25%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_25',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_50-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_50',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White brightness 50%',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White brightness 50%',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_brightness_50',
+    'unique_id': '1234567890_white_brightness_50',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_50-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White brightness 50%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_50',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_75-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_75',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White brightness 75%',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White brightness 75%',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_brightness_75',
+    'unique_id': '1234567890_white_brightness_75',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_75-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White brightness 75%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_75',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White brightness down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_brightness_down',
+    'unique_id': '1234567890_white_brightness_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White brightness down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White brightness up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_brightness_up',
+    'unique_id': '1234567890_white_brightness_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White brightness up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White off',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White off',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_off',
+    'unique_id': '1234567890_white_off',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_on-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_on',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White on',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White on',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_on',
+    'unique_id': '1234567890_white_on',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_40_key][button.led_infrared_via_test_ir_emitter_white_on-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter White on',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_white_on',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_blue_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_blue_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blue down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blue down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blue_down',
+    'unique_id': '1234567890_blue_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_blue_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Blue down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_blue_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_blue_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_blue_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blue up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blue up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blue_up',
+    'unique_id': '1234567890_blue_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_blue_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Blue up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_blue_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_brightness_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_down',
+    'unique_id': '1234567890_brightness_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_brightness_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_brightness_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_up',
+    'unique_id': '1234567890_brightness_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_brightness_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_brightness_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_green_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_green_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Green down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Green down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'green_down',
+    'unique_id': '1234567890_green_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_green_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Green down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_green_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_green_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_green_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Green up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Green up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'green_up',
+    'unique_id': '1234567890_green_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_green_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Green up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_green_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_quick-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_quick',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Quick',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quick',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'quick',
+    'unique_id': '1234567890_quick',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_quick-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Quick',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_quick',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_red_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_red_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Red down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Red down',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'red_down',
+    'unique_id': '1234567890_red_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_red_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Red down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_red_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_red_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_red_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Red up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Red up',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'red_up',
+    'unique_id': '1234567890_red_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_red_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Red up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_red_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_slow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_slow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Slow',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Slow',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'slow',
+    'unique_id': '1234567890_slow',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_44_key][button.led_infrared_via_test_ir_emitter_slow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Slow',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_slow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

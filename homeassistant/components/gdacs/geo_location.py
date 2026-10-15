@@ -1,11 +1,9 @@
 """Geolocation support for GDACS Feed."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_georss_gdacs.feed_entry import GdacsFeedEntry
 
@@ -110,6 +108,7 @@ class GdacsEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         if self.hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -121,6 +120,7 @@ class GdacsEvent(GeolocationEvent):
             self.hass, f"gdacs_update_{self._external_id}", self._update_callback
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         self._remove_signal_delete()
@@ -180,6 +180,7 @@ class GdacsEvent(GeolocationEvent):
         self._version = feed_entry.version
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         if self._event_type_short and self._event_type_short in ICONS:
@@ -187,6 +188,7 @@ class GdacsEvent(GeolocationEvent):
         return DEFAULT_ICON
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

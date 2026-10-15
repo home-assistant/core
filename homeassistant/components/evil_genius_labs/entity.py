@@ -1,6 +1,6 @@
 """The Evil Genius Labs integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,6 +16,7 @@ class EvilGeniusEntity(CoordinatorEntity[EvilGeniusUpdateCoordinator]):
     _attr_has_entity_name = True
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         info = self.coordinator.info

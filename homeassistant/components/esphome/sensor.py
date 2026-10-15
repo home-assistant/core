@@ -1,9 +1,8 @@
 """Support for esphome sensors."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 import math
+from typing import override
 
 from aioesphomeapi import (
     EntityInfo,
@@ -63,7 +62,9 @@ _STATE_CLASSES: EsphomeEnumMapper[EsphomeSensorStateClass, SensorStateClass | No
             EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
             EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
             EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
-            EsphomeSensorStateClass.MEASUREMENT_ANGLE: SensorStateClass.MEASUREMENT_ANGLE,
+            EsphomeSensorStateClass.MEASUREMENT_ANGLE: (
+                SensorStateClass.MEASUREMENT_ANGLE
+            ),
         }
     )
 )
@@ -73,6 +74,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -80,13 +82,15 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         self._attr_force_update = static_info.force_update
         # protobuf doesn't support nullable strings so we need to check
         # if the string is empty
-        if unit_of_measurement := static_info.unit_of_measurement:
-            self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = static_info.unit_of_measurement or None
         self._attr_suggested_display_precision = static_info.accuracy_decimals
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
         if not (state_class := static_info.state_class):
+            # Static info also updates an existing entity on reconnect, where a
+            # state class the firmware no longer sets must not linger.
+            self._attr_state_class = None
             return
         if (
             state_class == EsphomeSensorStateClass.MEASUREMENT
@@ -99,6 +103,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
+    @override
     def native_value(self) -> datetime | int | float | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
@@ -106,7 +111,10 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         state_float = state.state
         if not math.isfinite(state_float):
             return None
-        if self.device_class is SensorDeviceClass.TIMESTAMP:
+        if self.device_class in (
+            SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
+        ):
             return dt_util.utc_from_timestamp(state_float)
         return state_float
 
@@ -115,6 +123,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
     """A text sensor implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -124,6 +133,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
         )
 
     @property
+    @override
     def native_value(self) -> str | datetime | date | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:

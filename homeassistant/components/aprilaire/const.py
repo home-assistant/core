@@ -1,7 +1,5 @@
 """Constants for the Aprilaire integration."""
 
-from __future__ import annotations
-
 DOMAIN = "aprilaire"
 
 FAN_CIRCULATE = "Circulate"

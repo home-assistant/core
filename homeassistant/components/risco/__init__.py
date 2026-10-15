@@ -1,10 +1,15 @@
 """The Risco integration."""
 
-from __future__ import annotations
-
+from asyncio import CancelledError
 import logging
 
-from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
+from pyrisco import (
+    CannotConnectError,
+    OperationError,
+    RiscoCloud,
+    RiscoLocal,
+    UnauthorizedError,
+)
 from pyrisco.common import Partition, System, Zone
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,13 +23,18 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_COMMUNICATION_DELAY,
     CONF_CONCURRENCY,
     DEFAULT_CONCURRENCY,
     DOMAIN,
@@ -44,6 +54,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
+# pyrisco exposes timeout context as message text for this case.
+CLOCK_TIMEOUT_ERROR_FRAGMENT = "Timeout in command: CLOCK"
 
 
 def is_local(entry: ConfigEntry) -> bool:
@@ -56,36 +68,55 @@ def zone_update_signal(zone_id: int) -> str:
     return f"risco_zone_update_{zone_id}"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
     """Set up Risco from a config entry."""
     if is_local(entry):
-        return await _async_setup_local_entry(hass, entry)
+        await _async_setup_local_entry(hass, entry)
+        return
 
-    return await _async_setup_cloud_entry(hass, entry)
+    await _async_setup_cloud_entry(hass, entry)
 
 
 async def _async_setup_local_entry(
     hass: HomeAssistant, entry: RiscoConfigEntry
-) -> bool:
+) -> None:
     data = entry.data
     concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
     risco = RiscoLocal(
-        data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], concurrency=concurrency
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data[CONF_PIN],
+        communication_delay=data.get(CONF_COMMUNICATION_DELAY, 0),
+        concurrency=concurrency,
     )
 
     try:
         await risco.connect()
     except CannotConnectError as error:
         raise ConfigEntryNotReady from error
-    except UnauthorizedError:
-        _LOGGER.exception("Failed to login to Risco cloud")
-        return False
+    except UnauthorizedError as error:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="local_unauthorized",
+        ) from error
 
     async def _error(error: Exception) -> None:
-        _LOGGER.error("Error in Risco library", exc_info=error)
-        if isinstance(error, ConnectionResetError) and not hass.is_stopping:
-            _LOGGER.debug("Disconnected from panel. Reloading integration")
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        if isinstance(error, OperationError) and CLOCK_TIMEOUT_ERROR_FRAGMENT in str(
+            error
+        ):
+            _LOGGER.warning(
+                "Risco keep-alive timeout for entry %s (host: %s)",
+                entry.title,
+                data.get(CONF_HOST, "unknown"),
+            )
+        else:
+            _LOGGER.error(
+                "Error in Risco library",
+                exc_info=error,
+            )
+            if isinstance(error, ConnectionResetError) and not hass.is_stopping:
+                _LOGGER.debug("Disconnected from panel. Reloading integration")
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
     entry.async_on_unload(risco.add_error_handler(_error))
 
@@ -123,12 +154,10 @@ async def _async_setup_local_entry(
     entry.runtime_data = RiscoData(local_data=local_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def _async_setup_cloud_entry(
     hass: HomeAssistant, entry: RiscoConfigEntry
-) -> bool:
+) -> None:
     data = entry.data
     risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
@@ -154,16 +183,21 @@ async def _async_setup_cloud_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await events_coordinator.async_refresh()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and (local_data := entry.runtime_data.local_data):
-        await local_data.system.disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    if local_data := entry.runtime_data.local_data:
+        try:
+            await local_data.system.disconnect()
+        except CancelledError:
+            raise
+        except Exception:
+            _LOGGER.exception(
+                "Failed to disconnect from local Risco panel for entry %s (host: %s)",
+                entry.title,
+                entry.data.get(CONF_HOST, "unknown"),
+            )
 
 
 async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
@@ -174,6 +208,6 @@ async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Risco integration services."""
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True

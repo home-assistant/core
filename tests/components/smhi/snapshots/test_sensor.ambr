@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,9 +41,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_build_up_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Build up index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Build up index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_build_up_index',
@@ -60,7 +60,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,9 +95,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_drought_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Drought code',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Drought code',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_drought_code',
@@ -114,7 +114,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,9 +149,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_duff_moisture_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Duff moisture code',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Duff moisture code',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_duff_moisture_code',
@@ -168,7 +168,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,9 +203,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_fine_fuel_moisture_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Fine fuel moisture code',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fine fuel moisture code',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_fine_fuel_moisture_code',
@@ -222,7 +222,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -257,9 +257,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_fire_weather_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Fire weather index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fire weather index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_fire_weather_index',
@@ -309,9 +309,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Frozen precipitation',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Frozen precipitation',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_frozen_precipitation',
@@ -328,7 +328,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_wet',
         'wet',
         'moderate_wet',
@@ -370,10 +370,10 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_fuel_drying-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'device_class': 'enum',
-      'friendly_name': 'Test Fuel drying',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fuel drying',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_wet',
         'wet',
         'moderate_wet',
@@ -397,7 +397,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_low',
         'low',
         'moderate',
@@ -439,10 +439,10 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_fwi_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'device_class': 'enum',
-      'friendly_name': 'Test FWI index',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test FWI index',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_low',
         'low',
         'moderate',
@@ -499,9 +499,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test High cloud coverage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test High cloud coverage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_high_cloud_coverage',
@@ -518,7 +518,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'snow_cover',
         'season_over',
         'low',
@@ -560,10 +560,10 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_highest_grass_fire_risk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'device_class': 'enum',
-      'friendly_name': 'Test Highest grass fire risk',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Highest grass fire risk',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'snow_cover',
         'season_over',
         'low',
@@ -587,7 +587,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -622,9 +622,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_initial_spread_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Initial spread index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Initial spread index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_initial_spread_index',
@@ -674,9 +674,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Low cloud coverage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Low cloud coverage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_low_cloud_coverage',
@@ -726,9 +726,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Medium cloud coverage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Medium cloud coverage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_medium_cloud_coverage',
@@ -745,7 +745,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -783,11 +783,11 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_potential_rate_of_spread-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'device_class': 'speed',
-      'friendly_name': 'Test Potential rate of spread',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.METERS_PER_MINUTE: 'm/min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Potential rate of spread',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.METERS_PER_MINUTE: 'm/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_potential_rate_of_spread',
@@ -804,7 +804,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_precipitation',
         'rain',
         'thunderstorm',
@@ -853,10 +853,10 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'device_class': 'enum',
-      'friendly_name': 'Test Precipitation category',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Precipitation category',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_precipitation',
         'rain',
         'thunderstorm',
@@ -920,9 +920,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Thunder probability',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thunder probability',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_thunder_probability',
@@ -972,9 +972,9 @@
 # name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Total cloud coverage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Total cloud coverage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_total_cloud_coverage',

@@ -3,8 +3,6 @@
 Custom for type checking. See stub file.
 """
 
-from __future__ import annotations
-
 
 class HassKey[_T](str):
     """Generic Hass key type.

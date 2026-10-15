@@ -5,9 +5,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 import logging
 import time
-from typing import cast
+from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 
-from . import MediaPlayerDeviceClass, MediaPlayerEntity
+from . import MediaPlayerEntity
 from .browse_media import SearchMedia
 from .const import (
     ATTR_MEDIA_FILTER_CLASSES,
@@ -42,6 +42,7 @@ from .const import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
@@ -120,9 +121,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
                     description="The volume percentage of the media player",
-                    value_schema=vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=0, max=100),
+                    value_schema=probatio.All(
+                        probatio.Coerce(int),
+                        probatio.Range(min=0, max=100),
                         lambda val: val / 100,
                     ),
                 ),
@@ -156,6 +157,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
         )
         self.last_paused = last_paused
 
+    @override
     async def async_handle_states(
         self,
         intent_obj: intent.Intent,
@@ -191,6 +193,7 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         )
         self.last_paused = last_paused
 
+    @override
     async def async_handle_states(
         self,
         intent_obj: intent.Intent,
@@ -251,7 +254,7 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
             optional_slots={
                 ATTR_MEDIA_VOLUME_MUTED: intent.IntentSlotInfo(
                     description="Whether the media player should be muted or unmuted",
-                    value_schema=vol.Boolean(),
+                    value_schema=probatio.Boolean(),
                 ),
             },
             description=(
@@ -262,6 +265,7 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
         )
         self.is_volume_muted = is_volume_muted
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
 
@@ -279,17 +283,20 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
 
     intent_type = INTENT_MEDIA_SEARCH_AND_PLAY
     slot_schema = {
-        vol.Required("search_query"): cv.string,
-        vol.Optional("media_class"): vol.In([cls.value for cls in MediaClass]),
+        probatio.Required("search_query"): cv.string,
+        probatio.Optional("media_class"): probatio.In(
+            [cls.value for cls in MediaClass]
+        ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -372,8 +379,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             )
             or not (results := entity_response.result)
         ):
-            # No results found
-            return intent_obj.create_response()
+            raise intent.IntentHandleError(f"No results found for {search_query}")
 
         # 2. Play Media (first result)
         first_result = results[0]
@@ -406,24 +412,25 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
 
     intent_type = INTENT_SET_VOLUME_RELATIVE
     slot_schema = {
-        vol.Required("volume_step"): vol.Any(
+        probatio.Required("volume_step"): probatio.Any(
             "up",
             "down",
-            vol.All(
-                vol.Coerce(int),
-                vol.Range(min=-100, max=100),
+            probatio.All(
+                probatio.Coerce(int),
+                probatio.Range(min=-100, max=100),
                 lambda val: val / 100,
             ),
         ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

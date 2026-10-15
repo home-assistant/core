@@ -1,14 +1,12 @@
 """Support for the worldtides.info API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -16,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -30,10 +29,10 @@ SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -56,6 +55,8 @@ def setup_platform(
 
     tides = WorldTidesInfoSensor(name, lat, lon, key)
     tides.update()
+    if tides.data is None:
+        raise PlatformNotReady("Unable to retrieve data from WorldTidesInfo")
     if tides.data.get("error") == "No location found":
         _LOGGER.error("Location not available")
         return
@@ -77,11 +78,13 @@ class WorldTidesInfoSensor(SensorEntity):
         self.data = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
         attr = {}
@@ -99,6 +102,7 @@ class WorldTidesInfoSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         if self.data:
@@ -130,3 +134,8 @@ class WorldTidesInfoSensor(SensorEntity):
         except ValueError as err:
             _LOGGER.error("Error retrieving data from WorldTidesInfo: %s", err.args)
             self.data = None
+        except requests.exceptions.RequestException as err:
+            # Not the exception text: it carries the request URL with the API key
+            _LOGGER.error(
+                "Error retrieving data from WorldTidesInfo: %s", type(err).__name__
+            )

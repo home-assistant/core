@@ -1,10 +1,8 @@
 """The dhcp integration websocket apis."""
 
-from __future__ import annotations
-
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +26,7 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "dhcp/subscribe_discovery",
+        probatio.Required("type"): "dhcp/subscribe_discovery",
     }
 )
 @websocket_api.async_response

@@ -1,16 +1,14 @@
 """Sensor from an SQL Query."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -27,8 +25,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -38,7 +36,7 @@ from homeassistant.helpers.trigger_template_entity import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import (
     InvalidSqlQuery,
     async_create_sessionmaker,
@@ -71,14 +69,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the SQL sensor from yaml."""
     if (conf := discovery_info) is None:
-        async_create_issue(
+        async_create_platform_config_not_supported_issue(
             hass,
             DOMAIN,
-            "sensor_platform_yaml_not_supported",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="platform_yaml_not_supported",
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
             learn_more_url="https://www.home-assistant.io/integrations/sql/",
+            logger=_LOGGER,
         )
         return
 
@@ -118,7 +115,9 @@ async def async_setup_entry(
     db_url: str = resolve_db_url(hass, entry.data.get(CONF_DB_URL))
     name: str = entry.title
     query_str: str = entry.options[CONF_QUERY]
-    template: str | None = entry.options[CONF_ADVANCED_OPTIONS].get(CONF_VALUE_TEMPLATE)
+    template: str | None = entry.options[CONF_ADDITIONAL_OPTIONS].get(
+        CONF_VALUE_TEMPLATE
+    )
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
     query_template: ValueTemplate | None = None
@@ -139,9 +138,9 @@ async def async_setup_entry(
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
     for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in entry.options[CONF_ADVANCED_OPTIONS]:
+        if key not in entry.options[CONF_ADDITIONAL_OPTIONS]:
             continue
-        trigger_entity_config[key] = entry.options[CONF_ADVANCED_OPTIONS][key]
+        trigger_entity_config[key] = entry.options[CONF_ADDITIONAL_OPTIONS][key]
 
     await async_setup_sensor(
         hass,
@@ -237,18 +236,21 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
 
     @property
+    @override
     def name(self) -> str | None:
         """Name of the entity."""
         if self.has_entity_name:
             return self._attr_name
         return self._rendered.get(CONF_NAME)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)

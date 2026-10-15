@@ -1,11 +1,9 @@
 """Support for Hydrawise sprinkler sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Zone
 
@@ -21,6 +19,8 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,7 +113,9 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="watering_time",
         translation_key="watering_time",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda sensor: (
             int(
                 sensor.zone.scheduled_runs.current_run.remaining_time.total_seconds()
@@ -124,8 +126,6 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         ),
     ),
 )
-
-FLOW_MEASUREMENT_KEYS = [x.key for x in FLOW_CONTROLLER_SENSORS]
 
 
 async def async_setup_entry(
@@ -202,6 +202,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     entity_description: HydrawiseSensorEntityDescription
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the sensor."""
         if self.entity_description.device_class != SensorDeviceClass.WATER:
@@ -212,17 +213,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             else UnitOfVolume.LITERS
         )
 
-    @property
-    def icon(self) -> str | None:
-        """Icon of the entity based on the value."""
-        if (
-            self.entity_description.key in FLOW_MEASUREMENT_KEYS
-            and self.entity_description.device_class == SensorDeviceClass.WATER
-            and round(self.state, 2) == 0.0
-        ):
-            return "mdi:water-outline"
-        return None
-
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_native_value = self.entity_description.value_fn(self)

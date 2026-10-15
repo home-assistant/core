@@ -8,19 +8,17 @@ They also verify that unloading the integration properly disconnects.
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyvlx.exception import PyVLXException
 
 from homeassistant.components.velux.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, ConfigEntry, MockConfigEntry
+from tests.common import ConfigEntry, MockConfigEntry
 
 
 async def test_setup_retry_on_nodes_failure(
@@ -67,7 +65,7 @@ async def test_setup_retry_on_oserror_during_scenes(
 async def test_setup_auth_error(
     mock_config_entry: ConfigEntry, hass: HomeAssistant, mock_pyvlx: AsyncMock
 ) -> None:
-    """Test that PyVLXException with auth message raises ConfigEntryAuthFailed and starts reauth flow."""
+    """Test PyVLXException with auth message raises ConfigEntryAuthFailed."""
 
     mock_pyvlx.load_scenes.side_effect = PyVLXException(
         "Login to KLF 200 failed, check credentials"
@@ -86,6 +84,40 @@ async def test_setup_auth_error(
 
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_not_called()
+
+
+async def test_setup_uses_preconnected_pyvlx_from_config_flow(
+    hass: HomeAssistant, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that setup reuses the PyVLX instance from config flow without disconnecting.
+
+    The config flow connects once; setup should reuse that instance without
+    disconnecting and reconnecting, preventing an unnecessary disconnect/reboot
+    cycle between connection validation and integration start.
+    """
+    with patch("homeassistant.components.velux.PLATFORMS", []):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "127.0.0.1",
+                CONF_PASSWORD: "NotAStrongPassword",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["result"].state is ConfigEntryState.LOADED
+
+    # connect was called exactly once (by config flow), setup must not call it again
+    mock_pyvlx.connect.assert_awaited_once()
+    # ensure_connected was called once (by async_setup_entry)
+    mock_pyvlx.ensure_connected.assert_awaited_once()
+    # The gateway must not be disconnected between config flow and setup
+    mock_pyvlx.disconnect.assert_not_awaited()
+    mock_pyvlx.load_scenes.assert_awaited_once()
+    mock_pyvlx.load_nodes.assert_awaited_once()
 
 
 @pytest.fixture
@@ -127,42 +159,3 @@ async def test_unload_does_not_disconnect_if_platform_unload_fails(
 
     # Verify disconnect was NOT called since platform unload failed
     mock_pyvlx.disconnect.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("setup_integration")
-async def test_reboot_gateway_service_raises_on_exception(
-    hass: HomeAssistant, mock_pyvlx: AsyncMock
-) -> None:
-    """Test that reboot_gateway service raises HomeAssistantError on exception."""
-
-    mock_pyvlx.reboot_gateway.side_effect = OSError("Connection failed")
-    with pytest.raises(HomeAssistantError, match="Failed to reboot gateway"):
-        await hass.services.async_call(
-            "velux",
-            "reboot_gateway",
-            blocking=True,
-        )
-
-    mock_pyvlx.reboot_gateway.side_effect = PyVLXException("Reboot failed")
-    with pytest.raises(HomeAssistantError, match="Failed to reboot gateway"):
-        await hass.services.async_call(
-            "velux",
-            "reboot_gateway",
-            blocking=True,
-        )
-
-
-async def test_reboot_gateway_service_raises_validation_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test that reboot_gateway service raises ServiceValidationError when no gateway is loaded."""
-    # Set up the velux integration's async_setup to register the service
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    with pytest.raises(ServiceValidationError, match="No loaded Velux gateway found"):
-        await hass.services.async_call(
-            "velux",
-            "reboot_gateway",
-            blocking=True,
-        )

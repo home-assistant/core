@@ -1,21 +1,17 @@
 """API for homelink bound to Home Assistant OAuth."""
 
-from json import JSONDecodeError
-import logging
 import time
-from typing import cast
+from typing import override
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
 from homelink.settings import COGNITO_CLIENT_ID
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.oauth2 import async_token_request
 
 from .const import OAUTH2_TOKEN_URL
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
@@ -29,19 +25,23 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
         self.client_id = COGNITO_CLIENT_ID
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "SRPAuth"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain that is providing the implementation."""
         return self._domain
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Left intentionally blank because the auth is handled by SRP."""
         return ""
 
+    @override
     async def async_resolve_external_data(self, external_data) -> dict:
         """Format the token from the source appropriately for HomeAssistant."""
         tokens = external_data["tokens"]
@@ -53,40 +53,18 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
             "expires_at": (time.time() + tokens["AuthenticationResult"]["ExpiresIn"]),
         }
 
-    async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
-        session = async_get_clientsession(self.hass)
-
-        data["client_id"] = self.client_id
-
-        _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN_URL)
-        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except ClientError, JSONDecodeError:
-                error_response = {}
-                error_code = error_response.get("error", "unknown")
-                error_description = error_response.get(
-                    "error_description", "unknown error"
-                )
-                _LOGGER.error(
-                    "Token request for %s failed (%s): %s",
-                    self.domain,
-                    error_code,
-                    error_description,
-                )
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
-
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
-        new_token = await self._token_request(
+        new_token = await async_token_request(
+            self.hass,
+            OAUTH2_TOKEN_URL,
             {
                 "grant_type": "refresh_token",
                 "client_id": self.client_id,
                 "refresh_token": token["refresh_token"],
-            }
+            },
+            domain=self.domain,
         )
         return {**token, **new_token}
 
@@ -105,7 +83,6 @@ class AsyncConfigEntryAuth(AbstractAuth):
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]

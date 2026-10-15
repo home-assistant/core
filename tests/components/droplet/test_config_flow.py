@@ -65,6 +65,7 @@ async def test_user_setup(
     }
     assert result.get("context") is not None
     assert result.get("context", {}).get("unique_id") == MOCK_DEVICE_ID
+    mock_droplet_discovery.close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -107,8 +108,10 @@ async def test_user_setup_fail(
     assert result is not None
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
+    mock_droplet_discovery.close.assert_awaited_once()
 
-    # The user should be able to try again. Maybe the droplet was disconnected from the network or something
+    # The user should be able to try again. Maybe the droplet
+    # was disconnected from the network or something
     attrs = {
         "get_device_id.return_value": MOCK_DEVICE_ID,
         "try_connect.return_value": True,
@@ -199,6 +202,7 @@ async def test_zeroconf_setup(
     }
     assert result.get("context") is not None
     assert result.get("context", {}).get("unique_id") == MOCK_DEVICE_ID
+    mock_droplet_discovery.close.assert_awaited_once()
 
 
 @pytest.mark.parametrize("mock_droplet_discovery", ["192.168.1.5"], indirect=True)

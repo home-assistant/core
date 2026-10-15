@@ -1,7 +1,5 @@
 """Tests for the local_ip config_flow."""
 
-from __future__ import annotations
-
 from homeassistant.components.local_ip.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant

@@ -1,7 +1,5 @@
 """Entities and Devices queries for logbook."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Iterable
 
 from sqlalchemy import lambda_stmt, select, union_all
@@ -41,7 +39,7 @@ def _select_entities_device_id_context_ids_sub_query(
     json_quoted_entity_ids: list[str],
     json_quoted_device_ids: list[str],
 ) -> Select:
-    """Generate a subquery to find context ids for multiple entities and multiple devices."""
+    """Generate a subquery to find context ids for entities and devices."""
     union = union_all(
         select_events_context_id_subquery(start_day, end_day, event_type_ids).where(
             _apply_event_entity_id_device_id_matchers(

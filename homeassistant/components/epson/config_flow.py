@@ -1,9 +1,9 @@
 """Config flow for epson integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -15,15 +15,17 @@ from .exceptions import CannotConnect, PoweredOff
 
 ALLOWED_CONNECTION_TYPE = [HTTP, SERIAL]
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONNECTION_TYPE, default=HTTP): SelectSelector(
+        probatio.Required(CONF_CONNECTION_TYPE, default=HTTP): SelectSelector(
             SelectSelectorConfig(
                 options=ALLOWED_CONNECTION_TYPE, translation_key="connection_type"
             )
         ),
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_NAME, default=DOMAIN): str,
+        probatio.Required(CONF_HOST): str,
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
+        probatio.Required(CONF_NAME, default=DOMAIN): str,
     }
 )
 
@@ -36,6 +38,7 @@ class EpsonConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

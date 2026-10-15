@@ -1,8 +1,8 @@
 """Config flow to configure Met Éireann component."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
@@ -16,6 +16,7 @@ class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -29,16 +30,18 @@ class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
-                        vol.Required(
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
+                        probatio.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
+                        probatio.Required(
                             CONF_LATITUDE, default=self.hass.config.latitude
                         ): cv.latitude,
-                        vol.Required(
+                        probatio.Required(
                             CONF_LONGITUDE, default=self.hass.config.longitude
                         ): cv.longitude,
-                        vol.Required(
+                        probatio.Required(
                             CONF_ELEVATION, default=self.hass.config.elevation
                         ): int,
                     }

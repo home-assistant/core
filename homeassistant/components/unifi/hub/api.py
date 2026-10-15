@@ -1,7 +1,5 @@
 """Provide an object to communicate with UniFi Network application."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import ssl

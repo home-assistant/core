@@ -1,39 +1,27 @@
 """The Version integration."""
 
-from __future__ import annotations
-
-import logging
-
 from pyhaversion import HaVersion
 
+from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    BOARD_MAP,
-    CONF_BOARD,
-    CONF_CHANNEL,
-    CONF_IMAGE,
-    CONF_SOURCE,
-    PLATFORMS,
-)
+from .const import BOARD_MAP, CONF_BOARD, CONF_CHANNEL, CONF_IMAGE, DOMAIN, PLATFORMS
 from .coordinator import VersionConfigEntry, VersionDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> None:
     """Set up the version integration from a config entry."""
 
     board = entry.data[CONF_BOARD]
 
     if board not in BOARD_MAP:
-        _LOGGER.error(
-            'Board "%s" is (no longer) valid. Please remove the integration "%s"',
-            board,
-            entry.title,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_board",
+            translation_placeholders={"board": board, "title": entry.title},
         )
-        return False
 
     coordinator = VersionDataUpdateCoordinator(
         hass=hass,
@@ -52,9 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> b
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

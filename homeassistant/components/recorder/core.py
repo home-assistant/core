@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
@@ -12,7 +10,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
@@ -378,7 +376,7 @@ class Recorder(threading.Thread):
         return cast(int, self._psutil.psutil.virtual_memory().available)
 
     def _reached_max_backlog(self) -> bool:
-        """Check if the system has reached the max queue backlog and return True if it has."""
+        """Check if the system has reached the max queue backlog."""
         # First check the minimum value since its cheap
         if self.backlog < MAX_QUEUE_BACKLOG_MIN_VALUE:
             return False
@@ -557,10 +555,23 @@ class Recorder(threading.Thread):
 
     @callback
     def async_clear_statistics(
-        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+        self,
+        statistic_ids: list[str],
+        *,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        on_done: Callable[[], None] | None = None,
     ) -> None:
-        """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
+        """Clear statistics for a list of statistic_ids.
+
+        With a time range, only the statistics which overlap the range are cleared.
+        """
+        # A one-sided range would otherwise clear the complete statistics.
+        if (start_time is None) != (end_time is None):
+            raise ValueError("start_time and end_time must be provided together")
+        self.queue_task(
+            ClearStatisticsTask(on_done, statistic_ids, start_time, end_time)
+        )
 
     @callback
     def async_update_statistics_metadata(
@@ -568,8 +579,8 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | None | UndefinedType = UNDEFINED,
-        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        new_unit_class: str | UndefinedType | None = UNDEFINED,
+        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
@@ -670,6 +681,7 @@ class Recorder(threading.Thread):
             )
             return SHUTDOWN_TASK
 
+    @override
     def run(self) -> None:
         """Run the recorder thread."""
         self.is_running = True
@@ -805,7 +817,7 @@ class Recorder(threading.Thread):
     def _activate_and_set_db_ready(
         self, schema_status: migration.SchemaValidationStatus
     ) -> None:
-        """Activate the table managers or schedule migrations and mark the db as ready."""
+        """Activate table managers or schedule migrations and mark db as ready."""
         with session_scope(session=self.get_session()) as session:
             # Prime the statistics meta manager as soon as possible
             # since we want the frontend queries to avoid a thundering
@@ -870,7 +882,10 @@ class Recorder(threading.Thread):
     def _guarded_process_one_task_or_event_or_recover(
         self, task: RecorderTask | Event
     ) -> None:
-        """Process a task, guarding against exceptions to ensure the loop does not collapse."""
+        """Process a task, guarding against exceptions.
+
+        This ensures the loop does not collapse.
+        """
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
@@ -1222,7 +1237,9 @@ class Recorder(threading.Thread):
                             "state_id": state_id,
                             "last_reported_ts": last_reported_timestamp,
                         }
-                        for state_id, last_reported_timestamp in pending_last_reported.items()
+                        for state_id, last_reported_timestamp in (
+                            pending_last_reported.items()
+                        )
                     ],
                 )
         session.commit()
@@ -1298,7 +1315,10 @@ class Recorder(threading.Thread):
 
     @callback
     def async_get_commit_future(self) -> asyncio.Future[None] | None:
-        """Return a future that will wait for the next commit or None if nothing pending."""
+        """Return a future that will wait for the next commit.
+
+        Returns None if nothing is pending.
+        """
         if self._queue.empty() and not self._event_session_has_pending_writes:
             return None
         future: asyncio.Future[None] = self.hass.loop.create_future()
@@ -1374,10 +1394,16 @@ class Recorder(threading.Thread):
         self, dbapi_connection: DBAPIConnection, connection_record: Any
     ) -> None:
         """Dbapi specific connection settings."""
-        assert self.engine is not None
+        if (engine := self.engine) is None:
+            # _close_connection disposes the engine and drops our reference to it, but
+            # dispose() only empties the pool: the engine stays usable, so anything
+            # still holding a reference to it can check out a fresh DBAPI connection
+            # and get here. There is no longer an engine of ours to configure it for.
+            _LOGGER.debug("Ignoring connection setup for a closed database connection")
+            return
         if database_engine := setup_connection_for_dialect(
             self,
-            self.engine.dialect.name,
+            engine.dialect.name,
             dbapi_connection,
             not self._completed_first_database_setup,
         ):

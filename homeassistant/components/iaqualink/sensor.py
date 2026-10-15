@@ -1,6 +1,6 @@
 """Support for Aqualink temperature sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from iaqualink.device import AqualinkSensor
 
@@ -47,6 +47,7 @@ class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if self.dev.state == "":

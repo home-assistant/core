@@ -1,9 +1,8 @@
 """SFR Box sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from sfrbox_api.models import DslInfo, FtthInfo, VoipInfo, WanInfo
 
@@ -117,6 +116,7 @@ class SFRBoxBinarySensor[_T](SFRCoordinatorEntity[_T], BinarySensorEntity):
     entity_description: SFRBoxBinarySensorEntityDescription[_T]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value of the device."""
         return self.entity_description.value_fn(self.coordinator.data)

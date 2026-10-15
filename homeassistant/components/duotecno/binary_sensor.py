@@ -1,6 +1,6 @@
 """Support for Duotecno binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from duotecno.unit import ControlUnit, VirtualUnit
 
@@ -30,6 +30,7 @@ class DuotecnoBinarySensor(DuotecnoEntity, BinarySensorEntity):
     _unit: ControlUnit | VirtualUnit
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._unit.is_on()

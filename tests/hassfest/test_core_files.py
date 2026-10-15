@@ -94,5 +94,6 @@ def test_unexpected_entry(config: Config) -> None:
     assert len(config.errors) == 1
     assert (
         config.errors[0].error
-        == "'unknown_thing' in base_platforms in .core_files.yaml is not an entity platform or in EXTRA_BASE_PLATFORMS"
+        == "'unknown_thing' in base_platforms in .core_files.yaml"
+        " is not an entity platform or in EXTRA_BASE_PLATFORMS"
     )

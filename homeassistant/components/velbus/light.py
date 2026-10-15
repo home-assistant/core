@@ -1,8 +1,6 @@
 """Support for Velbus light."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from velbusaio.channels import (
     Button as VelbusButton,
@@ -60,16 +58,19 @@ class VelbusLight(VelbusEntity, LightEntity):
     _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return value_to_brightness(BRIGHTNESS_SCALE, self._channel.get_dimmer_state())
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -94,6 +95,7 @@ class VelbusLight(VelbusEntity, LightEntity):
         await getattr(self._channel, attr)(*args)
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
         attr, *args = (
@@ -121,11 +123,13 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         self._attr_name = f"LED {self._channel.get_name()}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
         if (flash := ATTR_FLASH in kwargs) and kwargs[ATTR_FLASH] == FLASH_LONG:
@@ -136,6 +140,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
             await self._channel.set_led_state("on")
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
         await self._channel.set_led_state("off")

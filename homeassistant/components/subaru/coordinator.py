@@ -1,22 +1,22 @@
 """Data update coordinator for Subaru."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
-from subarulink import Controller as SubaruAPI, SubaruException
+from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_UPDATE_ENABLED,
     COORDINATOR_NAME,
+    DOMAIN,
     FETCH_INTERVAL,
     VEHICLE_LAST_UPDATE,
     VEHICLE_VIN,
@@ -60,12 +60,18 @@ class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._controller = controller
         self._vehicle_info = vehicle_info
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Subaru API."""
         try:
             return await _refresh_subaru_data(
                 self.config_entry, self._vehicle_info, self._controller
             )
+        except InvalidCredentials as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SubaruException as err:
             raise UpdateFailed(err.message) from err
 
@@ -85,7 +91,8 @@ async def _refresh_subaru_data(
     for vehicle in vehicle_info.values():
         vin = vehicle[VEHICLE_VIN]
 
-        # Optionally send an "update" remote command to vehicle (throttled with update_interval)
+        # Optionally send an "update" remote command to
+        # vehicle (throttled with update_interval)
         if config_entry.options.get(CONF_UPDATE_ENABLED, False):
             await _update_subaru(vehicle, controller)
 

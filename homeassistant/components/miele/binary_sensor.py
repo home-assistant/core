@@ -1,11 +1,9 @@
 """Binary sensor platform for Miele integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Final, cast
+from typing import Final, cast, override
 
 from pymiele import MieleDevice
 
@@ -46,6 +44,7 @@ class MieleBinarySensorDefinition:
 BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
     MieleBinarySensorDefinition(
         types=(
+            MieleAppliance.COFFEE_SYSTEM,
             MieleAppliance.DISH_WARMER,
             MieleAppliance.DISHWASHER,
             MieleAppliance.FREEZER,
@@ -290,6 +289,7 @@ class MieleBinarySensor(MieleEntity, BinarySensorEntity):
     entity_description: MieleBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return cast(bool, self.entity_description.value_fn(self.device))

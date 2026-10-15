@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 import contextlib
 from dataclasses import dataclass, field
 import logging
@@ -48,6 +46,8 @@ MEDIA_TYPE_TO_SQUEEZEBOX: dict[str | MediaType, str] = {
     "genres": "genres",
     "new music": "new music",
     "album artists": "album artists",
+    "artist tracks": "titles",
+    "genre tracks": "titles",
     MediaType.ALBUM: "album",
     MediaType.ARTIST: "artist",
     MediaType.TRACK: "title",
@@ -63,6 +63,8 @@ SQUEEZEBOX_ID_BY_TYPE: dict[str | MediaType, str] = {
     "albums": "album_id",
     MediaType.ARTIST: "artist_id",
     "artists": "artist_id",
+    "artist tracks": "artist_id",
+    "genre tracks": "genre_id",
     MediaType.TRACK: "track_id",
     "tracks": "track_id",
     MediaType.PLAYLIST: "playlist_id",
@@ -89,6 +91,8 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | str]] = {
     "genres": {"item": MediaClass.DIRECTORY, "children": MediaClass.GENRE},
     "new music": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     "album artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
+    "artist tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
+    "genre tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
     MediaType.ALBUM: {"item": MediaClass.ALBUM, "children": MediaClass.TRACK},
     MediaType.ARTIST: {"item": MediaClass.ARTIST, "children": MediaClass.ALBUM},
     MediaType.TRACK: {"item": MediaClass.TRACK, "children": ""},
@@ -103,7 +107,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     str | MediaType | None,
 ] = {
     MediaType.ALBUM: MediaType.TRACK,
-    MediaType.PLAYLIST: MediaType.PLAYLIST,
+    MediaType.PLAYLIST: MediaType.TRACK,
     MediaType.ARTIST: MediaType.ALBUM,
     MediaType.GENRE: MediaType.ARTIST,
     "artists": MediaType.ARTIST,
@@ -115,10 +119,19 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     "radios": MediaClass.APP,
     "new music": MediaType.ALBUM,
     "album artists": MediaType.ARTIST,
+    "artist tracks": MediaType.TRACK,
+    "genre tracks": MediaType.TRACK,
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
     "favorite": None,
     "track": MediaType.TRACK,
+}
+
+# LMS ignores the search query when it lists the tracks of a playlist
+SEARCHABLE_TYPES: set[str | MediaType] = {
+    MediaType.ALBUM,
+    MediaType.ARTIST,
+    MediaType.GENRE,
 }
 
 
@@ -326,10 +339,12 @@ async def build_item_response(
                 child_media = _build_response_favorites(item)
 
             elif search_type in ["apps", "radios"]:
-                # item["cmd"] contains the name of the command to use with the cli for the app
+                # item["cmd"] contains the name of the command
+                # to use with the cli for the app;
                 # add the command to the dictionaries
                 if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
-                    # Skip searches in apps as they'd need UI or if the link isn't to audio
+                    # Skip searches in apps as they'd need UI
+                    # or if the link isn't to audio
                     continue
                 app_cmd = "app-" + item["cmd"]
 
@@ -358,6 +373,7 @@ async def build_item_response(
                     media_class=CONTENT_TYPE_MEDIA_CLASS[item_type]["item"],
                     can_expand=bool(CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]),
                     can_play=True,
+                    can_search=item_type in SEARCHABLE_TYPES,
                 )
 
             assert child_media.media_class is not None
@@ -397,6 +413,7 @@ async def build_item_response(
         can_play=any(child.can_play for child in children),
         children=children,
         can_expand=True,
+        can_search=search_type in SEARCHABLE_TYPES,
     )
 
 

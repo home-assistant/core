@@ -133,7 +133,9 @@ def substitute_references(
             except MissingReference as err:
                 if fail_on_missing:
                     raise ExitApp(
-                        f"Missing reference '{err.reference_key}' in translation for key '{key}'"
+                        f"Missing reference"
+                        f" '{err.reference_key}'"
+                        f" in translation for key '{key}'"
                     ) from err
                 continue
             result[key] = substituted

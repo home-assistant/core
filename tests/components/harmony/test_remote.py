@@ -10,7 +10,8 @@ from homeassistant.components.harmony.const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from homeassistant.components.harmony.remote import ATTR_CHANNEL, ATTR_DELAY_SECS
+from homeassistant.components.harmony.remote import ATTR_DELAY_SECS
+from homeassistant.components.harmony.services import ATTR_CHANNEL
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_COMMAND,
@@ -293,7 +294,7 @@ async def test_async_send_command_custom_delay(
     mock_write_config,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Ensure calls to send remote commands properly propagate to devices with custom delays."""
+    """Ensure calls to send remote commands propagate to devices with custom delays."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="123",

@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the Internet Printing Protocol (IPP) integration."""
+"""Tests for the diagnostics data provided by the IPP integration."""
 
 import pytest
 from syrupy.assertion import SnapshotAssertion

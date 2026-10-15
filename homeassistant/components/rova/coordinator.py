@@ -1,6 +1,7 @@
 """Coordinator for Rova."""
 
 from datetime import datetime, timedelta
+from typing import override
 
 from rova.rova import Rova
 
@@ -34,6 +35,7 @@ class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, datetime]:
         """Fetch data from Rova API."""
 

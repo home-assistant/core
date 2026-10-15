@@ -1,25 +1,29 @@
 """Support for Victron GX device tracker."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import TYPE_CHECKING, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     GpsLocation,
     Metric as VictronVenusMetric,
     MetricKind,
+    MetricValue,
 )
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
 PARALLEL_UPDATES = 0
+
+ATTR_ALTITUDE = "altitude"
+ATTR_COURSE = "course"
+ATTR_SPEED = "speed"
 
 
 async def async_setup_entry(
@@ -47,7 +51,9 @@ async def async_setup_entry(
 class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     """Implementation of a Victron GX device tracker."""
 
-    _attr_source_type = SourceType.GPS
+    _altitude: float | None = None
+    _course: float | None = None
+    _speed: float | None = None
 
     def __init__(
         self,
@@ -58,10 +64,16 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     ) -> None:
         """Initialize the device tracker."""
         super().__init__(device, metric, device_info, installation_id)
-        self._update_from_location(metric.value)
+        value = metric.value
+        if TYPE_CHECKING:
+            assert value is None or isinstance(value, GpsLocation)
+        self._update_from_location(value)
 
     @callback
-    def _on_update_cb(self, value: Any) -> None:
+    @override
+    def _on_update_cb(self, value: MetricValue) -> None:
+        if TYPE_CHECKING:
+            assert value is None or isinstance(value, GpsLocation)
         self._update_from_location(value)
         self.async_write_ha_state()
 
@@ -70,7 +82,23 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
         if not isinstance(value, GpsLocation):
             self._attr_latitude = None
             self._attr_longitude = None
+            self._altitude = None
+            self._course = None
+            self._speed = None
             return
 
         self._attr_latitude = value.latitude
         self._attr_longitude = value.longitude
+        self._altitude = value.altitude
+        self._course = value.course
+        self._speed = value.speed
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, StateType]:
+        """Return extra state attributes for altitude, course, and speed."""
+        attrs: dict[str, StateType] = {}
+        attrs[ATTR_ALTITUDE] = self._altitude
+        attrs[ATTR_COURSE] = self._course
+        attrs[ATTR_SPEED] = self._speed
+        return attrs

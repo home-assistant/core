@@ -1,8 +1,7 @@
 """Sensors flow for Withings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -57,6 +56,7 @@ class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
         super().__init__(coordinator, "in_bed")
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.in_bed

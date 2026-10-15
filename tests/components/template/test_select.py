@@ -12,9 +12,11 @@ from homeassistant.components.select import (
     ATTR_OPTIONS as SELECT_ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
+    SelectEntityCapabilityAttribute,
 )
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.const import CONF_PICTURE
+from homeassistant.components.template.select import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -26,11 +28,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -38,6 +46,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry, assert_setup_component
@@ -48,7 +58,6 @@ TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 
 TEST_SELECT = TemplatePlatformSetup(
     select.DOMAIN,
-    None,
     "template_select",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID),
 )
@@ -124,7 +133,7 @@ async def test_multiple_configs(hass: HomeAssistant) -> None:
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "select": [
@@ -214,6 +223,9 @@ async def test_template_select(hass: HomeAssistant, calls: list[ServiceCall]) ->
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "c", attributes)
     _verify(hass, "c", ["a", "b", "c"])
 
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "None", attributes)
+    _verify(hass, STATE_UNKNOWN, ["a", "b", "c"])
+
 
 def _verify(
     hass: HomeAssistant,
@@ -239,7 +251,10 @@ def _verify(
         (
             {
                 **TEST_OPTIONS,
-                CONF_ICON: "{% if states.sensor.test_state.state == 'yes' %}mdi:check{% endif %}",
+                CONF_ICON: (
+                    "{% if states.sensor.test_state.state == 'yes' %}"
+                    "mdi:check{% endif %}"
+                ),
             },
             ATTR_ICON,
             "mdi:check",
@@ -247,7 +262,10 @@ def _verify(
         (
             {
                 **TEST_OPTIONS,
-                CONF_PICTURE: "{% if states.sensor.test_state.state == 'yes' %}check.jpg{% endif %}",
+                CONF_PICTURE: (
+                    "{% if states.sensor.test_state.state == 'yes' %}"
+                    "check.jpg{% endif %}"
+                ),
             },
             ATTR_ENTITY_PICTURE,
             "check.jpg",
@@ -309,7 +327,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("select.my_template")
+    template_entity = entity_registry.async_get("select.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -441,7 +459,9 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
                 "options": "{{ ['test', 'yes', 'no'] }}",
                 "select_option": [],
                 "state": "{{ states('sensor.test_state') }}",
-                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+                "availability": (
+                    "{{ is_state('binary_sensor.test_availability', 'on') }}"
+                ),
             },
         )
     ],
@@ -549,3 +569,251 @@ async def test_nested_unique_id(
         TEST_OPTIONS_WITHOUT_STATE,
         "{{ 'test' }}",
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            "something",
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            "something",
+            {
+                "options": ["something", "anything"],
+            },
+        ),
+        (
+            "something",
+            {
+                "current_option": "something",
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            "something",
+            {
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring state."""
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SELECT,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_SELECT,
+        style,
+        {
+            "state": "{{ state_attr('sensor.test_state', 'option') }}",
+            "options": "{{ state_attr('sensor.test_state', 'options') or [] }}",
+            "select_option": [],
+        },
+        "is_state('sensor.test_state', 'something_new')",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SELECT,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {
+            "options": ["something", "anything", "something_new"],
+            "option": "something_new",
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SELECT,
+        "something_new",
+        {
+            "options": ["something", "anything", "something_new"],
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass,
+        TEST_SELECT,
+        style,
+        {"options": "{{ ['test', 'yes', 'no'] }}"},
+        "select_option",
+        caplog,
+    )
+
+
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass,
+        TEST_SELECT,
+        {"options": "{{ ['test', 'yes', 'no'] }}"},
+        "select_option",
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_SELECT,
+        style,
+        TEST_OPTIONS,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(SelectEntityCapabilityAttribute),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_SELECT,
+        style,
+        0,
+        {
+            **TEST_OPTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_SELECT,
+        style,
+        TEST_OPTIONS,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(SelectEntityCapabilityAttribute),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: SelectEntityCapabilityAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_SELECT,
+        style,
+        1,
+        {
+            **TEST_OPTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_SELECT.entity_id}: {attribute}"
+    assert error in caplog.text

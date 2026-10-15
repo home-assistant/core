@@ -1,7 +1,5 @@
 """Models for TCP platform."""
 
-from __future__ import annotations
-
 from typing import TypedDict
 
 from homeassistant.helpers.template import Template

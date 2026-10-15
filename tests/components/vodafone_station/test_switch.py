@@ -131,7 +131,9 @@ async def test_switch_fails(
             SWITCH_DOMAIN,
             SERVICE_TOGGLE,
             {
-                ATTR_ENTITY_ID: f"switch.vodafone_station_{TEST_SERIAL_NUMBER}_guest_5ghz_network"
+                ATTR_ENTITY_ID: (
+                    f"switch.vodafone_station_{TEST_SERIAL_NUMBER}_guest_5ghz_network"
+                )
             },
             blocking=True,
         )

@@ -1,10 +1,8 @@
 """Ecovacs mqtt entity module."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from deebot_client.capabilities import Capabilities
 from deebot_client.device import Device
@@ -43,6 +41,7 @@ class EcovacsEntity[CapabilityEntityT](Entity):
         self._subscribed_events: set[type[Event]] = set()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         device_info = self._device.device_info
@@ -55,16 +54,17 @@ class EcovacsEntity[CapabilityEntityT](Entity):
         )
 
         if nick := device_info.get("nick"):
-            info["name"] = nick
+            info.name = nick
 
         if model := device_info.get("deviceName"):
-            info["model"] = model
+            info.model = model
 
         if mac := self._device.mac:
-            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
         return info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -147,10 +147,12 @@ class EcovacsLegacyEntity(Entity):
         self._event_listeners: list[EventListener] = []
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return super().available and self.state is not None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove event listeners on entity remove."""
         for listener in self._event_listeners:

@@ -1,4 +1,104 @@
 # serializer version: 1
+# name: test_buttons[button.test_disable_keep_accessory_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_disable_keep_accessory_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Disable keep accessory power',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Disable keep accessory power',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'disable_keep_accessory_power_mode',
+    'unique_id': 'VINVINVIN-disable_keep_accessory_power_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.test_disable_keep_accessory_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Disable keep accessory power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_disable_keep_accessory_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.test_enable_keep_accessory_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_enable_keep_accessory_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enable keep accessory power',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Enable keep accessory power',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'enable_keep_accessory_power_mode',
+    'unique_id': 'VINVINVIN-enable_keep_accessory_power_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.test_enable_keep_accessory_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Enable keep accessory power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_enable_keep_accessory_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[button.test_flash_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -39,7 +139,7 @@
 # name: test_buttons[button.test_flash_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Flash lights',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Flash lights',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_flash_lights',
@@ -89,7 +189,7 @@
 # name: test_buttons[button.test_homelink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Homelink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Homelink',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_homelink',
@@ -139,7 +239,7 @@
 # name: test_buttons[button.test_honk_horn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Honk horn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Honk horn',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_honk_horn',
@@ -189,7 +289,7 @@
 # name: test_buttons[button.test_keyless_driving-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Keyless driving',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Keyless driving',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_keyless_driving',
@@ -239,7 +339,7 @@
 # name: test_buttons[button.test_play_fart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Play fart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Play fart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_play_fart',
@@ -289,7 +389,7 @@
 # name: test_buttons[button.test_wake-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Wake',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Wake',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_wake',

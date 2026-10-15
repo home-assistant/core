@@ -1,13 +1,12 @@
 """The Stookwijzer integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from stookwijzer import Stookwijzer
 
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -30,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> None:
     """Set up Stookwijzer from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
@@ -39,19 +38,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) 
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: StookwijzerConfigEntry
-) -> bool:
+) -> None:
     """Unload Stookwijzer config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: StookwijzerConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -73,7 +71,10 @@ async def async_migrate_entry(
                     "entry_title": entry.title,
                 },
             )
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="location_migration_failed",
+            )
 
         hass.config_entries.async_update_entry(
             entry,
@@ -85,8 +86,6 @@ async def async_migrate_entry(
         )
 
         LOGGER.debug("Migration to version %s successful", entry.version)
-
-    return True
 
 
 @callback

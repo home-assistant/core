@@ -1,6 +1,7 @@
 """Tests for honeywell config flow."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiosomecomfort
 import pytest
@@ -17,12 +18,20 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+# The away temperatures are options, not fields on the user form.
 FAKE_CONFIG = {
     "username": "fake",
     "password": "user",
-    "away_cool_temperature": 88,
-    "away_heat_temperature": 61,
 }
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.honeywell.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
@@ -36,23 +45,59 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
     client.login.side_effect = aiosomecomfort.device.ConnectionError
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
     )
     assert result["errors"] == {"base": "cannot_connect"}
 
+    client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
+    )
+    await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
     client.login.side_effect = aiosomecomfort.device.AuthError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
     )
     assert result["errors"] == {"base": "invalid_auth"}
+
+    client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -62,7 +107,15 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FAKE_CONFIG,
         )
         await hass.async_block_till_done()
 
@@ -153,6 +206,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test an authorization error reauth flow."""
 
@@ -183,6 +237,16 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    client.login.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
 
 @pytest.mark.parametrize(
     "error",
@@ -192,8 +256,9 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         TimeoutError,
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_connnection_error(
-    hass: HomeAssistant, client: MagicMock, error
+    hass: HomeAssistant, client: MagicMock, error: type[Exception]
 ) -> None:
     """Test a connection error reauth flow."""
 
@@ -218,3 +283,13 @@ async def test_reauth_flow_connnection_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    client.login.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"

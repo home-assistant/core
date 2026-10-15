@@ -1,19 +1,12 @@
 """Support for ZHA sirens."""
 
-from __future__ import annotations
-
 import functools
-from typing import Any
+from typing import Any, override
 
-from zha.application.const import (
-    WARNING_DEVICE_MODE_BURGLAR,
-    WARNING_DEVICE_MODE_EMERGENCY,
-    WARNING_DEVICE_MODE_EMERGENCY_PANIC,
-    WARNING_DEVICE_MODE_FIRE,
-    WARNING_DEVICE_MODE_FIRE_PANIC,
-    WARNING_DEVICE_MODE_POLICE_PANIC,
+from zha.application.platforms.siren import (
+    SirenEntityFeature as ZHASirenEntityFeature,
+    WarningMode,
 )
-from zha.application.platforms.siren import SirenEntityFeature as ZHASirenEntityFeature
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -28,10 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -57,24 +49,26 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHASiren(ZHAEntity, SirenEntity):
+class ZHASiren(ZHASupportedFeaturesEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
     _attr_available_tones: list[int | str] | dict[int, str] | None = {
-        WARNING_DEVICE_MODE_BURGLAR: "Burglar",
-        WARNING_DEVICE_MODE_FIRE: "Fire",
-        WARNING_DEVICE_MODE_EMERGENCY: "Emergency",
-        WARNING_DEVICE_MODE_POLICE_PANIC: "Police Panic",
-        WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
-        WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
+        WarningMode.Burglar: "Burglar",
+        WarningMode.Fire: "Fire",
+        WarningMode.Emergency: "Emergency",
+        WarningMode.Police_Panic: "Police Panic",
+        WarningMode.Fire_Panic: "Fire Panic",
+        WarningMode.Emergency_Panic: "Emergency Panic",
     }
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA siren."""
-        super().__init__(entity_data, **kwargs)
-
-        features: SirenEntityFeature = SirenEntityFeature(0)
-        zha_features: ZHASirenEntityFeature = self.entity_data.entity.supported_features
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZHASirenEntityFeature,
+    ) -> SirenEntityFeature:
+        """Convert ZHA siren features to HA siren features."""
+        features = SirenEntityFeature(0)
 
         if ZHASirenEntityFeature.TURN_ON in zha_features:
             features |= SirenEntityFeature.TURN_ON
@@ -87,14 +81,16 @@ class ZHASiren(ZHAEntity, SirenEntity):
         if ZHASirenEntityFeature.DURATION in zha_features:
             features |= SirenEntityFeature.DURATION
 
-        self._attr_supported_features = features
+        return features
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.entity_data.entity.is_on
+        return self._zha_state.is_on
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         await self.entity_data.entity.async_turn_on(
@@ -104,7 +100,8 @@ class ZHASiren(ZHAEntity, SirenEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
         await self.entity_data.entity.async_turn_off()

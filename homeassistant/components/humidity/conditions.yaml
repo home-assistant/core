@@ -9,7 +9,8 @@
 .humidity_threshold_number: &humidity_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 is_value:
@@ -25,11 +26,13 @@ is_value:
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
     threshold:
       required: true
       selector:

@@ -1,7 +1,5 @@
 """Tests for ZoneMinder YAML configuration validation."""
 
-from __future__ import annotations
-
 from homeassistant.components.zoneminder.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.core import HomeAssistant

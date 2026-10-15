@@ -1,7 +1,5 @@
 """The Xiaomi Bluetooth integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import cast
@@ -42,7 +40,7 @@ def process_service_info(
     device_registry: DeviceRegistry,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
-    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    """Process a BluetoothServiceInfoBleak and return sensor data."""
     coordinator = entry.runtime_data
     data = coordinator.device_data
     update = data.update(service_info)
@@ -98,10 +96,11 @@ def process_service_info(
             )
 
     # If device isn't pending we know it has seen at least one broadcast with a payload
-    # If that payload was encrypted and the bindkey was not verified then we need to reauth
+    # If that payload was encrypted and the bindkey was
+    # not verified then we need to reauth
     if (
         not data.pending
-        and data.encryption_scheme != EncryptionScheme.NONE
+        and data.encryption_scheme is not EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
         entry.async_start_reauth(hass, data={"device": data})
@@ -119,7 +118,7 @@ def format_discovered_event_class(address: str) -> str:
     return f"{DOMAIN}_discovered_event_class_{address}"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -184,9 +183,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: XiaomiBLEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: XiaomiBLEConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

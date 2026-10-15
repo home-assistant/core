@@ -1,9 +1,8 @@
 """Button support for Bravia TV."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -73,6 +72,7 @@ class BraviaTVButton(BraviaTVEntity, ButtonEntity):
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Trigger the button action."""
         await self.entity_description.press_action(self.coordinator)

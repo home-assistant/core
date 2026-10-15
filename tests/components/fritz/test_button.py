@@ -192,7 +192,8 @@ async def test_wol_button_absent_for_non_lan_device(
     entry.add_to_hass(hass)
 
     printer_wifi_data = deepcopy(MOCK_MESH_DATA)
-    # initialization logic uses the connection type of the `node_interface_1_uid` pair of the printer
+    # initialization logic uses the connection type of the
+    # `node_interface_1_uid` pair of the printer
     # ni-230 is wifi interface of fritzbox
     printer_node_interface = printer_wifi_data["nodes"][1]["node_interfaces"][0]
     printer_node_interface["type"] = "WLAN"
@@ -225,8 +226,8 @@ async def test_cleanup_button(
     assert entry.state is ConfigEntryState.LOADED
 
     # check if tracked device is registered properly
-    device = device_registry.async_get_device(
-        connections={("mac", "aa:bb:cc:00:11:22")}
+    device = device_registry.async_get_device_by_connection(
+        ("mac", "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert device
 
@@ -253,8 +254,8 @@ async def test_cleanup_button(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # check if orphan tracked device is removed
-    device = device_registry.async_get_device(
-        connections={("mac", "aa:bb:cc:00:11:22")}
+    device = device_registry.async_get_device_by_connection(
+        ("mac", "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert not device
 
@@ -270,6 +271,7 @@ async def test_cleanup_button(
 async def test_cleanup_button_deprecation_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
@@ -282,5 +284,24 @@ async def test_cleanup_button_deprecation_issue(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_cleanup_button")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firmware_update_button_deprecation_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test deprecation issue for legacy firmware update button."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_firmware_update_button")

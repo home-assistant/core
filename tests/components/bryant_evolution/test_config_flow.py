@@ -3,6 +3,7 @@
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient, ZoneInfo
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
@@ -104,10 +105,9 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect_bad_file(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_evolution_client_factory: AsyncMock,
+    hass: HomeAssistant, mock_evolution_client_factory: AsyncMock
 ) -> None:
     """Test we handle cannot connect error from a missing file."""
     mock_evolution_client_factory.side_effect = FileNotFoundError("test error")
@@ -125,11 +125,19 @@ async def test_form_cannot_connect_bad_file(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_evolution_client_factory.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_FILENAME: "some-serial",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_evolution_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that reconfigure discovers additional systems and zones."""
 

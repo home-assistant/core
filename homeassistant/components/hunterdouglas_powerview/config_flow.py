@@ -1,11 +1,9 @@
 """Config flow for Hunter Douglas PowerView integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
@@ -59,8 +57,9 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.powerview_config: dict = {}
         self.discovered_ip: str | None = None
         self.discovered_name: str | None = None
-        self.data_schema: dict = {vol.Required(CONF_HOST): str}
+        self.data_schema: dict = {probatio.Required(CONF_HOST): str}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -90,7 +89,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(self.data_schema), errors=errors
+            step_id="user", data_schema=probatio.Schema(self.data_schema), errors=errors
         )
 
     async def _async_validate_or_error(
@@ -110,6 +109,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return info, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -118,6 +118,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_name = discovery_info.hostname
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -128,6 +129,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -165,6 +167,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_link()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.discovered_ip == self.discovered_ip

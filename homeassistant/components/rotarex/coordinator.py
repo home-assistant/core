@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for the Rotarex integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from rotarex_dimes_srg_api import (
     InvalidAuth,
@@ -54,6 +52,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
             config_entry=config_entry,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator with initial authentication check."""
         try:
@@ -69,6 +68,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
                 translation_key="update_failed",
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, RotarexTank]:
         """Fetch data from API endpoint."""
         try:

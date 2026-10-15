@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Concatenate, Generic, TypeVar, cast
+from typing import Any, Concatenate, Generic, TypeVar, cast, override
 
 from ring_doorbell import (
     AuthenticationError,
@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
@@ -177,6 +177,7 @@ class RingBaseEntity(
         self._attr_extra_state_attributes = {}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},  # device_id is the mac
+            connections={(CONNECTION_NETWORK_MAC, device.device_id)},
             manufacturer="Ring",
             model=device.model,
             name=device.name,
@@ -190,6 +191,7 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
         return self.coordinator.data
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._device = cast(
             RingDeviceT,

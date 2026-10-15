@@ -208,6 +208,7 @@ async def test_single_instance(hass: HomeAssistant) -> None:
 )
 async def test_reauth_successful(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     user_input: dict[str, str],
 ) -> None:
     """Test starting a reauthentication flow."""
@@ -233,8 +234,13 @@ async def test_reauth_successful(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+    await hass.async_block_till_done()
+    mock_setup_entry.assert_awaited_once()
 
-async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
+
+async def test_reauth_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test reauthentication flow with invalid credentials."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -269,3 +275,6 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
 
         assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "reauth_successful"
+
+    await hass.async_block_till_done()
+    mock_setup_entry.assert_awaited_once()

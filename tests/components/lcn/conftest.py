@@ -1,6 +1,5 @@
 """Test configuration and mocks for LCN component."""
 
-import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -17,7 +16,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 
@@ -40,7 +39,7 @@ class MockDeviceConnection(DeviceConnection):
     request_status_motor_position = AsyncMock()
     request_status_binary_sensors = AsyncMock()
     request_status_variable = AsyncMock()
-    request_status_led_and_logic_ops = AsyncMock()
+    request_status_leds_and_logic_ops = AsyncMock()
     request_status_locked_keys = AsyncMock()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -75,7 +74,7 @@ def create_config_entry(
 ) -> MockConfigEntry:
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
-    entry_data = json.loads(load_fixture(fixture_filename))
+    entry_data = load_json_object_fixture(fixture_filename)
     for device in entry_data[CONF_DEVICES]:
         device[CONF_ADDRESS] = tuple(device[CONF_ADDRESS])
     for entity in entry_data[CONF_ENTITIES]:
@@ -111,7 +110,9 @@ async def init_integration(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
-    hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
+    # needs to be mocked as hass.http.register_static_path is
+    # called when registering the frontend
+    hass.http = Mock()
     lcn_connection = None
 
     def lcn_connection_factory(*args, **kwargs):
@@ -135,7 +136,7 @@ def get_device(
 ) -> dr.DeviceEntry:
     """Get LCN device for specified address."""
     device_registry = dr.async_get(hass)
-    identifiers = {(DOMAIN, generate_unique_id(entry.entry_id, address))}
-    device = device_registry.async_get_device(identifiers=identifiers)
+    identifier = (DOMAIN, generate_unique_id(entry.entry_id, address))
+    device = device_registry.async_get_device_by_identifier(identifier, entry.entry_id)
     assert device
     return device

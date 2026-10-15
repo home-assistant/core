@@ -1,7 +1,5 @@
 """Support for the Transmission BitTorrent client API."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 import re
@@ -74,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Set up the Transmission Component."""
 
     @callback
@@ -85,7 +83,8 @@ async def async_setup_entry(
         if CONF_NAME not in config_entry.data:
             return None
         match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
+            f"{config_entry.data[CONF_HOST]}"
+            f"-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
@@ -134,19 +133,17 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Unload Transmission Entry from config_entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -169,8 +166,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True
 
 
 async def get_api(

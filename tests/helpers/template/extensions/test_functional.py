@@ -1,7 +1,5 @@
 """Test functional utility functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import random
 from unittest.mock import MagicMock, patch
 
@@ -497,13 +495,15 @@ def test_combine(hass: HomeAssistant) -> None:
 
     assert render(
         hass,
-        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
+        "{{ combine({'a': 1, 'b': {'x': 1}},"
+        " {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
     ) == {"a": 1, "b": {"x": 1, "y": 2}, "c": 4}
 
     # Test that recursive=False does not merge nested dictionaries
     assert render(
         hass,
-        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
+        "{{ combine({'a': 1, 'b': {'x': 1}},"
+        " {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
     ) == {"a": 1, "b": {"y": 2}, "c": 4}
 
     # Test that None values are handled correctly in recursive merge

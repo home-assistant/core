@@ -1,7 +1,5 @@
 """The islamic_prayer_times component."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
@@ -21,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
-) -> bool:
+) -> None:
     """Set up the Islamic Prayer Component."""
 
     @callback
@@ -45,18 +43,13 @@ async def async_setup_entry(
     )
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         new = {**config_entry.data}
         if config_entry.minor_version < 2:
@@ -73,20 +66,15 @@ async def async_migrate_entry(
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
-) -> bool:
+) -> None:
     """Unload Islamic Prayer entry from config_entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        coordinator = config_entry.runtime_data
-        if coordinator.event_unsub:
-            coordinator.event_unsub()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    coordinator = config_entry.runtime_data
+    if coordinator.event_unsub:
+        coordinator.event_unsub()
 
 
 async def async_options_updated(

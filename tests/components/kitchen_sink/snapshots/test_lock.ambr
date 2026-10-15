@@ -3,8 +3,8 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Another basic lock',
-        'supported_features': <LockEntityFeature: 0>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Another basic lock',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
       }),
       'context': <ANY>,
       'entity_id': 'lock.another_basic_lock',
@@ -15,8 +15,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Another openable lock',
-        'supported_features': <LockEntityFeature: 1>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Another openable lock',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 1>,
       }),
       'context': <ANY>,
       'entity_id': 'lock.another_openable_lock',
@@ -27,8 +27,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Basic lock',
-        'supported_features': <LockEntityFeature: 0>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basic lock',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
       }),
       'context': <ANY>,
       'entity_id': 'lock.basic_lock',
@@ -39,8 +39,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Openable lock',
-        'supported_features': <LockEntityFeature: 1>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Openable lock',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 1>,
       }),
       'context': <ANY>,
       'entity_id': 'lock.openable_lock',

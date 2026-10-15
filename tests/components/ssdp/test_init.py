@@ -1,7 +1,7 @@
 """Test the SSDP integration."""
 
 from ipaddress import IPv4Address
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
@@ -605,7 +605,10 @@ async def test_getting_existing_headers(
         {
             "ST": "mock-st",
             "LOCATION": "http://1.1.1.1",
-            "USN": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+            "USN": (
+                "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+                "::urn:mdx-netflix-com:service:target:3"
+            ),
             "SERVER": "mock-server",
             "EXT": "",
             "_source": "search",
@@ -621,8 +624,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_st.ssdp_server == "mock-server"
     assert discovery_info_by_st.ssdp_st == "mock-st"
     assert (
-        discovery_info_by_st.ssdp_usn
-        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+        discovery_info_by_st.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+        "::urn:mdx-netflix-com:service:target:3"
     )
     assert discovery_info_by_st.ssdp_udn == ANY
     assert discovery_info_by_st.ssdp_headers["_timestamp"] == ANY
@@ -640,8 +643,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn.ssdp_server == "mock-server"
     assert discovery_info_by_udn.ssdp_st == "mock-st"
     assert (
-        discovery_info_by_udn.ssdp_usn
-        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+        discovery_info_by_udn.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+        "::urn:mdx-netflix-com:service:target:3"
     )
     assert discovery_info_by_udn.ssdp_udn == ANY
     assert discovery_info_by_udn.ssdp_headers["_timestamp"] == ANY
@@ -659,7 +662,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn_st.ssdp_st == "mock-st"
     assert (
         discovery_info_by_udn_st.ssdp_usn
-        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+        "::urn:mdx-netflix-com:service:target:3"
     )
     assert discovery_info_by_udn_st.ssdp_udn == ANY
     assert discovery_info_by_udn_st.ssdp_headers["_timestamp"] == ANY
@@ -758,6 +762,11 @@ async def test_bind_failure_skips_adapter(
     async def _async_start(self):
         if self.source == ("2001:db8::", 0, 0, 1):
             raise OSError
+
+    # The UPnP server needs a presentation URL, which is derived from the
+    # instance URL. In production http is set up before ssdp; set an internal
+    # URL here so get_url() succeeds without relying on http being set up.
+    hass.config.internal_url = "http://10.10.10.10:8123"
 
     SsdpListener.async_start = _async_start
     UpnpServer.async_start = _async_start
@@ -890,12 +899,15 @@ async def test_flow_dismiss_on_byebye(
     )
 
     mock_ssdp_advertisement["nts"] = "ssdp:byebye"
-    # ssdp:byebye advertisement should dismiss existing flows
+    # ssdp:byebye dismisses existing flows, but not one the user is working through
     with (
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_init_data_type",
-            return_value=[{"flow_id": "mock_flow_id"}],
+            return_value=[
+                {"flow_id": "mock_flow_id", "context": {}},
+                {"flow_id": "pairing", "context": {"dismiss_protected": True}},
+            ],
         ) as mock_async_progress_by_init_data_type,
         patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
     ):
@@ -903,7 +915,7 @@ async def test_flow_dismiss_on_byebye(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
-    assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"
+    assert mock_async_abort.mock_calls == [call("mock_flow_id")]
 
 
 @patch(
