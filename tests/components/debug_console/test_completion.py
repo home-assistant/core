@@ -168,12 +168,21 @@ def inner(alpha, beta=2):
 def decorated(*args, **kwargs):
     pass
 
+def wraps_itself(value):
+    pass
+
+wraps_itself.__wrapped__ = wraps_itself
+
 class Thing:
     def method(self, entity_id: str, *values: int, force: bool = False, **extra) -> str:
         \"\"\"Do the thing.
 
         In more detail.
         \"\"\"
+
+    @functools.wraps(method)
+    def decorated_method(self, *args, **kwargs):
+        pass
 
     @property
     def getter(self):
@@ -244,6 +253,22 @@ METHOD_SIGNATURE = {
                 "doc": "Do the inner thing.",
             },
             id="decorated",
+        ),
+        pytest.param(
+            "wraps_itself(",
+            {
+                "name": "wraps_itself",
+                "parameters": ["value"],
+                "active": 0,
+                "returns": None,
+                "doc": "",
+            },
+            id="wraps_itself",
+        ),
+        pytest.param(
+            "thing.decorated_method(",
+            {**METHOD_SIGNATURE, "name": "decorated_method", "active": 0},
+            id="decorated_method",
         ),
         pytest.param(
             "Thing(",
@@ -362,6 +387,18 @@ async def test_signature(
             {"type": "debug_console/signature", "code": "Documented("},
             id="signature_doc_descriptor",
         ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "holds_watched.item.al"},
+            id="complete_descriptor_metaclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "FakeWrapper("},
+            id="signature_wrapped_descriptor",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "bound_trap("},
+            id="signature_bound_callable",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -463,6 +500,20 @@ class Documented:
 masked = Masked()
 odd_dict = OddDict()
 holds_masked = HoldsMasked()
+
+class HoldsWatched:
+    item = Watched()
+
+class FakeWrapper:
+    __wrapped__ = Descriptor()
+
+    def __init__(self, argument):
+        pass
+
+import types
+
+holds_watched = HoldsWatched()
+bound_trap = types.MethodType(callable_trap, object())
 
 # Creating the classes above may run their hooks already.
 ran.clear()

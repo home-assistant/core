@@ -234,6 +234,11 @@ def _class_attribute(cls: type, name: str, default: Any) -> Any:
     return default
 
 
+def is_descriptor(value: Any) -> bool:
+    """Return if a value is a descriptor, without running code."""
+    return any("__get__" in class_dict(base) for base in class_mro(type(value)))
+
+
 def _is_data_descriptor(value: Any) -> bool:
     """Return if a value is a descriptor that can be set, like a property."""
     return any(

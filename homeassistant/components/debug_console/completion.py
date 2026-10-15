@@ -18,7 +18,7 @@ import pkgutil
 import re
 import sys
 import types
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 
@@ -27,6 +27,7 @@ from .inspection import (
     class_mro,
     instance_dict,
     is_class,
+    is_descriptor,
     preview,
     static_attribute,
 )
@@ -55,7 +56,6 @@ _SAFE_DEFAULT_TYPES = (type(None), bool, int, float, complex, str, bytes)
 _SIGNATURE_TYPES = (
     types.FunctionType,
     types.BuiltinFunctionType,
-    types.MethodType,
     types.MethodDescriptorType,
     types.WrapperDescriptorType,
     types.MethodWrapperType,
@@ -204,7 +204,7 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
 
         owner = value if is_class(value) else type(value)
         from_class = static is static_attribute(owner, attribute, _MISSING)
-        if not from_class or not hasattr(type(static), "__get__"):
+        if not from_class or not is_descriptor(static):
             # Plain values, including those in the __dict__ of an instance.
             value = static
         elif type(static) in _SAFE_DESCRIPTORS:
@@ -225,13 +225,7 @@ def _signature(namespace: dict[str, Any], callee: str) -> inspect.Signature | No
     ):
         return None
 
-    # Decorated functions show the signature of what they wrap, as long as that
-    # is safe to read too.
-    target = inspect.unwrap(
-        target,
-        # Only called for wrappers, which have __wrapped__.
-        stop=lambda wrapper: not _has_safe_signature(cast(Any, wrapper).__wrapped__),
-    )
+    target = _unwrap(target)
 
     try:
         # As strings, as evaluating annotations can fail or import things.
@@ -242,6 +236,34 @@ def _signature(namespace: dict[str, Any], callee: str) -> inspect.Signature | No
         return None
 
 
+def _unwrap(target: Any) -> Any:
+    """Return what a decorated function wraps, as long as that is safe to read.
+
+    Like inspect.unwrap, which leaves classes alone too, but reads __wrapped__
+    with getattr(). For a bound method, that runs code of what it binds.
+    """
+    # A bound method keeps __wrapped__ on its function, and binding what that
+    # wraps keeps the first argument out of the signature.
+    if type(target) is types.MethodType:
+        return types.MethodType(_unwrap(target.__func__), target.__self__)
+
+    seen = {id(target)}
+    while (
+        not is_class(target)
+        and (wrapped := static_attribute(target, "__wrapped__", _MISSING))
+        is not _MISSING
+        and _has_safe_signature(wrapped)
+    ):
+        # A wrapper that wraps itself, directly or not, would loop forever.
+        if id(wrapped) in seen:
+            break
+
+        seen.add(id(wrapped))
+        target = wrapped
+
+    return target
+
+
 def _has_safe_signature(value: Any) -> bool:
     """Return if inspect can read the signature without running user code.
 
@@ -250,6 +272,10 @@ def _has_safe_signature(value: Any) -> bool:
     """
     if is_class(value):
         return type(value) in _STANDARD_METACLASSES
+
+    # A method binds any callable, and inspect reads the signature of that.
+    if type(value) is types.MethodType:
+        return _has_safe_signature(value.__func__)
 
     return type(value) in _SIGNATURE_TYPES
 
