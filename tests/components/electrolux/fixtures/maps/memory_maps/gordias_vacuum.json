@@ -1,0 +1,17 @@
+[
+  {
+    "rooms": [
+      {
+        "Id": 11,
+        "Name": "Storage"
+      },
+      {
+        "Id": 12,
+        "Name": "Kitchen"
+      }
+    ],
+    "name": "Map 1",
+    "id": 1,
+    "currentMap": true
+  }
+]
