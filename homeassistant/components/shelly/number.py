@@ -359,6 +359,7 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="call_rpc",
+        supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),
 }
