@@ -56,11 +56,6 @@ def _zone_flags_indicate_bypass(zone_flags: list[str]) -> bool:
     return not BYPASS_ZONE_FLAGS.isdisjoint(zone_flags)
 
 
-def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str]:
-    """Return the zones and the version of the server."""
-    return client.list_zones(), client.get_version()
-
-
 def create_watcher_client(host: str, port: int) -> nx584_client.Client:
     """Create a client for the watcher thread that outlasts the long-poll."""
     return create_client(host, port, EVENTS_REQUEST_TIMEOUT)
@@ -91,12 +86,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NX584 zone sensors from a config entry."""
-    client = entry.runtime_data
+    data = entry.runtime_data
     exclude: list[int] = entry.options.get(CONF_EXCLUDE_ZONES, [])
     zone_types: dict[str, str] = entry.options.get(CONF_ZONE_TYPES, {})
 
-    zones, version = await hass.async_add_executor_job(_fetch_zones, client)
-    if [int(v) for v in version.split(".")] < [1, 1]:
+    if [int(v) for v in data.version.split(".")] < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
         return
 
@@ -107,7 +101,7 @@ async def async_setup_entry(
                 zone_types.get(str(zone["number"]), BinarySensorDeviceClass.OPENING)
             ),
         )
-        for zone in zones
+        for zone in data.zones
         if zone["number"] not in exclude
     }
     if zone_sensors:

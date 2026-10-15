@@ -65,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NX584 alarm panel from a config entry."""
     async_add_entities(
-        [NX584Alarm(entry.data.get(CONF_NAME, DEFAULT_NAME), entry.runtime_data)]
+        [NX584Alarm(entry.data.get(CONF_NAME, DEFAULT_NAME), entry.runtime_data.client)]
     )
 
 

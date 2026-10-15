@@ -71,7 +71,7 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data is mock_client.return_value
+    assert mock_config_entry.runtime_data.client is mock_client.return_value
     mock_client.assert_called_with(f"http://{TEST_HOST}:{TEST_PORT}")
     assert hass.states.get("alarm_control_panel.nx584")
     assert hass.states.get("binary_sensor.front")
@@ -154,6 +154,60 @@ async def test_setup_entry_not_ready(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(requests.exceptions.ConnectionError, id="cannot_connect"),
+        pytest.param(requests.exceptions.Timeout, id="timeout"),
+    ],
+)
+@pytest.mark.usefixtures("mock_watcher")
+async def test_setup_entry_zone_fetch_not_ready(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+) -> None:
+    """Test the entry retries when the zones cannot be fetched, then sets up."""
+    mock_client.return_value.get_version.side_effect = side_effect
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
+
+    mock_client.return_value.get_version.side_effect = None
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("binary_sensor.front")
+
+
+@pytest.mark.usefixtures("mock_watcher")
+async def test_setup_entry_alarm_only_skips_zones(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test an entry without zone sensors does not fetch the zones."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_PLATFORMS: [ALARM_CONTROL_PANEL_DOMAIN],
+        },
+        unique_id=f"{TEST_HOST}:{TEST_PORT}",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.zones == []
+    mock_client.return_value.get_version.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")

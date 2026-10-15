@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 import logging
 from typing import Any, override
 
@@ -34,7 +35,18 @@ DATA_IMPORT_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_import_lock")
 # Import abort reasons that have a repair issue in strings.json.
 IMPORT_ISSUE_REASONS = {"cannot_connect", "unknown"}
 
-type NX584ConfigEntry = ConfigEntry[nx584_client.Client]
+
+@dataclass
+class NX584Data:
+    """Runtime data of an NX584 config entry."""
+
+    client: nx584_client.Client
+    # Fetched only for entries that set up the zone sensors.
+    zones: list[dict[str, Any]] = field(default_factory=list)
+    version: str = ""
+
+
+type NX584ConfigEntry = ConfigEntry[NX584Data]
 
 
 class _TimeoutAdapter(HTTPAdapter):
@@ -71,6 +83,11 @@ def create_client(
     return client
 
 
+def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str]:
+    """Return the zones and the version of the server."""
+    return client.list_zones(), client.get_version()
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NX584 component."""
     async_setup_services(hass)
@@ -79,18 +96,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
     """Set up NX584 from a config entry."""
-    client = create_client(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    platforms: list[Platform] = entry.data.get(CONF_PLATFORMS, PLATFORMS)
+    data = NX584Data(create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]))
     try:
-        await hass.async_add_executor_job(client.list_zones)
+        if Platform.BINARY_SENSOR in platforms:
+            data.zones, data.version = await hass.async_add_executor_job(
+                _fetch_zones, data.client
+            )
+        else:
+            await hass.async_add_executor_job(data.client.list_zones)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to the NX584 server at {entry.data[CONF_HOST]}"
         ) from err
 
-    entry.runtime_data = client
-    await hass.config_entries.async_forward_entry_setups(
-        entry, entry.data.get(CONF_PLATFORMS, PLATFORMS)
-    )
+    entry.runtime_data = data
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
