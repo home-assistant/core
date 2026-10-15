@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.input_datetime import (
     ATTR_DATE,
@@ -14,15 +14,17 @@ from homeassistant.components.input_datetime import (
     ATTR_EDITABLE,
     ATTR_TIME,
     ATTR_TIMESTAMP,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
     CONF_ID,
-    CONF_INITIAL,
     CONF_NAME,
     CONFIG_SCHEMA,
-    DEFAULT_TIME,
     DOMAIN,
     SERVICE_RELOAD,
+)
+from homeassistant.components.input_datetime.const import (
+    CONF_HAS_DATE,
+    CONF_HAS_TIME,
+    CONF_INITIAL,
+    DEFAULT_TIME,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -130,7 +132,7 @@ async def async_set_timestamp(
 )
 def test_invalid_configs(config) -> None:
     """Test config."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         CONFIG_SCHEMA({DOMAIN: config})
 
 
@@ -284,7 +286,7 @@ async def test_set_invalid(hass: HomeAssistant) -> None:
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_datetime",
@@ -314,7 +316,7 @@ async def test_set_invalid_2(hass: HomeAssistant) -> None:
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_datetime",

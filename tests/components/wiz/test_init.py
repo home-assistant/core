@@ -74,6 +74,8 @@ async def test_wrong_device_now_has_our_ip(hass: HomeAssistant) -> None:
     bulb.mac = "dddddddddddd"
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    # Each retry creates a new bulb, so the socket of this one must not leak
+    bulb.async_close.assert_called_once()
 
     with _patch_wizlight():
         await hass.async_block_till_done(wait_background_tasks=True)

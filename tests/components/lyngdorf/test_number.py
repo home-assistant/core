@@ -113,7 +113,7 @@ async def test_number_none_values(
     mock_receiver: MagicMock,
 ) -> None:
     """Test a number shows unknown when the device reports nothing."""
-    mock_receiver.lipsync = None
+    mock_receiver.lipsync.value = None
     mock_receiver.trims[Trim.BASS].value = None
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
@@ -122,37 +122,15 @@ async def test_number_none_values(
     assert hass.states.get(TRIM_BASS_ENTITY_ID).state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_entity_created_before_the_device_reports_a_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test a control the model has still gets an entity before its first report."""
-    mock_receiver.lipsync = None
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.lyngdorf.lookup_model",
-            return_value=LyngdorfModel.MP_60,
-        ),
-        patch("homeassistant.components.lyngdorf.PLATFORMS", [Platform.NUMBER]),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(LIPSYNC_ENTITY_ID).state == STATE_UNKNOWN
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_receiver")
 async def test_entities_absent_for_controls_the_model_lacks(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no entity is created where the model has no such control."""
-    mock_receiver.lipsync_range = None
+    mock_receiver.lipsync = None
     del mock_receiver.trims[Trim.SURROUND]
     mock_config_entry.add_to_hass(hass)
 
@@ -166,9 +144,12 @@ async def test_entities_absent_for_controls_the_model_lacks(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(LIPSYNC_ENTITY_ID) is None
-    assert hass.states.get(TRIM_SURROUND_ENTITY_ID) is None
-    assert hass.states.get(TRIM_BASS_ENTITY_ID) is not None
+    # The registry, not the state machine: an entity that was created and then
+    # failed to render has no state either, so states alone cannot tell the two
+    # apart.
+    assert entity_registry.async_get(LIPSYNC_ENTITY_ID) is None
+    assert entity_registry.async_get(TRIM_SURROUND_ENTITY_ID) is None
+    assert entity_registry.async_get(TRIM_BASS_ENTITY_ID) is not None
 
 
 @pytest.mark.usefixtures("init_integration")

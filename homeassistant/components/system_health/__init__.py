@@ -8,7 +8,7 @@ import logging
 from typing import Any, Protocol
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -174,7 +174,7 @@ def _format_value(val: Any) -> Any:
     return val
 
 
-@websocket_api.websocket_command({vol.Required("type"): "system_health/info"})
+@websocket_api.websocket_command({probatio.Required("type"): "system_health/info"})
 @websocket_api.async_response
 async def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]

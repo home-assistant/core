@@ -221,6 +221,24 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.airzone.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.validate",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Test that DHCP discovery works."""

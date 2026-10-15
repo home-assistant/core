@@ -7,7 +7,7 @@ from typing import Any, cast, override
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
 from onedrive_personal_sdk.models.items import Drive
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -27,7 +27,7 @@ from .const import (
     OAUTH_SCOPES,
 )
 
-FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_PATH): str})
+FOLDER_NAME_SCHEMA = probatio.Schema({probatio.Required(CONF_FOLDER_PATH): str})
 
 
 class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -74,9 +74,9 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pick_tenant",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TENANT_ID): str,
+                    probatio.Required(CONF_TENANT_ID): str,
                 }
             ),
             description_placeholders={

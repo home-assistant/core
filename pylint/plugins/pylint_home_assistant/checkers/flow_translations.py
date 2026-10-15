@@ -124,7 +124,7 @@ def _extract_items_from_node(
                 items.append(_Field(name))
         return items
 
-    # SCHEMA_VAR.schema - the wrapped dict of a voluptuous Schema
+    # SCHEMA_VAR.schema - the wrapped dict of a probatio Schema
     if isinstance(node, nodes.Attribute) and node.attrname == "schema":
         return _extract_items_from_node(node.expr)
 
@@ -169,7 +169,7 @@ def _extract_items_from_call(node: nodes.Call) -> list[_Field | _Section] | None
                     *_extract_items_from_node(node.func.expr),
                     *_extract_items_from_node(node.args[0]),
                 ]
-            # vol.Schema({...}) / Schema({...}) - first arg is the schema dict
+            # probatio.Schema({...}) / Schema({...}) - first arg is the schema dict
             case nodes.Attribute(attrname="Schema") | nodes.Name(name="Schema"):
                 return _extract_items_from_node(node.args[0])
             # self.add_suggested_values_to_schema(schema, ...) - first arg is
@@ -213,7 +213,7 @@ def _extract_section_fields(node: nodes.NodeNG) -> list[str] | None:
     if not node.args:
         return None
 
-    # section(vol.Schema({...}), ...) - first arg is the schema
+    # section(probatio.Schema({...}), ...) - first arg is the schema
     inner_items = _extract_items_from_node(node.args[0])
     return [item.name for item in inner_items if isinstance(item, _Field)]
 

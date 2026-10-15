@@ -11,7 +11,7 @@ from lyngdorf import (
     fetch_device_serial,
     lookup_model,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -80,9 +80,9 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
                 }
             ),
             errors=errors,
@@ -159,7 +159,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                probatio.Schema({probatio.Required(CONF_HOST): cv.string}),
                 reconfigure_entry.data,
             ),
             errors=errors,

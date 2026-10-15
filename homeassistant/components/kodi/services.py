@@ -1,6 +1,6 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -20,14 +20,14 @@ ATTR_METHOD = "method"
 
 
 KODI_ADD_MEDIA_SCHEMA: VolDictType = {
-    vol.Required(ATTR_MEDIA_TYPE): cv.string,
-    vol.Optional(ATTR_MEDIA_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+    probatio.Required(ATTR_MEDIA_TYPE): cv.string,
+    probatio.Optional(ATTR_MEDIA_ID): cv.string,
+    probatio.Optional(ATTR_MEDIA_NAME): cv.string,
+    probatio.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 }
 
 KODI_CALL_METHOD_SCHEMA = cv.make_entity_service_schema(
-    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
+    {probatio.Required(ATTR_METHOD): cv.string}, extra=probatio.ALLOW_EXTRA
 )
 
 

@@ -7,10 +7,10 @@ import sqlite3
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from probatio.error import MultipleInvalid
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.recorder import DOMAIN, Recorder
 from homeassistant.components.recorder.const import SupportedDialect

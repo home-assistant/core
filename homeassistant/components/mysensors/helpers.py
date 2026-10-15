@@ -8,7 +8,7 @@ from typing import cast
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -34,7 +34,8 @@ from .models import MySensorsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMAS: Registry[
-    tuple[str, str], Callable[[BaseAsyncGateway, ChildSensor, ValueType], vol.Schema]
+    tuple[str, str],
+    Callable[[BaseAsyncGateway, ChildSensor, ValueType], probatio.Schema],
 ] = Registry()
 
 
@@ -85,7 +86,7 @@ def remove_node_dev_ids(entry: MySensorsConfigEntry, node_id: int) -> None:
 
 def default_schema(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a default validation schema for value types."""
     schema = {value_type_name: cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
@@ -94,7 +95,7 @@ def default_schema(
 @SCHEMAS.register(("light", "V_DIMMER"))
 def light_dimmer_schema(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a validation schema for V_DIMMER."""
     schema = {"V_DIMMER": cv.string, "V_LIGHT": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
@@ -103,7 +104,7 @@ def light_dimmer_schema(
 @SCHEMAS.register(("light", "V_PERCENTAGE"))
 def light_percentage_schema(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a validation schema for V_PERCENTAGE."""
     schema = {"V_PERCENTAGE": cv.string, "V_STATUS": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
@@ -112,7 +113,7 @@ def light_percentage_schema(
 @SCHEMAS.register(("light", "V_RGB"))
 def light_rgb_schema(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a validation schema for V_RGB."""
     schema = {"V_RGB": cv.string, "V_STATUS": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
@@ -121,7 +122,7 @@ def light_rgb_schema(
 @SCHEMAS.register(("light", "V_RGBW"))
 def light_rgbw_schema(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a validation schema for V_RGBW."""
     schema = {"V_RGBW": cv.string, "V_STATUS": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
@@ -130,7 +131,7 @@ def light_rgbw_schema(
 @SCHEMAS.register(("switch", "V_IR_SEND"))
 def switch_ir_send_schema(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a validation schema for V_IR_SEND."""
     schema = {"V_IR_SEND": cv.string, "V_LIGHT": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
@@ -141,18 +142,18 @@ def get_child_schema(
     child: ChildSensor,
     value_type_name: ValueType,
     schema: dict,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a child schema."""
     set_req = gateway.const.SetReq
-    child_schema = cast(vol.Schema, child.get_schema(gateway.protocol_version))
+    child_schema = cast(probatio.Schema, child.get_schema(gateway.protocol_version))
     return child_schema.extend(
         {
-            vol.Required(
+            probatio.Required(
                 set_req[name].value, msg=invalid_msg(gateway, child, name)
             ): child_schema.schema.get(set_req[name].value, valid)
             for name, valid in schema.items()
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     )
 
 
@@ -229,7 +230,7 @@ def validate_child(
             child_schema = child_schema_gen(gateway, child, v_name)
             try:
                 child_schema(child.values)
-            except vol.Invalid as exc:
+            except probatio.Invalid as exc:
                 _LOGGER.warning(
                     "Invalid %s on node %s, %s platform: %s",
                     child,

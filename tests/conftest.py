@@ -1,8 +1,8 @@
 """Set up some common test helper things."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
-from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
+from contextlib import AsyncExitStack, asynccontextmanager, contextmanager, suppress
 import datetime
 import functools
 import gc
@@ -18,6 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
+import time
 from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
@@ -33,6 +34,7 @@ from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import bcrypt
 from bleak_retry_connector import bleak_manager
+import execnet
 import freezegun
 import multidict
 import pytest
@@ -59,6 +61,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
@@ -89,6 +92,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
     config_entry_oauth2_flow,
+    deprecation,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -175,6 +179,15 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_setupnodes(
+    config: pytest.Config, specs: Sequence[execnet.XSpec]
+) -> None:
+    """Log the number of xdist workers, also when running with -qq."""
+    if reporter := config.pluginmanager.get_plugin("terminalreporter"):
+        reporter.write_line(f"xdist workers: {len(specs)}")
 
 
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
@@ -462,7 +475,7 @@ def verify_cleanup(
     for thread in threads:
         assert (
             isinstance(thread, threading._DummyThread)
-            or thread.name.startswith("waitpid-")
+            or thread.name.startswith("asyncio-waitpid-")
             or "_run_safe_shutdown_loop" in thread.name
         )
 
@@ -506,6 +519,7 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+    deprecation._REPORTED_DEPRECATED_ENTITY_USAGE.clear()
 
     # Reset patch_json
     if patch_json.mock_objects:
@@ -892,11 +906,17 @@ async def hass_read_only_access_token(
 async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return the Home Assistant Supervisor user."""
+    """Return the Home Assistant Supervisor user.
+
+    The user is published the same way the hassio integration does, so
+    commands restricted to the Supervisor accept it.
+    """
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
-    return MockUser(
+    user = MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
     ).add_to_hass(hass)
+    hass.data[DATA_SUPERVISOR_USER] = user
+    return user
 
 
 @pytest.fixture
@@ -1661,31 +1681,69 @@ def recorder_db_url(
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
     drop_existing_db = pytestconfig.getoption("drop_existing_db")
+    worker_db = False
+    if db_url.startswith(("mysql://", "postgresql://")) and (
+        worker := os.environ.get("PYTEST_XDIST_WORKER")
+    ):
+        import sqlalchemy as sa  # noqa: PLC0415
 
-    def drop_db() -> None:
+        # One database per xdist worker so the workers can run in parallel,
+        # and per test run so concurrent runs on one server don't collide
+        suffix = f"-{os.environ['PYTEST_XDIST_TESTRUNUID'][:8]}-{worker}"
+        url = sa.make_url(db_url)
+        # Postgres limits names to 63 bytes, MySQL to 64 characters
+        base = url.database.encode()[: 63 - len(suffix)].decode(errors="ignore")
+        database = f"{base}{suffix}"
+        db_url = url.set(database=database).render_as_string(hide_password=False)
+        # The database belongs to this worker, so a leftover from a failed
+        # teardown must not fail all following tests on the worker
+        drop_existing_db = True
+        worker_db = True
+
+    def drop_db(*, terminate: bool = False) -> None:
         import sqlalchemy as sa  # noqa: PLC0415
         import sqlalchemy_utils  # noqa: PLC0415
 
+        made_url = sa.make_url(db_url)
+        db = made_url.database
         if db_url.startswith("mysql://"):
-            made_url = sa.make_url(db_url)
-            db = made_url.database
+            query = sa.text(
+                "select id FROM information_schema.processlist"
+                " WHERE db=:db and id != CONNECTION_ID()"
+            )
+            kill = "KILL {}"
             engine = sa.create_engine(db_url)
-            # Check for any open connections to the database before dropping it
-            # to ensure that InnoDB does not deadlock.
+        else:
+            query = sa.text(
+                "select pid FROM pg_stat_activity"
+                " WHERE datname=:db and pid != pg_backend_pid()"
+                " and backend_type = 'client backend'"
+            )
+            kill = "select pg_terminate_backend({})"
+            engine = sa.create_engine(made_url.set(database="postgres"))
+        # Check for any open connections to the database before dropping it:
+        # MySQL can deadlock and Postgres refuses to drop a database in use.
+        # Connections of the test can take a moment to close on a busy
+        # machine, so wait for them.
+        for _ in range(30):
             with engine.begin() as connection:
-                query = sa.text(
-                    "select id FROM information_schema.processlist"
-                    " WHERE db=:db and id != CONNECTION_ID()"
-                )
                 rows = connection.execute(query, parameters={"db": db}).fetchall()
-                if rows:
-                    raise RuntimeError(
-                        f"Unable to drop database {db} because it is in use by {rows}"
-                    )
-            engine.dispose()
-            sqlalchemy_utils.drop_database(db_url)
-        elif db_url.startswith("postgresql://"):
-            sqlalchemy_utils.drop_database(db_url)
+                if rows and terminate:
+                    # The database belongs to this worker, so a connection
+                    # still open after its tests can safely be closed
+                    for (session_id,) in rows:
+                        # The session can close between the query and the kill
+                        with suppress(sa.exc.OperationalError):
+                            connection.execute(sa.text(kill.format(int(session_id))))
+            if not rows:
+                break
+            time.sleep(0.1)
+        engine.dispose()
+        if rows:
+            raise RuntimeError(
+                f"Unable to drop database {db} because it is in use by {rows}"
+            )
+        sqlalchemy_utils.drop_database(db_url)
 
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
@@ -1694,7 +1752,7 @@ def recorder_db_url(
         import sqlalchemy_utils  # noqa: PLC0415
 
         if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
-            drop_db()
+            drop_db(terminate=worker_db)
 
         if sqlalchemy_utils.database_exists(db_url):
             raise RuntimeError(
@@ -1712,7 +1770,7 @@ def recorder_db_url(
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
     elif db_url.startswith(("mysql://", "postgresql://")):
-        drop_db()
+        drop_db(terminate=worker_db)
 
 
 async def _async_init_recorder_component(

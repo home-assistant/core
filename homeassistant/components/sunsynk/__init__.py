@@ -17,7 +17,7 @@ from .entity import inverter_device_info
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SunsynkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SunsynkConfigEntry) -> None:
     """Set up Sunsynk from a config entry."""
     client = SunsynkClient(
         entry.data[CONF_USERNAME],
@@ -51,9 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SunsynkConfigEntry) -> b
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SunsynkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SunsynkConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

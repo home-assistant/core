@@ -3,19 +3,12 @@
 import asyncio
 from typing import override
 
-from aiohttp import ClientError
 from gassist_text import TextAssistantAsync
 from google.oauth2.credentials import Credentials
 
 from homeassistant.components import conversation
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -51,18 +44,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Assistant SDK from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="reauth_required"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     mem_storage = InMemoryStorage(hass)
     hass.http.register_view(GoogleAssistantSDKAudioView(mem_storage))
@@ -74,16 +60,12 @@ async def async_setup_entry(
     entry.async_on_unload(agent.async_close)
     conversation.async_set_agent(hass, entry, agent)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     conversation.async_unset_agent(hass, entry)
-
-    return True
 
 
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):

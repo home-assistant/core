@@ -8,8 +8,8 @@ import shutil
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant import loader
 from homeassistant.const import (
@@ -59,7 +59,7 @@ class Blueprint:
         """Initialize a blueprint."""
         try:
             data = self.data = schema(data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise InvalidBlueprint(expected_domain, path, data, err) from err
 
         # In future, we will treat this as "incorrect" and allow to recover from this
@@ -310,7 +310,7 @@ class DomainBlueprints:
         """Process a blueprint config."""
         try:
             config_with_blueprint = BLUEPRINT_INSTANCE_FIELDS(config_with_blueprint)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise InvalidBlueprintInputs(
                 self.domain, humanize_error(config_with_blueprint, err)
             ) from err

@@ -145,6 +145,20 @@ async def test_tariffs(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "tariffs_not_unique"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "cycle": "monthly",
+            "name": "Electricity meter",
+            "offset": 0,
+            "source": input_sensor_entity_id,
+            "tariffs": ["cat", "dog"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
     """Test periodically resetting."""
@@ -408,7 +422,7 @@ async def test_change_device_source(
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+    assert current_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are linked to the expected device
     for (
@@ -442,14 +456,14 @@ async def test_change_device_source(
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+    assert previous_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Confirm that the configuration entry is not in
     # the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+    assert current_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are linked to the expected device
     for (
@@ -483,7 +497,7 @@ async def test_change_device_source(
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+    assert previous_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are no longer linked to a device
     for (
@@ -525,7 +539,7 @@ async def test_change_device_source(
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+    assert current_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the entities are linked to the expected device
     for (
