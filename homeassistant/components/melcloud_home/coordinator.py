@@ -27,6 +27,7 @@ from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
+LIVE_UPDATE_INTERVAL = timedelta(minutes=10)
 TELEMETRY_UPDATE_INTERVAL = timedelta(minutes=15)
 
 # ATA telemetry reports Wh, ATW telemetry kWh per interval
@@ -168,34 +169,61 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         if self.data is not None:
             self._async_sync_units(self.data)
 
-    async def listen(self) -> None:
-        """Process websocket updates; polling remains as fallback if it fails and for the regular endpoints."""
+    @callback
+    def async_start_live_updates(self) -> None:
+        """Receive live updates until the config entry unloads."""
+        entry = self.config_entry
+        # Unload callbacks run in reverse, so the socket closes after unregistering
+        entry.async_on_unload(self.websocket.close)
+        entry.async_on_unload(
+            self.websocket.register_delta_callback(self.async_handle_delta)
+        )
+        entry.async_on_unload(
+            self.websocket.register_connection_callback(self.async_handle_connection)
+        )
+        entry.async_create_background_task(
+            self.hass, self._async_listen(), f"{DOMAIN}_websocket"
+        )
 
-        def _apply_delta[_UnitT: (ATAUnit, ATWUnit)](
-            units: dict[str, _UnitT], delta: UnitStateDelta
-        ) -> None:
-            """Apply a websocket delta to a cached unit."""
-            # Unknown units are discovered by the regular poll
-            if (unit := units.get(delta.unit_id)) is None:
-                return
-            updated = delta.apply_to(unit)
-            if updated is unit:
-                return
-            units[delta.unit_id] = updated
-
+    async def _async_listen(self) -> None:
+        """Receive live updates until the websocket is closed."""
         try:
-            async for delta in self.websocket.stream():
-                _LOGGER.debug("Received websocket delta: %s", delta)
-                if delta.unit_type == DEVICE_ATA:
-                    _apply_delta(self.ata_units, delta)
-                elif delta.unit_type == DEVICE_ATW:
-                    _apply_delta(self.atw_units, delta)
-                self.async_update_listeners()
-        except MelCloudHomeError as err:
-            _LOGGER.warning(
-                "Live updates are unavailable. Falling back to polling. Error received: %s",
-                err,
-            )
+            await self.websocket.listen()
+        except MelCloudHomeAuthenticationError:
+            self.config_entry.async_start_reauth(self.hass)
+
+    @callback
+    def async_handle_delta(self, delta: UnitStateDelta) -> None:
+        """Apply a websocket delta to the cached unit."""
+        _LOGGER.debug("Received websocket delta: %s", delta)
+        if (delta.unit_type == DEVICE_ATA and _apply_delta(self.ata_units, delta)) or (
+            delta.unit_type == DEVICE_ATW and _apply_delta(self.atw_units, delta)
+        ):
+            self.async_update_listeners()
+
+    @callback
+    def async_handle_connection(self, connected: bool) -> None:
+        """Poll less often while live updates arrive."""
+        _LOGGER.debug("Live updates %s", "connected" if connected else "disconnected")
+        if connected:
+            self.update_interval = LIVE_UPDATE_INTERVAL
+            return
+        self.update_interval = UPDATE_INTERVAL
+        # Catches up on missed changes and reschedules polling at the shorter interval
+        self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+
+
+def _apply_delta[_UnitT: (ATAUnit, ATWUnit)](
+    units: dict[str, _UnitT], delta: UnitStateDelta
+) -> bool:
+    """Apply a websocket delta to a cached unit; return whether it changed."""
+    # Unknown units are discovered by the regular poll
+    if (unit := units.get(delta.unit_id)) is None:
+        return False
+    if (updated := delta.apply_to(unit)) is unit:
+        return False
+    units[delta.unit_id] = updated
+    return True
 
 
 @dataclass(kw_only=True, frozen=True)

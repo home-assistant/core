@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
 from .coordinator import (
     MelCloudHomeConfigEntry,
     MelCloudHomeCoordinator,
@@ -48,11 +47,7 @@ async def async_setup_entry(
         coordinator=coordinator,
         telemetry_coordinator=telemetry_coordinator,
     )
-
-    entry.async_create_background_task(
-        hass, coordinator.listen(), f"{DOMAIN}_websocket"
-    )
-    entry.async_on_unload(coordinator.websocket.close)
+    coordinator.async_start_live_updates()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

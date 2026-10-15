@@ -1,15 +1,9 @@
 """Common fixtures for the MELCloud Home tests."""
 
-import asyncio
-from collections.abc import AsyncIterator, Generator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiomelcloudhome import (
-    MELCloudHome,
-    MELCloudHomeWebSocket,
-    UnitStateDelta,
-    UserContext,
-)
+from aiomelcloudhome import MELCloudHome, MELCloudHomeWebSocket, UserContext
 from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
 
@@ -43,28 +37,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def websocket_updates() -> asyncio.Queue[UnitStateDelta | Exception]:
-    """Queue driving the mocked websocket stream."""
-    return asyncio.Queue()
-
-
-@pytest.fixture
-def mock_websocket(
-    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
-) -> AsyncMock:
+def mock_websocket() -> AsyncMock:
     """Mock the MELCloud Home websocket."""
-    websocket = AsyncMock(MELCloudHomeWebSocket)
-
-    async def stream() -> AsyncIterator[UnitStateDelta]:
-        while True:
-            update = await websocket_updates.get()
-            if isinstance(update, Exception):
-                raise update
-            yield update
-            websocket_updates.task_done()
-
-    websocket.stream = stream
-    return websocket
+    return AsyncMock(MELCloudHomeWebSocket)
 
 
 @pytest.fixture
