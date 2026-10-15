@@ -100,8 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> N
 
     entry.async_on_unload(entry.async_on_state_change(state_changes))
 
-    return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Unload a config entry."""
