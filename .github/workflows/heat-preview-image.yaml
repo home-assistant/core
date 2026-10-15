@@ -1,0 +1,106 @@
+name: Heat preview image
+
+# Builds a Home Assistant test image with the heat energy source changes from
+# the energy-heat-source branches of this fork and the frontend fork.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - heat-preview
+
+permissions:
+  contents: read
+
+env:
+  CORE_REF: energy-heat-source
+  FRONTEND_REPO: ${{ github.repository_owner }}/frontend
+  FRONTEND_REF: energy-heat-source
+
+jobs:
+  build:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set image name
+        env:
+          OWNER: ${{ github.repository_owner }}
+        # Registry names must be lowercase
+        run: echo "IMAGE=ghcr.io/${OWNER,,}/home-assistant-heat" >> "$GITHUB_ENV"
+
+      - name: Checkout preview files
+        uses: actions/checkout@v4
+        with:
+          path: preview
+          persist-credentials: false
+
+      - name: Checkout core changes
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CORE_REF }}
+          path: core
+          persist-credentials: false
+
+      - name: Checkout frontend changes
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FRONTEND_REPO }}
+          ref: ${{ env.FRONTEND_REF }}
+          path: frontend
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Generate energy translations
+        working-directory: core
+        run: |
+          pip install orjson
+          python3 -m script.translations develop --integration energy
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+          SKIP_FETCH_NIGHTLY_TRANSLATIONS: "1"
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          script/build_frontend
+
+      - name: Prepare build context
+        run: |
+          mkdir context
+          cp preview/.github/heat-preview/Dockerfile context/
+          cp -r core/homeassistant/components/energy context/energy
+          cp -r frontend/hass_frontend context/hass_frontend
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: context
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:latest

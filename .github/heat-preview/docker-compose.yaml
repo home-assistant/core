@@ -1,0 +1,13 @@
+# Test instance of Home Assistant with the heat energy source changes.
+# Use a separate, empty config folder: never your production config.
+services:
+  homeassistant-heat:
+    image: ghcr.io/jochen754/home-assistant-heat:latest
+    container_name: homeassistant-heat
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config:/config
+    ports:
+      - "8124:8123"
