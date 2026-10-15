@@ -68,12 +68,22 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
             TimeoutError,
         ) as err:
             raise UpdateFailed(
-                f"Failed to update {self.name}, ({type(err).__name__}): {err}",
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    "coordinator_name": self.name,
+                    "error_name": type(err).__name__,
+                    "error": str(err),
+                },
                 retry_after=60,
             ) from err
         except WTCApiUnauthorizedError as err:
             raise ConfigEntryAuthFailed(
-                f"Failed to update {self.name}, unauthorized"
+                translation_domain=DOMAIN,
+                translation_key="update_failed_unauthorized",
+                translation_placeholders={
+                    "coordinator_name": self.name,
+                },
             ) from err
 
     async def _async_fetch_data(self) -> DataT:
@@ -133,5 +143,9 @@ class WatercrystMeasurementsUpdateCoordinator(
     @override
     async def _async_fetch_data(self) -> MeasurementResponse:
         if self._state.data is None or not self._state.data.online:
-            raise UpdateFailed("Failed to update measurements", retry_after=60)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="measurements_update_failed",
+                retry_after=60,
+            )
         return await self._client.get_measurements()

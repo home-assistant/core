@@ -90,5 +90,28 @@
         "name": "Water temperature"
       }
     }
+  },
+  "exceptions": {
+    "api_disabled": {
+      "message": "API disabled"
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication credentials"
+    },
+    "measurements_update_failed": {
+      "message": "Failed to update measurements, device offline"
+    },
+    "temporary_api_error": {
+      "message": "Temporary API error"
+    },
+    "unknown_error": {
+      "message": "An unexpected error occurred"
+    },
+    "update_failed": {
+      "message": "Failed to update {coordinator_name}, ({error_name}): {error}"
+    },
+    "update_failed_unauthorized": {
+      "message": "Failed to update {coordinator_name}, unauthorized"
+    }
   }
 }

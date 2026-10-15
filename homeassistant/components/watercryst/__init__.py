@@ -64,17 +64,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         info = await client.get_device_info()
         initial_state = await client.get_state()
     except WTCApiUnauthorizedError as err:
-        raise ConfigEntryAuthFailed("Invalid authentication") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
     except WTCApiDisabledError as err:
-        raise ConfigEntryError("API disabled") from err
-    except WTCApiTemporaryError as err:
-        raise ConfigEntryNotReady("Temporary API error") from err
-    except RequestError as err:
-        raise ConfigEntryNotReady("Temporary API error") from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="api_disabled"
+        ) from err
+    except (WTCApiTemporaryError, RequestError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="temporary_api_error"
+        ) from err
     except HTTPStatusError as err:
         if err.response.is_server_error:
-            raise ConfigEntryNotReady("Temporary API error") from err
-        raise ConfigEntryNotReady("Unexpected error") from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="temporary_api_error"
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="unknown_error"
+        ) from err
 
     connections: set[tuple[str, str]] = set()
 
