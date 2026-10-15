@@ -3369,6 +3369,7 @@
           "index": 2,
           "internalSwitchOutputEnabled": true,
           "label": "",
+          "valvePosition": 1.0,
           "valveProtectionDuration": 5,
           "valveProtectionSwitchingInterval": 14
         }

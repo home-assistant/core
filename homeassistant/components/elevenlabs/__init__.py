@@ -1,6 +1,7 @@
 """The ElevenLabs text-to-speech integration."""
 
 from dataclasses import dataclass
+from http import HTTPStatus
 import logging
 
 from elevenlabs import AsyncElevenLabs, Model
@@ -25,6 +26,18 @@ PLATFORMS: list[Platform] = [
     Platform.STT,
     Platform.TTS,
 ]
+
+
+def _is_invalid_api_key(err: ApiError) -> bool:
+    """Return whether the API rejected the API key."""
+    if err.status_code == HTTPStatus.UNAUTHORIZED:
+        return True
+    body = err.body
+    return (
+        isinstance(body, dict)
+        and isinstance(detail := body.get("detail"), dict)
+        and detail.get("status") == "invalid_api_key"
+    )
 
 
 async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:
@@ -62,7 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -
     except ConnectError as err:
         raise ConfigEntryNotReady("Failed to connect") from err
     except ApiError as err:
-        raise ConfigEntryAuthFailed("Auth failed") from err
+        if _is_invalid_api_key(err):
+            raise ConfigEntryAuthFailed("Auth failed") from err
+        raise ConfigEntryNotReady("Failed to fetch models") from err
 
     if model is None or (not model.languages):
         raise ConfigEntryError("Model could not be resolved")

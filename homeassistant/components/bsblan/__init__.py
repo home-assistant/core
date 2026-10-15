@@ -143,6 +143,7 @@ def _async_manage_outdated_firmware_issue(
             hass,
             DOMAIN,
             issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key=ISSUE_OUTDATED_FIRMWARE,
@@ -297,7 +298,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> No
 
 async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> None:
     """Unload BSBLAN config entry."""
-    ir.async_delete_issue(hass, DOMAIN, _issue_id_for_entry(entry.entry_id))
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 

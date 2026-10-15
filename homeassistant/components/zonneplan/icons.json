@@ -34,8 +34,12 @@
       "battery_state": {
         "default": "mdi:battery",
         "state": {
+          "backup_power_active": "mdi:home-battery",
           "charging": "mdi:battery-charging",
-          "discharging": "mdi:battery-arrow-down"
+          "discharging": "mdi:battery-arrow-down",
+          "fault": "mdi:battery-alert",
+          "off": "mdi:battery-off-outline",
+          "permanent_fault": "mdi:battery-alert"
         }
       },
       "current_electricity_price": {

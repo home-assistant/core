@@ -1,9 +1,13 @@
 """Test the System Bridge integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    ConnectionClosedException,
     ConnectionErrorException,
     DataMissingException,
 )
@@ -11,22 +15,23 @@ from systembridgeconnector.models.modules import ModulesData
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_version")
@@ -194,6 +199,169 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
 
         assert result is False
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            AuthenticationException,
+            ConfigEntryState.SETUP_ERROR,
+            id="authentication",
+        ),
+        pytest.param(
+            ConnectionErrorException,
+            ConfigEntryState.SETUP_RETRY,
+            id="connection_error",
+        ),
+    ],
+)
+async def test_version_check_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_version: MagicMock,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup fails when the version check fails."""
+    mock_version.check_supported.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+
+
+async def test_unsupported_version_creates_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_version: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an issue is raised when the System Bridge version is unsupported."""
+    mock_version.check_supported.return_value = False
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"system_bridge_{mock_config_entry.entry_id}_unsupported_version"
+    )
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_get_data_authentication_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test setup starts reauth when getting data fails authentication."""
+    mock_websocket_client.get_data.side_effect = AuthenticationException
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "reauth"),
+    [
+        pytest.param(
+            AuthenticationException,
+            ConfigEntryState.SETUP_ERROR,
+            True,
+            id="authentication",
+        ),
+        pytest.param(
+            ConnectionClosedException,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="connection_closed",
+        ),
+        pytest.param(
+            ConnectionErrorException,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="connection_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_register_data_listener_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+    reauth: bool,
+) -> None:
+    """Test setup fails when registering the data listener fails."""
+    mock_websocket_client.register_data_listener.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+    assert (
+        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})) is reauth
+    )
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(AuthenticationException, id="authentication"),
+        pytest.param(ConnectionClosedException, id="connection_closed"),
+        pytest.param(ConnectionResetError, id="connection_reset"),
+        pytest.param(ConnectionErrorException, id="connection_error"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_listener_disconnect_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    side_effect: type[Exception],
+) -> None:
+    """Test entities become unavailable when the WebSocket listener stops."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_websocket_client.listen.side_effect = side_effect
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_homeassistant_stop_closes_websocket(
+    hass: HomeAssistant,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test the WebSocket is closed when Home Assistant stops."""
+    mock_websocket_client.close.assert_not_awaited()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_websocket_client.close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
