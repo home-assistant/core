@@ -550,6 +550,11 @@ _LATER_TEMPORARY_START = datetime(2025, 1, 2, 8, 0, 0, tzinfo=UTC)
             },
             id="multi-recurring-two-windows",
         ),
+        pytest.param(
+            MultiRecurringSchedule(_MORNING_WINDOW, None),
+            {"type": "multi_recurring", "windows": [_EXPECTED_MORNING_WINDOW]},
+            id="multi-recurring-one-window",
+        ),
     ],
 )
 async def test_get_codes_service_schedule_time_values(
