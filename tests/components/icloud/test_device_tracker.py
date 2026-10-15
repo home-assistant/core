@@ -159,6 +159,39 @@ async def test_new_devices_are_announced_once_after_the_scan(
     assert announced == [sorted([DEVICE["id"], "device2"])]
 
 
+@pytest.mark.parametrize(
+    ("latitude", "longitude"),
+    [
+        pytest.param(0.0, 4.0, id="equator"),
+        pytest.param(3.0, 0.0, id="prime_meridian"),
+        pytest.param(0.0, 0.0, id="both"),
+    ],
+)
+async def test_a_coordinate_of_zero_is_a_valid_location(
+    hass: HomeAssistant,
+    locating_service: tuple,
+    freezer: FrozenDateTimeFactory,
+    latitude: float,
+    longitude: float,
+) -> None:
+    """Test that a fix on the equator or the prime meridian is accepted.
+
+    Zero is a coordinate, not a missing one, so only a missing coordinate may
+    be treated as no location.
+    """
+    _, status = locating_service
+    await setup_account(hass)
+
+    status["location"] = location(
+        is_old=False, age=timedelta(0), latitude=latitude, longitude=longitude
+    )
+    await next_fetch(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_LATITUDE] == latitude
+    assert state.attributes[ATTR_LONGITUDE] == longitude
+
+
 async def test_stale_location_cleared(
     hass: HomeAssistant,
     locating_service: tuple,
@@ -228,7 +261,7 @@ async def test_cached_location_without_a_timestamp_is_kept(
     locating_service: tuple,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a cached fix iCloud dates is kept when it dates nothing.
+    """Test that a cached fix without a timestamp is kept.
 
     Age is half of what makes a fix stale, so with no timestamp to read there
     is nothing to judge it by. Discarding it on the flag alone would throw
