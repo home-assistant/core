@@ -372,6 +372,19 @@ RPC_NUMBERS: Final = {
         supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),
+    "ledstrip_intensity": RpcNumberDescription(
+        key="ledstrip",
+        sub_key="intensity",
+        translation_key="effect_intensity",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        method="ledstrip_set",
+        supported=lambda _: True,
+        entity_class=RpcLedStripNumber,
+    ),
 }
 
 

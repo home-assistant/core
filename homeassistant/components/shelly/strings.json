@@ -340,6 +340,9 @@
       "current_limit": {
         "name": "Current limit"
       },
+      "effect_intensity": {
+        "name": "Effect intensity"
+      },
       "effect_speed": {
         "name": "Effect speed"
       },

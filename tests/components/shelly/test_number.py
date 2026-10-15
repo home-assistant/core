@@ -645,6 +645,16 @@ LEDSTRIP_STATUS_RAINBOW = {
     "speed": 33,
     "reverse": True,
 }
+LEDSTRIP_STATUS_BLINK = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "blink",
+    "rgb": [127, 172, 255],
+    "bg_rgb": [171, 171, 171],
+    "speed": 50,
+    "intensity": 65,
+}
 LEDSTRIP_STATUS_SOLID = {
     "id": 0,
     "on": False,
@@ -654,42 +664,49 @@ LEDSTRIP_STATUS_SOLID = {
 }
 
 
-async def test_rpc_ledstrip_speed_number(
+@pytest.mark.parametrize(
+    ("control", "ledstrip_status"),
+    [("speed", LEDSTRIP_STATUS_RAINBOW), ("intensity", LEDSTRIP_STATUS_BLINK)],
+)
+async def test_rpc_ledstrip_number(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
+    control: str,
+    ledstrip_status: dict[str, Any],
 ) -> None:
-    """Test RPC LED strip effect speed number."""
+    """Test RPC LED strip effect control number."""
+    entity_id = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_{control}"
     config = deepcopy(mock_rpc_device.config)
     config["ledstrip:0"] = LEDSTRIP_CONFIG
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
-    status["ledstrip:0"] = deepcopy(LEDSTRIP_STATUS_RAINBOW)
+    status["ledstrip:0"] = deepcopy(ledstrip_status)
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
     await init_integration(hass, 4)
 
-    state = hass.states.get(LEDSTRIP_ENTITY_ID)
-    assert state == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-state")
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
-    entry = entity_registry.async_get(LEDSTRIP_ENTITY_ID)
-    assert entry == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-entry")
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID, ATTR_VALUE: 80.0},
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80.0},
         blocking=True,
     )
-    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {"speed": 80})
+    mock_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
 
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "ledstrip:0", "speed", 80)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "ledstrip:0", control, 80)
     mock_rpc_device.mock_update()
 
-    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == "80"
 
 
