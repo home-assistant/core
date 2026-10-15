@@ -138,7 +138,6 @@ __all__ = [
     "CameraEntityFeature",
     "CameraEntityStateAttribute",
     "CameraImageView",
-    "CameraPreferences",
     "CameraState",
     "CameraView",
     "CameraWebRTCProvider",
