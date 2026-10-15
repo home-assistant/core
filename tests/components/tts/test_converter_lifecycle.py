@@ -1352,6 +1352,11 @@ async def test_second_owner_cancel_during_notification_join_reaps_child(
                 assert not any(
                     str(late_error) in record.message for record in caplog.records
                 )
+            # The injected join error can finish cleanup before its pipe tasks.
+            # Observe their completion without cancelling or retrieving results.
+            if pending := {task for task in tasks.values() if not task.done()}:
+                _, pending = await asyncio.wait(pending, timeout=3)
+                assert not pending
             assert not any(
                 task.get_name().startswith("tts_ffmpeg") and not task.done()
                 for task in asyncio.all_tasks()
