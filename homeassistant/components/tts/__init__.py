@@ -440,7 +440,7 @@ async def _async_convert_audio(
     to_sample_bytes: int | None = None,
     to_bitrate: int | None = None,
 ) -> AsyncGenerator[bytes]:
-    """Convert audio to a preferred format using ffmpeg."""
+    """Convert audio to a preferred format, using ffmpeg when needed."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
     is_input_gen = not isinstance(audio_input, (str, Path))
 
@@ -455,6 +455,40 @@ async def _async_convert_audio(
         audio_input = _async_prepend_audio(
             pcm_info.leftover if pcm_info else consumed, audio_input
         )
+
+    if (
+        pcm_info is not None
+        and to_extension == "wav"
+        and pcm_info.ffmpeg_format == "s16le"
+        and pcm_info.sample_channels <= 2
+        and to_sample_rate in (None, pcm_info.sample_rate)
+        and to_sample_channels in (None, pcm_info.sample_channels)
+        and to_sample_bytes in (None, 2)
+    ):
+        # ffmpeg would only copy the samples. Write the header ffmpeg writes to
+        # a pipe, since readers like the wave module take a data size of 0
+        # literally.
+        assert isinstance(audio_input, AsyncGenerator)
+        block_align = pcm_info.sample_channels * 2
+        yield struct.pack(
+            "<4sI4s4sIHHIIHH4sI",
+            b"RIFF",
+            0xFFFFFFFF,
+            b"WAVE",
+            b"fmt ",
+            16,
+            _WAV_FORMAT_PCM,
+            pcm_info.sample_channels,
+            pcm_info.sample_rate,
+            pcm_info.sample_rate * block_align,
+            block_align,
+            16,
+            b"data",
+            0xFFFFFFFF,
+        )
+        async for chunk in audio_input:
+            yield chunk
+        return
 
     command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
     if pcm_info is not None:
