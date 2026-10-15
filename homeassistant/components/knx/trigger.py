@@ -82,14 +82,14 @@ def async_subscribe_telegrams(
         telegram: Telegram, telegram_dict: TelegramDict
     ) -> None:
         """Filter Telegram and call the callback."""
-        payload_apci = type(telegram.payload)
-        if payload_apci is GroupValueWrite:
+        payload = telegram.payload
+        if isinstance(payload, GroupValueWrite):
             if options[CONF_KNX_GROUP_VALUE_WRITE] is False:
                 return
-        elif payload_apci is GroupValueResponse:
+        elif isinstance(payload, GroupValueResponse):
             if options[CONF_KNX_GROUP_VALUE_RESPONSE] is False:
                 return
-        elif payload_apci is GroupValueRead:
+        elif isinstance(payload, GroupValueRead):
             if options[CONF_KNX_GROUP_VALUE_READ] is False:
                 return
 
@@ -104,11 +104,11 @@ def async_subscribe_telegrams(
 
         if (
             trigger_transcoder is not None
-            and payload_apci in (GroupValueWrite, GroupValueResponse)
+            and isinstance(payload, (GroupValueWrite, GroupValueResponse))
             and trigger_transcoder.value_type != telegram_dict["dpt_name"]
         ):
             decoded_payload = decode_telegram_payload(
-                payload=telegram.payload.value,  # type: ignore[union-attr]  # checked via payload_apci
+                payload=payload.value,
                 transcoder=trigger_transcoder,
             )
             # overwrite decoded payload values in telegram_dict
