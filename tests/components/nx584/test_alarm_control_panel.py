@@ -3,10 +3,18 @@
 from unittest.mock import MagicMock
 
 import pytest
+import requests
 
 from homeassistant.components.nx584.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import TEST_HOST, TEST_PORT
 
@@ -56,3 +64,38 @@ async def test_bypass_services(
     )
 
     mock_client.return_value.set_bypass.assert_called_once_with(2, bypass)
+
+
+@pytest.mark.usefixtures("mock_watcher")
+@pytest.mark.parametrize(
+    ("side_effect", "return_value"),
+    [
+        pytest.param(requests.exceptions.ConnectionError, None, id="cannot_connect"),
+        pytest.param(None, [], id="no_partitions"),
+    ],
+)
+async def test_update_partitions_unavailable(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
+    return_value: list[dict[str, object]] | None,
+) -> None:
+    """Test the panel is unavailable while partitions cannot be listed."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    partitions = mock_client.return_value.list_partitions
+    working_partitions = partitions.return_value
+    partitions.side_effect = side_effect
+    partitions.return_value = return_value
+    await async_update_entity(hass, ENTITY_ID)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    partitions.side_effect = None
+    partitions.return_value = working_partitions
+    await async_update_entity(hass, ENTITY_ID)
+
+    assert hass.states.get(ENTITY_ID).state == "disarmed"

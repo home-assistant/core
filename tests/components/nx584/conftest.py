@@ -19,9 +19,9 @@ TEST_PORT = 5007
 def fake_zones() -> list[dict[str, object]]:
     """Return the zones reported by the fake server."""
     return [
-        {"name": "front", "number": 1, "state": False},
-        {"name": "back", "number": 2, "state": False},
-        {"name": "inside", "number": 3, "state": False},
+        {"name": "front", "number": 1, "state": False, "bypassed": False},
+        {"name": "back", "number": 2, "state": False, "bypassed": False},
+        {"name": "inside", "number": 3, "state": False, "bypassed": False},
     ]
 
 
