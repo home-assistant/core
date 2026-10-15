@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.auth.login_flow import MAX_URL_LENGTH
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -605,3 +606,35 @@ async def test_well_known_auth_info_allows_cors(
 
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(
+            {"client_id": CLIENT_ID + "?" + "x" * MAX_URL_LENGTH}, id="client_id"
+        ),
+        pytest.param(
+            {"redirect_uri": CLIENT_REDIRECT_URI + "?" + "x" * MAX_URL_LENGTH},
+            id="redirect_uri",
+        ),
+    ],
+)
+async def test_login_flow_url_too_long(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+) -> None:
+    """Test login flows reject overly long URLs."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert not hass.auth.login_flow.async_progress()
