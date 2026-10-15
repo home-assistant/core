@@ -2502,6 +2502,14 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 0,
+        "total_bytes": 0,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
         "reason": None,
         "stage": None,
         "state": ReceiveBackupState.COMPLETED,
@@ -2627,6 +2635,14 @@ async def test_receive_backup_non_agent_upload_error(
         "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 0,
+        "total_bytes": 0,
     }
 
     result = await ws_client.receive_json()
@@ -4072,16 +4088,19 @@ async def test_upload_progress_event(
         progress_events.append(result["event"])
         result = await ws_client.receive_json()
 
-    # Verify progress events from the remote agent (500 from agent + final from manager)
+    # Verify progress events from the remote agent
+    # (start and final from manager, 500 from agent)
     remote_progress = [e for e in progress_events if e["agent_id"] == "test.remote"]
-    assert len(remote_progress) == 2
-    assert remote_progress[0]["uploaded_bytes"] == 500
-    assert remote_progress[1]["uploaded_bytes"] == remote_progress[1]["total_bytes"]
+    assert len(remote_progress) == 3
+    assert remote_progress[0]["uploaded_bytes"] == 0
+    assert remote_progress[1]["uploaded_bytes"] == 500
+    assert remote_progress[2]["uploaded_bytes"] == remote_progress[2]["total_bytes"]
 
-    # Verify progress event from the local agent (final from manager)
+    # Verify progress events from the local agent (start and final from manager)
     local_progress = [e for e in progress_events if e["agent_id"] == LOCAL_AGENT_ID]
-    assert len(local_progress) == 1
-    assert local_progress[0]["uploaded_bytes"] == local_progress[0]["total_bytes"]
+    assert len(local_progress) == 2
+    assert local_progress[0]["uploaded_bytes"] == 0
+    assert local_progress[1]["uploaded_bytes"] == local_progress[1]["total_bytes"]
 
     assert result["event"]["stage"] == CreateBackupStage.CLEANING_UP
 
@@ -4141,14 +4160,16 @@ async def test_upload_progress_debounced(
         await progress_done.wait()
 
         # At this point the debouncer's cooldown timer is pending.
-        # The first event (100 bytes) fired immediately, 500 and 1000 are buffered.
+        # The start event (0 bytes) and the first report (100 bytes) fired
+        # immediately, 500 and 1000 are buffered.
         remote_events = [
             e
             for e in events
             if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
         ]
-        assert len(remote_events) == 1
-        assert remote_events[0].uploaded_bytes == 100
+        assert len(remote_events) == 2
+        assert remote_events[0].uploaded_bytes == 0
+        assert remote_events[1].uploaded_bytes == 100
 
         # Advance time past the cooldown to trigger the debouncer timer.
         # This fires the coalesced event: 500 was replaced by 1000.
@@ -4159,9 +4180,9 @@ async def test_upload_progress_debounced(
             for e in events
             if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
         ]
-        assert len(remote_events) == 2
-        assert remote_events[0].uploaded_bytes == 100
-        assert remote_events[1].uploaded_bytes == 1000
+        assert len(remote_events) == 3
+        assert remote_events[1].uploaded_bytes == 100
+        assert remote_events[2].uploaded_bytes == 1000
 
         # Let the upload finish
         upload_done.set()
@@ -4177,5 +4198,5 @@ async def test_upload_progress_debounced(
         for e in events
         if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
     ]
-    assert len(remote_events) == 3
-    assert remote_events[2].uploaded_bytes == remote_events[2].total_bytes
+    assert len(remote_events) == 4
+    assert remote_events[3].uploaded_bytes == remote_events[3].total_bytes
