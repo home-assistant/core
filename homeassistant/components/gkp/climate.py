@@ -89,7 +89,7 @@ class GkpClimate(GkpEntity, ClimateEntity):
     )
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
     _attr_preset_modes = PRESET_MODES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_min_temp = SETPOINT_MIN
     _attr_max_temp = SETPOINT_MAX
@@ -98,13 +98,13 @@ class GkpClimate(GkpEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.thermostat.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature setpoint."""
         return self.thermostat.setpoint
 
