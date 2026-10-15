@@ -1090,7 +1090,7 @@
     }),
   ])
 # ---
-# name: test_tts_language_used_instead_of_conversation_language
+# name: test_tts_language_not_used_for_intent_language
   list([
     dict({
       'data': dict({
@@ -1106,7 +1106,7 @@
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
-        'language': 'en-us',
+        'language': 'en',
         'prefer_local_intents': False,
         'satellite_id': None,
       }),
