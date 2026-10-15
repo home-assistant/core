@@ -10,6 +10,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
@@ -31,3 +32,17 @@ CONF_USE_AUX3 = "use_aux3"
 CONF_USE_AUX4 = "use_aux4"
 
 CURRENT_VERSION = 6
+
+PERIOD_MAP = {
+    "1_day": 86400,
+    "2_days": 2 * 86400,
+    "3_days": 3 * 86400,
+    "4_days": 4 * 86400,
+    "5_days": 5 * 86400,
+    "1_week": 7 * 86400,
+    "2_weeks": 14 * 86400,
+    "3_weeks": 21 * 86400,
+    "4_weeks": 28 * 86400,
+}
+
+PERIOD_SECONDS_TO_KEY = {v: k for k, v in PERIOD_MAP.items()}

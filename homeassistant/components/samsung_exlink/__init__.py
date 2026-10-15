@@ -14,7 +14,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SamsungExLinkConfigEntry
-) -> bool:
+) -> None:
     """Set up Samsung ExLink from a config entry."""
     port = entry.data[CONF_DEVICE]
     tv = SamsungTV(port, model=MODELS.get(entry.data.get(CONF_MODEL, "")))
@@ -46,16 +46,11 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SamsungExLinkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    await entry.runtime_data.disconnect()

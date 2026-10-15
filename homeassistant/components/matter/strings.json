@@ -175,7 +175,6 @@
     },
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -668,14 +667,8 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "valve_position": {
         "name": "Valve position"
-      },
-      "voltage": {
-        "name": "Voltage"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"
@@ -746,6 +739,9 @@
     },
     "addon_not_running": {
       "message": "The Matter Server app is not running yet."
+    },
+    "addon_stop_failed": {
+      "message": "Failed to stop the Matter Server app."
     },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."

@@ -196,15 +196,19 @@ async def test_esphome_device_service_calls_not_allowed(
     )
     await hass.async_block_till_done()
     assert len(mock_esphome_test) == 0
-    issue = issue_registry.async_get_issue(
-        "esphome", "service_calls_not_enabled-11:22:33:44:55:aa"
-    )
+    issue_id = "service_calls_not_enabled-11:22:33:44:55:aa"
+    issue = issue_registry.async_get_issue("esphome", issue_id)
     assert issue is not None
+    assert issue.config_entry_id == device.entry.entry_id
     assert (
         "If you trust this device and want to allow access "
         "for it to make Home Assistant service calls, you can "
         "enable this functionality in the options flow"
     ) in caplog.text
+
+    await hass.config_entries.async_remove(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 @pytest.mark.parametrize("has_deep_sleep", [True, False])
@@ -1183,18 +1187,22 @@ async def test_esphome_device_with_old_bluetooth(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with old bluetooth creates an issue."""
-    await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"bluetooth_proxy_feature_flags": 1, "esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
-    issue = issue_registry.async_get_issue(
-        "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
-    )
+    issue_id = "ble_firmware_outdated-11:22:33:44:55:AA"
+    issue = issue_registry.async_get_issue("esphome", issue_id)
     assert (
         issue.learn_more_url
         == f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
     )
+    assert issue.config_entry_id == device.entry.entry_id
+
+    await hass.config_entries.async_remove(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 async def test_esphome_device_with_password(
@@ -1219,15 +1227,19 @@ async def test_esphome_device_with_password(
         entry=entry,
     )
     await hass.async_block_till_done()
-    assert (
-        issue_registry.async_get_issue(
-            # This issue uses the ESPHome mac address which
-            # is always UPPER case
-            "esphome",
-            "api_password_deprecated-11:22:33:44:55:AA",
-        )
-        is not None
+    issue_id = "api_password_deprecated-11:22:33:44:55:AA"
+    issue = issue_registry.async_get_issue(
+        # This issue uses the ESPHome mac address which
+        # is always UPPER case
+        "esphome",
+        issue_id,
     )
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 async def test_esphome_device_with_current_bluetooth(
@@ -4751,8 +4763,9 @@ async def test_bluetooth_proxy_with_voice_assistant_awaits_forward(
         async with asyncio.timeout(2):
             assert await setup_task is True
             # The connection runs outside of the tasks Home Assistant tracks
-            while Platform.ASSIST_SATELLITE not in entry.runtime_data.loaded_platforms:
-                await asyncio.sleep(0.01)
+            await entry.runtime_data.first_connect_done.wait()
+
+    assert Platform.ASSIST_SATELLITE in entry.runtime_data.loaded_platforms
 
     assert "without awaiting async_forward_entry_setups" not in caplog.text
 

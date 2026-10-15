@@ -9,6 +9,7 @@ from aioaxlevpp import (
     AxleAuthenticationError,
     AxleConnectionError,
     AxleError,
+    AxleStatus,
     GridEvent,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -87,7 +88,7 @@ async def test_no_event(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: AsyncMock
 ) -> None:
     """An empty schedule is unknown, not a failed connection."""
-    mock_client.get_event.return_value = None
+    mock_client.get_status.return_value = AxleStatus(None, opted_out=False)
     await setup(hass, mock_config_entry)
     assert hass.states.get("sensor.axle_energy_event_type").state == "unknown"
 
@@ -99,7 +100,9 @@ async def test_opted_out(
     mock_event: GridEvent,
 ) -> None:
     """Exclude an event the household has opted out of."""
-    mock_client.get_event.return_value = replace(mock_event, opted_out=True)
+    mock_client.get_status.return_value = AxleStatus(
+        replace(mock_event, opted_out=True), opted_out=True
+    )
     await setup(hass, mock_config_entry)
     assert hass.states.get("sensor.axle_energy_event_type").state == "unknown"
 
@@ -114,12 +117,12 @@ async def test_recovery(
 ) -> None:
     """Recover from a failed request without confusing it with no event."""
     await setup(hass, mock_config_entry)
-    mock_client.get_event.side_effect = error
+    mock_client.get_status.side_effect = error
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.axle_energy_event_type").state == "unavailable"
-    mock_client.get_event.side_effect = None
+    mock_client.get_status.side_effect = None
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -135,16 +138,18 @@ async def test_polling(
 ) -> None:
     """Poll at ten minutes and publish revised direction."""
     await setup(hass, mock_config_entry)
-    mock_client.get_event.reset_mock()
+    mock_client.get_status.reset_mock()
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_client.get_event.assert_not_called()
-    mock_client.get_event.return_value = replace(mock_event, direction="import")
+    mock_client.get_status.assert_not_called()
+    mock_client.get_status.return_value = AxleStatus(
+        replace(mock_event, direction="import"), opted_out=False
+    )
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_client.get_event.assert_awaited_once()
+    mock_client.get_status.assert_awaited_once()
     assert hass.states.get("sensor.axle_energy_event_type").state == "import"
 
 
@@ -156,22 +161,22 @@ async def test_authentication_failure(
 ) -> None:
     """Stop polling on rejected credentials and resume after reauthentication."""
     await setup(hass, mock_config_entry)
-    mock_client.get_event.side_effect = AxleAuthenticationError()
+    mock_client.get_status.side_effect = AxleAuthenticationError()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.axle_energy_event_type").state == "unavailable"
-    mock_client.get_event.reset_mock()
+    mock_client.get_status.reset_mock()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_client.get_event.assert_not_called()
+    mock_client.get_status.assert_not_called()
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
-    mock_client.get_event.side_effect = None
+    mock_client.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         flows[0]["flow_id"], {CONF_API_KEY: "replacement-token"}
     )
@@ -180,8 +185,8 @@ async def test_authentication_failure(
     assert result["reason"] == "reauth_successful"
     assert hass.states.get("sensor.axle_energy_event_type").state == "export"
 
-    mock_client.get_event.reset_mock()
+    mock_client.get_status.reset_mock()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_client.get_event.assert_awaited_once()
+    mock_client.get_status.assert_awaited_once()

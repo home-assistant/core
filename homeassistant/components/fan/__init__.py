@@ -9,10 +9,11 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -26,7 +27,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
@@ -55,6 +56,38 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
+
+__all__ = [
+    "ATTR_DIRECTION",
+    "ATTR_OSCILLATING",
+    "ATTR_PERCENTAGE",
+    "ATTR_PERCENTAGE_STEP",
+    "ATTR_PRESET_MODE",
+    "ATTR_PRESET_MODES",
+    "DIRECTION_FORWARD",
+    "DIRECTION_REVERSE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_DECREASE_SPEED",
+    "SERVICE_INCREASE_SPEED",
+    "SERVICE_OSCILLATE",
+    "SERVICE_SET_DIRECTION",
+    "SERVICE_SET_PERCENTAGE",
+    "SERVICE_SET_PRESET_MODE",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_OFF",
+    "STATE_ON",
+    "FanEntity",
+    "FanEntityCapabilityAttribute",
+    "FanEntityDescription",
+    "FanEntityFeature",
+    "FanEntityStateAttribute",
+    "NotValidPresetModeError",
+]
 
 # mypy: disallow-any-generics
 

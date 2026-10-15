@@ -455,7 +455,7 @@ async def test_generate_data_invalid_attachments(
         pytest.raises(
             HomeAssistantError,
             match=re.escape(
-                "The Claude Haiku 4.5 model does not support"
+                "The Claude Haiku 5.5 model does not support"
                 " text/plain file types"
                 " (for `doorbell_snapshot.txt`)"
             ),

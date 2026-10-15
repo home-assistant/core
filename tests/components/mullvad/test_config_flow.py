@@ -74,6 +74,21 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.mullvad.async_setup_entry",
+            return_value=True,
+        ),
+        patch("homeassistant.components.mullvad.config_flow.MullvadAPI"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test we show an error when an unknown error occurs."""
@@ -94,3 +109,18 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.mullvad.async_setup_entry",
+            return_value=True,
+        ),
+        patch("homeassistant.components.mullvad.config_flow.MullvadAPI"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
