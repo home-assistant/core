@@ -122,3 +122,28 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="user", data_schema=_user_schema(self.hass))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the remote profile without replacing the entry or IR bindings."""
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            return self.async_update_reload_and_abort(entry, data_updates=user_input)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_MODEL, default=entry.data.get(CONF_MODEL, MODEL_GENERIC)
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[MODEL_GENERIC, MODEL_YAP1F],
+                            translation_key=CONF_MODEL,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
