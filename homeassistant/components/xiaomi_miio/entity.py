@@ -1,6 +1,6 @@
 """Code to handle a Xiaomi Device."""
 
-import datetime
+import datetime as dt
 from enum import Enum
 from functools import partial
 import logging
@@ -124,11 +124,11 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         value = getattr(state, attribute)
         if isinstance(value, Enum):
             return value.value
-        if isinstance(value, datetime.timedelta):
+        if isinstance(value, dt.timedelta):
             return cls._parse_time_delta(value)
-        if isinstance(value, datetime.time):
+        if isinstance(value, dt.time):
             return cls._parse_datetime_time(value)
-        if isinstance(value, datetime.datetime):
+        if isinstance(value, dt.datetime):
             return cls._parse_datetime_datetime(value)
 
         if value is None:
@@ -137,23 +137,23 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         return value
 
     @staticmethod
-    def _parse_time_delta(timedelta: datetime.timedelta) -> int:
+    def _parse_time_delta(timedelta: dt.timedelta) -> int:
         return int(timedelta.total_seconds())
 
     @staticmethod
-    def _parse_datetime_time(initial_time: datetime.time) -> str:
+    def _parse_datetime_time(initial_time: dt.time) -> str:
         now = dt_util.now()
         time = now.replace(
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
         if time < now:
-            time += datetime.timedelta(days=1)
+            time += dt.timedelta(days=1)
 
         return time.isoformat()
 
     @staticmethod
-    def _parse_datetime_datetime(time: datetime.datetime) -> str:
+    def _parse_datetime_datetime(time: dt.datetime) -> str:
         return time.isoformat()
 
 

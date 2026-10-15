@@ -1,7 +1,7 @@
 """Tests helpers."""
 
 from collections.abc import AsyncGenerator, Generator, Iterable
-import datetime
+import datetime as dt
 from typing import Unpack
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
@@ -181,7 +181,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             ):
                 container = Container(
                     id=kwargs.get("container") or "container_1234567890ABCDEFGHIJKLMN",
-                    expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
+                    expires_at=dt_util.utcnow() + dt.timedelta(minutes=5),
                 )
 
             yield event

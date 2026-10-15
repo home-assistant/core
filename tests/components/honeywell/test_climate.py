@@ -1,6 +1,6 @@
 """Test the Honeywell climate domain."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
@@ -465,7 +465,7 @@ async def test_service_calls_cool_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
         blocking=True,
     )
-    device.set_hold_cool.assert_called_once_with(datetime.time(2, 30), 15)
+    device.set_hold_cool.assert_called_once_with(dt.time(2, 30), 15)
     device.set_hold_cool.reset_mock()
 
     await hass.services.async_call(
@@ -677,7 +677,7 @@ async def test_service_calls_heat_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
         blocking=True,
     )
-    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 25)
+    device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
     device.set_hold_heat.reset_mock()
 
     device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
@@ -688,7 +688,7 @@ async def test_service_calls_heat_mode(
             {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 25)
+    device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
     device.set_hold_heat.reset_mock()
     assert exc_info.value.translation_key == "temp_failed_value"
 
@@ -700,7 +700,7 @@ async def test_service_calls_heat_mode(
             {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 25)
+    device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
     device.set_hold_heat.reset_mock()
 
     await hass.services.async_call(

@@ -1,6 +1,6 @@
 """Test the Anthropic config flow."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from anthropic import (
@@ -732,7 +732,7 @@ async def test_invalid_model(
         return_value=ModelInfo(
             type="model",
             id="valid-model-4-5",
-            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            created_at=dt.datetime(1970, 1, 1, tzinfo=dt.UTC),
             display_name="Valid Model 4-5",
             lifecycle="active",
         ),
