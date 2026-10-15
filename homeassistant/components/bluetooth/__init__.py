@@ -1,6 +1,6 @@
 """The bluetooth integration."""
 
-import datetime
+import datetime as dt
 import logging
 import platform
 from typing import TYPE_CHECKING, Any
@@ -181,7 +181,7 @@ async def _async_start_adapter_discovery(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
-    async def _async_call_debouncer(now: datetime.datetime) -> None:
+    async def _async_call_debouncer(now: dt.datetime) -> None:
         """Call the debouncer at a later time."""
         await discovery_debouncer.async_call()
 

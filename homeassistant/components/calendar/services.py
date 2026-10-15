@@ -1,7 +1,7 @@
 """Services for the calendar integration."""
 
 import dataclasses
-import datetime
+import datetime as dt
 from typing import TYPE_CHECKING, Any, Final
 
 import probatio
@@ -106,7 +106,7 @@ SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
 
 def _validate_timespan(
     values: dict[str, Any],
-) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
+) -> tuple[dt.datetime | dt.date, dt.datetime | dt.date]:
     """Parse a create event service call.
 
     Convert the args for a create event entity call.
@@ -122,8 +122,8 @@ def _validate_timespan(
         days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
         today = dt_util.now().date()
         return (
-            today + datetime.timedelta(days=days),
-            today + datetime.timedelta(days=days + 1),
+            today + dt.timedelta(days=days),
+            today + dt.timedelta(days=days + 1),
         )
 
     if EVENT_START_DATE in values and EVENT_END_DATE in values:
