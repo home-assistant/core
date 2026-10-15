@@ -1,5 +1,6 @@
 """Tests for the newly wired Gree fields: swing, vane, sleep, ifeel, fresh air, timer."""
 
+import asyncio
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,6 +20,7 @@ from homeassistant.components.gree_infrared.const import (
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
+from homeassistant.components.gree_infrared.state import COALESCE_DELAY_SEC
 from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -57,6 +59,19 @@ def _last_command(emitter: MockInfraredEmitterEntity) -> GreeAcCommand:
     return command
 
 
+async def _flush(hass: HomeAssistant) -> None:
+    """Wait out the coalescing window, then drain the flush task."""
+    await asyncio.sleep(COALESCE_DELAY_SEC + 0.2)
+    await hass.async_block_till_done()
+
+
+async def _flush_freezer(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Flush under a frozen clock by ticking past the window, no real sleep."""
+    freezer.tick(timedelta(seconds=COALESCE_DELAY_SEC + 0.2))
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+
 async def _turn_on_cool(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "climate",
@@ -64,6 +79,7 @@ async def _turn_on_cool(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush(hass)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -84,6 +100,7 @@ async def test_vertical_and_horizontal_swing(
         {ATTR_ENTITY_ID: _CLIMATE, "swing_horizontal_mode": "on"},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert (command.swing_v, command.swing_h) == (True, True)
     state = hass.states.get(_CLIMATE)
@@ -105,6 +122,7 @@ async def test_vane_position_select_yap1f(
         {ATTR_ENTITY_ID: entity_id, "option": "3"},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.swing_v_position == 3
     assert hass.states.get(entity_id).state == "3"
@@ -128,6 +146,7 @@ async def test_yap1f_horizontal_position_and_display_controls(
             {ATTR_ENTITY_ID: entity_id, "option": option},
             blocking=True,
         )
+        await _flush(hass)
         assert getattr(_last_command(mock_infrared_emitter_entity), field) == expected
 
     await hass.services.async_call(
@@ -136,6 +155,7 @@ async def test_yap1f_horizontal_position_and_display_controls(
         {ATTR_ENTITY_ID: _CLIMATE, "temperature": 24},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.fahrenheit is True
     assert command.temperature == 75
@@ -151,6 +171,7 @@ async def test_econo_switch_cool_only_and_cancel_on_mode_change(
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).econo is True
     await hass.services.async_call(
         "climate",
@@ -158,6 +179,7 @@ async def test_econo_switch_cool_only_and_cancel_on_mode_change(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).econo is False
     assert hass.states.get(entity_id).state == "unavailable"
 
@@ -174,10 +196,12 @@ async def test_absence_switch_heat_only_and_cancel_on_mode_change(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
+    await _flush(hass)
     entity_id = _entity_id(hass, "switch", "absence")
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).absence is True
     await hass.services.async_call(
         "climate",
@@ -185,6 +209,7 @@ async def test_absence_switch_heat_only_and_cancel_on_mode_change(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).absence is False
     assert hass.states.get(entity_id).state == "unavailable"
 
@@ -216,6 +241,7 @@ async def test_sleep_switch_and_cancel_on_mode_change(
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).sleep is True
     await hass.services.async_call(
         "climate",
@@ -223,6 +249,7 @@ async def test_sleep_switch_and_cancel_on_mode_change(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.sleep is False
     assert hass.states.get(entity_id).state == "off"
@@ -242,6 +269,7 @@ async def test_sleep_blocked_in_auto(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.AUTO},
         blocking=True,
     )
+    await _flush(hass)
     entity_id = _entity_id(hass, "switch", "sleep")
     assert hass.states.get(entity_id).state == "unavailable"
     climate = mock_config_entry.runtime_data.climate
@@ -261,6 +289,7 @@ async def test_ifeel_switch(
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).ifeel is True
 
 
@@ -277,6 +306,7 @@ async def test_fresh_air_select(
         {ATTR_ENTITY_ID: entity_id, "option": "level_2"},
         blocking=True,
     )
+    await _flush(hass)
     assert (
         _last_command(mock_infrared_emitter_entity).fresh_air is GreeAcFreshAir.LEVEL_2
     )
@@ -292,10 +322,12 @@ async def test_timer_number(
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 2.5}, blocking=True
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).timer_hours == 2.5
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 0}, blocking=True
     )
+    await _flush(hass)
     assert _last_command(mock_infrared_emitter_entity).timer_hours is None
 
 
@@ -306,13 +338,20 @@ async def test_timer_countdown_sends_remaining_and_expires(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
     """Full-state sends preserve timer deadline; overdue setters flip power off."""
-    await _turn_on_cool(hass)
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    await _flush_freezer(hass, freezer)
     await hass.services.async_call(
         "number",
         "set_value",
         {ATTR_ENTITY_ID: _entity_id(hass, "number", "timer_hours"), "value": 2},
         blocking=True,
     )
+    await _flush_freezer(hass, freezer)
     freezer.move_to(freezer() + timedelta(hours=1))
     await hass.services.async_call(
         "climate",
@@ -320,6 +359,7 @@ async def test_timer_countdown_sends_remaining_and_expires(
         {ATTR_ENTITY_ID: _CLIMATE, "temperature": 25},
         blocking=True,
     )
+    await _flush_freezer(hass, freezer)
     assert _last_command(mock_infrared_emitter_entity).timer_hours == 1
     sends_before_expiry = len(mock_infrared_emitter_entity.send_command_calls)
 
@@ -330,6 +370,7 @@ async def test_timer_countdown_sends_remaining_and_expires(
         {ATTR_ENTITY_ID: _CLIMATE, "temperature": 26},
         blocking=True,
     )
+    await _flush_freezer(hass, freezer)
     # Past the deadline the lock-held reconcile assumes timer-off before any
     # temperature frame, so the unit stays off and no power-on IR is sent.
     assert len(mock_infrared_emitter_entity.send_command_calls) == sends_before_expiry
@@ -368,7 +409,13 @@ async def test_timer_deadline_restored_as_remaining_duration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await _turn_on_cool(hass)
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    await _flush_freezer(hass, freezer)
     assert _last_command(mock_infrared_emitter_entity).timer_hours == 1
 
 
@@ -439,6 +486,7 @@ async def test_new_fields_restore_after_restart(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is GreeAcModel.YAP1F
     assert (command.swing_v, command.swing_h) == (True, True)
@@ -497,6 +545,7 @@ async def test_generic_new_fields_send(
         {ATTR_ENTITY_ID: _entity_id(hass, "switch", "sleep")},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is GreeAcModel.GENERIC
     assert command.swing_v is True

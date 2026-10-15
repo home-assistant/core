@@ -21,6 +21,7 @@ from homeassistant.components.gree_infrared.const import (
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
+from homeassistant.components.gree_infrared.state import COALESCE_DELAY_SEC
 from homeassistant.components.infrared import DATA_COMPONENT, InfraredReceivedSignal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -70,6 +71,12 @@ def _last_command(emitter: MockInfraredEmitterEntity) -> GreeAcCommand:
     command = emitter.send_command_calls[-1]
     assert isinstance(command, GreeAcCommand)
     return command
+
+
+async def _flush(hass: HomeAssistant) -> None:
+    """Wait out the coalescing window, then drain the flush task."""
+    await asyncio.sleep(COALESCE_DELAY_SEC + 0.2)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -122,6 +129,7 @@ async def test_option_switches_preserve_complete_state(
         {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert (command.model, command.mode, command.temperature, command.fan) == (
         GreeAcModel.YAP1F,
@@ -195,6 +203,7 @@ async def test_generic_option_switches_preserve_full_state(
         {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is GreeAcModel.GENERIC
     assert (
@@ -231,44 +240,52 @@ async def test_failed_send_does_not_commit_option_or_temperature(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     expected_model: GreeAcModel,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A failed IR transmission leaves every assumed state field intact."""
+    """A failed coalesced send is logged while staged option and temp stay."""
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush(hass)
+    mock_infrared_emitter_entity.send_command_calls.clear()
     with patch.object(
         mock_infrared_emitter_entity,
         "async_send_command",
-        side_effect=HomeAssistantError,
+        side_effect=HomeAssistantError("boom"),
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "switch",
-                "turn_on",
-                {ATTR_ENTITY_ID: _option_entity_id(hass, "turbo")},
-                blocking=True,
-            )
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "climate",
-                "set_temperature",
-                {ATTR_ENTITY_ID: _CLIMATE, ATTR_TEMPERATURE: 25},
-                blocking=True,
-            )
-    assert hass.states.get(_CLIMATE).attributes["temperature"] == 16
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {ATTR_ENTITY_ID: _option_entity_id(hass, "turbo")},
+            blocking=True,
+        )
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: _CLIMATE, ATTR_TEMPERATURE: 25},
+            blocking=True,
+        )
+        # Service calls stage and return before the IR send; nothing sent yet.
+        assert mock_infrared_emitter_entity.send_command_calls == []
+        with caplog.at_level("WARNING"):
+            await _flush(hass)
+        assert "Coalesced Gree IR send failed" in caplog.text
+    # Staged state is kept: HA shows the staged option and temperature.
+    assert hass.states.get(_CLIMATE).attributes["temperature"] == 25
+    assert hass.states.get(_option_entity_id(hass, "turbo")).state == "on"
     await hass.services.async_call(
         "climate",
         "set_fan_mode",
         {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
         blocking=True,
     )
-    assert hass.states.get(_option_entity_id(hass, "turbo")).state == "off"
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is expected_model
-    assert (command.temperature, command.turbo) == (16, False)
+    assert (command.temperature, command.turbo) == (25, True)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -296,43 +313,29 @@ async def test_concurrent_changes_compose_under_one_lock(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     expected_model: GreeAcModel,
 ) -> None:
-    """A queued option edit cannot be lost behind an in-flight climate send."""
+    """Rapid option and climate edits share one coalesced frame without loss."""
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
-    started, release = asyncio.Event(), asyncio.Event()
-    original_send = mock_infrared_emitter_entity.async_send_command
-
-    async def slow_send(command: GreeAcCommand) -> None:
-        started.set()
-        await release.wait()
-        await original_send(command)
-
-    with patch.object(
-        mock_infrared_emitter_entity, "async_send_command", side_effect=slow_send
-    ):
-        first = asyncio.create_task(
-            hass.services.async_call(
-                "switch",
-                "turn_on",
-                {ATTR_ENTITY_ID: _option_entity_id(hass, "turbo")},
-                blocking=True,
-            )
-        )
-        await started.wait()
-        second = asyncio.create_task(
-            hass.services.async_call(
-                "climate",
-                "set_temperature",
-                {ATTR_ENTITY_ID: _CLIMATE, ATTR_TEMPERATURE: 25},
-                blocking=True,
-            )
-        )
-        release.set()
-        await asyncio.gather(first, second)
+    await _flush(hass)
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {ATTR_ENTITY_ID: _option_entity_id(hass, "turbo")},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: _CLIMATE, ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+    await _flush(hass)
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is expected_model
     assert (command.turbo, command.temperature) == (True, 25)
@@ -396,6 +399,7 @@ async def test_restore_switches_without_transmission(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is expected_model
     assert (command.turbo, command.display, command.anion, command.blow) == (
@@ -447,6 +451,7 @@ async def test_restore_switches_when_previously_active(
         {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert (command.turbo, command.display, command.anion, command.blow) == (
         True,
@@ -648,6 +653,7 @@ async def test_two_entries_keep_independent_options(
     second_climate = second.runtime_data.climate
     assert second_climate is not None
     await second_climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush(hass)
     assert _last_command(second_emitter).turbo is False
     assert mock_infrared_emitter_entity.send_command_calls == []
     assert second.runtime_data.turbo is False
@@ -700,7 +706,7 @@ async def test_yap1f_off_frame_remembers_mode_for_next_ha_off(
         {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
-
+    await _flush(hass)
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     command = _last_command(mock_infrared_emitter_entity)
     assert command.model is GreeAcModel.YAP1F
@@ -714,8 +720,9 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Options cancelled by a mode change survive when the mode send fails."""
+    """A failed coalesced mode send is logged while the staged mode stays."""
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
@@ -729,13 +736,12 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
             {ATTR_ENTITY_ID: _option_entity_id(hass, key)},
             blocking=True,
         )
-    with (
-        patch.object(
-            mock_infrared_emitter_entity,
-            "async_send_command",
-            side_effect=HomeAssistantError,
-        ),
-        pytest.raises(HomeAssistantError),
+    await _flush(hass)
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError("boom"),
     ):
         await hass.services.async_call(
             "climate",
@@ -743,13 +749,17 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
             {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
             blocking=True,
         )
+        with caplog.at_level("WARNING"):
+            await _flush(hass)
+        assert "Coalesced Gree IR send failed" in caplog.text
     state = mock_config_entry.runtime_data
-    assert (state.sleep, state.econo) == (True, True)
+    assert hass.states.get(_CLIMATE).state == HVACMode.HEAT
+    assert (state.sleep, state.econo) == (False, False)
     assert [
         hass.states.get(_option_entity_id(hass, key)).state
         for key in ("sleep", "econo")
-    ] == ["on", "on"]
-
+    ] == ["off", "unavailable"]
+    caplog.clear()
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
@@ -763,13 +773,12 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
             {ATTR_ENTITY_ID: _option_entity_id(hass, key)},
             blocking=True,
         )
-    with (
-        patch.object(
-            mock_infrared_emitter_entity,
-            "async_send_command",
-            side_effect=HomeAssistantError,
-        ),
-        pytest.raises(HomeAssistantError),
+    await _flush(hass)
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError("boom"),
     ):
         await hass.services.async_call(
             "climate",
@@ -777,12 +786,12 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
             {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.OFF},
             blocking=True,
         )
+        with caplog.at_level("WARNING"):
+            await _flush(hass)
+        assert "Coalesced Gree IR send failed" in caplog.text
     state = mock_config_entry.runtime_data
-    assert (state.sleep, state.absence) == (True, True)
-    assert [
-        hass.states.get(_option_entity_id(hass, key)).state
-        for key in ("sleep", "absence")
-    ] == ["on", "on"]
+    assert hass.states.get(_CLIMATE).state == HVACMode.OFF
+    assert (state.sleep, state.absence) == (False, False)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -814,6 +823,7 @@ async def test_received_fahrenheit_frame_restores_celsius_target_and_scale(
         {ATTR_ENTITY_ID: _CLIMATE, ATTR_TEMPERATURE: 24},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert command.fahrenheit is True
     assert command.temperature == 75
@@ -851,6 +861,7 @@ async def test_received_yap1f_fields_reach_shared_state_and_next_frame(
         {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
         blocking=True,
     )
+    await _flush(hass)
     command = _last_command(mock_infrared_emitter_entity)
     assert (command.swing_h_position, command.econo, command.display_temp) == (
         3,
