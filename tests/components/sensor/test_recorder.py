@@ -198,6 +198,7 @@ def assert_issues(
         expected_issue = ir.IssueEntry(
             active=True,
             breaks_in_ha_version=None,
+            config_entry_id=None,
             created=ANY,
             data=expected_issue_data,
             dismissed_version=None,

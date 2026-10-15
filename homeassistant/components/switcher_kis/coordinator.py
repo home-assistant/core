@@ -2,17 +2,19 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from aioswitcher.device import SwitcherBase
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, update_coordinator
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, MAX_UPDATE_INTERVAL_SEC, SIGNAL_DEVICE_ADD
+
+if TYPE_CHECKING:
+    from . import SwitcherConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,14 +24,12 @@ class SwitcherDataUpdateCoordinator(
 ):
     """Switcher device data update coordinator."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: SwitcherConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        entry: ConfigEntry,
+        entry: SwitcherConfigEntry,
         device: SwitcherBase,
     ) -> None:
         """Initialize the Switcher device coordinator."""

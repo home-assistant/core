@@ -2,18 +2,20 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pyrisco import CannotConnectError, OperationError, RiscoCloud, UnauthorizedError
 from pyrisco.cloud.alarm import Alarm
 from pyrisco.cloud.event import Event
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from .models import RiscoConfigEntry
 
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
@@ -23,14 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
     """Class to manage fetching risco data."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: RiscoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: RiscoConfigEntry,
         risco: RiscoCloud,
     ) -> None:
         """Initialize global risco data updater."""
@@ -55,14 +55,12 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
 class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     """Class to manage fetching risco data."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: RiscoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: RiscoConfigEntry,
         risco: RiscoCloud,
     ) -> None:
         """Initialize global risco data updater."""

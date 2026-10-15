@@ -1,12 +1,11 @@
 """Update coordinator for Ruuvi Gateway."""
 
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from aioruuvigateway.api import get_gateway_history_data
 from aioruuvigateway.models import TagData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -14,18 +13,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import SCAN_INTERVAL
 
+if TYPE_CHECKING:
+    from . import RuuviGatewayConfigEntry
+
 
 class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
     """Poll the gateway for data and return changed TagData objects."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: RuuviGatewayConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: RuuviGatewayConfigEntry,
         logger: logging.Logger,
     ) -> None:
         """Initialize the coordinator using the given configuration (host, token)."""

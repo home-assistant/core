@@ -2253,6 +2253,16 @@ async def test_discovery_timeout_try_connect_all_fail(
     assert result3["errors"] == {"base": "cannot_connect"}
     assert mock_connect["connect"].call_count == 1
 
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_update_other_flows(
     hass: HomeAssistant,
@@ -2314,13 +2324,29 @@ async def test_reauth_update_other_flows(
     assert len(flows) == 0
 
 
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param(IP_ADDRESS, id="unchanged_host"),
+        pytest.param("127.0.0.99", id="changed_host"),
+    ],
+)
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
+    host: str,
 ) -> None:
     """Test reconfigure flow."""
+    device = _mocked_device(
+        device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+        credentials_hash=CREDENTIALS_HASH_KLAP,
+        ip_address=host,
+    )
+    mock_discovery["mock_devices"][host] = device
+    mock_connect["mock_devices"][host] = device
+
     result = await mock_added_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -2329,12 +2355,14 @@ async def test_reconfigure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: IP_ADDRESS,
+            CONF_HOST: host,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_added_config_entry.data[CONF_HOST] == host
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_auth_discovered(
@@ -2358,7 +2386,7 @@ async def test_reconfigure_auth_discovered(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_HOST: "WRONG_IP",
+                CONF_HOST: IP_ADDRESS,
             },
         )
 

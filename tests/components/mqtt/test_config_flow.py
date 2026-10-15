@@ -301,6 +301,13 @@ def mock_try_connection_time_out() -> Generator[MagicMock]:
         yield mock_client()
 
 
+def _connect_on_loop_start(mock_client: MagicMock) -> None:
+    """Let a timed out mock client connect when its loop starts."""
+    mock_client.loop_start = lambda: mock_client.on_connect(
+        mock_client, None, None, MockMqttReasonCode(), None
+    )
+
+
 @pytest.fixture
 def mock_ca_cert() -> bytes:
     """Mock the CA certificate."""
@@ -505,6 +512,13 @@ async def test_user_connection_fails(
     # Check config entry did not setup
     assert len(mock_finish_setup.mock_calls) == 0
 
+    _connect_on_loop_start(mock_try_connection_time_out)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_BROKER_FORM_DATA
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize("hass_config", [{"mqtt": {"sensor": {"state_topic": "test"}}}])
 async def test_manual_config_set(
@@ -671,6 +685,11 @@ async def test_hassio_cannot_connect(
     assert len(mock_try_connection_time_out.mock_calls)
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 0
+
+    _connect_on_loop_start(mock_try_connection_time_out)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures(
@@ -1144,7 +1163,7 @@ async def test_option_flow(
     assert yaml_mock.await_count
 
 
-@pytest.mark.usefixtures("mock_ca_cert", "mock_try_connection_success")
+@pytest.mark.usefixtures("mock_ca_cert", "mock_try_connection")
 @pytest.mark.parametrize(
     ("mock_ca_cert", "mock_client_cert", "mock_client_key", "client_key_password"),
     [
@@ -1265,6 +1284,21 @@ async def test_bad_certificate_validation(
         user_input=test_input,
     )
     assert result["errors"]["base"] == test_error
+
+    mock_ssl_context["context"]().load_verify_locations.side_effect = None
+    mock_ssl_context["context"]().load_cert_chain.side_effect = None
+    mock_ssl_context["load_der_private_key"].side_effect = None
+    mock_ssl_context["load_der_x509_certificate"].side_effect = None
+    mock_ssl_context["load_pem_private_key"].side_effect = None
+    mock_ssl_context["load_pem_x509_certificate"].side_effect = None
+    test_input[OTHER_SETTINGS][mqtt.CONF_CLIENT_KEY] = file_id[mqtt.CONF_CLIENT_KEY]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=test_input,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
@@ -1434,6 +1468,15 @@ async def test_invalid_discovery_prefix(
     await hass.async_block_till_done()
     # assert that the entry was not reloaded with the new config
     assert mock_reload_after_entry_update.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_DISCOVERY: True,
+            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 def get_default(schema: probatio.Schema, key: str) -> Any | None:
@@ -1830,6 +1873,16 @@ async def test_reconfigure_user_connection_fails(
     # Check config entry did not update
     assert config_entry.data == MOCK_BROKER_ENTRY_DATA
 
+    _connect_on_loop_start(mock_try_connection_time_out)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_BROKER_FORM_DATA
+        | {mqtt.CONF_BROKER: "another-broker", CONF_PORT: 2345},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_options_bad_birth_message_fails(
     hass: HomeAssistant, mock_try_connection: MqttMockPahoClient
@@ -1868,6 +1921,12 @@ async def test_options_bad_birth_message_fails(
         CONF_PORT: 1234,
     }
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"birth_topic": "ha_state/online"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_bad_will_message_fails(
     hass: HomeAssistant, mock_try_connection: MagicMock
@@ -1905,6 +1964,12 @@ async def test_options_bad_will_message_fails(
         mqtt.CONF_BROKER: "test-broker",
         CONF_PORT: 1234,
     }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"will_topic": "ha_state/offline"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

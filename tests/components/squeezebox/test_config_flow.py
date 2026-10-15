@@ -339,6 +339,14 @@ async def test_discovery_flow_edit_discovered_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
 
+    mock_server.http_status = HTTPStatus.OK
+    mock_server.async_query.side_effect = [False, {"uuid": TEST_UUID}]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_flow_failed(

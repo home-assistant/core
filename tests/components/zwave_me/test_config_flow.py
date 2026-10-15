@@ -130,6 +130,27 @@ async def test_handle_error_user(hass: HomeAssistant) -> None:
         )
         assert result2["errors"] == {"base": "no_valid_uuid_set"}
 
+    with (
+        patch(
+            "homeassistant.components.zwave_me.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.zwave_me.helpers.get_uuid",
+            return_value="test_uuid",
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "192.168.1.15",
+                "token": "test-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_duplicate_user(hass: HomeAssistant) -> None:
     """Test getting proper errors from duplicate uuid."""

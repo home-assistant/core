@@ -454,6 +454,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pairing"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "auth_missing"}
 
     with patch(
@@ -1461,6 +1462,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pairing"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "auth_missing"}
 
         assert remote.call_count == 2

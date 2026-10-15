@@ -1,7 +1,6 @@
 """The myStrom integration."""
 
 import asyncio
-import logging
 
 import pymystrom
 from pymystrom.bulb import MyStromBulb
@@ -20,8 +19,6 @@ PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
 PLATFORMS_MOTION_SENSOR = [Platform.SENSOR]
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def _async_get_device_state(
     device: MyStromSwitch | MyStromBulb | MyStromPir, ip_address: str
@@ -34,8 +31,11 @@ async def _async_get_device_state(
         else:
             await device.get_state()
     except MyStromConnectionError as err:
-        _LOGGER.error("No route to myStrom plug: %s", ip_address)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": ip_address},
+        ) from err
 
 
 def _get_mystrom_bulb(host: str, mac: str) -> MyStromBulb:
@@ -50,14 +50,17 @@ def _get_mystrom_switch(host: str) -> MyStromSwitch:
     return MyStromSwitch(host)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> None:
     """Set up myStrom from a config entry."""
     host = entry.data[CONF_HOST]
     try:
         info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
-        _LOGGER.error("No route to myStrom plug: %s", host)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from err
 
     info.setdefault("type", 101)
 
@@ -94,10 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> b
     )
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> None:
     """Unload a config entry."""
     device_type = entry.runtime_data.info["type"]
     platforms = []
@@ -107,4 +108,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> 
         platforms.extend(PLATFORMS_BULB)
     elif device_type == 110:
         platforms.extend(PLATFORMS_MOTION_SENSOR)
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)

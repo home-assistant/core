@@ -116,6 +116,16 @@ async def test_config_flow_errors(
     assert result2["errors"] == error
     assert len(mock_tedee.get_local_bridge.mock_calls) == 1
 
+    mock_tedee.get_local_bridge.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tedee: MagicMock

@@ -2,7 +2,6 @@
 
 from typing import override
 
-from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,5 +38,5 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
             name=self.coordinator.config_entry.title,
         )
         if isinstance(self.coordinator, StatusDataUpdateCoordinator):
-            device_info[ATTR_SW_VERSION] = self.coordinator.data.version
+            device_info.sw_version = self.coordinator.data.version
         return device_info

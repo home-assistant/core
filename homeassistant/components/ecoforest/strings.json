@@ -91,6 +91,9 @@
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication on device {host} failed"
+    },
+    "cannot_connect": {
+      "message": "Error communicating with device {host}"
     }
   }
 }

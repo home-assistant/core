@@ -1,5 +1,6 @@
 """Config flow for AirNow integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -62,7 +63,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             # Set a unique id based on latitude/longitude
             await self.async_set_unique_id(
@@ -70,20 +71,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-            try:
-                # Validate inputs
-                await validate_input(self.hass, user_input)
-
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except InvalidLocation:
-                errors["base"] = "invalid_location"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await self._async_validate_input(user_input)):
                 # Create Entry
                 return self.async_create_entry(
                     title=(
@@ -109,6 +97,54 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"api_key_url": _API_KEY_URL},
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None and not (
+            errors := await self._async_validate_input(
+                {**reauth_entry.data, **user_input}
+            )
+        ):
+            return self.async_update_reload_and_abort(
+                reauth_entry, data_updates=user_input
+            )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
+            description_placeholders={
+                "name": reauth_entry.title,
+                "api_key_url": _API_KEY_URL,
+            },
+            errors=errors,
+        )
+
+    async def _async_validate_input(self, data: dict[str, Any]) -> dict[str, str]:
+        """Validate the input and return any errors."""
+        try:
+            await validate_input(self.hass, data)
+        except CannotConnect:
+            return {"base": "cannot_connect"}
+        except InvalidAuth:
+            return {"base": "invalid_auth"}
+        except InvalidLocation:
+            return {"base": "invalid_location"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
 
 
 class CannotConnect(HomeAssistantError):

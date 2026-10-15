@@ -541,9 +541,9 @@ async def test_credentials_public_key_invalid_hex(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_credentials")
 async def test_credentials_invalid_private_key_preserves_other_fields(
     hass: HomeAssistant,
-    mock_credentials: AsyncMock,
 ) -> None:
     """Test gateway ID and API secret stay filled in after an invalid key error."""
     result = await hass.config_entries.flow.async_init(
@@ -574,6 +574,16 @@ async def test_credentials_invalid_private_key_preserves_other_fields(
     }
     assert defaults[CONF_GATEWAY_ID] == MOCK_GATEWAY_ID
     assert defaults[CONF_API_SECRET] == MOCK_API_SECRET
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "1" * 64,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_credentials_already_configured(

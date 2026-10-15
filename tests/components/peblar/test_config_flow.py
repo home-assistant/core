@@ -231,6 +231,7 @@ async def test_reconfigure_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.2",

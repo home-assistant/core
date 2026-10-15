@@ -16,7 +16,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import (  # noqa: F401
+from .const import (
     DATA_COMPONENT,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
@@ -34,6 +34,18 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+
+__all__ = [
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_PRESS",
+    "ButtonDeviceClass",
+    "ButtonEntity",
+    "ButtonEntityDescription",
+]
 
 # mypy: disallow-any-generics
 

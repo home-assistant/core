@@ -2,15 +2,17 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from bs4 import BeautifulSoup
 
 from homeassistant.components.rest import CONF_PAYLOAD_TEMPLATE, RestData
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_RESOURCE_TEMPLATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import ScrapeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +30,7 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry | None,
+        config_entry: ScrapeConfigEntry | None,
         rest: RestData,
         rest_config: dict[str, Any],
         update_interval: timedelta,

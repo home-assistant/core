@@ -68,6 +68,24 @@ async def test_form_cannot_connect(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://api.meetflo.com/api/v1/users/auth",
+        json={
+            "token": "token",
+            "tokenPayload": {"user": {"user_id": TEST_USER_ID}, "timestamp": 0},
+            "tokenExpiration": 86400,
+        },
+    )
+    with patch("homeassistant.components.flo.async_setup_entry", return_value=True):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-username", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_sso_after_legacy_failure(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

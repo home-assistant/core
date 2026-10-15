@@ -236,6 +236,11 @@ async def test_failed_connection_plm(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    result3, _ = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
     """Test a failed connection with the PLM."""
@@ -251,6 +256,11 @@ async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
+    result4, _ = await _device_form(
+        hass, result3["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     """Test a failed connection with a Hub."""
@@ -262,6 +272,11 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    result3, _ = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V2
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_via_usb(hass: HomeAssistant) -> None:

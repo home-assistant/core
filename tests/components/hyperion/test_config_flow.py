@@ -194,6 +194,7 @@ async def test_user_client_errors(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "cannot_connect"
 
     # Fail the auth check call.
@@ -358,6 +359,18 @@ async def test_auth_static_token_login_fail(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_access_token"
+
+    client.async_login = AsyncMock(
+        return_value={"command": "authorize-login", "success": True, "tan": 0}
+    )
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:

@@ -99,6 +99,21 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"].get("base") == base_error
 
+    with (
+        patch("sharkiq.AylaApi.async_sign_in", return_value=True),
+        patch("sharkiq.AylaApi.async_set_cookie"),
+        patch(
+            "homeassistant.components.sharkiq.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test reauth flow."""

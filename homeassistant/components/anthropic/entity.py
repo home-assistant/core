@@ -1183,6 +1183,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
                 coordinator.async_set_updated_data(coordinator.data)
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

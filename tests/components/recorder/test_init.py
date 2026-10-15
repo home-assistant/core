@@ -2727,10 +2727,7 @@ async def test_commit_before_commits_pending_writes(
         recorder.CONF_COMMIT_INTERVAL: 60,
     }
 
-    recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = await async_setup_recorder_instance(hass, config)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()

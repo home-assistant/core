@@ -2,9 +2,8 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -19,6 +18,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .data import HistoryStats, HistoryStatsState
 
+if TYPE_CHECKING:
+    from . import HistoryStatsConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,8 +34,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         self,
         hass: HomeAssistant,
         history_stats: HistoryStats,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry | None,
+        config_entry: HistoryStatsConfigEntry | None,
         name: str,
         preview: bool = False,
     ) -> None:

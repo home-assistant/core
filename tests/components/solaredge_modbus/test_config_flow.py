@@ -395,6 +395,15 @@ async def test_reconfigure_flow_new_line_settings_cannot_connect(
     # retry rather than staying unloaded with nothing scheduled to fix it.
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
+    mock_modbus_unit.fail_read(40000, None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _serial_input(baudrate=9600)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_flow_new_line_settings_wrong_device(
     hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
@@ -447,10 +456,12 @@ async def test_reconfigure_flow_new_line_settings_while_retrying(
     states: list[ConfigEntryState] = []
     probe = SolarEdge.async_probe
 
-    async def probe_watching_the_entry(unit: ModbusUnit) -> SolarEdge:
+    async def probe_watching_the_entry(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
         """Record whether the entry could still be reaching for the bus."""
         states.append(entry.state)
-        return await probe(unit)
+        return await probe(unit, assume_absent=assume_absent)
 
     result = await entry.start_reconfigure_flow(hass)
     with patch.object(SolarEdge, "async_probe", probe_watching_the_entry):

@@ -234,7 +234,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "simplefin": {"simplefin4py": {"dataclasses-json"}},
     "simplisafe": {"simplisafe-python": {"backoff"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
-    "surepetcare": {"surepy": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},

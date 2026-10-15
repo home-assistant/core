@@ -26,7 +26,7 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from . import RoonConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ENTITY_ID_CHANGED_SIGNAL
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,6 +125,11 @@ class RoonDevice(MediaPlayerEntity):
                 self.async_update_callback,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, ENTITY_ID_CHANGED_SIGNAL, self.async_write_ha_state
+            )
+        )
         self._server.add_player_id(self.entity_id, self.name)
 
     @callback
@@ -134,6 +139,8 @@ class RoonDevice(MediaPlayerEntity):
         self._server.remove_player_id(old_entity_id)
         self._server.add_player_id(self.entity_id, self.name)
         super().async_entity_id_changed(old_entity_id)
+        # Every player's group members are derived from the server's player ids
+        async_dispatcher_send(self.hass, ENTITY_ID_CHANGED_SIGNAL)
 
     @callback
     def async_update_callback(self, player_data):

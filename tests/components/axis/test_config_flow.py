@@ -118,8 +118,9 @@ async def test_manual_configuration_duplicate_fails(
         (config_flow.CannotConnect, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_fails_on_api(
-    hass: HomeAssistant, exc: Exception, error: str
+    hass: HomeAssistant, exc: type[Exception], error: str
 ) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -145,6 +146,18 @@ async def test_flow_fails_on_api(
         )
 
     assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_default_requests")
