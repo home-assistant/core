@@ -170,15 +170,10 @@ class FishAudioTTSEntity(TextToSpeechEntity):
                     yield chunk
 
             except RateLimitError as err:
-                _LOGGER.error("Fish Audio TTS rate limited: %s", err)
                 raise HomeAssistantError(f"Rate limited: {err}") from err
             except APIError as err:
-                _LOGGER.error("Fish Audio TTS request failed: %s", err)
                 raise HomeAssistantError(f"TTS request failed: {err}") from err
             except WebSocketError as err:
-                _LOGGER.error(
-                    "Fish Audio Websocket connection closed unexpectedly: %s", err
-                )
                 raise HomeAssistantError(
                     f"Websocket connection closed unexpectedly: {err}"
                 ) from err
