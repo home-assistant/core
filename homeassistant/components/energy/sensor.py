@@ -205,9 +205,9 @@ class SensorManager:
                 await power_entity.async_remove()
 
             if to_add:
-                for entity in to_add:
-                    if isinstance(entity, EnergyCostSensor):
-                        self._async_adopt_moved_gas_cost_sensor(entity)
+                for new_entity in to_add:
+                    if isinstance(new_entity, EnergyCostSensor):
+                        self._async_adopt_moved_gas_cost_sensor(new_entity)
                 self.async_add_entities(to_add)
                 await asyncio.wait(ent.add_finished for ent in to_add)
 
