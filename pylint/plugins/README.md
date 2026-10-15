@@ -89,6 +89,7 @@ Every check has a code following the
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
+| `C7417` | [`home-assistant-entity-platform-missing-all`](#c7417-home-assistant-entity-platform-missing-all) | Entity platform package root must define `__all__` |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
@@ -866,6 +867,17 @@ An EntityDescription field is set equal to a default already declared
 anywhere in the class hierarchy; the assignment can be removed. Only the
 literal defaults `None`, `True`, and `False` are checked; other default
 values are not flagged.
+
+
+## `home_assistant_entity_platform` checker
+
+Enforces conventions for entity platform integrations (the domains of the
+`Platform` enum, such as `light` or `sensor`).
+
+### `C7417`: `home-assistant-entity-platform-missing-all`
+
+The package root (`__init__.py`) of an entity platform integration must define
+`__all__`, listing its public names.
 
 
 ## `home_assistant_redundant_translation_key` checker

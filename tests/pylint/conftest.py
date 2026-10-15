@@ -22,6 +22,7 @@ from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
     HassEnforceConfigEntryUniqueIdNoIpChecker,
 )
 from pylint_home_assistant.checkers.decorator import HassDecoratorChecker
+from pylint_home_assistant.checkers.entity_platform import HassEntityPlatformChecker
 from pylint_home_assistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
@@ -59,6 +60,14 @@ def imports_checker_fixture(linter: UnittestLinter) -> BaseChecker:
     type_hint_checker = HassImportsFormatChecker(linter)
     type_hint_checker.module = "homeassistant.components.pylint_test"
     return type_hint_checker
+
+
+@pytest.fixture(name="entity_platform_checker")
+def entity_platform_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide an entity platform checker."""
+    entity_platform_checker = HassEntityPlatformChecker(linter)
+    entity_platform_checker.module = "homeassistant.components.pylint_test"
+    return entity_platform_checker
 
 
 @pytest.fixture(name="super_call_checker")
