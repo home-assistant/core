@@ -28,13 +28,21 @@ from tests.common import MockConfigEntry
 
 async def test_setup_entry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     setup_integration: MockConfigEntry,
 ) -> None:
-    """A successful setup loads the entry."""
+    """A successful setup loads the entry and initialises the hub model.
+
+    The first refresh runs the coordinator setup, so the hub is identified and
+    its device registered before the first poll.
+    """
     entry = setup_integration
     assert entry.state is ConfigEntryState.LOADED
-    # runtime_data is populated with the coordinator instance
-    assert entry.runtime_data is not None
+    assert entry.runtime_data.uid == MOCK_UID
+    assert entry.unique_id == MOCK_UID
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_UID), entry.entry_id
+    )
 
 
 async def test_unload_entry(

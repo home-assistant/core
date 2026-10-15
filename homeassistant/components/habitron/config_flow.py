@@ -315,17 +315,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         while a user flow does not -- adding an ignored hub by hand is how
         un-ignoring works.
         """
-        # The recorded identity is the strongest witness and needs no address
-        # at all, so it is asked first.
-        entry = self._async_entry_by_hub_identity(unique_id)
-
-        # Only an entry bound to no hub at all can be this one by its address.
-        # One bound to a *different* MAC -- by its unique id or by the hub
-        # device it registered -- is a different hub: the address it stores may
-        # simply be what DHCP has since handed this one, and matching on that
-        # would abort the new hub and rewrite the old entry onto a device that
-        # is not its own.
-        entry = entry or await self._async_matching_entry(
+        # Everything that awaits comes first. Name resolution gives a setup the
+        # chance to bind an entry to a hub, so what is decided from bindings is
+        # decided only afterwards, with no await until the caller is done.
+        stored_host = await self._async_stored_host(host)
+        by_address = await self._async_matching_entry(
             [
                 candidate
                 for candidate in self._async_current_entries()
@@ -333,15 +327,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ],
             host,
         )
-        # The address match awaits name resolution, and an entry may have
-        # adopted this MAC in its setup meanwhile. Asked again here, with no
-        # await between this answer and the caller creating its entry.
-        entry = entry or self._async_entry_by_hub_identity(unique_id)
+
+        # The recorded identity is the strongest witness and needs no address
+        # at all, so it wins. Only an entry still bound to no hub can be this
+        # one by its address: one bound to a *different* MAC -- by its unique
+        # id or by the hub device it registered -- is a different hub, and the
+        # address it stores may simply be what DHCP has since handed this one.
+        entry = self._async_entry_by_hub_identity(unique_id)
+        if (
+            entry is None
+            and by_address is not None
+            and by_address in self._async_current_entries()
+            and not async_hub_macs(self.hass, by_address)
+        ):
+            entry = by_address
         if entry is None:
             return None
         self.hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CONF_HOST: await self._async_stored_host(host)},
+            entry, data={**entry.data, CONF_HOST: stored_host}
         )
         self._async_schedule_reload_if_retrying(entry)
         return self.async_abort(reason="already_configured")

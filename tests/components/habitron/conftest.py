@@ -114,6 +114,7 @@ def mock_coordinator_setup() -> Generator[MagicMock]:
     """
 
     async def _connect_and_build(self) -> None:
+        self._client = AsyncMock()
         self.host = MOCK_HOST
         self.hub = SmartHub(
             uid=MOCK_UID,
@@ -124,6 +125,7 @@ def mock_coordinator_setup() -> Generator[MagicMock]:
         )
         await self._async_resolve_uid()
         self.base_url = f"http://{MOCK_HOST}:7780"
+        self._register_hub_device()
         self.router.modules = []
         self.router.states = []
 
@@ -137,12 +139,22 @@ def mock_coordinator_setup() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_coordinator_refresh() -> Generator[AsyncMock]:
-    """Skip the first refresh so coordinator setup completes without a hub."""
-    with patch(
-        "homeassistant.helpers.update_coordinator."
-        "DataUpdateCoordinator.async_config_entry_first_refresh",
-        new=AsyncMock(),
-    ) as mock:
+    """Stub the bus polls, so the first refresh runs its setup without a hub.
+
+    Only the wire calls are replaced: the first refresh still runs the
+    coordinator's setup, so the model the integration builds on is initialised
+    as in a real setup.
+    """
+    with (
+        patch(
+            "homeassistant.components.habitron.coordinator.async_refresh_system",
+            new=AsyncMock(return_value=4711),
+        ) as mock,
+        patch(
+            "homeassistant.components.habitron.coordinator.async_refresh_hub",
+            new=AsyncMock(),
+        ),
+    ):
         yield mock
 
 
