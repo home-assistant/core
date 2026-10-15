@@ -2565,7 +2565,8 @@ class EntityRegistry(BaseRegistry):
         # registry; device registry load was already awaited above.
         await self.hass.config_entries.async_wait_initialized()
         device_registry = dr.async_get(self.hass)
-        for entry in entities.values():
+        disabled_by_changed = False
+        for entry in list(entities.values()):
             if entry.disabled_by not in _DERIVED_DISABLED_BY:
                 continue
             config_entry = (
@@ -2581,7 +2582,12 @@ class EntityRegistry(BaseRegistry):
             disabled_by = _derived_disabled_by(config_entry, device)
             if disabled_by is entry.disabled_by:
                 continue
-            self.async_update_entity(entry.entity_id, disabled_by=disabled_by)
+            entities[entry.entity_id] = attr.evolve(
+                entry, disabled_by=disabled_by, modified_at=utcnow()
+            )
+            disabled_by_changed = True
+        if disabled_by_changed:
+            self.async_schedule_save()
 
         self._loaded_event.set()
 
