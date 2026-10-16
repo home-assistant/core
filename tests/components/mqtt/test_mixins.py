@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.models import DATA_MQTT
 from homeassistant.components.mqtt.sensor import DEFAULT_NAME as DEFAULT_SENSOR_NAME
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
@@ -1015,6 +1016,23 @@ def _device_discovery(device_identifier: str) -> tuple[str, dict[str, Any]]:
     }
 
 
+TRIGGER_KEEPER = (
+    "homeassistant/device_automation/keeper/config",
+    {
+        "device": {"identifiers": [MOVED_DEVICE_A]},
+        "automation_type": "trigger",
+        "payload": "short_press",
+        "topic": "foobar/triggers/button1",
+        "type": "button_short_press",
+        "subtype": "button_1",
+    },
+)
+TAG_KEEPER = (
+    "homeassistant/tag/keeper/config",
+    {"device": {"identifiers": [MOVED_DEVICE_A]}, "topic": "foobar/tag_scanned"},
+)
+
+
 async def _async_reload_mqtt_entry(hass: HomeAssistant) -> None:
     """Reload the MQTT config entry, which drops all discovered items."""
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -1106,26 +1124,8 @@ async def test_cleanup_previous_device_after_entry_reload(
             },
             id="disabled_entity",
         ),
-        pytest.param(
-            "homeassistant/device_automation/keeper/config",
-            {
-                "device": {"identifiers": [MOVED_DEVICE_A]},
-                "automation_type": "trigger",
-                "payload": "short_press",
-                "topic": "foobar/triggers/button1",
-                "type": "button_short_press",
-                "subtype": "button_1",
-            },
-            id="device_trigger",
-        ),
-        pytest.param(
-            "homeassistant/tag/keeper/config",
-            {
-                "device": {"identifiers": [MOVED_DEVICE_A]},
-                "topic": "foobar/tag_scanned",
-            },
-            id="tag",
-        ),
+        pytest.param(*TRIGGER_KEEPER, id="device_trigger"),
+        pytest.param(*TAG_KEEPER, id="tag"),
     ],
 )
 async def test_previous_device_kept_after_entry_reload(
@@ -1166,6 +1166,77 @@ async def test_previous_device_kept_after_entry_reload(
     )
     assert entity_id is not None
     assert entity_registry.async_get(entity_id).device_id == device_b.id
+    assert device_registry.async_get(device_a.id) is not None
+
+
+@pytest.mark.parametrize(
+    ("keeper_topic", "keeper_payload"),
+    [
+        pytest.param(*TRIGGER_KEEPER, id="device_trigger"),
+        pytest.param(*TAG_KEEPER, id="tag"),
+    ],
+)
+async def test_previous_device_cleanup_keeps_retained_discovery_payload(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    keeper_topic: str,
+    keeper_payload: dict[str, Any],
+) -> None:
+    """Test cleanup before rediscovery does not clear a retained discovery payload."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    keeper = json.json_dumps(keeper_payload)
+    topic, payload = _single_component_discovery(MOVED_DEVICE_A)
+    async_fire_mqtt_message(hass, keeper_topic, keeper, retain=True)
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload), retain=True)
+    await hass.async_block_till_done()
+    device_a = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_A), entry.entry_id
+    )
+    assert device_a is not None
+
+    await _async_reload_mqtt_entry(hass)
+    mqtt_mock = hass.data[DATA_MQTT].client
+    # The moved entity is replayed before the keeper, so the device is unused
+    topic, payload = _single_component_discovery(MOVED_DEVICE_B)
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload), retain=True)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device_a.id) is None
+    async_fire_mqtt_message(hass, keeper_topic, keeper, retain=True)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_a.id) is not None
+    mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_previous_device_kept_with_via_device_link(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the previous device is kept while another device links to it."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    topic, payload = _single_component_discovery(MOVED_DEVICE_A)
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload), retain=True)
+    await hass.async_block_till_done()
+    device_a = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_A), entry.entry_id
+    )
+    assert device_a is not None
+
+    await _async_reload_mqtt_entry(hass)
+    topic, payload = _single_component_discovery(MOVED_DEVICE_B)
+    payload["device"]["via_device"] = MOVED_DEVICE_A
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload), retain=True)
+    await hass.async_block_till_done()
+
+    device_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_B), entry.entry_id
+    )
+    assert device_b is not None
+    assert device_b.via_device_id == device_a.id
     assert device_registry.async_get(device_a.id) is not None
 
 
