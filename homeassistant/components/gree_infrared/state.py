@@ -124,7 +124,10 @@ class GreeAcState:
         self._clear_coalesced()
 
     def _clear_coalesced(self) -> None:
-        """Drop coalescing bookkeeping without sending."""
+        """Drop coalescing bookkeeping and cancel any pending flush."""
+        if self._coalesce_handle is not None:
+            self._coalesce_handle.cancel()
+            self._coalesce_handle = None
         self.coalesce_dirty = False
         self.pending_timer_reset = False
         self.pending_explicit_temp = False
