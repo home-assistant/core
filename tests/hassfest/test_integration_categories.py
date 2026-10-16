@@ -118,16 +118,30 @@ def test_validate_outdated_file(
     assert root_config.errors[0].fixable
 
 
-def test_generate_missing_icon(
+def test_validate_skips_invalid_integration(
     integrations: dict[str, Integration], root_config: Config
 ) -> None:
-    """Test a missing icon doesn't crash, the icons plugin reports it."""
-    path = integrations["homeassistant"].path / "icons.json"
-    path.write_text(json.dumps({"integration_category": {}}))
+    """Test invalid strings or icons are skipped, other plugins report them."""
+    integration = integrations["homeassistant"]
+    (integration.path / "strings.json").write_text("{")
+    integration.add_error("json", "Invalid JSON in strings.json")
+
+    integration_categories.validate(integrations, root_config)
+
+    assert root_config.errors == []
+    assert "integration_categories" not in root_config.cache
+
+
+def test_generate_without_categories(
+    integrations: dict[str, Integration], root_config: Config
+) -> None:
+    """Test strings and icons without categories generate an empty list."""
+    integration = integrations["homeassistant"]
+    (integration.path / "strings.json").write_text("{}")
+    (integration.path / "icons.json").write_text("{}")
 
     integration_categories.validate(integrations, root_config)
     integration_categories.generate(integrations, root_config)
 
-    generated = json.loads((root_config.root / integration_categories.PATH).read_text())
-    assert [category["icon"] for category in generated] == [None, None]
-    assert generated[0]["subcategories"][0]["icon"] is None
+    path = root_config.root / integration_categories.PATH
+    assert json.loads(path.read_text()) == []

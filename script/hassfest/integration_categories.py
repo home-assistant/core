@@ -12,20 +12,18 @@ def _generate(integration_path: Path) -> str:
     """Generate the integration categories data from the strings and icons."""
     strings = json.loads((integration_path / "strings.json").read_text())
     icons = json.loads((integration_path / "icons.json").read_text())
-    category_strings = strings["integration_category"]
+    category_strings = strings.get("integration_category", {})
     category_icons = icons.get("integration_category", {})
 
-    # A missing icon becomes None here, the icons plugin reports it as an error.
     categories = []
     for category, details in sorted(category_strings.items()):
-        icon_details = category_icons.get(category, {})
-        subcategory_icons = icon_details.get("subcategory", {})
+        icon_details = category_icons[category]
 
         subcategories = [
             {
                 "slug": subcategory,
                 "name": subcategory_details["name"],
-                "icon": subcategory_icons.get(subcategory, {}).get("default"),
+                "icon": icon_details["subcategory"][subcategory]["default"],
             }
             for subcategory, subcategory_details in sorted(
                 details.get("subcategory", {}).items()
@@ -37,7 +35,7 @@ def _generate(integration_path: Path) -> str:
                 "slug": category,
                 "name": details["name"],
                 "description": details["description"],
-                "icon": icon_details.get("default"),
+                "icon": icon_details["default"],
                 "subcategories": subcategories,
             }
         )
@@ -48,9 +46,14 @@ def _generate(integration_path: Path) -> str:
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate integration_categories.json."""
     path = config.root / PATH
-    config.cache["integration_categories"] = content = _generate(
-        integrations["homeassistant"].path
-    )
+    integration = integrations["homeassistant"]
+
+    # The json, translations and icons plugins report invalid strings and icons,
+    # and generating from them would crash.
+    if any(not error.fixable for error in integration.errors):
+        return
+
+    config.cache["integration_categories"] = content = _generate(integration.path)
 
     if not path.is_file() or path.read_text() != content + "\n":
         config.add_error(
