@@ -232,10 +232,6 @@ jobs:
             skip_coverage="true"
           fi
 
-          # Experiment: only run the linters
-          lint_only="true"
-          skip_coverage="true"
-
           if [[ "${INPUT_SKIP_COVERAGE}" == "true" ]] \
             || [[ "${HAS_CI_SKIP_COVERAGE_LABEL}" == "true" ]];
           then
@@ -585,24 +581,16 @@ jobs:
           python -m script.licenses check licenses-${PYTHON_VERSION}.json
 
   pylint:
-    name: Check pylint (shard ${{ matrix.shard }})
+    name: >-
+      Check pylint${{ needs.info.outputs.test_full_suite == 'true'
+      && format(' ({0}/2)', matrix.shard) || '' }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - shard: "1/1"
-            ignore: ""
-          - shard: "1/2"
-            ignore: "^homeassistant/(?!components/[0-9_a-m])"
-          - shard: "2/2"
-            ignore: "^homeassistant/components/[0-9_a-m]"
-          - shard: "1/3"
-            ignore: "^homeassistant/(?!components/[0-9_a-h])"
-          - shard: "2/3"
-            ignore: "^homeassistant/(?!components/[i-r])"
-          - shard: "3/3"
-            ignore: "^homeassistant/components/[0-9_a-r]"
+        shard: >-
+          ${{ fromJSON(needs.info.outputs.test_full_suite == 'true'
+          && '[1, 2]' || '[1]') }}
     permissions:
       contents: read
     needs:
@@ -633,15 +621,17 @@ jobs:
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         env:
-          PYLINT_IGNORE: ${{ matrix.ignore }}
+          PYLINT_SHARD: ${{ matrix.shard }}
         run: |
           . venv/bin/activate
           python --version
-          nproc
-          lscpu | grep "Model name"
-          start=$(date +%s)
-          pylint --jobs 0 ${PYLINT_IGNORE:+--ignore-paths="$PYLINT_IGNORE"} --ignore-missing-annotations=y homeassistant
-          echo "Pylint took $(($(date +%s) - start)) s"
+          # Shard 1 lints components 0-9 and a-m, shard 2 everything else
+          if [[ "${PYLINT_SHARD}" == "1" ]]; then
+            ignore="^homeassistant/(?!components/[0-9_a-m])"
+          else
+            ignore="^homeassistant/components/[0-9_a-m]"
+          fi
+          pylint --jobs 0 --ignore-paths="${ignore}" --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -653,18 +643,16 @@ jobs:
           pylint --ignore-missing-annotations=y $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   pylint-tests:
-    name: Check pylint on tests (shard ${{ matrix.shard }})
+    name: >-
+      Check pylint on tests${{ needs.info.outputs.test_full_suite == 'true'
+      && format(' ({0}/2)', matrix.shard) || '' }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - shard: "1/1"
-            ignore: ""
-          - shard: "1/2"
-            ignore: "^tests/(?!components/[0-9_a-m])"
-          - shard: "2/2"
-            ignore: "^tests/components/[0-9_a-m]"
+        shard: >-
+          ${{ fromJSON(needs.info.outputs.test_full_suite == 'true'
+          && '[1, 2]' || '[1]') }}
     permissions:
       contents: read
     needs:
@@ -696,15 +684,17 @@ jobs:
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         env:
-          PYLINT_IGNORE: ${{ matrix.ignore }}
+          PYLINT_SHARD: ${{ matrix.shard }}
         run: |
           . venv/bin/activate
           python --version
-          nproc
-          lscpu | grep "Model name"
-          start=$(date +%s)
-          pylint --jobs 0 ${PYLINT_IGNORE:+--ignore-paths="$PYLINT_IGNORE"} tests
-          echo "Pylint took $(($(date +%s) - start)) s"
+          # Shard 1 lints components 0-9 and a-m, shard 2 everything else
+          if [[ "${PYLINT_SHARD}" == "1" ]]; then
+            ignore="^tests/(?!components/[0-9_a-m])"
+          else
+            ignore="^tests/components/[0-9_a-m]"
+          fi
+          pylint --jobs 0 --ignore-paths="${ignore}" tests
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
