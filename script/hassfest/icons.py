@@ -259,8 +259,13 @@ def validate_integration_category_icons(
     integration: Integration, icons: dict[str, Any]
 ) -> None:
     """Validate every integration category has an icon, and every icon a category."""
-    strings = orjson.loads((integration.path / "strings.json").read_text())
-    categories = _integration_category_keys(strings.get("integration_category", {}))
+    # Invalid strings are reported by the json and translations plugins.
+    try:
+        strings = orjson.loads((integration.path / "strings.json").read_text())
+        categories = _integration_category_keys(strings.get("integration_category", {}))
+    except ValueError, AttributeError, TypeError:
+        return
+
     category_icons = _integration_category_keys(icons.get("integration_category", {}))
 
     for key in sorted(categories - category_icons):

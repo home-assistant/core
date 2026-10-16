@@ -39,11 +39,14 @@ INTEGRATION_CATEGORY_ICONS = {
 
 
 def _write_integration(
-    config: Config, path: Path, icon_data: dict[str, Any]
+    config: Config,
+    path: Path,
+    icon_data: dict[str, Any],
+    strings: str = json.dumps(INTEGRATION_CATEGORY_STRINGS),
 ) -> Integration:
     """Write an integration with strings and icons, and return it."""
     path.mkdir()
-    (path / "strings.json").write_text(json.dumps(INTEGRATION_CATEGORY_STRINGS))
+    (path / "strings.json").write_text(strings)
     (path / "icons.json").write_text(json.dumps(icon_data))
     return Integration(
         path,
@@ -164,3 +167,29 @@ def test_integration_category_icons_invalid(
 
     assert len(integration.errors) == 1
     assert integration.errors[0].error.startswith("Invalid icons.json")
+
+
+@pytest.mark.parametrize(
+    "strings",
+    [
+        pytest.param("{", id="invalid_json"),
+        pytest.param("[]", id="not_an_object"),
+        pytest.param('{"integration_category": []}', id="categories_not_an_object"),
+        pytest.param('{"integration_category": {"energy": null}}', id="category_null"),
+        pytest.param(
+            '{"integration_category": {"energy": {"subcategory": null}}}',
+            id="subcategory_null",
+        ),
+    ],
+)
+def test_integration_category_icons_invalid_strings(
+    config: Config, tmp_path: Path, strings: str
+) -> None:
+    """Test invalid strings skip the comparison, other plugins report them."""
+    integration = _write_integration(
+        config, tmp_path / "homeassistant", INTEGRATION_CATEGORY_ICONS, strings
+    )
+
+    icons.validate_icon_file(config, integration)
+
+    assert integration.errors == []

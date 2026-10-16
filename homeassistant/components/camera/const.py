@@ -8,11 +8,16 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import Camera
+    from .entity import Camera
     from .prefs import CameraPreferences
 
 DOMAIN: Final = "camera"
 DATA_COMPONENT: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
+
+DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
+ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
+
+MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
 DATA_CAMERA_PREFS: HassKey[CameraPreferences] = HassKey("camera_prefs")
 

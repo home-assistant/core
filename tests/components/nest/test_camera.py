@@ -155,7 +155,7 @@ async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Fixture to mock out the create stream call."""
     assert await async_setup_component(hass, "stream", {})
     with patch(
-        "homeassistant.components.camera.create_stream", autospec=True
+        "homeassistant.components.camera.entity.create_stream", autospec=True
     ) as mock_stream:
         mock_stream.return_value.endpoint_url.return_value = (
             "http://home.assistant/playlist.m3u8"
@@ -396,7 +396,7 @@ async def test_refresh_expired_stream_token(
 
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("homeassistant.components.camera.entity.create_stream") as create_stream:
         create_stream.return_value.start = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
@@ -418,7 +418,7 @@ async def test_refresh_expired_stream_token(
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # HLS stream is not re-created, just the source is updated
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("homeassistant.components.camera.entity.create_stream") as create_stream:
         hls_url1 = await camera.async_request_stream(
             hass, "camera.my_camera", fmt="hls"
         )
@@ -437,7 +437,7 @@ async def test_refresh_expired_stream_token(
     assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
 
     # HLS stream is still not re-created
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("homeassistant.components.camera.entity.create_stream") as create_stream:
         hls_url2 = await camera.async_request_stream(
             hass, "camera.my_camera", fmt="hls"
         )
@@ -605,7 +605,7 @@ async def test_refresh_expired_stream_failure(
     assert cam.state == CameraState.STREAMING
 
     # Request an HLS stream
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("homeassistant.components.camera.entity.create_stream") as create_stream:
         create_stream.return_value.start = AsyncMock()
         create_stream.return_value.stop = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
@@ -625,7 +625,7 @@ async def test_refresh_expired_stream_failure(
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # Requesting an HLS stream will create an entirely new stream
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("homeassistant.components.camera.entity.create_stream") as create_stream:
         create_stream.return_value.start = AsyncMock()
         # The HLS stream endpoint was invalidated, with a new auth token
         hls_url2 = await camera.async_request_stream(
