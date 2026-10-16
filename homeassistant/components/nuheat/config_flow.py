@@ -5,8 +5,8 @@ import logging
 from typing import Any, override
 
 import nuheat
+import probatio
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -17,11 +17,11 @@ from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SERIAL_NUMBER): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(CONF_SERIAL_NUMBER): str,
     }
 )
 
@@ -39,8 +39,9 @@ async def validate_input(hass: HomeAssistant, data):
         raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTPStatus.BAD_REQUEST
-            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            HTTPStatus.BAD_REQUEST
+            < ex.response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             raise InvalidAuth from ex
         raise CannotConnect from ex

@@ -10,7 +10,7 @@ from peblar import (
     PeblarConnectionError,
     PeblarError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_ALIAS, CONF_DESCRIPTION
 from homeassistant.core import (
@@ -21,7 +21,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
     async_get_config_entry,
     async_register_admin_service,
@@ -38,24 +37,24 @@ SERVICE_DELETE_VEHICLE_TOKEN = "delete_vehicle_token"
 SERVICE_LIST_RFID_TOKENS = "list_rfid_tokens"
 SERVICE_LIST_VEHICLE_TOKENS = "list_vehicle_tokens"
 
-CHARGER_SCHEMA = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str})
+CHARGER_SCHEMA = probatio.Schema({probatio.Required(ATTR_CONFIG_ENTRY_ID): str})
 
-TOKEN_SCHEMA = CHARGER_SCHEMA.extend({vol.Required(CONF_UID): str})
-ADD_TOKEN_SCHEMA = TOKEN_SCHEMA.extend({vol.Required(CONF_DESCRIPTION): str})
+TOKEN_SCHEMA = CHARGER_SCHEMA.extend({probatio.Required(CONF_UID): str})
+ADD_TOKEN_SCHEMA = TOKEN_SCHEMA.extend({probatio.Required(CONF_DESCRIPTION): str})
 
-VEHICLE_SCHEMA = CHARGER_SCHEMA.extend({vol.Required(CONF_EVCC_ID): str})
-ADD_VEHICLE_SCHEMA = VEHICLE_SCHEMA.extend({vol.Required(CONF_ALIAS): str})
+VEHICLE_SCHEMA = CHARGER_SCHEMA.extend({probatio.Required(CONF_EVCC_ID): str})
+ADD_VEHICLE_SCHEMA = VEHICLE_SCHEMA.extend({probatio.Required(CONF_ALIAS): str})
 
 # The charger takes the token by UID or by description, and wants exactly
 # one of the two.
-AUTHORIZE_SCHEMA = vol.All(
+AUTHORIZE_SCHEMA = probatio.All(
     CHARGER_SCHEMA.extend(
         {
-            vol.Exclusive(CONF_UID, "token"): str,
-            vol.Exclusive(CONF_DESCRIPTION, "token"): str,
+            probatio.Exclusive(CONF_UID, "token"): str,
+            probatio.Exclusive(CONF_DESCRIPTION, "token"): str,
         }
     ),
-    cv.has_at_least_one_key(CONF_UID, CONF_DESCRIPTION),
+    probatio.AtLeastOne(CONF_UID, CONF_DESCRIPTION),
 )
 
 

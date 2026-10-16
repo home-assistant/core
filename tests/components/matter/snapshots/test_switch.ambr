@@ -99,6 +99,56 @@
     'state': 'on',
   })
 # ---
+# name: test_switches[aqara_u200][switch.aqara_smart_lock_u200_one_touch_locking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.aqara_smart_lock_u200_one_touch_locking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'One-touch locking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'One-touch locking',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'one_touch_locking',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-DoorLockEnableOneTouchLocking-257-41',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[aqara_u200][switch.aqara_smart_lock_u200_one_touch_locking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200 One-touch locking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aqara_smart_lock_u200_one_touch_locking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -908,6 +958,56 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[mock_door_lock][switch.mock_door_lock_one_touch_locking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_door_lock_one_touch_locking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'One-touch locking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'One-touch locking',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'one_touch_locking',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockEnableOneTouchLocking-257-41',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_door_lock][switch.mock_door_lock_one_touch_locking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock One-touch locking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_door_lock_one_touch_locking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[mock_door_lock][switch.mock_door_lock_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1009,6 +1109,56 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_one_touch_locking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_door_lock_with_unbolt_one_touch_locking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'One-touch locking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'One-touch locking',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'one_touch_locking',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockEnableOneTouchLocking-257-41',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_one_touch_locking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt One-touch locking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_door_lock_with_unbolt_one_touch_locking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1104,6 +1254,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_laundrydryer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_lock][switch.mock_lock_one_touch_locking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_lock_one_touch_locking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'One-touch locking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'One-touch locking',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'one_touch_locking',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockEnableOneTouchLocking-257-41',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_lock][switch.mock_lock_one_touch_locking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock One-touch locking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_lock_one_touch_locking',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

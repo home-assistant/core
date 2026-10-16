@@ -1,9 +1,10 @@
 """Test the UniFi Protect media_player platform."""
 
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect.data import AiPort, Camera
+from uiprotect.data import Camera
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
@@ -295,13 +296,52 @@ async def test_media_player_play_error(
         assert not mock_wait.called
 
 
-async def test_aiport_no_media_player_entities(
+async def test_media_player_play_wait_error(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
-    aiport: AiPort,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that AI Port devices do not create camera-specific media player entities."""
-    await init_entry(hass, ufp, [aiport])
+    """Test a stream error while waiting for playback raises and resets the state."""
 
-    # AI Port should not create any media player entities (speaker)
-    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 0, 0)
+    await init_entry(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
+
+    doorbell.talkback_stream = Mock(is_running=True)
+
+    async def _wait_fails() -> None:
+        assert (
+            hass.states.get("media_player.test_camera_speaker").state == STATE_PLAYING
+        )
+        doorbell.talkback_stream.is_running = False
+        raise StreamError("Audio streaming failed")
+
+    with (
+        patch_ufp_method(doorbell, "stop_audio", new_callable=AsyncMock),
+        patch_ufp_method(doorbell, "play_audio", new_callable=AsyncMock),
+        patch_ufp_method(
+            doorbell,
+            "wait_until_audio_completes",
+            new_callable=AsyncMock,
+            side_effect=_wait_fails,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: "media_player.test_camera_speaker",
+                "media_content_id": "http://example.com/test.mp3",
+                "media_content_type": "music",
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "stream_error"
+    assert (
+        "homeassistant.components.unifiprotect.media_player",
+        logging.DEBUG,
+        "Error playing audio: Audio streaming failed",
+    ) in caplog.record_tuples
+    assert hass.states.get("media_player.test_camera_speaker").state == STATE_IDLE

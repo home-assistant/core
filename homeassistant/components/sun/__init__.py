@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> None:
     """Set up from a config entry."""
     # Remove deprecated solar_rising sensor entity (removed in 2026.1)
     ent_reg = er.async_get(hass)
@@ -63,11 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
     entry.runtime_data = sun
     entry.async_on_unload(sun.remove_listeners)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_remove()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_remove()

@@ -12,7 +12,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, Generic, Required, TypedDict, TypeVar, cast
 
-import voluptuous as vol
+import probatio
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -87,7 +87,7 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-class InvalidData(vol.Invalid):
+class InvalidData(probatio.Invalid):
     """Invalid data provided."""
 
     def __init__(
@@ -130,7 +130,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     """Typed result dict."""
 
     context: _FlowContextT
-    data_schema: vol.Schema | None
+    data_schema: probatio.Schema | None
     data: Mapping[str, Any]
     description_placeholders: Mapping[str, str] | None
     description: str | None
@@ -155,8 +155,8 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
 
 def _map_error_to_schema_errors(
     schema_errors: dict[str, Any],
-    error: vol.Invalid,
-    data_schema: vol.Schema,
+    error: probatio.Invalid,
+    data_schema: probatio.Schema,
 ) -> None:
     """Map an error to the correct position in the schema_errors.
 
@@ -171,7 +171,7 @@ def _map_error_to_schema_errors(
     if len(error_path) > 1:
         raise ValueError("Nested schemas are not supported")
 
-    # path_part can also be vol.Marker, but we need a string key
+    # path_part can also be probatio.Marker, but we need a string key
     path_part_str = str(path_part)
     schema_errors[path_part_str] = error.error_message
 
@@ -355,12 +355,12 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
-            data_schema = cast(vol.Schema, data_schema)
+            data_schema = cast(probatio.Schema, data_schema)
             try:
                 user_input = data_schema(user_input)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 raised_errors = [ex]
-                if isinstance(ex, vol.MultipleInvalid):
+                if isinstance(ex, probatio.MultipleInvalid):
                     raised_errors = ex.errors
 
                 schema_errors: dict[str, Any] = {}
@@ -666,8 +666,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return True
 
     def add_suggested_values_to_schema(
-        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
-    ) -> vol.Schema:
+        self, data_schema: probatio.Schema, suggested_values: Mapping[str, Any] | None
+    ) -> probatio.Schema:
         """Make a copy of the schema, populated with suggested values.
 
         For each schema marker matching items in `suggested_values`,
@@ -694,20 +694,20 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             if (
                 suggested_values
                 and key in suggested_values
-                and isinstance(key, vol.Marker)
+                and isinstance(key, probatio.Marker)
             ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
                 new_key.description = {"suggested_value": suggested_values[key.schema]}
             schema[new_key] = val
-        return vol.Schema(schema)
+        return probatio.Schema(schema)
 
     @callback
     def async_show_form(
         self,
         *,
         step_id: str | None = None,
-        data_schema: vol.Schema | None = None,
+        data_schema: probatio.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
@@ -891,7 +891,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             type=FlowResultType.MENU,
             flow_id=self.flow_id,
             handler=self.handler,
-            data_schema=vol.Schema({"next_step_id": vol.In(menu_options)}),
+            data_schema=probatio.Schema({"next_step_id": probatio.In(menu_options)}),
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
@@ -939,14 +939,14 @@ class SectionConfig(TypedDict, total=False):
 class section:
     """Data entry flow section."""
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = probatio.Schema(
         {
-            vol.Optional("collapsed", default=False): bool,
+            probatio.Optional("collapsed", default=False): bool,
         },
     )
 
     def __init__(
-        self, schema: vol.Schema, options: SectionConfig | None = None
+        self, schema: probatio.Schema, options: SectionConfig | None = None
     ) -> None:
         """Initialize."""
         self.schema = schema

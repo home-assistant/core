@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
+from homeassistant.components.homeassistant_hardware.util import FlasherType
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import EVENT_COMPONENT_LOADED
@@ -106,9 +107,9 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
         return "test_zigbee_ncp"
 
     @property
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
-        return Mock
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
+        return FlasherType.ZBT1
 
 
 @pytest.fixture(autouse=True)
@@ -200,7 +201,7 @@ def mock_multiprotocol_platform(
 
 
 def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
+    """Get suggested value for key in probatio schema."""
     for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:

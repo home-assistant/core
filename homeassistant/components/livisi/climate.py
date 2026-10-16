@@ -62,7 +62,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_hvac_mode = HVACMode.HEAT
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(
@@ -113,11 +113,11 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             self._humidity_capability, "humidity"
         )
         if temperature is None:
-            self._attr_current_temperature = None
+            self._attr_native_current_temperature = None
             self._attr_available = False
         else:
-            self._attr_target_temperature = target_temperature
-            self._attr_current_temperature = temperature
+            self._attr_native_target_temperature = target_temperature
+            self._attr_native_current_temperature = temperature
             self._attr_current_humidity = humidity
         self.async_on_remove(
             async_dispatcher_connect(
@@ -148,13 +148,13 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     @callback
     def update_target_temperature(self, target_temperature: float) -> None:
         """Update the target temperature of the climate device."""
-        self._attr_target_temperature = target_temperature
+        self._attr_native_target_temperature = target_temperature
         self.async_write_ha_state()
 
     @callback
     def update_temperature(self, current_temperature: float) -> None:
         """Update the current temperature of the climate device."""
-        self._attr_current_temperature = current_temperature
+        self._attr_native_current_temperature = current_temperature
         self.async_write_ha_state()
 
     @callback

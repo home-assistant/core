@@ -1,5 +1,6 @@
 """Support for Tuya cameras."""
 
+from dataclasses import dataclass
 from typing import override
 
 from tuya_device_handlers.definition.camera import (
@@ -20,11 +21,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
-    DeviceCategory.DGHSXJ: CameraEntityDescription(key=""),
-    DeviceCategory.SP: CameraEntityDescription(key=""),
+
+@dataclass(frozen=True)
+class TuyaCameraEntityDescription(TuyaEntityDescription, CameraEntityDescription):
+    """Describes a Tuya camera entity."""
+
+
+CAMERAS: dict[DeviceCategory, TuyaCameraEntityDescription] = {
+    DeviceCategory.DGHSXJ: TuyaCameraEntityDescription(key=""),
+    DeviceCategory.SP: TuyaCameraEntityDescription(key=""),
 }
 
 
@@ -69,7 +76,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: CameraEntityDescription,
+        description: TuyaCameraEntityDescription,
         definition: CameraDefinition,
     ) -> None:
         """Init Tuya Camera."""

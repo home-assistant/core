@@ -1,6 +1,6 @@
 """Constants for mobile_app."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import config_validation as cv
 
@@ -102,17 +102,17 @@ SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
 
-SCHEMA_APP_DATA = vol.Schema(
+SCHEMA_APP_DATA = probatio.Schema(
     {
-        vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
-        vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
+        probatio.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
+        probatio.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
         # Set to True to indicate that this registration
         # will connect via websocket channel to receive
         # push notifications.
-        vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
-        vol.Optional(ATTR_START_LIVE_ACTIVITY_TOKEN): cv.string,
+        probatio.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
+        probatio.Optional(ATTR_START_LIVE_ACTIVITY_TOKEN): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)

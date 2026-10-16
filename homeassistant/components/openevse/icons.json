@@ -11,6 +11,11 @@
         "default": "mdi:tune-variant"
       }
     },
+    "select": {
+      "override_state": {
+        "default": "mdi:tune-variant"
+      }
+    },
     "sensor": {
       "gfi_trip_count": {
         "default": "mdi:counter"

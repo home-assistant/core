@@ -7,7 +7,7 @@ from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATION
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -327,7 +327,7 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=description_placeholders,
         )
 

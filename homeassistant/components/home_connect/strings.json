@@ -10,7 +10,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
@@ -558,7 +557,8 @@
           "consumer_products_coffee_maker_enum_type_coffee_temperature_92_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_92_c%]",
           "consumer_products_coffee_maker_enum_type_coffee_temperature_94_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_94_c%]",
           "consumer_products_coffee_maker_enum_type_coffee_temperature_95_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_95_c%]",
-          "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_96_c%]"
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_96_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_98_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_98_c%]"
         }
       },
       "current_map": {
@@ -1759,7 +1759,8 @@
         "consumer_products_coffee_maker_enum_type_coffee_temperature_92_c": "92ºC",
         "consumer_products_coffee_maker_enum_type_coffee_temperature_94_c": "94ºC",
         "consumer_products_coffee_maker_enum_type_coffee_temperature_95_c": "95ºC",
-        "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "96ºC"
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "96ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_98_c": "98ºC"
       }
     },
     "drying_target": {

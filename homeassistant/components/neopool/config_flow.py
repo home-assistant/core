@@ -2,22 +2,20 @@
 
 from typing import Any, override
 
-from neopool_modbus import async_probe_serial
-from neopool_modbus.exceptions import (
-    NeoPoolConnectionError,
-    NeoPoolModbusError,
-    NeoPoolTimeoutError,
-)
+from neopool_modbus import async_probe_serial_unit
+from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_MODBUS_FRAMER,
@@ -34,18 +32,20 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import NeoPoolConfigEntry
+from .helpers import build_modbus_params
 
 
-async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | None]:
+async def _async_probe(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> tuple[str | None, str | None]:
     """Probe a device using user-supplied connection parameters."""
+    params = build_modbus_params(user_input)
     try:
-        serial = await async_probe_serial(
-            user_input[CONF_HOST],
-            port=user_input[CONF_PORT],
-            unit_id=user_input[CONF_UNIT_ID],
-            framer=user_input[CONF_MODBUS_FRAMER],
-        )
-    except NeoPoolConnectionError, NeoPoolTimeoutError:
+        async with async_get_temporary_unit(
+            hass, params, user_input[CONF_UNIT_ID]
+        ) as unit:
+            serial = await async_probe_serial_unit(unit)
+    except HomeAssistantError, NeoPoolTimeoutError:
         return None, "cannot_connect"
     except NeoPoolModbusError:
         return None, "cannot_read_modbus"
@@ -71,20 +71,24 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step of the configuration flow."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-                vol.Optional(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.Coerce(int),
-                vol.Optional(
+                probatio.Required(CONF_HOST): str,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(
+                    int
+                ),
+                probatio.Optional(
+                    CONF_UNIT_ID, default=DEFAULT_UNIT_ID
+                ): probatio.Coerce(int),
+                probatio.Optional(
                     CONF_MODBUS_FRAMER,
                     default=DEFAULT_MODBUS_FRAMER,
-                ): vol.In(("tcp", "rtu")),
+                ): probatio.In(("tcp", "rtu")),
             }
         )
         errors: dict[str, str] = {}
         if user_input is not None:
-            serial, error_key = await _async_probe(user_input)
+            serial, error_key = await _async_probe(self.hass, user_input)
             if error_key:
                 errors[CONF_HOST] = error_key
             else:
@@ -109,27 +113,27 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         current = entry.data
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=current[CONF_HOST]): str,
-                vol.Optional(
+                probatio.Required(CONF_HOST, default=current[CONF_HOST]): str,
+                probatio.Optional(
                     CONF_PORT, default=current.get(CONF_PORT, DEFAULT_PORT)
-                ): vol.Coerce(int),
-                vol.Optional(
+                ): probatio.Coerce(int),
+                probatio.Optional(
                     CONF_UNIT_ID,
                     default=current.get(CONF_UNIT_ID, DEFAULT_UNIT_ID),
-                ): vol.Coerce(int),
-                vol.Optional(
+                ): probatio.Coerce(int),
+                probatio.Optional(
                     CONF_MODBUS_FRAMER,
                     default=current.get(CONF_MODBUS_FRAMER, DEFAULT_MODBUS_FRAMER),
-                ): vol.In(("tcp", "rtu")),
+                ): probatio.In(("tcp", "rtu")),
             }
         )
 
         errors: dict[str, str] = {}
         if user_input is not None:
             merged = {**current, **user_input}
-            serial, error_key = await _async_probe(merged)
+            serial, error_key = await _async_probe(self.hass, merged)
             if error_key:
                 errors[CONF_HOST] = error_key
             else:
@@ -157,29 +161,29 @@ class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_LIGHT,
                     default=options.get(CONF_USE_LIGHT, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_COVER_SENSOR,
                     default=options.get(CONF_USE_COVER_SENSOR, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX1,
                     default=options.get(CONF_USE_AUX1, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX2,
                     default=options.get(CONF_USE_AUX2, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX3,
                     default=options.get(CONF_USE_AUX3, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX4,
                     default=options.get(CONF_USE_AUX4, False),
                 ): bool,

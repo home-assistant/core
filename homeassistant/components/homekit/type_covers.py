@@ -330,6 +330,28 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         self.async_call_service(COVER_DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     @callback
+    def _async_update_target_position_while_moving(
+        self, state: str, current_position: int
+    ) -> None:
+        """Aim the target position at the end of travel while moving.
+
+        The Home app reads the direction of travel from the target position
+        relative to the current one, so a target the cover has already passed
+        makes it report the opposite direction. Only a passed target is
+        replaced: one the cover is still travelling towards, or has just
+        reached, is what HomeKit asked for.
+        """
+        if not self.features & CoverEntityFeature.SET_POSITION:
+            # Tilt-only covers lock the target position to closed.
+            return
+        target_position = self.char_target_position.value
+        if state == CoverState.OPENING:
+            if target_position < current_position:
+                self.char_target_position.set_value(100)
+        elif state == CoverState.CLOSING and target_position > current_position:
+            self.char_target_position.set_value(0)
+
+    @callback
     @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
@@ -339,9 +361,11 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
-            # Writing target_position on a moving cover
-            # will break the moving state in HK.
-            if new_state.state not in MOVING_STATES:
+            if new_state.state in MOVING_STATES:
+                self._async_update_target_position_while_moving(
+                    new_state.state, current_position
+                )
+            else:
                 self.char_target_position.set_value(current_position)
 
         position_state = _hass_state_to_position_start(new_state.state)

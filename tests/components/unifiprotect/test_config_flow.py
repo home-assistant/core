@@ -2154,6 +2154,7 @@ async def test_port_int_conversion(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PORT] == 8443
     assert isinstance(result["data"][CONF_PORT], int)
+    assert result["result"].unique_id == nvr.mac
 
 
 async def _start_api_key_flow(hass: HomeAssistant) -> ConfigFlowResult:

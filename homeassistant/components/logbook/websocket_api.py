@@ -7,13 +7,13 @@ from datetime import datetime as dt, timedelta
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.const import EVENT_CALL_SERVICE
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, async_noop, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
@@ -245,11 +245,11 @@ async def _async_events_consumer(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logbook/event_stream",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
-        vol.Optional("device_ids"): [str],
+        probatio.Required("type"): "logbook/event_stream",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Optional("entity_ids"): [str],
+        probatio.Optional("device_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -303,7 +303,7 @@ async def ws_event_stream(
 
     if end_time and end_time <= utc_now:
         # Not live stream but we it might be a big query
-        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.subscriptions[msg_id] = async_noop
         connection.send_result(msg_id)
         # Fetch everything from history
         await _async_send_historical_events(
@@ -451,12 +451,12 @@ def _ws_formatted_get_events(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logbook/get_events",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
-        vol.Optional("device_ids"): [str],
-        vol.Optional("context_id"): str,
+        probatio.Required("type"): "logbook/get_events",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Optional("entity_ids"): [str],
+        probatio.Optional("device_ids"): [str],
+        probatio.Optional("context_id"): str,
     }
 )
 @websocket_api.async_response

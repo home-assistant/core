@@ -581,7 +581,7 @@ async def test_remote_scanner_bluetooth_config_entry(
         (dr.CONNECTION_BLUETOOTH, scanner.source), adapter_entry.entry_id
     )
     assert dev is not None
-    assert dev.config_entries == {adapter_entry.entry_id}
+    assert dev.config_entry_id == adapter_entry.entry_id
     assert dev.manufacturer == manufacturer
 
     manager.async_remove_scanner(scanner.source)

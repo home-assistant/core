@@ -12,6 +12,39 @@ get_forecasts:
       integration: environment_canada
       domain: weather
 
+get_precipitation_forecast:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: environment_canada
+    precip_type:
+      selector:
+        select:
+          options:
+            - "auto"
+            - "rain"
+            - "snow"
+    past_minutes:
+      selector:
+        number:
+          min: 0
+          max: 180
+          unit_of_measurement: min
+    future_minutes:
+      selector:
+        number:
+          min: 0
+          max: 72
+          unit_of_measurement: min
+    hourly_hours:
+      selector:
+        number:
+          min: 0
+          max: 48
+          unit_of_measurement: h
+
 set_radar_type:
   target:
     entity:

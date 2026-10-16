@@ -7,7 +7,8 @@ from toonapi import Agreement, Status
 from toonapi.models import ThermostatInfo
 
 from homeassistant.components.toon import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.toon.const import CONF_MIGRATE
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -45,6 +46,27 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_migrate_entry_version_1(hass: HomeAssistant) -> None:
+    """Test a version 1 config entry starts a new flow and fails migration."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, version=1)
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        "This configuration entry is no longer supported, complete the new Toon"
+        " setup to replace it"
+    )
+    mock_flow_init.assert_called_once_with(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_MIGRATE: entry.entry_id},
+    )
 
 
 async def test_migrate_entry_minor_version_2_2(hass: HomeAssistant) -> None:

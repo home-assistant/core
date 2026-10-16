@@ -1,12 +1,13 @@
 """Config flow for Smappee."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pysmappee import helper, mqtt
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -32,11 +33,30 @@ class SmappeeFlowHandler(
     serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
 
     @override
-    async def async_oauth_create_entry(self, data):
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
         await self.async_set_unique_id(unique_id=f"{DOMAIN}Cloud")
         return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        # The user and environment steps abort when the cloud entry exists
+        return await self.async_step_pick_implementation()
 
     @property
     @override
@@ -129,11 +149,11 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="environment",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required("environment", default=ENV_CLOUD): vol.In(
-                            [ENV_CLOUD, ENV_LOCAL]
-                        )
+                        probatio.Required(
+                            "environment", default=ENV_CLOUD
+                        ): probatio.In([ENV_CLOUD, ENV_LOCAL])
                     }
                 ),
                 errors={},
@@ -158,7 +178,7 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="local",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
                 errors={},
             )
         # In a LOCAL setup we still need to resolve the host to serial number
