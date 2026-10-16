@@ -26,6 +26,7 @@ EVENT_KEY_SENSOR = "sensor"
 EVENT_KEY_UNIT = "unit"
 
 SIGNAL_AVAILABILITY = "rflink_device_available"
+SIGNAL_EVENT = "rflink_event"
 SIGNAL_HANDLE_EVENT = "rflink_handle_event_{}"
 
 TMP_ENTITY = "tmp.{}"

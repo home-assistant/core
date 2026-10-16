@@ -139,6 +139,7 @@ async def test_import_flow_with_yaml_name(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Station"
     assert result["data"] == {CONF_STATION_ID: TEST_STATION_ID}
+    assert result["result"].unique_id == TEST_STATION_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

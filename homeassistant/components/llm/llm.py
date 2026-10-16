@@ -3,17 +3,27 @@
 from typing import override
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.llm import LLMContext, Tool, ToolInput, ToolResult
+from homeassistant.helpers.llm import (
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
 from homeassistant.util import dt as dt_util
 
 from . import LLMTools
+from .const import DOMAIN
 
 
 class GetDateTimeTool(Tool):
     """Tool for getting the current date and time."""
 
     name = "llm__GetDateTime"
+    title = "Get date and time"
     description = "Provides the current date and time."
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
 
     @override
     async def async_call(

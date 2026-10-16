@@ -68,41 +68,38 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._push_connected
 
     async def subscribe(self) -> None:
-        """Subscribe to Firestore real-time updates via the library."""
+        """Subscribe to Firestore real-time updates via the library.
 
-        def _on_data(data: dict[str, Any]) -> None:
-            """Callback from the Firestore thread; push data to the HA loop."""
-            self.hass.loop.call_soon_threadsafe(self._async_handle_push, data)
-
+        The library invokes the data callback on the event loop, with
+        acknowledged writes already reflected, so deliveries are published
+        as they come.
+        """
         self.subscription = await self.api.subscribe_pool_resilient(
-            self.pool_id, _on_data, on_health=self._async_on_subscription_health
+            self.pool_id,
+            self.async_set_updated_data,
+            on_health=self._async_on_subscription_health,
         )
-
-    @callback
-    def _async_handle_push(self, data: dict[str, Any]) -> None:
-        """Apply a snapshot; its arrival is what proves the connection is up."""
-        if not self._push_connected:
-            self._push_connected = True
-            _LOGGER.info("Reconnected to %s, entities are available again", self.name)
-        self.async_set_updated_data(data)
 
     @callback
     def _async_on_subscription_health(self, healthy: bool) -> None:
-        """Mark entities unavailable while the push connection is down.
+        """Mirror the push connection state into entity availability.
 
-        Tracked separately from last_update_success: an optimistic update
+        Tracked separately from last_update_success: an acknowledged write
         or a manual refresh sets that flag back to True while the
-        subscription is still down, and the health callback only fires on
-        transitions, so it would not correct it. Only an incoming snapshot
-        clears this.
+        subscription is still down. The library reports healthy only once a
+        reconnected stream has delivered a consistent snapshot, so data
+        arriving in between must not fake availability either.
         """
-        if healthy or not self._push_connected:
+        if healthy == self._push_connected:
             return
-        self._push_connected = False
-        _LOGGER.warning(
-            "Lost the connection to %s, entities are unavailable until it recovers",
-            self.name,
-        )
+        self._push_connected = healthy
+        if healthy:
+            _LOGGER.info("Reconnected to %s, entities are available again", self.name)
+        else:
+            _LOGGER.warning(
+                "Lost the connection to %s, entities are unavailable until it recovers",
+                self.name,
+            )
         self.async_update_listeners()
 
     @override
@@ -116,32 +113,3 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_value(self, path: str, default: Any = None) -> Any:
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
-
-    def apply_optimistic(self, value_path: str, value: Any) -> None:
-        """Reflect a just-written value before the Firestore push round-trips.
-
-        Hayward's cloud takes several seconds to acknowledge a write back
-        through Firestore, which would make the UI feel laggy. Writing into
-        coordinator.data after a successful REST call gives entities instant
-        feedback; the next snapshot from Firestore overwrites it harmlessly.
-        """
-        self.apply_optimistic_values({value_path: value})
-
-    def apply_optimistic_values(self, updates: dict[str, Any]) -> None:
-        """Reflect several just-written values as a single update.
-
-        Applying them one at a time would publish a state where only part
-        of the write has landed, which entities derived from more than one
-        path briefly read as a different value.
-        """
-        for value_path, value in updates.items():
-            keys = value_path.split(".")
-            target: dict[str, Any] = self.data
-            for key in keys[:-1]:
-                child = target.get(key)
-                if not isinstance(child, dict):
-                    child = {}
-                    target[key] = child
-                target = child
-            target[keys[-1]] = value
-        self.async_set_updated_data(self.data)

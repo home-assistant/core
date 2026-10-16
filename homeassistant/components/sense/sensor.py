@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import override
 
-from sense_energy import ASyncSenseable, Scale
+from sense_energy import TREND_SCALES, ASyncSenseable, Scale
 from sense_energy.sense_api import SenseDevice
 
 from homeassistant.components.sensor import (
@@ -88,7 +88,7 @@ async def async_setup_entry(
         )
         entities.extend(
             SenseDeviceEnergySensor(device, scale, trends_coordinator, sense_monitor_id)
-            for scale in Scale
+            for scale in TREND_SCALES
         )
 
     for variant_id, variant_name in SENSOR_VARIANTS:
@@ -103,7 +103,7 @@ async def async_setup_entry(
         for i in range(len(data.active_voltage))
     )
 
-    for scale in Scale:
+    for scale in TREND_SCALES:
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
             entities.append(
                 SenseTrendsSensor(

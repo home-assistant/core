@@ -149,9 +149,23 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Tuya."""
         if CONF_USER_CODE in entry_data:
-            success, _ = await self.__async_get_qr_code(entry_data[CONF_USER_CODE])
-            if success:
-                return await self.async_step_scan()
+            self.__user_code = entry_data[CONF_USER_CODE]
+            return await self.async_step_reauth_confirm()
+
+        return await self.async_step_reauth_user_code()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with Tuya."""
+        # The QR code expires in minutes, while a reauth flow can sit untouched
+        # for days. Request the code when the user is ready to scan it.
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        success, _ = await self.__async_get_qr_code(self.__user_code)
+        if success:
+            return await self.async_step_scan()
 
         return await self.async_step_reauth_user_code()
 

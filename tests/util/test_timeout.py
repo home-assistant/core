@@ -122,13 +122,13 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_execu
         with timeout.freeze("not_recorder"):
             time.sleep(0.3)
 
-    with pytest.raises(TimeoutError):  # noqa: PT012
-        async with timeout.async_timeout(0.1):
-            async with (
-                timeout.async_timeout(0.2, zone_name="recorder"),
-                timeout.async_timeout(0.2, zone_name="not_recorder"),
-            ):
-                await hass.async_add_executor_job(_some_sync_work)
+    with pytest.raises(TimeoutError):
+        async with (
+            timeout.async_timeout(0.1),
+            timeout.async_timeout(0.2, zone_name="recorder"),
+            timeout.async_timeout(0.2, zone_name="not_recorder"),
+        ):
+            await hass.async_add_executor_job(_some_sync_work)
 
 
 async def test_mix_global_timeout_freeze_and_zone_freeze_executor_2nd_outside_zone(
@@ -304,20 +304,24 @@ async def test_multiple_zone_timeout() -> None:
     """Test a simple zone timeout."""
     timeout = TimeoutManager()
 
-    with pytest.raises(TimeoutError):  # noqa: PT012
-        async with timeout.async_timeout(0.1, "test"):
-            async with timeout.async_timeout(0.5, "test"):
-                await asyncio.sleep(0.3)
+    with pytest.raises(TimeoutError):
+        async with (
+            timeout.async_timeout(0.1, "test"),
+            timeout.async_timeout(0.5, "test"),
+        ):
+            await asyncio.sleep(0.3)
 
 
 async def test_different_zone_timeout() -> None:
     """Test a simple zone timeout."""
     timeout = TimeoutManager()
 
-    with pytest.raises(TimeoutError):  # noqa: PT012
-        async with timeout.async_timeout(0.1, "test"):
-            async with timeout.async_timeout(0.5, "other"):
-                await asyncio.sleep(0.3)
+    with pytest.raises(TimeoutError):
+        async with (
+            timeout.async_timeout(0.1, "test"),
+            timeout.async_timeout(0.5, "other"),
+        ):
+            await asyncio.sleep(0.3)
 
 
 async def test_simple_zone_timeout_freeze() -> None:

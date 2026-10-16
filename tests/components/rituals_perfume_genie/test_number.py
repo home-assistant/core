@@ -50,9 +50,8 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
     """Test setting the diffuser number entity value."""
     config_entry = mock_config_entry(unique_id="number_set_value_test")
     diffuser = mock_diffuser_v1_battery_cartridge()
-    await init_integration(hass, config_entry, [diffuser])
+    client = await init_integration(hass, config_entry, [diffuser])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    diffuser.perfume_amount = 1
 
     state = hass.states.get("number.genie_perfume_amount")
     assert state
@@ -64,6 +63,15 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1},
         blocking=True,
     )
+
+    client.set_perfume_amount.assert_awaited_once_with(diffuser.hub_hash, 1)
+
+    # The new value shows right away, without waiting for the next update.
+    state = hass.states.get("number.genie_perfume_amount")
+    assert state
+    assert state.state == "1"
+
+    diffuser.perfume_amount = 1
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,

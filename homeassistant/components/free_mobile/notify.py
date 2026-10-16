@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
     }
 )
 
