@@ -22,13 +22,13 @@ from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -113,7 +113,8 @@ class EcovacsController:
         self._added_legacy_entities: set[str] = set()
 
     async def _async_persist_account_credentials(
-        self, account: AccountCredentials,
+        self,
+        account: AccountCredentials,
     ) -> None:
         """Persist account credentials so restarts skip the password login."""
         data = {"access_token": account.access_token, "user_id": account.user_id}
