@@ -22,18 +22,18 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
-    ROUNDING_PRECISION,
     SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
-    round_temperature,
 )
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
+    ROUNDING_PRECISION,
 )
+from homeassistant.components.weather.entity import round_temperature
 from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
