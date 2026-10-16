@@ -12,7 +12,12 @@ from aioindiallsky import (
 )
 import probatio
 
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -140,6 +145,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: port,
                 }
             )
+        if not getattr(self, "_discovered_mac", None) and port in (80, 443):
+            alt_port = 443 if port == 80 else 80
+            for check_host in check_hosts:
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: check_host,
+                        CONF_PORT: alt_port,
+                    }
+                )
 
     @override
     async def async_step_user(
@@ -194,6 +208,91 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def _async_find_matching_ignored_entry(
+        self, fallback_id: str, matching_hosts: set[str], host: str, port: int
+    ) -> ConfigEntry | None:
+        """Find an existing ignored entry matching known server identities."""
+        for entry in self._async_current_entries(include_ignore=True):
+            if entry.source == SOURCE_IGNORE and (
+                entry.unique_id in (fallback_id, f"{host}:{port}")
+                or (
+                    entry.unique_id is not None
+                    and any(
+                        entry.unique_id.startswith(f"{h}_")
+                        or entry.unique_id.startswith(f"{h}:")
+                        for h in matching_hosts
+                    )
+                )
+            ):
+                return entry
+        return None
+
+    async def _async_adopt_entry_for_mac(
+        self, formatted_mac: str, port: int, matching_hosts: set[str]
+    ) -> ConfigEntry | None:
+        """Adopt an existing unassigned entry for the discovered MAC address."""
+        adoptable_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if (
+                entry.unique_id is None
+                or entry.unique_id
+                in {f"{h}:{entry.data[CONF_PORT]}" for h in matching_hosts}
+            )
+            and entry.data[CONF_HOST] in matching_hosts
+        ]
+        for entry in adoptable_entries:
+            if entry.data[CONF_PORT] == port:
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=formatted_mac
+                )
+                return entry
+        for entry in adoptable_entries:
+            try:
+                await validate_input(self.hass, entry.data)
+            except CannotConnect, InvalidAuth, Unknown:
+                continue
+            self.hass.config_entries.async_update_entry(entry, unique_id=formatted_mac)
+            return entry
+        return None
+
+    async def _async_calculate_mac_updates(
+        self,
+        existing_entry: ConfigEntry,
+        host: str,
+        port: int,
+        ssl: bool,
+        matching_hosts: set[str],
+    ) -> dict[str, Any]:
+        """Calculate updates for an existing entry with matching MAC."""
+        updates: dict[str, Any] = {}
+        if (
+            is_ip_address(existing_entry.data[CONF_HOST])
+            and existing_entry.data[CONF_HOST] not in matching_hosts
+        ):
+            updates[CONF_HOST] = host
+        target_host = updates.get(CONF_HOST, existing_entry.data[CONF_HOST])
+        if (
+            existing_entry.data[CONF_SSL] == ssl
+            and existing_entry.data[CONF_PORT] != port
+            and not any(
+                other.entry_id != existing_entry.entry_id
+                and other.data.get(CONF_HOST) in (matching_hosts | {target_host})
+                and other.data.get(CONF_PORT) == port
+                for other in self._async_current_entries(include_ignore=False)
+            )
+        ):
+            try:
+                await validate_input(
+                    self.hass,
+                    {**existing_entry.data, **updates, CONF_PORT: port},
+                )
+            except CannotConnect, InvalidAuth, Unknown:
+                pass
+            else:
+                updates[CONF_PORT] = port
+        return updates
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -218,73 +317,36 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             matching_hosts.add(normalize_host(discovery_info.hostname))
         self._matching_hosts = matching_hosts
 
+        server_name = discovery_info.name.split("._")[0]
+        stable_host = (
+            normalize_host(discovery_info.hostname) if discovery_info.hostname else host
+        )
+        fallback_unique_id = f"{stable_host}_{server_name}"
+
         if mac:
             formatted_mac = format_mac(mac)
             self._discovered_mac = formatted_mac
             existing_entry = await self.async_set_unique_id(formatted_mac)
             if existing_entry is None:
-                for entry in self._async_current_entries(include_ignore=True):
-                    if entry.source == SOURCE_IGNORE and entry.unique_id in {
-                        f"{h}:{port}" for h in matching_hosts
-                    }:
-                        self.hass.config_entries.async_update_entry(
-                            entry, unique_id=formatted_mac
-                        )
-                        existing_entry = entry
-                        break
+                if ignored_entry := self._async_find_matching_ignored_entry(
+                    fallback_unique_id, matching_hosts, host, port
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        ignored_entry, unique_id=formatted_mac
+                    )
+                    existing_entry = ignored_entry
 
             if existing_entry is None:
-                adoptable_entries = [
-                    entry
-                    for entry in self._async_current_entries(include_ignore=False)
-                    if (
-                        entry.unique_id is None
-                        or entry.unique_id
-                        in {f"{h}:{entry.data[CONF_PORT]}" for h in matching_hosts}
-                    )
-                    and entry.data[CONF_HOST] in matching_hosts
-                ]
-                for entry in adoptable_entries:
-                    if entry.data[CONF_PORT] == port:
-                        self.hass.config_entries.async_update_entry(
-                            entry, unique_id=formatted_mac
-                        )
-                        existing_entry = entry
-                        break
-                else:
-                    for entry in adoptable_entries:
-                        try:
-                            await validate_input(self.hass, entry.data)
-                        except CannotConnect, InvalidAuth, Unknown:
-                            continue
-                        self.hass.config_entries.async_update_entry(
-                            entry, unique_id=formatted_mac
-                        )
-                        existing_entry = entry
-                        break
+                existing_entry = await self._async_adopt_entry_for_mac(
+                    formatted_mac, port, matching_hosts
+                )
 
-            updates: dict[str, Any] = {}
             if existing_entry is not None:
                 if not existing_entry.data:
                     self._abort_if_unique_id_configured()
-                if (
-                    is_ip_address(existing_entry.data[CONF_HOST])
-                    and existing_entry.data[CONF_HOST] not in matching_hosts
-                ):
-                    updates[CONF_HOST] = host
-                if (
-                    existing_entry.data[CONF_SSL] == ssl
-                    and existing_entry.data[CONF_PORT] != port
-                ):
-                    try:
-                        await validate_input(
-                            self.hass,
-                            {**existing_entry.data, **updates, CONF_PORT: port},
-                        )
-                    except CannotConnect, InvalidAuth, Unknown:
-                        pass
-                    else:
-                        updates[CONF_PORT] = port
+                updates = await self._async_calculate_mac_updates(
+                    existing_entry, host, port, ssl, matching_hosts
+                )
             else:
                 updates = {
                     CONF_HOST: host,
@@ -293,14 +355,17 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             self._abort_if_unique_id_configured(updates=updates)
         else:
-            for match_host in matching_hosts:
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: match_host,
-                        CONF_PORT: port,
-                    }
-                )
-            fallback_unique_id = f"{host}:{port}"
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.data.get(CONF_HOST) in matching_hosts:
+                    entry_port = entry.data.get(CONF_PORT)
+                    if entry_port == port or {entry_port, port} == {80, 443}:
+                        return self.async_abort(reason="already_configured")
+
+            if self._async_find_matching_ignored_entry(
+                fallback_unique_id, matching_hosts, host, port
+            ):
+                return self.async_abort(reason="already_configured")
+
             await self.async_set_unique_id(fallback_unique_id)
             self._abort_if_unique_id_configured()
 
