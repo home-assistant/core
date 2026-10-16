@@ -342,7 +342,7 @@ async def test_config_entry_unique_id_update(
         assert entity.unique_id.startswith(expected_unique_id)
 
 
-async def test_coordinators_remove_stale_devices(
+async def test_info_coordinator_removes_stale_line_and_reload_survives_orphaned_light(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
@@ -352,7 +352,7 @@ async def test_coordinators_remove_stale_devices(
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinators remove stale devices."""
+    """Test a removed line is cleaned up and orphaned lights do not break reload."""
     await setup_integration(hass, mock_config_entry)
 
     unique_id = mock_config_entry.unique_id
@@ -369,6 +369,40 @@ async def test_coordinators_remove_stale_devices(
     )
     assert device_entry is None
 
+    orphaned_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}-device6"), mock_config_entry.entry_id
+    )
+    assert orphaned_device is not None
+    assert orphaned_device.via_device_id is None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    orphaned_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}-device6"), mock_config_entry.entry_id
+    )
+    assert orphaned_device is not None
+    assert orphaned_device.via_device_id is None
+
+
+async def test_devices_coordinator_removes_stale_device(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the devices coordinator removes stale devices."""
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id = mock_config_entry.unique_id
+    assert unique_id is not None
+
     mock_lunatone_devices.data.devices = [
         device for device in mock_lunatone_devices.data.devices if device.id != 6
     ]
@@ -381,6 +415,23 @@ async def test_coordinators_remove_stale_devices(
         (DOMAIN, f"{unique_id}-device6"), mock_config_entry.entry_id
     )
     assert device_entry is None
+
+
+async def test_sensors_coordinator_removes_stale_device(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensors coordinator removes stale devices."""
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id = mock_config_entry.unique_id
+    assert unique_id is not None
 
     mock_lunatone_sensors.data.sensors = [
         sensor for sensor in mock_lunatone_sensors.data.sensors if sensor.id != 3
