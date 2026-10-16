@@ -16,6 +16,88 @@ from .conftest import GATEWAY_ID, gateway_info, snapshot
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("firmware", "hardware", "expected_firmware", "expected_hardware"),
+    [
+        (None, None, "FW-info", "HW-info"),
+        ("FW-snapshot", None, "FW-snapshot", "HW-info"),
+        (None, "HW-snapshot", "FW-info", "HW-snapshot"),
+        ("FW-snapshot", "HW-snapshot", "FW-snapshot", "HW-snapshot"),
+    ],
+)
+async def test_gateway_versions_survive_switch_registration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_lanbon_client: AsyncMock,
+    firmware: str | None,
+    hardware: str | None,
+    expected_firmware: str,
+    expected_hardware: str,
+) -> None:
+    """Missing snapshot versions retain gateway info; explicit versions take priority."""
+    snap = snapshot()
+    device = replace(
+        snap.devices[0], firmware_version=firmware, hardware_version=hardware
+    )
+    mock_lanbon_client.get_devices.return_value = replace(snap, devices=(device,))
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.lanbon.LanbonClient.get_info",
+        return_value=gateway_info(
+            firmware_version="FW-info", hardware_version="HW-info"
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    gateway = device_registry.async_get_device_by_identifier(
+        ("lanbon", GATEWAY_ID), mock_config_entry.entry_id
+    )
+    assert gateway is not None
+    assert gateway.sw_version == expected_firmware
+    assert gateway.hw_version == expected_hardware
+
+
+@pytest.mark.parametrize(
+    ("firmware", "hardware"),
+    [(None, None), ("child-firmware", "child-hardware")],
+)
+async def test_child_versions_do_not_inherit_gateway_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_lanbon_client: AsyncMock,
+    firmware: str | None,
+    hardware: str | None,
+) -> None:
+    """A child retains its own versions, including unknown values."""
+    snap = snapshot()
+    child = replace(
+        snap.devices[0],
+        id="child-1",
+        firmware_version=firmware,
+        hardware_version=hardware,
+    )
+    mock_lanbon_client.get_devices.return_value = replace(
+        snap, devices=(snap.devices[0], child)
+    )
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.lanbon.LanbonClient.get_info",
+        return_value=gateway_info(
+            firmware_version="FW-info", hardware_version="HW-info"
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    child_device = device_registry.async_get_device_by_identifier(
+        ("lanbon", f"{GATEWAY_ID}_child-1"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.sw_version == firmware
+    assert child_device.hw_version == hardware
+
+
 async def test_switch_entities_only_type_switch(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,

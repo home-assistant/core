@@ -105,8 +105,10 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
             manufacturer=device.manufacturer or MANUFACTURER,
             model=device.model or None,
             name=device.name or device.model or MANUFACTURER,
-            sw_version=device.firmware_version,
-            hw_version=device.hardware_version,
+            sw_version=device.firmware_version
+            or (info.firmware_version if info and device.id == gateway_id else None),
+            hw_version=device.hardware_version
+            or (info.hardware_version if info and device.id == gateway_id else None),
         )
         if gateway and device.id != gateway_id:
             device_info["via_device_id"] = gateway.id
