@@ -41,7 +41,9 @@ def _vehicle(vehicle_id: int, name: str) -> AbrpVehicle:
     )
 
 
-def _mock_token_post(aioclient_mock: AiohttpClientMocker) -> None:
+def _mock_token_post(
+    aioclient_mock: AiohttpClientMocker, id_token: str | None = None
+) -> None:
     """Queue the standard token-exchange response on ``aioclient_mock``."""
     aioclient_mock.post(
         OAUTH2_TOKEN,
@@ -50,7 +52,7 @@ def _mock_token_post(aioclient_mock: AiohttpClientMocker) -> None:
             "refresh_token": "mock-refresh-token",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "id_token": build_id_token(USER_SUB),
+            "id_token": id_token or build_id_token(USER_SUB),
         },
     )
 
@@ -131,6 +133,40 @@ async def test_full_flow(
     assert isinstance(code_verifier, str)
     assert code_verifier
     assert _compute_expected_challenge(code_verifier) == code_challenge
+
+
+@pytest.mark.parametrize(
+    ("id_token", "expected_title"),
+    [
+        pytest.param(
+            build_id_token(name="Sofie"),
+            "A Better Routeplanner (Sofie)",
+            id="display_name",
+        ),
+        pytest.param(build_id_token(), "A Better Routeplanner", id="no_display_name"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_setup_entry", "mock_abrp_client"
+)
+async def test_entry_title(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    id_token: str,
+    expected_title: str,
+) -> None:
+    """The entry title appends the account's display name when it has one."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
+    _mock_token_post(aioclient_mock, id_token)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].title == expected_title
 
 
 @pytest.mark.usefixtures("current_request_with_host")

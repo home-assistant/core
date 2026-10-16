@@ -90,11 +90,15 @@ async def complete_oauth_callback(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
 
-def build_id_token(sub: str = USER_SUB, *, email: str | None = None) -> str:
-    """Build a fake JWT id_token with the given ``sub`` (and optional ``email``)."""
+def build_id_token(
+    sub: str = USER_SUB, *, email: str | None = None, name: str | None = None
+) -> str:
+    """Build a fake JWT id_token with the given ``sub`` and optional claims."""
     payload_dict: dict[str, Any] = {"sub": sub}
     if email is not None:
         payload_dict["email"] = email
+    if name is not None:
+        payload_dict["name"] = name
     payload = json.dumps(payload_dict).encode()
     payload_b64 = base64.urlsafe_b64encode(payload).rstrip(b"=").decode()
     return f"header.{payload_b64}.signature"
