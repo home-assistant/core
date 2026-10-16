@@ -1,7 +1,7 @@
 """LoRaWAN connection handling."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 
 from lorawan_connection import (
     Connection,
@@ -20,7 +20,7 @@ from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.util.hass_dict import HassKey
 
 from .const import SIGNAL_DEVICES_CHANGED
-from .device_state import DeviceState, ObservedConnection
+from .device_state import ObservedConnection
 
 type ConnectionChange = tuple[str, Connection | None]
 
@@ -40,10 +40,8 @@ class RegisteredConnection:
         self._hass = hass
         self._entry_id = entry_id
         self._registry = hass.data[DATA_REGISTRY]
-        self._observations = ObservedConnection(configuration_url)
-        previous_connection = self._registry.observed_connections.get(entry_id)
-        self._previous_devices = (
-            previous_connection.devices if previous_connection else {}
+        self._observations = ObservedConnection(
+            configuration_url, self._registry.observed_connections.get(entry_id)
         )
         self._active = False
         self._disconnected = False
@@ -81,7 +79,7 @@ class RegisteredConnection:
             raise ConnectionUnavailable("Connection lost during registration")
         self._registry.connections[self._entry_id] = self
         self._registry.observed_connections[self._entry_id] = self._observations
-        self._previous_devices = {}
+        self._observations.finish_replay()
         self._active = True
         async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
         change: ConnectionChange = (self._entry_id, self.connection)
@@ -109,17 +107,7 @@ class RegisteredConnection:
         """Update device observations and discover matching integrations."""
         if self._disconnected:
             return
-        devices = self._observations.devices
-        if event.type in (EventType.ADDED, EventType.UPDATED):
-            if (state := devices.get(event.dev_eui)) is not None:
-                state.descriptor = event.descriptor
-            elif (previous := self._previous_devices.get(event.dev_eui)) is not None:
-                devices[event.dev_eui] = replace(previous, descriptor=event.descriptor)
-            else:
-                devices[event.dev_eui] = DeviceState(event.descriptor)
-        elif event.type == EventType.REMOVED:
-            devices.pop(event.dev_eui, None)
-        elif (state := devices.get(event.dev_eui)) is None or not state.receive(event):
+        if not self._observations.handle_device_event(event):
             return
         if self._active:
             async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
