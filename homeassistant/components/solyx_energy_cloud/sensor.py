@@ -18,14 +18,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 
-from .coordinator import SolyxEnergyData
+from .coordinator import SolyxEnergyConfigEntry, SolyxEnergyData
 from .entity import SolyxNymoEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-    from . import SolyxEnergyConfigEntry
 
 PARALLEL_UPDATES = 0
 

@@ -3,14 +3,17 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
+from solyx_energy_api.client import SolyxEnergyApiClient
 from solyx_energy_api.exceptions import (
     SolyxEnergyAuthError,
     SolyxEnergyDataError,
     SolyxEnergyTokenError,
 )
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -27,12 +30,6 @@ from .const import (
     DOMAIN,
 )
 from .util import parse_float
-
-if TYPE_CHECKING:
-    from solyx_energy_api.client import SolyxEnergyApiClient
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

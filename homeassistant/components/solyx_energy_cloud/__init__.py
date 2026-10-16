@@ -1,11 +1,9 @@
 """Solyx Energy integration."""
 
-from typing import TYPE_CHECKING
-
 from solyx_energy_api.client import SolyxEnergyApiClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -15,14 +13,9 @@ from .const import (
     CONF_NYMO_DEVICE_ID,
     REALM_ID,
 )
-from .coordinator import SolyxEnergyCoordinator
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+from .coordinator import SolyxEnergyConfigEntry, SolyxEnergyCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type SolyxEnergyConfigEntry = ConfigEntry[SolyxEnergyCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolyxEnergyConfigEntry) -> bool:
