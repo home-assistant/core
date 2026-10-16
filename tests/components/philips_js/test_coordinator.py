@@ -265,10 +265,11 @@ async def test_notify_settings_changed(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    "side_effect",
     [
         pytest.param(ConnectionFailure(""), id="connection-failure"),
         pytest.param(GeneralFailure(""), id="general-failure"),
+        pytest.param(dict.fromkeys, id="no-values"),
     ],
 )
 async def test_notify_settings_update_failed(
@@ -276,7 +277,7 @@ async def test_notify_settings_update_failed(
     mock_menu_config_entry: MockConfigEntry,
     mock_tv: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    exception: Exception,
+    side_effect: Exception | Callable[[list[int]], dict[int, None]],
 ) -> None:
     """Test the notify loop stops when reading changed settings fails."""
     caplog.set_level(logging.DEBUG)
@@ -285,7 +286,7 @@ async def test_notify_settings_update_failed(
 
     def _notify_change(timeout: int) -> bool:
         mock_tv.settings_version = 1
-        mock_tv.getMenuItemsSettingsCurrentValue.side_effect = exception
+        mock_tv.getMenuItemsSettingsCurrentValue.side_effect = side_effect
         return True
 
     mock_tv.notifyChange.side_effect = _notify_change
@@ -299,10 +300,11 @@ async def test_notify_settings_update_failed(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    "side_effect",
     [
         pytest.param(ConnectionFailure(""), id="connection-failure"),
         pytest.param(GeneralFailure(""), id="general-failure"),
+        pytest.param(dict.fromkeys, id="no-values"),
     ],
 )
 async def test_settings_read_failed(
@@ -310,7 +312,7 @@ async def test_settings_read_failed(
     freezer: FrozenDateTimeFactory,
     mock_menu_config_entry: MockConfigEntry,
     mock_tv: MagicMock,
-    exception: Exception,
+    side_effect: Exception | Callable[[list[int]], dict[int, None]],
 ) -> None:
     """Test only menu entities are unavailable when reading settings fails."""
     assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
@@ -318,7 +320,7 @@ async def test_settings_read_failed(
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
     assert state.state == STATE_ON
 
-    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = exception
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = side_effect
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

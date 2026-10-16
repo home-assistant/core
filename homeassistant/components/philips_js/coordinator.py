@@ -135,7 +135,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if settings_version != self.api.settings_version:
                     try:
                         await self._async_update_settings()
-                    except GeneralFailure:
+                    except GeneralFailure, SettingsNotAvailable:
                         _LOGGER.debug("Aborting notify due to failed settings update")
                         self.settings = {}
                         self.async_set_updated_data(None)
@@ -235,10 +235,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         node_ids = [
             description["node"]["node_id"] for description in self.selected_menu_nodes
         ]
-        if settings := await self.api.getMenuItemsSettingsCurrentValue(node_ids):
-            self.settings = settings
-        else:
-            self.settings = {}
+        settings = await self.api.getMenuItemsSettingsCurrentValue(node_ids)
+        # A failed read is reported as no value for any node
+        if node_ids and not any(settings.values()):
+            raise SettingsNotAvailable("No values for the selected menu settings")
+        self.settings = settings
 
     async def async_update_menu_setting(
         self, node_id: int, data: MenuItemsSettingsUpdateValueData
@@ -259,7 +260,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         # A change can affect value and availability of other settings
         try:
             await self._async_update_settings()
-        except GeneralFailure:
+        except GeneralFailure, SettingsNotAvailable:
             await self.async_request_refresh()
             return
         self.async_update_listeners()
@@ -271,7 +272,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self._async_update_settings()
         except AutenticationFailure:
             raise
-        except GeneralFailure as err:
+        except (GeneralFailure, SettingsNotAvailable) as err:
             _LOGGER.debug("Unable to read menu settings: %s", err)
             self.settings = {}
 
