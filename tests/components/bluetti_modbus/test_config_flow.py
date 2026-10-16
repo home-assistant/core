@@ -169,6 +169,7 @@ async def test_user_flow_retries_a_transient_busy_response(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
 
 
 async def test_user_flow_unsupported_device(
@@ -271,6 +272,7 @@ async def test_user_flow_probes_only_the_fields_setup_reads(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
