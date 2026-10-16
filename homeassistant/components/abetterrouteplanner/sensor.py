@@ -13,7 +13,7 @@ library enum, so a library-side value change cannot alter a reported state.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import override
 
 from aioabrp import ChargingState, Metric, MetricValue, Telemetry
 
@@ -257,7 +257,6 @@ class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEnt
         super().__init__(coordinator)
         self.entity_description = description
         self._vehicle_id = vehicle_id
-        self._metric = description.metric
         scope = f"{entry.unique_id}_{vehicle_id}"
         self._attr_unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
         self._attr_device_info = DeviceInfo(
@@ -272,23 +271,6 @@ class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEnt
         if tlm is None:
             return None
         return self.entity_description.value_fn(tlm)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Expose the reading's wire time and upstream provider."""
-        attrs: dict[str, Any] = {}
-        stamp = self.coordinator.last_reported_at.get(self._vehicle_id, {}).get(
-            self._metric
-        )
-        if stamp is not None:
-            attrs["last_reported_at"] = stamp
-        provider = self.coordinator.last_provider.get(self._vehicle_id, {}).get(
-            self._metric
-        )
-        if provider is not None:
-            attrs["provider"] = provider
-        return attrs or None
 
     @property
     @override

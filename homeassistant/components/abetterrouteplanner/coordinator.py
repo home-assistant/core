@@ -2,7 +2,6 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 
 from aioabrp import (
@@ -12,7 +11,6 @@ from aioabrp import (
     AbrpVehicle,
     ConnectionEvent,
     ConnectionState,
-    Metric,
     Telemetry,
     VehicleModelDisplay,
 )
@@ -21,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -117,10 +114,6 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
             update_interval=None,
         )
         self.data = {}
-        # The reading's own wire time, falling back to receipt time.
-        self.last_reported_at: dict[int, dict[Metric, datetime]] = {}
-        # Sticky on omission: a frame without a provider keeps the prior value.
-        self.last_provider: dict[int, dict[Metric, str]] = {}
         self.last_connection_event: ConnectionEvent | None = None
         self.stream_auth_failed: bool = False
 
@@ -132,16 +125,8 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
         """
         if next(telemetry.items(), None) is None:
             return
-        now = dt_util.utcnow()
         stored = self.data.get(vehicle_id)
         self.data[vehicle_id] = telemetry if stored is None else stored.merge(telemetry)
-        reported = self.last_reported_at.setdefault(vehicle_id, {})
-        providers = self.last_provider.setdefault(vehicle_id, {})
-        for metric, metric_value in telemetry.items():
-            # The wire time, so a rollup value days old is not stamped "now".
-            reported[metric] = metric_value.time or now
-            if metric_value.provider is not None:
-                providers[metric] = metric_value.provider
         self.async_set_updated_data(self.data)
 
     @callback

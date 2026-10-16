@@ -1,6 +1,5 @@
 """Tests for the A Better Routeplanner sensor platform."""
 
-from datetime import UTC, datetime
 import json
 import logging
 from pathlib import Path
@@ -16,7 +15,6 @@ from aioabrp import (
     Telemetry,
     VehicleModelDisplay,
 )
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -52,7 +50,6 @@ CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_s
 VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 # Not in the mocked garage, so the stream never subscribes to it.
 _ABSENT_VEHICLE_ID = 999999999999
-PROVIDER = "RIVIAN_STREAM"
 # Two makes: a single-make setup can't tell per-vehicle binding from a
 # hard-coded first make.
 _POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
@@ -137,27 +134,25 @@ async def test_telemetry_sensors_snapshot(
     """Entity registry + states snapshot for the full per-vehicle metric set."""
     await setup_integration(hass, config_entry_with_vehicles)
 
-    # Every metric in one frame so the snapshot captures rendered states, with
-    # time frozen so the receipt-stamped ``last_reported_at`` is deterministic.
-    with freeze_time("2026-05-24T12:00:00+00:00"):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(
-                soc=build_metric_value(85.0),
-                power=build_metric_value(23300.0),
-                voltage=build_metric_value(704.0),
-                soe=build_metric_value(68000.0),
-                odometer=build_metric_value(120000.0),
-                calibrated_ref_cons=build_metric_value(175.0),
-                battery_capacity=build_metric_value(92000.0),
-                soh=build_metric_value(98.0),
-                range=build_metric_value(100000.0),
-                battery_temperature=build_metric_value(23.7),
-                charging_state=build_metric_value(ChargingState.CHARGING_AC),
-            ),
-        )
-        await hass.async_block_till_done()
+    # Every metric in one frame so the snapshot captures rendered states.
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(
+            soc=build_metric_value(85.0),
+            power=build_metric_value(23300.0),
+            voltage=build_metric_value(704.0),
+            soe=build_metric_value(68000.0),
+            odometer=build_metric_value(120000.0),
+            calibrated_ref_cons=build_metric_value(175.0),
+            battery_capacity=build_metric_value(92000.0),
+            soh=build_metric_value(98.0),
+            range=build_metric_value(100000.0),
+            battery_temperature=build_metric_value(23.7),
+            charging_state=build_metric_value(ChargingState.CHARGING_AC),
+        ),
+    )
+    await hass.async_block_till_done()
 
     await snapshot_platform(
         hass, entity_registry, snapshot, config_entry_with_vehicles.entry_id
@@ -413,8 +408,6 @@ async def test_first_frame_creates_only_that_metric(
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
-@pytest.mark.usefixtures("mock_abrp_client")
-@pytest.mark.usefixtures("mock_abrp_client")
 async def test_lazy_create_idempotent_on_repeated_frames(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -422,8 +415,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
     mock_telemetry_stream: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Two consecutive non-null power frames must create exactly one power entity."""
-
+    """Frames merge per vehicle, and a repeated metric reuses its entity."""
     await setup_integration(hass, config_entry_with_vehicles)
 
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
@@ -434,6 +426,15 @@ async def test_lazy_create_idempotent_on_repeated_frames(
         Telemetry(power=build_metric_value(5000.0)),
     )
     await hass.async_block_till_done()
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(soc=build_metric_value(85.0)),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "5000.0"
+    assert hass.states.get(SOC_ENTITY_ID).state == "85.0"
 
     fire_frame(
         mock_telemetry_stream,
@@ -456,10 +457,22 @@ async def test_lazy_create_idempotent_on_repeated_frames(
 
 
 @pytest.mark.parametrize(
-    ("active_vehicle_id", "expected_entity_id"),
+    ("active_vehicle_id", "expected_entity_id", "other_vehicle_id", "other_entity_id"),
     [
-        pytest.param(MOCK_VEHICLE_ID, VOLTAGE_ENTITY_ID, id="vehicle_a_active"),
-        pytest.param(MOCK_VEHICLE_ID_2, VOLTAGE_ENTITY_ID_2, id="vehicle_b_active"),
+        pytest.param(
+            MOCK_VEHICLE_ID,
+            VOLTAGE_ENTITY_ID,
+            MOCK_VEHICLE_ID_2,
+            VOLTAGE_ENTITY_ID_2,
+            id="vehicle_a_active",
+        ),
+        pytest.param(
+            MOCK_VEHICLE_ID_2,
+            VOLTAGE_ENTITY_ID_2,
+            MOCK_VEHICLE_ID,
+            VOLTAGE_ENTITY_ID,
+            id="vehicle_b_active",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -470,8 +483,10 @@ async def test_multi_vehicle_entity_isolation(
     mock_telemetry_stream: MagicMock,
     active_vehicle_id: int,
     expected_entity_id: str,
+    other_vehicle_id: int,
+    other_entity_id: str,
 ) -> None:
-    """A frame creates a sensor only on its own vehicle, never outside the garage."""
+    """Each vehicle gets its own sensors and values; ids outside the garage get none."""
     await setup_integration(hass, config_entry_with_vehicles)
 
     for vehicle_id in (active_vehicle_id, _ABSENT_VEHICLE_ID):
@@ -487,134 +502,11 @@ async def test_multi_vehicle_entity_isolation(
     )
     assert [entry.entity_id for entry in entries] == [expected_entity_id]
 
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_telemetry_stream: MagicMock,
-) -> None:
-    """Stamp refreshes only on frames whose batch carries the voltage metric."""
-
-    await setup_integration(hass, config_entry_with_vehicles)
-
-    t1 = datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)
-    t2 = datetime(2026, 5, 24, 10, 5, 0, tzinfo=UTC)
-    t3 = datetime(2026, 5, 24, 10, 10, 0, tzinfo=UTC)
-
-    with freeze_time(t1):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(voltage=build_metric_value(400.0)),
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get(VOLTAGE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("last_reported_at") == t1
-
-    with freeze_time(t2):
-        # This batch carries soc only, so the voltage slot stays untouched.
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(soc=build_metric_value(50.0)),
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get(VOLTAGE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("last_reported_at") == t1
-
-    with freeze_time(t3):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(voltage=build_metric_value(410.0)),
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get(VOLTAGE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("last_reported_at") == t3
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_wire_time_is_preferred_over_receipt_time(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_telemetry_stream: MagicMock,
-) -> None:
-    """A reading carrying its own wire time is not stamped with arrival time."""
-
-    await setup_integration(hass, config_entry_with_vehicles)
-
-    wire = datetime(2026, 5, 20, 8, 0, 0, tzinfo=UTC)
-    with freeze_time(datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(voltage=build_metric_value(400.0, time=wire)),
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get(VOLTAGE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("last_reported_at") == wire
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_provider_kept_when_a_frame_omits_it(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_telemetry_stream: MagicMock,
-) -> None:
-    """A frame without a provider keeps the last one; a new provider replaces it."""
-    await setup_integration(hass, config_entry_with_vehicles)
-
-    for voltage, provider, expected in (
-        (400.0, PROVIDER, PROVIDER),
-        (410.0, None, PROVIDER),
-        (420.0, "APP_LOCATION", "APP_LOCATION"),
-    ):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(voltage=build_metric_value(voltage, provider=provider)),
-        )
-        await hass.async_block_till_done()
-        assert hass.states.get(VOLTAGE_ENTITY_ID).attributes.get("provider") == expected
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_attributes_kept_per_vehicle(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_telemetry_stream: MagicMock,
-) -> None:
-    """Each vehicle's sensor reports its own provider and stamp."""
-    await setup_integration(hass, config_entry_with_vehicles)
-    t1 = datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)
-    t2 = datetime(2026, 5, 24, 10, 5, 0, tzinfo=UTC)
-
-    with freeze_time(t1):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID,
-            Telemetry(voltage=build_metric_value(400.0, provider=PROVIDER)),
-        )
-        await hass.async_block_till_done()
-    with freeze_time(t2):
-        fire_frame(
-            mock_telemetry_stream,
-            MOCK_VEHICLE_ID_2,
-            Telemetry(voltage=build_metric_value(380.0)),
-        )
-        await hass.async_block_till_done()
-
-    first = hass.states.get(VOLTAGE_ENTITY_ID).attributes
-    second = hass.states.get(VOLTAGE_ENTITY_ID_2).attributes
-    assert (first["provider"], first["last_reported_at"]) == (PROVIDER, t1)
-    assert "provider" not in second
-    assert second["last_reported_at"] == t2
+    fire_frame(
+        mock_telemetry_stream,
+        other_vehicle_id,
+        Telemetry(voltage=build_metric_value(380.0)),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(expected_entity_id).state == "400.0"
+    assert hass.states.get(other_entity_id).state == "380.0"

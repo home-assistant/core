@@ -2,7 +2,6 @@
 
 import base64
 from collections.abc import Generator
-from datetime import datetime
 from http import HTTPStatus
 import inspect
 import json
@@ -67,14 +66,9 @@ def build_vehicle_model_display(
     )
 
 
-def build_metric_value(
-    value: float | ChargingState,
-    *,
-    time: datetime | None = None,
-    provider: str | None = None,
-) -> MetricValue:
+def build_metric_value(value: float | ChargingState) -> MetricValue:
     """Build a typed MetricValue (the unit of coordinator telemetry state)."""
-    return MetricValue(value=value, time=time, provider=provider)
+    return MetricValue(value=value, time=None, provider=None)
 
 
 async def complete_oauth_callback(
