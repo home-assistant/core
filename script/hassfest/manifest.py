@@ -138,10 +138,9 @@ NO_IOT_CLASS = [
 ]
 
 
-# Integrations of these types are not something people browse for
+# Built-in plumbing and entity platforms, not something people browse for
 NO_CATEGORIES_INTEGRATION_TYPES = {
     IntegrationType.ENTITY,
-    IntegrationType.HELPER,
     IntegrationType.SYSTEM,
 }
 

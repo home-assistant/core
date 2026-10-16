@@ -99,7 +99,7 @@ def test_unknown_category(config: Config, category: str) -> None:
 
 
 @pytest.mark.usefixtures("mock_core_integration")
-@pytest.mark.parametrize("integration_type", ["entity", "helper", "system"])
+@pytest.mark.parametrize("integration_type", ["entity", "system"])
 def test_categories_not_allowed(config: Config, integration_type: str) -> None:
     """Test integration types people don't browse for can't have categories."""
     errors = _validate(
@@ -107,6 +107,15 @@ def test_categories_not_allowed(config: Config, integration_type: str) -> None:
     )
 
     assert errors == [f"Integrations of type {integration_type} can't have categories"]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_categories_helper(config: Config) -> None:
+    """Test helper integrations can have categories."""
+    assert (
+        _validate(config, {"integration_type": "helper", "categories": ["energy"]})
+        == []
+    )
 
 
 @pytest.mark.usefixtures("mock_core_integration")
