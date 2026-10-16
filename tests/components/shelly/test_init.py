@@ -652,6 +652,22 @@ async def test_device_script_getcode_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_device_ledstrip_effects_error(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test device LED strip effects list error."""
+    monkeypatch.setattr(
+        mock_ledstrip_rpc_device,
+        "ledstrip_list_effects",
+        AsyncMock(side_effect=RpcCallError(0)),
+    )
+
+    entry = await init_integration(hass, 2)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_ble_scanner_unsupported_firmware_fixed(
     hass: HomeAssistant,
     mock_rpc_device: Mock,

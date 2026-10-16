@@ -22,7 +22,7 @@ from tests.common import snapshot_platform
 def mock_getrandbits():
     """Mock camera access token which normally is randomized."""
     with patch(
-        "homeassistant.components.camera.SystemRandom.getrandbits",
+        "homeassistant.components.camera.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

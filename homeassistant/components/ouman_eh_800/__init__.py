@@ -17,7 +17,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> None:
     """Set up Ouman EH-800 from a config entry."""
     coordinator = OumanEh800Coordinator(hass, entry)
 
@@ -36,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

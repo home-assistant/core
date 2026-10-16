@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from python_homeassistant_analytics import HomeassistantAnalyticsConnectionError
+
 from homeassistant.components.analytics_insights import CONF_TRACKED_APPS
 from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_INTEGRATIONS,
@@ -31,6 +33,24 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_integration_list_fetch_failed(
+    hass: HomeAssistant,
+    mock_analytics_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup is retried when the integration list cannot be fetched."""
+    mock_analytics_client.get_integrations.side_effect = (
+        HomeassistantAnalyticsConnectionError
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "Could not fetch the integration list from Home Assistant"
+    )
 
 
 async def test_migration_v1_to_v2(

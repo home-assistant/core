@@ -338,7 +338,7 @@ DEVICE_UNIT_MAP = {
 # so that the integration startup remains fast.
 MAX_SCRIPT_SIZE = 5120
 
-All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+All_LIGHT_TYPES = ("cct", "ledstrip", "light", "rgb", "rgbw")
 
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"

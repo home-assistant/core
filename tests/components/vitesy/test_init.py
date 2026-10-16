@@ -4,9 +4,10 @@ from unittest.mock import AsyncMock
 
 from aiovitesy.exceptions import CannotAuthenticate, CannotConnect, VitesyError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.vitesy.coordinator import UPDATE_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -34,11 +35,15 @@ async def test_setup_auth_failure(
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test rejected credentials put the entry in an error state."""
+    """Test rejected credentials during setup start a reauth flow."""
     mock_vitesy_client.login.side_effect = CannotAuthenticate
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_setup_connection_failure_is_retried(
@@ -73,27 +78,24 @@ async def test_update_failure_marks_entities_unavailable(
     )
 
 
+@pytest.mark.parametrize("method", ["get_all_devices", "get_mode_status"])
 async def test_update_auth_failure(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    method: str,
 ) -> None:
-    """Test rejected credentials during a refresh keep the coordinator polling."""
+    """Test rejected credentials during a refresh start a reauth flow."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_vitesy_client.get_all_devices.side_effect = CannotAuthenticate
+    getattr(mock_vitesy_client, method).side_effect = CannotAuthenticate
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not mock_config_entry.runtime_data.last_update_success
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    mock_vitesy_client.get_all_devices.side_effect = None
-    mock_vitesy_client.get_all_devices.return_value = {}
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.runtime_data.last_update_success
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

@@ -90,7 +90,7 @@ async def test_circulator_fan_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -161,7 +161,7 @@ async def test_air_purifier_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -225,7 +225,7 @@ async def test_exception_handling_air_purifier_service(
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -275,7 +275,7 @@ async def test_circulator_fan_pro_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -325,7 +325,7 @@ async def test_standing_fan_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -372,7 +372,7 @@ async def test_exception_handling_standing_fan_service(
         },
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             HomeAssistantError,
@@ -417,7 +417,7 @@ async def test_standing_fan_command_failure(
         **{mock_method: AsyncMock(return_value=False)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             HomeAssistantError, match="Failed to send the command to the fan"

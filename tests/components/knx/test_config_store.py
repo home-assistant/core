@@ -2,6 +2,7 @@
 
 import dataclasses
 import json
+import string
 from typing import Any
 
 import pytest
@@ -43,10 +44,12 @@ from homeassistant.components.knx.storage.entity_store_validation import (
     EntityStoreValidationException,
     validate_entity_data,
 )
+from homeassistant.components.knx.storage.expose_controller import validate_expose_data
 from homeassistant.components.knx.storage.serialize import get_serialized_schema
 from homeassistant.const import CONF_PLATFORM, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.translation import async_get_translations
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
@@ -1403,7 +1406,7 @@ _HSV_MSG = (
         pytest.param(
             Platform.LIGHT,
             {"ga_brightness": {"write": "1/2/3"}},
-            "either 'address' or 'individual_colors' is required",
+            "At least one of 'Switch' or 'Individual addresses' is required.",
             id="light_no_switch_or_individual_colors",
         ),
         pytest.param(
@@ -1436,3 +1439,340 @@ def test_cross_field_rules(
     assert errors[0]["path"] == ["data", "knx"]
     assert errors[0]["message"] == message
     assert errors[0]["code"] == "no_match"
+
+
+_GA = {"write": "1/2/3"}
+_NAME = {"name": "test"}
+
+VALIDATION_ERROR_CASES = [
+    pytest.param("switch", {}, {"ga_switch": _GA}, "name_or_device_required"),
+    pytest.param(
+        "switch",
+        {"name": "test", "entity_category": "invalid"},
+        {"ga_switch": _GA},
+        "invalid_entity_category",
+    ),
+    pytest.param(
+        "sensor",
+        {"name": "test", "entity_category": "config"},
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}},
+        "entity_category_not_supported",
+    ),
+    pytest.param(
+        "switch", _NAME, {"ga_switch": {"write": "1/2/3/4"}}, "invalid_group_address"
+    ),
+    pytest.param(
+        "climate",
+        _NAME,
+        {
+            "ga_temperature_current": {"state": "1/2/1"},
+            "target_temperature": {"ga_temperature_target": _GA},
+            "ga_active": {},
+        },
+        "group_address_required",
+    ),
+    pytest.param(
+        "switch", _NAME, {"ga_switch": _GA, "sync_state": False}, "sync_state_disabled"
+    ),
+    pytest.param("switch", _NAME, {"ga_switch": _GA, "bogus": 1}, "not_a_valid_option"),
+    pytest.param("switch", _NAME, {}, "required"),
+    pytest.param("switch", _NAME, "invalid", "expected_mapping"),
+    pytest.param(
+        "switch",
+        _NAME,
+        {"ga_switch": {"write": "1/2/3", "passive": "invalid"}},
+        "expected_sequence",
+    ),
+    pytest.param(
+        "scene", _NAME, {"ga_scene": _GA, "scene_number": "x"}, "expected_type"
+    ),
+    pytest.param("invalid", _NAME, {}, "expected_type_or_one_of"),
+    pytest.param(
+        "text",
+        _NAME,
+        {"ga_text": {"write": "1/2/3", "dpt": "16.000"}, "mode": "invalid"},
+        "value_one_of",
+    ),
+    pytest.param("cover", _NAME, {"ga_stop": _GA}, "cover_control_required"),
+    pytest.param("fan", _NAME, {}, "fan_switch_or_speed_required"),
+    pytest.param(
+        "light",
+        _NAME,
+        {"ga_brightness": _GA},
+        "light_switch_or_individual_colors_required",
+    ),
+    pytest.param(
+        "light",
+        _NAME,
+        {"ga_switch": _GA, "color": {"ga_hue": _GA, "ga_saturation": _GA}},
+        "light_hsv_requires_brightness",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "14.000"}},
+        "number_min_required",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "14.000"}, "min": 0},
+        "number_max_required",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "min": -5},
+        "number_min_below_dpt_min",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "max": 500},
+        "number_max_above_dpt_max",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "step": 0.0001},
+        "number_step_below_dpt_resolution",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "device_class": "voltage"},
+        "unit_invalid_for_device_class",
+    ),
+    pytest.param(
+        "sensor",
+        _NAME,
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "state_class": "total"},
+        "state_class_invalid_for_device_class",
+    ),
+    pytest.param(
+        "sensor",
+        _NAME,
+        {
+            "ga_sensor": {"state": "1/2/3", "dpt": "7.001"},
+            "state_class": "measurement_angle",
+        },
+        "unit_invalid_for_state_class",
+    ),
+    pytest.param(
+        "sensor",
+        _NAME,
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "device_class": "enum"},
+        "sensor_enum_device_class_unsupported",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"value": 1}},
+        "value_requires_dpt",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": {"write": "1/2/3", "dpt": "5.001"}, "data": {"value": 500}},
+        "value_invalid_for_dpt",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {
+            "ga_send": {"write": "1/2/3", "dpt": "5.001"},
+            "data": {"payload": "0x1", "payload_length": 2},
+        },
+        "payload_length_invalid_for_dpt",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "zz", "payload_length": 1}},
+        "payload_invalid_format",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "-1", "payload_length": 1}},
+        "payload_negative",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "0x40", "payload_length": 0}},
+        "payload_exceeds_6_bit",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "0x100", "payload_length": 1}},
+        "payload_exceeds_length",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {"options_source": {"ga_enum": {"write": "1/2/3", "dpt": "5.010"}}},
+        "enum_dpt_required",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {"options_source": {"ga_custom": _GA, "custom_options": []}},
+        "select_option_required",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {"options_source": {"ga_custom": _GA, "custom_options": ["invalid"]}},
+        "select_option_not_a_mapping",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [{"option": "", "value": 1}],
+            }
+        },
+        "select_option_name_required",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [
+                    {"option": "a", "payload": "0", "payload_length": 1},
+                    {"option": "a", "payload": "1", "payload_length": 1},
+                ],
+            }
+        },
+        "select_option_duplicate",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [{"option": "a", "value": 1}],
+            }
+        },
+        "select_option_value_requires_dpt",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": {"write": "1/2/3", "dpt": "5.010"},
+                "custom_options": [{"option": "a", "value": 1000}],
+            }
+        },
+        "select_option_value_invalid_for_dpt",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [
+                    {"option": "a", "payload": "0", "payload_length": 1},
+                    {"option": "b", "payload": "1", "payload_length": 2},
+                ],
+            }
+        },
+        "select_option_payload_length_mismatch",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": {"write": "1/2/3", "dpt": "5.010"},
+                "custom_options": [
+                    {"option": "a", "payload": "0", "payload_length": 2}
+                ],
+            }
+        },
+        "select_option_payload_length_mismatch_dpt",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [
+                    {"option": "a", "payload": "1", "payload_length": 1},
+                    {"option": "b", "payload": "0x01", "payload_length": 1},
+                ],
+            }
+        },
+        "select_option_payload_duplicate",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("platform", "entity", "knx_data", "translation_key"), VALIDATION_ERROR_CASES
+)
+async def test_validation_errors_are_translated(
+    hass: HomeAssistant,
+    platform: str,
+    entity: dict[str, Any],
+    knx_data: Any,
+    translation_key: str,
+) -> None:
+    """Test entity validation errors carry a translation with matching placeholders."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {CONF_PLATFORM: platform, CONF_DATA: {"entity": entity, "knx": knx_data}}
+        )
+    await _assert_errors_translated(
+        hass, exc_info.value.validation_error["errors"], translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("option_data", "translation_key"),
+    [
+        pytest.param({"value_template": "static"}, "static_template", id="static"),
+        pytest.param(
+            {"value_template": "{{ invalid"}, "invalid_template", id="invalid"
+        ),
+        pytest.param({"cooldown": -1}, "range_min", id="negative"),
+    ],
+)
+async def test_expose_validation_errors_are_translated(
+    hass: HomeAssistant, option_data: dict[str, Any], translation_key: str
+) -> None:
+    """Test expose validation errors carry a translation with matching placeholders."""
+    option = {"ga": {"write": "1/2/3", "dpt": "5.001"}, **option_data}
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_expose_data({"entity_id": "light.test", "data": {"options": [option]}})
+    await _assert_errors_translated(
+        hass, exc_info.value.validation_error["errors"], translation_key
+    )
+
+
+async def _assert_errors_translated(
+    hass: HomeAssistant, errors: list[dict[str, Any]], translation_key: str
+) -> None:
+    """Assert the expected key is raised and every error has a usable translation."""
+    translations = await async_get_translations(hass, "en", "config_panel", [DOMAIN])
+    assert translation_key in [error["translation_key"] for error in errors]
+    for error in errors:
+        translation = translations.get(
+            f"component.{DOMAIN}.config_panel.validation_error.{error['translation_key']}"
+        )
+        assert translation is not None, error
+        fields = {
+            field for _, field, _, _ in string.Formatter().parse(translation) if field
+        }
+        assert fields <= error["placeholders"].keys(), error
+        json.dumps(error)  # sent over the websocket
