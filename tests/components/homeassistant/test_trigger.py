@@ -1,14 +1,17 @@
 """Tests for the Home Assistant triggers."""
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.homeassistant.trigger import RestartRequiredTrigger
 from homeassistant.config import DATA_PREVIOUS_VERSION
 from homeassistant.const import __version__
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall
+from homeassistant.core import Context, CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import system_state
+from homeassistant.helpers.trigger import TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -128,6 +131,32 @@ async def test_restart_required_already_set(
     await hass.async_block_till_done()
 
     assert len(service_calls) == 0
+
+
+async def test_restart_required_reentrant(hass: HomeAssistant) -> None:
+    """Test an action that adds a restart source does not fire the trigger again."""
+    trigger = RestartRequiredTrigger(
+        hass, TriggerConfig(key="homeassistant.restart_required")
+    )
+    payloads: list[dict[str, object]] = []
+
+    @callback
+    def run_action(
+        extra_trigger_payload: dict[str, object],
+        description: str,
+        context: Context | None = None,
+    ) -> asyncio.Task[None]:
+        payloads.append(extra_trigger_payload)
+        # Actions start eagerly, so this lands while the listener still runs
+        system_state.async_set_home_assistant_restart_required(hass, "demo")
+        return hass.async_create_task(asyncio.sleep(0))
+
+    unsub = await trigger.async_attach_runner(run_action)
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+    await hass.async_block_till_done()
+    unsub()
+
+    assert payloads == [{"sources": ["hacs"]}]
 
 
 async def test_host_reboot_required(

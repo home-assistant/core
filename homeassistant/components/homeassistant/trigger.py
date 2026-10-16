@@ -96,9 +96,14 @@ class _SystemStateTrigger(Trigger):
         def check_state(state: system_state.SystemState) -> None:
             nonlocal was_set
             is_set = self._is_set(state)
-            if is_set and not was_set:
-                run_action(self._trigger_payload(state), self._description)
+            fire = is_set and not was_set
+
+            # Record the transition before running the action: it starts
+            # eagerly and may change the system state, re-entering here.
             was_set = is_set
+
+            if fire:
+                run_action(self._trigger_payload(state), self._description)
 
         return system_state.async_subscribe(self._hass, check_state)
 
