@@ -15,6 +15,8 @@ from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
@@ -26,12 +28,6 @@ INVERTER_POWER_ENTITY = "sensor.balco_260_total_inverter_power"
 PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
 
 
-async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
@@ -40,7 +36,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """All sensor entities and their states match the snapshot."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -51,7 +47,7 @@ async def test_energy_sensor_is_a_total_increasing_counter(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A lifetime energy field gets the energy device class, not a bare number."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     entry = entity_registry.async_get(ENERGY_ENTITY)
     assert entry is not None
@@ -66,7 +62,7 @@ async def test_only_the_present_charge_level_is_a_battery_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """b_soc gets the battery device class; SoH does not, and b_soc_total is not shown."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(BATTERY_LEVEL_ENTITY)
     assert state is not None
@@ -96,7 +92,7 @@ async def test_diagnostic_fields_are_categorized_as_diagnostic(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A count with no physical unit is a diagnostic entity, not a primary one."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     entry = entity_registry.async_get(CYCLE_COUNT_ENTITY)
     assert entry is not None
@@ -115,7 +111,7 @@ async def test_inverter_power_is_signed(
     mock_modbus_unit.holding[field.address] = low
     mock_modbus_unit.holding[field.address + 1] = high
 
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(INVERTER_POWER_ENTITY)
     assert state is not None
@@ -146,7 +142,7 @@ async def test_pv_input_type_states(
     assert field is not None
     mock_modbus_unit.holding[field.address] = raw
 
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(PV_1_TYPE_ENTITY)
     assert state is not None
