@@ -23,6 +23,8 @@ from .entity import WiimBaseEntity
 
 PARALLEL_UPDATES = 1
 
+OTHER_OUTPUT = "Other Out"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,7 +59,9 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
         """Initialize the audio output selector."""
         super().__init__(device)
         self._attr_unique_id = f"{device.udn}_audio_output"
-        self._attr_options = list(device.supported_output_modes)
+        self._attr_options = [
+            mode for mode in device.supported_output_modes if mode != OTHER_OUTPUT
+        ]
         self._attr_current_option = (
             device.output_mode if device.output_mode in self._attr_options else None
         )
@@ -87,23 +91,24 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
     @callback
     def _async_handle_device_update(self, *_args: object) -> None:
         """Publish current output and availability from the SDK cache."""
-        self._attr_options = list(self._device.supported_output_modes)
+        self._attr_options = [
+            mode for mode in self._device.supported_output_modes if mode != OTHER_OUTPUT
+        ]
         current = self._device.output_mode
         self._attr_current_option = current if current in self._attr_options else None
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Refresh available outputs and the active output."""
-        self._attr_options = list(self._device.supported_output_modes)
+        self._attr_options = [
+            mode for mode in self._device.supported_output_modes if mode != OTHER_OUTPUT
+        ]
         current = await self._device.get_audio_output_hw_mode()
         self._attr_current_option = current if current in self._attr_options else None
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Switch the device to the selected audio output."""
-        if option == "Other Out":
-            return
-
         try:
             await self._device.async_set_output_mode(option)
         except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
