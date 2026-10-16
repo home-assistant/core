@@ -88,6 +88,31 @@ DEFAULT_AI_TASK_OPTIONS = {
 }
 
 
+def get_unsupported_tool_options(
+    capabilities: anthropic.types.ModelCapabilities | None,
+) -> set[str]:
+    """Return configuration options for explicitly unsupported server tools."""
+    unsupported_options: set[str] = set()
+    if capabilities is None:
+        return unsupported_options
+
+    if not capabilities.server_tools.code_execution.supported:
+        unsupported_options.add(CONF_CODE_EXECUTION)
+    if not capabilities.server_tools.web_search.supported:
+        unsupported_options.update(
+            {
+                CONF_WEB_SEARCH,
+                CONF_WEB_SEARCH_MAX_USES,
+                CONF_WEB_SEARCH_USER_LOCATION,
+                CONF_WEB_SEARCH_CITY,
+                CONF_WEB_SEARCH_REGION,
+                CONF_WEB_SEARCH_COUNTRY,
+                CONF_WEB_SEARCH_TIMEZONE,
+            }
+        )
+    return unsupported_options
+
+
 def get_supported_thinking_efforts(
     capabilities: anthropic.types.ModelCapabilities | None,
 ) -> list[str]:
@@ -120,6 +145,9 @@ def reconcile_model_options(
 ) -> None:
     """Remove saved options incompatible with the selected model."""
     capabilities = model_info.capabilities
+    for option in get_unsupported_tool_options(capabilities):
+        options.pop(option, None)
+
     if (
         capabilities is None
         or not capabilities.thinking.supported
@@ -485,24 +513,37 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             )
 
+        unsupported_tool_options = get_unsupported_tool_options(
+            self.model_info.capabilities
+        )
+
+        if CONF_CODE_EXECUTION not in unsupported_tool_options:
+            step_schema[
+                probatio.Optional(
+                    CONF_CODE_EXECUTION, default=DEFAULT[CONF_CODE_EXECUTION]
+                )
+            ] = bool
+
+        if CONF_WEB_SEARCH not in unsupported_tool_options:
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_WEB_SEARCH,
+                        default=DEFAULT[CONF_WEB_SEARCH],
+                    ): bool,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                    ): cv.positive_int,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                    ): bool,
+                }
+            )
+
         step_schema.update(
             {
-                probatio.Optional(
-                    CONF_CODE_EXECUTION,
-                    default=DEFAULT[CONF_CODE_EXECUTION],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH,
-                    default=DEFAULT[CONF_WEB_SEARCH],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_MAX_USES,
-                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): cv.positive_int,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                ): bool,
                 probatio.Optional(
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],

@@ -1,7 +1,7 @@
 """The weather tests for the AEMET OpenData platform."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -127,7 +127,7 @@ async def test_forecast_subscription(
         "homeassistant.components.aemet.AEMET.api_call",
         side_effect=mock_api_call,
     ):
-        freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
+        freezer.tick(WEATHER_UPDATE_INTERVAL + dt.timedelta(seconds=1))
         await hass.async_block_till_done()
         msg = await client.receive_json()
 
