@@ -247,14 +247,25 @@ class AutoUpdateManager:
             async_at_started(self._hass, self._async_start_checking)
         )
 
-    async def _async_start_checking(self, hass: HomeAssistant) -> None:
+    @callback
+    def _async_start_checking(self, hass: HomeAssistant) -> None:
         """Check now and on an interval, once Home Assistant has started."""
         self._entry.async_on_unload(
             async_track_time_interval(
-                hass, self._async_check, CHECK_INTERVAL, cancel_on_shutdown=True
+                hass,
+                self._async_schedule_check,
+                CHECK_INTERVAL,
+                cancel_on_shutdown=True,
             )
         )
-        await self._async_check()
+        self._async_schedule_check()
+
+    @callback
+    def _async_schedule_check(self, _now: datetime | None = None) -> None:
+        """Run a check as a background task, so unloading cancels it."""
+        self._entry.async_create_background_task(
+            self._hass, self._async_check(), "hassio automatic update check"
+        )
 
     @property
     def settings(self) -> AutoUpdateSettings:
@@ -372,45 +383,70 @@ class AutoUpdateManager:
             for job in jobs_coordinator.current_jobs
         )
 
-    async def _async_check(self, _now: datetime | None = None) -> None:
-        """Install an eligible patch release when it is time.
-
-        Only looks at the current state, so it gives the same answer no
-        matter what made it run.
-        """
+    @callback
+    def _async_due_version(self, now: datetime) -> str | None:
+        """Return the version to install now, if it is time for one."""
         if (
             self.settings.enabled is not True
             or self.unavailable_reason is not None
             or self._hass.config.safe_mode
         ):
-            return
+            return None
 
-        now = dt_util.now()
         if (
             install_time := self._async_install_time(now)
         ) is None or now < install_time:
+            return None
+
+        return self.async_get_install_candidate(now)
+
+    async def _async_check(self) -> None:
+        """Install an eligible patch release when it is time.
+
+        Only looks at the current state, so it gives the same answer no
+        matter what made it run.
+        """
+        now = dt_util.now()
+        if (window := _window_start(self.settings, now)) is None:
             return
 
-        # One attempt per window; a failure must not retry every few minutes
-        window = _window_start(self.settings, now)
-        if window == self._attempted_window or self._async_is_busy():
+        # One attempt per window; a failure must not retry every few minutes.
+        # Compared in UTC; a local start in the hour the clocks go back would
+        # never match the stored one.
+        window = dt_util.as_utc(window)
+        if window == self._attempted_window:
             return
 
-        if (version := self.async_get_install_candidate(now)) is None:
+        if (version := self._async_due_version(now)) is None or self._async_is_busy():
             return
 
         # Stored before the update starts; Home Assistant restarts during it
         self._attempted_window = window
         await self._store.async_save(self._data_to_save())
 
-        backup = bool(
-            async_get_update_options(self._hass, self._entry)[
-                OPTION_CORE_BACKUP_BEFORE_UPDATE
-            ]
-        )
-        _LOGGER.info("Installing Home Assistant %s automatically", version)
+        backup = async_get_update_options(self._hass, self._entry)[
+            OPTION_CORE_BACKUP_BEFORE_UPDATE
+        ]
         try:
-            await update_core(self._hass, version, backup)
+            if backup:
+                # Imported here like update_helper does, to keep backup out of
+                # startup
+                from .backup import backup_core_before_update  # noqa: PLC0415
+
+                await backup_core_before_update(self._hass)
+
+                # A backup takes a while: the window may have closed, or the
+                # version been skipped or pulled. Not busy again; that was us.
+                if self._async_due_version(dt_util.now()) != version:
+                    _LOGGER.info(
+                        "Not installing Home Assistant %s automatically, "
+                        "it is no longer due",
+                        version,
+                    )
+                    return
+
+            _LOGGER.info("Installing Home Assistant %s automatically", version)
+            await update_core(self._hass, version, False)
         except HomeAssistantError as err:
             _LOGGER.error(
                 "Automatic update to Home Assistant %s failed: %s", version, err

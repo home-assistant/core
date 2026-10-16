@@ -1,8 +1,9 @@
 """Test automatic Home Assistant updates."""
 
+import asyncio
 from collections.abc import Generator
 from dataclasses import replace
-from datetime import datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -891,7 +892,7 @@ async def test_no_retry_after_reload(
     )
 
     assert hass_storage[STORAGE_KEY]["data"]["attempted_window"] == (
-        _local(22, 3).isoformat()
+        dt_util.as_utc(_local(22, 3)).isoformat()
     )
 
     freezer.tick(CHECK_INTERVAL)
@@ -901,3 +902,120 @@ async def test_no_retry_after_reload(
         await hass.async_block_till_done()
 
     assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_no_retry_after_reload_when_clocks_go_back(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test the attempted window matches in the hour that happens twice."""
+    await hass.config.async_set_time_zone("Europe/Helsinki")
+    supervisor_client.homeassistant.update.side_effect = SupervisorError("Boom")
+    # 03:30 local on 25 October 2026 happens twice; this is the first time
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        datetime(2026, 10, 25, 0, 30, tzinfo=UTC),
+        first_seen={"2026.10.2": datetime(2026, 10, 19, tzinfo=UTC)},
+    )
+
+    freezer.tick(CHECK_INTERVAL)
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_unload_during_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test unloading while the backup runs stops the update."""
+    backup_done = asyncio.Event()
+
+    async def slow_backup(hass: HomeAssistant) -> None:
+        await backup_done.wait()
+
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=slow_backup,
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        backup_done.set()
+        await hass.async_block_till_done()
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_window_closed_during_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test nothing installs when the window closed while backing up."""
+
+    async def slow_backup(hass: HomeAssistant) -> None:
+        freezer.move_to(_local(22, 5, 10))
+
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=slow_backup,
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 4, 59),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_skipped_during_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test nothing installs when the version was skipped while backing up."""
+    backup_done = asyncio.Event()
+
+    async def slow_backup(hass: HomeAssistant) -> None:
+        await backup_done.wait()
+
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=slow_backup,
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+        await _call_update_service(hass, "skip")
+        backup_done.set()
+        await hass.async_block_till_done()
+
+    supervisor_client.homeassistant.update.assert_not_called()
