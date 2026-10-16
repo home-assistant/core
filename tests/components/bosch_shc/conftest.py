@@ -31,6 +31,7 @@ from boschshcpy import (
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCPresenceSimulationSystem,
+    SHCRoomThermostat2,
     SHCShutterContact,
     SHCShutterContact2,
     SHCShutterContact2Plus,
@@ -47,6 +48,8 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    DisplayDirection,
+    DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
@@ -448,9 +451,15 @@ def thermostat_gen2_device(
     name: str = "Thermostat Gen2",
     supports_display_configuration: bool = False,
     humidity_warning_enabled: bool = False,
-) -> SHCThermostatGen2:
+    display_direction: DisplayDirection.Direction | None = None,
+    displayed_temperature: DisplayedTemperatureConfiguration.DisplayedTemperature
+    | None = None,
+    supports_display_direction: bool | None = None,
+    supports_displayed_temperature: bool | None = None,
+    spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
+) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
-    device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
+    device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
     device.id = device_id
     device.root_device_id = "test-mac"
@@ -462,6 +471,18 @@ def thermostat_gen2_device(
     device.status = "AVAILABLE"
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
+    device.supports_display_direction = (
+        display_direction is not None
+        if supports_display_direction is None
+        else supports_display_direction
+    )
+    device.display_direction = display_direction
+    device.supports_displayed_temperature = (
+        displayed_temperature is not None
+        if supports_displayed_temperature is None
+        else supports_displayed_temperature
+    )
+    device.displayed_temperature = displayed_temperature
     return device
 
 

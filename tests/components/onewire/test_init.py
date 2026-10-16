@@ -36,6 +36,7 @@ async def test_connect_failure(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -60,6 +61,7 @@ async def test_listing_failure(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "cannot_connect"
 
 
 async def test_unload_entry(

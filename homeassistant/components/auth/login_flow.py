@@ -106,6 +106,8 @@ if TYPE_CHECKING:
 
     from . import StoreResultType
 
+MAX_URL_LENGTH = 2048
+
 
 @callback
 def async_setup(hass: HomeAssistant, store_result: StoreResultType) -> None:
@@ -358,13 +360,17 @@ class LoginFlowIndexView(LoginFlowBaseView):
     @RequestDataValidator(
         probatio.Schema(
             {
-                probatio.Required("client_id"): str,
+                probatio.Required("client_id"): probatio.All(
+                    str, probatio.Length(max=MAX_URL_LENGTH)
+                ),
                 probatio.Required("handler"): probatio.All(
                     [probatio.Any(str, None)],
                     probatio.Length(2, 2),
                     probatio.Coerce(tuple),
                 ),
-                probatio.Required("redirect_uri"): str,
+                probatio.Required("redirect_uri"): probatio.All(
+                    str, probatio.Length(max=MAX_URL_LENGTH)
+                ),
                 # S256 challenges are always 43 unpadded base64url characters.
                 probatio.Optional("code_challenge"): probatio.Match(
                     r"^[A-Za-z0-9_-]{43}\Z"
