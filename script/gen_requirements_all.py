@@ -55,8 +55,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
 }
 
 URL_PIN = (
-    "https://developers.home-assistant.io/docs/"
-    "creating_platform_code_review.html#1-requirements"
+    "https://contributors.home-assistant.io/core/integrations/manifest/#requirements"
 )
 
 
@@ -126,7 +125,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.5
+pydantic==2.14.0
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
