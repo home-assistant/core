@@ -1,9 +1,11 @@
 """Component to integrate ambilight for TVs exposing the Joint Space API."""
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, cast, override
 
-from haphilipsjs import PhilipsTV
+from haphilipsjs import GeneralFailure, PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
 
 from homeassistant.components.light import (
@@ -21,6 +23,8 @@ from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
 from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
+
+COMMAND_ATTEMPTS = 3
 
 EFFECT_PARTITION = ": "
 EFFECT_MODE = "Mode"
@@ -328,15 +332,33 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         if await self._tv.setAmbilightCurrentConfiguration(config) is False:
             raise HomeAssistantError("Failed to set ambilight mode")
 
+    async def _async_retry(self, command: Callable[[], Awaitable[None]]) -> None:
+        """Run a command, retrying as the TV may drop single requests."""
+        for attempt in range(COMMAND_ATTEMPTS):
+            try:
+                await command()
+            except HomeAssistantError, GeneralFailure:
+                if attempt == COMMAND_ATTEMPTS - 1:
+                    raise
+                await asyncio.sleep(1)
+                await self.coordinator.async_ensure_reachable()
+            else:
+                return
+
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
+        if not await self.coordinator.async_ensure_reachable():
+            raise HomeAssistantError("TV is not available")
+        self._update_from_coordinator()
+        await self._async_retry(lambda: self._async_turn_on(kwargs))
+        await self.coordinator.async_request_refresh()
+
+    async def _async_turn_on(self, kwargs: dict[str, Any]) -> None:
+        """Send the turn on command to the TV."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         attr_effect = cast(str, kwargs.get(ATTR_EFFECT, self.effect))
-
-        if not self._tv.on:
-            raise HomeAssistantError("TV is not available")
 
         effect = AmbilightEffect.from_str(attr_effect)
 
@@ -373,10 +395,14 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn of ambilight."""
-
+        # A TV that is not reachable has no ambilight running.
         if not self._tv.on:
-            raise HomeAssistantError("TV is not available")
+            return
+        await self._async_retry(self._async_turn_off)
+        await self.coordinator.async_request_refresh()
 
+    async def _async_turn_off(self) -> None:
+        """Send the turn off command to the TV."""
         if await self._tv.setAmbilightMode("internal") is False:
             raise HomeAssistantError("Failed to set ambilight mode")
 
@@ -384,13 +410,3 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
 
         self._update_from_coordinator()
         self.async_write_ha_state()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return true if entity is available."""
-        if not super().available:
-            return False
-        if not self._tv.on:
-            return False
-        return True

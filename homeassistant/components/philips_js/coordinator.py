@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from haphilipsjs import (
@@ -18,9 +19,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_SYSTEM,
+    DOMAIN,
+    UNREACHABLE_GRACE,
+    WAKE_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +48,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Set up the coordinator."""
         self.api = api
         self._notify_future: asyncio.Task | None = None
+        self._last_seen: float | None = None
 
         super().__init__(
             hass,
@@ -132,15 +140,55 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
+    @property
+    def in_grace(self) -> bool:
+        """Return if the TV answered recently enough to trust its last state."""
+        return (
+            self._last_seen is not None
+            and time.monotonic() - self._last_seen < UNREACHABLE_GRACE
+        )
+
     @override
     async def _async_update_data(self):
-        """Fetch the latest data from the source."""
+        """Fetch the latest data from the source.
+
+        A TV in standby regularly drops single requests. Instead of marking
+        the TV as off after one failed poll, keep the last known state for
+        UNREACHABLE_GRACE seconds after the last successful poll. Once that
+        has passed, the TV counts as off.
+        """
         try:
             await self.api.update()
-            self._async_notify_schedule()
         except ConnectionFailure:
             pass
         except AutenticationFailure as exception:
             raise ConfigEntryAuthFailed(str(exception)) from exception
         except GeneralFailure as exception:
-            raise UpdateFailed(str(exception)) from exception
+            _LOGGER.debug("Update failed: %r", exception)
+            self.api.on = False
+
+        if self.api.on:
+            self._last_seen = time.monotonic()
+            self._async_notify_schedule()
+        elif self.in_grace and self.api.system:
+            # Transient failure: keep the last known state.
+            self.api.on = True
+
+    async def async_ensure_reachable(self) -> bool:
+        """Wait until the TV answers, for at most WAKE_TIMEOUT seconds."""
+        if self.api.on and self.in_grace:
+            return True
+
+        deadline = time.monotonic() + WAKE_TIMEOUT
+        while True:
+            try:
+                if await self.api.update():
+                    self._last_seen = time.monotonic()
+                    return True
+            except AutenticationFailure as exception:
+                raise ConfigEntryAuthFailed(str(exception)) from exception
+            except GeneralFailure as exception:
+                _LOGGER.debug("TV not answering yet: %r", exception)
+            if time.monotonic() >= deadline:
+                return False
+            await asyncio.sleep(2)
