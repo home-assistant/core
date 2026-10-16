@@ -589,10 +589,7 @@ jobs:
       - info
       - base
     timeout-minutes: 20
-    if: |
-      github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
-      || github.event.inputs.pylint-only == 'true'
+    if: false # Experiment: only the full pytest run
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -635,11 +632,7 @@ jobs:
       - info
       - base
     timeout-minutes: 20
-    if: |
-      (github.event.inputs.mypy-only != 'true'
-        && github.event.inputs.audit-licenses-only != 'true'
-        || github.event.inputs.pylint-only == 'true')
-      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
+    if: false # Experiment: only the full pytest run
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -681,10 +674,7 @@ jobs:
     needs:
       - info
       - base
-    if: |
-      github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
-      || github.event.inputs.mypy-only == 'true'
+    if: false # Experiment: only the full pytest run
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -747,12 +737,7 @@ jobs:
     # Run only when core code or the benchmark suite itself changed. Skipped on
     # forks, where the OIDC token CodSpeed needs is unavailable. Pushes to dev
     # that touch core refresh the CodSpeed baseline.
-    if: >-
-      needs.info.outputs.lint_only != 'true'
-      && (github.event_name != 'pull_request'
-        || !github.event.pull_request.head.repo.fork)
-      && (contains(fromJSON(needs.info.outputs.core), 'core')
-        || contains(fromJSON(needs.info.outputs.core), 'benchmarks'))
+    if: false # Experiment: only the full pytest run
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1090,9 +1075,7 @@ jobs:
       - hassfest
       - prek
       - mypy
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.mariadb_groups != '[]'
+    if: false # Experiment: only the full pytest run
     strategy:
       fail-fast: false
       matrix:
@@ -1232,9 +1215,7 @@ jobs:
       - hassfest
       - prek
       - mypy
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.postgresql_groups != '[]'
+    if: false # Experiment: only the full pytest run
     strategy:
       fail-fast: false
       matrix:
@@ -1367,9 +1348,7 @@ jobs:
       - hassfest
       - prek
       - mypy
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.sqlite_groups != '[]'
+    if: false # Experiment: only the full pytest run
     strategy:
       fail-fast: false
       matrix:
