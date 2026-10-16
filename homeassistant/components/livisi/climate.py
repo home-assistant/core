@@ -151,7 +151,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         humidity = await self.coordinator.async_get_device_state(
             self._humidity_capability, HUMIDITY
         )
-        if temperature is None:
+        if temperature is None or target_temperature is None:
             self._attr_native_current_temperature = None
             self._attr_available = False
             return False

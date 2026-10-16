@@ -521,6 +521,55 @@ async def test_unreachable_event_during_refresh(
     await hass.async_block_till_done()
 
 
+async def test_climate_target_temperature_read_failure_recovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed target temperature read keeps recovery pending."""
+    values = VALUES.copy()
+    del values[("setpoint-capability", "pointTemperature")]
+
+    def get_value(capability: str, property_name: str) -> bool | float | int:
+        if (capability, property_name) not in values:
+            raise LivisiException
+        return values[(capability, property_name)]
+
+    connection = MagicMock(spec=LivisiConnection)
+    connection.controller = CONTROLLER
+    connection.async_get_devices.return_value = [DEVICES[2]]
+    connection.async_get_value.side_effect = get_value
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.livisi.coordinator.livisi_connect",
+        return_value=connection,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    climate_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, "climate-device"
+    )
+    assert climate_id is not None
+    assert hass.states.is_state(climate_id, STATE_UNAVAILABLE)
+
+    await _async_poll(hass, freezer)
+    assert hass.states.is_state(climate_id, STATE_UNAVAILABLE)
+
+    values[("setpoint-capability", "pointTemperature")] = 21.0
+    await _async_poll(hass, freezer)
+    climate_state = hass.states.get(climate_id)
+    assert climate_state is not None
+    assert climate_state.state != STATE_UNAVAILABLE
+    assert climate_state.attributes[ATTR_TEMPERATURE] == 21.0
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("device", "platform", "domain", "service", "service_data"),
     [
