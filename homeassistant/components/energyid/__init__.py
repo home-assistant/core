@@ -70,21 +70,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             translation_key="auth_timeout",
         ) from err
     except ClientResponseError as err:
+        # 401/403 = invalid credentials, trigger reauth
         if err.status in (401, 403):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_credentials",
             ) from err
+        # Other HTTP errors are likely temporary
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_http_error",
         ) from err
     except ClientError as err:
+        # Network/connection errors are temporary
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_connection_error",
         ) from err
     except Exception as err:
+        # Unknown errors - log and retry (safer than forcing reauth)
         # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Unexpected error during EnergyID authentication")
         raise ConfigEntryNotReady(
@@ -93,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         ) from err
 
     if not is_claimed:
+        # Device exists but not claimed = user needs to claim it = auth issue
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="device_not_claimed",
@@ -109,8 +114,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
     # Directives are optional, so a failed first fetch must not block the upload path.
     try:
         await directive_coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        _LOGGER.warning("Unable to retrieve EnergyID directives, retrying later")
+    except ConfigEntryNotReady as err:
+        _LOGGER.warning(
+            "Unable to retrieve EnergyID directives, retrying later: %s", err
+        )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
