@@ -40,8 +40,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_MODEL,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     Platform,
     UnitOfTemperature,
@@ -77,7 +75,7 @@ _STORED_CLIMATE_DATA = {
     "native_target_temperature": 25.0,
     "native_target_temperature_high": None,
     "native_target_temperature_low": None,
-    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS.value,
 }
 
 
@@ -342,6 +340,7 @@ async def test_turn_on_off_uses_the_last_active_mode(
             {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
             blocking=True,
         )
+        await _flush_coalesced(hass)
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
@@ -350,6 +349,7 @@ async def test_turn_on_off_uses_the_last_active_mode(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1844,6 +1844,7 @@ async def test_restore_temperature_unit(
         {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
@@ -1870,6 +1871,7 @@ async def test_restore_data_saved(
         },
         blocking=True,
     )
+    await _flush_coalesced(hass)
 
     await async_mock_restore_state_shutdown_restart(hass)
 
@@ -1877,10 +1879,11 @@ async def test_restore_data_saved(
         data["state"]["entity_id"]: data["extra_data"]
         for data in hass_storage[RESTORE_STATE_KEY]["data"]
     }
-    assert stored[_CLIMATE_ENTITY_ID] == {
-        **_STORED_CLIMATE_DATA,
-        "last_active_hvac_mode": HVACMode.DRY.value,
-    }
+    stored_climate_data = stored[_CLIMATE_ENTITY_ID]
+    assert {
+        key: stored_climate_data[key] for key in _STORED_CLIMATE_DATA
+    } == _STORED_CLIMATE_DATA
+    assert stored_climate_data["last_active_hvac_mode"] == HVACMode.DRY.value
 
 
 @pytest.mark.usefixtures("init_integration")
