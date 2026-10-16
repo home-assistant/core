@@ -79,8 +79,9 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
                     "name": ((device.name_by_user or device.name) if device else None)
                     or descriptor.name
                     or descriptor.dev_eui,
-                    "manufacturer": descriptor.manufacturer,
-                    "model": descriptor.model,
+                    "manufacturer": (device.manufacturer if device else None)
+                    or descriptor.manufacturer,
+                    "model": (device.model if device else None) or descriptor.model,
                     "application_id": descriptor.application_id,
                     "device_id": device.id if device else None,
                     "connection": connection,

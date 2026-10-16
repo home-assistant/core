@@ -179,11 +179,15 @@ async def test_support_and_registry_link(
         config_entry_id=entry.entry_id,
         identifiers={(entry.domain, f"network:{DESCRIPTOR.dev_eui}")},
         name="Original name",
+        manufacturer="Seeed Studio",
+        model="S2103",
     )
     device_registry.async_update_device(device.id, name_by_user="Office")
     result = _snapshot(hass)["devices"][0]
     assert result["device_id"] == device.id
     assert result["name"] == "Office"
+    assert result["manufacturer"] == "Seeed Studio"
+    assert result["model"] == "S2103"
     assert result["support"] == "supported"
     backend.emit(
         AddedEvent(
