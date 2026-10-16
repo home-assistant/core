@@ -5,6 +5,8 @@ NAME = "tankerkoenig"
 
 CONF_STATIONS = "stations"
 
+SERVICE_GET_OPENING_TIMES = "get_opening_times"
+
 DEFAULT_RADIUS = 2
 DEFAULT_SCAN_INTERVAL = 30
 

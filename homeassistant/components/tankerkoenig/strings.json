@@ -60,9 +60,6 @@
           },
           "longitude": {
             "name": "[%key:common::config_flow::data::longitude%]"
-          },
-          "opening_times": {
-            "name": "Opening times"
           }
         }
       }
@@ -199,6 +196,12 @@
         },
         "title": "Tankerkoenig options"
       }
+    }
+  },
+  "services": {
+    "get_opening_times": {
+      "description": "Retrieves the opening times of a gas station.",
+      "name": "Get opening times"
     }
   }
 }
