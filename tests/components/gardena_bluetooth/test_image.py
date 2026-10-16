@@ -59,7 +59,7 @@ def _encode(points: Iterable[tuple[int, int]]) -> bytes:
 def mock_getrandbits() -> Generator[None]:
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield
