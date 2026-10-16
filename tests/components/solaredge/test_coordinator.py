@@ -11,6 +11,7 @@ from solaredge_web import EnergyData
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import (
+    StatisticData,
     StatisticMeanType,
     StatisticMetaData,
 )
@@ -34,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     STATE_UNKNOWN,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -474,6 +476,92 @@ async def test_modules_coordinator_reprocess_same_window_new_equipment(
         f"{DOMAIN}:{SITE_ID}_7a012346_ca": [
             {"start": 1738465200.0, "end": 1738468800.0, "state": 30.0, "sum": 30.0},
         ],
+    }
+
+
+async def test_modules_coordinator_first_window_statistic_without_sum(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test the sum is still recovered when the first in-window statistic has no sum.
+
+    The recorder computes the change relative to the last sum before the window,
+    so the first in-window statistic that has a sum recovers the baseline even
+    when preceding statistics in the window have none.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"{DOMAIN}:{SITE_ID}_7a012345_ca"
+    # The first statistic in the window has no sum, the next one does. Its sum
+    # of 34 equals the 24 from the last statistic before the window plus 10.
+    async_add_external_statistics(
+        hass,
+        StatisticMetaData(
+            mean_type=StatisticMeanType.ARITHMETIC,
+            has_sum=True,
+            name=f"{entry.title} Optimizer 1.1",
+            source=DOMAIN,
+            statistic_id=statistic_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        ),
+        [
+            StatisticData(
+                start=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)).replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                ),
+                state=None,
+                sum=None,
+            ),
+            StatisticData(
+                start=dt_util.as_utc(datetime(2025, 2, 1, 12, 0)).replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                ),
+                state=10.0,
+                sum=34.0,
+            ),
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 10.0},
+        ),
+    ]
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 10.0, "sum": 34.0},
+            {"start": 1738468800.0, "end": 1738472400.0, "state": 10.0, "sum": 34.0},
+        ]
     }
 
 

@@ -634,13 +634,16 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         for statistic_id in statistic_ids:
             statistic_sum: float | None = None
             if statistics := current_stats.get(statistic_id):
-                # The change is relative to the last sum before start_time,
-                # so subtracting it recovers that sum.
-                first_stat = statistics[0]
-                first_sum = first_stat["sum"]
-                first_change = first_stat["change"]
-                if first_sum is not None and first_change is not None:
-                    statistic_sum = first_sum - first_change
+                # The change is relative to the last sum before start_time, so
+                # subtracting it from the first statistic that has a sum
+                # recovers that sum. Leading statistics without a sum are
+                # skipped, since their change is unknown.
+                for stat in statistics:
+                    stat_sum = stat["sum"]
+                    stat_change = stat["change"]
+                    if stat_sum is not None and stat_change is not None:
+                        statistic_sum = stat_sum - stat_change
+                        break
             if statistic_sum is None:
                 # No statistics found in the window yet, or the first one has
                 # no sum, so continue from the last statistic, but use it only
