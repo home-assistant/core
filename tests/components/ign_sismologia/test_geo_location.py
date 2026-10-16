@@ -1,6 +1,6 @@
 """The tests for the IGN Sismologia (Earthquakes) Feed platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -85,7 +85,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
         (38.0, -3.0),
         region="Region 1",
         attribution="Attribution 1",
-        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        published=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         magnitude=5.7,
         image_url="http://image.url/map.jpg",
     )
@@ -127,9 +127,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_TITLE: "Title 1",
                 ATTR_REGION: "Region 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
-                ),
+                ATTR_PUBLICATION_DATE: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
                 ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,

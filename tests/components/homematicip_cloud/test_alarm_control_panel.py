@@ -1,13 +1,18 @@
 """Tests for HomematicIP Cloud alarm control panel."""
 
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import Mock, patch
 
 from homematicip.async_home import AsyncHome
 import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.homematicip_cloud.alarm_control_panel import (
+    HomematicipAlarmControlPanelEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, get_and_check_entity_basics
 
@@ -155,3 +160,70 @@ async def test_hmip_alarm_control_panel_activation_failed(
             {"entity_id": entity_id},
             blocking=True,
         )
+
+
+async def test_hmip_alarm_control_panel_removal_removes_home_callback(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test removing the alarm panel removes its home update handler."""
+    entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    home = mock_hap.home
+
+    def _entity_handlers() -> list[Any]:
+        return [
+            handler
+            for handler in home._on_update
+            if getattr(getattr(handler, "__self__", None), "entity_id", None)
+            == entity_id
+        ]
+
+    assert len(_entity_handlers()) == 1
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert _entity_handlers() == []
+    assert hass.states.get(entity_id) is None
+
+    await _async_manipulate_security_zones(
+        hass, home, internal_active=True, external_active=True
+    )
+    assert hass.states.get(entity_id) is None
+
+
+async def test_hmip_alarm_control_panel_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test a renamed alarm panel keeps following home updates in place."""
+    entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    new_entity_id = "alarm_control_panel.renamed"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    home = mock_hap.home
+
+    with patch.object(
+        HomematicipAlarmControlPanelEntity,
+        "async_added_to_hass",
+        autospec=True,
+        side_effect=HomematicipAlarmControlPanelEntity.async_added_to_hass,
+    ) as mock_added_to_hass:
+        entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+        await hass.async_block_till_done()
+
+    # The entity_id is changed in place, the entity is not added again
+    mock_added_to_hass.assert_not_called()
+    assert hass.states.get(entity_id) is None
+    assert hass.states.get(new_entity_id).state == AlarmControlPanelState.DISARMED
+
+    await _async_manipulate_security_zones(
+        hass, home, internal_active=True, external_active=True
+    )
+    assert hass.states.get(new_entity_id).state == AlarmControlPanelState.ARMED_AWAY

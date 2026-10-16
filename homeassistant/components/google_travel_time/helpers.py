@@ -1,6 +1,6 @@
 """Helpers for Google Time Travel integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from google.api_core.client_options import ClientOptions
@@ -57,13 +57,13 @@ def convert_time(time_str: str) -> timestamp_pb2.Timestamp:
     if parsed_time is None:
         raise ValueError(f"Invalid time format: {time_str}")
     start_of_day = dt_util.start_of_local_day()
-    combined = datetime.datetime.combine(
+    combined = dt.datetime.combine(
         start_of_day,
         parsed_time,
         start_of_day.tzinfo,
     )
     if combined < dt_util.now():
-        combined = combined + datetime.timedelta(days=1)
+        combined = combined + dt.timedelta(days=1)
     timestamp = timestamp_pb2.Timestamp()
     timestamp.FromDatetime(dt=combined)
     return timestamp

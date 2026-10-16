@@ -1264,6 +1264,81 @@ async def test_prefer_local_intents(
         )
 
 
+@pytest.mark.usefixtures("init_components")
+async def test_prefer_local_intents_match_failed(
+    hass: HomeAssistant,
+    mock_chat_session: chat_session.ChatSession,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that a local intent without targets leaves no trace for the agent."""
+
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            raise intent.MatchFailedError(
+                result=intent.MatchTargetsResult(is_match=False),
+                constraints=intent.MatchTargetsConstraints(),
+            )
+
+    intent.async_register(hass, OrderBeerIntentHandler())
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, conversation_engine="test-agent", prefer_local_intents=True
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="I'd like to order a stout please",
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=lambda event: None,
+        ),
+    )
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            supports_streaming=False,
+        ),
+    ):
+        await pipeline_input.validate()
+
+    agent_chat_log_roles: list[str] = []
+
+    async def mock_converse(**kwargs: Any) -> conversation.ConversationResult:
+        with (
+            chat_session.async_get_chat_session(
+                hass, kwargs["conversation_id"]
+            ) as session,
+            conversation.async_get_chat_log(hass, session) as chat_log,
+        ):
+            agent_chat_log_roles.extend(content.role for content in chat_log.content)
+        response = intent.IntentResponse(language=hass.config.language)
+        response.async_set_speech("Agent response")
+        return conversation.ConversationResult(response=response)
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
+        side_effect=mock_converse,
+    ):
+        await pipeline_input.execute()
+
+    assert agent_chat_log_roles == ["system", "user"]
+
+
 async def test_intent_continue_conversation(
     hass: HomeAssistant,
     init_components,
@@ -1722,6 +1797,64 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             8,
             "hello, how are you? I'm doing well, thank you.",
         ),
+        # Text ending without whitespace, a tool call, then more text
+        (
+            (
+                [
+                    "Let me check the temperature.",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [
+                    "It is ",
+                    "25 degrees.",
+                ],
+            ),
+            # 1 chunk before tool call, the separator, then 2 after
+            4,
+            "Let me check the temperature. It is 25 degrees.",
+        ),
+        # Text, then an assistant message with only another tool call
+        (
+            (
+                [
+                    "Let me check the temperature.",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id_2",
+                        )
+                    ],
+                },
+                [
+                    "It is ",
+                    "25 degrees.",
+                ],
+            ),
+            # 1 chunk before the tool calls, one separator, then 2 after
+            4,
+            "Let me check the temperature. It is 25 degrees.",
+        ),
     ],
 )
 @freeze_time("2025-10-31 12:00:00")
@@ -1869,7 +2002,7 @@ async def test_chat_log_tts_streaming(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = probatio.Schema({})
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     with (
         patch(
@@ -1890,8 +2023,7 @@ async def test_chat_log_tts_streaming(
         [chunk.decode() async for chunk in stream.async_stream_result()]
     )
 
-    streamed_text = "".join(text_deltas)
-    assert tts_result == streamed_text
+    assert tts_result == chunk_text
     assert len(received_tts) == expected_chunks
     assert "".join(received_tts) == chunk_text
 

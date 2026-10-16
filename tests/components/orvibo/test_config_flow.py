@@ -202,6 +202,7 @@ async def test_discovery_no_devices(
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.10)"
     assert result["data"][CONF_HOST] == "192.168.1.10"
     assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(
@@ -235,6 +236,7 @@ async def test_import_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.5"
     assert result["data"][CONF_MAC] == expected_mac
+    assert result["result"].unique_id == expected_mac
 
 
 @pytest.mark.parametrize(

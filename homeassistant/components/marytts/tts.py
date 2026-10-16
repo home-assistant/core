@@ -34,7 +34,7 @@ MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
             SUPPORT_LANGUAGES
         ),

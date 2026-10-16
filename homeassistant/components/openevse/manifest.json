@@ -9,6 +9,6 @@
   "iot_class": "local_push",
   "loggers": ["openevsehttp"],
   "quality_scale": "platinum",
-  "requirements": ["python-openevse-http==1.5.0"],
+  "requirements": ["python-openevse-http==1.8.0"],
   "zeroconf": ["_openevse._tcp.local."]
 }

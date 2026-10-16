@@ -125,7 +125,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         schema = probatio.Schema(
             {
-                probatio.Required(CONF_PIN): str,
+                probatio.Required(probatio.Secret(CONF_PIN)): str,
             }
         )
 
@@ -184,7 +184,9 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
 
         LOGGER.debug(
-            "Checking discovered device: {discovery_info.name} on {discovery_info.host}"
+            "Checking discovered device: %s on %s",
+            discovery_info.name,
+            discovery_info.host,
         )
 
         secured_transport = discovery_info.type == "_philipstv_s_rpc._tcp.local."

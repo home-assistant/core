@@ -30,7 +30,11 @@ from homeassistant.components.assist_satellite.entity import AssistSatelliteStat
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
@@ -799,7 +803,7 @@ async def test_start_conversation_reject_builtin_agent(
     entity: MockAssistSatellite,
 ) -> None:
     """Test starting a conversation on a device."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "start_conversation",
@@ -807,6 +811,11 @@ async def test_start_conversation_reject_builtin_agent(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert (
+        exc_info.value.translation_key
+        == "builtin_agent_start_conversation_not_supported"
+    )
 
 
 async def test_start_conversation_default_preannounce(
@@ -1011,6 +1020,108 @@ async def test_ask_question_requires_entity_permission(
             return_response=True,
             context=Context(user_id=hass_read_only_user.id),
         )
+
+
+async def test_ask_question_unknown_entity(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test ask_question raises a translated error for an unknown entity."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "ask_question",
+            {"entity_id": "assist_satellite.unknown", "question": "Anything?"},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_entity_id"
+    assert exc_info.value.translation_placeholders == {
+        "entity_id": "assist_satellite.unknown"
+    }
+
+
+async def test_ask_question_no_answer(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test ask_question raises a translated error when there is no answer."""
+
+    async def async_start_conversation(start_announcement):
+        entity._ask_question_future.set_result(None)
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia(
+                url="https://www.home-assistant.io/resolved.mp3",
+                mime_type="audio/mp3",
+            ),
+        ),
+        patch.object(entity, "async_start_conversation", new=async_start_conversation),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "ask_question",
+            {
+                "entity_id": "assist_satellite.test_entity",
+                "question_media_id": "media-source://given",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_answer"
+    assert entity.state == AssistSatelliteState.IDLE
+
+
+async def test_ask_question_service_no_answer(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test ask_question service raises a translated error without an answer."""
+    with (
+        patch.object(entity, "async_internal_ask_question", return_value=None),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "ask_question",
+            {"entity_id": "assist_satellite.test_entity", "question": "Anything?"},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_answer"
+
+
+async def test_announce_tts_engine_not_found(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test announce raises a translated error when the TTS engine is missing."""
+    with (
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "announce",
+            {"message": "Hello"},
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "tts_engine_not_found"
 
 
 @pytest.mark.parametrize("sentence", ["no punctuation!", "[malformed template)"])

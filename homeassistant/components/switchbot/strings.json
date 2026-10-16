@@ -4,13 +4,8 @@
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "api_error": "Error while communicating with SwitchBot API: {error_detail}",
       "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be disabled once the device is configured. If you need clarification on whether the device is in-range, download the diagnostics for the integration that provides your Bluetooth adapter or proxy and check if the MAC address of the SwitchBot device is present.",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "switchbot_unsupported_type": "Unsupported SwitchBot type.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "auth_failed": "Authentication failed: {error_detail}",
@@ -164,6 +159,12 @@
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]",
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
             }
+          },
+          "speed": {
+            "state": {
+              "normal": "Normal",
+              "silent": "Silent"
+            }
           }
         }
       },
@@ -179,6 +180,28 @@
             "state": {
               "performance": "Performance",
               "quiet": "Quiet"
+            }
+          }
+        }
+      }
+    },
+    "event": {
+      "off_button": {
+        "name": "OFF button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
+            }
+          }
+        }
+      },
+      "on_button": {
+        "name": "ON button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
             }
           }
         }
@@ -216,6 +239,7 @@
           "preset_mode": {
             "state": {
               "baby": "Baby",
+              "hurricane": "Hurricane",
               "natural": "Natural",
               "normal": "[%key:common::state::normal%]",
               "sleep": "Sleep"
@@ -267,6 +291,9 @@
     },
     "light": {
       "air_purifier_light": {
+        "name": "[%key:component::light::title%]"
+      },
+      "circulator_fan_pro_light": {
         "name": "[%key:component::light::title%]"
       },
       "light": {

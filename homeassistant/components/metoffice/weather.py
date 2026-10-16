@@ -4,8 +4,10 @@ from typing import Any, cast, override
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -115,8 +117,12 @@ def _populate_forecast_data(
     weather_code = get_mapped_attribute(ATTR_FORECAST_CONDITION)
     if weather_code is not None:
         forecast[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
+    forecast[ATTR_FORECAST_HUMIDITY] = get_mapped_attribute(ATTR_FORECAST_HUMIDITY)
     forecast[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_mapped_attribute(
         ATTR_FORECAST_NATIVE_APPARENT_TEMP
+    )
+    forecast[ATTR_FORECAST_NATIVE_DEW_POINT] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_DEW_POINT
     )
     forecast[ATTR_FORECAST_NATIVE_PRESSURE] = get_mapped_attribute(
         ATTR_FORECAST_NATIVE_PRESSURE
@@ -211,6 +217,14 @@ class MetOfficeWeather(
 
     @property
     @override
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "feelsLikeTemperature")
+        return float(value) if value is not None else None
+
+    @property
+    @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
         weather_now = self.coordinator.data.now()
@@ -255,6 +269,14 @@ class MetOfficeWeather(
         """Return the wind speed."""
         weather_now = self.coordinator.data.now()
         value = get_attribute(weather_now, "windSpeed10m")
+        return float(value) if value is not None else None
+
+    @property
+    @override
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "windGustSpeed10m")
         return float(value) if value is not None else None
 
     @property

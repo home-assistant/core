@@ -546,6 +546,7 @@ async def test_initiate_backup(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -800,6 +801,7 @@ async def test_initiate_backup_with_agent_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": backups_info,
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -905,6 +907,7 @@ async def test_initiate_backup_with_agent_error(
     assert len(backups_response) == 4
     assert new_expected_backup_data in backups_response
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1375,6 +1378,7 @@ async def test_initiate_backup_non_agent_upload_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1471,6 +1475,7 @@ async def test_initiate_backup_with_task_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1563,6 +1568,7 @@ async def test_initiate_backup_file_error_upload_to_agents(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1686,6 +1692,7 @@ async def test_initiate_backup_file_error_create_backup(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2425,6 +2432,7 @@ async def test_receive_backup_agent_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": backups_info,
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2494,6 +2502,14 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 0,
+        "total_bytes": 0,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
         "reason": None,
         "stage": None,
         "state": ReceiveBackupState.COMPLETED,
@@ -2508,6 +2524,7 @@ async def test_receive_backup_agent_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": backups_info,
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2559,6 +2576,7 @@ async def test_receive_backup_non_agent_upload_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2620,6 +2638,14 @@ async def test_receive_backup_non_agent_upload_error(
     }
 
     result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 0,
+        "total_bytes": 0,
+    }
+
+    result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
     assert DOMAIN not in hass_storage
@@ -2667,6 +2693,7 @@ async def test_receive_backup_file_write_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2759,6 +2786,7 @@ async def test_receive_backup_read_tar_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2920,6 +2948,7 @@ async def test_receive_backup_file_read_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -3729,6 +3758,7 @@ async def test_initiate_backup_per_agent_encryption(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -3893,6 +3923,7 @@ async def test_restore_progress_after_restart(
     result = await ws_client.receive_json()
     assert result["success"] is True
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -3919,6 +3950,7 @@ async def test_restore_progress_after_restart_fail_to_remove(
     result = await ws_client.receive_json()
     assert result["success"] is True
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -3982,6 +4014,7 @@ async def test_manager_not_blocked_after_restore(
     result = await ws_client.receive_json()
     assert result["success"] is True
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -4055,16 +4088,19 @@ async def test_upload_progress_event(
         progress_events.append(result["event"])
         result = await ws_client.receive_json()
 
-    # Verify progress events from the remote agent (500 from agent + final from manager)
+    # Verify progress events from the remote agent
+    # (start and final from manager, 500 from agent)
     remote_progress = [e for e in progress_events if e["agent_id"] == "test.remote"]
-    assert len(remote_progress) == 2
-    assert remote_progress[0]["uploaded_bytes"] == 500
-    assert remote_progress[1]["uploaded_bytes"] == remote_progress[1]["total_bytes"]
+    assert len(remote_progress) == 3
+    assert remote_progress[0]["uploaded_bytes"] == 0
+    assert remote_progress[1]["uploaded_bytes"] == 500
+    assert remote_progress[2]["uploaded_bytes"] == remote_progress[2]["total_bytes"]
 
-    # Verify progress event from the local agent (final from manager)
+    # Verify progress events from the local agent (start and final from manager)
     local_progress = [e for e in progress_events if e["agent_id"] == LOCAL_AGENT_ID]
-    assert len(local_progress) == 1
-    assert local_progress[0]["uploaded_bytes"] == local_progress[0]["total_bytes"]
+    assert len(local_progress) == 2
+    assert local_progress[0]["uploaded_bytes"] == 0
+    assert local_progress[1]["uploaded_bytes"] == local_progress[1]["total_bytes"]
 
     assert result["event"]["stage"] == CreateBackupStage.CLEANING_UP
 
@@ -4124,14 +4160,16 @@ async def test_upload_progress_debounced(
         await progress_done.wait()
 
         # At this point the debouncer's cooldown timer is pending.
-        # The first event (100 bytes) fired immediately, 500 and 1000 are buffered.
+        # The start event (0 bytes) and the first report (100 bytes) fired
+        # immediately, 500 and 1000 are buffered.
         remote_events = [
             e
             for e in events
             if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
         ]
-        assert len(remote_events) == 1
-        assert remote_events[0].uploaded_bytes == 100
+        assert len(remote_events) == 2
+        assert remote_events[0].uploaded_bytes == 0
+        assert remote_events[1].uploaded_bytes == 100
 
         # Advance time past the cooldown to trigger the debouncer timer.
         # This fires the coalesced event: 500 was replaced by 1000.
@@ -4142,9 +4180,9 @@ async def test_upload_progress_debounced(
             for e in events
             if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
         ]
-        assert len(remote_events) == 2
-        assert remote_events[0].uploaded_bytes == 100
-        assert remote_events[1].uploaded_bytes == 1000
+        assert len(remote_events) == 3
+        assert remote_events[1].uploaded_bytes == 100
+        assert remote_events[2].uploaded_bytes == 1000
 
         # Let the upload finish
         upload_done.set()
@@ -4160,5 +4198,5 @@ async def test_upload_progress_debounced(
         for e in events
         if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
     ]
-    assert len(remote_events) == 3
-    assert remote_events[2].uploaded_bytes == remote_events[2].total_bytes
+    assert len(remote_events) == 4
+    assert remote_events[3].uploaded_bytes == remote_events[3].total_bytes

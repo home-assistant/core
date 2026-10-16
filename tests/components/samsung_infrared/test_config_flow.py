@@ -114,3 +114,6 @@ async def test_user_flow_title_from_entity_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+    assert (
+        result["result"].unique_id == f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}"
+    )
