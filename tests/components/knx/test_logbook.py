@@ -11,7 +11,7 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx.const import EVENT_KNX_STATE_CHANGED, KNX_MODULE_KEY
 from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
-from tests.common import MockUser, async_capture_events
+from tests.common import MockUser, async_capture_events, mock_restore_cache
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import WebSocketGenerator
 
@@ -435,3 +435,55 @@ async def test_shared_response_live_activity(
     assert "context_event_type" not in entries["switch.learning"]
     assert entries["switch.known"]["context_name"] == "1.1.23"
     assert entries["switch.known"]["context_event_type"] == EVENT_KNX_STATE_CHANGED
+
+
+@pytest.mark.parametrize(
+    "responses",
+    [
+        pytest.param((("1/0/4", 128), ("1/0/2", 0)), id="tilt-first"),
+        pytest.param((("1/0/2", 0), ("1/0/4", 128)), id="position-first"),
+    ],
+)
+async def test_restored_cover_initial_responses(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    responses: tuple[tuple[str, int], ...],
+) -> None:
+    """Initial position discovery is not an action, regardless of tilt response order."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "cover.test",
+                "closed",
+                {"current_position": 0, "current_tilt_position": 0},
+            ),
+        ),
+    )
+    await knx.setup_integration(
+        {
+            "cover": {
+                "name": "test",
+                "move_long_address": "1/0/0",
+                "position_state_address": "1/0/2",
+                "angle_state_address": "1/0/4",
+            }
+        },
+        state_updater=False,
+    )
+    assert hass.states.get("cover.test").state == "closed"
+    assert hass.states.get("cover.test").attributes["assumed_state"]
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+
+    for address, value in responses:
+        await knx.receive_response(address, (value,), source="1.1.40")
+        assert not events
+
+    assert hass.states.get("cover.test").state == "open"
+    assert not hass.states.get("cover.test").attributes.get("assumed_state")
+
+    await knx.receive_response("1/0/2", (255,), source="1.1.40")
+    assert hass.states.get("cover.test").state == "closed"
+    assert len(events) == 1
+    assert events[0].data["source"] == "1.1.40"
+    assert hass.states.get("cover.test").context is events[0].context

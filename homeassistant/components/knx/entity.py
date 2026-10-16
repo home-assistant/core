@@ -190,8 +190,10 @@ class _KnxEntityBase(Entity):
                     context = Context()
             self.async_set_context(context)
             # Lights expose an uninitialized KNX state as "off" in HA.
-            self._device_state_initialized = state is not None and (
-                not isinstance(device, XknxLight) or device.state is not None
+            self._device_state_initialized = (
+                state is not None
+                and not self.assumed_state
+                and (not isinstance(device, XknxLight) or device.state is not None)
             )
         self.async_write_ha_state()
 
