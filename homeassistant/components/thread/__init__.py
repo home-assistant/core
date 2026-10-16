@@ -7,6 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .dataset_store import (
+    DatasetAddResult,
     DatasetEntry,
     async_add_dataset,
     async_get_dataset,
@@ -16,6 +17,7 @@ from .websocket_api import async_setup as async_setup_ws_api
 
 __all__ = [
     "DOMAIN",
+    "DatasetAddResult",
     "DatasetEntry",
     "async_add_dataset",
     "async_get_dataset",
@@ -37,12 +39,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return True

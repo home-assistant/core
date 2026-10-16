@@ -44,6 +44,11 @@
       }
     }
   },
+  "exceptions": {
+    "region_migration_failed": {
+      "message": "Region codes have changed for the PlayStation 4 integration, remove and re-add the integration"
+    }
+  },
   "services": {
     "send_command": {
       "description": "Emulates button press for PlayStation 4.",

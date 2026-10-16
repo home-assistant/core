@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from lyngdorf.const import LyngdorfModel
+from lyngdorf import LyngdorfModel
 import pytest
 
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.common import MockConfigEntry
 
@@ -31,10 +32,10 @@ async def test_setup_entry_connection_failures(
 ) -> None:
     """Test setup retries when connecting to the receiver fails."""
     mock_config_entry.add_to_hass(hass)
-    mock_receiver.async_connect.side_effect = exc
+    mock_receiver.connect.side_effect = exc
 
     with patch(
-        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        "homeassistant.components.lyngdorf.lookup_model",
         return_value=LyngdorfModel.MP_60,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -54,7 +55,7 @@ async def test_receiver_disconnects_on_hass_stop(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    mock_receiver.async_disconnect.assert_awaited_once()
+    mock_receiver.disconnect.assert_awaited_once()
 
 
 async def test_unload_entry(
@@ -67,6 +68,34 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_uses_the_home_assistant_websession(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_create_receiver: MagicMock,
+) -> None:
+    """Test the receiver is given Home Assistant's shared aiohttp session."""
+    assert mock_create_receiver.call_args.kwargs["session"] is async_get_clientsession(
+        hass
+    )
+
+
+async def test_unload_releases_receiver_subscriptions(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test every receiver subscription is released when the entry unloads."""
+    unsubscribe = mock_receiver.on_change.return_value
+    registered = mock_receiver.on_change.call_count
+    assert registered > 0
+    assert unsubscribe.call_count == 0
+
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert unsubscribe.call_count == registered
 
 
 async def test_zone_b_via_device_id(
@@ -115,7 +144,7 @@ async def test_mac_connection_registered_when_serial_is_mac(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        "homeassistant.components.lyngdorf.lookup_model",
         return_value=LyngdorfModel.MP_60,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -131,17 +160,18 @@ async def test_mac_connection_registered_when_serial_is_mac(
     assert mac_connections == expected_mac_connections
 
 
-@pytest.mark.usefixtures("mock_receiver")
 async def test_no_zone_b_device_for_model_without_zone_b(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test no Zone B device is created for a model without Zone B."""
     mock_config_entry.add_to_hass(hass)
+    mock_receiver.zone_b = None
 
     with patch(
-        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        "homeassistant.components.lyngdorf.lookup_model",
         return_value=LyngdorfModel.TDAI_3400,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

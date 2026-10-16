@@ -34,7 +34,7 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
 @pytest.mark.parametrize(
     ("service_name", "power", "target_soc"),
     [
-        ("charge", 1200, 60),
+        ("charge", 5000, 60),
         ("discharge", 1200, 40),
     ],
 )

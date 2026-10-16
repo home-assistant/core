@@ -763,7 +763,7 @@ def _device_payload(device_entry: dr.AnyDeviceEntry) -> dict[str, Any]:
     }
 
 
-async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
+async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     """Return detailed information about entities and devices for a snapshot."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -774,7 +774,7 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
     removed_devices: set[str] = set()
 
     # Get device list
-    for device_entry in (*dev_reg.devices.values(), *dev_reg.child_devices.values()):
+    for device_entry in (*dev_reg.devices, *dev_reg.child_devices):
         config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:
@@ -883,7 +883,10 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
                 continue
 
             resolved_device = dev_reg.async_get(device_id)
-            assert resolved_device is not None
+            if resolved_device is None:
+                # The device was removed while we were awaiting above
+                removed_devices.add(device_id)
+                continue
 
             device_id_mapping[device_id] = (integration_domain, len(devices_info))
 

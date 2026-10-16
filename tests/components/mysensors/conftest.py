@@ -198,9 +198,8 @@ def gateway_fixture(
 
 def load_nodes_state(fixture_path: str) -> dict:
     """Load mysensors nodes fixture."""
-    return json.loads(
-        load_fixture(fixture_path, integration=DOMAIN), cls=MySensorsJSONDecoder
-    )
+    fixture = load_fixture(fixture_path, integration=DOMAIN)
+    return json.loads(fixture, cls=MySensorsJSONDecoder)
 
 
 def update_gateway_nodes(

@@ -14,7 +14,7 @@
         'host': 'nas.meontheinternet.com',
         'mac': '00-11-32-XX-XX-59',
         'password': '**REDACTED**',
-        'port': 1234,
+        'port': '1234',
         'ssl': True,
         'username': '**REDACTED**',
         'verify_ssl': False,

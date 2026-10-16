@@ -21,6 +21,8 @@ pytestmark = [
         "sensor.frenck_charging_current",
         "sensor.frenck_charging_power",
         "sensor.frenck_charging_voltage",
+        "sensor.frenck_wi_fi_rssi",
+        "sensor.frenck_wi_fi_signal_strength",
     ],
 )
 async def test_sensors(
@@ -50,6 +52,7 @@ async def test_sensors(
         "sensor.frenck_charging_current",
         "sensor.frenck_charging_power",
         "sensor.frenck_charging_voltage",
+        "sensor.frenck_wi_fi_rssi",
     ],
 )
 async def test_disabled_by_default_sensors(
@@ -61,3 +64,19 @@ async def test_disabled_by_default_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_wifi_signal_strength_is_enabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the signal strength percentage is on without asking for it.
+
+    A percentage is what someone can actually read, so it is the one that
+    shows up by default. The dBm behind it stays available but off.
+    """
+    assert (state := hass.states.get("sensor.frenck_wi_fi_signal_strength"))
+    assert state.state == "100"
+
+    assert (entry := entity_registry.async_get("sensor.frenck_wi_fi_signal_strength"))
+    assert not entry.disabled

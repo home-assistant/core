@@ -98,4 +98,6 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.samsung_tv_source"
-    await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, entity_id, [EMITTER_ENTITY_ID]
+    )

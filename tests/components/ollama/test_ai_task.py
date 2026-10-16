@@ -4,8 +4,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import ollama
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.ollama import CONF_KEEP_ALIVE
@@ -180,9 +180,9 @@ async def test_generate_structured_data(
             task_name="Test Task",
             entity_id=entity_id,
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -199,6 +199,7 @@ async def test_generate_structured_data(
         "type": "object",
         "properties": {"characters": {"items": {"type": "string"}, "type": "array"}},
         "required": ["characters"],
+        "additionalProperties": False,
     }
 
 
@@ -235,9 +236,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id=entity_id,
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,

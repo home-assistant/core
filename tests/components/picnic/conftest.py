@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,7 +12,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.mock_title_shopping_cart"
@@ -44,13 +43,13 @@ def mock_picnic_api():
         client = mock.return_value
         client.session.auth_token = "3q29fpwhulzes"
         client.get_cart.return_value = Cart.from_api(
-            json.loads(load_fixture("picnic/cart.json"))
+            load_json_object_fixture("picnic/cart.json")
         )
         client.get_user.return_value = User.from_api(
-            json.loads(load_fixture("picnic/user.json"))
+            load_json_object_fixture("picnic/user.json")
         )
         client.get_deliveries.return_value = [
-            DeliverySummary.from_api(json.loads(load_fixture("picnic/delivery.json")))
+            DeliverySummary.from_api(load_json_object_fixture("picnic/delivery.json"))
         ]
         client.get_delivery_position.return_value = {}
         yield client

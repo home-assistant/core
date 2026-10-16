@@ -2,6 +2,7 @@
 
 from copy import copy
 from html import escape
+from http import HTTPStatus
 from json import dumps
 from unittest.mock import MagicMock, patch
 
@@ -19,6 +20,7 @@ from homeassistant.components.onedrive.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_NAME,
     DOMAIN,
+    OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -28,9 +30,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-from .const import BACKUP_METADATA
+from .const import BACKUP_METADATA, INSTANCE_ID
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_config_entry(
@@ -56,6 +59,54 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("status", "state", "translation_key", "reauth_expected"),
+    [
+        pytest.param(
+            HTTPStatus.BAD_REQUEST,
+            ConfigEntryState.SETUP_ERROR,
+            "oauth2_helper_reauth_required",
+            True,
+            id="reauth",
+        ),
+        pytest.param(
+            HTTPStatus.TOO_MANY_REQUESTS,
+            ConfigEntryState.SETUP_RETRY,
+            "oauth2_helper_refresh_transient",
+            False,
+            id="transient",
+        ),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            ConfigEntryState.SETUP_RETRY,
+            "oauth2_helper_refresh_transient",
+            False,
+            id="server_error",
+        ),
+    ],
+)
+@pytest.mark.parametrize("expires_at", [0], ids=["expired"])
+async def test_token_refresh_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+    state: ConfigEntryState,
+    translation_key: str,
+    reauth_expected: bool,
+) -> None:
+    """Test a failing token refresh during setup."""
+    aioclient_mock.post(OAUTH2_TOKEN, status=status, json={})
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is state
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert bool(hass.config_entries.flow.async_progress()) is reauth_expected
 
 
 @pytest.mark.parametrize(
@@ -210,6 +261,7 @@ async def test_device(
 )
 async def test_data_cap_issues(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     mock_drive: Drive,
@@ -223,7 +275,6 @@ async def test_data_cap_issues(
 
     await setup_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, issue_key)
     assert (issue is not None) == issue_exists
 
@@ -250,10 +301,32 @@ async def test_1_1_to_1_2_migration(
     assert old_config_entry.minor_version == 2
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(
+            AuthenticationError(403, "Auth failed"),
+            "Authentication failed",
+            id="authentication_error",
+        ),
+        pytest.param(
+            NotFoundError(404, "Not found"),
+            f"Failed to get backups_{INSTANCE_ID[:8]} folder",
+            id="not_found",
+        ),
+        pytest.param(
+            OneDriveException(),
+            f"Failed to get backups_{INSTANCE_ID[:8]} folder",
+            id="onedrive_exception",
+        ),
+    ],
+)
 async def test_1_1_to_1_2_migration_failure(
     hass: HomeAssistant,
     mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    reason: str,
 ) -> None:
     """Test migration from 1.1 to 1.2 failure."""
     old_config_entry = MockConfigEntry(
@@ -266,11 +339,11 @@ async def test_1_1_to_1_2_migration_failure(
         },
     )
 
-    # will always 404 after migration, because of dummy id
-    mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
+    mock_onedrive_client.get_drive_item.side_effect = side_effect
 
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert old_config_entry.reason == reason
     assert old_config_entry.minor_version == 1
 
 

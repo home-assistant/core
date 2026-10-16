@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from pylamarzocco.const import FirmwareType, UpdateStatus
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -138,7 +138,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
                 await asyncio.sleep(3)
                 counter += 1
 
-        except (TimeoutError, RequestNotSuccessful) as exc:
+        except (TimeoutError, LaMarzoccoError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

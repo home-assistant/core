@@ -3,12 +3,13 @@
 import logging
 from typing import Any, override
 
-from arcam.fmj import SourceCodes
+from arcam.fmj.codecs import SourceCodes
 
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -50,6 +51,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         """Initialize device."""
         super().__init__(coordinator)
         self._state = coordinator.state
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -165,7 +167,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        presets = self._state.get_preset_details()
+        presets = self._state.get_preset_details() or {}
 
         radio = [
             BrowseMedia(

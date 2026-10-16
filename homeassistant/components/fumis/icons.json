@@ -108,5 +108,10 @@
         "default": "mdi:timer"
       }
     }
+  },
+  "triggers": {
+    "fuel_became_low": {
+      "trigger": "mdi:gauge-empty"
+    }
   }
 }

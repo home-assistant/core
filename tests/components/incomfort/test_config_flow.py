@@ -47,6 +47,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
     assert result["data"] == MOCK_CONFIG
@@ -149,6 +150,7 @@ async def test_dhcp_flow_simple(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "192.168.1.12"}
+    assert result["result"].unique_id == "00:04:a3:de:ad:ff"
 
     config_entry: ConfigEntry = result["result"]
     entry_id = config_entry.entry_id
@@ -164,7 +166,7 @@ async def test_dhcp_flow_simple(
     assert gateway_device.manufacturer == "Intergas"
     assert gateway_device.connections == {("mac", "00:04:a3:de:ad:ff")}
 
-    devices = device_registry.devices.get_devices_for_config_entry_id(entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(devices) == 3
     boiler_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "c0ffeec0ffee"), entry_id
@@ -212,8 +214,8 @@ async def test_dhcp_flow_migrates_existing_entry_without_unique_id(
     assert gateway_device.manufacturer == "Intergas"
     assert gateway_device.connections == {("mac", "00:04:a3:de:ad:ff")}
 
-    devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 3
     boiler_device = device_registry.async_get_device_by_identifier(

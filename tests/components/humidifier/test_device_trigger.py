@@ -1,10 +1,10 @@
 """The tests for Humidifier device triggers."""
 
-import datetime
+import datetime as dt
 
+from probatio import Invalid, to_field_list
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -378,7 +378,7 @@ async def test_if_fires_on_state_change(
     assert service_calls[3].data["some"] == "current_humidity_changed_above"
 
     # Wait 6 minutes
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=6))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=6))
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert {service_calls[4].data["some"], service_calls[5].data["some"]} == {
@@ -395,8 +395,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 8
     assert {service_calls[6].data["some"], service_calls[7].data["some"]} == {
-        "turn_off device - humidifier.test_5678 - on - off - None",
-        "turn_on_or_off device - humidifier.test_5678 - on - off - None",
+        f"turn_off device - {entry.entity_id} - on - off - None",
+        f"turn_on_or_off device - {entry.entity_id} - on - off - None",
     }
 
     # Fake turn on
@@ -408,8 +408,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 10
     assert {service_calls[8].data["some"], service_calls[9].data["some"]} == {
-        "turn_on device - humidifier.test_5678 - off - on - None",
-        "turn_on_or_off device - humidifier.test_5678 - off - on - None",
+        f"turn_on device - {entry.entity_id} - off - on - None",
+        f"turn_on_or_off device - {entry.entity_id} - off - on - None",
     }
 
 
@@ -536,7 +536,7 @@ async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -563,7 +563,7 @@ async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -590,7 +590,7 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -614,3 +614,18 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
             "type": "positive_time_period_dict",
         },
     ]
+
+
+def test_target_humidity_changed_with_bad_above_is_invalid() -> None:
+    """Test the trigger type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="expected int at 'above'"):
+        device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "humidifier.test",
+                "type": "target_humidity_changed",
+                "above": "wet",
+            }
+        )

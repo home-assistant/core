@@ -132,7 +132,7 @@ async def test_trophy_title_coordinator(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 2
 
@@ -225,7 +225,7 @@ async def test_trophy_title_coordinator_doesnt_update(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 1
 

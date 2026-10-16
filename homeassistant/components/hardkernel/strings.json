@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "not_hassio": {
+      "message": "Home Assistant is not running on Home Assistant OS, the Hardkernel entry will be removed"
+    },
+    "unsupported_board": {
+      "message": "Home Assistant is not running on a Hardkernel board ({board}), the Hardkernel entry will be removed"
+    }
+  }
+}

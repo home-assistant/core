@@ -76,6 +76,7 @@
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 72,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.FAHRENHEIT: '°F'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.system_1_zone_1',

@@ -11,7 +11,7 @@ from .coordinator import ModernFormsConfigEntry
 
 REDACT_CONFIG = {CONF_MAC}
 REDACT_DEVICE_INFO = {"mac_address", "owner"}
-REDACT_DEVICE_STATUS = {"schedule", "user_data"}
+REDACT_DEVICE_STATUS = {"name", "schedule", "user_data"}
 
 
 async def async_get_config_entry_diagnostics(
