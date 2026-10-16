@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from data_grand_lyon_ha import TclAlert, TclAlertSeverityType, TclAlertType
+from data_grand_lyon_ha import TclAlert
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -132,39 +132,18 @@ async def test_state_on_prefers_started_alert_over_later_one(
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test a running alert wins over a more severe one starting later today."""
-    ongoing = TclAlert(
-        type=TclAlertType.INFORMATION,
-        cause="événement",
+    ongoing = replace(
+        MOCK_TCL_ALERTS[0],
         debut=datetime(2026, 4, 10, 8, 0),
         fin=datetime(2026, 4, 10, 20, 0),
-        mode="Bus",
-        ligne_com="C3",
-        ligne_cli="C3",
         titre="Ongoing information",
-        message="Service normal, information seulement.",
-        last_update_fme=datetime(2026, 4, 10, 9, 15),
-        n=10,
-        type_severite=TclAlertSeverityType.OTHER_EFFECT,
         niveau_severite=30,
-        type_objet="line",
-        liste_objet="C3",
     )
-    later_today = TclAlert(
-        type=TclAlertType.DISRUPTION,
-        cause="travaux",
+    later_today = replace(
+        MOCK_TCL_ALERTS[0],
         debut=datetime(2026, 4, 10, 18, 0),
         fin=datetime(2026, 4, 10, 22, 0),
-        mode="Bus",
-        ligne_com="C3",
-        ligne_cli="C3",
         titre="Later disruption",
-        message="Déviation à partir de 18h.",
-        last_update_fme=datetime(2026, 4, 10, 9, 15),
-        n=11,
-        type_severite=TclAlertSeverityType.SIGNIFICANT_DELAYS,
-        niveau_severite=20,
-        type_objet="line",
-        liste_objet="C3",
     )
     mock_tcl_client.get_tcl_alerts.return_value = [ongoing, later_today]
     mock_line_config_entry.add_to_hass(hass)
@@ -182,22 +161,11 @@ async def test_state_on_prefers_started_alert_over_later_one(
     [
         pytest.param(
             [
-                TclAlert(
-                    type=TclAlertType.DISRUPTION,
-                    cause="travaux",
+                replace(
+                    MOCK_TCL_ALERTS[0],
                     debut=datetime(2026, 4, 10, 18, 0),
                     fin=datetime(2026, 4, 10, 22, 0),
-                    mode="Bus",
-                    ligne_com="C3",
-                    ligne_cli="C3",
                     titre="Upcoming disruption",
-                    message="Déviation à partir de 18h.",
-                    last_update_fme=datetime(2026, 4, 10, 9, 15),
-                    n=20,
-                    type_severite=TclAlertSeverityType.SIGNIFICANT_DELAYS,
-                    niveau_severite=20,
-                    type_objet="line",
-                    liste_objet="C3",
                 )
             ],
             "Upcoming disruption",
@@ -205,39 +173,18 @@ async def test_state_on_prefers_started_alert_over_later_one(
         ),
         pytest.param(
             [
-                TclAlert(
-                    type=TclAlertType.INFORMATION,
-                    cause="événement",
+                replace(
+                    MOCK_TCL_ALERTS[0],
                     debut=datetime(2026, 4, 10, 16, 0),
                     fin=datetime(2026, 4, 10, 20, 0),
-                    mode="Bus",
-                    ligne_com="C3",
-                    ligne_cli="C3",
                     titre="Soonest information",
-                    message="Information seulement.",
-                    last_update_fme=datetime(2026, 4, 10, 9, 15),
-                    n=21,
-                    type_severite=TclAlertSeverityType.OTHER_EFFECT,
                     niveau_severite=30,
-                    type_objet="line",
-                    liste_objet="C3",
                 ),
-                TclAlert(
-                    type=TclAlertType.DISRUPTION,
-                    cause="travaux",
+                replace(
+                    MOCK_TCL_ALERTS[0],
                     debut=datetime(2026, 4, 10, 18, 0),
                     fin=datetime(2026, 4, 10, 22, 0),
-                    mode="Bus",
-                    ligne_com="C3",
-                    ligne_cli="C3",
                     titre="Later severe disruption",
-                    message="Déviation à partir de 18h.",
-                    last_update_fme=datetime(2026, 4, 10, 9, 15),
-                    n=22,
-                    type_severite=TclAlertSeverityType.SIGNIFICANT_DELAYS,
-                    niveau_severite=20,
-                    type_objet="line",
-                    liste_objet="C3",
                 ),
             ],
             "Soonest information",
