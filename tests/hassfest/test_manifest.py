@@ -94,10 +94,38 @@ def test_invalid_categories(config: Config, categories: Any) -> None:
 )
 def test_unknown_category(config: Config, category: str) -> None:
     """Test unknown categories are rejected."""
-    assert _validate(config, {"categories": ["energy", category]}) == [
+    assert _validate(config, {"categories": ["lighting", category]}) == [
         f"Unknown category `{category}`, see "
         "homeassistant/components/homeassistant/strings.json for the known categories"
     ]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize(
+    "categories",
+    [
+        pytest.param(["energy", "energy.meters_monitoring"], id="parent_first"),
+        pytest.param(["energy.meters_monitoring", "energy"], id="subcategory_first"),
+    ],
+)
+def test_category_with_its_subcategory(config: Config, categories: list[str]) -> None:
+    """Test a category can't be listed next to one of its own subcategories."""
+    assert _validate(config, {"categories": categories}) == [
+        "Category `energy` is implied by its subcategory "
+        "`energy.meters_monitoring`, remove `energy`"
+    ]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_two_subcategories_of_one_category(config: Config) -> None:
+    """Test two subcategories of the same category are fine."""
+    assert (
+        _validate(
+            config,
+            {"categories": ["energy.meters_monitoring", "energy.ev_charging"]},
+        )
+        == []
+    )
 
 
 @pytest.mark.usefixtures("mock_core_integration")

@@ -423,6 +423,15 @@ def validate_categories(integration: Integration, known_categories: set[str]) ->
                 f"see {HOMEASSISTANT_STRINGS_PATH} for the known categories",
             )
 
+    for category in categories:
+        parent, _, subcategory = category.partition(".")
+        if subcategory and parent in categories:
+            integration.add_error(
+                "manifest",
+                f"Category `{parent}` is implied by its subcategory `{category}`, "
+                f"remove `{parent}`",
+            )
+
 
 def validate_manifest(
     integration: Integration,
