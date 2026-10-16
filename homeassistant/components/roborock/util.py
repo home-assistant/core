@@ -1,5 +1,7 @@
 """Utility helpers for the Roborock integration."""
 
+from hashlib import md5
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
@@ -14,6 +16,15 @@ from .const import DOMAIN
 
 # Version in which deprecated entities will be removed.
 DEPRECATED_REMOVAL_VERSION = "2027.3.0"
+
+
+def camera_pin_digest(pin: str) -> str:
+    """Return the digest a Roborock vacuum expects for its video PIN.
+
+    Live view identifies the PIN with this exact digest. The robot protocol
+    requires it; this integration does not use it as a password hash.
+    """
+    return md5(pin.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 def deprecate_entity(

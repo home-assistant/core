@@ -52,6 +52,11 @@
     }
   },
   "entity": {
+    "camera": {
+      "camera": {
+        "name": "Camera"
+      }
+    },
     "binary_sensor": {
       "clean_box_empty": {
         "name": "Clean water box"
@@ -723,6 +728,12 @@
     "button_press_failed": {
       "message": "Failed to press button"
     },
+    "camera_answer_timeout": {
+      "message": "The vacuum did not return a camera stream in time."
+    },
+    "camera_pin_required": {
+      "message": "Set the Roborock video PIN in the integration options before viewing the camera."
+    },
     "command_failed": {
       "message": "Error while calling {command}"
     },
@@ -796,6 +807,7 @@
     "step": {
       "drawables": {
         "data": {
+          "camera_pin": "Video PIN",
           "charger": "Charger",
           "cleaned_area": "Cleaned area",
           "goto_path": "Go-to path",
@@ -818,6 +830,7 @@
           "zones": "Zones"
         },
         "data_description": {
+          "camera_pin": "Numeric video PIN from the Roborock app, the same one used for remote viewing. Leave this blank to keep the current PIN. It is stored only as the digest the vacuum expects.",
           "charger": "Show the charger on the map.",
           "cleaned_area": "Show the area cleaned on the map.",
           "goto_path": "Show the go-to path on the map.",

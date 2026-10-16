@@ -14,6 +14,8 @@ CONF_SHOW_BACKGROUND = "show_background"
 CONF_SHOW_WALLS = "show_walls"
 CONF_SHOW_ROOMS = "show_rooms"
 CONF_ROBOROCK_SERVER_URL = "roborock_server_url"
+CONF_CAMERA_PIN = "camera_pin"
+CONF_CAMERA_PIN_HASH = "camera_pin_hash"
 REGION_AUTO = "auto"
 REGION_CUSTOM = "custom"
 REGION_US = "us"
@@ -54,6 +56,7 @@ DEFAULT_DRAWABLES = {
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,

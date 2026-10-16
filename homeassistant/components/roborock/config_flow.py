@@ -41,6 +41,8 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
+    CONF_CAMERA_PIN,
+    CONF_CAMERA_PIN_HASH,
     CONF_ENTRY_CODE,
     CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_BACKGROUND,
@@ -54,6 +56,7 @@ from .const import (
     REGION_CUSTOM,
     REGION_OPTIONS,
 )
+from .util import camera_pin_digest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -294,6 +297,9 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
+            pin = user_input.pop(CONF_CAMERA_PIN, None)
+            if isinstance(pin, str) and pin.strip():
+                self.options[CONF_CAMERA_PIN_HASH] = camera_pin_digest(pin.strip())
             self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND)
             self.options[CONF_SHOW_ROOMS] = user_input.pop(CONF_SHOW_ROOMS)
             self.options[CONF_SHOW_WALLS] = user_input.pop(CONF_SHOW_WALLS)
@@ -327,6 +333,9 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
                 default=self.config_entry.options.get(CONF_SHOW_WALLS, True),
             )
         ] = bool
+        data_schema[probatio.Optional(probatio.Secret(CONF_CAMERA_PIN))] = TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        )
         return self.async_show_form(
             step_id=DRAWABLES,
             data_schema=probatio.Schema(data_schema),

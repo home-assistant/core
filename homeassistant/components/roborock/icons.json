@@ -1,5 +1,10 @@
 {
   "entity": {
+    "camera": {
+      "camera": {
+        "default": "mdi:cctv"
+      }
+    },
     "binary_sensor": {
       "clean_fluid_empty": {
         "default": "mdi:spray-bottle"
