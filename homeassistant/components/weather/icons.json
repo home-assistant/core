@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "did_rain": {
+      "condition": "mdi:weather-rainy"
+    },
+    "will_rain": {
+      "condition": "mdi:umbrella"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:weather-partly-cloudy",

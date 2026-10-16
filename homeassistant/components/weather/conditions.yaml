@@ -1,0 +1,49 @@
+.target: &target
+  entity:
+    - domain: weather
+
+.behavior: &behavior
+  required: true
+  default: any
+  selector:
+    automation_behavior:
+      mode: condition
+
+.within: &within
+  required: true
+  default:
+    days: 1
+    hours: 0
+    minutes: 0
+    seconds: 0
+  selector:
+    duration:
+      enable_day: true
+
+did_rain:
+  target: *target
+  fields:
+    behavior: *behavior
+    within: *within
+
+will_rain:
+  target: *target
+  fields:
+    behavior: *behavior
+    within: *within
+    measure:
+      required: true
+      default: amount
+      selector:
+        select:
+          translation_key: measure
+          options:
+            - amount
+            - probability
+    threshold:
+      required: true
+      selector:
+        number:
+          min: 0
+          step: any
+          mode: box

@@ -1,6 +1,7 @@
 {
   "domain": "weather",
   "name": "Weather",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/weather",
   "integration_type": "entity",

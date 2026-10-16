@@ -1,4 +1,43 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if"
+  },
+  "conditions": {
+    "did_rain": {
+      "description": "Tests if it rained at one or more weather entities within a past time window.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::weather::common::condition_behavior_name%]"
+        },
+        "within": {
+          "description": "How far back to look.",
+          "name": "In the last"
+        }
+      },
+      "name": "Did it rain"
+    },
+    "will_rain": {
+      "description": "Tests if the forecast of one or more weather entities expects rain within a future time window.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::weather::common::condition_behavior_name%]"
+        },
+        "measure": {
+          "description": "Test the expected amount of precipitation or the chance of precipitation.",
+          "name": "Based on"
+        },
+        "threshold": {
+          "description": "The minimum value. The amount uses the precipitation unit of the weather entity. The probability is a percentage.",
+          "name": "At least"
+        },
+        "within": {
+          "description": "How far ahead to look.",
+          "name": "In the next"
+        }
+      },
+      "name": "Will it rain"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::weather::title%]",
@@ -101,6 +140,12 @@
         "daily": "Daily",
         "hourly": "Hourly",
         "twice_daily": "Twice daily"
+      }
+    },
+    "measure": {
+      "options": {
+        "amount": "Amount",
+        "probability": "Probability"
       }
     }
   },
