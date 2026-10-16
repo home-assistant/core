@@ -141,7 +141,8 @@ class OneWireHub:
         ]
         if new_devices:
             self.devices.extend(new_devices)
-            self._populate_device_registry(new_devices)
+            # Include known devices, to restore links to a re-added parent
+            self._populate_device_registry(devices)
             async_dispatcher_send(
                 self._hass, SIGNAL_NEW_DEVICE_CONNECTED, self, new_devices
             )
