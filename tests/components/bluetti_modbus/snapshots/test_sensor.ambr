@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ac_1_o_c',
+    'translation_key': 'ac_output_current',
     'unique_id': '1234_ac_1_o_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -94,7 +94,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ac_o_p_total',
+    'translation_key': 'ac_output_power',
     'unique_id': '1234_ac_o_p_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -152,7 +152,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ac_1_o_v',
+    'translation_key': 'ac_output_voltage',
     'unique_id': '1234_ac_1_o_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -210,7 +210,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_c',
+    'translation_key': 'battery_current',
     'unique_id': '1234_b_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -265,7 +265,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_cycle_count',
+    'translation_key': 'battery_cycle_count',
     'unique_id': '1234_b_cycle_count',
     'unit_of_measurement': None,
   })
@@ -318,7 +318,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_soc',
+    'translation_key': 'battery_soc',
     'unique_id': '1234_b_soc',
     'unit_of_measurement': '%',
   })
@@ -373,7 +373,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_soh',
+    'translation_key': 'battery_soh',
     'unique_id': '1234_b_soh',
     'unit_of_measurement': '%',
   })
@@ -430,7 +430,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_v',
+    'translation_key': 'battery_voltage',
     'unique_id': '1234_b_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -483,7 +483,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_cell_count',
+    'translation_key': 'cell_count',
     'unique_id': '1234_b_cell_count',
     'unit_of_measurement': None,
   })
@@ -533,7 +533,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_dc_count',
+    'translation_key': 'dc_pv_input_count',
     'unique_id': '1234_pv_dc_count',
     'unit_of_measurement': None,
   })
@@ -588,7 +588,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'g_1_i_c',
+    'translation_key': 'grid_current',
     'unique_id': '1234_g_1_i_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -646,7 +646,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'g_i_f',
+    'translation_key': 'grid_frequency',
     'unique_id': '1234_g_i_f',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
@@ -704,7 +704,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'g_i_p_total',
+    'translation_key': 'grid_input_power',
     'unique_id': '1234_g_i_p_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -762,7 +762,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'g_1_i_v',
+    'translation_key': 'grid_voltage',
     'unique_id': '1234_g_1_i_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -815,7 +815,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'd_num_inverters',
+    'translation_key': 'inverter_count',
     'unique_id': '1234_d_num_inverters',
     'unit_of_measurement': None,
   })
@@ -870,7 +870,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'd_inverter_1_c',
+    'translation_key': 'inverter_current',
     'unique_id': '1234_d_inverter_1_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -934,7 +934,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'd_inverter_status',
+    'translation_key': 'inverter_status',
     'unique_id': '1234_d_inverter_status',
     'unit_of_measurement': None,
   })
@@ -1000,7 +1000,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'd_inverter_1_v',
+    'translation_key': 'inverter_voltage',
     'unique_id': '1234_d_inverter_1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -2026,7 +2026,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_ac_e',
+    'translation_key': 'pv_ac_energy',
     'unique_id': '1234_pv_ac_e',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2084,7 +2084,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_ac_p',
+    'translation_key': 'pv_ac_power',
     'unique_id': '1234_pv_ac_p',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -2137,7 +2137,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_ntc_count',
+    'translation_key': 'temperature_sensor_count',
     'unique_id': '1234_b_ntc_count',
     'unit_of_measurement': None,
   })
@@ -2192,7 +2192,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ac_o_e_total',
+    'translation_key': 'total_ac_output_energy',
     'unique_id': '1234_ac_o_e_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2250,7 +2250,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_i_e',
+    'translation_key': 'total_battery_charged_energy',
     'unique_id': '1234_b_i_e',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
@@ -2308,7 +2308,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'b_o_e',
+    'translation_key': 'total_battery_discharged_energy',
     'unique_id': '1234_b_o_e',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
@@ -2366,7 +2366,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'g_o_e_total',
+    'translation_key': 'total_grid_export_energy',
     'unique_id': '1234_g_o_e_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2424,7 +2424,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'g_i_e_total',
+    'translation_key': 'total_grid_import_energy',
     'unique_id': '1234_g_i_e_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2482,7 +2482,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'd_inverter_total',
+    'translation_key': 'total_inverter_power',
     'unique_id': '1234_d_inverter_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -2540,7 +2540,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_i_e_total',
+    'translation_key': 'total_pv_input_energy',
     'unique_id': '1234_pv_i_e_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2598,7 +2598,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_i_p_total',
+    'translation_key': 'total_pv_input_power',
     'unique_id': '1234_pv_i_p_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
