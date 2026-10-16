@@ -55,14 +55,6 @@ def _as_is(value: Any) -> StateType:
     return cast(StateType, value)
 
 
-def _inverter_status(value: Any) -> StateType:
-    return _INVERTER_STATUS.get(value)
-
-
-def _pv_type(value: Any) -> StateType:
-    return _PV_TYPE.get(value)
-
-
 @dataclass(frozen=True, kw_only=True)
 class BluettiModbusSensorEntityDescription(SensorEntityDescription):
     """Describes a BLUETTI Modbus sensor."""
@@ -156,7 +148,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="d_inverter_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(_INVERTER_STATUS.values()),
-        value_fn=_inverter_status,
+        value_fn=_INVERTER_STATUS.get,
     ),
     BluettiModbusSensorEntityDescription(
         key="d_inverter_type",
@@ -229,7 +221,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="pv_1_i_type",
         device_class=SensorDeviceClass.ENUM,
         options=list(_PV_TYPE.values()),
-        value_fn=_pv_type,
+        value_fn=_PV_TYPE.get,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
@@ -260,7 +252,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="pv_2_i_type",
         device_class=SensorDeviceClass.ENUM,
         options=list(_PV_TYPE.values()),
-        value_fn=_pv_type,
+        value_fn=_PV_TYPE.get,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
@@ -291,7 +283,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="pv_3_i_type",
         device_class=SensorDeviceClass.ENUM,
         options=list(_PV_TYPE.values()),
-        value_fn=_pv_type,
+        value_fn=_PV_TYPE.get,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
@@ -322,7 +314,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         translation_key="pv_4_i_type",
         device_class=SensorDeviceClass.ENUM,
         options=list(_PV_TYPE.values()),
-        value_fn=_pv_type,
+        value_fn=_PV_TYPE.get,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
