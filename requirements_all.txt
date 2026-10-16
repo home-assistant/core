@@ -2730,7 +2730,7 @@ python-citybikes==0.3.3
 python-digitalocean==1.13.2
 
 # homeassistant.components.dropbox
-python-dropbox-api==0.1.5
+python-dropbox-api==0.1.6
 
 # homeassistant.components.duco
 python-duco-connectivity==0.18.0
