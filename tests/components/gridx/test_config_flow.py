@@ -72,6 +72,7 @@ async def test_flow_errors(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_no_systems(hass: HomeAssistant, mock_connector: AsyncMock) -> None:
     """Test an account without systems cannot be set up."""
+    systems = mock_connector.systems
     mock_connector.systems = {}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -81,6 +82,12 @@ async def test_flow_no_systems(hass: HomeAssistant, mock_connector: AsyncMock) -
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_systems"}
+
+    mock_connector.systems = systems
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_connector", "mock_setup_entry")
