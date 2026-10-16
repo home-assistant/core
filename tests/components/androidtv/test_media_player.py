@@ -28,6 +28,7 @@ from homeassistant.components.androidtv.const import (
 )
 from homeassistant.components.androidtv.media_player import (
     MAX_SCREENSHOT_SIZE_BYTES,
+    SCREENCAP_DATASPACE_SRGB,
     _encode_raw_screencap,
 )
 from homeassistant.components.androidtv.services import (
@@ -858,7 +859,10 @@ async def test_get_image_http(
     tests/components/media_player/test_init.py.
     """
     encoded = base64.b64encode(
-        gzip.compress(struct.pack("<IIII", 1, 1, 1, 0) + b"\xff\x00\x00\xff")
+        gzip.compress(
+            struct.pack("<IIII", 1, 1, 1, SCREENCAP_DATASPACE_SRGB)
+            + b"\xff\x00\x00\xff"
+        )
     ).decode()
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -1250,9 +1254,7 @@ async def test_options_reload(hass: HomeAssistant) -> None:
             assert config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize(
-    ("sdk_version", "header_bytes"), [(26, 12), (27, 16), (28, 16)]
-)
+@pytest.mark.parametrize("sdk_version", [27, 28])
 @pytest.mark.parametrize(
     ("pixel_format", "pixels", "expected"),
     [
@@ -1265,13 +1267,12 @@ async def test_options_reload(hass: HomeAssistant) -> None:
 )
 def test_raw_screencap_pixels(
     sdk_version: int,
-    header_bytes: int,
     pixel_format: int,
     pixels: bytes,
     expected: tuple[int, ...],
 ) -> None:
-    """Preserve color and alpha for old and new Android raw headers."""
-    header = struct.pack("<III", 1, 1, pixel_format) + bytes(header_bytes - 12)
+    """Preserve color and alpha for supported raw screenshot headers."""
+    header = struct.pack("<IIII", 1, 1, pixel_format, SCREENCAP_DATASPACE_SRGB)
     encoded = base64.b64encode(gzip.compress(header + pixels)).decode()
     png = _encode_raw_screencap(encoded, sdk_version)
     assert png is not None
@@ -1281,7 +1282,27 @@ def test_raw_screencap_pixels(
 
 
 @pytest.mark.parametrize(
-    "raw", [b"", bytes(11), struct.pack("<IIII", 2, 1, 1, 0) + bytes(4)]
+    ("sdk_version", "header"),
+    [
+        pytest.param(26, struct.pack("<III", 1, 1, 1), id="api-26-no-dataspace"),
+        pytest.param(27, struct.pack("<IIII", 1, 1, 1, 2), id="display-p3"),
+    ],
+)
+def test_raw_screencap_unsupported_color_space_falls_back(
+    sdk_version: int, header: bytes
+) -> None:
+    """Use the device PNG encoder when raw color space cannot be preserved."""
+    encoded = base64.b64encode(gzip.compress(header + bytes(4))).decode()
+    assert _encode_raw_screencap(encoded, sdk_version) is None
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b"",
+        bytes(11),
+        struct.pack("<IIII", 2, 1, 1, SCREENCAP_DATASPACE_SRGB) + bytes(4),
+    ],
 )
 def test_raw_screencap_truncated(raw: bytes) -> None:
     """Reject incomplete frames rather than inventing missing pixels."""
@@ -1291,18 +1312,45 @@ def test_raw_screencap_truncated(raw: bytes) -> None:
 
 
 def test_raw_screencap_oversized_frame() -> None:
-    """Reject dimensions above the host-side decode bound."""
+    """Defer frames above the host-side decode bound to the device PNG encoder."""
     width = MAX_SCREENSHOT_SIZE_BYTES // 4
-    header = struct.pack("<IIII", width, 2, 1, 0)
+    header = struct.pack("<IIII", width, 2, 1, SCREENCAP_DATASPACE_SRGB)
     encoded = base64.b64encode(gzip.compress(header)).decode()
-    with pytest.raises(ValueError, match="frame size"):
-        _encode_raw_screencap(encoded, 27)
+    assert _encode_raw_screencap(encoded, 27) is None
+
+
+async def test_raw_screencap_oversized_frame_falls_back(hass: HomeAssistant) -> None:
+    """An oversized raw frame uses the existing native PNG capture."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    width = MAX_SCREENSHOT_SIZE_BYTES // 4
+    header = struct.pack("<IIII", width, 2, 1, SCREENCAP_DATASPACE_SRGB)
+    encoded = base64.b64encode(gzip.compress(header)).decode()
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            return_value=f"28\n{encoded}",
+        ),
+        patchers.PATCH_SCREENCAP as legacy_capture,
+    ):
+        await async_update_entity(hass, entity_id)
+    legacy_capture.assert_awaited_once()
+    assert hass.states.get(entity_id).attributes["entity_picture"]
 
 
 def test_raw_screencap_unsupported_format() -> None:
     """Leave unsupported pixel formats to the existing device PNG encoder."""
     encoded = base64.b64encode(
-        gzip.compress(struct.pack("<IIII", 1, 1, 43, 0) + bytes(4))
+        gzip.compress(
+            struct.pack("<IIII", 1, 1, 43, SCREENCAP_DATASPACE_SRGB) + bytes(4)
+        )
     ).decode()
     assert _encode_raw_screencap(encoded, 27) is None
 
@@ -1312,7 +1360,9 @@ def test_raw_screencap_unsupported_format() -> None:
     [
         pytest.param(gzip.compress(bytes(11)), 0, id="truncated-frame"),
         pytest.param(
-            gzip.compress(struct.pack("<IIII", 1, 1, 43, 0) + bytes(4)),
+            gzip.compress(
+                struct.pack("<IIII", 1, 1, 43, SCREENCAP_DATASPACE_SRGB) + bytes(4)
+            ),
             1,
             id="unsupported-format",
         ),
