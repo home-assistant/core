@@ -584,6 +584,36 @@ async def test_login_flow_pkce_validation(
 
 
 @pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"client_id": CLIENT_ID + "?" + "x" * 2048}, id="client_id"),
+        pytest.param(
+            {"redirect_uri": CLIENT_REDIRECT_URI + "?" + "x" * 2048},
+            id="redirect_uri",
+        ),
+    ],
+)
+async def test_login_flow_url_too_long(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+) -> None:
+    """Test login flows reject overly long URLs."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert not hass.auth.login_flow.async_progress()
+
+
+@pytest.mark.parametrize(
     "path",
     [
         pytest.param(
