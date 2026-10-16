@@ -50,7 +50,7 @@ async def _async_fetch_home_info(auth_mgr: YoLinkAuthMgr) -> dict[str, Any]:
 UAC_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_UAID): selector.TextSelector(),
-        probatio.Required(CONF_SECRET_KEY): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_SECRET_KEY)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
