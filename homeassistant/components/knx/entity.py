@@ -1,5 +1,6 @@
 """Base classes for KNX entities."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -147,15 +148,21 @@ class _KnxEntityBase(Entity):
         """Call after device was updated."""
         self.async_write_ha_state()
 
-    def _entity_identifier(self) -> KnxEntityIdentifier | None:
-        """Return the identifier of this entity, if it has a unique id."""
-        if self._knx_entity_identifier is None and (uid := self.unique_id):
+    @override
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Build the identifier once the platform is known."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        if uid := self.unique_id:
             self._knx_entity_identifier = KnxEntityIdentifier(
-                platform=self.platform_data.domain,
+                platform=platform.domain,
                 unique_id=uid,
                 ui=isinstance(self, KnxUiEntity),
             )
-        return self._knx_entity_identifier
 
     @override
     def add_to_platform_abort(self) -> None:
@@ -164,7 +171,7 @@ class _KnxEntityBase(Entity):
         Disabled entities are aborted before `async_added_to_hass` and would
         otherwise be unknown to the group address map.
         """
-        if (identifier := self._entity_identifier()) is not None:
+        if (identifier := self._knx_entity_identifier) is not None:
             if self.registry_entry is not None and self.registry_entry.disabled:
                 self._knx_module.add_disabled_entity(
                     group_addresses=self._device.group_addresses(),
@@ -185,7 +192,7 @@ class _KnxEntityBase(Entity):
         self._device.name = self.entity_id
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
-        if (identifier := self._entity_identifier()) is not None:
+        if (identifier := self._knx_entity_identifier) is not None:
             self._knx_module.add_to_group_address_entities(
                 group_addresses=self._device.group_addresses(),
                 identifier=identifier,
