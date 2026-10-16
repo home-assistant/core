@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, cast, override
 
 from aioanylist import AnyListError
-from aioanylist.proto import PB
+from aioanylist.proto import ListItem, ShoppingList  # pylint: disable=no-name-in-module
 
 from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
@@ -24,7 +24,7 @@ from .coordinator import AnyListConfigEntry, AnyListDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 
-def _convert_item(item: PB.ListItem) -> TodoItem:
+def _convert_item(item: ListItem) -> TodoItem:
     """Convert an AnyList item to a Home Assistant todo item."""
     return TodoItem(
         uid=str(item.identifier),
@@ -114,7 +114,7 @@ class AnyListTodoListEntity(
         self._attr_unique_id = f"{account_id}_{list_id}"
 
     @property
-    def shopping_list(self) -> PB.ShoppingList:
+    def shopping_list(self) -> ShoppingList:
         """Return the backing AnyList shopping list."""
         return self.coordinator.data.shopping_lists[self._list_id]
 
