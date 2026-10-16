@@ -47,14 +47,14 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     diffuser = mock_diffuser_v1_battery_cartridge()
     client = await init_integration(hass, config_entry, [diffuser])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    coordinator = config_entry.runtime_data["lot123v1"]
+    coordinator = config_entry.runtime_data.hubs
     diffuser.is_on = False
 
     state = hass.states.get("switch.genie")
     assert state
     assert state.state == STATE_ON
 
-    call_count_before_update = client.hub.call_count
+    call_count_before_update = client.hubs.call_count
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -69,7 +69,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
     assert coordinator.last_update_success
-    assert client.hub.call_count == call_count_before_update + 1
+    assert client.hubs.call_count == call_count_before_update + 1
 
 
 async def test_device_info(
