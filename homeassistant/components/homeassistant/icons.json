@@ -345,7 +345,7 @@
   },
   "triggers": {
     "updated": {
-      "trigger": "mdi:update"
+      "trigger": "mdi:package-up"
     }
   }
 }
