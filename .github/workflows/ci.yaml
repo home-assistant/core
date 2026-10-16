@@ -674,7 +674,10 @@ jobs:
     needs:
       - info
       - base
-    if: false # Experiment: only the full pytest run
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+      || github.event.inputs.mypy-only == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
