@@ -222,7 +222,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return if the light is turned on."""
-        if self._tv.on:
+        if self.coordinator.tv_on:
             effect = AmbilightEffect.from_str(self._attr_effect)
             return effect.is_on(self._tv.powerstate)
 
@@ -337,11 +337,12 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         for attempt in range(COMMAND_ATTEMPTS):
             try:
                 await command()
-            except HomeAssistantError, GeneralFailure:
+            except (HomeAssistantError, GeneralFailure) as err:
                 if attempt == COMMAND_ATTEMPTS - 1:
                     raise
                 await asyncio.sleep(1)
-                await self.coordinator.async_ensure_reachable()
+                if not await self.coordinator.async_ensure_reachable(force=True):
+                    raise HomeAssistantError("TV is not available") from err
             else:
                 return
 
@@ -396,7 +397,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn of ambilight."""
         # A TV that is not reachable has no ambilight running.
-        if not self._tv.on:
+        if not self.coordinator.tv_on:
             return
         await self._async_retry(self._async_turn_off)
         await self.coordinator.async_request_refresh()

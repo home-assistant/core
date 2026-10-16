@@ -1,5 +1,6 @@
 """Tests for the Philips TV ambilight light."""
 
+import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 from types import SimpleNamespace
@@ -9,7 +10,7 @@ from haphilipsjs import GeneralFailure, PhilipsTV
 import pytest
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.philips_js.const import UNREACHABLE_GRACE, WAKE_TIMEOUT
+from homeassistant.components.philips_js.const import UNREACHABLE_GRACE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -41,15 +42,16 @@ class FakeClock:
         return self.now
 
     async def sleep(self, delay: float) -> None:
-        """Advance the clock instead of sleeping."""
+        """Advance the clock instead of sleeping, yielding to the loop briefly."""
         self.now += delay
+        await asyncio.sleep(0.001)
 
 
 @pytest.fixture
 def clock() -> Generator[FakeClock]:
     """Replace the time and sleep used by the integration with a fake clock."""
     fake = FakeClock()
-    fake_asyncio = MagicMock(sleep=fake.sleep)
+    fake_asyncio = MagicMock(sleep=fake.sleep, timeout=asyncio.timeout)
     with (
         patch(f"{COORDINATOR}.time", SimpleNamespace(monotonic=fake.monotonic)),
         patch(f"{COORDINATOR}.asyncio", fake_asyncio),
@@ -109,7 +111,8 @@ async def test_transient_failure_keeps_state(
     _fail_updates(mock_tv)
     await _poll(hass, clock, 30)
 
-    assert mock_tv.on is True
+    # The TV did not answer, but the light keeps the last known state.
+    assert mock_tv.on is False
     assert (state := hass.states.get(LIGHT_ENTITY_ID))
     assert state.state == STATE_ON
 
@@ -222,9 +225,11 @@ async def test_turn_on_times_out(
     """Test turn_on raises after WAKE_TIMEOUT when the TV never answers."""
     _fail_updates(mock_tv)
     await _poll(hass, clock, UNREACHABLE_GRACE + 1)
-    start = clock.now
 
-    with pytest.raises(HomeAssistantError, match="TV is not available"):
+    with (
+        patch(f"{COORDINATOR}.WAKE_TIMEOUT", 0.05),
+        pytest.raises(HomeAssistantError, match="TV is not available"),
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -232,8 +237,79 @@ async def test_turn_on_times_out(
             blocking=True,
         )
 
-    assert clock.now - start >= WAKE_TIMEOUT
+    assert mock_tv.update.await_count > 1
     mock_tv.setAmbilightCached.assert_not_called()
+
+
+@pytest.mark.usefixtures("setup_light")
+async def test_turn_on_times_out_on_hanging_update(
+    hass: HomeAssistant, mock_tv: PhilipsTV, clock: FakeClock
+) -> None:
+    """Test a pending api.update() cannot block turn_on past WAKE_TIMEOUT."""
+    _fail_updates(mock_tv)
+    await _poll(hass, clock, UNREACHABLE_GRACE + 1)
+
+    never = asyncio.Event()
+
+    async def hang() -> bool:
+        await never.wait()
+        return True
+
+    mock_tv.update.side_effect = hang
+
+    with (
+        patch(f"{COORDINATOR}.WAKE_TIMEOUT", 0.05),
+        pytest.raises(HomeAssistantError, match="TV is not available"),
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_tv.setAmbilightCached.assert_not_called()
+
+
+@pytest.mark.usefixtures("setup_light")
+async def test_retry_forces_live_poll_within_grace(
+    hass: HomeAssistant, mock_tv: PhilipsTV
+) -> None:
+    """Test a failed command triggers a live poll even while in grace."""
+    mock_tv.setAmbilightCached.side_effect = [GeneralFailure("dropped"), True]
+    mock_tv.update.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_tv.update.assert_awaited()
+    assert mock_tv.setAmbilightCached.call_count == 2
+
+
+@pytest.mark.usefixtures("setup_light")
+async def test_retry_stops_when_live_poll_fails(
+    hass: HomeAssistant, mock_tv: PhilipsTV
+) -> None:
+    """Test turn_on raises without a further command if the probe fails."""
+    mock_tv.setAmbilightCached.side_effect = GeneralFailure("dropped")
+    _fail_updates(mock_tv)
+
+    with (
+        patch(f"{COORDINATOR}.WAKE_TIMEOUT", 0.05),
+        pytest.raises(HomeAssistantError, match="TV is not available"),
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert mock_tv.setAmbilightCached.call_count == 1
 
 
 @pytest.mark.usefixtures("setup_light")
