@@ -16,6 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -25,6 +26,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 from .util import get_ssl_context, normalize_host
@@ -91,6 +93,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _discovered_data: dict[str, Any]
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -138,6 +142,76 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery of an INDI Allsky server."""
+        host = normalize_host(discovery_info.host)
+        port = discovery_info.port or (
+            80 if discovery_info.type == "_http._tcp.local." else 443
+        )
+        ssl = discovery_info.type != "_http._tcp.local."
+        mac = discovery_info.properties.get("mac")
+
+        if mac:
+            formatted_mac = format_mac(mac)
+            await self.async_set_unique_id(formatted_mac)
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    CONF_SSL: ssl,
+                }
+            )
+        else:
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                }
+            )
+            await self._async_handle_discovery_without_unique_id()
+
+        self._discovered_data = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: ssl,
+            CONF_VERIFY_SSL: True,
+        }
+
+        try:
+            await validate_input(self.hass, self._discovered_data)
+        except CannotConnect, InvalidAuth, Unknown:
+            return self.async_abort(reason="cannot_connect")
+
+        server_name = discovery_info.name.split("._")[0]
+        self.context["title_placeholders"] = {"name": server_name}
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user confirmation of discovery."""
+        if user_input is not None:
+            port = self._discovered_data[CONF_PORT]
+            default_port = 443 if self._discovered_data[CONF_SSL] else 80
+            host_str = (
+                f"{self._discovered_data[CONF_HOST]}:{port}"
+                if port != default_port
+                else self._discovered_data[CONF_HOST]
+            )
+            return self.async_create_entry(
+                title=f"INDI Allsky ({host_str})",
+                data=self._discovered_data,
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=self.context.get("title_placeholders", {}),
+        )
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
