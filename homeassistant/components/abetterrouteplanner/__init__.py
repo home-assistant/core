@@ -9,8 +9,8 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -134,6 +134,14 @@ async def async_setup_entry(
         )
         await stream.start()
         entry.async_on_unload(stream.stop)
+
+        # Entries are not unloaded on shutdown, so stop the stream there too.
+        async def _async_stop_stream(_: Event) -> None:
+            await stream.stop()
+
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_stream)
+        )
 
     entry.runtime_data = AbrpData(
         vehicles=vehicles, telemetry_coordinator=telemetry_coordinator

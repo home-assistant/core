@@ -21,6 +21,7 @@ from homeassistant.components.abetterrouteplanner.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestTransientError
 from homeassistant.helpers import device_registry as dr
@@ -450,6 +451,26 @@ async def test_unload_stops_stream(
     await hass.async_block_till_done()
 
     assert config_entry_with_vehicles.state is ConfigEntryState.NOT_LOADED
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
+
+    # The shutdown listener must go with the entry.
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_shutdown_stops_stream(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Home Assistant stopping stops the stream without unloading the entry."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     mock_telemetry_stream.return_value.stop.assert_awaited_once()
 
 
