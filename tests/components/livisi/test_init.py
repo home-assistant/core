@@ -2,8 +2,10 @@
 
 import asyncio
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import MagicMock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from livisi import (
     LIVISI_EVENT_STATE_CHANGED,
     LivisiConnection,
@@ -21,6 +23,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.livisi.const import (
+    DEVICE_POLLING_DELAY,
     DOMAIN,
     IS_OPEN,
     LIVISI_REACHABILITY_CHANGE,
@@ -45,7 +48,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import CONTROLLER, VALID_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _device(
@@ -118,6 +121,18 @@ VALUES = {
 }
 
 
+def _fire_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Start the next device poll."""
+    freezer.tick(timedelta(seconds=DEVICE_POLLING_DELAY))
+    async_fire_time_changed(hass)
+
+
+async def _async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Run the next device poll and wait for its updates."""
+    _fire_poll(hass, freezer)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("controller", "target_temperature_property"),
     [
@@ -132,6 +147,7 @@ VALUES = {
 async def test_setup_entities_and_unload(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     controller: LivisiController,
     target_temperature_property: str,
 ) -> None:
@@ -236,13 +252,11 @@ async def test_setup_entities_and_unload(
     assert hass.states.is_state(switch_id, STATE_ON)
 
     connection.async_get_devices.return_value = [DEVICES[0], DEVICES[2]]
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
 
     connection.async_get_devices.return_value = DEVICES
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(switch_id, STATE_ON)
 
     on_data(
@@ -288,8 +302,7 @@ async def test_setup_entities_and_unload(
     assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
     assert hass.states.is_state(climate_id, STATE_UNAVAILABLE)
 
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(binary_sensor_id, STATE_OFF)
     assert hass.states.is_state(switch_id, STATE_ON)
     assert not hass.states.is_state(climate_id, STATE_UNAVAILABLE)
@@ -372,7 +385,7 @@ async def test_setup_entities_and_unload(
     assert not hass.states.is_state(climate_id, STATE_UNAVAILABLE)
 
     connection.async_get_devices.side_effect = LivisiException
-    await config_entry.runtime_data.async_refresh()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(binary_sensor_id, STATE_UNAVAILABLE)
     assert hass.states.is_state(climate_id, STATE_UNAVAILABLE)
 
@@ -393,6 +406,7 @@ async def test_setup_entities_and_unload(
 async def test_state_read_failure_recovery(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     device: LivisiDevice,
     platform: Platform,
 ) -> None:
@@ -418,25 +432,21 @@ async def test_state_read_failure_recovery(
 
     connection.async_get_value.side_effect = None
     connection.async_get_value.return_value = True
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert not hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
     connection.async_get_devices.return_value = [replace(device, unreachable=True)]
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
     connection.async_get_devices.return_value = [device]
     connection.async_get_value.side_effect = LivisiException
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
     connection.async_get_value.side_effect = None
     connection.async_get_value.return_value = True
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert not hass.states.is_state(entity_id, STATE_UNAVAILABLE)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -444,7 +454,9 @@ async def test_state_read_failure_recovery(
 
 
 async def test_unreachable_event_during_refresh(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an unreachable event takes precedence over an older device poll."""
     refresh_started = asyncio.Event()
@@ -469,6 +481,7 @@ async def test_unreachable_event_during_refresh(
         Platform.SWITCH, DOMAIN, "switch-device"
     )
     assert switch_id is not None
+    on_data = connection.listen_for_events.await_args.args[0]
 
     async def delayed_get_devices() -> list[LivisiDevice]:
         refresh_started.set()
@@ -476,10 +489,10 @@ async def test_unreachable_event_during_refresh(
         return [DEVICES[1]]
 
     connection.async_get_devices.side_effect = delayed_get_devices
-    refresh = hass.async_create_task(config_entry.runtime_data.async_refresh())
+    _fire_poll(hass, freezer)
     await refresh_started.wait()
 
-    config_entry.runtime_data.on_data(
+    on_data(
         LivisiWebsocketEvent(
             namespace="core.RWE",
             type=LIVISI_EVENT_STATE_CHANGED,
@@ -492,7 +505,6 @@ async def test_unreachable_event_during_refresh(
 
     state_read_count = connection.async_get_value.await_count
     finish_refresh.set()
-    await refresh
     await hass.async_block_till_done()
 
     assert connection.async_get_value.await_count == state_read_count
@@ -500,8 +512,7 @@ async def test_unreachable_event_during_refresh(
 
     connection.async_get_devices.side_effect = None
     connection.async_get_devices.return_value = [DEVICES[1]]
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
 
     assert connection.async_get_value.await_count == state_read_count + 1
     assert not hass.states.is_state(switch_id, STATE_UNAVAILABLE)
@@ -511,7 +522,9 @@ async def test_unreachable_event_during_refresh(
 
 
 async def test_new_unreachable_event_wins_over_recovery(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a stale recovery cannot override a newer unreachable event."""
     recovery_started = asyncio.Event()
@@ -537,10 +550,10 @@ async def test_new_unreachable_event_wins_over_recovery(
         Platform.SWITCH, DOMAIN, "switch-device"
     )
     assert switch_id is not None
+    on_data = connection.listen_for_events.await_args.args[0]
 
     connection.async_get_devices.return_value = [replace(DEVICES[1], unreachable=True)]
-    await config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
     assert hass.states.is_state(switch_id, STATE_UNAVAILABLE)
 
     async def delayed_get_value(capability: str, property_name: str) -> bool:
@@ -555,14 +568,16 @@ async def test_new_unreachable_event_wins_over_recovery(
 
     connection.async_get_value.side_effect = delayed_get_value
     connection.async_get_devices.return_value = [DEVICES[1]]
-    await config_entry.runtime_data.async_refresh()
+    _fire_poll(hass, freezer)
     await recovery_started.wait()
 
+    poll_count = connection.async_get_devices.await_count
     recovery_call_count = connection.async_get_value.await_count
-    await config_entry.runtime_data.async_refresh()
+    _fire_poll(hass, freezer)
+    assert connection.async_get_devices.await_count == poll_count + 1
     assert connection.async_get_value.await_count == recovery_call_count
 
-    config_entry.runtime_data.on_data(
+    on_data(
         LivisiWebsocketEvent(
             namespace="core.RWE",
             type=LIVISI_EVENT_STATE_CHANGED,
