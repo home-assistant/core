@@ -1,6 +1,5 @@
 """Base module for the KNX integration."""
 
-from dataclasses import replace
 import logging
 from typing import cast
 
@@ -50,6 +49,7 @@ from .const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
+    GroupAddressEntity,
     KNXConfigEntryOptions,
     KnxEntityIdentifier,
 )
@@ -116,8 +116,7 @@ class KNXModule:
         self.group_address_entities: dict[
             DeviceGroupAddress, set[KnxEntityIdentifier]
         ] = {}
-        # configured entities disabled in the entity registry - keyed like the
-        # live map, `disabled` is only set when both are merged
+        # configured entities disabled in the entity registry
         self.disabled_group_address_entities: dict[
             KnxEntityIdentifier, set[DeviceGroupAddress]
         ] = {}
@@ -277,18 +276,30 @@ class KNXModule:
         """Unregister a disabled entity."""
         self.disabled_group_address_entities.pop(identifier, None)
 
-    def get_group_address_entities(
-        self,
-    ) -> dict[DeviceGroupAddress, set[KnxEntityIdentifier]]:
+    def get_group_address_entities(self) -> dict[str, list[GroupAddressEntity]]:
         """Return the entities configured for each group address, disabled ones included."""
-        result = {
-            ga: set(identifiers)
-            for ga, identifiers in self.group_address_entities.items()
-        }
+        result: dict[str, list[GroupAddressEntity]] = {}
+
+        def _add(
+            ga: DeviceGroupAddress, identifier: KnxEntityIdentifier, disabled: bool
+        ) -> None:
+            result.setdefault(str(ga), []).append(
+                GroupAddressEntity(
+                    platform=identifier.platform,
+                    unique_id=identifier.unique_id,
+                    ui=identifier.ui,
+                    disabled=disabled,
+                )
+            )
+
+        for ga, identifiers in self.group_address_entities.items():
+            for identifier in identifiers:
+                _add(ga, identifier, disabled=False)
         for identifier, group_addresses in self.disabled_group_address_entities.items():
-            disabled_identifier = replace(identifier, disabled=True)
             for ga in group_addresses:
-                result.setdefault(ga, set()).add(disabled_identifier)
+                _add(ga, identifier, disabled=True)
+        for entities in result.values():
+            entities.sort(key=lambda entity: (entity["platform"], entity["unique_id"]))
         return result
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:

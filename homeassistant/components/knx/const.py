@@ -28,7 +28,15 @@ class KnxEntityIdentifier:
     platform: str
     unique_id: str
     ui: bool  # ui or yaml entity
-    disabled: bool = False  # disabled in the entity registry - set when reported
+
+
+class GroupAddressEntity(TypedDict):
+    """An entity using a group address, as reported to the KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool
+    disabled: bool  # disabled in the entity registry
 
 
 # Prefix of device identifiers created via the `knx/create_device` websocket
