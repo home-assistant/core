@@ -373,10 +373,14 @@ async def test_initial_light_response_has_no_sender_event(
 
 
 @pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "order", [pytest.param(1, id="learning-first"), pytest.param(-1, id="known-first")]
+)
 async def test_shared_response_live_activity(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
+    order: int,
 ) -> None:
     """Initialization of one entity must not claim another entity's sender context."""
     assert await async_setup_component(hass, "logbook", {})
@@ -395,7 +399,7 @@ async def test_shared_response_live_activity(
                     "address": "1/1/1",
                     "state_address": "1/1/3",
                 },
-            ]
+            ][::order]
         },
         state_updater=False,
     )
@@ -409,7 +413,7 @@ async def test_shared_response_live_activity(
             "id": 1,
             "type": "logbook/event_stream",
             "start_time": (dt_util.utcnow() - timedelta(seconds=1)).isoformat(),
-            "entity_ids": ["switch.known"],
+            "entity_ids": ["switch.learning", "switch.known"],
         }
     )
     assert (await client.receive_json())["success"]
@@ -422,9 +426,12 @@ async def test_shared_response_live_activity(
     assert hass.states.get("switch.learning").state == STATE_ON
     assert hass.states.get("switch.known").state == STATE_ON
     assert len(events) == 1
+    assert hass.states.get("switch.learning").context.id != events[0].context.id
+    assert hass.states.get("switch.known").context is events[0].context
     message = await asyncio.wait_for(client.receive_json(), 2)
-    entries = message["event"]["events"]
-    assert len(entries) == 1
-    assert entries[0]["entity_id"] == "switch.known"
-    assert entries[0].get("context_name") == "1.1.23", entries[0]
-    assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
+    entries = {entry["entity_id"]: entry for entry in message["event"]["events"]}
+    assert len(entries) == 2
+    assert "context_name" not in entries["switch.learning"]
+    assert "context_event_type" not in entries["switch.learning"]
+    assert entries["switch.known"]["context_name"] == "1.1.23"
+    assert entries["switch.known"]["context_event_type"] == EVENT_KNX_STATE_CHANGED

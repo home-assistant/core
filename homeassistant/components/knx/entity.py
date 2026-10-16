@@ -166,10 +166,9 @@ class _KnxEntityBase(Entity):
                 update.context if isinstance(update.context, Context) else Context()
             )
             state = self.state
-            if (
-                isinstance(context, KnxTelegramContext)
-                and (old_state := self.hass.states.get(self.entity_id)) is not None
-                and (
+            if isinstance(context, KnxTelegramContext):
+                old_state = self.hass.states.get(self.entity_id)
+                can_attribute = old_state is not None and (
                     (
                         self._device_state_initialized
                         and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
@@ -179,13 +178,16 @@ class _KnxEntityBase(Entity):
                         and isinstance(update.telegram.payload, GroupValueWrite)
                     )
                 )
-                and state is not None
-                and old_state.state != state
-            ):
-                context.async_log(self.hass)
-            # Do not let an unrelated state write claim the telegram's origin event.
-            if isinstance(context, KnxTelegramContext) and not context.logged:
-                context = Context()
+                if (
+                    can_attribute
+                    and old_state is not None
+                    and state is not None
+                    and old_state.state != state
+                ):
+                    context.async_log(self.hass)
+                # Eligibility is per entity; event deduplication is per telegram.
+                if not can_attribute or not context.logged:
+                    context = Context()
             self.async_set_context(context)
             # Lights expose an uninitialized KNX state as "off" in HA.
             self._device_state_initialized = state is not None and (
