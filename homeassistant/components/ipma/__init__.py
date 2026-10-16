@@ -33,7 +33,7 @@ class IpmaRuntimeData:
     location: Location
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: IpmaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: IpmaConfigEntry) -> None:
     """Set up IPMA station as config entry."""
 
     latitude = config_entry.data[CONF_LATITUDE]
@@ -61,9 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: IpmaConfigEntry) 
     config_entry.runtime_data = IpmaRuntimeData(api=api, location=location)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IpmaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IpmaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

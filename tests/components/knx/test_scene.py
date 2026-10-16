@@ -1,5 +1,7 @@
 """Test KNX scene."""
 
+import pytest
+
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import SceneSchema
 from homeassistant.const import (
@@ -62,6 +64,41 @@ async def test_activate_knx_scene(
     # different scene number - should not be recorded
     await knx.receive_write("1/1/1", (0x00,))
     assert len(events) == 4
+    # learn request for this scene number - should not be recorded
+    await knx.receive_write("1/1/1", (0x97,))
+    assert len(events) == 4
+    # activation after a learn request is recorded again
+    await knx.receive_write("1/1/1", (0x17,))
+    assert len(events) == 5
+
+
+async def test_save_knx_scene(
+    hass: HomeAssistant, knx: KNXTestKit, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test saving a KNX scene sends a DPT 18.001 learn telegram."""
+    await knx.setup_integration(
+        {
+            SceneSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    SceneSchema.CONF_SCENE_NUMBER: 24,
+                    KNX_ADDRESS: "1/1/1",
+                },
+            ]
+        }
+    )
+
+    events = async_capture_events(hass, "state_changed")
+
+    await hass.services.async_call(
+        "knx", "save_scene", {"entity_id": "scene.test"}, blocking=True
+    )
+    # learn bit set on the 0-based raw scene number
+    await knx.assert_write("1/1/1", (0x97,))
+    # saving is not an activation
+    assert len(events) == 0
+    # the outgoing telegram is decodable by the device processing it
+    assert "Can not process" not in caplog.text
 
 
 async def test_scene_ui_create(

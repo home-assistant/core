@@ -142,7 +142,7 @@ async def test_usage_sensor_unknown_until_data_arrives(
     "battery_state",
     [
         pytest.param(None, id="missing"),
-        pytest.param("Standby", id="unknown_value"),
+        pytest.param("Hibernating", id="unknown_value"),
     ],
 )
 async def test_battery_state_unknown(
@@ -164,6 +164,27 @@ async def test_battery_state_unknown(
     for entity_id in (BATTERY_STATE_ENTITY_ID, INVERTER_STATE_ENTITY_ID):
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_UNKNOWN
+
+
+async def test_battery_state_from_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test the API's PascalCase states map to the enum options."""
+    battery = mock_zonneplan_client.async_get_battery.return_value.battery
+    assert battery is not None
+    battery.contract.meta["battery_state"] = "BackupPowerActive"
+    battery.contract.meta["inverter_state"] = "ShuttingDown"
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(BATTERY_STATE_ENTITY_ID))
+    assert state.state == "backup_power_active"
+    assert (state := hass.states.get(INVERTER_STATE_ENTITY_ID))
+    assert state.state == "shutting_down"
 
 
 async def test_battery_earned_today_without_measurement_groups(

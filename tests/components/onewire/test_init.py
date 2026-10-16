@@ -36,6 +36,7 @@ async def test_connect_failure(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -60,6 +61,7 @@ async def test_listing_failure(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "cannot_connect"
 
 
 async def test_unload_entry(
@@ -227,3 +229,108 @@ async def test_registry_cleanup(
         device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
         is None
     )
+
+
+@patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
+async def test_registry_cleanup_after_scan(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing a device disconnected without reload, then reconnected."""
+    assert await async_setup_component(hass, "config", {})
+
+    entry_id = config_entry.entry_id
+    live_id = "10.111111111111"
+    dead_id = "28.111111111111"
+    dead_entity_id = "sensor.28_111111111111_temperature"
+
+    setup_owproxy_mock_devices(owproxy, [live_id, dead_id])
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(dead_entity_id) is not None
+
+    # Device is no longer on bus at the next scan
+    setup_owproxy_mock_devices(owproxy, [live_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    client = await hass_ws_client(hass)
+    device = device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
+    response = await client.remove_device(device.id)
+    assert not response["success"]
+
+    device = device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+    response = await client.remove_device(device.id)
+    assert response["success"]
+    await hass.async_block_till_done()
+    assert hass.states.get(dead_entity_id) is None
+
+    # Device is reconnected, and added again at the next scan
+    setup_owproxy_mock_devices(owproxy, [live_id, dead_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+        is not None
+    )
+    assert hass.states.get(dead_entity_id) is not None
+
+
+@patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
+async def test_registry_cleanup_reconnect_parent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test branch devices are linked again when a removed coupler reconnects."""
+    assert await async_setup_component(hass, "config", {})
+
+    entry_id = config_entry.entry_id
+    parent_id = "1F.111111111111"
+    child_id = "1D.111111111111"
+
+    setup_owproxy_mock_devices(owproxy, [parent_id])
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    # Coupler and branch device are no longer on bus at the next scan
+    setup_owproxy_mock_devices(owproxy, [])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Only the coupler is removed
+    client = await hass_ws_client(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_id), entry_id
+    )
+    response = await client.remove_device(device.id)
+    assert response["success"]
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_id), entry_id
+    )
+    assert child_device.via_device_id is None
+
+    # Coupler is reconnected at the next scan
+    setup_owproxy_mock_devices(owproxy, [parent_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_id), entry_id
+    )
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_id), entry_id
+    )
+    assert child_device.via_device_id == parent_device.id

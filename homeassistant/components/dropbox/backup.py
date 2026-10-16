@@ -19,6 +19,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -175,6 +176,7 @@ class DropboxBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -183,7 +185,16 @@ class DropboxBackupAgent(BackupAgent):
         metadata_path = f"/{metadata_filename}"
 
         file_stream = await open_stream()
-        await self._api.upload_file(backup_path, file_stream)
+
+        async def stream_with_progress() -> AsyncIterator[bytes]:
+            # upload_file sends each buffered chunk before reading more of the stream.
+            bytes_uploaded = 0
+            async for chunk in file_stream:
+                bytes_uploaded += len(chunk)
+                on_progress(bytes_uploaded=bytes_uploaded)
+                yield chunk
+
+        await self._api.upload_file(backup_path, stream_with_progress())
 
         metadata_stream = _async_string_iterator(json.dumps(backup.as_dict()))
 

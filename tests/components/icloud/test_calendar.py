@@ -95,7 +95,8 @@ async def _setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     config_entry.add_to_hass(hass)
     with patch("homeassistant.components.icloud.PLATFORMS", [Platform.CALENDAR]):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        # The first fetch runs as a background task of the config entry.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_entities(

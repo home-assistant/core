@@ -18,7 +18,7 @@ _PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: PTDevicesConfigEntry
-) -> bool:
+) -> None:
     """Set up PTDevices from a config entry."""
     auth_token: str = config_entry.data[CONF_API_TOKEN]
     session = async_get_clientsession(hass)
@@ -39,9 +39,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(config_entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PTDevicesConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PTDevicesConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

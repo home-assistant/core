@@ -26,7 +26,7 @@ from .helper import (
 )
 
 if TYPE_CHECKING:
-    from . import LightEntity
+    from .entity import LightEntity
 
 
 def _preprocess_data(hass: HomeAssistant, data: dict[str, Any]) -> VolDictType:
