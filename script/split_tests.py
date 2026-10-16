@@ -30,6 +30,11 @@ _CACHE_VERSION: Final = 1
 # it re-walk dirs and re-collect the hits.
 _DIR_LEVEL_MISS_RATIO: Final = 0.3
 
+# Files whose tests keep several CPUs busy, weighed by that many workers so
+# the other workers in their bucket get less to do; test_circular_imports
+# runs MAX_CONCURRENT_IMPORTS interpreters at once.
+_CPU_WEIGHTS: Final = {"tests/test_circular_imports.py": 4}
+
 
 class Bucket:
     """Class to hold bucket."""
@@ -580,7 +585,9 @@ def apply_durations(folder: TestFolder, durations: dict[str, float]) -> bool:
         return False
     per_test = sum(durations[f.path.as_posix()] for f in timed) / timed_tests
     for file in files:
-        file.duration = durations.get(file.path.as_posix(), file.total_tests * per_test)
+        path = file.path.as_posix()
+        duration = durations.get(path, file.total_tests * per_test)
+        file.duration = duration * _CPU_WEIGHTS.get(path, 1)
     print(
         f"Durations: {len(timed)} of {len(files)} files measured,"
         f" {per_test:.3f}s per test for the rest"

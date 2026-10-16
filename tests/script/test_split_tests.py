@@ -680,6 +680,19 @@ def test_split_tests_balances_by_duration(tmp_path: Path) -> None:
     assert sorted(b.total_tests for b in holder._buckets) == [10, 150]
 
 
+def test_apply_durations_weighs_cpu_heavy_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A file that keeps several CPUs busy counts its duration that many times."""
+    heavy = tmp_path / "alpha" / "test_heavy.py"
+    heavy.parent.mkdir()
+    heavy.touch()
+    monkeypatch.setattr(split_tests, "_CPU_WEIGHTS", {heavy.as_posix(): 4})
+    folder = _build_folder(tmp_path, {heavy: 3})
+    assert split_tests.apply_durations(folder, {heavy.as_posix(): 10.0})
+    assert folder.total_weight == 40
+
+
 def test_apply_durations_without_matches_keeps_counts(tmp_path: Path) -> None:
     """Durations for unknown files leave the test counts as weights."""
     one = tmp_path / "alpha" / "test_one.py"
