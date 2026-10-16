@@ -281,6 +281,113 @@ async def test_async_track_state_change_filtered(hass: HomeAssistant) -> None:
     track_throws.async_remove()
 
 
+async def test_async_track_state_change_filtered_empty_entity_with_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test an empty entity dependency does not block domain tracking."""
+    calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, {"", "sensor.explicit"}, {"light"}),
+        action,
+    )
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("sensor.explicit", "on")
+    hass.states.async_set("switch.unrelated", "on")
+
+    assert calls == ["light.target", "sensor.explicit"]
+
+    tracker.async_remove()
+
+
+async def test_async_track_state_change_filtered_empty_entity_update_with_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test updating to an empty entity dependency does not raise."""
+    calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, {"sensor.initial"}, set()),
+        action,
+    )
+    tracker.async_update_listeners(
+        TrackStates(False, {"", "sensor.explicit"}, {"light"})
+    )
+
+    hass.states.async_set("sensor.initial", "on")
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("sensor.explicit", "on")
+
+    assert calls == ["light.target", "sensor.explicit"]
+
+    tracker.async_remove()
+
+
+async def test_track_template_result_empty_entity_dependency_with_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test a template can track an empty entity dependency and a domain."""
+    calls = []
+    template = Template("{{ states('') }} {{ states.light | count }}", hass)
+
+    @callback
+    def action(
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        assert event is not None
+        assert updates
+        calls.append(event.data["entity_id"])
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template, None)],
+        action,
+    )
+
+    hass.states.async_set("light.target", "on")
+    await hass.async_block_till_done()
+    hass.states.async_set("switch.unrelated", "on")
+    await hass.async_block_till_done()
+
+    assert calls == ["light.target"]
+
+    info.async_remove()
+
+
+async def test_async_track_state_change_filtered_malformed_entities_with_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test malformed entity dependencies do not raise with a domain filter."""
+
+    @callback
+    def action(_: Event[EventStateChangedData]) -> None:
+        pass
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(
+            False,
+            {"", "no_period", ".leading", "light.", "light.extra.period"},
+            {"light"},
+        ),
+        action,
+    )
+
+    tracker.async_remove()
+
+
 async def test_async_track_state_change_filtered_domain_does_not_rebuild_entities(
     hass: HomeAssistant,
 ) -> None:
