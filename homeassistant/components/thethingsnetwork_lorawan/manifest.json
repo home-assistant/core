@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["lorawan-connection[tts]==1.1.0"]
+  "requirements": ["lorawan-connection[tts]==1.2.0"]
 }

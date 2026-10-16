@@ -11,11 +11,17 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import MediaPlayerEntity
+    from .entity import MediaPlayerEntity
 
 DOMAIN: Final = "media_player"
 
 DATA_COMPONENT: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)
+
+CACHE_IMAGES: Final = "images"
+CACHE_MAXSIZE: Final = "maxsize"
+CACHE_LOCK: Final = "lock"
+CACHE_URL: Final = "url"
+CACHE_CONTENT: Final = "content"
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24

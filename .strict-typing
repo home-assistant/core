@@ -164,6 +164,7 @@ homeassistant.components.data_grand_lyon.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
 homeassistant.components.deako.*
+homeassistant.components.debug_console.*
 homeassistant.components.deconz.*
 homeassistant.components.default_config.*
 homeassistant.components.demo.*

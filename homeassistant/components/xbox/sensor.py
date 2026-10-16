@@ -11,13 +11,12 @@ from pythonxbox.api.provider.smartglass.models import SmartglassConsole, Storage
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, UnitOfInformation
+from homeassistant.const import CONF_NAME, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

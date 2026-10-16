@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
+from renault_api.exceptions import NotAuthenticatedException
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
     KamereonResponseException,
@@ -15,6 +16,7 @@ from renault_api.kamereon.exceptions import (
 from renault_api.kamereon.models import KamereonVehicleDataAttributes
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -101,6 +103,9 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
             self.update_interval = None
             self.not_supported = True
             raise UpdateFailed(f"This endpoint is not supported: {err}") from err
+
+        except NotAuthenticatedException as err:
+            raise ConfigEntryAuthFailed from err
 
         except KamereonResponseException as err:
             # Other Renault errors.

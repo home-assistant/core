@@ -1324,6 +1324,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "debug_console": {
+      "name": "Debug console",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
     "debugpy": {
       "name": "Remote Python Debugger",
       "integration_type": "service",
