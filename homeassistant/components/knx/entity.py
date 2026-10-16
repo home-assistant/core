@@ -1,6 +1,5 @@
 """Base classes for KNX entities."""
 
-import asyncio
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -149,41 +148,35 @@ class _KnxEntityBase(Entity):
         self.async_write_ha_state()
 
     @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Build the identifier once the platform is known."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
-        if uid := self.unique_id:
-            self._knx_entity_identifier = KnxEntityIdentifier(
-                platform=platform.domain,
-                unique_id=uid,
-                ui=isinstance(self, KnxUiEntity),
-            )
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Build the identifier and arrange for the group address map to be updated.
 
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Track the group addresses of an entity the platform did not add.
-
-        Disabled entities are aborted before `async_added_to_hass` and would
-        otherwise be unknown to the group address map.
+        Runs for every add attempt, including the ones the platform aborts
+        because the entity is disabled.
         """
-        if (identifier := self._knx_entity_identifier) is not None:
-            if self.registry_entry is not None and self.registry_entry.disabled:
-                self._knx_module.add_disabled_entity(
-                    group_addresses=self._device.group_addresses(),
-                    identifier=identifier,
-                )
-            else:
-                # added to the map already if `add_to_platform_finish` failed
-                self._knx_module.remove_from_group_address_entities(
-                    group_addresses=self._device.group_addresses(),
-                    identifier=identifier,
-                )
-        super().add_to_platform_abort()
+        await super().async_prepare_to_add_to_hass()
+        if not (uid := self.unique_id):
+            return
+        self._knx_entity_identifier = KnxEntityIdentifier(
+            platform=self.platform.domain,
+            unique_id=uid,
+            ui=isinstance(self, KnxUiEntity),
+        )
+        self.async_on_remove(self._untrack_group_addresses)
+
+    @callback
+    def _untrack_group_addresses(self) -> None:
+        """Update the group address map when the entity is aborted or removed.
+
+        A disabled entity - aborted at setup or removing itself when disabled
+        at runtime - stays configured and is tracked as disabled.
+        """
+        if (identifier := self._knx_entity_identifier) is None:
+            return
+        group_addresses = self._device.group_addresses()
+        self._knx_module.remove_from_group_address_entities(group_addresses, identifier)
+        if self.registry_entry is not None and self.registry_entry.disabled:
+            self._knx_module.add_disabled_entity(group_addresses, identifier)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -214,17 +207,6 @@ class _KnxEntityBase(Entity):
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
-        if (identifier := self._knx_entity_identifier) is not None:
-            self._knx_module.remove_from_group_address_entities(
-                group_addresses=self._device.group_addresses(),
-                identifier=identifier,
-            )
-            # an entity disabled at runtime removes itself but stays configured
-            if self.registry_entry is not None and self.registry_entry.disabled:
-                self._knx_module.add_disabled_entity(
-                    group_addresses=self._device.group_addresses(),
-                    identifier=identifier,
-                )
 
 
 class KnxYamlEntity(_KnxEntityBase):
