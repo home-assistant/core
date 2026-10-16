@@ -167,6 +167,7 @@ async def test_entry_title(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == expected_title
+    assert result["result"].unique_id == USER_SUB
 
 
 @pytest.mark.usefixtures("current_request_with_host")
