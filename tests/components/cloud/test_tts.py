@@ -1,5 +1,6 @@
 """Tests for cloud tts."""
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
@@ -8,6 +9,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
+from aiohttp.test_utils import TestClient
 from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
 import probatio
@@ -414,6 +416,130 @@ async def test_tts_entity(
 
     state = hass.states.get(entity_id)
     assert state is None
+
+
+async def test_tts_cache_shutdown_completes_before_teardown(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Cloud GET producer and converter finish on shutdown before the leak guard."""
+    cloud.voice.process_tts_stream = _make_stream_mock("There is someone at the door.")
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await cloud.register_on_start.call_args[0][0]()
+    client: TestClient = await hass_client()
+    cache_tasks: list[asyncio.Task] = []
+    converter_tasks: list[asyncio.Task] = []
+    processes: list[asyncio.subprocess.Process] = []
+    original_background = hass.async_create_background_task
+    original_spawn = asyncio.create_subprocess_exec
+    original_stop = hass.async_stop
+    original_client_close = client.close
+    state_at_stop: list[tuple[tuple[str, bool, int], ...]] = []
+    eof_held = asyncio.Event()
+    hold_eof = asyncio.Event()
+    cancel_ack = asyncio.Event()
+    real_eof: list[tuple[asyncio.subprocess.Process, bytes]] = []
+
+    def tracked_background(target, name, eager_start=True):
+        task = original_background(target, name, eager_start=eager_start)
+        if name.startswith("tts_load_data_into_cache_"):
+            cache_tasks.append(task)
+        elif name == "tts_ffmpeg_cleanup":
+            converter_tasks.append(task)
+        return task
+
+    async def tracked_spawn(*args, **kwargs):
+        process = await original_spawn(*args, **kwargs)
+        if "ffmpeg" in str(args[0]):
+            processes.append(process)
+            assert process.stdout is not None
+            original_read = process.stdout.read
+
+            async def ordered_read(n: int = -1) -> bytes:
+                result = await original_read(n)
+                if not result and not real_eof:
+                    real_eof.append((process, result))
+                    eof_held.set()
+                    try:
+                        await hold_eof.wait()
+                    except asyncio.CancelledError:
+                        cancel_ack.set()
+                        raise
+                return result
+
+            process.stdout.read = ordered_read
+        return process
+
+    async def tracked_stop(*args, **kwargs):
+        result = await original_stop(*args, **kwargs)
+        state_at_stop.append(
+            tuple(
+                (task.get_name(), task.done(), task.cancelling())
+                for task in (*cache_tasks, *converter_tasks)
+            )
+        )
+        return result
+
+    with (
+        patch.object(hass, "async_create_background_task", tracked_background),
+        patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", tracked_spawn
+        ),
+        patch.object(hass, "async_stop", tracked_stop),
+        patch(
+            "homeassistant.components.tts.secrets.token_urlsafe",
+            return_value="test_token",
+        ),
+    ):
+        try:
+            req = await client.post(
+                "/api/tts_get_url",
+                json={
+                    "engine_id": "tts.home_assistant_cloud",
+                    "message": "There is someone at the door.",
+                },
+            )
+            assert req.status == HTTPStatus.OK
+            response = await req.json()
+            assert (await client.get(response["path"])).status == HTTPStatus.OK
+            await asyncio.wait_for(eof_held.wait(), 3)
+            assert real_eof == [(processes[0], b"")]
+            assert cache_tasks and not cache_tasks[0].done()
+            assert await asyncio.wait_for(processes[0].wait(), 3) == 0
+            await original_client_close()
+            await hass.async_stop()
+
+            assert cache_tasks and converter_tasks and processes
+            assert eof_held.is_set() and cancel_ack.is_set()
+            assert processes[0].returncode == 0
+            assert all(
+                done
+                for name, done, _ in state_at_stop[0]
+                if name == "tts_ffmpeg_cleanup"
+            ), state_at_stop
+            assert all(
+                cancelling
+                for name, _, cancelling in state_at_stop[0]
+                if name.startswith("tts_load_data_into_cache_")
+            ), state_at_stop
+            await asyncio.wait({*cache_tasks}, timeout=2)
+            assert all(task.done() for task in (*cache_tasks, *converter_tasks))
+        finally:
+            # Harness release is not credited as production shutdown.
+            hold_eof.set()
+            await original_client_close()
+            if hass.is_running:
+                await hass.async_stop()
+            pending = [
+                task for task in (*cache_tasks, *converter_tasks) if not task.done()
+            ]
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.wait(pending, timeout=2)
 
 
 async def test_migrating_pipelines(

@@ -1,7 +1,8 @@
 """Provide functionality for TTS."""
 
 import asyncio
-from collections.abc import AsyncGenerator, MutableMapping
+from collections.abc import AsyncGenerator, Callable, Coroutine, MutableMapping
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -14,6 +15,7 @@ from pathlib import Path
 import re
 import secrets
 import struct
+import sys
 from time import monotonic
 from typing import Any, Final, Protocol
 
@@ -32,6 +34,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
 from homeassistant.core import (
     CALLBACK_TYPE,
+    CoreState,
     Event,
     HassJob,
     HassJobType,
@@ -44,6 +47,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import language as language_util, ulid as ulid_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_CACHE,
@@ -142,6 +146,116 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 FFMPEG_CHUNK_SIZE: Final[int] = 4096
+# Retain only the end of ffmpeg diagnostics; stderr can be arbitrarily large.
+_FFMPEG_ERROR_TAIL: Final[int] = 65536
+_FFMPEG_CLEANUP_TIMEOUT: Final[float] = 1.0
+
+
+async def _async_ffmpeg_stderr(
+    stderr: asyncio.StreamReader, diagnostic: bytearray
+) -> None:
+    """Drain stderr concurrently without retaining more than a bounded tail."""
+    while chunk := await stderr.read(FFMPEG_CHUNK_SIZE):
+        diagnostic.extend(chunk)
+        if len(diagnostic) > _FFMPEG_ERROR_TAIL:
+            del diagnostic[:-_FFMPEG_ERROR_TAIL]
+
+
+async def _async_ffmpeg_discard_stdout(stdout: asyncio.StreamReader) -> None:
+    """Discard abandoned output until EOF so a paused pipe can disconnect."""
+    while await stdout.read(FFMPEG_CHUNK_SIZE):
+        pass
+
+
+def _ffmpeg_late_result(task: asyncio.Task) -> None:
+    """Retrieve a task that could not finish within the cleanup deadline."""
+    if task.cancelled():
+        return
+    if error := task.exception():
+        _LOGGER.warning("TTS ffmpeg cleanup task failed: %s", error)
+
+
+async def _async_ffmpeg_join(task: asyncio.Task | None) -> None:
+    """Wait a finite phase for cooperative shutdown; supervise late results."""
+    if task is None:
+        return
+    if task.done():
+        _ffmpeg_late_result(task)
+        return
+    done, _ = await asyncio.wait({task}, timeout=_FFMPEG_CLEANUP_TIMEOUT)
+    if not done:
+        _LOGGER.warning("TTS ffmpeg cleanup task did not stop promptly")
+        task.add_done_callback(_ffmpeg_late_result)
+    else:
+        _ffmpeg_late_result(task)
+
+
+async def _async_ffmpeg_reap(
+    hass: HomeAssistant, process: asyncio.subprocess.Process, wait_task: asyncio.Task
+) -> None:
+    """Kill and reap using the original HA-owned wait where possible."""
+    if process.returncode is None:
+        with contextlib.suppress(ProcessLookupError):
+            process.kill()
+    if process.returncode is not None:
+        return
+    if wait_task.done():
+        # A cancelled or failed wait cannot report a still-unknown OS exit.
+        wait_task = hass.async_create_background_task(
+            process.wait(), "tts_ffmpeg_wait_replacement"
+        )
+    await _async_ffmpeg_join(wait_task)
+
+
+@dataclass(eq=False)
+class _ConversionShutdown:
+    """An admitted conversion, including acquisition before its process exists."""
+
+    requested: asyncio.Future[None]
+    ready: asyncio.Future[None]
+    terminal: asyncio.Future[None]
+    cleanup: Callable[[], asyncio.Task] | None = None
+
+    def request(self) -> None:
+        """Wake the owner and start its one shared cleanup if acquired."""
+        if not self.requested.done():
+            self.requested.set_result(None)
+        if self.cleanup is not None:
+            self.cleanup()
+
+
+class _ConversionCoordinator:
+    """Close admission before the public shutdown job first suspends."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        self.closing = hass.is_stopping or hass.state is CoreState.stopped
+        self.active: set[_ConversionShutdown] = set()
+        hass.async_add_shutdown_job(HassJob(self.async_shutdown))
+
+    async def async_shutdown(self) -> None:
+        """Observe critical cleanup concurrently, before background cancellation."""
+        self.closing = True
+        active = tuple(self.active)
+        for handle in active:
+            handle.request()
+        if active:
+            _, pending = await asyncio.wait(
+                {handle.terminal for handle in active}, timeout=_FFMPEG_CLEANUP_TIMEOUT
+            )
+            if pending:
+                _LOGGER.warning("TTS conversions are still closing during shutdown")
+
+
+_CONVERSION_COORDINATOR: HassKey[_ConversionCoordinator] = HassKey(
+    "tts_conversion_shutdown"
+)
+
+
+def _conversion_coordinator(hass: HomeAssistant) -> _ConversionCoordinator:
+    """Reuse setup's coordinator; support private calls made before setup."""
+    if _CONVERSION_COORDINATOR not in hass.data:
+        hass.data[_CONVERSION_COORDINATOR] = _ConversionCoordinator(hass)
+    return hass.data[_CONVERSION_COORDINATOR]
 
 
 class TTSCache:
@@ -441,17 +555,101 @@ async def _async_convert_audio(
     to_bitrate: int | None = None,
 ) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
+    coordinator = _conversion_coordinator(hass)
+    if coordinator.closing or hass.is_stopping or hass.state is CoreState.stopped:
+        if isinstance(audio_input, AsyncGenerator):
+            close_task = hass.async_create_background_task(
+                audio_input.aclose(), "tts_ffmpeg_source_close"
+            )
+            close_task.add_done_callback(_ffmpeg_late_result)
+            await _async_ffmpeg_join(close_task)
+        raise HomeAssistantError("TTS conversion is shutting down")
+    handle = _ConversionShutdown(
+        hass.loop.create_future(), hass.loop.create_future(), hass.loop.create_future()
+    )
+    coordinator.active.add(handle)
+    conversion = _async_convert_audio_owned(
+        hass,
+        handle,
+        from_extension,
+        audio_input,
+        to_extension,
+        to_sample_rate,
+        to_sample_channels,
+        to_sample_bytes,
+        to_bitrate,
+    )
+    try:
+        async for chunk in conversion:
+            yield chunk
+    finally:
+        await conversion.aclose()
+        if handle.cleanup is None:
+            handle.ready.set_result(None)
+            handle.terminal.set_result(None)
+            coordinator.active.discard(handle)
+
+
+async def _async_convert_audio_owned(  # noqa: C901
+    hass: HomeAssistant,
+    handle: _ConversionShutdown,
+    from_extension: str | None,
+    audio_input: AsyncGenerator[bytes] | str | Path,
+    to_extension: str | None,
+    to_sample_rate: int | None,
+    to_sample_channels: int | None,
+    to_sample_bytes: int | None,
+    to_bitrate: int | None,
+) -> AsyncGenerator[bytes]:
+    """Convert with an admission registered before header or process acquisition."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
     is_input_gen = not isinstance(audio_input, (str, Path))
 
     is_streaming_wav = is_input_gen and from_extension == "wav"
+    original_audio_input = audio_input
+
+    async def close_input() -> None:
+        """Close the owned wrapper and original source without losing an error."""
+        assert isinstance(audio_input, AsyncGenerator)
+        assert isinstance(original_audio_input, AsyncGenerator)
+        sources = (
+            (audio_input, original_audio_input)
+            if audio_input is not original_audio_input
+            else (audio_input,)
+        )
+        error: Exception | None = None
+        for source in sources:
+            try:
+                await source.aclose()
+            except Exception as err:
+                if error is None:
+                    error = err
+                else:
+                    _LOGGER.warning("TTS source close failed", exc_info=True)
+        if error is not None:
+            raise error
+
+    async def close_before_spawn(primary: BaseException) -> None:
+        """Keep the primary error and retrieve an interrupted close result."""
+        close_task = hass.async_create_background_task(
+            close_input(), "tts_ffmpeg_source_close"
+        )
+        try:
+            await _async_ffmpeg_join(close_task)
+        except asyncio.CancelledError:
+            close_task.add_done_callback(_ffmpeg_late_result)
+            raise primary from None
 
     pcm_info: _StreamingPcmInfo | None = None
     if is_streaming_wav:
         # Unwrapping the container lets ffmpeg start streaming immediately
         # instead of buffering ahead to inspect the WAV file.
         assert isinstance(audio_input, AsyncGenerator)
-        pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
+        try:
+            pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
+        except BaseException as primary:
+            await close_before_spawn(primary)
+            raise
         audio_input = _async_prepend_audio(
             pcm_info.leftover if pcm_info else consumed, audio_input
         )
@@ -506,14 +704,148 @@ async def _async_convert_audio(
     command.extend(["-fflags", "+bitexact"])
     command.append("pipe:1")  # Send output to stdout.
 
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdin=asyncio.subprocess.PIPE if is_input_gen else None,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.PIPE if is_input_gen else None,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except BaseException as primary:
+        if is_input_gen:
+            await close_before_spawn(primary)
+        raise
+
+    if handle.requested.done() and process.returncode is None:
+        with contextlib.suppress(ProcessLookupError):
+            process.kill()
 
     writer_task: asyncio.Task | None = None
+    read_task: asyncio.Task | None = None
+    source_failure_task: asyncio.Task | None = None
+    stdin_failure_task: asyncio.Task | None = None
+    stderr_task: asyncio.Task | None = None
+    wait_task: asyncio.Task | None = None
+    cleanup_task: asyncio.Task | None = None
+    complete = False
+
+    def owned(coro: Coroutine[Any, Any, Any], name: str) -> asyncio.Task:
+        task = hass.async_create_background_task(coro, name)
+        task.add_done_callback(_ffmpeg_late_result)
+        return task
+
+    async def transfer_then_discard(old_reader: asyncio.Task | None) -> None:
+        """Never acquire stdout until its previous reader relinquishes it."""
+        if old_reader is not None:
+            if not old_reader.done():
+                await asyncio.wait({old_reader})
+            _ffmpeg_late_result(old_reader)
+        assert process.stdout is not None
+        discard = owned(
+            _async_ffmpeg_discard_stdout(process.stdout), "tts_ffmpeg_stdout_discard"
+        )
+        await asyncio.wait({discard})
+        discard.result()
+
+    async def teardown() -> None:
+        """Start pipe progress before any provider wait, with one observation budget."""
+        deadline = hass.loop.time() + _FFMPEG_CLEANUP_TIMEOUT
+        for notifier in (source_failure_task, stdin_failure_task):
+            if notifier is not None:
+                notifier.cancel()
+        resources = {task for task in (source_failure_task, stdin_failure_task) if task}
+        critical: set[asyncio.Task] = set()
+        if not complete:
+            if process.returncode is None:
+                with contextlib.suppress(ProcessLookupError):
+                    process.kill()
+            for task in (writer_task, read_task):
+                if task is not None and not task.done() and not task.cancelling():
+                    task.cancel()
+            # This transfer is independent of a held provider finalizer.
+            critical.add(
+                owned(transfer_then_discard(read_task), "tts_ffmpeg_stdout_transfer")
+            )
+            assert stderr_task is not None and wait_task is not None
+            critical.update((stderr_task, wait_task))
+        resources.update(critical)
+        if writer_task is not None:
+            writer_task.add_done_callback(_ffmpeg_late_result)
+            resources.add(writer_task)
+
+        def finished(_: asyncio.Task | None = None) -> None:
+            # Refresh every terminal original before checking the effective set:
+            # another original's replacement callback may still be queued.
+            for task in tuple(critical):
+                if not task.done() or hass.loop.time() >= deadline:
+                    continue
+                if task is wait_task and process.returncode is None:
+                    replacement = owned(process.wait(), "tts_ffmpeg_wait_replacement")
+                elif task is stderr_task and (
+                    task.cancelled() or task.exception() is not None
+                ):
+                    assert process.stderr is not None
+                    replacement = owned(
+                        _async_ffmpeg_stderr(process.stderr, diagnostic),
+                        "tts_ffmpeg_stderr_replacement",
+                    )
+                else:
+                    continue
+                critical.remove(task)
+                critical.add(replacement)
+                resources.add(replacement)
+                replacement.add_done_callback(finished)
+            if all(task.done() for task in critical) and not handle.terminal.done():
+                handle.terminal.set_result(None)
+                _conversion_coordinator(hass).active.discard(handle)
+
+        for task in critical:
+            if not task.done():
+                task.add_done_callback(finished)
+        finished()
+        await _async_ffmpeg_join(source_failure_task)
+        await _async_ffmpeg_join(stdin_failure_task)
+        while pending := {task for task in resources if not task.done()}:
+            remaining = deadline - hass.loop.time()
+            if remaining <= 0:
+                _LOGGER.warning("TTS ffmpeg cleanup task did not stop promptly")
+                for task in pending:
+                    task.add_done_callback(_ffmpeg_late_result)
+                if process.returncode is None:
+                    with contextlib.suppress(ProcessLookupError):
+                        process.kill()
+                break
+            await asyncio.wait(
+                pending, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
+            )
+
+    def ensure_cleanup() -> asyncio.Task:
+        nonlocal cleanup_task
+        if cleanup_task is None:
+            cleanup_task = owned(teardown(), "tts_ffmpeg_cleanup")
+        return cleanup_task
+
+    def check_shutdown() -> None:
+        if handle.requested.done():
+            if source_read_error is not None:
+                raise source_read_error
+            # Explicit shutdown cancels this owner, not an arbitrary pipe failure.
+            owner = asyncio.current_task()
+            assert owner is not None
+            owner.cancel()
+            raise asyncio.CancelledError
+
+    async def terminal_wait(tasks: set[asyncio.Task]) -> None:
+        await asyncio.wait(
+            tasks | {handle.requested}, return_when=asyncio.FIRST_COMPLETED
+        )
+        check_shutdown()
+
+    input_exhausted = False
+    source_read_error: BaseException | None = None
+    source_failed = asyncio.Event()
+    stdin_error: OSError | None = None
+    stdin_failed = asyncio.Event()
 
     if is_input_gen:
         # Input is a generator, so we must manually feed in chunks
@@ -521,46 +853,273 @@ async def _async_convert_audio(
         assert process.stdin
 
         async def write_input() -> None:
+            nonlocal input_exhausted, source_read_error, stdin_error
             assert process.stdin
+            primary: BaseException | None = None
             try:
-                async for chunk in audio_input:
-                    process.stdin.write(chunk)
-                    await process.stdin.drain()
+                if handle.requested.done():
+                    return
+                while True:
+                    try:
+                        chunk = await anext(audio_input)
+                    except StopAsyncIteration:
+                        input_exhausted = True
+                        break
+                    except BaseException as err:
+                        source_read_error = err
+                        source_failed.set()
+                        raise
+                    try:
+                        process.stdin.write(chunk)
+                        await process.stdin.drain()
+                    except (BrokenPipeError, ConnectionResetError) as err:
+                        stdin_error = err
+                        stdin_failed.set()
+                        raise
+            except BaseException as err:
+                primary = err
+                raise
             finally:
-                if process.stdin:
-                    process.stdin.close()
+                process.stdin.close()
+                try:
+                    await close_input()
+                except Exception:
+                    if primary is None:
+                        raise
+                    _LOGGER.warning("TTS source close failed", exc_info=True)
 
-        writer_task = hass.async_create_background_task(
-            write_input(), "tts_ffmpeg_conversion"
+        writer_task = owned(write_input(), "tts_ffmpeg_conversion")
+
+    assert process.stdout and process.stderr
+    diagnostic = bytearray()
+    stderr_task = owned(
+        _async_ffmpeg_stderr(process.stderr, diagnostic), "tts_ffmpeg_stderr"
+    )
+    wait_task = owned(process.wait(), "tts_ffmpeg_wait")
+    source_failure_task = (
+        hass.async_create_background_task(
+            source_failed.wait(), "tts_ffmpeg_source_failure"
+        )
+        if is_input_gen
+        else None
+    )
+    stdin_failure_task = (
+        hass.async_create_background_task(
+            stdin_failed.wait(), "tts_ffmpeg_stdin_failure"
+        )
+        if is_input_gen
+        else None
+    )
+    handle.cleanup = ensure_cleanup
+    handle.ready.set_result(None)
+    if handle.requested.done():
+        ensure_cleanup()
+
+    def child_exited_unsuccessfully() -> bool:
+        """Use the observed OS exit even when the original wait is pending."""
+        return isinstance(process.returncode, int) and process.returncode != 0
+
+    def child_exited_before_input_exhausted() -> bool:
+        """Reject a known zero exit if a generator still has input."""
+        return (
+            process.returncode == 0 and writer_task is not None and not input_exhausted
         )
 
-    assert process.stdout
+    def check_completed_writer() -> bool:
+        """Raise a close failure, or signal an already-known failed child."""
+        if (
+            writer_task is not None
+            and writer_task.done()
+            and (writer_task.cancelled() or writer_task.exception() is not None)
+        ):
+            # On some asyncio runtimes the original wait remains pending until
+            # pipe disconnection even though the OS exit status is known.
+            if child_exited_unsuccessfully():
+                return True
+            writer_task.result()
+        return False
+
     try:
         while True:
-            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
-            if not chunk:
+            if source_read_error is not None:
+                raise source_read_error
+            check_shutdown()
+            if child_exited_before_input_exhausted():
+                raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
+            if child_exited_unsuccessfully():
+                if read_task is not None and not read_task.done():
+                    read_task.cancel()
+                    await _async_ffmpeg_join(read_task)
                 break
-            yield chunk
-    finally:
-        if writer_task is not None:
-            # Ensure we wait for the input writer to complete.
-            await writer_task
+            if input_exhausted and check_completed_writer():
+                break
+            if (
+                writer_task is not None
+                and not input_exhausted
+                and (stdin_error is not None or writer_task.done())
+            ):
+                if stdin_error is not None:
+                    # Transport failure can precede a held source finalizer.
+                    # Give an exiting child bounded time for its diagnostic.
+                    if not wait_task.done():
+                        await asyncio.wait({wait_task}, timeout=0.1)
+                    if source_read_error is not None:
+                        raise source_read_error
+                    if child_exited_unsuccessfully():
+                        break
+                    if process.returncode == 0:
+                        raise HomeAssistantError(
+                            "ffmpeg exited before TTS input was exhausted"
+                        )
+                    raise stdin_error
+                writer_task.result()
+            if read_task is None:
+                read_task = owned(
+                    process.stdout.read(FFMPEG_CHUNK_SIZE), "tts_ffmpeg_stdout"
+                )
+            pending = {read_task, handle.requested}
+            if not wait_task.done():
+                pending.add(wait_task)
+            if writer_task is not None and not writer_task.done():
+                pending.add(writer_task)
+            if source_failure_task is not None and not source_failure_task.done():
+                pending.add(source_failure_task)
+            if stdin_failure_task is not None and not stdin_failure_task.done():
+                pending.add(stdin_failure_task)
+            done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            if source_read_error is not None:
+                # Do not let a later source close or child failure replace an
+                # error already observed while reading input.
+                raise source_read_error
+            check_shutdown()
+            if child_exited_before_input_exhausted():
+                raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
+            if child_exited_unsuccessfully():
+                read_task.cancel()
+                await _async_ffmpeg_join(read_task)
+                break
+            if input_exhausted and check_completed_writer():
+                break
+            if (
+                writer_task is not None
+                and not input_exhausted
+                and (stdin_error is not None or writer_task.done())
+            ):
+                if stdin_error is not None:
+                    if not wait_task.done():
+                        await asyncio.wait({wait_task}, timeout=0.1)
+                    if source_read_error is not None:
+                        raise source_read_error
+                    if child_exited_unsuccessfully():
+                        read_task.cancel()
+                        await _async_ffmpeg_join(read_task)
+                        # Keep the reader owned until it actually finishes;
+                        # abort cleanup must not start a competing discard.
+                        break
+                    if process.returncode == 0:
+                        raise HomeAssistantError(
+                            "ffmpeg exited before TTS input was exhausted"
+                        )
+                    raise stdin_error
+                writer_task.result()
+            if read_task in done:
+                chunk = read_task.result()
+                read_task = None
+                if chunk:
+                    yield chunk
+                    continue
+                break
+            if wait_task in done and writer_task is not None and not input_exhausted:
+                read_task.cancel()
+                await _async_ffmpeg_join(read_task)
+                break
+            # A successful writer waking the wait is not an abort: the
+            # pending reader still owns stdout and may contain final output.
+            # Reuse it on the next iteration rather than cancelling it.
 
-        # Wait for process termination and check for errors.
-        retcode = await process.wait()
+        if source_read_error is not None:
+            raise source_read_error
+        check_shutdown()
+        child_failure_with_close = input_exhausted and check_completed_writer()
+        known_child_failure = child_exited_unsuccessfully()
+        if not wait_task.done() and not (
+            known_child_failure or child_failure_with_close
+        ):
+            if writer_task is not None and not input_exhausted:
+                # A held source cannot keep a child with closed stdout alive
+                # indefinitely. It may still exit during this brief grace.
+                await asyncio.wait({wait_task}, timeout=0.1)
+            if writer_task is None or input_exhausted:
+                # stdout EOF is not process exit. With completed input a
+                # pending finalizer failure must also wake this process wait.
+                if writer_task is not None and not writer_task.done():
+                    await terminal_wait({wait_task, writer_task})
+                    if source_read_error is not None:
+                        raise source_read_error
+                    child_failure_with_close = check_completed_writer()
+                if not wait_task.done() and not child_failure_with_close:
+                    # A successful close still waits for the actual exit.
+                    await terminal_wait({wait_task})
+        if source_read_error is not None:
+            raise source_read_error
+        if input_exhausted:
+            child_failure_with_close = (
+                check_completed_writer() or child_failure_with_close
+            )
+        known_child_failure = child_exited_unsuccessfully()
+        if not wait_task.done() and not (
+            known_child_failure or child_failure_with_close or process.returncode == 0
+        ):
+            raise HomeAssistantError(
+                "ffmpeg output closed before TTS input was exhausted"
+            )
+        retcode = (
+            process.returncode
+            if known_child_failure
+            or child_failure_with_close
+            or process.returncode == 0
+            else wait_task.result()
+        )
         if retcode != 0:
-            assert process.stderr
-            stderr_data = await process.stderr.read()
+            # A known child failure is primary over source finalization. The
+            # normal EOF case below still waits for its writer to finish.
+            await _async_ffmpeg_join(stderr_task)
             # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error(stderr_data.decode())
+            _LOGGER.error("%s", diagnostic.decode(errors="replace"))
             raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
                 "See log for details."
             )
+        if writer_task is not None and not input_exhausted:
+            raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
+        if writer_task is not None:
+            # An owner cancellation must not reach a writer whose source close
+            # can suppress it indefinitely; the supervised teardown retrieves
+            # a late writer result after this wait is interrupted.
+            await terminal_wait({writer_task})
+            writer_task.result()
+        await terminal_wait({stderr_task})
+        stderr_task.result()
+        check_shutdown()
+        complete = True
+    finally:
+        primary_error = sys.exception()
+
+        cleanup_task = ensure_cleanup()
+        try:
+            await _async_ffmpeg_join(cleanup_task)
+        except asyncio.CancelledError:
+            # An interrupted join has not installed its late-result callback.
+            # HA still owns teardown, but its task bucket only removes it.
+            cleanup_task.add_done_callback(_ffmpeg_late_result)
+            if primary_error is not None:
+                raise primary_error from None
+            raise
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
+    _conversion_coordinator(hass)
     websocket_api.async_register_command(hass, websocket_list_engines)
     websocket_api.async_register_command(hass, websocket_get_engine)
     websocket_api.async_register_command(hass, websocket_list_engine_voices)
@@ -710,8 +1269,12 @@ class ResultStream:
         """Get the stream of this result."""
         if self._override_media_path is not None:
             # Overridden
-            async for chunk in self._async_stream_override_result():
-                yield chunk
+            override_audio = self._async_stream_override_result()
+            try:
+                async for chunk in override_audio:
+                    yield chunk
+            finally:
+                await override_audio.aclose()
 
             self.last_used = monotonic()
             return
@@ -785,8 +1348,11 @@ class ResultStream:
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
             to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
-        async for chunk in converted_audio:
-            yield chunk
+        try:
+            async for chunk in converted_audio:
+                yield chunk
+        finally:
+            await converted_audio.aclose()
 
     def delete(self) -> None:
         """Remove the result stream from the manager."""
@@ -1332,6 +1898,12 @@ class SpeechManager:
                 to_sample_bytes=sample_bytes,
                 to_bitrate=bitrate,
             )
+            try:
+                async for chunk in data_gen:
+                    yield chunk
+            finally:
+                await data_gen.aclose()
+            return
 
         async for chunk in data_gen:
             yield chunk
