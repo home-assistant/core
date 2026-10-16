@@ -2439,6 +2439,37 @@ async def test_fan_edit_after_timer_deadline_reconciles_without_send(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("init_integration")
+async def test_pending_fan_edit_does_not_prevent_timer_power_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A fan edit staged before expiry cannot keep the AC powered on."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await _flush_now(hass, climate)
+    await climate.async_set_timer_hours(0.5)
+    await _flush_now(hass, climate)
+    deadline = climate._timer_deadline
+    assert deadline is not None
+
+    await climate.async_set_fan_mode(FAN_LOW)
+    freezer.move_to(deadline)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.OFF
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    await _flush_now(hass, climate)
+    command = mock_infrared_emitter_entity.send_command_calls[-1]
+    assert command.power is False
+    assert command.fan is GreeAcFanSpeed.LOW
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
 @pytest.mark.parametrize(
     ("initial_mode", "expected_mode", "additional_sends"),
     [(HVACMode.COOL, HVACMode.OFF, 0), (HVACMode.OFF, HVACMode.COOL, 1)],

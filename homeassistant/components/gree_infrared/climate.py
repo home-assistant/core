@@ -547,15 +547,14 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     def _expire_timer_power(self) -> None:
         """Clear an overdue timer and flip assumed HVAC power without transmitting.
 
-        Staged but unsent requests win over the expiry: a staged power mode is
-        left alone (the flush sends it) and a staged timer replacement is kept
-        (only the old deadline is retired).
+        Explicit HVAC mode requests take precedence; unrelated staged settings do not
+        mask timer expiry. A staged timer replacement retires only the old deadline.
         """
         self._cancel_timer_expiry()
         self._timer_deadline = None
         if not self._state.pending_timer_reset:
             self._state.timer_hours = None
-        if self._state.coalesce_dirty:
+        if self._state.pending_power_change or self._state.pending_timer_reset:
             return
         self._attr_hvac_mode = (
             self._last_active_hvac_mode
@@ -635,6 +634,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 self._received_fahrenheit_temperature = None
             if power:
                 self._last_active_hvac_mode = hvac_mode
+            state.pending_power_change = False
             self.async_write_ha_state()
             state.async_notify_switches()
 
@@ -808,6 +808,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         for key, value in self._options_for_mode(hvac_mode).items():
             setattr(self._state, key, value)
         self._attr_hvac_mode = hvac_mode
+        self._state.pending_power_change = True
         self.async_write_ha_state()
         self._state.async_notify_switches()
         self._state.async_schedule_coalesced_flush(
@@ -829,6 +830,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
             if hvac_mode is not None:
                 self._attr_hvac_mode = hvac_mode
+                self._state.pending_power_change = True
             self._attr_native_target_temperature = float(temp)
             if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
                 self._state.pending_explicit_temp = True
@@ -1050,6 +1052,7 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         # of re-applying the superseded HA edit.
         self._state.pending_explicit_temp = False
         self._state.pending_timer_reset = False
+        self._state.pending_power_change = False
         self._received_fahrenheit_temperature = (
             command.temperature if command.fahrenheit else None
         )

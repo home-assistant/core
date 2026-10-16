@@ -44,6 +44,7 @@ class GreeAcState:
         self.command_lock = asyncio.Lock()
         # Staging flags consumed by the climate entity's coalesced flush.
         self.pending_timer_reset = False
+        self.pending_power_change = False
         self.pending_explicit_temp = False
         # Coalesced transmit bookkeeping: setters stage values and (re)schedule
         # one flush; the flush sends a single frame with the final state.
@@ -127,3 +128,4 @@ class GreeAcState:
         self.coalesce_dirty = False
         self.pending_timer_reset = False
         self.pending_explicit_temp = False
+        self.pending_power_change = False
