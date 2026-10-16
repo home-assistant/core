@@ -7504,6 +7504,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "thethingsnetwork_lorawan": {
+      "name": "The Things Network LoRaWAN",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "thingspeak": {
       "name": "ThingSpeak",
       "integration_type": "hub",

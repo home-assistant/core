@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "One or more of these applications are already configured",
+      "reauth_successful": "Authentication updated"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to The Things Stack",
+      "invalid_auth": "API key rejected or missing required application permissions",
+      "invalid_endpoint": "Enter an HTTP or HTTPS server address with a valid port",
+      "select_application": "Enter at least one application ID.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic."
+        },
+        "title": "Update API key"
+      },
+      "user": {
+        "data": {
+          "api_key": "API key",
+          "application_ids": "Application IDs",
+          "endpoint": "Application Server",
+          "identity_server": "Identity Server"
+        },
+        "data_description": {
+          "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic.",
+          "application_ids": "Enter the IDs shown in your application overview. Only devices in these applications will be discovered.",
+          "endpoint": "Server address, including the scheme and port. The Things Network uses port 8884.",
+          "identity_server": "For The Things Network, use the eu1 server address. Leave empty to use the Application Server address."
+        },
+        "description": "Connect your The Things Network or The Things Stack applications.",
+        "title": "Connect to The Things Network"
+      }
+    }
+  }
+}
