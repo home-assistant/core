@@ -102,7 +102,7 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("exc", [ApiError("API Error"), RetryError])
+@pytest.mark.parametrize("exc", [ApiError("API Error"), RetryError, TimeoutError])
 async def test_availability(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, exc: Exception
 ) -> None:

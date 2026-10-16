@@ -19,8 +19,11 @@ from .conftest import DEVICE_ID
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 AIR_QUALITY_SCORE = "sensor.kitchen_shelfy_air_quality_score"
+FAN_SPEED = "sensor.kitchen_shelfy_fan_speed"
 FILTER_CHANGE_DUE = "sensor.kitchen_shelfy_filter_change_due"
 FRIDGE_TEMPERATURE = "sensor.kitchen_shelfy_fridge_temperature"
+LAST_UPDATE = "sensor.kitchen_shelfy_last_update"
+POWER_LEVEL = "sensor.kitchen_shelfy_power_level"
 
 
 async def test_all_entities(
@@ -102,6 +105,20 @@ async def test_air_quality_score_without_value(
             "Ignoring unparsable filter due date for Kitchen Shelfy: not-a-date",
             id="due_date_unparsable",
         ),
+        pytest.param(
+            "measurement",
+            {"timestamp": "not-a-date"},
+            LAST_UPDATE,
+            "Ignoring unparsable measurement timestamp for Kitchen Shelfy: not-a-date",
+            id="measurement_timestamp_unparsable",
+        ),
+        pytest.param(
+            "programs",
+            {"eco-s1": {"metadata": {"fan": "TURBO", "power": "HIGH"}}},
+            FAN_SPEED,
+            "Ignoring unknown program fan level for Kitchen Shelfy: turbo",
+            id="program_level_unknown",
+        ),
     ],
 )
 async def test_sensor_unknown_on_invalid_value(
@@ -130,6 +147,37 @@ async def test_sensor_unknown_on_invalid_value(
     assert warning in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("program_id", "fan_speed", "power_level"),
+    [
+        pytest.param("performance-s1", "high", "low", id="other_program"),
+        pytest.param("unknown-s1", STATE_UNKNOWN, STATE_UNKNOWN, id="unknown_program"),
+    ],
+)
+async def test_program_levels_follow_active_program(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: dict[str, VitesyDevice],
+    freezer: FrozenDateTimeFactory,
+    program_id: str,
+    fan_speed: str,
+    power_level: str,
+) -> None:
+    """Test fan speed and power level follow the device's active program."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(FAN_SPEED).state == "mid"
+    assert hass.states.get(POWER_LEVEL).state == "high"
+
+    mock_devices[DEVICE_ID].program_id = program_id
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(FAN_SPEED).state == fan_speed
+    assert hass.states.get(POWER_LEVEL).state == power_level
+
+
 async def test_sensors_absent_from_measurement_are_not_created(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
@@ -140,6 +188,7 @@ async def test_sensors_absent_from_measurement_are_not_created(
     device = mock_devices[DEVICE_ID]
     device.measurement = {"score": 0.5}
     device.maintenance = {}
+    device.programs = {"eco-s1": {"id": "eco-s1"}}
 
     await setup_integration(hass, mock_config_entry)
 
@@ -151,5 +200,8 @@ async def test_sensors_absent_from_measurement_are_not_created(
         "door_open_duration",
         "filter_change_due",
         "fridge_cleaning_due",
+        "fan_speed",
+        "power_level",
+        "last_update",
     ):
         assert hass.states.get(f"sensor.kitchen_shelfy_{absent}") is None

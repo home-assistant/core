@@ -3,7 +3,6 @@
 from typing import override
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -12,17 +11,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PlexServer
 from .const import CONF_SERVER_IDENTIFIER, DOMAIN, PLEX_UPDATE_PLATFORMS_SIGNAL
-from .helpers import get_plex_server
+from .helpers import PlexConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PlexConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex button from config entry."""
     server_id: str = config_entry.data[CONF_SERVER_IDENTIFIER]
-    plex_server = get_plex_server(hass, server_id)
+    plex_server = config_entry.runtime_data.server
     async_add_entities([PlexScanClientsButton(server_id, plex_server)])
 
 

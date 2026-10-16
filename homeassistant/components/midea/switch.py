@@ -60,7 +60,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
-        models=[DeviceType.AC],
+        models=[DeviceType.A1, DeviceType.AC],
         entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
@@ -144,6 +144,48 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         key="ai_switch",
         translation_key="ai_switch",
         models=[DeviceType.DC],
+    ),
+    MideaSwitchEntityDescription(
+        key="protection",
+        translation_key="protection",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
+    MideaSwitchEntityDescription(
+        key="whole_tank_heating",
+        translation_key="whole_tank_heating",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
+    MideaSwitchEntityDescription(
+        key="variable_heating",
+        translation_key="variable_heating",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
+    MideaSwitchEntityDescription(
+        key="sterilization",
+        translation_key="sterilization",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
+    MideaSwitchEntityDescription(
+        key="eplus",
+        translation_key="megawater",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
+    MideaSwitchEntityDescription(
+        key="memory",
+        translation_key="memo_u",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
     ),
 ]
 

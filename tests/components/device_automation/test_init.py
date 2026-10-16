@@ -1341,8 +1341,28 @@ BAD_AUTOMATIONS = [
     ),
 ]
 
-BAD_TRIGGERS = BAD_CONDITIONS = [
+BAD_CONDITIONS = [
     *BAD_AUTOMATIONS,
+    ({"domain": "light"}, "required key not provided at '{path}device_id'"),
+]
+
+BAD_TRIGGERS = [
+    (
+        {"device_id": "very_unique", "domain": "light"},
+        "expected type to be one of",
+    ),
+    (
+        {"device_id": "wrong", "domain": "light"},
+        "Unknown device 'wrong'",
+    ),
+    (
+        {"device_id": "wrong"},
+        "required key not provided at '{path}domain'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
+        "Unknown entity 'wrong'",
+    ),
     ({"domain": "light"}, "required key not provided at '{path}device_id'"),
 ]
 

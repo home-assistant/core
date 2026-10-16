@@ -12,7 +12,6 @@ from homeassistant.components.knx.storage.knx_selector import (
     AllSerializeFirst,
     GASelector,
     GroupAddressConfig,
-    GroupAddressSelector,
     GroupSelect,
     GroupSelectOption,
     KnxPayload,
@@ -100,33 +99,20 @@ def test_ga_selector(
     data: dict[str, Any],
     expected: dict[str, Any],
 ) -> None:
-    """Test GASelector."""
+    """Test GASelector yields a typed value that renders back to storage."""
     selector = GASelector(**selector_config)
-    result = selector(data)
-    assert result == expected
-
-
-@pytest.mark.parametrize(("selector_config", "data", "expected"), GA_SELECTOR_CASES)
-def test_group_address_selector(
-    selector_config: dict[str, Any],
-    data: dict[str, Any],
-    expected: dict[str, Any],
-) -> None:
-    """Test GroupAddressSelector yields a typed value that renders back to storage."""
-    selector = GroupAddressSelector(**selector_config)
     result = selector(data)
     assert isinstance(result, GroupAddressConfig)
     assert result.write == expected.get("write")
     assert result.state == expected.get("state")
     assert result.passive == expected.get("passive", [])
     assert result.dpt == expected.get("dpt")
-    # storage form is what the dict based GASelector produces
     assert selector.to_storage(result) == expected
 
 
-def test_group_address_selector_none() -> None:
-    """Test GroupAddressSelector passes an absent optional value through."""
-    selector = GroupAddressSelector()
+def test_ga_selector_none() -> None:
+    """Test GASelector passes an absent optional value through."""
+    selector = GASelector()
     assert selector(None) is None
     assert selector.to_storage(None) is None
 
@@ -144,7 +130,7 @@ def test_group_address_config_address_lists() -> None:
 def test_knx_selector_in() -> None:
     """Test finding a selector in annotation metadata."""
     ga_selector = knx_selector_in([str, ga(write_required=True)])
-    assert isinstance(ga_selector, GroupAddressSelector)
+    assert isinstance(ga_selector, GASelector)
     assert ga_selector.write_required is True
     ha_selector = selector.BooleanSelector()
     assert knx_selector_in([bool, ha_selector]) is ha_selector

@@ -17,7 +17,7 @@ from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
 PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: LivisiConfigEntry) -> bool:
+async def async_setup_entry(hass: core.HomeAssistant, entry: LivisiConfigEntry) -> None:
     """Set up Livisi Smart Home from a config entry."""
     web_session = aiohttp_client.async_get_clientsession(hass)
     aiolivisi = AioLivisi(web_session)
@@ -43,9 +43,8 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: LivisiConfigEntry) 
         hass, coordinator.ws_connect(), "livisi-ws_connect"
     )
     entry.async_on_unload(coordinator.websocket.disconnect)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LivisiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LivisiConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

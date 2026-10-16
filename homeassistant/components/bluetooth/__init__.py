@@ -1,6 +1,6 @@
 """The bluetooth integration."""
 
-import datetime
+import datetime as dt
 import logging
 import platform
 from typing import TYPE_CHECKING, Any
@@ -181,7 +181,7 @@ async def _async_start_adapter_discovery(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
-    async def _async_call_debouncer(now: datetime.datetime) -> None:
+    async def _async_call_debouncer(now: dt.datetime) -> None:
         """Call the debouncer at a later time."""
         await discovery_debouncer.async_call()
 
@@ -374,7 +374,7 @@ async def async_update_device(
         device_registry.async_update_device(device_entry.id, **kwargs)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry for a bluetooth scanner."""
     if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
         if not (source_entry := hass.config_entries.async_get_entry(source_entry_id)):
@@ -388,7 +388,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                 )
             )
-            return True
+            return
         address = entry.unique_id
         assert address is not None
         source_domain = entry.data[CONF_SOURCE_DOMAIN]
@@ -408,7 +408,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             details,
             entry.data.get(CONF_SOURCE_DEVICE_ID),
         )
-        return True
+        return
     manager = _get_manager(hass)
     address = entry.unique_id
     assert address is not None
@@ -443,7 +443,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     entry.async_on_unload(scanner.async_stop)
-    return True
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -451,6 +450,5 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return True

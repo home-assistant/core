@@ -1,6 +1,6 @@
 """The tests for the GDACS Feed integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -61,8 +61,8 @@ async def test_setup(
         alert_level="Alert Level 1",
         country="Country 1",
         attribution="Attribution 1",
-        from_date=datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.UTC),
-        to_date=datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.UTC),
+        from_date=dt.datetime(2020, 1, 10, 8, 0, tzinfo=dt.UTC),
+        to_date=dt.datetime(2020, 1, 20, 8, 0, tzinfo=dt.UTC),
         duration_in_week=1,
         population="Population 1",
         severity="Severity 1",
@@ -127,8 +127,8 @@ async def test_setup(
             ATTR_DESCRIPTION: "Description 1",
             ATTR_COUNTRY: "Country 1",
             ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_FROM_DATE: datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.UTC),
-            ATTR_TO_DATE: datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.UTC),
+            ATTR_FROM_DATE: dt.datetime(2020, 1, 10, 8, 0, tzinfo=dt.UTC),
+            ATTR_TO_DATE: dt.datetime(2020, 1, 20, 8, 0, tzinfo=dt.UTC),
             ATTR_DURATION_IN_WEEK: 1,
             ATTR_ALERT_LEVEL: "Alert Level 1",
             ATTR_POPULATION: "Population 1",

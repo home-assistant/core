@@ -1,7 +1,7 @@
 """Test Slack integration."""
 
 from homeassistant.components.slack.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, async_init_integration
@@ -39,3 +39,8 @@ async def test_async_setup_entry_invalid_auth(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.reason == "Invalid API key"
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id

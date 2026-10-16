@@ -4,6 +4,7 @@ import asyncio
 from pathlib import Path
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.os_error import os_write_error
 
 
 class LocalTodoListStore:
@@ -29,7 +30,10 @@ class LocalTodoListStore:
     async def async_store(self, ics_content: str) -> None:
         """Persist the calendar to storage."""
         async with self._lock:
-            await self._hass.async_add_executor_job(self._store, ics_content)
+            try:
+                await self._hass.async_add_executor_job(self._store, ics_content)
+            except OSError as err:
+                raise os_write_error(err, str(self._path)) from err
 
     def _store(self, ics_content: str) -> None:
         """Persist the calendar to storage."""

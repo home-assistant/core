@@ -29,12 +29,12 @@ from homeassistant.components.conversation.chat_log import (
 )
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import chat_session, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -131,6 +131,79 @@ async def test_unknown_llm_api(
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+
+
+class AdminAPI(llm.API):
+    """Test API that requires an admin user."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return the API instance."""
+        return llm.APIInstance(self, "Admin API Prompt", llm_context, [])
+
+
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        pytest.param(None, id="no_user"),
+        pytest.param("unknown-user", id="unknown_user"),
+        pytest.param("non-admin-user", id="non_admin_user"),
+    ],
+)
+async def test_llm_api_object_requires_admin_unauthorized(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    user_id: str | None,
+) -> None:
+    """Test an admin-only LLM API object is refused for a non-admin context."""
+    MockUser(id="non-admin-user").add_to_hass(hass)
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(Unauthorized),
+    ):
+        await chat_log.async_provide_llm_data(
+            llm.LLMContext(
+                platform="test",
+                context=Context(user_id=user_id),
+                language="en",
+                assistant=None,
+                device_id=None,
+            ),
+            user_llm_hass_api=api,
+        )
+
+    assert chat_log.llm_api is None
+
+
+async def test_llm_api_object_requires_admin_authorized(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test an admin-only LLM API object is allowed for an admin user."""
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            llm.LLMContext(
+                platform="test",
+                context=Context(user_id=hass_admin_user.id),
+                language="en",
+                assistant=None,
+                device_id=None,
+            ),
+            user_llm_hass_api=api,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api is api
 
 
 async def test_multiple_llm_apis(

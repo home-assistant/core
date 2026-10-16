@@ -311,6 +311,14 @@ async def test_inovelli_led_effect_rejects_unknown_effect(
         await device_action.async_validate_action_config(hass, config)
 
 
+async def test_action_without_type_is_invalid(hass: HomeAssistant) -> None:
+    """Test an action without a type fails validation."""
+    config = {"device_id": "device_id", "domain": DOMAIN}
+
+    with pytest.raises(probatio.Invalid):
+        await device_action.async_validate_action_config(hass, config)
+
+
 async def test_client_unique_id_suffix_stripped(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
