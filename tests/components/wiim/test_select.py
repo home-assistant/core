@@ -18,7 +18,12 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.wiim.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -55,6 +60,7 @@ async def test_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
+    entity_registry: er.EntityRegistry,
     current: str,
 ) -> None:
     """Initialize the selector from device capabilities and active output."""
@@ -65,6 +71,9 @@ async def test_setup(
     assert state is not None
     assert state.state == (STATE_UNKNOWN if current == "Other Out" else current)
     assert state.attributes[ATTR_OPTIONS] == ["Line Out", "Optical Out"]
+    registry_entry = entity_registry.async_get(ENTITY_ID)
+    assert registry_entry is not None
+    assert registry_entry.entity_category is EntityCategory.CONFIG
     mock_wiim_device.async_refresh_audio_capabilities.assert_awaited_once_with()
     mock_wiim_device.get_audio_output_hw_mode.assert_awaited_once_with()
 

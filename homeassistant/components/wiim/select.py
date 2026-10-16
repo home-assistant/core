@@ -8,6 +8,7 @@ from wiim.exceptions import WiimException
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -53,6 +54,7 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
     """Select an audio output reported by the device."""
 
     _attr_translation_key = "audio_output"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_should_poll = False
 
     def __init__(self, device: WiimDevice) -> None:
