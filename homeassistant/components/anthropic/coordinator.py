@@ -2,7 +2,7 @@
 
 import datetime as dt
 from functools import partial
-from typing import override
+from typing import Literal, override
 
 import anthropic
 
@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -60,6 +61,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             update_method=self.async_update_data,
             always_update=False,
         )
+        self._last_model_update: dt.datetime | None = None
 
     @property
     def client(self) -> anthropic.AsyncAnthropic:
@@ -81,14 +83,50 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
         super().async_set_updated_data(data)
 
     async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
-        """Fetch data from the API."""
-        try:
-            self.update_interval = UPDATE_INTERVAL_DISCONNECTED
-            result = await self.client.models.list(
-                lifecycle=["active", "deprecated", "retired"], timeout=10.0
+        """Fetch model list from the API.
+
+        Regular updates only fetch active models.
+        Deprecated and retired models are only fetched on first refresh,
+        if the active models has changed, or if we have passed a deprecation
+        or retirement date for any already fetched model.
+        """
+        self.update_interval = UPDATE_INTERVAL_DISCONNECTED
+        active_models = await self._async_get_models(["active"])
+        models = self.data or []
+        cached_active_models = [
+            model for model in models if model.lifecycle == "active"
+        ]
+        last_update = self._last_model_update
+        now = dt_util.utcnow()
+        if (
+            last_update is None
+            or active_models != cached_active_models
+            or any(
+                last_update < date <= now
+                for model in models
+                for date in (model.deprecated_at, model.retires_at)
+                if date is not None
             )
-            models = [model async for model in result]
-            self.update_interval = UPDATE_INTERVAL_CONNECTED
+        ):
+            inactive_models = await self._async_get_models(["deprecated", "retired"])
+        else:
+            inactive_models = [model for model in models if model.lifecycle != "active"]
+        # A model can change lifecycle between the two requests.
+        inactive_ids = {model.id for model in inactive_models}
+        models = [
+            model for model in active_models if model.id not in inactive_ids
+        ] + inactive_models
+        self._last_model_update = now
+        self.update_interval = UPDATE_INTERVAL_CONNECTED
+        return models
+
+    async def _async_get_models(
+        self, lifecycle: list[Literal["active", "deprecated", "retired"]]
+    ) -> list[anthropic.types.ModelInfo]:
+        """Fetch all pages for the requested lifecycle stages."""
+        try:
+            result = await self.client.models.list(lifecycle=lifecycle, timeout=10.0)
+            return [model async for model in result]
         except anthropic.APITimeoutError as err:
             raise TimeoutError(err.message or str(err)) from err
         except anthropic.AuthenticationError as err:
@@ -103,7 +141,6 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
                 translation_key="api_error",
                 translation_placeholders={"message": err.message},
             ) from err
-        return models
 
     def mark_connection_error(self) -> None:
         """Mark the connection as having an error and reschedule background check."""
