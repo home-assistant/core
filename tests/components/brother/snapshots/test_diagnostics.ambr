@@ -53,7 +53,10 @@
       'pf_kit_1_remaining_pages': 48741,
       'pf_kit_mp_remaining_life': None,
       'pf_kit_mp_remaining_pages': None,
-      'printer_errors': None,
+      'printer_errors': list([
+        'door_open',
+        'low_toner',
+      ]),
       'printer_status': 'idle',
       'status': 'waiting',
       'uptime': '2024-03-03T15:04:24+00:00',

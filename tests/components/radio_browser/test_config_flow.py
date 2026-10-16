@@ -1,8 +1,9 @@
 """Test the Radio Browser config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from radios import RadioBrowserConnectionError
 
 from homeassistant.components.radio_browser.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,13 +13,14 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_radio_browser")
 async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") is None
+    assert result.get("errors") == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -29,6 +31,35 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result2.get("title") == "Radio Browser"
     assert result2.get("data") == {}
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_radio_browser: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the user flow when Radio Browser cannot be reached, and recovers."""
+    mock_radio_browser.stats.side_effect = RadioBrowserConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "cannot_connect"}
+
+    mock_radio_browser.stats.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
 

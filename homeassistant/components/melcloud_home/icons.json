@@ -10,6 +10,9 @@
           "off": "mdi:snowflake-off"
         }
       },
+      "frost_protection_active": {
+        "default": "mdi:snowflake-thermometer"
+      },
       "holiday_mode": {
         "default": "mdi:beach",
         "state": {
@@ -21,6 +24,9 @@
         "state": {
           "off": "mdi:fire-off"
         }
+      },
+      "overheat_protection_active": {
+        "default": "mdi:thermometer-alert"
       },
       "standby": {
         "default": "mdi:power-sleep",

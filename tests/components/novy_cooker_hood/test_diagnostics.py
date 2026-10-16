@@ -20,8 +20,6 @@ async def test_diagnostics(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, init_novy_cooker_hood
     )
-    # Exclude the random transmitter registry id from the snapshot.
-    result["config_entry"]["data"].pop("transmitter")
 
     assert result == snapshot(
         exclude=props(

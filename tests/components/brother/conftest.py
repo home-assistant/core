@@ -68,8 +68,8 @@ BROTHER_DATA = BrotherSensors(
     pf_kit_1_remaining_pages=48741,
     pf_kit_mp_remaining_life=None,
     pf_kit_mp_remaining_pages=None,
-    printer_errors=None,
     printer_status="idle",
+    printer_errors=["door_open", "low_toner"],
     status="waiting",
     uptime=datetime(2024, 3, 3, 15, 4, 24, tzinfo=UTC),
     yellow_counter=None,
@@ -118,6 +118,15 @@ def mock_brother_client(mock_brother: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
+def mock_ink_brother_client(mock_brother_client: AsyncMock) -> AsyncMock:
+    """Mock Brother client for an inkjet printer."""
+    mock_brother_client.serial = "9876543210"
+    mock_brother_client.model = "DCP-J562DW"
+
+    return mock_brother_client
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
@@ -127,6 +136,22 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "localhost",
             CONF_TYPE: "laser",
+            SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+        },
+        minor_version=2,
+    )
+
+
+@pytest.fixture
+def mock_ink_config_entry() -> MockConfigEntry:
+    """Mock a config entry for an inkjet printer."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="DCP-J562DW 9876543210",
+        unique_id="9876543210",
+        data={
+            CONF_HOST: "localhost",
+            CONF_TYPE: "ink",
             SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
         },
         minor_version=2,

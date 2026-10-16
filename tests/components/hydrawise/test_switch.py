@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from pydrawise import APIError
 from pydrawise.schema import Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,6 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -103,3 +105,34 @@ async def test_auto_watering_services(
     state = hass.states.get("switch.zone_one_automatic_watering")
     assert state is not None
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "api_method"),
+    [
+        ("switch.zone_one_manual_watering", SERVICE_TURN_ON, "start_zone"),
+        ("switch.zone_one_manual_watering", SERVICE_TURN_OFF, "stop_zone"),
+        ("switch.zone_one_automatic_watering", SERVICE_TURN_ON, "resume_zone"),
+        ("switch.zone_one_automatic_watering", SERVICE_TURN_OFF, "suspend_zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_switch_api_error(
+    hass: HomeAssistant,
+    mock_pydrawise: AsyncMock,
+    entity_id: str,
+    service: str,
+    api_method: str,
+) -> None:
+    """Test that API errors raise a translated error."""
+    getattr(mock_pydrawise, api_method).side_effect = APIError("Boom")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            service_data={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "command_error"

@@ -70,7 +70,7 @@ CONTROLLER_EDIT = {
         )
     ),
     probatio.Optional(CONF_USERNAME): selector.TextSelector(),
-    probatio.Optional(CONF_PASSWORD): selector.TextSelector(
+    probatio.Optional(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
         selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
     ),
 }

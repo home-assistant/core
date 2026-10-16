@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["ouman-eh-800-api==1.0.0"]
+  "requirements": ["ouman-eh-800-api==1.1.0"]
 }

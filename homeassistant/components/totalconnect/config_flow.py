@@ -19,7 +19,9 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import AUTO_BYPASS, CODE_REQUIRED, CONF_USERCODES, DOMAIN
 
-PASSWORD_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+PASSWORD_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -66,7 +68,7 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 

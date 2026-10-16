@@ -4,12 +4,15 @@ from collections.abc import Generator
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from pyintelliclima.const import FanMode, FanSpeed
-from pyintelliclima.intelliclima_types import (
+from pyintelliclima import (
+    FanMode,
+    FanSpeed,
     IntelliClimaDevices,
-    IntelliClimaECO,
-    IntelliClimaFilterStatsEntry,
+    IntelliClimaECO2,
     IntelliClimaFilterStatus,
+)
+from pyintelliclima.intelliclima_types import (
+    IntelliClimaFilterStatsEntry,
     IntelliClimaModelType,
 )
 import pytest
@@ -24,7 +27,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.intellifire.async_setup_entry", return_value=True
+        "homeassistant.components.intelliclima.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 
@@ -41,9 +44,9 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-def create_eco_device(device_id: str, crono_sn: str, name: str) -> IntelliClimaECO:
+def create_eco_device(device_id: str, crono_sn: str, name: str) -> IntelliClimaECO2:
     """Create an ECOCOMFORT 2.0 device."""
-    return IntelliClimaECO(
+    return IntelliClimaECO2(
         id=device_id,
         crono_sn=crono_sn,
         status="OK",
@@ -152,31 +155,30 @@ def mock_cloud_interface(
         # Mock other async methods if needed
         mock_client.authenticate.return_value = True
         mock_client.get_all_device_status.return_value = single_eco_device
-        mock_client.get_filter_status.return_value = IntelliClimaFilterStatus(
-            serial="11223344",
-            is_active=True,
-            from_date="2025-11-18 10:22:51",
-            stats=[
-                IntelliClimaFilterStatsEntry(
-                    night_tot_hour="10",
-                    low_tot_hour="20",
-                    medium_tot_hour="30",
-                    high_tot_hour="5",
-                    boost_tot_hour="1",
-                )
-            ],
-            totale=66.0,
-            change_filter=True,
-        )
-
-        # Sub-API used by the fan entity
-        mock_client.ecocomfort = SimpleNamespace(
+        mock_client.ecocomfort2 = SimpleNamespace(
             turn_off=AsyncMock(return_value=True),
             set_mode_speed=AsyncMock(return_value=True),
             set_mode_speed_auto=AsyncMock(return_value=True),
+            get_filter_status=AsyncMock(
+                return_value=IntelliClimaFilterStatus(
+                    serial="11223344",
+                    is_active=True,
+                    from_date="2025-11-18 10:22:51",
+                    stats=[
+                        IntelliClimaFilterStatsEntry(
+                            night_tot_hour="10",
+                            low_tot_hour="20",
+                            medium_tot_hour="30",
+                            high_tot_hour="5",
+                            boost_tot_hour="1",
+                        )
+                    ],
+                    totale=66.0,
+                    change_filter=True,
+                )
+            ),
         )
 
         mock_client.auth_token = "fake-token"
         mock_client.user_id = "fake-user-id"
-        mock_client.house_id = "fake-house-id"
         yield mock_client  # Yielding to the test

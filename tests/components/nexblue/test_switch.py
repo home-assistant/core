@@ -10,7 +10,7 @@ from nexblue_api import NexBlueError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nexblue.const import DOMAIN
+from homeassistant.components.nexblue.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -44,15 +44,18 @@ async def test_switch_entities_snapshot(
     )
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_charger_removed_from_list_becomes_unavailable(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a charger missing from a refresh does not raise an exception."""
     mock_client.async_list_chargers.return_value = []
 
-    await init_integration.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("switch.nb123456_charging").state == STATE_UNAVAILABLE
 
@@ -373,10 +376,11 @@ async def test_pending_command_refreshes_cancelled_on_unload(
         (7, "on"),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_charging_session_states(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     charging_state: int,
     expected_state: str,
 ) -> None:
@@ -385,6 +389,8 @@ async def test_charging_session_states(
         CHARGER_STATUS, charging_state=charging_state
     )
 
-    await init_integration.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("switch.nb123456_charging").state == expected_state

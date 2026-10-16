@@ -212,7 +212,7 @@ def icon_schema(
                 )
             }
         )
-    if integration_type not in (IntegrationType.ENTITY, IntegrationType.SYSTEM):
+    if integration_type != IntegrationType.ENTITY:
         schema = schema.extend(
             {
                 probatio.Optional("entity"): probatio.All(
