@@ -17,7 +17,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lorawan import async_register_connection
-from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.components.lorawan.websocket_api import _snapshot
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import HomeAssistant
@@ -96,7 +95,7 @@ async def test_reconnect_rebuilds_observations(
     backend.disconnect()
     result = _snapshot(hass)
     assert result["devices"] == []
-    assert result["connections"][0]["connected"] is False
+    assert result["connections"] == []
     replacement, _ = await registered_backend("network", [DESCRIPTOR])
     states = _snapshot(hass)["devices"]
     assert len(states) == 1
@@ -249,7 +248,7 @@ async def test_subscribe_unsubscribe(
     backend.disconnect()
     event = (await client.receive_json())["event"]
     assert event["devices"] == []
-    assert event["connections"][0]["connected"] is False
+    assert event["connections"] == []
     await client.send_json({"id": 2, "type": "unsubscribe_events", "subscription": 1})
     assert (await client.receive_json())["success"]
     with patch("homeassistant.components.lorawan.websocket_api._snapshot") as snapshot:
@@ -274,15 +273,19 @@ async def test_admin_required(
 
 
 async def test_removed_connection_entry(
-    hass: HomeAssistant, registered_backend: RegisterBackend
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    mock_connection: MockConnection,
 ) -> None:
-    """Removing a connection entry discards its metadata."""
-    backend, _ = await registered_backend("network", [DESCRIPTOR])
-    backend.disconnect()
-    assert hass.data[DATA_REGISTRY].observed_connections
-    await hass.config_entries.async_remove("network")
+    """Removing a connection entry removes its devices and metadata."""
+    assert await hass.config_entries.async_setup(connection_entry.entry_id)
+    mock_connection.emit(AddedEvent(descriptor=DESCRIPTOR))
+    result = _snapshot(hass)
+    assert len(result["devices"]) == 1
+    assert len(result["connections"]) == 1
+    await hass.config_entries.async_remove(connection_entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data[DATA_REGISTRY].observed_connections
+    assert _snapshot(hass) == {"devices": [], "connections": []}
 
 
 async def test_configuration_url_without_devices(
@@ -290,7 +293,7 @@ async def test_configuration_url_without_devices(
     connection_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Offer the console before any devices exist and retain its URL during outages."""
+    """Offer the console while connected, even before any devices exist."""
     assert await async_setup_component(hass, "lorawan", {})
     backend = MockConnection()
     configuration_url = "https://eu1.cloud.thethings.network/console"
@@ -304,6 +307,5 @@ async def test_configuration_url_without_devices(
     assert result["connections"][0]["configuration_url"] == configuration_url
     assert result["connections"][0]["connected"] is True
     backend.disconnect()
-    assert _snapshot(hass)["connections"][0]["configuration_url"] == configuration_url
-    assert _snapshot(hass)["connections"][0]["connected"] is False
+    assert _snapshot(hass) == {"devices": [], "connections": []}
     unsubscribe()

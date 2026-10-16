@@ -27,18 +27,18 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
     device_registry = dr.async_get(hass)
     devices = []
     connections = []
-    for entry_id, observations in registry.observed_connections.items():
+    for entry_id, registered in registry.connections.items():
         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
             continue
         connection = {
             "entry_id": entry_id,
             "domain": entry.domain,
             "title": entry.title,
-            "connected": entry_id in registry.connections,
-            "configuration_url": observations.configuration_url,
+            "connected": True,
+            "configuration_url": registered.configuration_url,
         }
         connections.append(connection)
-        for state in observations.devices.values():
+        for state in registered.devices.values():
             descriptor = state.descriptor
             domains = [
                 domain

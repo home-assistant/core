@@ -20,7 +20,7 @@ from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.util.hass_dict import HassKey
 
 from .const import SIGNAL_DEVICES_CHANGED
-from .device_state import ObservedConnection
+from .device_state import DeviceState
 
 type ConnectionChange = tuple[str, Connection | None]
 
@@ -40,7 +40,8 @@ class RegisteredConnection:
         self._hass = hass
         self._entry_id = entry_id
         self._registry = hass.data[DATA_REGISTRY]
-        self._observations = ObservedConnection(configuration_url)
+        self.configuration_url = configuration_url
+        self.devices: dict[str, DeviceState] = {}
         self._active = False
         self._disconnected = False
         self._pending_discoveries: set[str] = set()
@@ -76,7 +77,6 @@ class RegisteredConnection:
             self.unsubscribe()
             raise ConnectionUnavailable("Connection lost during registration")
         self._registry.connections[self._entry_id] = self
-        self._registry.observed_connections[self._entry_id] = self._observations
         self._active = True
         async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
         change: ConnectionChange = (self._entry_id, self.connection)
@@ -92,7 +92,7 @@ class RegisteredConnection:
         if self._active:
             self._active = False
             self._registry.connections.pop(self._entry_id)
-            self._observations.devices.clear()
+            self.devices.clear()
             async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
             change: ConnectionChange = (self._entry_id, None)
             notify(self._registry.connection_change_listeners, change)
@@ -105,7 +105,7 @@ class RegisteredConnection:
         """Update device observations and discover matching integrations."""
         if self._disconnected:
             return
-        if not self._observations.handle_device_event(event):
+        if not self._update_device_state(event):
             return
         if self._active:
             async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
@@ -118,6 +118,20 @@ class RegisteredConnection:
                     self._discover(domain)
                 else:
                     self._pending_discoveries.add(domain)
+
+    def _update_device_state(self, event: DeviceEvent) -> bool:
+        """Process a device event and return whether it was handled."""
+        if event.type in (EventType.ADDED, EventType.UPDATED):
+            if (state := self.devices.get(event.dev_eui)) is not None:
+                state.descriptor = event.descriptor
+            else:
+                self.devices[event.dev_eui] = DeviceState(event.descriptor)
+        elif event.type == EventType.REMOVED:
+            self.devices.pop(event.dev_eui, None)
+        else:
+            state = self.devices.get(event.dev_eui)
+            return state is not None and state.receive(event)
+        return True
 
     @callback
     def _discover(self, domain: str) -> None:
@@ -138,8 +152,6 @@ class ConnectionRegistry:
     """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
     """Registered connections keyed by provider config entry ID."""
-    observed_connections: dict[str, ObservedConnection] = field(default_factory=dict)
-    """Connection metadata and observations keyed by config entry ID."""
     connection_change_listeners: list[Callable[[ConnectionChange], None]] = field(
         default_factory=list
     )
