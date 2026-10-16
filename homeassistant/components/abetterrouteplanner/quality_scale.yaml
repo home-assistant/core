@@ -57,9 +57,7 @@ rules:
   diagnostics:
     status: todo
     comment: >-
-      Deferred to a follow-up PR per the core review of #173433; the in-memory
-      connection-triage fields on the telemetry coordinator already retain the
-      data a diagnostics dump will surface.
+      Deferred to a follow-up PR per the core review of #173433.
   discovery:
     status: exempt
     comment: Cloud service, no local discovery possible.

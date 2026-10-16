@@ -122,8 +122,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         # Sticky on omission: a frame without a provider keeps the prior value.
         self.last_provider: dict[int, dict[Metric, str]] = {}
         self.last_connection_event: ConnectionEvent | None = None
-        self.last_connection_at: datetime | None = None
-        self.connect_count: int = 0
         self.stream_auth_failed: bool = False
 
     @callback
@@ -175,9 +173,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state
         self.last_connection_event = event
-        self.last_connection_at = dt_util.utcnow()
-        if event.state is ConnectionState.CONNECTED:
-            self.connect_count += 1
 
         if changed:
             if event.state is ConnectionState.CONNECTED:
