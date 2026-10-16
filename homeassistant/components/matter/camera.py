@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters.Objects import CameraAvStreamManagement, WebRtcTransportProvider
-from matter_server.client.exceptions import InvalidServerVersion, MatterClientException
+from matter_server.client.exceptions import MatterClientException
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
 from matter_server.common.models import (
@@ -169,7 +169,7 @@ class MatterCamera(MatterEntity, Camera):
                 sdp=offer_sdp,
                 ice_servers=ice_servers or None,
             )
-        except (MatterError, InvalidServerVersion) as err:
+        except (MatterError, MatterClientException) as err:
             self._sessions.pop(session_id, None)
             raise HomeAssistantError(str(err) or type(err).__name__) from err
         else:
@@ -235,7 +235,7 @@ class MatterCamera(MatterEntity, Camera):
                 webrtc_session_id=matter_session_id,
                 ice_candidates=ice_candidates,
             )
-        except (MatterError, InvalidServerVersion) as err:
+        except (MatterError, MatterClientException) as err:
             raise HomeAssistantError(str(err) or type(err).__name__) from err
 
     @callback
@@ -245,31 +245,35 @@ class MatterCamera(MatterEntity, Camera):
             return
 
         matter_session_id = data["webrtc_session_id"]
-
-        # After a restart the camera may reuse a known id for an offer in flight,
-        # so events for known ids are buffered too. Nothing follows the "end" of
-        # a session, so a buffered "end" belongs to an earlier session once
-        # another event arrives.
-        if self._pending_offers:
-            events = self._buffered_events.setdefault(matter_session_id, [])
-            if (
-                data["event_type"] != "end"
-                and events
-                and events[-1]["event_type"] == "end"
-            ):
-                events.clear()
-            events.append(data)
+        session_id = self._matter_session_ids.get(matter_session_id)
+        event_type = data["event_type"]
 
         # After a restart the camera may reuse the id of a session whose end
         # was never seen. A second answer for a known id proves that, so the
         # old session is over.
-        if (
-            data["event_type"] == "answer"
-            and (session_id := self._matter_session_ids.get(matter_session_id))
-            is not None
+        if reused := (
+            event_type == "answer"
+            and session_id is not None
             and self._sessions[session_id].answered
         ):
             self._forget_matter_session(matter_session_id)
+
+        # After a restart the camera may reuse a known id for an offer in flight,
+        # so events for known ids are buffered too, though those a known session
+        # got before it was over are its own. Nothing follows the "end" of a
+        # session, so a buffered "end" belongs to an earlier session once
+        # another event arrives.
+        if self._pending_offers:
+            events = self._buffered_events.setdefault(matter_session_id, [])
+            if (
+                reused
+                or (event_type == "end" and session_id is not None)
+                or (
+                    event_type != "end" and events and events[-1]["event_type"] == "end"
+                )
+            ):
+                events.clear()
+            events.append(data)
 
         if matter_session_id in self._matter_session_ids:
             self._handle_webrtc_event(data)
@@ -348,6 +352,8 @@ class MatterCamera(MatterEntity, Camera):
             # The offer is still in flight; the session is stopped once it returns.
             return
         self._matter_session_ids.pop(matter_session_id, None)
+        # The events the session got are its own, not an offer in flight's.
+        self._buffered_events.pop(matter_session_id, None)
         self._stop_matter_session(matter_session_id)
 
     @callback
@@ -382,7 +388,7 @@ class MatterCamera(MatterEntity, Camera):
                 node_id=self._endpoint.node.node_id,
                 endpoint_id=self._endpoint.endpoint_id,
             )
-        except (MatterError, InvalidServerVersion) as err:
+        except (MatterError, MatterClientException) as err:
             raise HomeAssistantError(str(err) or type(err).__name__) from err
         self.content_type = CONTENT_TYPES.get(result.codec.upper(), "image/jpeg")
         return b64decode(result.data)

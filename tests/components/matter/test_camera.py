@@ -6,6 +6,7 @@ from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
+from matter_server.client.exceptions import NotConnected
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import CameraPrivacyMode, MatterError
 from matter_server.common.models import (
@@ -683,15 +684,86 @@ async def test_camera_webrtc_claimed_answer_not_replayed(
     assert response["event"] == {"type": "answer", "answer": "second"}
 
 
+@pytest.mark.parametrize(
+    ("end_events", "expected_message", "stop_calls"),
+    [
+        pytest.param([], {"type": "answer", "answer": "second"}, 2, id="closed"),
+        pytest.param(["end"], ENDED_MESSAGE, 0, id="ended"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_webrtc_delivered_events_not_replayed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
+    end_events: list[str],
+    expected_message: dict[str, Any],
+    stop_calls: int,
+) -> None:
+    """Test events a session got are not replayed to one reusing its id."""
+    client = await hass_ws_client(hass)
+    first_subscription_id, _ = await _start_session(client, matter_client)
+
+    release = asyncio.Event()
+
+    async def blocked_offer(**kwargs: Any) -> CameraStartStreamResult:
+        await release.wait()
+        return START_STREAM_RESULT
+
+    matter_client.camera_start_stream.side_effect = blocked_offer
+    second_subscription_id, _ = await _send_offer(client)
+
+    # The first session is answered, and maybe ended by the camera, while the
+    # second offer is in flight.
+    for event_type in ("answer", *end_events):
+        await trigger_subscription_callback(
+            hass,
+            matter_client,
+            event=EventType.WEBRTC_CALLBACK,
+            data=_webrtc_callback_data(matter_node, event_type, EVENT_DATA[event_type]),
+        )
+    response = await client.receive_json()
+    assert response["id"] == first_subscription_id
+    assert response["event"] == ANSWER_MESSAGE
+    await _unsubscribe(client, first_subscription_id)
+
+    # The camera reuses the first session's id for the second offer, which must
+    # not get the first session's answer.
+    release.set()
+    await hass.async_block_till_done()
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.WEBRTC_CALLBACK,
+        data=_webrtc_callback_data(matter_node, "answer", {"sdp": "second"}),
+    )
+    response = await client.receive_json()
+    assert response["id"] == second_subscription_id
+    assert response["event"] == expected_message
+
+    await _unsubscribe(client, second_subscription_id)
+    await hass.async_block_till_done()
+    assert matter_client.camera_stop_stream.call_count == stop_calls
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(CameraPrivacyMode(), id="camera_error"),
+        pytest.param(NotConnected(), id="client_error"),
+    ],
+)
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
 @pytest.mark.usefixtures("matter_node")
 async def test_camera_webrtc_offer_error(
     hass: HomeAssistant,
     matter_client: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    error: Exception,
 ) -> None:
     """Test a failing offer cleans up the session."""
-    matter_client.camera_start_stream.side_effect = CameraPrivacyMode()
+    matter_client.camera_start_stream.side_effect = error
     client = await hass_ws_client(hass)
     _, session_id = await _send_offer(client)
 
