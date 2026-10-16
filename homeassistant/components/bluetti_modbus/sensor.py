@@ -341,11 +341,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
-        key="b_type",
-        translation_key="b_type",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BluettiModbusSensorEntityDescription(
         key="b_v",
         translation_key="b_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,

@@ -64,9 +64,6 @@
       "b_soh": {
         "name": "Battery SoH"
       },
-      "b_type": {
-        "name": "Battery type"
-      },
       "b_v": {
         "name": "Battery voltage"
       },
