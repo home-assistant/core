@@ -262,14 +262,18 @@ async def test_hw_entity_absent_when_hw_flag_false(
         ),
         (
             {"ScheduledChargingAllowed": False},
-            ["default", "fast_solar", "pure_solar", "smart_solar"],
+            ["custom_solar", "default", "fast_solar", "pure_solar", "smart_solar"],
         ),
         (
             {"SolarChargingAllowed": False, "ScheduledChargingAllowed": False},
             ["default"],
         ),
+        (
+            {"SolarChargingCustomPowerTarget": None},
+            ["default", "fast_solar", "pure_solar", "scheduled", "smart_solar"],
+        ),
     ],
-    ids=["no solar", "no scheduled", "neither"],
+    ids=["no solar", "no scheduled", "neither", "firmware without custom solar"],
     indirect=["mock_peblar"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -281,8 +285,30 @@ async def test_smart_charging_options_follow_the_charger(
 
     A charger without a power meter rejects solar charging, and the web
     interface hides those modes. Offering them anyway lets the user pick
-    something the charger quietly ignores.
+    something the charger quietly ignores. The same goes for custom solar,
+    which firmware older than 1.10 has never heard of.
     """
     state = hass.states.get("select.peblar_ev_charger_smart_charging")
     assert state
     assert state.attributes[ATTR_OPTIONS] == expected_options
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_selecting_custom_solar(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+) -> None:
+    """Test the mode firmware 1.10 added reaches the charger."""
+    mock_peblar.smart_charging.reset_mock()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.peblar_ev_charger_smart_charging",
+            ATTR_OPTION: "custom_solar",
+        },
+        blocking=True,
+    )
+
+    mock_peblar.smart_charging.assert_called_once_with(SmartChargingMode.CUSTOM_SOLAR)

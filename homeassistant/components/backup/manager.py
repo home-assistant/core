@@ -624,6 +624,8 @@ class BackupManager:
                 latest_uploaded_bytes = bytes_uploaded
                 upload_progress_debouncer.async_schedule_call()
 
+            # Tell listeners which agents this backup is uploaded to.
+            _emit_upload_progress()
             await agent.async_upload_backup(
                 open_stream=open_stream_func,
                 backup=_backup,

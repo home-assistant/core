@@ -9,10 +9,13 @@ from aioflo.errors import RequestError
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_USE_SSO
+from .const import CONF_USE_SSO, DOMAIN
 from .coordinator import FloConfigEntry, FloDeviceDataUpdateCoordinator, FloRuntimeData
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +49,16 @@ async def async_get_flo_api(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FloConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Flo integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: FloConfigEntry) -> None:
     """Set up flo from a config entry."""
     try:
         client, used_sso = await async_get_flo_api(
@@ -81,9 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FloConfigEntry) -> bool:
     entry.runtime_data = FloRuntimeData(client=client, devices=devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FloConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FloConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

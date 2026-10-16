@@ -1,7 +1,10 @@
 """Tests for the Abode camera device."""
 
-from unittest.mock import patch
+from collections.abc import Callable, Generator
+from typing import Any
+from unittest.mock import MagicMock, patch
 
+from jaraco.abode.helpers import timeline
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +16,10 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
-from tests.common import snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
+
+CAMERA_ENTITY_ID = "camera.test_cam"
+RENAMED_CAMERA_ENTITY_ID = "camera.renamed_cam"
 
 
 @pytest.fixture(autouse=True)
@@ -80,3 +86,110 @@ async def test_camera_off(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         mock_capture.assert_called_once_with(True)
+
+
+@pytest.fixture
+def mock_update_image_location() -> Generator[MagicMock]:
+    """Mock the camera image location update and skip the image download."""
+    with (
+        patch(
+            "jaraco.abode.devices.camera.Camera.update_image_location"
+        ) as mock_update,
+        patch("homeassistant.components.abode.camera.AbodeCamera.get_image"),
+    ):
+        yield mock_update
+
+
+def _timeline_capture_callbacks(
+    config_entry: MockConfigEntry,
+) -> list[Callable[[Any], None]]:
+    """Return the capture image timeline callbacks registered with jaraco.abode."""
+    events = config_entry.runtime_data.abode.events
+    return events._timeline_callbacks[timeline.CAPTURE_IMAGE["event_code"]]
+
+
+async def _fire_capture(
+    hass: HomeAssistant, callbacks: list[Callable[[Any], None]]
+) -> None:
+    """Fire a capture image timeline event from the jaraco.abode thread."""
+    for capture_callback in callbacks:
+        await hass.async_add_executor_job(capture_callback, timeline.CAPTURE_IMAGE)
+    await hass.async_block_till_done()
+
+
+async def test_timeline_capture_after_entity_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_update_image_location: MagicMock,
+) -> None:
+    """Test a removed camera no longer handles timeline capture events."""
+    config_entry = await setup_platform(hass, CAMERA_DOMAIN)
+    callbacks = _timeline_capture_callbacks(config_entry)
+
+    await _fire_capture(hass, callbacks)
+    mock_update_image_location.assert_called_once()
+
+    entity_registry.async_remove(CAMERA_ENTITY_ID)
+    await hass.async_block_till_done()
+    assert hass.states.get(CAMERA_ENTITY_ID) is None
+
+    mock_update_image_location.reset_mock()
+    await _fire_capture(hass, callbacks)
+    mock_update_image_location.assert_not_called()
+
+
+async def test_timeline_capture_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_update_image_location: MagicMock,
+) -> None:
+    """Test a renamed camera handles each timeline capture event once."""
+    config_entry = await setup_platform(hass, CAMERA_DOMAIN)
+
+    # The entity_id is changed in place, the timeline subscription is kept.
+    entity_registry.async_update_entity(
+        CAMERA_ENTITY_ID, new_entity_id=RENAMED_CAMERA_ENTITY_ID
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(RENAMED_CAMERA_ENTITY_ID)
+
+    callbacks = _timeline_capture_callbacks(config_entry)
+    assert len(callbacks) == 1
+
+    await _fire_capture(hass, callbacks)
+    mock_update_image_location.assert_called_once()
+
+
+async def test_capture_image_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the capture image service follows an entity_id change."""
+    config_entry = await setup_platform(hass, CAMERA_DOMAIN)
+    entity_registry.async_update_entity(
+        CAMERA_ENTITY_ID, new_entity_id=RENAMED_CAMERA_ENTITY_ID
+    )
+    await hass.async_block_till_done()
+
+    with patch("jaraco.abode.devices.camera.Camera.capture") as mock_capture:
+        await hass.services.async_call(
+            DOMAIN,
+            "capture_image",
+            {ATTR_ENTITY_ID: CAMERA_ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_capture.assert_not_called()
+
+        await hass.services.async_call(
+            DOMAIN,
+            "capture_image",
+            {ATTR_ENTITY_ID: RENAMED_CAMERA_ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_capture.assert_called_once()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert "Unable to remove unknown dispatcher" not in caplog.text

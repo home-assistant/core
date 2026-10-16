@@ -77,20 +77,6 @@ async def test_entities(
             (False,),
             id="current_shaper_off",
         ),
-        pytest.param(
-            "switch.openevse_mock_config_manual_override",
-            SERVICE_TURN_ON,
-            "toggle_override",
-            (),
-            id="manual_override_on",
-        ),
-        pytest.param(
-            "switch.openevse_mock_config_manual_override",
-            SERVICE_TURN_OFF,
-            "toggle_override",
-            (),
-            id="manual_override_off",
-        ),
     ],
 )
 async def test_switch_turn_on_off(
@@ -114,6 +100,94 @@ async def test_switch_turn_on_off(
         blocking=True,
     )
     getattr(mock_charger, method_name).assert_called_once_with(*args)
+
+
+async def test_manual_override_switch_uses_current_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test the manual override checks the charger state before toggling."""
+    mock_charger.version_check.return_value = True
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_charger.update.reset_mock()
+
+    async def _override_enabled_on_charger(force_status: bool = False) -> None:
+        mock_charger.manual_override = True
+
+    # The cached state still says off, while the charger already has it on
+    mock_charger.update.side_effect = _override_enabled_on_charger
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
+        blocking=True,
+    )
+
+    mock_charger.update.assert_awaited_once_with(force_status=True)
+    mock_charger.toggle_override.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("manual_override", "service", "toggled"),
+    [
+        pytest.param(False, SERVICE_TURN_ON, True, id="turn_on_when_off"),
+        pytest.param(True, SERVICE_TURN_ON, False, id="turn_on_when_on"),
+        pytest.param(True, SERVICE_TURN_OFF, True, id="turn_off_when_on"),
+        pytest.param(False, SERVICE_TURN_OFF, False, id="turn_off_when_off"),
+    ],
+)
+async def test_manual_override_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+    manual_override: bool,
+    service: str,
+    toggled: bool,
+) -> None:
+    """Test the manual override only toggles when not already in that state."""
+    mock_charger.version_check.return_value = True
+    mock_charger.manual_override = manual_override
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
+        blocking=True,
+    )
+
+    assert mock_charger.toggle_override.called is toggled
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_manual_override_switch_old_firmware(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+    service: str,
+) -> None:
+    """Test the manual override toggles without a state check on old firmware."""
+    mock_charger.version_check.return_value = False
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_charger.update.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
+        blocking=True,
+    )
+
+    mock_charger.version_check.assert_called_once_with("4.0.1")
+    mock_charger.update.assert_not_called()
+    mock_charger.toggle_override.assert_called_once_with()
 
 
 @pytest.mark.parametrize(

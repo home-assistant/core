@@ -79,6 +79,22 @@ async def test_directory(
     )
 
 
+async def test_directory_children_content_type(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test subdirectories have a string media content type."""
+    browse_media_directory = await async_browse_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents",
+    )
+
+    assert [
+        (child.title, child.media_content_type)
+        for child in browse_media_directory.children
+    ] == [("testsubdirectory", "")]
+
+
 async def test_subdirectory(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

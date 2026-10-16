@@ -1,6 +1,5 @@
 """Default implementation of the Assist pipeline engine."""
 
-import array
 import asyncio
 from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
@@ -9,6 +8,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
+import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
@@ -443,7 +443,12 @@ class _DefaultPipelineProcessor:
                     silence_seconds=self.host.audio_settings.silence_seconds
                 )
 
-            result = await self.stt_provider.async_process_audio_stream(
+            process_audio_stream = (
+                self.stt_provider.async_process_audio_stream
+                if isinstance(self.stt_provider, stt.Provider)
+                else self.stt_provider.internal_async_process_audio_stream
+            )
+            result = await process_audio_stream(
                 metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
@@ -612,6 +617,7 @@ class _DefaultPipelineProcessor:
                 tts_input_stream = None
             chat_log_role = None
             delta_character_count = 0
+            last_assistant_content = ""
 
             @callback
             def chat_log_delta_listener(
@@ -629,10 +635,20 @@ class _DefaultPipelineProcessor:
                 if tts_input_stream is None:
                     return
 
-                nonlocal chat_log_role
+                nonlocal chat_log_role, last_assistant_content
 
                 if role := delta.get("role"):
                     chat_log_role = role
+
+                    # Keep TTS from running a new assistant message into the
+                    # previous one, for example around a tool call
+                    if (
+                        role == "assistant"
+                        and last_assistant_content
+                        and not last_assistant_content[-1].isspace()
+                    ):
+                        tts_input_stream.put_nowait(" ")
+                        last_assistant_content = " "
 
                 # We are only interested in assistant deltas
                 if chat_log_role != "assistant":
@@ -640,6 +656,7 @@ class _DefaultPipelineProcessor:
 
                 if content := delta.get("content"):
                     tts_input_stream.put_nowait(content)
+                    last_assistant_content = content
 
                 if self._streamed_response_text:
                     return
@@ -983,8 +1000,8 @@ class _DefaultPipelineProcessor:
         timestamp_ms = 0
         async for chunk in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
-                chunk = _multiply_volume(
-                    chunk, self.host.audio_settings.volume_multiplier
+                chunk = audioop.mul(
+                    chunk, SAMPLE_WIDTH, self.host.audio_settings.volume_multiplier
                 )
 
             for sub_chunk in chunk_samples(
@@ -1011,8 +1028,10 @@ class _DefaultPipelineProcessor:
         async for dirty_samples in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 # Static gain
-                dirty_samples = _multiply_volume(
-                    dirty_samples, self.host.audio_settings.volume_multiplier
+                dirty_samples = audioop.mul(
+                    dirty_samples,
+                    SAMPLE_WIDTH,
+                    self.host.audio_settings.volume_multiplier,
                 )
 
             # Split into chunks for audio enhancements/VAD
@@ -1185,19 +1204,6 @@ class _DefaultPipelineProcessor:
             <= end_stage_index
         ):
             await self.prepare_text_to_speech()
-
-
-def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
-    """Multiply 16-bit PCM samples by a constant."""
-
-    def _clamp(val: float) -> float:
-        """Clamp to signed 16-bit."""
-        return max(-32768, min(32767, val))
-
-    return array.array(
-        "h",
-        (int(_clamp(value * volume_multiplier)) for value in array.array("h", chunk)),
-    ).tobytes()
 
 
 @dataclass

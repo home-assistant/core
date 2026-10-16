@@ -80,6 +80,16 @@ async def test_form_duplicate_entries(
     assert mock_pyotgw.return_value.connect.await_count == 1
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
+    result4 = await hass.config_entries.flow.async_configure(
+        flow2["flow_id"], {CONF_DEVICE: "/dev/ttyUSB1", CONF_ID: "test_entry_2"}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
+    result5 = await hass.config_entries.flow.async_configure(
+        flow3["flow_id"], {CONF_DEVICE: "/dev/ttyUSB2", CONF_ID: "test_entry_3"}
+    )
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_connection_timeout(
@@ -102,6 +112,15 @@ async def test_form_connection_timeout(
 
     assert mock_pyotgw.return_value.connect.await_count == 1
 
+    mock_pyotgw.return_value.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        {CONF_DEVICE: "socket://192.0.2.254:1234", CONF_ID: "test_entry_1"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_connection_error(
@@ -121,6 +140,14 @@ async def test_form_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_pyotgw.return_value.connect.await_count == 1
+
+    mock_pyotgw.return_value.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0", CONF_ID: "test_entry_1"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -70,3 +70,4 @@ async def test_step_user(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 300.0,
         CONF_CATEGORIES: [],
     }
+    assert result["result"].unique_id == "-41.2, 174.7"

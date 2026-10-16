@@ -10,7 +10,7 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE  # noqa: F401
+from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_PATTERN,
@@ -41,7 +41,13 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 __all__ = [
+    "ATTR_MAX",
+    "ATTR_MIN",
+    "ATTR_MODE",
+    "ATTR_PATTERN",
+    "ATTR_VALUE",
     "DOMAIN",
+    "SERVICE_SET_VALUE",
     "TextEntity",
     "TextEntityCapabilityAttribute",
     "TextEntityDescription",

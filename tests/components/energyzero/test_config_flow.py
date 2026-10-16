@@ -37,6 +37,7 @@ async def test_full_user_flow(
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "EnergyZero"
     assert result2.get("data") == {}
+    assert result2["result"].unique_id == DOMAIN
 
     assert len(mock_setup_entry.mock_calls) == 1
 

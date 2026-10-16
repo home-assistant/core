@@ -34,7 +34,7 @@ CONFIG_SCHEMA = probatio.Schema(
             )
         ),
         probatio.Required(
-            CONF_PASSWORD,
+            probatio.Secret(CONF_PASSWORD),
         ): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,

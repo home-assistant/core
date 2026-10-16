@@ -17,7 +17,12 @@ import probatio
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .const import DATA_COMPONENT, DOMAIN, AssistSatelliteEntityFeature
@@ -100,7 +105,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Optional("preannounce_media_id"): _media_id_validator,
                 }
             ),
-            cv.has_at_least_one_key("message", "media_id"),
+            probatio.AtLeastOne("message", "media_id"),
         ),
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
@@ -118,7 +123,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Optional("extra_system_prompt"): str,
                 }
             ),
-            cv.has_at_least_one_key("start_message", "start_media_id"),
+            probatio.AtLeastOne("start_message", "start_media_id"),
         ),
         "async_internal_start_conversation",
         [AssistSatelliteEntityFeature.START_CONVERSATION],
@@ -147,8 +152,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
             satellite_entity_id
         )
         if satellite_entity is None:
-            raise HomeAssistantError(
-                f"Invalid Assist satellite entity id: {satellite_entity_id}"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_entity_id",
+                translation_placeholders={"entity_id": satellite_entity_id},
             )
 
         satellite_entity.async_set_context(call.context)
@@ -166,7 +173,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         answer = await satellite_entity.async_internal_ask_question(**ask_question_args)
 
         if answer is None:
-            raise HomeAssistantError("No answer from satellite")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_answer",
+            )
 
         return asdict(answer)
 
@@ -185,7 +195,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     {
                         probatio.Required("id"): str,
                         probatio.Required("sentences"): probatio.All(
-                            cv.ensure_list,
+                            probatio.EnsureList(),
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
@@ -194,7 +204,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     }
                 ],
             },
-            cv.has_at_least_one_key("question", "question_media_id"),
+            probatio.AtLeastOne("question", "question_media_id"),
         ),
         supports_response=SupportsResponse.ONLY,
     )

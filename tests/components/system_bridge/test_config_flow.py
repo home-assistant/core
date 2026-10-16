@@ -1,5 +1,7 @@
 """Test the System Bridge config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from systembridgeconnector.exceptions import (
@@ -10,6 +12,7 @@ from systembridgeconnector.exceptions import (
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,6 +28,29 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the client to connect and return data."""
+    with (
+        patch(
+            "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+        ),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            return_value=FIXTURE_DATA_RESPONSE,
+        ),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.listen",
+            new=mock_data_listener,
+        ),
+        patch(
+            "homeassistant.components.system_bridge.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -71,6 +97,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127.0.0.1"
     assert result2["data"] == FIXTURE_USER_INPUT
+    assert result2["result"].unique_id == FIXTURE_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -95,6 +122,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_connection_closed_cannot_connect(hass: HomeAssistant) -> None:
@@ -128,6 +163,14 @@ async def test_form_connection_closed_cannot_connect(hass: HomeAssistant) -> Non
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_timeout_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle timeout cannot connect error."""
@@ -159,6 +202,14 @@ async def test_form_timeout_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -192,6 +243,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_uuid_error(hass: HomeAssistant) -> None:
     """Test we handle error from bad uuid."""
@@ -224,6 +283,14 @@ async def test_form_uuid_error(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown errors."""
@@ -255,6 +322,14 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
@@ -290,6 +365,15 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
@@ -339,6 +423,15 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     assert result3["step_id"] == "authenticate"
     assert result3["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.ABORT
+    assert result4["reason"] == "reauth_successful"
+
 
 async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     """Test we show user form on connection error."""
@@ -373,6 +466,15 @@ async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_flow(
@@ -412,6 +514,24 @@ async def test_reauth_flow(
     assert result2["reason"] == "reauth_successful"
 
 
+async def test_reauth_flow_reloads_once(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test a successful reauth reloads a loaded entry once."""
+    result = await init_integration.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: "new-token"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert init_integration.data[CONF_TOKEN] == "new-token"
+    mock_reload.assert_called_once_with(init_integration.entry_id)
+
+
 async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test zeroconf flow."""
 
@@ -449,6 +569,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127.0.0.1"
     assert result2["data"] == FIXTURE_ZEROCONF_INPUT
+    assert result2["result"].unique_id == FIXTURE_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -476,6 +597,14 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_bad_zeroconf_info(hass: HomeAssistant) -> None:
