@@ -40,9 +40,7 @@ class RegisteredConnection:
         self._hass = hass
         self._entry_id = entry_id
         self._registry = hass.data[DATA_REGISTRY]
-        self._observations = ObservedConnection(
-            configuration_url, self._registry.observed_connections.get(entry_id)
-        )
+        self._observations = ObservedConnection(configuration_url)
         self._active = False
         self._disconnected = False
         self._pending_discoveries: set[str] = set()
@@ -79,7 +77,6 @@ class RegisteredConnection:
             raise ConnectionUnavailable("Connection lost during registration")
         self._registry.connections[self._entry_id] = self
         self._registry.observed_connections[self._entry_id] = self._observations
-        self._observations.finish_replay()
         self._active = True
         async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
         change: ConnectionChange = (self._entry_id, self.connection)
@@ -95,6 +92,7 @@ class RegisteredConnection:
         if self._active:
             self._active = False
             self._registry.connections.pop(self._entry_id)
+            self._observations.devices.clear()
             async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
             change: ConnectionChange = (self._entry_id, None)
             notify(self._registry.connection_change_listeners, change)

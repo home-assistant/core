@@ -1,6 +1,6 @@
 """LoRaWAN device state."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field
 
 from lorawan_connection import (
     DeviceDescriptor,
@@ -40,28 +40,18 @@ class DeviceState:
         return True
 
 
+@dataclass
 class ObservedConnection:
-    """Keep connection metadata and observations through transport outages."""
+    """Track connection metadata and backend observations."""
 
-    def __init__(
-        self,
-        configuration_url: str | None,
-        previous: ObservedConnection | None = None,
-    ) -> None:
-        """Initialize connection observations."""
-        self.configuration_url = configuration_url
-        self.devices: dict[str, DeviceState] = {}
-        self._previous_devices = previous.devices if previous else {}
+    configuration_url: str | None
+    devices: dict[str, DeviceState] = field(default_factory=dict)
 
     def handle_device_event(self, event: DeviceEvent) -> bool:
         """Process a device event and return whether it was handled."""
         if event.type in (EventType.ADDED, EventType.UPDATED):
             if (state := self.devices.get(event.dev_eui)) is not None:
                 state.descriptor = event.descriptor
-            elif (previous := self._previous_devices.get(event.dev_eui)) is not None:
-                self.devices[event.dev_eui] = replace(
-                    previous, descriptor=event.descriptor
-                )
             else:
                 self.devices[event.dev_eui] = DeviceState(event.descriptor)
         elif event.type == EventType.REMOVED:
@@ -70,7 +60,3 @@ class ObservedConnection:
             state = self.devices.get(event.dev_eui)
             return state is not None and state.receive(event)
         return True
-
-    def finish_replay(self) -> None:
-        """Release observations from the previous connection."""
-        self._previous_devices = {}

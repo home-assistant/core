@@ -75,24 +75,42 @@ async def test_device_observations(
     assert "model_id" not in str(result)
 
 
-async def test_reconnect_reconciles_devices(
+async def test_reconnect_rebuilds_observations(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
-    """Keep observations during outages, but drop devices absent after reconnect."""
+    """Rebuild observations from the backend after a disconnect."""
     second = replace(DESCRIPTOR, dev_eui="0000000000000001")
     backend, _ = await registered_backend("network", [DESCRIPTOR, second])
     now = dt_util.utcnow()
     backend.emit(UplinkEvent(descriptor=DESCRIPTOR, received_at=now, data=b"data"))
+    backend.emit(JoinEvent(descriptor=DESCRIPTOR, received_at=now, dev_addr="abcdef01"))
+    backend.emit(
+        StatusEvent(
+            descriptor=DESCRIPTOR,
+            received_at=now,
+            battery_level=70,
+            battery_level_unavailable=False,
+            margin=2,
+        )
+    )
     backend.disconnect()
-    states = _snapshot(hass)["devices"]
-    assert len(states) == 2
-    assert states[0]["connection"]["connected"] is False
-    assert states[0]["last_uplink"] == now.isoformat()
+    result = _snapshot(hass)
+    assert result["devices"] == []
+    assert result["connections"][0]["connected"] is False
     replacement, _ = await registered_backend("network", [DESCRIPTOR])
     states = _snapshot(hass)["devices"]
     assert len(states) == 1
     assert states[0]["connection"]["connected"] is True
-    assert states[0]["last_uplink"] == now.isoformat()
+    assert states[0]["last_uplink"] is None
+    assert states[0]["last_join"] is None
+    assert states[0]["last_status"] is None
+    assert states[0]["battery_level"] is None
+    assert states[0]["downlink_margin"] is None
+    observed_at = now - timedelta(hours=1)
+    replacement.emit(
+        UplinkEvent(descriptor=DESCRIPTOR, received_at=observed_at, data=b"history")
+    )
+    assert _snapshot(hass)["devices"][0]["last_uplink"] == observed_at.isoformat()
     replacement.emit(RemovedEvent(descriptor=DESCRIPTOR))
     assert _snapshot(hass)["devices"] == []
     replacement.emit(AddedEvent(descriptor=DESCRIPTOR))
@@ -229,9 +247,9 @@ async def test_subscribe_unsubscribe(
         "last_uplink"
     ] == now.isoformat()
     backend.disconnect()
-    assert (await client.receive_json())["event"]["devices"][0]["connection"][
-        "connected"
-    ] is False
+    event = (await client.receive_json())["event"]
+    assert event["devices"] == []
+    assert event["connections"][0]["connected"] is False
     await client.send_json({"id": 2, "type": "unsubscribe_events", "subscription": 1})
     assert (await client.receive_json())["success"]
     with patch("homeassistant.components.lorawan.websocket_api._snapshot") as snapshot:
@@ -258,7 +276,7 @@ async def test_admin_required(
 async def test_removed_connection_entry(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
-    """Removing a connection entry discards its retained observations."""
+    """Removing a connection entry discards its metadata."""
     backend, _ = await registered_backend("network", [DESCRIPTOR])
     backend.disconnect()
     assert hass.data[DATA_REGISTRY].observed_connections
