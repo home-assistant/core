@@ -38,13 +38,6 @@ class SenseCapSensorDescription[DeviceT: SenseCapDevice](SensorEntityDescription
     value_fn: Callable[[DeviceT], float | None]
 
 
-def _battery_level(device: SenseCapDevice) -> float | None:
-    """Use LoRaWAN status with SenseCAP uplink battery data as a fallback."""
-    if (battery_level := device.battery_level) is not None:
-        return battery_level
-    return device.battery_percentage
-
-
 DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
     *(
         SenseCapSensorDescription[S2101 | S2103](
@@ -88,7 +81,11 @@ DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
         SenseCapSensorDescription[SenseCapDevice](
             key="battery",
             device_type=device_type,
-            value_fn=_battery_level,
+            value_fn=lambda device: (
+                battery_level
+                if (battery_level := device.battery_level) is not None
+                else device.battery_percentage
+            ),
             device_class=SensorDeviceClass.BATTERY,
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
