@@ -154,7 +154,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         ssl = discovery_info.type != "_http._tcp.local."
         mac = discovery_info.properties.get("mac")
 
-        matching_hosts = {host}
+        matching_hosts = {normalize_host(addr) for addr in discovery_info.addresses}
+        matching_hosts.add(host)
         if discovery_info.hostname:
             matching_hosts.add(normalize_host(discovery_info.hostname))
 
@@ -176,9 +177,11 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
             updates: dict[str, Any] = {}
             if existing_entry is not None:
+                if not existing_entry.data:
+                    self._abort_if_unique_id_configured()
                 if (
                     is_ip_address(existing_entry.data[CONF_HOST])
-                    and existing_entry.data[CONF_HOST] != host
+                    and existing_entry.data[CONF_HOST] not in matching_hosts
                 ):
                     updates[CONF_HOST] = host
                 if (
