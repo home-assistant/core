@@ -370,10 +370,10 @@ class Telegrams:
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
-        if telegram.direction is TelegramDirection.INCOMING:
-            telegram.context = KnxTelegramContext(telegram_dict)
         if telegram_dict["payload"] is not None:
             # exclude GroupValueRead telegrams
+            if telegram.direction is TelegramDirection.INCOMING:
+                telegram.context = KnxTelegramContext(telegram_dict)
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
 
         # Store in history store

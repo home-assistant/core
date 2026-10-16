@@ -24,12 +24,15 @@ def async_describe_events(
             if event.data["source_name"]
             else source
         )
-        destination = event.data.get("destination_name") or event.data["destination"]
+        destination = event.data["destination_name"] or event.data["destination"]
+        action = (
+            "wrote to"
+            if event.data["telegramtype"] == "GroupValueWrite"
+            else "responded to"
+        )
         return {
             LOGBOOK_ENTRY_NAME: name,
-            LOGBOOK_ENTRY_MESSAGE: (
-                f"sent a {event.data['telegramtype']} telegram to {destination}"
-            ),
+            LOGBOOK_ENTRY_MESSAGE: f"{action} {destination}",
         }
 
     async_describe_event(DOMAIN, EVENT_KNX_STATE_CHANGED, async_describe_telegram)

@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,8 +12,9 @@ from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx.const import EVENT_KNX_STATE_CHANGED, KNX_MODULE_KEY
+from homeassistant.components.knx.logbook import async_describe_events
 from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
-from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.core import Context, Event, HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -497,3 +499,54 @@ async def test_restored_cover_initial_responses(
     assert len(events) == 1
     assert events[0].data["source"] == "1.1.40"
     assert hass.states.get(COVER_ENTITY_ID).context is events[0].context
+
+
+@pytest.mark.parametrize(
+    ("telegram_type", "action"),
+    [("GroupValueWrite", "wrote to"), ("GroupValueResponse", "responded to")],
+)
+@pytest.mark.parametrize("destination_name", ["", "Living room light"])
+async def test_activity_message(
+    hass: HomeAssistant, telegram_type: str, action: str, destination_name: str
+) -> None:
+    """Describe writes and responses without exposing protocol class names."""
+    describe = Mock()
+    async_describe_events(hass, describe)
+    render = describe.call_args.args[2]
+    result = render(
+        Event(
+            EVENT_KNX_STATE_CHANGED,
+            {
+                "source": "1.1.23",
+                "source_name": "Wall switch",
+                "destination": "1/1/1",
+                "destination_name": destination_name,
+                "telegramtype": telegram_type,
+            },
+        )
+    )
+    assert result == {
+        "name": "Wall switch (1.1.23)",
+        "message": f"{action} {destination_name or '1/1/1'}",
+    }
+
+
+async def test_read_has_no_sender_context(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Reads need no sender context, including when HA responds to them."""
+    await knx.setup_integration(
+        {"switch": {"name": "test", "address": "1/1/1", "respond_to_read": True}},
+        state_updater=False,
+    )
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+    await knx.receive_write("1/1/1", True, source="1.1.23")
+    previous = hass.states.get(SWITCH_ENTITY_ID).context
+    telegrams: list[Telegram] = []
+    knx.xknx.telegram_queue.register_telegram_received_cb(
+        telegrams.append, match_for_outgoing=True
+    )
+    await knx.receive_read("1/1/1", source="1.1.40")
+    await knx.assert_response("1/1/1", True)
+    assert len(telegrams) == 2
+    assert all(telegram.context is None for telegram in telegrams)
+    assert hass.states.get(SWITCH_ENTITY_ID).context is previous
+    assert len(events) == 1
