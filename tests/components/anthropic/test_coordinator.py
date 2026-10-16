@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
 from freezegun import freeze_time
-from httpx import URL, Request, Response
+from httpx2 import URL, Request, Response
 import pytest
 
 from homeassistant.components import conversation

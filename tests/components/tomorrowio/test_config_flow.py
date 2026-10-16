@@ -57,6 +57,10 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert (
+        result["result"].unique_id
+        == f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}"
+    )
 
 
 async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
@@ -90,6 +94,10 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert (
+        result["result"].unique_id
+        == f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}"
+    )
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:

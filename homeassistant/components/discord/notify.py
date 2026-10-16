@@ -221,10 +221,13 @@ class DiscordNotificationService(BaseNotificationService):
                         _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue
                 await channel.send(message, files=files, embeds=embeds)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (nextcord.HTTPException, nextcord.NotFound) as error:
-            _LOGGER.warning("Communication error: %s", error)
-        await discord_bot.close()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
+        finally:
+            await discord_bot.close()
 
 
 class DiscordNotifyEntity(NotifyEntity):
@@ -276,8 +279,7 @@ class DiscordNotifyEntity(NotifyEntity):
             except (nextcord.HTTPException, nextcord.NotFound) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="send_failed",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="communication_error",
                 ) from err
         finally:
             await discord_bot.close()

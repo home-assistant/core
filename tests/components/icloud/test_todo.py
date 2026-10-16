@@ -8,6 +8,7 @@ from pyicloud.services.reminders.client import RemindersApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.icloud.const import CONF_INCLUDE_COMPLETED, DOMAIN
 from homeassistant.components.icloud.coordinator import (
     REMINDERS_SCAN_INTERVAL,
     UNDECODED_TITLE,
@@ -90,7 +91,8 @@ async def _setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     config_entry.add_to_hass(hass)
     with patch("homeassistant.components.icloud.PLATFORMS", [Platform.TODO]):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        # The first fetch runs as a background task of the config entry.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_entities(
@@ -104,6 +106,44 @@ async def test_entities(
     await _setup(hass, config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_completed_reminders_excluded_by_default(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that completed reminders are not downloaded by default.
+
+    Fetching every completed reminder ever made means paging through years of
+    CloudKit records on each refresh, which is what made setup hang on large
+    accounts.
+    """
+    await _setup(hass, config_entry)
+
+    assert reminders.list_reminders.call_args.kwargs["include_completed"] is False
+
+
+async def test_include_completed_option(
+    hass: HomeAssistant, reminders: MagicMock
+) -> None:
+    """Test that the option brings completed reminders back."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_account_id",
+        title="Test iCloud Account",
+        data={
+            "username": "test_user",
+            "password": "test_pass",
+            "with_family": False,
+            "max_interval": 0,
+            "gps_accuracy_threshold": 0,
+        },
+        options={CONF_INCLUDE_COMPLETED: True},
+    )
+    await _setup(hass, config_entry)
+
+    assert reminders.list_reminders.call_args.kwargs["include_completed"] is True
 
 
 async def test_groups_skipped(

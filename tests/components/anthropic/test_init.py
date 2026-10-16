@@ -11,8 +11,8 @@ from anthropic import (
     BadRequestError,
 )
 import attr
-import httpx
-from httpx import URL, Request, Response
+import httpx2
+from httpx2 import URL, Request, Response
 import pytest
 
 from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
@@ -97,8 +97,8 @@ async def test_init_auth_error(
     with patch(
         "anthropic.resources.models.AsyncModels.list",
         side_effect=AuthenticationError(
-            response=httpx.Response(
-                status_code=500, request=httpx.Request(method="GET", url="test")
+            response=httpx2.Response(
+                status_code=500, request=httpx2.Request(method="GET", url="test")
             ),
             body=None,
             message="",

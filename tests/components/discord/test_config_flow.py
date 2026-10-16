@@ -68,6 +68,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == "1234567890"
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
@@ -239,6 +240,15 @@ async def test_subentry_flow_invalid_target(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_target"}
+
+    channel = Mock()
+    channel.name = TARGET_NAME
+    with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_TARGET_ID: TARGET},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_subentry_flow_user_fallback(hass: HomeAssistant) -> None:

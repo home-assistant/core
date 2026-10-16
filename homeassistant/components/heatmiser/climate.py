@@ -99,8 +99,8 @@ class HeatmiserV3Thermostat(ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        self._attr_target_temperature = int(temperature)
-        self.therm.set_target_temp(self._attr_target_temperature)
+        self._attr_native_target_temperature = int(temperature)
+        self.therm.set_target_temp(self._attr_native_target_temperature)
 
     def update(self) -> None:
         """Get the latest data."""
@@ -109,13 +109,13 @@ class HeatmiserV3Thermostat(ClimateEntity):
             _LOGGER.error("Failed to update device %s", self.name)
             return
         self.dcb = self.therm.read_dcb()
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             UnitOfTemperature.CELSIUS
             if (self.therm.get_temperature_format() == "C")
             else UnitOfTemperature.FAHRENHEIT
         )
-        self._attr_current_temperature = int(self.therm.get_floor_temp())
-        self._attr_target_temperature = int(self.therm.get_target_temp())
+        self._attr_native_current_temperature = int(self.therm.get_floor_temp())
+        self._attr_native_target_temperature = int(self.therm.get_target_temp())
         self._attr_hvac_mode = (
             HVACMode.OFF
             if (int(self.therm.get_current_state()) == 0)

@@ -31,10 +31,14 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "return_value"),
+    ("side_effect", "return_value", "message"),
     [
-        (ConnectionError("Connection lost"), None),
-        (None, None),
+        (
+            ConnectionError("Connection lost"),
+            None,
+            "Error communicating with the Qube heat pump: Connection lost",
+        ),
+        (None, None, "No data received from the Qube heat pump"),
     ],
 )
 async def test_sensor_unavailable_on_coordinator_error(
@@ -42,8 +46,10 @@ async def test_sensor_unavailable_on_coordinator_error(
     mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     side_effect: Exception | None,
     return_value: None,
+    message: str,
 ) -> None:
     """Test sensors become unavailable when coordinator fails."""
     await setup_integration(hass, mock_config_entry)
@@ -66,6 +72,7 @@ async def test_sensor_unavailable_on_coordinator_error(
     # All sensors should be unavailable
     states = hass.states.async_all("sensor")
     assert all(s.state == STATE_UNAVAILABLE for s in states)
+    assert message in caplog.text
 
 
 async def test_sensor_with_none_status_code(

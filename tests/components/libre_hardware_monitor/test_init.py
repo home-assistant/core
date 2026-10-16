@@ -2,9 +2,12 @@
 
 from dataclasses import replace
 from datetime import timedelta
+from types import MappingProxyType
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
+from librehardwaremonitor_api.sensor_type import SensorType
 import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import (
@@ -16,7 +19,11 @@ from homeassistant.components.libre_hardware_monitor.recorder import (
     async_custom_equivalent_units,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfDataRate
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfDataRate,
+    UnitOfInformation,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -170,6 +177,111 @@ async def test_migration_to_sensor_device_classes(
     )
     assert updated_config_entry.version == 2
     assert updated_config_entry.minor_version == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "sensor_type",
+        "lhm_value",
+        "lhm_unit",
+        "legacy_unit",
+        "expected_value",
+        "expected_unit",
+    ),
+    [
+        pytest.param(
+            SensorType.SMALL_DATA,
+            "733.0",
+            "MB",
+            "MB",
+            733.0,
+            UnitOfInformation.MEBIBYTES,
+            id="small_data",
+        ),
+        pytest.param(
+            SensorType.DATA,
+            "16.0",
+            "GB",
+            "GB",
+            16.0,
+            UnitOfInformation.GIBIBYTES,
+            id="data",
+        ),
+        pytest.param(
+            SensorType.DATA,
+            "17179869184",
+            "B",
+            "GB",
+            16.0,
+            UnitOfInformation.GIBIBYTES,
+            id="data_reported_in_bytes",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_to_binary_data_size_units(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+    sensor_type: SensorType,
+    lhm_value: str,
+    lhm_unit: str,
+    legacy_unit: str,
+    expected_value: float,
+    expected_unit: str,
+) -> None:
+    """Test that data sizes LHM labels MB and GB move to MiB and GiB."""
+    legacy_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        data=VALID_CONFIG,
+        entry_id="test_entry_id",
+        version=2,
+        minor_version=1,
+    )
+    legacy_config_entry.add_to_hass(hass)
+
+    sensor_id = "gpu-nvidia-0-data-0"
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(
+            {
+                sensor_id: LibreHardwareMonitorSensorData(
+                    name="GPU Memory Total",
+                    value=lhm_value,
+                    type=sensor_type,
+                    min=lhm_value,
+                    max=lhm_value,
+                    unit=lhm_unit,
+                    device_id="gpu-nvidia-0",
+                    device_name="NVIDIA GeForce RTX 4080 SUPER",
+                    device_type="NVIDIA",
+                    sensor_id=sensor_id,
+                )
+            }
+        ),
+    )
+
+    # Set up data size sensor with the unit it had before device classes
+    object_id = "nvidia_geforce_rtx_4080_gpu_memory_total"
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{legacy_config_entry.entry_id}_{sensor_id}",
+        suggested_object_id=object_id,
+        config_entry=legacy_config_entry,
+        unit_of_measurement=legacy_unit,
+    )
+
+    await init_integration(hass, legacy_config_entry)
+
+    entity_entry = entity_registry.async_get(f"sensor.{object_id}")
+    assert entity_entry.unit_of_measurement == expected_unit
+
+    # LHM always calculated binary sizes, so the value is relabelled, not converted
+    state = hass.states.get(f"sensor.{object_id}")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    assert float(state.state) == expected_value
 
 
 @pytest.mark.usefixtures("mock_deprecated_lhm_client")

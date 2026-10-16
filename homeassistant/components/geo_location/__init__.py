@@ -7,11 +7,7 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    EntityStateAttribute,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -32,6 +28,19 @@ SCAN_INTERVAL = timedelta(seconds=60)
 ATTR_DISTANCE = "distance"
 ATTR_SOURCE = "source"
 
+
+__all__ = [
+    "ATTR_DISTANCE",
+    "ATTR_LATITUDE",
+    "ATTR_LONGITUDE",
+    "ATTR_SOURCE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "GeolocationEntityStateAttribute",
+    "GeolocationEvent",
+]
 
 # mypy: disallow-any-generics
 

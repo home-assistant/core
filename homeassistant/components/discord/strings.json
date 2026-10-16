@@ -53,8 +53,8 @@
     }
   },
   "exceptions": {
-    "send_failed": {
-      "message": "Error sending message to Discord: {error}"
+    "communication_error": {
+      "message": "Error communicating with Discord."
     },
     "target_not_found": {
       "message": "Target not found for ID: {target}"

@@ -23,7 +23,7 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
 )
 from .entity import PeblarEntity
-from .helpers import peblar_exception_handler
+from .helpers import peblar_exception_handler, supports_custom_solar
 
 PARALLEL_UPDATES = 1
 
@@ -44,17 +44,12 @@ def _smart_charging_options(configuration: PeblarUserConfiguration) -> list[str]
     A charger without a power meter configured rejects solar charging, and
     scheduled charging can be switched off during commissioning. Offering
     those anyway lands the user on a mode the charger quietly ignores.
-
-    Custom solar arrived with firmware 1.10. Rather than check the version,
-    take the charger at its word: it reports the settings that go with the
-    mode, and leaves them out when it has never heard of it.
     """
     solar = configuration.solar_charging_allowed
-    custom = solar and configuration.solar_charging_custom_power_target is not None
     return [
         option
         for option, allowed in (
-            ("custom_solar", custom),
+            ("custom_solar", supports_custom_solar(configuration)),
             ("default", True),
             ("fast_solar", solar),
             ("pure_solar", solar),

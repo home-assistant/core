@@ -39,8 +39,9 @@ async def validate_input(hass: HomeAssistant, data):
         raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTPStatus.BAD_REQUEST
-            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            HTTPStatus.BAD_REQUEST
+            < ex.response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             raise InvalidAuth from ex
         raise CannotConnect from ex

@@ -1,13 +1,14 @@
 """Test Discord notify."""
 
 import logging
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import nextcord
 import pytest
 
 from homeassistant.components.discord.notify import DiscordNotificationService
 from homeassistant.components.notify import (
+    ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -34,6 +35,32 @@ async def test_send_message_without_target_logs_error(
         await discord_notification_service.async_send_message(MESSAGE)
     assert "No target specified" in caplog.text
     assert discord_aiohttp_mock.call_count == 0
+
+
+async def test_send_message_communication_error(
+    discord_notification_service: DiscordNotificationService,
+) -> None:
+    """Test send message raises on a Discord communication error."""
+    client = MagicMock()
+    client.login = AsyncMock()
+    client.close = AsyncMock()
+    client.fetch_channel = AsyncMock(
+        side_effect=nextcord.HTTPException(
+            MagicMock(status=500, reason="Server Error"), "error"
+        )
+    )
+    with (
+        patch(
+            "homeassistant.components.discord.notify.nextcord.Client",
+            return_value=client,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await discord_notification_service.async_send_message(
+            MESSAGE, **{ATTR_TARGET: [TARGET]}
+        )
+    assert exc_info.value.translation_key == "communication_error"
+    client.close.assert_awaited_once()
 
 
 async def test_get_file_from_url(
@@ -176,7 +203,7 @@ async def test_notify_entity_communication_error(hass: HomeAssistant) -> None:
             new=AsyncMock(return_value=channel),
         ),
         patch("homeassistant.components.discord.notify.nextcord.Client.close"),
-        pytest.raises(HomeAssistantError, match="Error sending message to Discord"),
+        pytest.raises(HomeAssistantError, match="Error communicating with Discord"),
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,

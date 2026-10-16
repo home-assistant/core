@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
-from .const import FEATUREMAP_ATTRIBUTE_ID
+from .const import CLUSTER_REVISION_ATTRIBUTE_ID, FEATUREMAP_ATTRIBUTE_ID
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .fan import DISCOVERY_SCHEMAS as FAN_SCHEMAS
@@ -55,6 +55,33 @@ def iter_schemas() -> Generator[MatterDiscoverySchema]:
     """Iterate over all available discovery schemas."""
     for platform_schemas in DISCOVERY_SCHEMAS.values():
         yield from platform_schemas
+
+
+def _matches_cluster_revision(
+    endpoint: MatterEndpoint,
+    primary_attribute: type[ClusterAttributeDescriptor],
+    schema: MatterDiscoverySchema,
+) -> bool:
+    """Return whether the endpoint's ClusterRevision matches the schema."""
+    if schema.cluster_revision_min is None and schema.cluster_revision_max is None:
+        return True
+    raw_cluster_revision = endpoint.get_attribute_value(
+        primary_attribute.cluster_id, CLUSTER_REVISION_ATTRIBUTE_ID
+    )
+    if raw_cluster_revision in (None, NullValue, 0):
+        # ClusterRevision starts at 1 (Matter spec 7.13.1); 0 means the
+        # attribute could not be read, so do not filter out the schema
+        return True
+    cluster_revision_value = int(raw_cluster_revision)
+    if (
+        schema.cluster_revision_min is not None
+        and cluster_revision_value < schema.cluster_revision_min
+    ) or (
+        schema.cluster_revision_max is not None
+        and cluster_revision_value > schema.cluster_revision_max
+    ):
+        return False
+    return True
 
 
 @callback
@@ -143,6 +170,10 @@ def async_discover_entities(
                 & schema.featuremap_contains
             )
         ):
+            continue
+
+        # check for required cluster revision range
+        if not _matches_cluster_revision(endpoint, primary_attribute, schema):
             continue
 
         # BEGIN checks on actual attribute values

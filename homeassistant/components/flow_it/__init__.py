@@ -14,13 +14,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.FAN,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> None:
     """Set up Flow-it from a config entry."""
 
     vmc = FlowItVMCMachine(
@@ -41,13 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        vmc = entry.runtime_data.vmc
-        await vmc.close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    vmc = entry.runtime_data.vmc
+    await vmc.close()
