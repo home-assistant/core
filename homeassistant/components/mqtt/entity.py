@@ -802,15 +802,23 @@ async def async_remove_discovery_payload(
 
 @callback
 def _async_discovered_device_exists(
-    hass: HomeAssistant, discovery_payload: MQTTDiscoveryPayload, config_entry_id: str
+    hass: HomeAssistant,
+    discovery_payload: MQTTDiscoveryPayload,
+    config_entry_id: str,
+    main_device_id: str | None,
 ) -> bool:
     """Return if the device of a device discovery payload exists.
 
-    This is the parent device of the child devices in the payload.
+    This is the parent device of the child devices in the payload. The device the
+    entity was last registered with is checked first, as a failed update leaves
+    the device in the payload unregistered.
     """
+    device_registry = dr.async_get(hass)
+    if main_device_id is not None and device_registry.async_get(main_device_id):
+        return True
     device_config = MQTT_ENTITY_DEVICE_INFO_SCHEMA(discovery_payload[CONF_DEVICE])
     return bool(
-        dr.async_get(hass).async_get_devices(
+        device_registry.async_get_devices(
             identifiers={(DOMAIN, id_) for id_ in device_config[CONF_IDENTIFIERS]},
             connections={
                 (conn_[0], conn_[1]) for conn_ in device_config[CONF_CONNECTIONS]
@@ -825,6 +833,7 @@ async def async_remove_entity_discovery_payload(
     entity_id: str,
     discovery_data: DiscoveryInfoType,
     registry_entry: er.RegistryEntry | None,
+    main_device_id: str | None,
 ) -> None:
     """Clear the retained discovery payload of an entity removed from the registry.
 
@@ -837,10 +846,9 @@ async def async_remove_entity_discovery_payload(
     if (
         discovery_payload.device_discovery
         and registry_entry is not None
-        and registry_entry.device_id is not None
         and registry_entry.config_entry_id is not None
         and _async_discovered_device_exists(
-            hass, discovery_payload, registry_entry.config_entry_id
+            hass, discovery_payload, registry_entry.config_entry_id, main_device_id
         )
     ):
         application: str = discovery_payload[CONF_ORIGIN][CONF_NAME]
@@ -867,13 +875,18 @@ async def async_clear_discovery_topic_if_entity_removed(
     hass: HomeAssistant,
     discovery_data: DiscoveryInfoType,
     registry_entry: er.RegistryEntry,
+    main_device_id: str | None,
     event: Event[er.EventEntityRegistryUpdatedData],
 ) -> None:
     """Clear the discovery topic if the entity is removed."""
     if event.data["action"] == "remove":
         # publish empty payload to config topic to avoid re-adding
         await async_remove_entity_discovery_payload(
-            hass, event.data["entity_id"], discovery_data, registry_entry
+            hass,
+            event.data["entity_id"],
+            discovery_data,
+            registry_entry,
+            main_device_id,
         )
 
 
@@ -1101,6 +1114,9 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
 
 class MqttDiscoveryUpdateMixin(Entity):
     """Mixin used to handle updated discovery message for entity based platforms."""
+
+    # The registered device or parent device, set by MqttEntityDeviceInfo
+    _main_device_id: str | None = None
 
     def __init__(
         self,
@@ -1338,6 +1354,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                 self.entity_id,
                 self._discovery_data,
                 self.registry_entry,
+                self._main_device_id,
             )
 
     @callback
@@ -1378,6 +1395,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                         self.hass,
                         self._discovery_data,
                         self.registry_entry,
+                        self._main_device_id,
                     ),
                 )
             )
@@ -1516,6 +1534,8 @@ class MqttEntityDeviceInfo(Entity):
 
     _parent_device_id: str | None = None
     _registered_device_id: str | None = None
+    # Kept after a failed registration, as the entity stays linked to its device
+    _main_device_id: str | None = None
     _device_registration_failed = False
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
@@ -1560,7 +1580,7 @@ class MqttEntityDeviceInfo(Entity):
             _log_device_info_error(err)
             return None
         if not self._has_child_device:
-            self._registered_device_id = device.id
+            self._registered_device_id = self._main_device_id = device.id
             return device
         try:
             child_device = device_registry.async_get_or_create_child(
@@ -1581,7 +1601,7 @@ class MqttEntityDeviceInfo(Entity):
                 "mqtt cleanup parent device",
             )
             return None
-        self._parent_device_id = device.id
+        self._parent_device_id = self._main_device_id = device.id
         self._registered_device_id = child_device.id
         return child_device
 
