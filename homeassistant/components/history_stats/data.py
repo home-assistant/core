@@ -1,7 +1,7 @@
 """Manage the history_stats data."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 import math
 
@@ -12,7 +12,7 @@ from homeassistant.util import dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
 
-MIN_TIME_UTC = datetime.datetime.min.replace(tzinfo=dt_util.UTC)
+MIN_TIME_UTC = dt.datetime.min.replace(tzinfo=dt_util.UTC)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class HistoryStatsState:
 
     seconds_matched: float | None
     match_count: int | None
-    period: tuple[datetime.datetime, datetime.datetime]
+    period: tuple[dt.datetime, dt.datetime]
 
 
 @dataclass
@@ -44,8 +44,8 @@ class HistoryStats:
         entity_states: list[str],
         start: Template | None,
         end: Template | None,
-        duration: datetime.timedelta | None,
-        min_state_duration: datetime.timedelta,
+        duration: dt.timedelta | None,
+        min_state_duration: dt.timedelta,
         preview: bool = False,
     ) -> None:
         """Init the history stats manager."""

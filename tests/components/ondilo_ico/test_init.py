@@ -2,15 +2,20 @@
 
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from ondilo import OndiloError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.ondilo_ico.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -419,6 +424,69 @@ async def test_measures_scheduling(
     state = hass.states.get(entity_id_2)
     assert state is not None
     assert state.last_reported == datetime.fromisoformat("2024-01-01T04:10:00+00:00")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "config_entry_state", "reauth_flows"),
+    [
+        pytest.param(
+            OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=Mock()),
+            ConfigEntryState.SETUP_ERROR,
+            1,
+            id="reauth",
+        ),
+        pytest.param(
+            OAuth2TokenRequestTransientError(domain=DOMAIN, request_info=Mock()),
+            ConfigEntryState.SETUP_RETRY,
+            0,
+            id="transient",
+        ),
+    ],
+)
+async def test_token_refresh_error_during_setup(
+    hass: HomeAssistant,
+    mock_ondilo_client: MagicMock,
+    config_entry: MockConfigEntry,
+    side_effect: Exception,
+    config_entry_state: ConfigEntryState,
+    reauth_flows: int,
+) -> None:
+    """Test a token refresh failure during setup."""
+    # The client refreshes the token while making a request.
+    mock_ondilo_client.get_pools.side_effect = side_effect
+
+    await setup_integration(hass, config_entry, mock_ondilo_client)
+
+    assert config_entry.state is config_entry_state
+    flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN,
+        match_context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
+    )
+    assert len(flows) == reauth_flows
+
+
+async def test_token_refresh_auth_error_during_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_ondilo_client: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a token refresh auth failure during a scheduled update starts reauth."""
+    await setup_integration(hass, config_entry, mock_ondilo_client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    mock_ondilo_client.get_pools.side_effect = OAuth2TokenRequestReauthError(
+        domain=DOMAIN, request_info=Mock()
+    )
+
+    freezer.tick(timedelta(minutes=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 async def test_oauth_implementation_not_available(

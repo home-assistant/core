@@ -2,22 +2,22 @@
 
 import asyncio
 
-from ritualsgenie import (
-    RitualsGenie,
-    RitualsGenieAuthenticationError,
-    RitualsGenieError,
-    RitualsGenieHub,
-)
+from ritualsgenie import RitualsGenie, RitualsGenieHub
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, UPDATE_INTERVAL
-from .coordinator import RitualsConfigEntry, RitualsDataUpdateCoordinator
+from .const import ACCOUNT_HASH
+from .coordinator import (
+    RitualsConfigEntry,
+    RitualsHubsCoordinator,
+    RitualsRuntimeData,
+    RitualsSensorsCoordinator,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -28,7 +28,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:
     """Set up Rituals Perfume Genie from a config entry."""
     # Initiate reauth for old config entries which don't have
     # username / password in the entry data
@@ -41,46 +41,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> b
         session=async_get_clientsession(hass),
     )
 
-    try:
-        hubs = await client.hubs()
-    except RitualsGenieAuthenticationError as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except RitualsGenieError as err:
-        raise ConfigEntryNotReady(err) from err
+    hubs = RitualsHubsCoordinator(hass, entry, client)
+    await hubs.async_config_entry_first_refresh()
 
     # Migrate old unique_ids to the new format
-    async_migrate_entities_unique_ids(hass, entry, hubs)
+    async_migrate_entities_unique_ids(hass, entry, list(hubs.data.values()))
 
-    # The API provided by Rituals is currently rate limited to 30 requests
-    # per hour per IP address. To avoid hitting this limit, we will adjust
-    # the polling interval based on the number of diffusers one has.
-    update_interval = UPDATE_INTERVAL * len(hubs)
-
-    # Create a coordinator for each diffuser
-    coordinators = {
-        hub.hublot: RitualsDataUpdateCoordinator(
-            hass, entry, client, hub, update_interval
-        )
-        for hub in hubs
+    sensors = {
+        hublot: RitualsSensorsCoordinator(hass, entry, hubs, hublot)
+        for hublot in hubs.data
     }
 
-    # Refresh all coordinators
-    await asyncio.gather(
-        *[
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators.values()
-        ]
-    )
-
-    entry.runtime_data = coordinators
+    entry.runtime_data = RitualsRuntimeData(hubs=hubs, sensors=sensors)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+    # Only now the entities are listening, so the coordinators know which
+    # sensors to fetch. Not a first refresh on purpose: when the sensors fail,
+    # the diffusers can still be controlled. Rituals has blocked just the
+    # sensors before.
+    await asyncio.gather(
+        *(coordinator.async_refresh() for coordinator in sensors.values())
+    )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback
@@ -119,11 +105,10 @@ def async_migrate_entities_unique_ids(
 
 
 # Migration helpers for API v2
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate config entry to version 2: drop legacy ACCOUNT_HASH and bump version."""
     if entry.version < 2:
         data = dict(entry.data)
         data.pop(ACCOUNT_HASH, None)
         hass.config_entries.async_update_entry(entry, data=data, version=2)
-        return True
-    return True
+        return
