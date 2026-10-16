@@ -380,6 +380,7 @@ async def test_oauth_flow_uses_resolved_token_for_home_lookup(
     result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
     auth_mgr = mock_yolink_client.call_args.args[0]
     assert auth_mgr.access_token() == "mock-access-token"
     mock_yolink_client.return_value.execute.assert_awaited_once_with(
@@ -404,6 +405,7 @@ async def test_oauth_flow_creates_entry_when_home_is_unknown(
     result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
     assert CONF_HOME_ID not in result["data"]
 
 
@@ -701,6 +703,7 @@ async def test_uac_flow_unnamed_home(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "YoLink Home"
+    assert result["result"].unique_id == TEST_HOME_ID
 
 
 @pytest.mark.parametrize(
@@ -766,7 +769,7 @@ async def test_uac_flow_unusable_home_info(
     home_info: BRDP,
     error: str,
 ) -> None:
-    """Test the UAC flow reports an error when no home is named."""
+    """Test the UAC flow reports an error when no home is named and recovers."""
     mock_yolink_client.return_value.execute.return_value = home_info
 
     flow_id = await _async_start_uac_flow(hass)
@@ -777,6 +780,14 @@ async def test_uac_flow_unusable_home_info(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    mock_yolink_client.return_value.execute.return_value = home_info_response()
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_UAID: TEST_UAID, CONF_SECRET_KEY: TEST_SECRET_KEY}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_HOME_ID
 
 
 @pytest.mark.usefixtures("mock_yolink_client")
