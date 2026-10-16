@@ -334,6 +334,10 @@
     }
   },
   "services": {
+    "stop_transition": {
+      "description": "Stops an in-progress transition of one or more lights, keeping them at their current brightness and color. Has no effect on lights that are not transitioning.",
+      "name": "Stop transition"
+    },
     "toggle": {
       "description": "Toggles one or more lights, from on to off, or off to on, based on their current state.",
       "fields": {

@@ -20,7 +20,11 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    Unauthorized,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
@@ -2597,3 +2601,100 @@ def test_missing_kelvin_property_warnings(
 
     assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
     assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[1]
+
+
+class MockStopTransitionLight(MockLight):
+    """Mock light that stops transitions with an async method."""
+
+    supported_features = light.LightEntityFeature.STOP_TRANSITION
+
+    def __init__(self, name: str, state: str) -> None:
+        """Initialize the mock light."""
+        super().__init__(name, state)
+        self.stop_transition_calls = 0
+
+    async def async_stop_transition(self) -> None:
+        """Stop the transition."""
+        self.stop_transition_calls += 1
+
+
+class MockSyncStopTransitionLight(MockLight):
+    """Mock light that stops transitions with a sync method."""
+
+    supported_features = light.LightEntityFeature.STOP_TRANSITION
+
+    def __init__(self, name: str, state: str) -> None:
+        """Initialize the mock light."""
+        super().__init__(name, state)
+        self.stop_transition_calls = 0
+
+    def stop_transition(self) -> None:
+        """Stop the transition."""
+        self.stop_transition_calls += 1
+
+
+@pytest.mark.parametrize(
+    "light_class",
+    [
+        pytest.param(MockStopTransitionLight, id="async"),
+        pytest.param(MockSyncStopTransitionLight, id="sync"),
+    ],
+)
+async def test_stop_transition_service(
+    hass: HomeAssistant,
+    light_class: type[MockStopTransitionLight | MockSyncStopTransitionLight],
+) -> None:
+    """Test the stop_transition service is only sent to supporting lights."""
+    supporting_light = light_class("supporting", STATE_ON)
+    other_light = MockLight("other", STATE_ON)
+    setup_test_component_platform(hass, DOMAIN, [supporting_light, other_light])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        light.SERVICE_STOP_TRANSITION,
+        {ATTR_ENTITY_ID: supporting_light.entity_id},
+        blocking=True,
+    )
+    assert supporting_light.stop_transition_calls == 1
+
+    # Unsupported lights are skipped when not explicitly targeted
+    await hass.services.async_call(
+        DOMAIN,
+        light.SERVICE_STOP_TRANSITION,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+    assert supporting_light.stop_transition_calls == 2
+
+    with pytest.raises(
+        ServiceNotSupported,
+        match="Entity light.other does not support action light.stop_transition",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            light.SERVICE_STOP_TRANSITION,
+            {ATTR_ENTITY_ID: other_light.entity_id},
+            blocking=True,
+        )
+    assert supporting_light.stop_transition_calls == 2
+
+
+async def test_stop_transition_not_implemented(hass: HomeAssistant) -> None:
+    """Test a light advertising the feature without implementing it raises."""
+    entity = MockLight("test", STATE_ON)
+    entity.supported_features = light.LightEntityFeature.STOP_TRANSITION
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(NotImplementedError):
+        await hass.services.async_call(
+            DOMAIN,
+            light.SERVICE_STOP_TRANSITION,
+            {ATTR_ENTITY_ID: entity.entity_id},
+            blocking=True,
+        )

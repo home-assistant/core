@@ -148,9 +148,11 @@ PLATFORM_ACTION_METHODS: dict[str, set[str]] = {
         "start_mowing",
     },
     Platform.LIGHT: {
+        "async_stop_transition",
         "async_toggle",
         "async_turn_off",
         "async_turn_on",
+        "stop_transition",
         "toggle",
         "turn_off",
         "turn_on",
