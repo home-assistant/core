@@ -64,10 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
             translation_placeholders={"error": str(ex)},
         ) from ex
 
-    if (
-        "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
-        and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
-    ):
+    if "X_AVM-DE_UPnP1" in avm_wrapper.connection.services and not (
+        await avm_wrapper.async_get_upnp_configuration()
+    ).get("NewEnable"):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="error_upnp_disabled",
