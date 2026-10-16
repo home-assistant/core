@@ -3142,7 +3142,7 @@ snapcast==2.3.8
 soco==0.31.5
 
 # homeassistant.components.sofar
-sofar-modbus==0.22.0
+sofar-modbus==0.23.0
 
 # homeassistant.components.solaredge
 solaredge-web==0.5.0
