@@ -547,6 +547,7 @@ def mock_multilevel_sensor() -> Mock:
     sensor.name = "Test multilevel sensor"
     sensor.room_id = 1
     sensor.unit = "V"
+    sensor.dead = False
     sensor.visible = True
     sensor.enabled = True
     sensor.type = "com.fibaro.multilevelSensor"
