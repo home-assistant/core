@@ -14,11 +14,10 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_REGION
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
-    TextSelectorConfig,
 )
 
 from .const import (
@@ -41,6 +40,7 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize pending input."""
         self._input: dict[str, Any] = {}
         self._custom_server = False
+        self._applications: dict[str, str] = {}
 
     @asynccontextmanager
     async def _async_connection(
@@ -51,7 +51,7 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             self._input[CONF_ENDPOINT],
             self._input[CONF_API_KEY],
             identity_server=self._input[CONF_IDENTITY_SERVER],
-            application_ids=self._input[CONF_APPLICATION_IDS],
+            application_ids=self._input.get(CONF_APPLICATION_IDS, []),
             network_id="validation",
         )
         try:
@@ -98,34 +98,67 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_connection(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Validate access to the selected applications and both servers."""
+        """Validate the API key and fetch available applications."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if self._custom_server:
                 self._input = dict(user_input)
             else:
                 self._input.update(user_input)
-            self._input[CONF_APPLICATION_IDS] = sorted(
-                {app.strip() for app in user_input[CONF_APPLICATION_IDS] if app.strip()}
+            self._input.pop(CONF_APPLICATION_IDS, None)
+            try:
+                for key in (CONF_ENDPOINT, CONF_IDENTITY_SERVER):
+                    if endpoint := self._input.get(key, "").strip():
+                        self._input[key] = str(URL(endpoint).with_path(""))
+                self._input[CONF_IDENTITY_SERVER] = (
+                    self._input.get(CONF_IDENTITY_SERVER, "").strip()
+                    or self._input[CONF_ENDPOINT]
+                )
+                async with self._async_connection(errors) as connection:
+                    self._applications = await connection.applications()
+            except ValueError:
+                errors["base"] = "invalid_endpoint"
+            if not errors:
+                return await self.async_step_applications()
+        return self._show_connection_form(errors)
+
+    def _show_connection_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        """Ask for credentials and custom server addresses."""
+        fields: dict[probatio.Marker, Any] = {}
+        if self._custom_server:
+            fields.update(
+                {
+                    probatio.Required(CONF_ENDPOINT): str,
+                    probatio.Optional(CONF_IDENTITY_SERVER): str,
+                }
             )
-            if not self._input[CONF_APPLICATION_IDS]:
+        fields[probatio.Required(probatio.Secret(CONF_API_KEY))] = str
+        return self.async_show_form(
+            step_id="connection",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(fields),
+                self._input,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_applications(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select applications and validate device and traffic access."""
+        if not self._applications:
+            return self.async_abort(reason="no_applications")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            applications = sorted(set(user_input[CONF_APPLICATION_IDS]))
+            if not applications:
                 errors[CONF_APPLICATION_IDS] = "select_application"
             else:
-                try:
-                    for key in (CONF_ENDPOINT, CONF_IDENTITY_SERVER):
-                        if endpoint := self._input.get(key, "").strip():
-                            self._input[key] = str(URL(endpoint).with_path(""))
-                    self._input[CONF_IDENTITY_SERVER] = (
-                        self._input.get(CONF_IDENTITY_SERVER, "").strip()
-                        or self._input[CONF_ENDPOINT]
-                    )
-                    async with self._async_connection(errors) as connection:
-                        await connection.async_connect()
-                except ValueError:
-                    errors["base"] = "invalid_endpoint"
+                self._input[CONF_APPLICATION_IDS] = applications
+                async with self._async_connection(errors) as connection:
+                    await connection.async_connect()
                 if not errors:
                     identity_server = self._input[CONF_IDENTITY_SERVER]
-                    applications = self._input[CONF_APPLICATION_IDS]
                     await self.async_set_unique_id(
                         f"{identity_server}:{','.join(applications)}"
                     )
@@ -140,29 +173,24 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=", ".join(applications), data=self._input
                     )
-        fields: dict[probatio.Marker, Any] = {}
-        if self._custom_server:
-            fields.update(
-                {
-                    probatio.Required(CONF_ENDPOINT): str,
-                    probatio.Optional(CONF_IDENTITY_SERVER): str,
-                }
-            )
-        fields.update(
-            {
-                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-                probatio.Required(CONF_APPLICATION_IDS): TextSelector(
-                    TextSelectorConfig(multiple=True)
-                ),
-            }
-        )
+        if errors.get("base") == "invalid_auth":
+            return self._show_connection_form(errors)
         return self.async_show_form(
-            step_id="connection",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(fields),
-                self._input,
-            ),
+            step_id="applications",
             errors=errors,
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_APPLICATION_IDS): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=key, label=name)
+                                for key, name in self._applications.items()
+                            ],
+                            multiple=True,
+                        )
+                    )
+                }
+            ),
         )
 
     async def async_step_reauth(

@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "One or more of these applications are already configured",
+      "no_applications": "No applications are available with this API key.",
       "reauth_successful": "Authentication updated"
     },
     "error": {
@@ -12,16 +13,24 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "applications": {
+        "data": {
+          "application_ids": "Applications"
+        },
+        "data_description": {
+          "application_ids": "Only devices in the selected applications will be discovered."
+        },
+        "description": "Select the applications whose devices you want to use in Home Assistant.",
+        "title": "Select applications"
+      },
       "connection": {
         "data": {
           "api_key": "API key",
-          "application_ids": "Application IDs",
           "endpoint": "Application Server",
           "identity_server": "Identity Server"
         },
         "data_description": {
           "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic.",
-          "application_ids": "Enter the IDs shown in your application overview. Only devices in these applications will be discovered.",
           "endpoint": "Server address, including the scheme and port. The Things Network uses port 8884.",
           "identity_server": "Leave empty to use the Application Server address."
         },

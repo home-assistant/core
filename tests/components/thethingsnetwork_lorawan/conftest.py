@@ -34,6 +34,10 @@ def mock_connection() -> Generator[Mock]:
     """Mock the library's transport boundary."""
     connection = Mock(spec=TTSConnection)
     connection.stack_type = "tts"
+    connection.applications.return_value = {
+        "application": "Application",
+        "second": "Second",
+    }
     connection.on_disconnect.return_value = Mock()
     connection.async_subscribe.return_value = Mock()
     with (

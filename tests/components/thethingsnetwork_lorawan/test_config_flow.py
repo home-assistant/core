@@ -15,12 +15,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 DOMAIN = "thethingsnetwork_lorawan"
-INPUT = {
+CREDENTIALS = {
     "endpoint": "https://server:8884",
     "identity_server": "https://identity:8884",
     "api_key": "secret",
-    "application_ids": ["application"],
 }
+INPUT = {**CREDENTIALS, "application_ids": ["application"]}
 
 
 @pytest.fixture(autouse=True)
@@ -42,119 +42,67 @@ async def test_initial_form(hass: HomeAssistant, mock_connection: Mock) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
     assert list(result["data_schema"].schema) == ["region"]
+    mock_connection.applications.assert_not_awaited()
     mock_connection.async_connect.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    ("region", "endpoint"),
-    [
-        ("eu1", "https://eu1.cloud.thethings.network:8884"),
-        ("nam1", "https://nam1.cloud.thethings.network:8884"),
-        ("au1", "https://au1.cloud.thethings.network:8884"),
-    ],
-)
-async def test_region(
-    hass: HomeAssistant, mock_connection: Mock, region: str, endpoint: str
-) -> None:
-    """Regional traffic uses the selected cluster and the central Identity Server."""
+@pytest.mark.parametrize("region", ["eu1", "nam1", "au1"])
+async def test_region(hass: HomeAssistant, mock_connection: Mock, region: str) -> None:
+    """Discover applications through EU1 before connecting to regional traffic."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"region": region}
     )
-    assert result["step_id"] == "connection"
-    assert list(result["data_schema"].schema) == ["api_key", "application_ids"]
-    mock_connection.async_connect.assert_not_awaited()
+    assert list(result["data_schema"].schema) == ["api_key"]
     with patch(
         f"homeassistant.components.{DOMAIN}.config_flow.TTSConnection",
         return_value=mock_connection,
     ) as constructor:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"api_key": "secret", "application_ids": ["application"]},
+            result["flow_id"], {"api_key": "secret"}
+        )
+        assert result["step_id"] == "applications"
+        constructor.assert_called_once_with(
+            f"https://{region}.cloud.thethings.network:8884",
+            "secret",
+            identity_server="https://eu1.cloud.thethings.network:8884",
+            application_ids=[],
+            network_id="validation",
+        )
+        mock_connection.applications.assert_awaited_once_with()
+        mock_connection.async_connect.assert_not_awaited()
+        selector = next(iter(result["data_schema"].schema.values()))
+        assert selector.config["options"] == [
+            {"value": "application", "label": "Application"},
+            {"value": "second", "label": "Second"},
+        ]
+        assert selector.config["multiple"] is True
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"application_ids": ["application"]}
+        )
+        constructor.assert_called_with(
+            f"https://{region}.cloud.thethings.network:8884",
+            "secret",
+            identity_server="https://eu1.cloud.thethings.network:8884",
+            application_ids=["application"],
+            network_id="validation",
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == (
-        "https://eu1.cloud.thethings.network:8884:application"
+    assert (
+        result["result"].unique_id
+        == "https://eu1.cloud.thethings.network:8884:application"
     )
     assert result["data"] == {
-        "endpoint": endpoint,
+        "endpoint": f"https://{region}.cloud.thethings.network:8884",
         "identity_server": "https://eu1.cloud.thethings.network:8884",
         "api_key": "secret",
         "application_ids": ["application"],
     }
-    constructor.assert_called_once_with(
-        endpoint,
-        "secret",
-        identity_server="https://eu1.cloud.thethings.network:8884",
-        application_ids=["application"],
-        network_id="validation",
-    )
-    mock_connection.async_connect.assert_awaited_once()
-    mock_connection.close.assert_awaited_once()
+    mock_connection.async_connect.assert_awaited_once_with()
+    assert mock_connection.close.await_count == 2
     await hass.async_block_till_done()
-
-
-async def test_region_retry(hass: HomeAssistant, mock_connection: Mock) -> None:
-    """Retain selected server addresses when retrying rejected credentials."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"region": "nam1"}
-    )
-    mock_connection.async_connect.side_effect = AuthenticationError()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"api_key": "invalid", "application_ids": ["application"]},
-    )
-    assert result["step_id"] == "connection"
-    assert result["errors"] == {"base": "invalid_auth"}
-    assert list(result["data_schema"].schema) == ["api_key", "application_ids"]
-    mock_connection.async_connect.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"api_key": "replacement", "application_ids": ["application"]},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == (
-        "https://eu1.cloud.thethings.network:8884:application"
-    )
-    assert result["data"] == {
-        "endpoint": "https://nam1.cloud.thethings.network:8884",
-        "identity_server": "https://eu1.cloud.thethings.network:8884",
-        "api_key": "replacement",
-        "application_ids": ["application"],
-    }
-    await hass.async_block_till_done()
-
-
-async def test_region_duplicate(
-    hass: HomeAssistant, connection_entry: MockConfigEntry
-) -> None:
-    """A region preset cannot duplicate an application configured with URLs."""
-    hass.config_entries.async_update_entry(
-        connection_entry,
-        data={
-            **connection_entry.data,
-            "endpoint": "https://nam1.cloud.thethings.network:8884",
-            "identity_server": "https://eu1.cloud.thethings.network:8884",
-        },
-        unique_id="https://eu1.cloud.thethings.network:8884:application",
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"region": "nam1"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"api_key": "secret", "application_ids": ["application"]},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -187,7 +135,7 @@ async def test_region_duplicate(
         ),
     ],
 )
-async def test_user(
+async def test_custom_server(
     hass: HomeAssistant,
     mock_connection: Mock,
     endpoint: str,
@@ -195,56 +143,68 @@ async def test_user(
     expected_endpoint: str,
     expected_identity: str,
 ) -> None:
-    """Normalize pasted URLs and application IDs, then check both servers."""
+    """Normalize pasted URLs before fetching the application list."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"region": "custom"}
+    )
+    assert list(result["data_schema"].schema) == [
+        "endpoint",
+        "identity_server",
+        "api_key",
+    ]
     with patch(
         f"homeassistant.components.{DOMAIN}.config_flow.TTSConnection",
         return_value=mock_connection,
     ) as constructor:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"region": "custom"}
-        )
-        assert result["step_id"] == "connection"
-        assert list(result["data_schema"].schema) == [
-            "endpoint",
-            "identity_server",
-            "api_key",
-            "application_ids",
-        ]
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                **INPUT,
-                "endpoint": endpoint,
-                "identity_server": identity_server,
-                "application_ids": [" second ", "application", "second"],
-            },
+            {**CREDENTIALS, "endpoint": endpoint, "identity_server": identity_server},
+        )
+        constructor.assert_called_once_with(
+            expected_endpoint,
+            "secret",
+            identity_server=expected_identity,
+            application_ids=[],
+            network_id="validation",
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"application_ids": ["second", "application"]}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "application, second"
+    assert result["result"].unique_id == f"{expected_identity}:application,second"
     assert result["data"] == {
-        **INPUT,
         "endpoint": expected_endpoint,
         "identity_server": expected_identity,
+        "api_key": "secret",
         "application_ids": ["application", "second"],
     }
-    assert result["result"].unique_id == f"{expected_identity}:application,second"
-    constructor.assert_called_once_with(
-        expected_endpoint,
-        "secret",
-        identity_server=expected_identity,
-        application_ids=["application", "second"],
-        network_id="validation",
+    await hass.async_block_till_done()
+
+
+async def test_no_applications(hass: HomeAssistant, mock_connection: Mock) -> None:
+    """An authenticated key with no applications cannot create an entry."""
+    mock_connection.applications.return_value = {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_connection.async_connect.assert_awaited_once_with()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"region": "eu1"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_key": "secret"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_applications"
     mock_connection.close.assert_awaited_once_with()
-    await hass.async_block_till_done()
+    mock_connection.async_connect.assert_not_awaited()
 
 
-async def test_same_server(hass: HomeAssistant, mock_connection: Mock) -> None:
-    """The Identity Server defaults to the Application Server."""
+async def test_empty_selection(hass: HomeAssistant, mock_connection: Mock) -> None:
+    """Require a selection before opening traffic subscriptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -252,38 +212,71 @@ async def test_same_server(hass: HomeAssistant, mock_connection: Mock) -> None:
         result["flow_id"], {"region": "custom"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "endpoint": INPUT["endpoint"],
-            "api_key": "secret",
-            "application_ids": ["application"],
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "https://server:8884:application"
-    assert result["data"]["identity_server"] == INPUT["endpoint"]
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize("applications", [[], ["", "  "]])
-async def test_empty_applications(
-    hass: HomeAssistant, mock_connection: Mock, applications: list[str]
-) -> None:
-    """At least one application is required before connecting."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        result["flow_id"], CREDENTIALS
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"region": "custom"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**INPUT, "application_ids": applications}
+        result["flow_id"], {"application_ids": []}
     )
     assert result["errors"] == {"application_ids": "select_application"}
     mock_connection.async_connect.assert_not_awaited()
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], INPUT)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "https://identity:8884:application"
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("region", "credentials", "identity"),
+    [
+        ("nam1", {"api_key": "secret"}, "https://eu1.cloud.thethings.network:8884"),
+        ("custom", CREDENTIALS, "https://identity:8884"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (AuthenticationError(), "invalid_auth"),
+        (ConnectionUnavailable(), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+)
+async def test_discovery_error(
+    hass: HomeAssistant,
+    mock_connection: Mock,
+    region: str,
+    credentials: dict[str, str],
+    identity: str,
+    error: Exception,
+    expected: str,
+) -> None:
+    """Failed authentication or listing allows the user to replace credentials."""
+    mock_connection.applications.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"region": region}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], credentials
+    )
+    assert result["step_id"] == "connection"
+    assert result["errors"] == {"base": expected}
+    mock_connection.close.assert_awaited_once_with()
+    mock_connection.async_connect.assert_not_awaited()
+    mock_connection.applications.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**credentials, "api_key": "replacement"}
+    )
+    assert result["step_id"] == "applications"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{identity}:application"
+    assert result["data"]["api_key"] == "replacement"
     await hass.async_block_till_done()
 
 
@@ -300,23 +293,30 @@ async def test_empty_applications(
 async def test_invalid_endpoint(
     hass: HomeAssistant, mock_connection: Mock, field: str, endpoint: str
 ) -> None:
-    """Invalid addresses never start a connection."""
+    """Invalid addresses never start discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"region": "custom"}
+    )
     with patch(
         f"homeassistant.components.{DOMAIN}.config_flow.TTSConnection",
         side_effect=TTSConnection,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"region": "custom"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {**INPUT, field: endpoint}
+            result["flow_id"], {**CREDENTIALS, field: endpoint}
         )
     assert result["errors"] == {"base": "invalid_endpoint"}
-    mock_connection.async_connect.assert_not_awaited()
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], INPUT)
+    mock_connection.applications.assert_not_awaited()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CREDENTIALS
+    )
+    assert result["step_id"] == "applications"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "https://identity:8884:application"
     await hass.async_block_till_done()
@@ -325,7 +325,6 @@ async def test_invalid_endpoint(
 @pytest.mark.parametrize(
     ("error", "expected"),
     [
-        (AuthenticationError(), "invalid_auth"),
         (ConnectionUnavailable(), "cannot_connect"),
         (RuntimeError("unexpected"), "unknown"),
     ],
@@ -333,28 +332,68 @@ async def test_invalid_endpoint(
 async def test_connection_error(
     hass: HomeAssistant, mock_connection: Mock, error: Exception, expected: str
 ) -> None:
-    """Failed validation closes the transport and allows retrying the form."""
-    mock_connection.async_connect.side_effect = error
+    """Device and traffic access are checked after application selection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"region": "custom"}
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], INPUT)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CREDENTIALS
+    )
+    mock_connection.async_connect.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
+    assert result["step_id"] == "applications"
     assert result["errors"] == {"base": expected}
-    mock_connection.close.assert_awaited_once_with()
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert mock_connection.close.await_count == 2
     mock_connection.async_connect.side_effect = None
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], INPUT)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "https://identity:8884:application"
     await hass.async_block_till_done()
 
 
-async def test_cancelled_validation(hass: HomeAssistant, mock_connection: Mock) -> None:
-    """Cancellation still closes the temporary connection."""
-    mock_connection.async_connect.side_effect = asyncio.CancelledError
+async def test_missing_application_rights(
+    hass: HomeAssistant, mock_connection: Mock
+) -> None:
+    """Return to credentials when the key cannot read selected devices or traffic."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"region": "custom"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CREDENTIALS
+    )
+    mock_connection.async_connect.side_effect = AuthenticationError()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
+    assert result["step_id"] == "connection"
+    assert result["errors"] == {"base": "invalid_auth"}
+    mock_connection.async_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**CREDENTIALS, "api_key": "replacement"}
+    )
+    assert result["step_id"] == "applications"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["second"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "https://identity:8884:second"
+    assert result["data"]["application_ids"] == ["second"]
+    await hass.async_block_till_done()
+
+
+async def test_cancelled_discovery(hass: HomeAssistant, mock_connection: Mock) -> None:
+    """Cancellation closes discovery connections."""
+    mock_connection.applications.side_effect = asyncio.CancelledError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -362,15 +401,13 @@ async def test_cancelled_validation(hass: HomeAssistant, mock_connection: Mock) 
         result["flow_id"], {"region": "custom"}
     )
     with pytest.raises(asyncio.CancelledError):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], INPUT
-        )
+        await hass.config_entries.flow.async_configure(result["flow_id"], CREDENTIALS)
     mock_connection.close.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("applications", [["application"], ["application", "second"]])
 @pytest.mark.parametrize(
-    ("stored_identity_server", "identity_server"),
+    ("stored_identity", "identity"),
     [
         ("https://identity:8884", "https://identity:8884"),
         ("https://identity:8884", "https://IDENTITY:8884"),
@@ -382,14 +419,14 @@ async def test_duplicate_application(
     hass: HomeAssistant,
     connection_entry: MockConfigEntry,
     applications: list[str],
-    stored_identity_server: str,
-    identity_server: str,
+    stored_identity: str,
+    identity: str,
 ) -> None:
-    """Overlapping applications cannot register duplicate devices."""
+    """Reject overlapping applications after normalizing server URLs."""
     hass.config_entries.async_update_entry(
         connection_entry,
-        data={**connection_entry.data, "identity_server": stored_identity_server},
-        unique_id=f"{stored_identity_server}:application",
+        data={**connection_entry.data, "identity_server": stored_identity},
+        unique_id=f"{stored_identity}:application",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -398,27 +435,27 @@ async def test_duplicate_application(
         result["flow_id"], {"region": "custom"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {**INPUT, "application_ids": applications, "identity_server": identity_server},
+        result["flow_id"], {**CREDENTIALS, "identity_server": identity}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": applications}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
-    ("changes", "unique_id"),
+    ("identity", "applications", "unique_id"),
     [
-        ({"application_ids": ["second"]}, "https://identity:8884:second"),
-        (
-            {"identity_server": "https://another:8884"},
-            "https://another:8884:application",
-        ),
+        ("https://identity:8884", ["second"], "https://identity:8884:second"),
+        ("https://another:8884", ["application"], "https://another:8884:application"),
     ],
 )
 async def test_distinct_application(
     hass: HomeAssistant,
     connection_entry: MockConfigEntry,
-    changes: dict[str, str | list[str]],
+    identity: str,
+    applications: list[str],
     unique_id: str,
 ) -> None:
     """Other applications and deployments can be configured independently."""
@@ -429,7 +466,10 @@ async def test_distinct_application(
         result["flow_id"], {"region": "custom"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**INPUT, **changes}
+        result["flow_id"], {**CREDENTIALS, "identity_server": identity}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": applications}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == unique_id

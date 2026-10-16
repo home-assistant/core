@@ -1573,7 +1573,7 @@ loqedAPI==2.1.16
 
 # homeassistant.components.lorawan
 # homeassistant.components.thethingsnetwork_lorawan
-lorawan-connection[tts]==1.0.0
+lorawan-connection[tts]==1.1.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
