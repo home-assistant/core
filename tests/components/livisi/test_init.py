@@ -521,6 +521,74 @@ async def test_unreachable_event_during_refresh(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("device", "platform", "domain", "service", "service_data"),
+    [
+        pytest.param(
+            DEVICES[1], Platform.SWITCH, SWITCH_DOMAIN, SERVICE_TURN_ON, {}, id="on"
+        ),
+        pytest.param(
+            DEVICES[1], Platform.SWITCH, SWITCH_DOMAIN, SERVICE_TURN_OFF, {}, id="off"
+        ),
+        pytest.param(
+            DEVICES[2],
+            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 22.0},
+            id="set-temperature",
+        ),
+    ],
+)
+async def test_failed_command_recovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    device: LivisiDevice,
+    platform: Platform,
+    domain: str,
+    service: str,
+    service_data: dict[str, float],
+) -> None:
+    """Test a poll restores availability after a rejected command."""
+
+    def get_value(capability: str, property_name: str) -> bool | float | int:
+        return VALUES[(capability, property_name)]
+
+    connection = MagicMock(spec=LivisiConnection)
+    connection.controller = CONTROLLER
+    connection.async_get_devices.return_value = [device]
+    connection.async_get_value.side_effect = get_value
+    connection.async_set_state.return_value = False
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.livisi.coordinator.livisi_connect",
+        return_value=connection,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, device.id)
+    assert entity_id is not None
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            domain,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+
+    await _async_poll(hass, freezer)
+    assert not hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_new_unreachable_event_wins_over_recovery(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

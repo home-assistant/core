@@ -67,7 +67,8 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
         )
         if not success:
             self._attr_available = False
-            raise HomeAssistantError(f"Failed to turn on {self._attr_name}")
+            self.coordinator.mark_device_unreachable(self._device_id)
+            raise HomeAssistantError(f"Failed to turn on {self.entity_id}")
         self._attr_available = True
 
     @override
@@ -78,7 +79,8 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
         )
         if not success:
             self._attr_available = False
-            raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
+            self.coordinator.mark_device_unreachable(self._device_id)
+            raise HomeAssistantError(f"Failed to turn off {self.entity_id}")
         self._attr_available = True
 
     @override
