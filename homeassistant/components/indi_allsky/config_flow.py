@@ -65,13 +65,17 @@ def _matches_instance_identity(
     """Return True if entry matches instance identity across fallback and MAC IDs."""
     if expected_unique_id and entry.unique_id == expected_unique_id:
         return True
+    if server_name and entry.unique_id and entry.unique_id.endswith(f"_{server_name}"):
+        return True
     if not _matches_server_name(entry, server_name):
         return False
     if entry.unique_id is None:
         return True
-    if server_name and entry.unique_id.endswith(f"_{server_name}"):
-        return True
-    return entry.unique_id.count(":") == 5 and "_" not in entry.unique_id
+    return bool(
+        entry.unique_id
+        and entry.unique_id.count(":") == 5
+        and "_" not in entry.unique_id
+    )
 
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
@@ -140,6 +144,38 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_original_mac: str | None = None
     _discovered_unique_id: str | None = None
     _discovered_port: int | None = None
+    _fallback_unique_id: str | None = None
+
+    def _async_migrate_entry_for_mac(
+        self,
+        instance_unique_id: str,
+        formatted_mac: str | None,
+        fallback_unique_id: str | None,
+        server_name: str | None,
+        matching_hosts: set[str],
+    ) -> ConfigEntry | None:
+        """Migrate legacy MAC or fallback unique ID entry to instance unique ID."""
+        matching_fallback_ids = {fallback_unique_id} if fallback_unique_id else set()
+        if server_name:
+            matching_fallback_ids.update(f"{h}_{server_name}" for h in matching_hosts)
+        for entry in self._async_current_entries(include_ignore=False):
+            if (
+                (
+                    formatted_mac
+                    and entry.unique_id == formatted_mac
+                    and _matches_server_name(entry, server_name)
+                )
+                or (fallback_unique_id and entry.unique_id == fallback_unique_id)
+                or (
+                    entry.unique_id in matching_fallback_ids
+                    and entry.data.get(CONF_HOST) in matching_hosts
+                )
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=instance_unique_id
+                )
+                return entry
+        return None
 
     async def _async_check_and_adopt_existing_entry(
         self, host: str, port: int, matching_hosts: set[str] | None = None
@@ -150,6 +186,29 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if self.unique_id:
             server_name = self.context.get("title_placeholders", {}).get("name")
+            fallback_unique_id = getattr(self, "_fallback_unique_id", None)
+            mac = getattr(self, "_discovered_mac", None)
+            if mac and (
+                migrated_entry := self._async_migrate_entry_for_mac(
+                    self.unique_id,
+                    mac,
+                    fallback_unique_id,
+                    server_name,
+                    check_hosts,
+                )
+            ):
+                updates = {}
+                discovered_data = getattr(self, "_discovered_data", None)
+                if discovered_data:
+                    updates = await self._async_calculate_mac_updates(
+                        migrated_entry,
+                        host,
+                        port,
+                        discovered_data.get(CONF_SSL, True),
+                        check_hosts,
+                    )
+                self._abort_if_unique_id_configured(updates=updates)
+
             adoptable_entries = [
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
@@ -346,37 +405,43 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, Any]:
         """Calculate updates for an existing entry with matching MAC."""
         updates: dict[str, Any] = {}
-        if (
+        host_changed = (
             is_ip_address(existing_entry.data[CONF_HOST])
             and existing_entry.data[CONF_HOST] not in matching_hosts
-            and not any(
-                other.entry_id != existing_entry.entry_id
-                and other.data.get(CONF_HOST) in (matching_hosts | {host})
-                and other.data.get(CONF_PORT) == existing_entry.data[CONF_PORT]
-                for other in self._async_current_entries(include_ignore=False)
-            )
-        ):
-            updates[CONF_HOST] = host
-        target_host = updates.get(CONF_HOST, existing_entry.data[CONF_HOST])
-        if (
-            existing_entry.data[CONF_SSL] == ssl
-            and existing_entry.data[CONF_PORT] != port
-            and not any(
+        )
+        target_host = host if host_changed else existing_entry.data[CONF_HOST]
+        port_changed = existing_entry.data[CONF_PORT] != port
+
+        if port_changed:
+            if existing_entry.data[CONF_SSL] == ssl and not any(
                 other.entry_id != existing_entry.entry_id
                 and other.data.get(CONF_HOST) in (matching_hosts | {target_host})
                 and other.data.get(CONF_PORT) == port
                 for other in self._async_current_entries(include_ignore=False)
-            )
-        ):
-            try:
-                await validate_input(
-                    self.hass,
-                    {**existing_entry.data, **updates, CONF_PORT: port},
-                )
-            except CannotConnect, InvalidAuth, Unknown:
-                pass
-            else:
-                updates[CONF_PORT] = port
+            ):
+                try:
+                    await validate_input(
+                        self.hass,
+                        {
+                            **existing_entry.data,
+                            CONF_HOST: target_host,
+                            CONF_PORT: port,
+                        },
+                    )
+                except CannotConnect, InvalidAuth, Unknown:
+                    pass
+                else:
+                    if host_changed:
+                        updates[CONF_HOST] = target_host
+                    updates[CONF_PORT] = port
+        elif host_changed:
+            if not any(
+                other.entry_id != existing_entry.entry_id
+                and other.data.get(CONF_HOST) in (matching_hosts | {target_host})
+                and other.data.get(CONF_PORT) == existing_entry.data[CONF_PORT]
+                for other in self._async_current_entries(include_ignore=False)
+            ):
+                updates[CONF_HOST] = target_host
         return updates
 
     @override
@@ -408,6 +473,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             normalize_host(discovery_info.hostname) if discovery_info.hostname else host
         )
         fallback_unique_id = f"{stable_host}_{server_name}"
+        self._fallback_unique_id = fallback_unique_id
         self._discovered_port = port
 
         if mac:
@@ -418,16 +484,13 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_unique_id = instance_unique_id
             existing_entry = await self.async_set_unique_id(instance_unique_id)
             if existing_entry is None:
-                for entry in self._async_current_entries(include_ignore=False):
-                    if (
-                        entry.unique_id == formatted_mac
-                        and _matches_server_name(entry, server_name)
-                    ) or entry.unique_id == fallback_unique_id:
-                        self.hass.config_entries.async_update_entry(
-                            entry, unique_id=instance_unique_id
-                        )
-                        existing_entry = entry
-                        break
+                existing_entry = self._async_migrate_entry_for_mac(
+                    instance_unique_id,
+                    formatted_mac,
+                    fallback_unique_id,
+                    server_name,
+                    matching_hosts,
+                )
 
             if existing_entry is None:
                 if ignored_entry := self._async_find_matching_ignored_entry(
