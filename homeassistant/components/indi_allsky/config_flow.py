@@ -157,6 +157,16 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if mac:
             formatted_mac = format_mac(mac)
             await self.async_set_unique_id(formatted_mac)
+            for entry in self._async_current_entries(include_ignore=False):
+                if (
+                    entry.unique_id is None
+                    and entry.data[CONF_HOST] == host
+                    and entry.data[CONF_PORT] == port
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=formatted_mac
+                    )
+                    break
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_HOST: host,
@@ -212,6 +222,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             description_placeholders=self.context.get("title_placeholders", {}),
         )
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
