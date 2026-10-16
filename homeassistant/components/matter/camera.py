@@ -177,7 +177,7 @@ class MatterCamera(MatterEntity, Camera):
             LOGGER.debug(
                 "WebRTC session %s started for %s", matter_session_id, self.entity_id
             )
-            early_events = self._buffered_events.get(matter_session_id, [])
+            early_events = self._buffered_events.pop(matter_session_id, [])
         finally:
             self._pending_offers -= 1
             # Drop orphaned events once no offer is in flight to claim them.
@@ -243,22 +243,35 @@ class MatterCamera(MatterEntity, Camera):
         """Handle a WEBRTC_CALLBACK event from the Matter server."""
         if data["endpoint_id"] != self._endpoint.endpoint_id:
             return
-        matter_session_id = data["webrtc_session_id"]
-        has_session = matter_session_id in self._matter_session_ids
-        is_end = data["event_type"] == "end"
 
-        # While an offer is in flight the camera may have reused a known id for
-        # the new session, so its events are buffered too. Nothing follows the
-        # "end" of a session, so an "end" for a known id is taken as that
-        # session's, and a buffered "end" belongs to an earlier session once
+        matter_session_id = data["webrtc_session_id"]
+
+        # After a restart the camera may reuse a known id for an offer in flight,
+        # so events for known ids are buffered too. Nothing follows the "end" of
+        # a session, so a buffered "end" belongs to an earlier session once
         # another event arrives.
-        if self._pending_offers and not (has_session and is_end):
+        if self._pending_offers:
             events = self._buffered_events.setdefault(matter_session_id, [])
-            if not is_end and events and events[-1]["event_type"] == "end":
+            if (
+                data["event_type"] != "end"
+                and events
+                and events[-1]["event_type"] == "end"
+            ):
                 events.clear()
             events.append(data)
 
-        if has_session:
+        # After a restart the camera may reuse the id of a session whose end
+        # was never seen. A second answer for a known id proves that, so the
+        # old session is over.
+        if (
+            data["event_type"] == "answer"
+            and (session_id := self._matter_session_ids.get(matter_session_id))
+            is not None
+            and self._sessions[session_id].answered
+        ):
+            self._forget_matter_session(matter_session_id)
+
+        if matter_session_id in self._matter_session_ids:
             self._handle_webrtc_event(data)
 
     @callback
