@@ -121,7 +121,7 @@ async def test_keypad_vision_pro_doorbell_event(
             return_value=True,
         ),
         patch(
-            "homeassistant.components.event.dt_util.utcnow",
+            "homeassistant.components.event.entity.dt_util.utcnow",
             side_effect=lambda: next(timestamps),
         ),
     ):
@@ -202,7 +202,7 @@ async def test_contact_sensor_button_event(
             press_states.append(new_state.state)
 
     with patch(
-        "homeassistant.components.event.dt_util.utcnow",
+        "homeassistant.components.event.entity.dt_util.utcnow",
         side_effect=lambda: next(timestamps),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -323,7 +323,7 @@ async def test_climate_panel_keystate_event(
             off_states.append(new_state.state)
 
     with patch(
-        "homeassistant.components.event.dt_util.utcnow",
+        "homeassistant.components.event.entity.dt_util.utcnow",
         side_effect=lambda: next(timestamps),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
