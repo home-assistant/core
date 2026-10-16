@@ -1,7 +1,7 @@
 """Tests for polling measures."""
 
 from collections.abc import Callable, Coroutine
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -54,7 +54,7 @@ async def async_setup_test_fixture(
         else:
             mock_get_station.return_value = value
 
-        next_update = dt_util.utcnow() + datetime.timedelta(60 * 15)
+        next_update = dt_util.utcnow() + dt.timedelta(60 * 15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 

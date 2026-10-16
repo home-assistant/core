@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_RECIPIENTS,
@@ -33,13 +33,13 @@ from .const import (  # noqa: F401
     SERVICE_SEND_MESSAGE,
     NotifyEntityFeature,
 )
-from .legacy import (  # noqa: F401
+from .legacy import (
     BaseNotificationService,
     async_reload,
     async_reset_platform,
     async_setup_legacy,
 )
-from .repairs import migrate_notify_issue  # noqa: F401
+from .repairs import migrate_notify_issue
 from .services import async_setup_services
 
 # mypy: disallow-any-generics
@@ -60,6 +60,29 @@ PLATFORM_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "ATTR_DATA",
+    "ATTR_MESSAGE",
+    "ATTR_RECIPIENTS",
+    "ATTR_TARGET",
+    "ATTR_TITLE",
+    "ATTR_TITLE_DEFAULT",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "NOTIFY_SERVICE_SCHEMA",
+    "PLATFORM_SCHEMA",
+    "SERVICE_NOTIFY",
+    "SERVICE_PERSISTENT_NOTIFICATION",
+    "SERVICE_SEND_MESSAGE",
+    "BaseNotificationService",
+    "NotifyEntity",
+    "NotifyEntityDescription",
+    "NotifyEntityFeature",
+    "async_reload",
+    "async_reset_platform",
+    "migrate_notify_issue",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

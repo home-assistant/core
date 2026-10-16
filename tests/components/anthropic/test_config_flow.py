@@ -1,6 +1,6 @@
 """Test the Anthropic config flow."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from anthropic import (
@@ -425,6 +425,7 @@ async def test_subentry_with_optional_thinking(
         subentry,
         data={
             CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_BUDGET: 2048,
             CONF_THINKING_EFFORT: "none",
         },
     )
@@ -454,6 +455,7 @@ async def test_subentry_with_optional_thinking(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert subentry.data[CONF_THINKING_EFFORT] == "none"
+    assert CONF_THINKING_BUDGET not in subentry.data
 
 
 @pytest.mark.parametrize(
@@ -531,6 +533,105 @@ async def test_reconfigure_subentry_with_required_thinking(
     assert result["reason"] == "reconfigure_successful"
     assert subentry.data[CONF_CHAT_MODEL] == model
     assert subentry.data[CONF_THINKING_EFFORT] == expected_effort
+
+
+@pytest.mark.parametrize(
+    ("model", "current_effort", "expected_thinking_options"),
+    [
+        pytest.param(
+            "claude-opus-4-5",
+            "none",
+            {CONF_THINKING_BUDGET: 2048, CONF_THINKING_EFFORT: "low"},
+            id="manual_thinking_none",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            "max",
+            {CONF_THINKING_BUDGET: 2048, CONF_THINKING_EFFORT: "low"},
+            id="unsupported_max",
+        ),
+        pytest.param(
+            "claude-opus-4-6",
+            "xhigh",
+            {CONF_THINKING_EFFORT: "low"},
+            id="unsupported_xhigh",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            "high",
+            {CONF_THINKING_BUDGET: 2048},
+            id="unsupported_effort",
+        ),
+        pytest.param(
+            "claude-fable-5",
+            "max",
+            {CONF_THINKING_EFFORT: "max"},
+            id="supported_max",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_subentry_thinking_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    model: str,
+    current_effort: str,
+    expected_thinking_options: dict[str, str | int],
+) -> None:
+    """Test model changes clear invalid thinking settings before showing the form."""
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-fable-5",
+            CONF_THINKING_BUDGET: 2048,
+            CONF_THINKING_EFFORT: current_effort,
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    thinking_options = {CONF_THINKING_BUDGET, CONF_THINKING_EFFORT}
+    assert set(result["data_schema"].schema) & thinking_options == set(
+        expected_thinking_options
+    )
+    for option, expected_value in expected_thinking_options.items():
+        key = next(key for key in result["data_schema"].schema if key == option)
+        assert (key.description or {}).get(
+            "suggested_value", key.default()
+        ) == expected_value
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], expected_thinking_options
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert {
+        option: subentry.data[option]
+        for option in thinking_options & subentry.data.keys()
+    } == expected_thinking_options
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -732,7 +833,7 @@ async def test_invalid_model(
         return_value=ModelInfo(
             type="model",
             id="valid-model-4-5",
-            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            created_at=dt.datetime(1970, 1, 1, tzinfo=dt.UTC),
             display_name="Valid Model 4-5",
             lifecycle="active",
         ),
