@@ -136,8 +136,17 @@ class RegisteredConnection:
         """Update device observations and discover matching integrations."""
         if self._disconnected:
             return
-        if not self._update_device_state(event):
-            return
+        if event.type in (EventType.ADDED, EventType.UPDATED):
+            if (state := self.devices.get(event.dev_eui)) is not None:
+                state.descriptor = event.descriptor
+            else:
+                self.devices[event.dev_eui] = DeviceState(event.descriptor)
+        elif event.type == EventType.REMOVED:
+            self.devices.pop(event.dev_eui, None)
+        else:
+            state = self.devices.get(event.dev_eui)
+            if state is None or not state.receive(event):
+                return
         if self._active:
             async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
         if event.type != EventType.ADDED:
@@ -149,20 +158,6 @@ class RegisteredConnection:
                     self._discover(domain)
                 else:
                     self._pending_discoveries.add(domain)
-
-    def _update_device_state(self, event: DeviceEvent) -> bool:
-        """Process a device event and return whether it was handled."""
-        if event.type in (EventType.ADDED, EventType.UPDATED):
-            if (state := self.devices.get(event.dev_eui)) is not None:
-                state.descriptor = event.descriptor
-            else:
-                self.devices[event.dev_eui] = DeviceState(event.descriptor)
-        elif event.type == EventType.REMOVED:
-            self.devices.pop(event.dev_eui, None)
-        else:
-            state = self.devices.get(event.dev_eui)
-            return state is not None and state.receive(event)
-        return True
 
     @callback
     def _discover(self, domain: str) -> None:
