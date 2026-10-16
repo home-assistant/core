@@ -25,6 +25,7 @@ from .common import (
 )
 
 
+@pytest.mark.timeout(30)  # sets up every node fixture at once
 @pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_sensors(
