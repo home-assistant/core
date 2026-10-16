@@ -12,6 +12,22 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "connection": {
+        "data": {
+          "api_key": "API key",
+          "application_ids": "Application IDs",
+          "endpoint": "Application Server",
+          "identity_server": "Identity Server"
+        },
+        "data_description": {
+          "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic.",
+          "application_ids": "Enter the IDs shown in your application overview. Only devices in these applications will be discovered.",
+          "endpoint": "Server address, including the scheme and port. The Things Network uses port 8884.",
+          "identity_server": "Leave empty to use the Application Server address."
+        },
+        "description": "Connect your The Things Network or The Things Stack applications.",
+        "title": "Connect to The Things Network"
+      },
       "reauth_confirm": {
         "data": {
           "api_key": "API key"
@@ -23,19 +39,22 @@
       },
       "user": {
         "data": {
-          "api_key": "API key",
-          "application_ids": "Application IDs",
-          "endpoint": "Application Server",
-          "identity_server": "Identity Server"
+          "region": "Region"
         },
         "data_description": {
-          "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic.",
-          "application_ids": "Enter the IDs shown in your application overview. Only devices in these applications will be discovered.",
-          "endpoint": "Server address, including the scheme and port. The Things Network uses port 8884.",
-          "identity_server": "For The Things Network, use the eu1 server address. Leave empty to use the Application Server address."
+          "region": "Select the region shown in your The Things Network console URL, or select Custom server for another The Things Stack deployment."
         },
-        "description": "Connect your The Things Network or The Things Stack applications.",
-        "title": "Connect to The Things Network"
+        "title": "Select server region"
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "au1": "Australia (AU1)",
+        "custom": "Custom server",
+        "eu1": "Europe (EU1)",
+        "nam1": "North America (NAM1)"
       }
     }
   }

@@ -11,16 +11,22 @@ import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_REGION
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+)
 
 from .const import (
     CONF_APPLICATION_IDS,
     CONF_ENDPOINT,
     CONF_IDENTITY_SERVER,
-    DEFAULT_ENDPOINT,
     DOMAIN,
+    TTN_IDENTITY_SERVER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +40,7 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize pending input."""
         self._input: dict[str, Any] = {}
+        self._custom_server = False
 
     @asynccontextmanager
     async def _async_connection(
@@ -63,10 +70,41 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Select a The Things Network region or a custom server."""
+        if user_input is not None:
+            region = user_input[CONF_REGION]
+            self._custom_server = region == "custom"
+            if not self._custom_server:
+                self._input = {
+                    CONF_ENDPOINT: f"https://{region}.cloud.thethings.network:8884",
+                    CONF_IDENTITY_SERVER: TTN_IDENTITY_SERVER,
+                }
+            return await self.async_step_connection()
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_REGION, default="eu1"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["eu1", "nam1", "au1", "custom"],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key=CONF_REGION,
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Validate access to the selected applications and both servers."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._input = dict(user_input)
+            if self._custom_server:
+                self._input = dict(user_input)
+            else:
+                self._input.update(user_input)
             self._input[CONF_APPLICATION_IDS] = sorted(
                 {app.strip() for app in user_input[CONF_APPLICATION_IDS] if app.strip()}
             )
@@ -102,19 +140,26 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=", ".join(applications), data=self._input
                     )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(
-                    {
-                        probatio.Required(CONF_ENDPOINT, default=DEFAULT_ENDPOINT): str,
-                        probatio.Optional(CONF_IDENTITY_SERVER): str,
-                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-                        probatio.Required(CONF_APPLICATION_IDS): TextSelector(
-                            TextSelectorConfig(multiple=True)
-                        ),
-                    }
+        fields: dict[probatio.Marker, Any] = {}
+        if self._custom_server:
+            fields.update(
+                {
+                    probatio.Required(CONF_ENDPOINT): str,
+                    probatio.Optional(CONF_IDENTITY_SERVER): str,
+                }
+            )
+        fields.update(
+            {
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(CONF_APPLICATION_IDS): TextSelector(
+                    TextSelectorConfig(multiple=True)
                 ),
+            }
+        )
+        return self.async_show_form(
+            step_id="connection",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(fields),
                 self._input,
             ),
             errors=errors,
