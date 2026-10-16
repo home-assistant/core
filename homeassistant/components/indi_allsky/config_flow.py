@@ -110,7 +110,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         check_hosts = (
             matching_hosts if matching_hosts and host in matching_hosts else {host}
         )
-        if self.unique_id and getattr(self, "_discovered_mac", None):
+        if self.unique_id:
             adoptable_entries = [
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
@@ -128,15 +128,16 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     break
             else:
-                for entry in adoptable_entries:
-                    try:
-                        await validate_input(self.hass, entry.data)
-                    except CannotConnect, InvalidAuth, Unknown:
-                        continue
-                    self.hass.config_entries.async_update_entry(
-                        entry, unique_id=self.unique_id
-                    )
-                    break
+                if getattr(self, "_discovered_mac", None):
+                    for entry in adoptable_entries:
+                        try:
+                            await validate_input(self.hass, entry.data)
+                        except CannotConnect, InvalidAuth, Unknown:
+                            continue
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=self.unique_id
+                        )
+                        break
         self._abort_if_unique_id_configured()
         for check_host in check_hosts:
             self._async_abort_entries_match(
@@ -145,7 +146,12 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: port,
                 }
             )
-        if not getattr(self, "_discovered_mac", None) and port in (80, 443):
+        if (
+            matching_hosts
+            and host in matching_hosts
+            and not getattr(self, "_discovered_mac", None)
+            and port in (80, 443)
+        ):
             alt_port = 443 if port == 80 else 80
             for check_host in check_hosts:
                 self._async_abort_entries_match(
@@ -192,8 +198,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     if port != default_port
                     else user_input[CONF_HOST]
                 )
-                if not getattr(self, "_discovered_mac", None):
-                    await self.async_set_unique_id(None)
                 return self.async_create_entry(
                     title=f"INDI Allsky ({host_str})",
                     data=user_input,
@@ -215,14 +219,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries(include_ignore=True):
             if entry.source == SOURCE_IGNORE and (
                 entry.unique_id in (fallback_id, f"{host}:{port}")
-                or (
-                    entry.unique_id is not None
-                    and any(
-                        entry.unique_id.startswith(f"{h}_")
-                        or entry.unique_id.startswith(f"{h}:")
-                        for h in matching_hosts
-                    )
-                )
+                or entry.unique_id in {f"{h}:{port}" for h in matching_hosts}
             ):
                 return entry
         return None
@@ -359,6 +356,10 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 if entry.data.get(CONF_HOST) in matching_hosts:
                     entry_port = entry.data.get(CONF_PORT)
                     if entry_port == port or {entry_port, port} == {80, 443}:
+                        if entry.unique_id is None:
+                            self.hass.config_entries.async_update_entry(
+                                entry, unique_id=fallback_unique_id
+                            )
                         return self.async_abort(reason="already_configured")
 
             if self._async_find_matching_ignored_entry(
@@ -366,8 +367,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
 
-            await self.async_set_unique_id(fallback_unique_id)
-            self._abort_if_unique_id_configured()
+            existing_entry = await self.async_set_unique_id(fallback_unique_id)
+            updates = {}
+            if existing_entry is not None:
+                if (
+                    is_ip_address(existing_entry.data[CONF_HOST])
+                    and existing_entry.data[CONF_HOST] not in matching_hosts
+                ):
+                    updates[CONF_HOST] = host
+            self._abort_if_unique_id_configured(updates=updates)
 
         self._discovered_data = {
             CONF_HOST: host,
@@ -409,8 +417,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 if port != default_port
                 else self._discovered_data[CONF_HOST]
             )
-            if not getattr(self, "_discovered_mac", None):
-                await self.async_set_unique_id(None)
             return self.async_create_entry(
                 title=f"INDI Allsky ({host_str})",
                 data=self._discovered_data,
