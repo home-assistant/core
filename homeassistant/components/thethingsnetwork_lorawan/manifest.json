@@ -1,6 +1,6 @@
 {
   "domain": "thethingsnetwork_lorawan",
-  "name": "The Things Network LoRaWAN",
+  "name": "The Things Network",
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["lorawan"],
