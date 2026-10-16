@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
     ATTR_UDN,
@@ -9,14 +11,16 @@ from homeassistant.components.panasonic_viera.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_MAC, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    MOCK_MAC,
     get_mock_remote,
 )
 
@@ -244,3 +248,82 @@ async def test_setup_unload_entry(hass: HomeAssistant, mock_remote) -> None:
 
     assert state_tv is None
     assert state_remote is None
+
+
+async def test_setup_entry_mac_address(
+    hass: HomeAssistant,
+    mock_remote,
+    mock_get_mac_address: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the MAC address is learned and exposed as a device connection."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA, **MOCK_DEVICE_INFO},
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_mac_address.assert_called_once_with(ip=MOCK_CONFIG_DATA[CONF_HOST])
+    assert mock_entry.data[CONF_MAC] == MOCK_MAC
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_DEVICE_INFO[ATTR_UDN]), mock_entry.entry_id
+    )
+    assert device
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MOCK_MAC)}
+
+
+async def test_setup_entry_mac_address_known(
+    hass: HomeAssistant, mock_remote, mock_get_mac_address: Mock
+) -> None:
+    """Test the MAC address is not looked up again once stored."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA, **MOCK_DEVICE_INFO, CONF_MAC: MOCK_MAC},
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_mac_address.assert_not_called()
+    assert mock_entry.data[CONF_MAC] == MOCK_MAC
+
+
+@pytest.mark.parametrize("mac", [None, "00:00:00:00:00:00"])
+async def test_setup_entry_mac_address_unknown(
+    hass: HomeAssistant,
+    mock_remote,
+    mock_get_mac_address: Mock,
+    device_registry: dr.DeviceRegistry,
+    mac: str | None,
+) -> None:
+    """Test setup still succeeds when the MAC address cannot be determined."""
+    mock_get_mac_address.return_value = mac
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA, **MOCK_DEVICE_INFO},
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert CONF_MAC not in mock_entry.data
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_DEVICE_INFO[ATTR_UDN]), mock_entry.entry_id
+    )
+    assert device
+    assert device.connections == set()

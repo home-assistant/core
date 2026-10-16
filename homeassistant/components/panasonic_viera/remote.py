@@ -4,9 +4,9 @@ from collections.abc import Iterable
 from typing import Any, override
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME, STATE_ON
+from homeassistant.const import ATTR_MANUFACTURER, CONF_MAC, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PanasonicVieraConfigEntry, Remote
@@ -32,21 +32,27 @@ async def async_setup_entry(
     remote = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
+    mac = config.get(CONF_MAC)
 
-    async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info)])
+    async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info, mac)])
 
 
 class PanasonicVieraRemoteEntity(RemoteEntity):
     """Representation of a Panasonic Viera TV Remote."""
 
     def __init__(
-        self, remote: Remote, name: str, device_info: dict[str, Any] | None = None
+        self,
+        remote: Remote,
+        name: str,
+        device_info: dict[str, Any] | None = None,
+        mac: str | None = None,
     ) -> None:
         """Initialize the entity."""
         # Save a reference to the imported class
         self._remote = remote
         self._name = name
         self._device_info = device_info
+        self._mac = mac
 
     @property
     @override
@@ -64,6 +70,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
             return None
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
+            connections={(CONNECTION_NETWORK_MAC, self._mac)} if self._mac else set(),
             manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
             model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
             name=self._name,
