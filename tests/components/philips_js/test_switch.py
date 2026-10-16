@@ -146,11 +146,19 @@ async def test_menu_switch_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "tv_config",
+    [
+        pytest.param({"on": False, "update.return_value": False}, id="off"),
+        pytest.param({"powerstate": "Standby"}, id="standby"),
+    ],
+)
 async def test_menu_switch_unavailable_when_tv_off(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_menu_config_entry: MockConfigEntry,
     mock_tv: MagicMock,
+    tv_config: dict[str, Any],
 ) -> None:
     """Test a menu switch becomes unavailable when the TV turns off."""
     assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
@@ -158,8 +166,7 @@ async def test_menu_switch_unavailable_when_tv_off(
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
     assert state.state == STATE_ON
 
-    mock_tv.on = False
-    mock_tv.update.return_value = False
+    mock_tv.configure_mock(**tv_config)
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_CONTROLLABLE, ATTR_NODE_ID, DOMAIN
+from .const import ATTR_CONTROLLABLE, ATTR_NODE_ID, DOMAIN, TV_STATE_ON
 from .coordinator import PhilipsTVDataUpdateCoordinator
 
 
@@ -58,8 +58,11 @@ class PhilipsTVSettingsEntity(PhilipsJsEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # Settings are kept from the last update while the TV is off
-        if not super().available or not self.coordinator.api.on:
+        if (
+            not super().available
+            or not self.coordinator.api.on
+            or self.coordinator.api.powerstate not in (TV_STATE_ON, None)
+        ):
             return False
 
         if self._value:
