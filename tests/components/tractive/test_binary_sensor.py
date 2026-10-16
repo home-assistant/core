@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tractive.const import DOMAIN
@@ -14,6 +15,7 @@ from . import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

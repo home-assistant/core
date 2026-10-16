@@ -70,7 +70,7 @@ prek run --from-ref "$BASE_SHA" --to-ref HEAD
 **Track results:**
 - `PREK_PASSED`: true if `prek run` exits with code 0
 
-**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation. If the failure appears to be an environment setup issue (e.g., missing tools, command not found, venv not activated), also point the user to https://developers.home-assistant.io/docs/development_environment.**
+**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation. If the failure appears to be an environment setup issue (e.g., missing tools, command not found, venv not activated), also point the user to https://contributors.home-assistant.io/core/development/environment/.**
 
 ## Step 3: Stage Any Changes from Checks
 
@@ -121,7 +121,7 @@ Write a release-note-style PR title summarizing the change. The title becomes th
 
 ## Step 6: Verify Development Checklist
 
-Check each item from the [development checklist](https://developers.home-assistant.io/docs/development_checklist/):
+Check each item from the [development checklist](https://contributors.home-assistant.io/core/development/checklist/):
 
 | Item | How to verify |
 |------|---------------|
