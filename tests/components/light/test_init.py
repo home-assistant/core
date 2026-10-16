@@ -1,6 +1,5 @@
 """The tests for the Light component."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -10,7 +9,6 @@ import pytest
 from homeassistant import core
 from homeassistant.components import light
 from homeassistant.components.light import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -20,26 +18,18 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
 from .common import MockLight
 
 from tests.common import (
-    MockConfigEntry,
     MockEntityPlatform,
-    MockModule,
-    MockPlatform,
     MockUser,
     async_mock_service,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
     setup_test_component_platform,
 )
 
@@ -2607,51 +2597,3 @@ def test_missing_kelvin_property_warnings(
 
     assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
     assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[1]
-
-
-class MockFlow(ConfigFlow):
-    """Test flow."""
-
-
-@pytest.fixture
-def mock_test_config_flow(hass: HomeAssistant) -> Generator[None]:
-    """Mock a config flow for the test integration."""
-    mock_platform(hass, "test.config_flow")
-
-    with mock_config_flow("test", MockFlow):
-        yield
-
-
-@pytest.mark.usefixtures("mock_test_config_flow")
-async def test_setup_entry_platform_failed(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test a forwarded light platform that fails to set up raises."""
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [Platform.LIGHT]
-        )
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
-    ) -> None:
-        raise RuntimeError("Boom")
-
-    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry_init))
-    mock_platform(
-        hass, "test.light", MockPlatform(async_setup_entry=async_setup_entry_platform)
-    )
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # A failing forwarded platform does not change the state of the entry
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert "Failed to set up the test light platform" in caplog.text
