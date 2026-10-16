@@ -160,6 +160,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(
                 user_input, {CONF_PASSWORD: "invalid_auth"}, step_id
             )
+        except PyiCloudAcceptTermsException as retry_error:
+            return await self._async_terms_required(retry_error)
         except PyiCloudConnectionException as retry_error:
             _LOGGER.error("Error connecting to iCloud service: %s", retry_error)
             self.api = None
@@ -198,6 +200,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             with_family=self._with_family,
             authenticate=False,
             refresh_interval=None,
+            accept_terms=self._accept_terms,
         )
         api.session.clear_persistence()
         try:
@@ -451,6 +454,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             error,
         )
         self.api = None
+        # The challenge belonged to the session just dropped. Left set, it
+        # would send the login that follows the acceptance back to code entry.
+        self._forced_2fa = False
         # A login that already accepted them and still failed cannot be helped
         # by accepting again, so say so rather than offering the step in a loop.
         errors = {"base": "accept_terms_failed"} if self._accept_terms else None

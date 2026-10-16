@@ -1055,6 +1055,103 @@ async def test_accept_terms_during_verification(hass: HomeAssistant) -> None:
         assert service_mock.call_args.kwargs["accept_terms"] is True
 
 
+async def test_terms_demanded_while_entering_a_flagged_code(
+    hass: HomeAssistant,
+) -> None:
+    """Test that accepting terms does not send a clean login back to code entry.
+
+    The challenge belongs to the session the terms demand discards. Leaving the
+    flag set would route the login that follows it to the code form again,
+    although nothing is asking for a code any more.
+    """
+    challenged = MagicMock(requires_2fa=False, requires_2sa=False)
+    challenged.two_factor_delivery_method = "sms"
+    type(challenged).devices = PropertyMock(
+        side_effect=PyiCloud2FARequiredException(USERNAME, Mock(spec=Response))
+    )
+    challenged.validate_2fa_code = Mock(
+        side_effect=PyiCloudAcceptTermsException("Terms not accepted")
+    )
+    clean = MagicMock(requires_2fa=False, requires_2sa=False)
+    clean.devices = [MagicMock()]
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[challenged, clean],
+    ):
+        result = await _submit_user_form(hass)
+        assert result["step_id"] == CONF_VERIFICATION_CODE
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+        )
+        assert result["step_id"] == "accept_terms"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_terms_demanded_when_logging_in_again_without_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the login without the stored session can ask for the terms."""
+    refused = MagicMock()
+    refused.authenticate.side_effect = PyiCloudAcceptTermsException("Terms")
+    accepted = MagicMock(requires_2fa=False, requires_2sa=False)
+    accepted.devices = [MagicMock()]
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            refused,
+            accepted,
+        ],
+    ):
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "accept_terms"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_consent_to_the_terms_is_kept_when_logging_in_again(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the login without the stored session carries the given consent.
+
+    The terms are accepted, and the login that follows is then turned down for
+    its stored session. The login that replaces it must not ask again.
+    """
+    retry_service = MagicMock(requires_2fa=False, requires_2sa=False)
+    retry_service.devices = [MagicMock()]
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAcceptTermsException("Terms"),
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            retry_service,
+        ],
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["step_id"] == "accept_terms"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert service_mock.call_args_list[2].kwargs["accept_terms"] is True
+
+
 @pytest.mark.usefixtures("service_password_update")
 async def test_password_update(hass: HomeAssistant) -> None:
     """Test that password reauthentication works successfully."""
