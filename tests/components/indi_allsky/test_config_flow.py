@@ -285,7 +285,7 @@ def test_is_ip_address() -> None:
             True,
             443,
             "INDI Allsky (192.168.1.50)",
-            "aa:bb:cc:dd:ee:ff",
+            "aa:bb:cc:dd:ee:ff_INDI Allsky",
         ),
         (
             ZeroconfServiceInfo(
@@ -300,7 +300,7 @@ def test_is_ip_address() -> None:
             True,
             8443,
             "INDI Allsky (192.168.1.50:8443)",
-            "aa:bb:cc:dd:ee:ff",
+            "aa:bb:cc:dd:ee:ff_INDI Allsky",
         ),
         (
             ZeroconfServiceInfo(
@@ -400,7 +400,7 @@ async def test_zeroconf_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert result["data"] == {
         CONF_HOST: "indi-allsky.local",
         CONF_PORT: 443,
@@ -547,7 +547,7 @@ async def test_zeroconf_already_configured_manual_entry_adopts_mac(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
 
 
 async def test_zeroconf_already_configured_manual_entry_with_hostname_adopts_mac_and_preserves_hostname(
@@ -585,7 +585,7 @@ async def test_zeroconf_already_configured_manual_entry_with_hostname_adopts_mac
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry.data[CONF_HOST] == "indi-allsky.local"
 
 
@@ -634,7 +634,7 @@ async def test_zeroconf_skips_adoption_if_mac_already_configured(
     """Test Zeroconf skips adopting manual entry if an entry with the MAC already exists."""
     existing_mac_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
+        unique_id="aa:bb:cc:dd:ee:ff_INDI Allsky",
         title="INDI Allsky (192.168.1.50)",
         data={
             CONF_HOST: "192.168.1.50",
@@ -676,7 +676,7 @@ async def test_zeroconf_skips_adoption_if_mac_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert existing_mac_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert existing_mac_entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert manual_entry.unique_id is None
 
 
@@ -783,7 +783,7 @@ async def test_zeroconf_dual_stack_adopts_matching_ipv4_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry.data[CONF_HOST] == "192.168.1.50"
 
 
@@ -818,7 +818,7 @@ async def test_zeroconf_discovery_custom_service_honors_ssl_txt_property(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert result["data"] == {
         CONF_HOST: "192.168.1.50",
         CONF_PORT: 80,
@@ -874,7 +874,7 @@ async def test_zeroconf_prevent_duplicate_for_endpoint_configured_during_confirm
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
 
 
 async def test_zeroconf_fallback_step_prevent_duplicate_entry_when_manual_entry_created_with_ip_alias(
@@ -938,7 +938,7 @@ async def test_zeroconf_fallback_step_prevent_duplicate_entry_when_manual_entry_
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
 
 
 async def test_zeroconf_fallback_step_clears_unique_id_for_different_host(
@@ -1026,7 +1026,7 @@ async def test_zeroconf_alternate_protocol_announcement_first_adopts_mac_and_pre
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert manual_entry.data[CONF_PORT] == 443
     assert manual_entry.data[CONF_SSL] is True
 
@@ -1124,7 +1124,7 @@ async def test_zeroconf_confirmation_adopts_alternate_port_manual_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
 
 
 async def test_zeroconf_confirmation_alternate_port_manual_entry_fails_validation(
@@ -1228,7 +1228,7 @@ async def test_zeroconf_prioritizes_exact_port_match_over_alternate_port_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry_8443.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry_8443.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry_8443.data[CONF_PORT] == 8443
     assert entry_443.unique_id is None
     assert entry_443.data[CONF_PORT] == 443
@@ -1292,7 +1292,7 @@ async def test_zeroconf_confirmation_prioritizes_exact_port_match_over_alternate
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry_8443.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry_8443.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry_8443.data[CONF_PORT] == 8443
     assert entry_443.unique_id is None
     assert entry_443.data[CONF_PORT] == 443
@@ -1340,7 +1340,7 @@ async def test_zeroconf_alternate_port_replacement_fails_validation_preserves_sa
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry.data[CONF_PORT] == 8443
 
 
@@ -1381,7 +1381,7 @@ async def test_zeroconf_alternate_port_replacement_succeeds_validation_updates_p
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry.data[CONF_PORT] == 443
 
 
@@ -1579,7 +1579,7 @@ async def test_zeroconf_sequential_announcements_prevent_port_update_duplicating
     )
     assert result1["type"] is FlowResultType.ABORT
     assert result1["reason"] == "already_configured"
-    assert entry_8443.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry_8443.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry_8443.data[CONF_PORT] == 8443
 
     # Second announcement for 443 arrives with same MAC
@@ -1955,7 +1955,7 @@ async def test_zeroconf_mac_announcement_migrates_macless_fallback_id_after_ip_c
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
     assert entry.data[CONF_HOST] == "192.168.1.60"
 
 
@@ -2090,7 +2090,7 @@ async def test_zeroconf_fallback_step_restores_discovery_identity_after_failed_h
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky"
 
 
 async def test_zeroconf_host_update_skips_when_target_endpoint_already_configured(
@@ -2372,3 +2372,146 @@ async def test_zeroconf_confirmation_macless_alternate_port_aborts_when_name_mat
     )
     assert result_confirm["type"] is FlowResultType.ABORT
     assert result_confirm["reason"] == "already_configured"
+
+
+async def test_zeroconf_mac_discovery_distinct_instances_share_mac(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test discovering second instance on same machine with shared MAC creates separate entry."""
+    entry_north = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff_INDI Allsky North",
+        title="INDI Allsky North (192.168.1.50:8080)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry_north.add_to_hass(hass)
+
+    discovery_south = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=8081,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky South._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_south,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result_confirm = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
+    assert result_confirm["result"].unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky South"
+    assert entry_north.unique_id == "aa:bb:cc:dd:ee:ff_INDI Allsky North"
+    assert entry_north.data[CONF_PORT] == 8080
+
+
+async def test_zeroconf_fallback_step_clears_unique_id_when_changing_to_unrelated_port(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test fallback step clears unique ID when user changes port to an unrelated port."""
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyConnectionError(
+        "Port offline"
+    )
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=8080,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_indi_allsky_client.fetch_image.side_effect = None
+    mock_indi_allsky_client.fetch_image.return_value = b"test"
+
+    # User retains same discovered host but points to unrelated port 8081
+    result_configure = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8081,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result_configure["type"] is FlowResultType.CREATE_ENTRY
+    assert result_configure["result"].unique_id is None
+
+
+async def test_zeroconf_mac_discovery_preserves_ignored_fallback_entry_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test MAC announcement matching ignored fallback entry preserves fallback ID and rediscovery protection."""
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="indi-allsky.local_INDI Allsky",
+        data={},
+    )
+    ignored_entry.add_to_hass(hass)
+
+    # MAC announcement arrives for the same host
+    discovery_with_mac = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_https._tcp.local.",
+        name="INDI Allsky._https._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_with_mac,
+    )
+    assert result1["type"] is FlowResultType.ABORT
+    assert result1["reason"] == "already_configured"
+    # Verify fallback unique ID was preserved
+    assert ignored_entry.unique_id == "indi-allsky.local_INDI Allsky"
+
+    # Subsequent announcement without MAC arrives
+    discovery_without_mac = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_https._tcp.local.",
+        name="INDI Allsky._https._tcp.local.",
+        properties={"path": "/indi-allsky"},
+    )
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_without_mac,
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
