@@ -78,11 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    if not await hass.data[DATA_COMPONENT].async_unload_entry(entry):
-        raise ConfigEntryError(
-            translation_domain=HOMEASSISTANT_DOMAIN,
-            translation_key="unload_platforms_failed",
-        )
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class WakeWordDetectionEntity(RestoreEntity):
