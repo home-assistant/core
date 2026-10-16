@@ -1,5 +1,6 @@
 """Config flow for INDI Allsky integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -54,7 +55,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Validate that the user input allows us to connect to INDI Allsky."""
     client = IndiAllSkyClient(
         host=data[CONF_HOST],
@@ -96,7 +97,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_data: dict[str, Any]
     _matching_hosts: set[str]
 
-    def _check_and_adopt_existing_entry(
+    async def _async_check_and_adopt_existing_entry(
         self, host: str, port: int, matching_hosts: set[str] | None = None
     ) -> None:
         """Check for existing duplicate entries and adopt unique_id if needed."""
@@ -105,11 +106,16 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if self.unique_id:
             for entry in self._async_current_entries(include_ignore=False):
-                if (
-                    entry.unique_id is None
-                    and entry.data[CONF_HOST] in check_hosts
-                    and entry.data[CONF_PORT] == port
-                ):
+                if entry.unique_id is None and entry.data[CONF_HOST] in check_hosts:
+                    if entry.data[CONF_PORT] == port:
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=self.unique_id
+                        )
+                        break
+                    try:
+                        await validate_input(self.hass, entry.data)
+                    except CannotConnect, InvalidAuth, Unknown:
+                        continue
                     self.hass.config_entries.async_update_entry(
                         entry, unique_id=self.unique_id
                     )
@@ -133,10 +139,13 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
-            self._check_and_adopt_existing_entry(
+            matching_hosts = getattr(self, "_matching_hosts", None)
+            if matching_hosts and user_input[CONF_HOST] not in matching_hosts:
+                await self.async_set_unique_id(None)
+            await self._async_check_and_adopt_existing_entry(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
-                getattr(self, "_matching_hosts", None),
+                matching_hosts,
             )
 
             try:
@@ -202,8 +211,17 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     if (
                         entry.unique_id is None
                         and entry.data[CONF_HOST] in matching_hosts
-                        and entry.data[CONF_PORT] == port
                     ):
+                        if entry.data[CONF_PORT] == port:
+                            self.hass.config_entries.async_update_entry(
+                                entry, unique_id=formatted_mac
+                            )
+                            existing_entry = entry
+                            break
+                        try:
+                            await validate_input(self.hass, entry.data)
+                        except CannotConnect, InvalidAuth, Unknown:
+                            continue
                         self.hass.config_entries.async_update_entry(
                             entry, unique_id=formatted_mac
                         )
@@ -269,7 +287,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovery."""
         if user_input is not None:
-            self._check_and_adopt_existing_entry(
+            await self._async_check_and_adopt_existing_entry(
                 self._discovered_data[CONF_HOST],
                 self._discovered_data[CONF_PORT],
                 getattr(self, "_matching_hosts", None),
