@@ -18,7 +18,7 @@ license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.4.0
 prek==0.5.5
-pydantic==2.13.5
+pydantic==2.14.0
 PyGithub==2.10.0
 pylint==4.1.2
 pylint-per-file-ignores==4.0.0
