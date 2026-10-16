@@ -5,13 +5,8 @@ from typing import Any, override
 from energyid_webhooks.directives import DirectiveResource
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -25,8 +20,6 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
-
-SERVICE_GET_DIRECTIVE_SCHEDULE = "get_directive_schedule"
 
 SIGNAL_TO_STATE = {
     "--": "very_bad_moment",
@@ -44,14 +37,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up directive sensors and discover newly granted directives."""
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_GET_DIRECTIVE_SCHEDULE,
-        None,
-        "async_get_directive_schedule",
-        supports_response=SupportsResponse.ONLY,
-    )
-
     coordinator = entry.runtime_data.directive_coordinator
     directives_enabled = async_directives_enabled(entry)
     entity_registry = er.async_get(hass)

@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration only registers an entity service on the sensor platform.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done

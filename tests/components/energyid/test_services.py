@@ -12,7 +12,7 @@ from energyid_webhooks.directives import (
 )
 
 from homeassistant.components.energyid.const import CONF_ENABLE_DIRECTIVES, DOMAIN
-from homeassistant.components.energyid.sensor import SERVICE_GET_DIRECTIVE_SCHEDULE
+from homeassistant.components.energyid.services import SERVICE_GET_DIRECTIVE_SCHEDULE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

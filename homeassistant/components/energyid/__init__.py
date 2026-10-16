@@ -20,13 +20,14 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -43,11 +44,20 @@ from .coordinator import (
     EnergyIDRuntimeData,
     async_directives_enabled,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
 PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the EnergyID component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
