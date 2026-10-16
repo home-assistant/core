@@ -12,9 +12,11 @@ from lorawan_connection import (
     StatusEvent,
     UplinkEvent,
 )
+from lorawan_connection.mock import MockConnection
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lorawan import async_register_connection
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.components.lorawan.websocket_api import _snapshot
 from homeassistant.core import HomeAssistant
@@ -91,7 +93,7 @@ async def test_reconnect_reconciles_devices(
     assert states[0]["connection"]["connected"] is True
     assert states[0]["last_uplink"] == now.isoformat()
     replacement.emit(RemovedEvent(descriptor=DESCRIPTOR))
-    assert _snapshot(hass) == {"devices": []}
+    assert _snapshot(hass)["devices"] == []
     replacement.emit(AddedEvent(descriptor=DESCRIPTOR))
     assert _snapshot(hass)["devices"][0]["last_uplink"] is None
 
@@ -241,7 +243,31 @@ async def test_removed_connection_entry(
     """Removing a connection entry discards its retained observations."""
     backend, _ = await registered_backend("network", [DESCRIPTOR])
     backend.disconnect()
-    assert hass.data[DATA_REGISTRY].devices
+    assert hass.data[DATA_REGISTRY].observed_connections
     await hass.config_entries.async_remove("network")
     await hass.async_block_till_done()
-    assert not hass.data[DATA_REGISTRY].devices
+    assert not hass.data[DATA_REGISTRY].observed_connections
+
+
+async def test_configuration_url_without_devices(
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Offer the console before any devices exist and retain its URL during outages."""
+    assert await async_setup_component(hass, "lorawan", {})
+    backend = MockConnection()
+    configuration_url = "https://eu1.cloud.thethings.network/console"
+    unsubscribe = await async_register_connection(
+        hass, connection_entry, connection=backend, configuration_url=configuration_url
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "lorawan/devices/list"})
+    result = (await client.receive_json())["result"]
+    assert result["devices"] == []
+    assert result["connections"][0]["configuration_url"] == configuration_url
+    assert result["connections"][0]["connected"] is True
+    backend.disconnect()
+    assert _snapshot(hass)["connections"][0]["configuration_url"] == configuration_url
+    assert _snapshot(hass)["connections"][0]["connected"] is False
+    unsubscribe()

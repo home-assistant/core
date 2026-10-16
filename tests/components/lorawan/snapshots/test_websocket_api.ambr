@@ -1,11 +1,21 @@
 # serializer version: 1
 # name: test_device_observations[discovered]
   dict({
+    'connections': list([
+      dict({
+        'configuration_url': None,
+        'connected': True,
+        'domain': 'test_provider',
+        'entry_id': 'network',
+        'title': 'Mock Title',
+      }),
+    ]),
     'devices': list([
       dict({
         'application_id': 'application',
         'battery_level': None,
         'connection': dict({
+          'configuration_url': None,
           'connected': True,
           'domain': 'test_provider',
           'entry_id': 'network',
@@ -30,11 +40,21 @@
 # ---
 # name: test_device_observations[observed]
   dict({
+    'connections': list([
+      dict({
+        'configuration_url': None,
+        'connected': True,
+        'domain': 'test_provider',
+        'entry_id': 'network',
+        'title': 'Mock Title',
+      }),
+    ]),
     'devices': list([
       dict({
         'application_id': 'application',
         'battery_level': 0,
         'connection': dict({
+          'configuration_url': None,
           'connected': True,
           'domain': 'test_provider',
           'entry_id': 'network',

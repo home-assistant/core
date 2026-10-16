@@ -26,7 +26,8 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
     registry = hass.data[DATA_REGISTRY]
     device_registry = dr.async_get(hass)
     devices = []
-    for entry_id, states in registry.devices.items():
+    connections = []
+    for entry_id, observations in registry.observed_connections.items():
         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
             continue
         connection = {
@@ -34,8 +35,10 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
             "domain": entry.domain,
             "title": entry.title,
             "connected": entry_id in registry.connections,
+            "configuration_url": observations.configuration_url,
         }
-        for state in states.values():
+        connections.append(connection)
+        for state in observations.devices.values():
             descriptor = state.descriptor
             domains = [
                 domain
@@ -108,7 +111,7 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
                     "downlink_margin": status.margin if status else None,
                 }
             )
-    return {"devices": devices}
+    return {"devices": devices, "connections": connections}
 
 
 @websocket_api.require_admin

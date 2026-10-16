@@ -1,6 +1,6 @@
 """Retain LoRaWAN observations for the device overview."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from lorawan_connection import (
     DeviceDescriptor,
@@ -37,3 +37,11 @@ class DeviceState:
         else:
             return False
         return True
+
+
+@dataclass
+class ObservedConnection:
+    """Keep connection metadata and observations through transport outages."""
+
+    configuration_url: str | None
+    devices: dict[str, DeviceState] = field(default_factory=dict)

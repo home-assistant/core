@@ -20,7 +20,7 @@ from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.util.hass_dict import HassKey
 
 from .const import SIGNAL_DEVICES_CHANGED
-from .device_state import DeviceState
+from .device_state import DeviceState, ObservedConnection
 
 type ConnectionChange = tuple[str, Connection | None]
 
@@ -41,8 +41,8 @@ class ConnectionRegistry:
     """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
     """Registered connections keyed by provider config entry ID."""
-    devices: dict[str, dict[str, DeviceState]] = field(default_factory=dict)
-    """Observed devices keyed by connection config entry ID, then DevEUI."""
+    observed_connections: dict[str, ObservedConnection] = field(default_factory=dict)
+    """Connection metadata and observations keyed by config entry ID."""
     connection_change_listeners: list[Callable[[ConnectionChange], None]] = field(
         default_factory=list
     )
@@ -53,7 +53,11 @@ DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
 
 
 async def async_register_connection(
-    hass: HomeAssistant, entry: ConfigEntry, *, connection: Connection
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    *,
+    connection: Connection,
+    configuration_url: str | None = None,
 ) -> Unsubscribe:
     """Register a connected backend from lorawan-connection and return cleanup."""
     registry = hass.data[DATA_REGISTRY]
@@ -72,7 +76,8 @@ async def async_register_connection(
             discovery_brands[domain] = brands
     registry.pending_connection_registrations.add(entry_id)
     devices: dict[str, DeviceState] = {}
-    previous_devices = registry.devices.get(entry_id, {})
+    previous_connection = registry.observed_connections.get(entry_id)
+    previous_devices = previous_connection.devices if previous_connection else {}
     active = False
     disconnected = False
     pending_discoveries: set[str] = set()
@@ -146,7 +151,9 @@ async def async_register_connection(
         unregister()
         raise ConnectionUnavailable("Connection lost during registration")
     registry.connections[entry_id] = RegisteredConnection(connection, unregister)
-    registry.devices[entry_id] = devices
+    registry.observed_connections[entry_id] = ObservedConnection(
+        configuration_url, devices
+    )
     previous_devices = {}
     active = True
     async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)

@@ -44,12 +44,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def entry_changed(change: ConfigEntryChange, entry: ConfigEntry) -> None:
         if (
-            entry.entry_id not in registry.devices
+            entry.entry_id not in registry.observed_connections
             and entry.domain not in registry.integrations
         ):
             return
         if change is ConfigEntryChange.REMOVED:
-            registry.devices.pop(entry.entry_id, None)
+            registry.observed_connections.pop(entry.entry_id, None)
         async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
 
     unsubscribe_entries = async_dispatcher_connect(
@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for registered in tuple(registry.connections.values()):
             registered.unsubscribe()
         registry.connection_change_listeners.clear()
-        registry.devices.clear()
+        registry.observed_connections.clear()
         unsubscribe_entries()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
