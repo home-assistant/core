@@ -1,11 +1,13 @@
 """Exercise the published client through HTTP responses and real Core setup."""
 
 from copy import deepcopy
+from datetime import timedelta
 from ipaddress import ip_address
 import json
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.lanbon.const import DOMAIN
@@ -19,7 +21,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import GATEWAY_ID, HOST, INFO, PORT, SNAPSHOT, TOKEN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 BASE = f"http://{HOST}:{PORT}/api/v1"
@@ -211,6 +213,7 @@ async def test_http_setup_control_refresh_and_unload(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """The real dependency connects Core setup, commands, JSON and HTTP 304."""
     aioclient_mock.get(f"{BASE}/info", json=INFO)
@@ -239,7 +242,9 @@ async def test_http_setup_control_refresh_and_unload(
     assert hass.states.get(entity_id).state == STATE_ON
     aioclient_mock.clear_requests()
     aioclient_mock.get(f"{BASE}/devices", status=304)
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert aioclient_mock.mock_calls[0][3]["If-None-Match"] == '"2"'
     assert hass.states.get(entity_id).state == STATE_ON
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)

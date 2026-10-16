@@ -67,6 +67,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID
     assert result["title"] == "L10-4G"
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
@@ -125,6 +126,7 @@ async def test_user_flow_recovers_after_errors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID
     assert result["data"][CONF_GATEWAY_ID] == GATEWAY_ID
 
 
@@ -142,6 +144,18 @@ async def test_user_api_disabled_raises(hass: HomeAssistant) -> None:
             {CONF_HOST: HOST, CONF_PORT: PORT, CONF_TOKEN: TOKEN},
         )
     assert result["errors"]["base"] == "api_disabled"
+
+    with patch(
+        "homeassistant.components.lanbon.config_flow.LanbonClient.get_info",
+        return_value=gateway_info(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_TOKEN: TOKEN},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID
 
 
 async def test_zeroconf_flow_ignores_txt_token(hass: HomeAssistant) -> None:
@@ -168,6 +182,7 @@ async def test_zeroconf_flow_ignores_txt_token(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID
     assert result["data"][CONF_TOKEN] == TOKEN
     assert result["data"][CONF_TOKEN] != "from-txt-must-not-be-used"
     assert result["data"][CONF_GATEWAY_ID] == GATEWAY_ID
@@ -222,6 +237,7 @@ async def test_invalid_port_rejected_before_connecting(
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID
 
 
 async def test_missing_unique_id_aborts(hass: HomeAssistant) -> None:
@@ -257,6 +273,18 @@ async def test_rate_limit_is_retryable(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
+
+    with patch(
+        "homeassistant.components.lanbon.config_flow.LanbonClient.get_info",
+        return_value=gateway_info(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_TOKEN: TOKEN},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID
 
 
 async def test_zeroconf_updates_host_when_already_configured(
@@ -322,3 +350,4 @@ async def test_discovery_recovers_after_error(
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_ID

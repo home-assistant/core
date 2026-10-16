@@ -3,10 +3,11 @@
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
+from aiolanbon.models import Device
 import pytest
 
 from homeassistant.components.lanbon.switch import LanbonSwitch
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -213,3 +214,73 @@ async def test_two_gateways_with_identical_child_ids(
             child_id, "switch:1", "set_on", {"on": False}
         )
         assert send_first.await_count == 1
+
+
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param((), id="device-removed"),
+        pytest.param((replace(snapshot().devices[0], online=False),), id="offline"),
+        pytest.param(
+            (replace(snapshot().devices[0], components=()),), id="component-removed"
+        ),
+        pytest.param(
+            (
+                replace(
+                    snapshot().devices[0],
+                    components=(
+                        replace(snapshot().devices[0].components[0], enabled=False),
+                    ),
+                ),
+            ),
+            id="disabled",
+        ),
+    ],
+)
+async def test_switch_unavailable_and_recovers(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    devices: tuple[Device, ...],
+) -> None:
+    """A missing, offline or disabled component recovers with the next snapshot."""
+    coordinator = setup_integration.runtime_data
+    entity_id = hass.states.async_entity_ids("switch")[0]
+    coordinator.async_set_updated_data(replace(snapshot(), devices=devices))
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    coordinator.async_set_updated_data(snapshot())
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_failed_coordinator_refresh_makes_switch_unavailable(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """CoordinatorEntity supplies the failed-refresh availability guard."""
+    coordinator = setup_integration.runtime_data
+    entity_id = hass.states.async_entity_ids("switch")[0]
+    coordinator.async_set_update_error(RuntimeError("refresh failed"))
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    coordinator.async_set_updated_data(snapshot())
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_switch_properties_follow_latest_snapshot(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """State and component name follow replacement objects without changing identity."""
+    coordinator = setup_integration.runtime_data
+    entity = LanbonSwitch(coordinator, GATEWAY_ID, "switch:1")
+    unique_id = entity.unique_id
+    snap = snapshot()
+    component = replace(
+        snap.devices[0].components[0], name="Kitchen", state={"on": True}
+    )
+    coordinator.async_set_updated_data(
+        replace(snap, devices=(replace(snap.devices[0], components=(component,)),))
+    )
+    assert entity.is_on is True
+    assert entity.unique_id == unique_id
+    entity_id = hass.states.async_entity_ids("switch")[0]
+    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).attributes["friendly_name"].endswith("Kitchen")

@@ -1,6 +1,5 @@
 """Switch entities from LOIP components with type=switch."""
 
-import json
 import re
 from typing import Any, override
 
@@ -70,13 +69,11 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         self._device_id = device_id
         self._component_id = component_id
         self._gateway_id = coordinator.config_entry.unique_id
-        self._attr_unique_id = json.dumps(
-            [self._gateway_id, device_id, component_id], separators=(",", ":")
-        )
+        self._attr_unique_id = f"{self._gateway_id}_{device_id}_{component_id}"
         self._device_identifier = (
             device_id
             if device_id == self._gateway_id
-            else json.dumps([self._gateway_id, device_id], separators=(",", ":"))
+            else f"{self._gateway_id}_{device_id}"
         )
         self._sync_name()
 
@@ -84,7 +81,7 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
     @override
     def device_info(self) -> DeviceInfo:
         """Use the snapshot device identity, not the gateway info for every child."""
-        device, _component = self._pair()
+        device = self._device
         snap = self.coordinator.data
         info = self.coordinator.info
         gateway_id = (info.gateway_id if info else "") or (
@@ -115,17 +112,22 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
             device_info["via_device_id"] = gateway.id
         return device_info
 
-    def _pair(self):
-        snap = self.coordinator.data
-        if snap is None:
-            return None, None
-        device = snap.device(self._device_id)
-        if device is None:
-            return None, None
-        return device, device.component(self._component_id)
+    @property
+    def _device(self) -> Device | None:
+        """Return the device from the latest snapshot."""
+        if (snapshot := self.coordinator.data) is None:
+            return None
+        return snapshot.device(self._device_id)
+
+    @property
+    def _component(self) -> Component | None:
+        """Return the component from the latest snapshot."""
+        if (device := self._device) is None:
+            return None
+        return device.component(self._component_id)
 
     def _sync_name(self) -> None:
-        _device, component = self._pair()
+        component = self._component
         if component is not None:
             self._attr_name = component.name or self._component_id
 
@@ -133,11 +135,10 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
     @override
     def available(self) -> bool:
         """Return True when the device and component are online and enabled."""
-        device, component = self._pair()
+        device, component = self._device, self._component
         return bool(
             super().available
             and self.coordinator.gateway_verified
-            and self.coordinator.last_update_success
             and device
             and device.online
             and component
@@ -148,7 +149,7 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return the on/off state."""
-        _device, component = self._pair()
+        component = self._component
         if component is None:
             return None
         value = component.state.get("on")

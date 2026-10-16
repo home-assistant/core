@@ -150,6 +150,7 @@ async def test_websocket_failure_keeps_polling(
     mock_config_entry: MockConfigEntry,
     mock_lanbon_client: MagicMock,
     error: Exception,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Losing push support leaves polling and the existing snapshot available."""
 
@@ -174,7 +175,9 @@ async def test_websocket_failure_keeps_polling(
         assert coordinator._use_ws is False
         assert coordinator.update_interval.total_seconds() == 15
         mock_lanbon_client.get_devices.reset_mock()
-        await coordinator.async_refresh()
+        freezer.tick(timedelta(seconds=16))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         mock_lanbon_client.get_devices.assert_awaited_once()
         assert coordinator.last_update_success
 
@@ -183,6 +186,7 @@ async def test_concurrent_event_requires_complete_snapshot(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """An event for A must not hide a missed update for B behind a new ETag."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
@@ -211,17 +215,23 @@ async def test_concurrent_event_requires_complete_snapshot(
         return complete
 
     mock_lanbon_client.get_devices.side_effect = concurrent_response
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.data.devices[0].components[0].state["on"] is True
     assert coordinator.data.devices[0].components[1].state["on"] is True
     mock_lanbon_client.get_devices.reset_mock()
     mock_lanbon_client.get_devices.side_effect = None
     mock_lanbon_client.get_devices.return_value = complete
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mock_lanbon_client.get_devices.assert_awaited_once_with(if_none_match=None)
     assert coordinator.data.devices[0].components[1].state["on"] is True
     mock_lanbon_client.get_devices.return_value = None
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.data.devices[0].components[1].state["on"] is True
 
 
@@ -232,7 +242,12 @@ async def test_reconnect_waits_for_actual_snapshot(
 ) -> None:
     """Reconnection cannot consume events before a forced refresh completes."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
-    await coordinator.async_request_refresh()
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": hass.states.async_entity_ids("switch")[0]},
+        blocking=True,
+    )
     delivered = asyncio.Event()
     entered = asyncio.Event()
     release = asyncio.Event()
@@ -266,6 +281,7 @@ async def test_reconnect_waits_for_inflight_poll(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A poll completing after reconnect must not restore a conditional ETag."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
@@ -284,9 +300,8 @@ async def test_reconnect_waits_for_inflight_poll(
         yield state_event("2")
 
     mock_lanbon_client.get_devices.side_effect = response
-    poll = setup_integration.async_create_background_task(
-        hass, coordinator.async_refresh(), "lanbon-test-poll"
-    )
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
     await entered.wait()
     with patch.object(coordinator.client, "listen", return_value=events()):
         listener = setup_integration.async_create_background_task(
@@ -295,7 +310,7 @@ async def test_reconnect_waits_for_inflight_poll(
         await hass.async_block_till_done()
         assert not delivered.is_set()
         release.set()
-        await poll
+        await hass.async_block_till_done()
         await listener
     assert mock_lanbon_client.get_devices.await_count == 3
     assert mock_lanbon_client.get_devices.call_args.kwargs["if_none_match"] is None
@@ -306,6 +321,7 @@ async def test_failed_reconnect_snapshot_stops_event_updates(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A partial event must not mark a failed full resync healthy."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
@@ -323,7 +339,9 @@ async def test_failed_reconnect_snapshot_stops_event_updates(
     assert not coordinator.last_update_success
     assert not coordinator._use_ws
     mock_lanbon_client.get_devices.side_effect = None
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.last_update_success
 
 
@@ -431,7 +449,9 @@ async def test_partial_event_preserves_poll_failure_until_recovery(
     """A partial event cannot heal a failed snapshot or postpone its retry."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
     mock_lanbon_client.get_devices.side_effect = LanbonConnectionError("offline")
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert not coordinator.last_update_success
     assert coordinator._apply_event(state_event("2"))
     assert not coordinator.last_update_success
@@ -510,6 +530,7 @@ async def test_overlap_preserves_snapshot_topology(
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
     remove_device: bool,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Events cannot resurrect removed components/devices or hide new ones."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
@@ -526,7 +547,9 @@ async def test_overlap_preserves_snapshot_topology(
         return complete
 
     mock_lanbon_client.get_devices.side_effect = response
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.data.devices == (updated,)
     assert coordinator._etag is None
 
@@ -539,6 +562,7 @@ async def test_failed_overlap_does_not_replay_old_events(
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
     error: BaseException,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A failed/cancelled GET must not leak its events into a later snapshot."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
@@ -552,7 +576,9 @@ async def test_failed_overlap_does_not_replay_old_events(
         await coordinator._async_update_data()
     mock_lanbon_client.get_devices.side_effect = None
     mock_lanbon_client.get_devices.return_value = snapshot()
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.last_update_success
     assert coordinator.data.devices[0].components[0].state["on"] is False
     assert coordinator._etag == "1"
@@ -562,6 +588,7 @@ async def test_overlap_keeps_latest_state_and_availability(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Multiple events preserve the last value of each independent field."""
     coordinator: LanbonCoordinator = setup_integration.runtime_data
@@ -576,7 +603,9 @@ async def test_overlap_keeps_latest_state_and_availability(
         return snapshot()
 
     mock_lanbon_client.get_devices.side_effect = response
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.data.devices[0].components[0].state["on"] is True
     assert coordinator.data.devices[0].online is False
     assert coordinator.data.revision == "5"
@@ -632,6 +661,7 @@ async def test_foreign_snapshot_blocks_control_and_recovers(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Reject foreign data, disable control/events, then recover on the real gateway."""
     coordinator = setup_integration.runtime_data
@@ -640,7 +670,9 @@ async def test_foreign_snapshot_blocks_control_and_recovers(
     mock_lanbon_client.get_devices.return_value = replace(
         snapshot(), gateway_id="other-gateway", revision="foreign"
     )
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.data is original
     assert not coordinator.last_update_success
     assert not coordinator.gateway_verified
@@ -656,7 +688,9 @@ async def test_foreign_snapshot_blocks_control_and_recovers(
         "homeassistant.components.lanbon.LanbonClient.get_info",
         return_value=gateway_info(),
     ) as get_info:
-        await coordinator.async_refresh()
+        freezer.tick(timedelta(seconds=16))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
     get_info.assert_awaited_once()
     mock_lanbon_client.get_devices.assert_awaited_with(if_none_match=None)
     assert coordinator.last_update_success
@@ -672,15 +706,20 @@ async def test_partial_recovery_does_not_restore_control(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_lanbon_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A matching info response alone cannot validate the retained old snapshot."""
     coordinator = setup_integration.runtime_data
     mock_lanbon_client.get_devices.return_value = replace(
         snapshot(), gateway_id="foreign"
     )
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mock_lanbon_client.get_devices.return_value = None
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert not coordinator.last_update_success
     assert not coordinator.gateway_verified
     assert not coordinator._apply_event(state_event("99"))

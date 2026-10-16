@@ -16,7 +16,6 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -135,7 +134,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = probatio.Schema(
             {
                 probatio.Required(CONF_HOST, default=self._host or ""): str,
-                probatio.Required(CONF_PORT, default=self._port): cv.port,
+                probatio.Required(CONF_PORT, default=self._port): probatio.Port(),
                 probatio.Required(CONF_TOKEN): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
