@@ -97,7 +97,9 @@ async def test_media_player_turn_on_prefers_playing_source(
     The room has two video sources (ids 100 and 101, both named "TV"), the
     current video device is 100, but the playing source is 101 — so 101 must
     be posted: the playing source outranks the current video source, and
-    removing either priority branch would fail this test.
+    removing the playing-source branch would fail this test (turn_on would
+    post the current video device instead). The current-video branch is
+    pinned by test_media_player_turn_on_duplicate_source_names.
     """
     mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
     mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 100
