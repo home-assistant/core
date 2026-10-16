@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from mastodon.Mastodon import Account, InstanceV2, Status
+from mastodon.Mastodon import Account, InstanceV2, MediaAttachment, Status
 import pytest
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
@@ -45,6 +45,7 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.mastodon_api_version = 2
+        client.media_post.side_effect = [MediaAttachment(id=1), MediaAttachment(id=2)]
         client.status_post.return_value = Status.from_json(
             load_fixture("status_post.json", DOMAIN)
         )

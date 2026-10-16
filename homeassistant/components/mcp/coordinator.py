@@ -3,9 +3,9 @@
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-import datetime
+import datetime as dt
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import httpx2
 from mcp import McpError
@@ -27,7 +27,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import llm
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
@@ -39,29 +39,32 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]
 
 
-def _create_sse_httpx_client(
+def create_mcp_httpx_client(
     headers: dict[str, str] | None = None,
     timeout: httpx2.Timeout | None = None,
     auth: httpx2.Auth | None = None,
 ) -> httpx2.AsyncClient:
-    """Create the httpx client used by the SSE transport.
+    """Create an httpx client for talking to an MCP server.
 
-    The SSE transport closes the client itself, so it cannot be handed one of
-    the Home Assistant managed clients. Building it here keeps it off the SDK
-    default, which reads the CA bundle from disk inside the event loop.
+    The caller closes the client, so it cannot be one of the Home Assistant
+    managed clients. Reuses the shared SSL context instead of loading
+    certificates for every client.
     """
+    kwargs: dict[str, Any] = {}
+    if timeout is not None:
+        kwargs["timeout"] = timeout
     return httpx2.AsyncClient(
         verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
         follow_redirects=True,
-        headers=headers,
-        timeout=timeout,
+        headers={USER_AGENT: SERVER_SOFTWARE, **(headers or {})},
         auth=auth,
+        **kwargs,
     )
 
 
@@ -83,10 +86,12 @@ async def mcp_client(
 
     try:
         async with (
-            streamable_http_client(
-                url=url,
-                http_client=create_async_httpx_client(hass, headers=headers),
-            ) as (read_stream, write_stream, _),
+            create_mcp_httpx_client(headers=headers) as http_client,
+            streamable_http_client(url=url, http_client=http_client) as (
+                read_stream,
+                write_stream,
+                _,
+            ),
             ClientSession(read_stream, write_stream) as session,
         ):
             result = await session.initialize()
@@ -110,7 +115,7 @@ async def mcp_client(
                     sse_client(
                         url=url,
                         headers=headers,
-                        httpx_client_factory=_create_sse_httpx_client,
+                        httpx_client_factory=create_mcp_httpx_client,
                     ) as streams,
                     ClientSession(*streams) as session,
                 ):

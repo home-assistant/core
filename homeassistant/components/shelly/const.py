@@ -305,9 +305,9 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 CONF_GEN = "gen"
 
 VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
-VIRTUAL_COMPONENTS_MAP = {
+DYNAMIC_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
-    "button": {"types": ["button"], "modes": ["button"]},
+    "button": {"types": ["button", "ircode"], "modes": ["button"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
     "select": {"types": ["enum"], "modes": ["dropdown"]},
     "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
@@ -338,7 +338,7 @@ DEVICE_UNIT_MAP = {
 # so that the integration startup remains fast.
 MAX_SCRIPT_SIZE = 5120
 
-All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+All_LIGHT_TYPES = ("cct", "ledstrip", "light", "rgb", "rgbw")
 
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"

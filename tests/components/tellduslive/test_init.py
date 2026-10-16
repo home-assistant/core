@@ -1,17 +1,18 @@
 """Tests for the TelldusLive integration setup."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
-from homeassistant.components.tellduslive import NEW_CLIENT_TASK
 from homeassistant.components.tellduslive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_ID, HUB_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_device_via_device_links(
@@ -25,7 +26,7 @@ async def test_device_via_device_links(
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     # Hubs and devices are registered from a background task spawned by setup.
-    await hass.data[NEW_CLIENT_TASK]
+    await mock_config_entry.runtime_data.setup_task
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -59,7 +60,7 @@ async def test_device_added_without_hub(
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.data[NEW_CLIENT_TASK]
+    await mock_config_entry.runtime_data.setup_task
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -93,3 +94,28 @@ async def test_setup_not_authorized(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == "Authentication with Telldus Live failed"
+
+
+async def test_no_polling_after_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test an update finishing after unload does not schedule another."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data.setup_task
+    await hass.async_block_till_done()
+    client = mock_config_entry.runtime_data.client
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    # Simulate an update that was in flight while the entry unloaded.
+    await client.update()
+    mock_tellduslive.update.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    await hass.async_block_till_done()
+
+    mock_tellduslive.update.assert_not_called()

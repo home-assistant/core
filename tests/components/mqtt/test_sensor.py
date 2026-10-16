@@ -1577,6 +1577,44 @@ async def test_entity_device_info_with_identifier(
     )
 
 
+async def test_discovery_with_removed_via_hub_option(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test discovery of a sensor with the removed via_hub device option."""
+    await mqtt_mock_entry()
+    data = json.dumps(
+        {
+            "name": "test",
+            "state_topic": "test-topic",
+            "unique_id": "veryunique",
+            "device": {
+                "identifiers": ["helloworld"],
+                "name": "Hello World",
+                "via_hub": "hub-id",
+            },
+        }
+    )
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique")
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "helloworld"), entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "hub-id"), entry_id)
+        is None
+    )
+    assert "The 'via_hub' option has been removed" in caplog.text
+
+
 async def test_entity_device_info_update(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

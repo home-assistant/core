@@ -1,6 +1,6 @@
 """The tests for Humidifier device conditions."""
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
 from pytest_unordered import unordered
 
@@ -707,3 +707,17 @@ async def test_capabilities_missing_entity(
         )
         == expected_capabilities
     )
+
+
+def test_is_mode_without_mode_is_invalid() -> None:
+    """Test the condition type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'mode'"):
+        device_condition.CONDITION_SCHEMA(
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "humidifier.test",
+                "type": "is_mode",
+            }
+        )

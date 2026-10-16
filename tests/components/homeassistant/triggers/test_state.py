@@ -802,6 +802,60 @@ async def test_if_fires_on_entity_change_with_for(
     assert len(service_calls) == 1
 
 
+async def test_if_fires_on_entity_change_with_for_list_of_states(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing on entity change with for and a list of states.
+
+    The entity must stay in one of the listed states for the whole duration;
+    changing between listed states restarts the duration. This is intentional:
+    it makes the state trigger behave the same as the state condition, which
+    can only check how long the entity has been in its current state.
+    """
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "to": ["world", "universe"],
+                    "for": {"seconds": 5},
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"to_state": "{{ trigger.to_state.state }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Changing to another listed state restarts the duration
+    hass.states.async_set("test.entity", "universe")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    freezer.tick(timedelta(seconds=1, microseconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["to_state"] == "universe"
+
+
 async def test_if_fires_on_entity_change_with_for_without_to(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
