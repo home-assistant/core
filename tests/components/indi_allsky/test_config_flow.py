@@ -874,3 +874,67 @@ async def test_zeroconf_prevent_duplicate_for_endpoint_configured_during_confirm
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_zeroconf_fallback_step_prevent_duplicate_entry_when_manual_entry_created_with_ip_alias(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test fallback user step prevents duplicate entry if manual entry with IP alias is created while form is open."""
+    # First connection check against literal IP fails
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyConnectionError(
+        "Certificate verification failed"
+    )
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # Form falls back to user step prefilled with hostname indi-allsky.local
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # User manually configures entry via literal IP while the fallback form is open
+    manual_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    manual_entry.add_to_hass(hass)
+
+    # Fallback form is now submitted with hostname indi-allsky.local
+    mock_indi_allsky_client.fetch_image.side_effect = None
+    mock_indi_allsky_client.fetch_image.return_value = b"test"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "indi-allsky.local",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert manual_entry.unique_id == "aa:bb:cc:dd:ee:ff"

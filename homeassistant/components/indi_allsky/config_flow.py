@@ -96,6 +96,33 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_data: dict[str, Any]
     _matching_hosts: set[str]
 
+    def _check_and_adopt_existing_entry(
+        self, host: str, port: int, matching_hosts: set[str] | None = None
+    ) -> None:
+        """Check for existing duplicate entries and adopt unique_id if needed."""
+        check_hosts = (
+            matching_hosts if matching_hosts and host in matching_hosts else {host}
+        )
+        if self.unique_id:
+            for entry in self._async_current_entries(include_ignore=False):
+                if (
+                    entry.unique_id is None
+                    and entry.data[CONF_HOST] in check_hosts
+                    and entry.data[CONF_PORT] == port
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=self.unique_id
+                    )
+                    break
+        self._abort_if_unique_id_configured()
+        for check_host in check_hosts:
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: check_host,
+                    CONF_PORT: port,
+                }
+            )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -106,12 +133,10 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
-            self._abort_if_unique_id_configured()
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
+            self._check_and_adopt_existing_entry(
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                getattr(self, "_matching_hosts", None),
             )
 
             try:
@@ -244,28 +269,11 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovery."""
         if user_input is not None:
-            matching_hosts = getattr(
-                self, "_matching_hosts", {self._discovered_data[CONF_HOST]}
+            self._check_and_adopt_existing_entry(
+                self._discovered_data[CONF_HOST],
+                self._discovered_data[CONF_PORT],
+                getattr(self, "_matching_hosts", None),
             )
-            if self.unique_id:
-                for entry in self._async_current_entries(include_ignore=False):
-                    if (
-                        entry.unique_id is None
-                        and entry.data[CONF_HOST] in matching_hosts
-                        and entry.data[CONF_PORT] == self._discovered_data[CONF_PORT]
-                    ):
-                        self.hass.config_entries.async_update_entry(
-                            entry, unique_id=self.unique_id
-                        )
-                        break
-            self._abort_if_unique_id_configured()
-            for match_host in matching_hosts:
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: match_host,
-                        CONF_PORT: self._discovered_data[CONF_PORT],
-                    }
-                )
             port = self._discovered_data[CONF_PORT]
             default_port = 443 if self._discovered_data[CONF_SSL] else 80
             host_str = (
