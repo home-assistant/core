@@ -103,8 +103,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
     # Directives are optional, so a failed first fetch must not block the upload path.
     try:
         await directive_coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        _LOGGER.warning("Unable to retrieve EnergyID directives, retrying later")
+    except ConfigEntryNotReady as err:
+        _LOGGER.warning(
+            "Unable to retrieve EnergyID directives, retrying later: %s", err
+        )
 
     async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
         """Callback for periodically synchronizing sensor data."""
