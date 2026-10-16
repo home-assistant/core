@@ -215,6 +215,16 @@ async def test_hmip_arming_blocked_sensor_follows_arming(
         )
     assert hass.states.get(entity_id).state == STATE_ON
 
+    home.set_security_zones_activation_async.return_value = Mock(success=False, json={})
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_away",
+            {"entity_id": alarm_entity_id},
+            blocking=True,
+        )
+    assert hass.states.get(entity_id).state == STATE_ON
+
     home.set_security_zones_activation_async.return_value = Mock(success=True, json={})
     await hass.services.async_call(
         "alarm_control_panel",
