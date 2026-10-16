@@ -1956,6 +1956,7 @@ NO_QUALITY_SCALE = [
     "config",
     "configurator",
     "counter",
+    "debug_console",
     "default_config",
     "device_automation",
     "device_tracker",
