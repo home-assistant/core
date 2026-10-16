@@ -426,7 +426,7 @@ async def test_disconnect_while_vendor_subscribes() -> None:
         return stop_events
 
     backend = Mock(async_subscribe=AsyncMock(side_effect=replay))
-    await connection.attach(RegisteredConnection(backend, Mock()))
+    await connection.attach(Mock(spec=RegisteredConnection, connection=backend))
     stop_events.assert_called_once_with()
     listener.assert_called_once()
     assert connection.registration is None

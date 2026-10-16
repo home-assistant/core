@@ -25,12 +25,123 @@ from .device_state import DeviceState, ObservedConnection
 type ConnectionChange = tuple[str, Connection | None]
 
 
-@dataclass
 class RegisteredConnection:
-    """A provider and the cleanup for its discovery subscription."""
+    """Manage a connection's registration and subscriptions."""
 
-    connection: Connection
-    unsubscribe: Unsubscribe
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        connection: Connection,
+        configuration_url: str | None,
+    ) -> None:
+        """Initialize the registration."""
+        self.connection = connection
+        self._hass = hass
+        self._entry_id = entry_id
+        self._registry = hass.data[DATA_REGISTRY]
+        self._observations = ObservedConnection(configuration_url)
+        previous_connection = self._registry.observed_connections.get(entry_id)
+        self._previous_devices = (
+            previous_connection.devices if previous_connection else {}
+        )
+        self._active = False
+        self._disconnected = False
+        self._pending_discoveries: set[str] = set()
+        self._unsubscribes: list[Unsubscribe] = []
+        self._discovery_brands: dict[str, set[int | str]] = {}
+        for domain, matchers in self._registry.integrations.items():
+            brands = {
+                brand_id
+                for stack, brand_id in matchers
+                if stack == connection.stack_type
+            }
+            if brands:
+                self._discovery_brands[domain] = brands
+
+    async def async_setup(self) -> None:
+        """Subscribe to the connection and publish its registration."""
+        self._registry.pending_connection_registrations.add(self._entry_id)
+        try:
+            self._unsubscribes.append(self.connection.on_disconnect(self.unsubscribe))
+            self._unsubscribes.append(
+                await self.connection.async_subscribe(
+                    brands=None,
+                    listener=self._handle_event,
+                )
+            )
+        except BaseException:
+            self.unsubscribe()
+            raise
+        finally:
+            self._registry.pending_connection_registrations.discard(self._entry_id)
+
+        if self._disconnected:
+            self.unsubscribe()
+            raise ConnectionUnavailable("Connection lost during registration")
+        self._registry.connections[self._entry_id] = self
+        self._registry.observed_connections[self._entry_id] = self._observations
+        self._previous_devices = {}
+        self._active = True
+        async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
+        change: ConnectionChange = (self._entry_id, self.connection)
+        notify(self._registry.connection_change_listeners, change)
+        for domain in sorted(self._pending_discoveries):
+            self._discover(domain)
+        self._pending_discoveries.clear()
+
+    @callback
+    def unsubscribe(self) -> None:
+        """Unregister the connection and release subscriptions."""
+        self._disconnected = True
+        if self._active:
+            self._active = False
+            self._registry.connections.pop(self._entry_id)
+            async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
+            change: ConnectionChange = (self._entry_id, None)
+            notify(self._registry.connection_change_listeners, change)
+        for unsubscribe in self._unsubscribes:
+            unsubscribe()
+        self._unsubscribes.clear()
+
+    @callback
+    def _handle_event(self, event: DeviceEvent) -> None:
+        """Update device observations and discover matching integrations."""
+        if self._disconnected:
+            return
+        devices = self._observations.devices
+        if event.type in (EventType.ADDED, EventType.UPDATED):
+            if (state := devices.get(event.dev_eui)) is not None:
+                state.descriptor = event.descriptor
+            elif (previous := self._previous_devices.get(event.dev_eui)) is not None:
+                devices[event.dev_eui] = replace(previous, descriptor=event.descriptor)
+            else:
+                devices[event.dev_eui] = DeviceState(event.descriptor)
+        elif event.type == EventType.REMOVED:
+            devices.pop(event.dev_eui, None)
+        elif (state := devices.get(event.dev_eui)) is None or not state.receive(event):
+            return
+        if self._active:
+            async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
+        if event.type != EventType.ADDED:
+            return
+        brand_id = event.descriptor.brand_id
+        for domain, brands in self._discovery_brands.items():
+            if brand_id in brands:
+                if self._active:
+                    self._discover(domain)
+                else:
+                    self._pending_discoveries.add(domain)
+
+    @callback
+    def _discover(self, domain: str) -> None:
+        """Start discovery for a device integration."""
+        discovery_flow.async_create_flow(
+            self._hass,
+            domain,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=LoRaWANDiscoveryInfo(),
+        )
 
 
 @dataclass
@@ -67,98 +178,6 @@ async def async_register_connection(
         or entry_id in registry.pending_connection_registrations
     ):
         raise ValueError("A connection is already registered for this entry")
-    discovery_brands = {}
-    for domain, matchers in registry.integrations.items():
-        brands = {
-            brand_id for stack, brand_id in matchers if stack == connection.stack_type
-        }
-        if brands:
-            discovery_brands[domain] = brands
-    registry.pending_connection_registrations.add(entry_id)
-    devices: dict[str, DeviceState] = {}
-    previous_connection = registry.observed_connections.get(entry_id)
-    previous_devices = previous_connection.devices if previous_connection else {}
-    active = False
-    disconnected = False
-    pending_discoveries: set[str] = set()
-    unsubscribes: list[Unsubscribe] = []
-
-    @callback
-    def discover(domain: str) -> None:
-        discovery_flow.async_create_flow(
-            hass,
-            domain,
-            context={"source": SOURCE_INTEGRATION_DISCOVERY},
-            data=LoRaWANDiscoveryInfo(),
-        )
-
-    @callback
-    def handle_event(event: DeviceEvent) -> None:
-        if disconnected:
-            return
-        if event.type in (EventType.ADDED, EventType.UPDATED):
-            if (state := devices.get(event.dev_eui)) is not None:
-                state.descriptor = event.descriptor
-            elif (previous := previous_devices.get(event.dev_eui)) is not None:
-                devices[event.dev_eui] = replace(previous, descriptor=event.descriptor)
-            else:
-                devices[event.dev_eui] = DeviceState(event.descriptor)
-        elif event.type == EventType.REMOVED:
-            devices.pop(event.dev_eui, None)
-        elif (state := devices.get(event.dev_eui)) is None or not state.receive(event):
-            return
-        if active:
-            async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
-        if event.type != EventType.ADDED:
-            return
-        brand_id = event.descriptor.brand_id
-        for domain, brands in discovery_brands.items():
-            if brand_id in brands:
-                if active:
-                    discover(domain)
-                else:
-                    pending_discoveries.add(domain)
-
-    @callback
-    def unregister() -> None:
-        nonlocal active, disconnected
-        disconnected = True
-        if active:
-            active = False
-            registry.connections.pop(entry_id)
-            async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
-            change: ConnectionChange = (entry_id, None)
-            notify(registry.connection_change_listeners, change)
-        for unsubscribe in unsubscribes:
-            unsubscribe()
-        unsubscribes.clear()
-
-    try:
-        unsubscribes.append(connection.on_disconnect(unregister))
-        unsubscribes.append(
-            await connection.async_subscribe(
-                brands=None,
-                listener=handle_event,
-            )
-        )
-    except BaseException:
-        unregister()
-        raise
-    finally:
-        registry.pending_connection_registrations.discard(entry_id)
-
-    if disconnected:
-        unregister()
-        raise ConnectionUnavailable("Connection lost during registration")
-    registry.connections[entry_id] = RegisteredConnection(connection, unregister)
-    registry.observed_connections[entry_id] = ObservedConnection(
-        configuration_url, devices
-    )
-    previous_devices = {}
-    active = True
-    async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
-    change: ConnectionChange = (entry_id, connection)
-    notify(registry.connection_change_listeners, change)
-    for domain in sorted(pending_discoveries):
-        discover(domain)
-    return unregister
+    registered = RegisteredConnection(hass, entry_id, connection, configuration_url)
+    await registered.async_setup()
+    return registered.unsubscribe
