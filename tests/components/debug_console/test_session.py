@@ -136,6 +136,8 @@ async def test_sessions_separated(
     other_client = await hass_ws_client(
         hass, hass.auth.async_create_access_token(refresh_token)
     )
+    await other_client.send_json_auto_id({"type": "debug_console/warning/accept"})
+    assert (await other_client.receive_json())["success"]
     result = await async_execute(other_client, "secret")
 
     assert "NameError: name 'secret' is not defined" in result["error"]

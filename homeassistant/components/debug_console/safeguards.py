@@ -1,8 +1,7 @@
-"""Safeguards of the Debug console, on versions that are not for development.
+"""Safeguards of the Debug console.
 
-Development and nightly versions are for people working on Home Assistant, so
-these only apply to beta and stable versions: each user has to accept a warning
-before using the console, and everything that runs is logged.
+Each user has to accept a warning before using the console, and everything that
+runs is logged, with who ran it.
 """
 
 from dataclasses import dataclass
@@ -16,12 +15,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_WARNING_ACCEPTED,
-    DOMAIN,
-    IS_DEVELOPMENT_VERSION,
-    WARNING_VERSION,
-)
+from .const import CONF_WARNING_ACCEPTED, DOMAIN, WARNING_VERSION
 from .inspection import class_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,9 +69,6 @@ async def async_setup_safeguards(hass: HomeAssistant) -> None:
 @callback
 def async_warning_required(hass: HomeAssistant, user_id: str) -> bool:
     """Return if a user still has to accept the warning before using the console."""
-    if IS_DEVELOPMENT_VERSION:
-        return False
-
     acceptance = hass.data[DATA_WARNING_ACCEPTANCES].accepted.get(user_id)
     return acceptance is None or acceptance["version"] < WARNING_VERSION
 
@@ -95,9 +86,6 @@ async def async_accept_warning(hass: HomeAssistant, user_id: str) -> None:
 @callback
 def async_log_execution(connection: ActiveConnection, code: str) -> None:
     """Log code that runs, so a support request shows what was done."""
-    if IS_DEVELOPMENT_VERSION:
-        return
-
     _LOGGER.warning(
         "%s ran code in the debug console:\n%s", _describe_user(connection), code
     )
@@ -106,9 +94,6 @@ def async_log_execution(connection: ActiveConnection, code: str) -> None:
 @callback
 def async_log_inspection(connection: ActiveConnection, value: Any) -> None:
     """Log an object the user expanded, as reading its items runs its code."""
-    if IS_DEVELOPMENT_VERSION:
-        return
-
     _LOGGER.warning(
         "%s expanded a %s in the debug console",
         _describe_user(connection),
@@ -121,9 +106,6 @@ def async_log_property_evaluation(
     connection: ActiveConnection, value: Any, attribute: str
 ) -> None:
     """Log a property the user evaluated, as properties can change things too."""
-    if IS_DEVELOPMENT_VERSION:
-        return
-
     _LOGGER.warning(
         "%s evaluated %s.%s in the debug console",
         _describe_user(connection),

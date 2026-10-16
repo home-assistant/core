@@ -1,10 +1,8 @@
-"""Tests for the safeguards of the Debug console on release versions."""
+"""Tests for the safeguards of the Debug console."""
 
-from collections.abc import Generator
 import logging
 import re
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -27,13 +25,9 @@ EXECUTE = {"type": "debug_console/execute", "session_id": SESSION_ID, "code": "1
 
 
 @pytest.fixture
-def release_version() -> Generator[None]:
-    """Run as a beta or stable version, where the safeguards apply."""
-    with patch(
-        "homeassistant.components.debug_console.safeguards.IS_DEVELOPMENT_VERSION",
-        False,
-    ):
-        yield
+async def setup_integration(hass: HomeAssistant) -> None:
+    """Set up the Debug console, without anyone having accepted the warning."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
 
 def _logged_user(user: MockUser) -> str:
@@ -60,7 +54,6 @@ async def _async_send(
     return msg
 
 
-@pytest.mark.usefixtures("release_version")
 async def test_warning_required_until_accepted(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
@@ -68,7 +61,7 @@ async def test_warning_required_until_accepted(
 ) -> None:
     """Test the console refuses to run code until the user accepts the warning."""
     msg = await _async_send(websocket_client, {"type": "debug_console/info"})
-    assert msg["result"] == {"enabled": True, "warning_required": True}
+    assert msg["result"] == {"warning_required": True}
 
     msg = await _async_send(websocket_client, EXECUTE)
     assert not msg["success"]
@@ -78,7 +71,7 @@ async def test_warning_required_until_accepted(
     assert msg["success"]
 
     msg = await _async_send(websocket_client, {"type": "debug_console/info"})
-    assert msg["result"] == {"enabled": True, "warning_required": False}
+    assert msg["result"] == {"warning_required": False}
 
     msg = await _async_send(websocket_client, EXECUTE)
     assert msg["success"]
@@ -87,18 +80,6 @@ async def test_warning_required_until_accepted(
     assert acceptance["version"] == WARNING_VERSION
 
 
-async def test_no_warning_on_development_version(
-    websocket_client: MockHAClientWebSocket,
-) -> None:
-    """Test development versions do not ask for the warning."""
-    msg = await _async_send(websocket_client, {"type": "debug_console/info"})
-    assert msg["result"] == {"enabled": True, "warning_required": False}
-
-    msg = await _async_send(websocket_client, EXECUTE)
-    assert msg["success"]
-
-
-@pytest.mark.usefixtures("release_version")
 async def test_older_warning_needs_accepting_again(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -119,7 +100,7 @@ async def test_older_warning_needs_accepting_again(
 
     msg = await _async_send(client, {"type": "debug_console/info"})
 
-    assert msg["result"] == {"enabled": True, "warning_required": True}
+    assert msg["result"] == {"warning_required": True}
 
 
 async def test_acceptance_of_removed_users_forgotten(
@@ -159,51 +140,29 @@ async def test_acceptance_of_removed_users_forgotten(
     }
 
 
-@pytest.mark.parametrize(
-    ("development_version", "logged"),
-    [
-        pytest.param(False, True, id="release"),
-        pytest.param(True, False, id="development"),
-    ],
-)
 async def test_logging_executions(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
     caplog: pytest.LogCaptureFixture,
-    development_version: bool,
-    logged: bool,
 ) -> None:
-    """Test release versions log the code that runs, with who ran it."""
-    with (
-        patch(
-            "homeassistant.components.debug_console.safeguards.IS_DEVELOPMENT_VERSION",
-            development_version,
-        ),
-        caplog.at_level(logging.WARNING),
-    ):
+    """Test the code that runs is logged, with who ran it."""
+    with caplog.at_level(logging.WARNING):
         await _async_send(websocket_client, {"type": "debug_console/warning/accept"})
         msg = await _async_send(websocket_client, {**EXECUTE, "code": "answer = 42"})
 
     assert msg["success"]
-    assert (
-        bool(
-            re.search(
-                _logged_user(hass_admin_user)
-                + r" ran code in the debug console:\nanswer = 42",
-                caplog.text,
-            )
-        )
-        is logged
+    assert re.search(
+        _logged_user(hass_admin_user) + r" ran code in the debug console:\nanswer = 42",
+        caplog.text,
     )
 
 
-@pytest.mark.usefixtures("release_version")
 async def test_logging_inspection(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test release versions log objects that are expanded, with who did."""
+    """Test objects that are expanded are logged, with who did."""
     await _async_send(websocket_client, {"type": "debug_console/warning/accept"})
     msg = await _async_send(
         websocket_client,
@@ -227,13 +186,12 @@ async def test_logging_inspection(
     )
 
 
-@pytest.mark.usefixtures("release_version")
 async def test_logging_property_evaluation(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test release versions log properties that are evaluated, with who did."""
+    """Test properties that are evaluated are logged, with who did."""
     await _async_send(websocket_client, {"type": "debug_console/warning/accept"})
     msg = await _async_send(
         websocket_client,
@@ -261,7 +219,6 @@ async def test_logging_property_evaluation(
     )
 
 
-@pytest.mark.usefixtures("release_version")
 @pytest.mark.parametrize("command", CONSOLE_COMMANDS)
 async def test_warning_required_per_user(
     hass: HomeAssistant,

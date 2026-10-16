@@ -23,7 +23,7 @@ from .safeguards import (
     async_log_property_evaluation,
     async_warning_required,
 )
-from .session import DATA_SESSIONS, async_get_session
+from .session import async_get_session
 
 ERR_EXECUTION_STOPPED = "execution_stopped"
 ERR_WARNING_NOT_ACCEPTED = "warning_not_accepted"
@@ -33,19 +33,13 @@ SESSION_ID = probatio.All(str, probatio.Length(min=1, max=64))
 
 
 @callback
-def async_register_websocket_commands(hass: HomeAssistant, *, enabled: bool) -> None:
-    """Register the websocket commands of the debug console.
-
-    Only those to tell the frontend it is disabled, while it is.
-    """
-    websocket_api.async_register_command(hass, handle_info)
-    if not enabled:
-        return
-
+def async_register_websocket_commands(hass: HomeAssistant) -> None:
+    """Register the websocket commands of the debug console."""
     websocket_api.async_register_command(hass, handle_clear)
     websocket_api.async_register_command(hass, handle_complete)
     websocket_api.async_register_command(hass, handle_execute)
     websocket_api.async_register_command(hass, handle_get_attribute)
+    websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_inspect)
     websocket_api.async_register_command(hass, handle_signature)
     websocket_api.async_register_command(hass, handle_warning_accept)
@@ -79,15 +73,10 @@ def _require_accepted_warning(
 def handle_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Return if the console is enabled, and if the user has to accept the warning."""
-    enabled = DATA_SESSIONS in hass.data
+    """Return if the user has to accept the warning first."""
     connection.send_result(
         msg["id"],
-        {
-            "enabled": enabled,
-            "warning_required": enabled
-            and async_warning_required(hass, connection.user.id),
-        },
+        {"warning_required": async_warning_required(hass, connection.user.id)},
     )
 
 

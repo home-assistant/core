@@ -1,37 +1,38 @@
 """Fixtures for the Debug console tests."""
 
-from collections.abc import Generator
-from unittest.mock import patch
+from typing import Any
 
 import pytest
 
-from homeassistant.components.debug_console.const import DOMAIN
+from homeassistant.components.debug_console.const import (
+    CONF_WARNING_ACCEPTED,
+    DOMAIN,
+    WARNING_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockUser
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
-@pytest.fixture(autouse=True)
-def default_version() -> Generator[None]:
-    """Run as a release version, but without the safeguards of one.
-
-    Each module reads the version on import, so each one is patched. Tests of
-    the safeguards of release versions patch it again.
-    """
-    with (
-        patch("homeassistant.components.debug_console.IS_DEVELOPMENT_VERSION", False),
-        patch(
-            "homeassistant.components.debug_console.safeguards.IS_DEVELOPMENT_VERSION",
-            True,
-        ),
-    ):
-        yield
-
-
 @pytest.fixture
-async def setup_integration(hass: HomeAssistant) -> None:
-    """Set up the Debug console, enabled in YAML."""
+async def setup_integration(
+    hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
+) -> None:
+    """Set up the Debug console, with the warning accepted by the admin."""
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "key": DOMAIN,
+        "data": {
+            CONF_WARNING_ACCEPTED: {
+                hass_admin_user.id: {
+                    "version": WARNING_VERSION,
+                    "accepted_at": "2026-01-01T00:00:00+00:00",
+                }
+            }
+        },
+    }
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
 
