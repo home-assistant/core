@@ -8,7 +8,11 @@ from time import time
 from typing import TYPE_CHECKING
 
 from renault_api.exceptions import NotAuthenticatedException
-from renault_api.gigya.exceptions import InvalidCredentialsException
+from renault_api.gigya.exceptions import (
+    InvalidCredentialsException,
+    PendingTwoFactorAuthenticationException,
+)
+from renault_api.gigya.models import GigyaTfaEmail
 from renault_api.kamereon.exceptions import KamereonResponseException
 from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
@@ -74,6 +78,15 @@ class RenaultHub:
         """Return the Gigya login token obtained from a successful login."""
         return self._client.session.login_token
 
+    @property
+    def device_ids(self) -> dict[str, str]:
+        """Return the Gigya device ids remembered after two-factor authentication."""
+        return self._client.session.device_ids
+
+    def set_device_ids(self, device_ids: dict[str, str]) -> None:
+        """Restore Gigya device ids, so a remembered device skips two-factor auth."""
+        self._client.session.set_device_ids(device_ids)
+
     def set_throttled(self) -> None:
         """We got throttled, we need to adjust the rate limit."""
         if self._got_throttled_at_time is None:
@@ -100,14 +113,35 @@ class RenaultHub:
             return True
         return False
 
+    async def get_two_factor_auth_emails(self) -> list[GigyaTfaEmail]:
+        """Get the email addresses registered for two-factor authentication."""
+        return await self._client.session.get_two_factor_auth_emails()
+
+    async def request_two_factor_auth_code(self, email_id: str) -> None:
+        """Email a two-factor authentication code."""
+        await self._client.session.request_two_factor_auth_code(email_id)
+
+    async def complete_two_factor_auth(self, code: str) -> None:
+        """Complete the pending login with the emailed code."""
+        await self._client.session.complete_two_factor_auth(code)
+
     async def async_login(self, config_entry: RenaultConfigEntry) -> None:
         """Log in with the stored login token, or fall back to the password."""
         if login_token := config_entry.data.get(RenaultConfigurationKeys.LOGIN_TOKEN):
             self._client.session.set_login_token(login_token)
-        elif await self.attempt_login(
-            config_entry.data[RenaultConfigurationKeys.USERNAME],
-            config_entry.data[RenaultConfigurationKeys.PASSWORD],
-        ):
+            return
+        self.set_device_ids(
+            config_entry.data.get(RenaultConfigurationKeys.DEVICE_IDS, {})
+        )
+        try:
+            login_success = await self.attempt_login(
+                config_entry.data[RenaultConfigurationKeys.USERNAME],
+                config_entry.data[RenaultConfigurationKeys.PASSWORD],
+            )
+        except PendingTwoFactorAuthenticationException as exc:
+            # The code can only be entered in the reauth flow.
+            raise NotAuthenticatedException from exc
+        if login_success:
             # Persist the login token so the next setup can skip the password.
             self._hass.config_entries.async_update_entry(
                 config_entry,

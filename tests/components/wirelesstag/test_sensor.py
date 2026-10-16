@@ -58,7 +58,7 @@ async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Let the platform poll the tag once."""
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def _recover_by_poll(
