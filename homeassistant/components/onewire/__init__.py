@@ -51,9 +51,16 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     onewire_hub = config_entry.runtime_data
-    return not device_entry.identifiers.intersection(
-        (DOMAIN, device.id) for device in onewire_hub.devices or []
-    )
+    device_ids = {
+        identifier[1]
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+    }
+    if device_ids & onewire_hub.present_device_ids:
+        return False
+    for device_id in device_ids:
+        onewire_hub.forget_device(device_id)
+    return True
 
 
 async def async_unload_entry(
