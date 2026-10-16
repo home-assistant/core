@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_MAXIMUM,
     CONF_MINIMUM,
     CONF_NAME,
@@ -26,7 +27,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -164,6 +167,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Compensation from a config entry."""
+
+    def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_ENTITY_ID: source_entity_id},
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id=entry.entry_id,
+            set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
+            source_device_id=async_entity_id_to_device_id(
+                hass, entry.options[CONF_ENTITY_ID]
+            ),
+            source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
+        )
+    )
+
     config = dict(entry.options)
     data_points: list[dict[str, float]] = config[CONF_POLYNOMIAL_CONFIG][
         CONF_DATAPOINTS
