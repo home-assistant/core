@@ -18,8 +18,7 @@ def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
     """Register the Remo hubs and the appliances this platform exposes.
 
     Registration is eager because an energy-only hub (Remo E / E lite)
-    has no entities to create its device, and repeats on every poll so
-    renames in the Nature app reach the device registry.
+    has no entities to create its device.
     """
     coordinator = entry.runtime_data
     device_registry = dr.async_get(hass)
@@ -52,9 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
     entry.runtime_data = coordinator
 
     _async_register_devices(hass, entry)
-    entry.async_on_unload(
-        coordinator.async_add_listener(lambda: _async_register_devices(hass, entry))
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

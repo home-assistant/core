@@ -4,14 +4,11 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from aionatureremo import Appliance, NatureRemoAuthError, NatureRemoConnectionError
-from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.nature_remo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from . import async_poll
 
 from tests.common import MockConfigEntry
 
@@ -110,19 +107,14 @@ async def test_setup_auth_error_is_setup_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_appliance_rename_reaches_the_device_registry(
+async def test_appliance_rename_reaches_the_device_registry_on_reload(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     appliances: list[Appliance],
     device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A nickname edited in the Nature app propagates on the next poll.
-
-    The device would otherwise keep the nickname it happened to have when
-    its first entity was created.
-    """
+    """A nickname edited in the Nature app is picked up on reload."""
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "appliance-meter-1"), init_integration.entry_id
     )
@@ -135,7 +127,8 @@ async def test_appliance_rename_reaches_the_device_registry(
         else appliance
         for appliance in appliances
     ]
-    await async_poll(hass, freezer)
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "appliance-meter-1"), init_integration.entry_id
