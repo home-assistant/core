@@ -217,7 +217,8 @@ Unnecessary alias when importing `DOMAIN` from within the same integration.
 In an integration module that defines `__all__`, re-exported names must be
 listed in `__all__` instead of being kept with a `# noqa: F401` marker.
 Imports of submodules only (e.g. `from . import sensor, switch  # noqa: F401`,
-used to preload platforms) are allowed.
+used to preload platforms) are allowed, as are imports inside functions or
+classes, which cannot be exported through `__all__`.
 
 
 ## `home_assistant_enforce_type_hints` checker

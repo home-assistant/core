@@ -501,6 +501,28 @@ def test_bad_noqa_f401_with_all(
             """,
             id="not_an_integration",
         ),
+        pytest.param(
+            "homeassistant.components.pylint_test",
+            """
+            __all__ = ["DOMAIN"]
+
+            def check() -> bool:
+                import pylint_test_library  # noqa: F401
+
+                return True
+            """,
+            id="function_local_import",
+        ),
+        pytest.param(
+            "homeassistant.components.pylint_test",
+            """
+            __all__ = ["DOMAIN"]
+
+            class Check:
+                from .const import SERVICE  # noqa: F401
+            """,
+            id="class_local_import",
+        ),
     ],
 )
 def test_good_noqa_f401_with_all(
@@ -518,4 +540,63 @@ def test_good_noqa_f401_with_all(
     )
 
     with assert_no_messages(linter):
+        imports_checker.visit_module(root_node)
+
+
+def test_good_noqa_f401_with_all_sibling_preload(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    tmp_path: Path,
+) -> None:
+    """Ensure preloading sibling submodules from an ordinary module passes."""
+    (tmp_path / "sensor.py").touch()
+    root_node = astroid.parse(
+        textwrap.dedent(
+            """
+            from . import sensor  # noqa: F401
+
+            __all__ = ["DOMAIN"]
+            """
+        ),
+        "homeassistant.components.pylint_test.api",
+        str(tmp_path / "api.py"),
+    )
+
+    with assert_no_messages(linter):
+        imports_checker.visit_module(root_node)
+
+
+def test_bad_noqa_f401_with_all_module_level_block(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    tmp_path: Path,
+) -> None:
+    """Ensure imports in module-level blocks are still reported."""
+    root_node = astroid.parse(
+        textwrap.dedent(
+            """
+            try:
+                from .const import SERVICE  # noqa: F401
+            except ImportError:
+                pass
+
+            __all__ = ["DOMAIN"]
+            """
+        ),
+        "homeassistant.components.pylint_test",
+        str(tmp_path / "__init__.py"),
+    )
+    import_node = root_node.body[0].body[0]
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="home-assistant-noqa-f401-with-all",
+            node=import_node,
+            line=import_node.lineno,
+            col_offset=import_node.col_offset,
+            end_line=import_node.end_lineno,
+            end_col_offset=import_node.end_col_offset,
+        ),
+    ):
         imports_checker.visit_module(root_node)

@@ -182,7 +182,6 @@ def _imports_only_submodules(
         not isinstance(import_node, nodes.ImportFrom)
         or import_node.level != 1
         or import_node.modname
-        or not module.package
         or not module.file
     ):
         return False
@@ -267,6 +266,9 @@ class HassImportsFormatChecker(BaseChecker):
         with node.stream() as stream:
             lines = stream.read().decode().splitlines()
         for import_node in node.nodes_of_class((nodes.Import, nodes.ImportFrom)):
+            # Local imports cannot be exported through the module's __all__
+            if import_node.scope() is not node:
+                continue
             if not any(
                 _NOQA_F401.search(line)
                 for line in lines[import_node.fromlineno - 1 : import_node.tolineno]
