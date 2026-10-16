@@ -13,11 +13,6 @@ from sensecap_lorawan import (
     S2106,
     S2107,
     S2120,
-    Gen1AirTemperatureHumidity,
-    Gen1CO2,
-    Gen1Light,
-    Gen1Pressure,
-    Gen1SoilTemperatureMoisture,
     SenseCapDevice,
 )
 
@@ -60,52 +55,50 @@ class SenseCapSensorDescription[DeviceT: SenseCapDevice](SensorEntityDescription
 
 
 DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
-    SenseCapSensorDescription[
-        S2101 | S2103 | S2106 | S2120 | Gen1AirTemperatureHumidity
-    ](
+    SenseCapSensorDescription[S2101 | S2103 | S2106 | S2120](
         key="temperature",
-        device_types=(S2101, S2103, S2106, S2120, Gen1AirTemperatureHumidity),
+        device_types=(S2101, S2103, S2106, S2120),
         value_fn=lambda device: device.temperature,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2101 | S2103 | S2120 | Gen1AirTemperatureHumidity](
+    SenseCapSensorDescription[S2101 | S2103 | S2120](
         key="humidity",
-        device_types=(S2101, S2103, S2120, Gen1AirTemperatureHumidity),
+        device_types=(S2101, S2103, S2120),
         value_fn=lambda device: device.humidity,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2102 | S2120 | Gen1Light](
+    SenseCapSensorDescription[S2102 | S2120](
         key="illuminance",
-        device_types=(S2102, S2120, Gen1Light),
+        device_types=(S2102, S2120),
         value_fn=lambda device: device.illuminance,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2103 | Gen1CO2](
+    SenseCapSensorDescription[S2103](
         key="carbon_dioxide",
-        device_types=(S2103, Gen1CO2),
+        device_types=(S2103,),
         value_fn=lambda device: device.co2,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2104 | Gen1SoilTemperatureMoisture](
+    SenseCapSensorDescription[S2104](
         key="soil_temperature",
-        device_types=(S2104, Gen1SoilTemperatureMoisture),
+        device_types=(S2104,),
         value_fn=lambda device: device.soil_temperature,
         translation_key="soil_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2104 | Gen1SoilTemperatureMoisture](
+    SenseCapSensorDescription[S2104](
         key="soil_moisture",
-        device_types=(S2104, Gen1SoilTemperatureMoisture),
+        device_types=(S2104,),
         value_fn=lambda device: device.soil_moisture,
         translation_key="soil_moisture",
         device_class=SensorDeviceClass.MOISTURE,
@@ -127,9 +120,9 @@ DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2120 | Gen1Pressure](
+    SenseCapSensorDescription[S2120](
         key="pressure",
-        device_types=(S2120, Gen1Pressure),
+        device_types=(S2120,),
         value_fn=lambda device: device.pressure,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PA,
@@ -223,11 +216,6 @@ DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
             S2106,
             S2107,
             S2120,
-            Gen1AirTemperatureHumidity,
-            Gen1CO2,
-            Gen1Light,
-            Gen1Pressure,
-            Gen1SoilTemperatureMoisture,
         ),
         value_fn=lambda device: (
             battery_level

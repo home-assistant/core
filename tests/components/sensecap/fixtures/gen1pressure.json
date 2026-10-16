@@ -1,8 +1,0 @@
-{
-  "source": "Synthetic frame using the SenseCAP decoder protocol test vectors.",
-  "f_port": 1,
-  "payload": "01051030de09060000",
-  "expected": {
-    "atmospheric_pressure": 1013.1
-  }
-}
