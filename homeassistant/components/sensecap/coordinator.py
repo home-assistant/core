@@ -33,6 +33,7 @@ class SenseCapCoordinator(DataUpdateCoordinator[SenseCapDevice]):
             name=self.data.descriptor.name,
             manufacturer="Seeed Studio",
             model=f"SenseCAP {type(self.data).__name__}",
+            model_id=type(self.data).__name__,
         )
 
     @callback
