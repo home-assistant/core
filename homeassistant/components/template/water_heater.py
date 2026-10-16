@@ -91,7 +91,7 @@ WATER_HEATER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_CURRENT_TEMPERATURE): cv.template,
         probatio.Optional(CONF_MAX_TEMPERATURE): probatio.Coerce(float),
         probatio.Optional(CONF_MIN_TEMPERATURE): probatio.Coerce(float),
-        probatio.Optional(CONF_OPERATION_LIST): cv.template,
+        probatio.Required(CONF_OPERATION_LIST): cv.template,
         probatio.Optional(CONF_OPERATION_MODE): cv.template,
         probatio.Optional(CONF_TARGET_TEMPERATURE): cv.template,
         probatio.Optional(CONF_TARGET_TEMPERATURE_STEP): probatio.All(
@@ -100,7 +100,7 @@ WATER_HEATER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_TEMPERATURE_UNIT): probatio.In(
             TemperatureConverter.VALID_UNITS
         ),
-        probatio.Optional(SET_OPERATION_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(SET_OPERATION_MODE_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(SET_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Inclusive(CONF_TURN_OFF, "on_off_actions"): cv.SCRIPT_SCHEMA,
         probatio.Inclusive(CONF_TURN_ON, "on_off_actions"): cv.SCRIPT_SCHEMA,
@@ -114,12 +114,6 @@ WATER_HEATER_COMMON_SCHEMA = probatio.Schema(
 )
 
 _WATER_HEATER_VALIDATION = (
-    tcv.inclusive_group(
-        "operation_mode",
-        CONF_OPERATION_MODE,
-        CONF_OPERATION_LIST,
-        SET_OPERATION_MODE_ACTION,
-    ),
     tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION),
     tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION),
 )

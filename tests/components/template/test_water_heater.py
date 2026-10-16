@@ -277,19 +277,19 @@ async def test_operation_mode_template(hass: HomeAssistant, expected: Any) -> No
         ),
     ],
 )
-async def test_bad_operation_mode_group_config(
+async def test_missing_required_operation_mode_option(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     config: ConfigType,
     option: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a bad operation mode group configuration."""
+    """Test a water heater missing a required operation mode option."""
     platform = TEST_WATER_HEATER
     await setup_entity(hass, platform, style, 0, config)
     assert len(hass.states.async_all(platform.domain)) == 0
     assert (
-        "Invalid config for 'template': Some required option(s) are missing from inclusive group 'operation_mode', expected missing options"
+        f"Invalid config for 'template': required key '{option}' not provided"
         in caplog.text
     )
 
