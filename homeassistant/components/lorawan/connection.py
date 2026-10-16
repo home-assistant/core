@@ -1,7 +1,7 @@
-"""Register server connections and discover matching vendor integrations."""
+"""Register connections, retain device observations, and discover integrations."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from lorawan_connection import (
     Connection,
@@ -15,8 +15,12 @@ from lorawan_connection import (
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.util.hass_dict import HassKey
+
+from .const import SIGNAL_DEVICES_CHANGED
+from .device_state import DeviceState
 
 type ConnectionChange = tuple[str, Connection | None]
 
@@ -37,6 +41,8 @@ class ConnectionRegistry:
     """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
     """Registered connections keyed by provider config entry ID."""
+    devices: dict[str, dict[str, DeviceState]] = field(default_factory=dict)
+    """Observed devices keyed by connection config entry ID, then DevEUI."""
     connection_change_listeners: list[Callable[[ConnectionChange], None]] = field(
         default_factory=list
     )
@@ -65,6 +71,8 @@ async def async_register_connection(
         if brands:
             discovery_brands[domain] = brands
     registry.pending_connection_registrations.add(entry_id)
+    devices: dict[str, DeviceState] = {}
+    previous_devices = registry.devices.get(entry_id, {})
     active = False
     disconnected = False
     pending_discoveries: set[str] = set()
@@ -81,7 +89,22 @@ async def async_register_connection(
 
     @callback
     def handle_event(event: DeviceEvent) -> None:
-        if disconnected or event.type != EventType.ADDED:
+        if disconnected:
+            return
+        if event.type in (EventType.ADDED, EventType.UPDATED):
+            if (state := devices.get(event.dev_eui)) is not None:
+                state.descriptor = event.descriptor
+            elif (previous := previous_devices.get(event.dev_eui)) is not None:
+                devices[event.dev_eui] = replace(previous, descriptor=event.descriptor)
+            else:
+                devices[event.dev_eui] = DeviceState(event.descriptor)
+        elif event.type == EventType.REMOVED:
+            devices.pop(event.dev_eui, None)
+        elif (state := devices.get(event.dev_eui)) is None or not state.receive(event):
+            return
+        if active:
+            async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
+        if event.type != EventType.ADDED:
             return
         brand_id = event.descriptor.brand_id
         for domain, brands in discovery_brands.items():
@@ -98,6 +121,7 @@ async def async_register_connection(
         if active:
             active = False
             registry.connections.pop(entry_id)
+            async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
             change: ConnectionChange = (entry_id, None)
             notify(registry.connection_change_listeners, change)
         for unsubscribe in unsubscribes:
@@ -108,11 +132,7 @@ async def async_register_connection(
         unsubscribes.append(connection.on_disconnect(unregister))
         unsubscribes.append(
             await connection.async_subscribe(
-                brands=frozenset(
-                    (connection.stack_type, brand_id)
-                    for brands in discovery_brands.values()
-                    for brand_id in brands
-                ),
+                brands=None,
                 listener=handle_event,
             )
         )
@@ -126,7 +146,10 @@ async def async_register_connection(
         unregister()
         raise ConnectionUnavailable("Connection lost during registration")
     registry.connections[entry_id] = RegisteredConnection(connection, unregister)
+    registry.devices[entry_id] = devices
+    previous_devices = {}
     active = True
+    async_dispatcher_send(hass, SIGNAL_DEVICES_CHANGED)
     change: ConnectionChange = (entry_id, connection)
     notify(registry.connection_change_listeners, change)
     for domain in sorted(pending_discoveries):
