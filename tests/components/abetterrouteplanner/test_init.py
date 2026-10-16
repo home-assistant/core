@@ -25,6 +25,7 @@ from .conftest import MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2, MOCK_VEHICLE_MODEL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
@@ -117,6 +118,32 @@ async def test_setup_token_refresh_transient_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
+async def test_reload_restores_deleted_credential(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Deleting the built-in credential in the UI does not break a reload."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "application_credentials/delete",
+            "application_credentials_id": "abetterrouteplanner_ha_abrp_integration",
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_missing_implementation(
