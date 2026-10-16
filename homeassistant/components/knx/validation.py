@@ -171,6 +171,20 @@ ia_validator = probatio.Any(
 )
 
 
+def individual_address_validator(value: Any) -> IndividualAddress:
+    """Validate a KNX individual address and return it parsed.
+
+    Unlike `ia_validator`, this also rejects parts out of range like `16.0.1`.
+    """
+    value = ia_validator(value)
+    try:
+        return IndividualAddress(value)
+    except CouldNotParseAddress as exc:
+        raise probatio.Invalid(
+            f"'{value}' is not a valid KNX individual address: {exc.message}"
+        ) from exc
+
+
 def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
     """Validate that value is parsable as IPv4 address.
 
