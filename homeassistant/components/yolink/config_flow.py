@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from yolink.auth_mgr import YoLinkAuthMgr
 from yolink.client import YoLinkClient
 from yolink.endpoint import Endpoints
@@ -47,10 +47,10 @@ async def _async_fetch_home_info(auth_mgr: YoLinkAuthMgr) -> dict[str, Any]:
     return home_info.data
 
 
-UAC_SCHEMA = vol.Schema(
+UAC_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_UAID): selector.TextSelector(),
-        vol.Required(CONF_SECRET_KEY): selector.TextSelector(
+        probatio.Required(CONF_UAID): selector.TextSelector(),
+        probatio.Required(CONF_SECRET_KEY): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
