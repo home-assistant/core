@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -47,5 +48,9 @@ class Control4Entity(CoordinatorEntity[Any]):
             manufacturer=self._device_manufacturer,
             model=self._device_model,
             name=self._device_name,
-            via_device=(DOMAIN, self._controller_unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._controller_unique_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )

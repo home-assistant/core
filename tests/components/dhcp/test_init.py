@@ -1,7 +1,7 @@
 """Test the DHCP discovery integration."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import threading
 from typing import Any, cast
 from unittest.mock import patch
@@ -321,6 +321,47 @@ async def test_registered_devices(
         hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
         macaddress="50147903852c",
     )
+
+
+async def test_registered_devices_multiple_config_entries_same_mac(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test registered-device rediscovery covers every config entry sharing a MAC."""
+    integration_matchers = dhcp.async_index_integration_matchers(
+        [
+            {"domain": "mock-domain-a", "registered_devices": True},
+            {"domain": "mock-domain-b", "registered_devices": True},
+        ]
+    )
+
+    packet = Ether(RAW_DHCP_RENEWAL)
+
+    # Two config entries each own a device for the same MAC; both must be rediscovered.
+    config_entry_a = MockConfigEntry(domain="mock-domain-a", data={})
+    config_entry_a.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
+        name="name",
+    )
+    config_entry_b = MockConfigEntry(domain="mock-domain-b", data={})
+    config_entry_b.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_b.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
+        name="name",
+    )
+
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await async_handle_dhcp_packet(packet)
+
+    assert {call[1][0] for call in mock_init.mock_calls} == {
+        "mock-domain-a",
+        "mock-domain-b",
+    }
 
 
 async def test_dhcp_match_hostname(hass: HomeAssistant) -> None:
@@ -1252,7 +1293,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
             ],
         ),
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=65))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=65))
         await hass.async_block_till_done()
         device_tracker_watcher.async_stop()
         await hass.async_block_till_done()

@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from pysomfymylink import Shade, SomfyMyLink
+
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -14,7 +16,7 @@ from .const import CONF_REVERSED_TARGET_IDS, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-MYLINK_COVER_TYPE_TO_DEVICE_CLASS = {
+MYLINK_COVER_TYPE_TO_DEVICE_CLASS: dict[int | None, CoverDeviceClass] = {
     0: CoverDeviceClass.BLIND,
     1: CoverDeviceClass.SHUTTER,
 }
@@ -26,28 +28,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover and configure Somfy covers."""
-    reversed_target_ids = config_entry.options.get(CONF_REVERSED_TARGET_IDS, {})
+    reversed_target_ids: dict[str, bool] = config_entry.options.get(
+        CONF_REVERSED_TARGET_IDS, {}
+    )
 
-    mylink_status = config_entry.runtime_data.mylink_status
     somfy_mylink = config_entry.runtime_data.somfy_mylink
     cover_list = []
 
-    for cover in mylink_status["result"]:
-        cover_config = {
-            "target_id": cover["targetID"],
-            "name": cover["name"],
-            "device_class": MYLINK_COVER_TYPE_TO_DEVICE_CLASS.get(
-                cover.get("type"), CoverDeviceClass.WINDOW
-            ),
-            "reverse": reversed_target_ids.get(cover["targetID"], False),
-        }
-
-        cover_list.append(SomfyShade(somfy_mylink, **cover_config))
+    for shade in config_entry.runtime_data.shades:
+        cover_list.append(
+            SomfyShade(
+                somfy_mylink,
+                shade,
+                reverse=reversed_target_ids.get(shade.target_id, False),
+            )
+        )
 
         _LOGGER.debug(
             "Adding Somfy Cover: %s with targetID %s",
-            cover_config["name"],
-            cover_config["target_id"],
+            shade.name,
+            shade.target_id,
         )
 
     async_add_entities(cover_list)
@@ -63,23 +63,24 @@ class SomfyShade(RestoreEntity, CoverEntity):
 
     def __init__(
         self,
-        somfy_mylink,
-        target_id,
-        name="SomfyShade",
-        reverse=False,
-        device_class=CoverDeviceClass.WINDOW,
-    ):
+        somfy_mylink: SomfyMyLink,
+        shade: Shade,
+        *,
+        reverse: bool = False,
+    ) -> None:
         """Initialize the cover."""
         self.somfy_mylink = somfy_mylink
-        self._target_id = target_id
-        self._attr_unique_id = target_id
+        self._target_id = shade.target_id
+        self._attr_unique_id = shade.target_id
         self._reverse = reverse
         self._attr_is_closed = None
-        self._attr_device_class = device_class
+        self._attr_device_class = MYLINK_COVER_TYPE_TO_DEVICE_CLASS.get(
+            shade.cover_type, CoverDeviceClass.WINDOW
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._target_id)},
             manufacturer=MANUFACTURER,
-            name=name,
+            name=shade.name,
         )
 
     @override

@@ -191,20 +191,18 @@ async def test_migration_from_v1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -214,20 +212,18 @@ async def test_migration_from_v1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -448,10 +444,10 @@ async def test_migration_from_v1_disabled(
     assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
     assert stt_subentries[0].title == DEFAULT_STT_NAME
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
 
@@ -464,18 +460,15 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
@@ -577,14 +570,12 @@ async def test_migration_from_v1_with_multiple_keys(
         assert subentry.data == RECOMMENDED_STT_OPTIONS
         assert subentry.title == DEFAULT_STT_NAME
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {
-            entry.entry_id: {list(entry.subentries.values())[0].subentry_id}
-        }
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == list(entry.subentries.values())[0].subentry_id
 
 
 async def test_migration_from_v1_with_same_keys(
@@ -709,20 +700,18 @@ async def test_migration_from_v1_with_same_keys(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -732,36 +721,29 @@ async def test_migration_from_v1_with_same_keys(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
-    ("device_changes", "extra_subentries", "expected_device_subentries"),
+    "extra_subentries",
     [
         # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b0:
-        # Wrong device registry, no TTS subentry
-        (
-            {"add_config_entry_id": "mock_entry_id", "add_config_subentry_id": None},
-            [],
-            {"mock_entry_id": {"mock_id_1"}},
-        ),
-        # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b1:
-        # Wrong device registry, TTS subentry created
-        (
-            {"add_config_entry_id": "mock_entry_id", "add_config_subentry_id": None},
+        # no TTS subentry
+        pytest.param([], id="without_tts_subentry"),
+        # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b1
+        # or later: TTS subentry created
+        pytest.param(
             [
                 ConfigSubentryData(
                     data=RECOMMENDED_TTS_OPTIONS,
@@ -771,22 +753,7 @@ async def test_migration_from_v1_with_same_keys(
                     unique_id=None,
                 )
             ],
-            {"mock_entry_id": {"mock_id_1"}},
-        ),
-        # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b2
-        # or later: Correct device registry, TTS subentry created
-        (
-            {},
-            [
-                ConfigSubentryData(
-                    data=RECOMMENDED_TTS_OPTIONS,
-                    subentry_id="mock_id_3",
-                    subentry_type="tts",
-                    title=DEFAULT_TTS_NAME,
-                    unique_id=None,
-                )
-            ],
-            {"mock_entry_id": {"mock_id_1"}},
+            id="with_tts_subentry",
         ),
     ],
 )
@@ -794,15 +761,11 @@ async def test_migration_from_v2_1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    device_changes: dict[str, str],
     extra_subentries: list[ConfigSubentryData],
-    expected_device_subentries: dict[str, set[str | None]],
 ) -> None:
     """Test migration from version 2.1.
 
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1 and add AI Task and STT subentries:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
+    This tests we add TTS, AI Task and STT subentries:
     - Add TTS subentry (Added in Home Assistant Core 2025.7.0b1)
     - Add AI Task subentry (Added in version 2.3)
     - Add STT subentry (Added in version 2.3)
@@ -850,8 +813,6 @@ async def test_migration_from_v2_1(
         model="Generative AI",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    device_1 = device_registry.async_update_device(device_1.id, **device_changes)
-    assert device_1.config_entries_subentries == expected_device_subentries
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -939,20 +900,18 @@ async def test_migration_from_v2_1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -962,20 +921,18 @@ async def test_migration_from_v2_1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 async def test_devices(
@@ -1227,7 +1184,7 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = attr.evolve(
         conversation_device, disabled_by=device_disabled_by
     )
-    device_registry.devices[conversation_device.id] = conversation_device
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

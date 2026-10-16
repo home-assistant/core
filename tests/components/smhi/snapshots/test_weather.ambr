@@ -6,6 +6,19 @@
         dict({
           'cloud_coverage': 100,
           'condition': 'clear-night',
+          'datetime': '2026-04-03T00:00:00+00:00',
+          'humidity': 97,
+          'precipitation': 0.2,
+          'pressure': 1008.2,
+          'temperature': 5.3,
+          'templow': 5.3,
+          'wind_bearing': 138,
+          'wind_gust_speed': 4.32,
+          'wind_speed': 1.8,
+        }),
+        dict({
+          'cloud_coverage': 100,
+          'condition': 'clear-night',
           'datetime': '2026-04-03T01:00:00+00:00',
           'humidity': 97,
           'precipitation': 0.2,
@@ -811,30 +824,30 @@
   dict({
     'cloud_coverage': 100,
     'condition': 'cloudy',
-    'datetime': '2026-04-02T12:00:00+00:00',
-    'humidity': 79,
+    'datetime': '2026-04-02T11:00:00+00:00',
+    'humidity': 80,
     'precipitation': 0.0,
-    'pressure': 1011.3,
+    'pressure': 1011.5,
     'temperature': 10.4,
     'templow': 10.4,
-    'wind_bearing': 245,
-    'wind_gust_speed': 24.12,
-    'wind_speed': 11.16,
+    'wind_bearing': 255,
+    'wind_gust_speed': 24.48,
+    'wind_speed': 12.24,
   })
 # ---
 # name: test_forecast_services[load_platforms0].3
   dict({
     'cloud_coverage': 100,
     'condition': 'cloudy',
-    'datetime': '2026-04-02T18:00:00+00:00',
-    'humidity': 98,
+    'datetime': '2026-04-02T17:00:00+00:00',
+    'humidity': 94,
     'precipitation': 0.0,
     'pressure': 1009.7,
-    'temperature': 7.2,
-    'templow': 7.2,
-    'wind_bearing': 180,
-    'wind_gust_speed': 6.48,
-    'wind_speed': 3.24,
+    'temperature': 8.3,
+    'templow': 8.3,
+    'wind_bearing': 223,
+    'wind_gust_speed': 8.28,
+    'wind_speed': 3.6,
   })
 # ---
 # name: test_setup_hass[load_platforms0]

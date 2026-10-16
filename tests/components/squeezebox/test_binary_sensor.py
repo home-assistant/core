@@ -8,11 +8,18 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
+from homeassistant.components.squeezebox.const import (
+    DOMAIN,
+    PLAYER_SENSOR_ALARM_ACTIVE,
+    PLAYER_SENSOR_ALARM_SNOOZE,
+    PLAYER_SENSOR_ALARM_UPCOMING,
+    PLAYER_UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import FAKE_QUERY_RESPONSE
+from .conftest import FAKE_QUERY_RESPONSE, TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -67,24 +74,35 @@ async def mock_player(
 
 async def test_player_alarm_sensors_device_class(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_player: MagicMock,
 ) -> None:
     """Test player alarm binary sensors have correct device class."""
 
+    upcoming_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_ALARM_UPCOMING}"
+    )
+    active_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_ALARM_ACTIVE}"
+    )
+    snooze_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_ALARM_SNOOZE}"
+    )
+
     # Test alarm upcoming sensor device class
-    upcoming_state = hass.states.get("binary_sensor.alarm_upcoming")
+    upcoming_state = hass.states.get(upcoming_id)
     assert upcoming_state is not None
     assert upcoming_state.attributes.get("device_class") is None
 
     # Test alarm active sensor device class
-    active_state = hass.states.get("binary_sensor.alarm_active")
+    active_state = hass.states.get(active_id)
     assert active_state is not None
     assert (
         active_state.attributes.get("device_class") == BinarySensorDeviceClass.RUNNING
     )
 
     # Test alarm snooze sensor device class
-    snooze_state = hass.states.get("binary_sensor.alarm_snoozed")
+    snooze_state = hass.states.get(snooze_id)
     assert snooze_state is not None
     assert (
         snooze_state.attributes.get("device_class") == BinarySensorDeviceClass.RUNNING
@@ -93,6 +111,7 @@ async def test_player_alarm_sensors_device_class(
 
 async def test_player_alarm_sensors_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_player: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -100,18 +119,28 @@ async def test_player_alarm_sensors_state(
 
     player = mock_player
 
+    upcoming_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_ALARM_UPCOMING}"
+    )
+    active_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_ALARM_ACTIVE}"
+    )
+    snooze_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_ALARM_SNOOZE}"
+    )
+
     # Test alarm upcoming sensor
-    upcoming_state = hass.states.get("binary_sensor.alarm_upcoming")
+    upcoming_state = hass.states.get(upcoming_id)
     assert upcoming_state is not None
     assert upcoming_state.state == STATE_ON
 
     # Test alarm active sensor
-    active_state = hass.states.get("binary_sensor.alarm_active")
+    active_state = hass.states.get(active_id)
     assert active_state is not None
     assert active_state.state == STATE_OFF
 
     # Test alarm snooze sensor
-    snooze_state = hass.states.get("binary_sensor.alarm_snoozed")
+    snooze_state = hass.states.get(snooze_id)
     assert snooze_state is not None
     assert snooze_state.state == STATE_OFF
 
@@ -123,10 +152,10 @@ async def test_player_alarm_sensors_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    upcoming_state = hass.states.get("binary_sensor.alarm_upcoming")
+    upcoming_state = hass.states.get(upcoming_id)
     assert upcoming_state is not None
     assert upcoming_state.state == STATE_OFF
 
-    active_state = hass.states.get("binary_sensor.alarm_active")
+    active_state = hass.states.get(active_id)
     assert active_state is not None
     assert active_state.state == STATE_ON

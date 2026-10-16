@@ -45,7 +45,7 @@ async def test_setup_and_unload_entry(
     ],
 )
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_edifier_code_to_command")
-async def test_migrate_entry_v1_to_v2(
+async def test_migrate_entry_from_v1(
     hass: HomeAssistant,
     old_model: str,
     old_command_set: str,
@@ -70,7 +70,47 @@ async def test_migrate_entry_v1_to_v2(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.data[CONF_MODEL] == expected_model
+    assert entry.data[CONF_COMMAND_SET] == expected_command_set
+    assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"
+
+
+@pytest.mark.parametrize(
+    ("model", "old_command_set", "expected_command_set"),
+    [
+        pytest.param("R2000DB", "r1280db", "r2000db", id="r2000db-split"),
+        pytest.param("R2730DB", "r1280db", "r2730db", id="r2730db-split"),
+        pytest.param("RC10D1", "r1280db", "r2730db", id="rc10d1-split"),
+        pytest.param("R1280DB", "r1280db", "r1280db", id="unchanged-model"),
+    ],
+)
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_edifier_code_to_command")
+async def test_migrate_entry_from_v2(
+    hass: HomeAssistant,
+    model: str,
+    old_command_set: str,
+    expected_command_set: str,
+) -> None:
+    """Test v2 config entries are migrated to the split R2000DB command set."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"Edifier {model} via Test IR emitter",
+        data={
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_MODEL: model,
+            CONF_COMMAND_SET: old_command_set,
+        },
+        unique_id=f"{old_command_set}_{EMITTER_ENTITY_ID}",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 3
+    assert entry.data[CONF_MODEL] == model
     assert entry.data[CONF_COMMAND_SET] == expected_command_set
     assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"

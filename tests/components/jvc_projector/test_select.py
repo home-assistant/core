@@ -4,15 +4,24 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from jvcprojector import command as cmd
+from jvcprojector import JvcProjectorTimeoutError, command as cmd
+import pytest
 
-from homeassistant.components.jvc_projector.coordinator import INTERVAL_FAST
+from homeassistant.components.jvc_projector.coordinator import (
+    INTERVAL_FAST,
+    INTERVAL_SLOW,
+)
 from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_OPTION
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_OPTION,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -21,6 +30,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 INPUT_ENTITY_ID = "select.jvc_projector_input"
 HDR_PROCESSING_ENTITY_ID = "select.jvc_projector_hdr_processing"
 HDR_SENSOR_ENTITY_ID = "sensor.jvc_projector_hdr"
+MOTION_ENHANCE_ENTITY_ID = "select.jvc_projector_motion_enhance"
 
 
 async def test_input_select(
@@ -45,6 +55,32 @@ async def test_input_select(
         blocking=True,
     )
     mock_device.set.assert_called_once_with(cmd.Input, cmd.Input.HDMI2)
+
+
+@pytest.mark.parametrize(
+    "mock_device",
+    [{"fixture_override": {cmd.MotionEnhance: JvcProjectorTimeoutError}}],
+    indirect=True,
+)
+async def test_motion_enhance_timeout_is_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a motion enhance timeout does not make the select unavailable."""
+    entity_registry.async_update_entity(MOTION_ENHANCE_ENTITY_ID, disabled_by=None)
+
+    await hass.config_entries.async_reload(mock_integration.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(INTERVAL_SLOW)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(MOTION_ENHANCE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_enable_hdr_processing_select(

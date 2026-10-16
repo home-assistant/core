@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+from roborock.data import RoborockStateCode
+from roborock.device_features import RoborockDockFeatures
 from roborock.devices.traits.b01 import Q10PropertiesApi
 from roborock.devices.traits.b01.q10 import (
     ButtonLightTrait,
@@ -16,6 +18,7 @@ from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
@@ -36,8 +39,10 @@ from .coordinator import (
 from .entity import (
     RoborockCoordinatedEntityA01,
     RoborockCoordinatedEntityB01Q10,
+    RoborockCoordinatedEntityV1,
     RoborockEntityV1,
 )
+from .models import DeviceState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +86,57 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         translation_key="off_peak_switch",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+    ),
+]
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockDockSwitchDescription(SwitchEntityDescription):
+    """Class to describe a Roborock dock action switch entity."""
+
+    turn_on_command: RoborockCommand
+    turn_on_params: dict[str, Any] | None = None
+    turn_off_command: RoborockCommand
+    turn_off_params: dict[str, Any] | None = None
+
+    value_fn: Callable[[DeviceState], bool | None]
+    is_supported: Callable[[RoborockDockFeatures], bool]
+
+
+WASHING_STATES = {
+    RoborockStateCode.washing_the_mop,
+    RoborockStateCode.washing_the_mop_2,
+}
+
+
+DOCK_SWITCH_DESCRIPTIONS: list[RoborockDockSwitchDescription] = [
+    RoborockDockSwitchDescription(
+        key="dust_emptying",
+        translation_key="dust_emptying",
+        turn_on_command=RoborockCommand.APP_START_COLLECT_DUST,
+        turn_off_command=RoborockCommand.APP_STOP_COLLECT_DUST,
+        value_fn=lambda data: data.status.state is RoborockStateCode.emptying_the_bin,
+        is_supported=lambda dock_features: dock_features.is_collectable,
+    ),
+    RoborockDockSwitchDescription(
+        key="mop_washing",
+        translation_key="mop_washing",
+        turn_on_command=RoborockCommand.APP_START_WASH,
+        turn_off_command=RoborockCommand.APP_STOP_WASH,
+        value_fn=lambda data: data.status.state in WASHING_STATES,
+        is_supported=lambda dock_features: dock_features.is_washable,
+    ),
+    RoborockDockSwitchDescription(
+        key="mop_drying",
+        translation_key="mop_drying",
+        turn_on_command=RoborockCommand.APP_SET_DRYER_STATUS,
+        turn_on_params={"status": 1},
+        turn_off_command=RoborockCommand.APP_SET_DRYER_STATUS,
+        turn_off_params={"status": 0},
+        value_fn=lambda data: (
+            None if data.status.dry_status is None else bool(data.status.dry_status)
+        ),
+        is_supported=lambda dock_features: dock_features.is_dryable,
     ),
 ]
 
@@ -159,6 +215,12 @@ async def async_setup_entry(
                 for description in SWITCH_DESCRIPTIONS
                 if (v1_trait := description.trait(coordinator.properties_api))
                 is not None
+            )
+            dock_features = coordinator.properties_api.device_features.dock_features
+            entities.extend(
+                RoborockDockSwitch(coordinator, description)
+                for description in DOCK_SWITCH_DESCRIPTIONS
+                if description.is_supported(dock_features)
             )
         elif isinstance(coordinator, RoborockDataUpdateCoordinatorA01):
             entities.extend(
@@ -253,6 +315,53 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._trait.is_on
+
+
+class RoborockDockSwitch(RoborockCoordinatedEntityV1, SwitchEntity):
+    """A class to start and stop a dock action that runs for a while.
+
+    The dock ends the action on its own, so the switch turns itself off once the
+    device reports it is no longer running.
+    """
+
+    entity_description: RoborockDockSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockDockSwitchDescription,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+            is_dock_entity=True,
+        )
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Start the dock action."""
+        await self.send(
+            self.entity_description.turn_on_command,
+            self.entity_description.turn_on_params,
+        )
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Stop the dock action."""
+        await self.send(
+            self.entity_description.turn_off_command,
+            self.entity_description.turn_off_params,
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return True if the dock action is running."""
+        if (data := self.coordinator.data) is None:
+            return None
+        return self.entity_description.value_fn(data)
 
 
 class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):

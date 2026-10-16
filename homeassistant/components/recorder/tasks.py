@@ -61,11 +61,18 @@ class ClearStatisticsTask(RecorderTask):
 
     on_done: Callable[[], None] | None
     statistic_ids: list[str]
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        statistics.clear_statistics(instance, self.statistic_ids)
+        if self.start_time is not None and self.end_time is not None:
+            statistics.clear_statistics_range(
+                instance, self.statistic_ids, self.start_time, self.end_time
+            )
+        else:
+            statistics.clear_statistics(instance, self.statistic_ids)
         if self.on_done:
             self.on_done()
 
@@ -76,9 +83,9 @@ class UpdateStatisticsMetadataTask(RecorderTask):
 
     on_done: Callable[[], None] | None
     statistic_id: str
-    new_statistic_id: str | None | UndefinedType
-    new_unit_class: str | None | UndefinedType
-    new_unit_of_measurement: str | None | UndefinedType
+    new_statistic_id: str | UndefinedType | None
+    new_unit_class: str | UndefinedType | None
+    new_unit_of_measurement: str | UndefinedType | None
 
     @override
     def run(self, instance: Recorder) -> None:

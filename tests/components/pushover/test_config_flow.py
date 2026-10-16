@@ -102,13 +102,25 @@ async def test_flow_invalid_user_key(
 
     mock_pushover.side_effect = BadAPIRequestError("400: user key is invalid")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_USER_KEY: "invalid_user_key"}
+
+    mock_pushover.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_invalid_api_key(
@@ -118,13 +130,25 @@ async def test_flow_invalid_api_key(
 
     mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+    mock_pushover.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> None:
@@ -132,13 +156,25 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
 
     mock_pushover.side_effect = BadAPIRequestError
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_pushover.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
@@ -190,6 +226,17 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
     assert result2["errors"] == {
         CONF_API_KEY: "invalid_api_key",
     }
+
+    mock_pushover.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "NEWAPIKEY",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
 
 
 async def test_reauth_with_existing_config(hass: HomeAssistant) -> None:

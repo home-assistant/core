@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_get_live_context_schema
   dict({
+    'additionalProperties': False,
     'properties': dict({
       'area': dict({
         'description': 'Filter entities by area name or alias (case-insensitive).',
@@ -25,8 +26,6 @@
         'type': 'string',
       }),
     }),
-    'required': list([
-    ]),
     'type': 'object',
   })
 # ---

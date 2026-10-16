@@ -248,10 +248,19 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
+@pytest.mark.parametrize(
+    "ble_name",
+    [
+        pytest.param("GS3_GS012345", id="gs3"),
+        pytest.param("LINEA_GS012345", id="linea"),
+        pytest.param("LINEAR_GS012345", id="linear"),
+    ],
+)
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    ble_name: str,
 ) -> None:
     """Testing reconfgure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -263,6 +272,7 @@ async def test_reconfigure_flow(
 
     result = await __do_successful_user_step(hass, result, mock_cloud_client)
     service_info = get_bluetooth_service_info(ModelName.GS3_MP, "GS012345")
+    service_info.name = ble_name
 
     with (
         patch(
@@ -382,6 +392,7 @@ async def test_bluetooth_discovery(
         CONF_TOKEN: "dummyToken",
         CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
+    assert result["result"].unique_id == "GS012345"
 
 
 async def test_bluetooth_discovery_already_configured(
@@ -478,6 +489,7 @@ async def test_dhcp_discovery(
         CONF_TOKEN: None,
         CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
+    assert result["result"].unique_id == "GS012345"
 
 
 async def test_dhcp_discovery_abort_on_hostname_changed(

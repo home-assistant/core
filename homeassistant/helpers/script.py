@@ -12,8 +12,8 @@ import logging
 from typing import Any, Literal, TypedDict, cast, overload, override
 
 import async_interrupt
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import scene
@@ -134,6 +134,17 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 
 ATTR_CUR = "current"
 ATTR_MAX = "max"
+
+# Configuration errors which should cause the script to stop also when
+# continue_on_error is True.
+CONFIGURATION_ERRORS = (
+    probatio.Invalid,
+    exceptions.TemplateError,
+    exceptions.ServiceNotFound,
+    exceptions.InvalidEntityFormatError,
+    exceptions.NoEntitySpecifiedError,
+    exceptions.ConditionError,
+)
 
 DATA_SCRIPTS: HassKey[dict[int, ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
@@ -285,21 +296,23 @@ class trace_action:
 
 
 def make_script_schema(
-    schema: Mapping[Any, Any], default_script_mode: str, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+    schema: Mapping[Any, Any],
+    default_script_mode: str,
+    extra: int = probatio.PREVENT_EXTRA,
+) -> probatio.Schema:
     """Make a schema for a component that uses the script helper."""
-    return vol.Schema(
+    return probatio.Schema(
         {
             **schema,
-            vol.Optional(CONF_MODE, default=default_script_mode): vol.In(
+            probatio.Optional(CONF_MODE, default=default_script_mode): probatio.In(
                 SCRIPT_MODE_CHOICES
             ),
-            vol.Optional(CONF_MAX, default=DEFAULT_MAX): vol.All(
-                vol.Coerce(int), vol.Range(min=2)
+            probatio.Optional(CONF_MAX, default=DEFAULT_MAX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=2)
             ),
-            vol.Optional(CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED): vol.All(
-                vol.Upper, vol.In(_MAX_EXCEEDED_CHOICES)
-            ),
+            probatio.Optional(
+                CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED
+            ): probatio.All(probatio.Upper, probatio.In(_MAX_EXCEEDED_CHOICES)),
         },
         extra=extra,
     )
@@ -427,7 +440,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | None | UndefinedType = UNDEFINED,
+        conversation_response: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -457,7 +470,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | None | UndefinedType = UNDEFINED
+        self._conversation_response: str | UndefinedType | None = UNDEFINED
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -615,19 +628,9 @@ class _ScriptRun:
         if isinstance(exception, _StopScript):
             raise exception
 
-        # These are incorrect scripts, and not runtime errors that need to
-        # be handled and thus cannot be stopped by `continue_on_error`.
-        if isinstance(
-            exception,
-            (
-                vol.Invalid,
-                exceptions.TemplateError,
-                exceptions.ServiceNotFound,
-                exceptions.InvalidEntityFormatError,
-                exceptions.NoEntitySpecifiedError,
-                exceptions.ConditionError,
-            ),
-        ):
+        # These are configuration errors which should cause the script to
+        # stop also when `continue_on_error` is True.
+        if isinstance(exception, CONFIGURATION_ERRORS):
             raise exception
 
         # Only Home Assistant errors can be ignored.
@@ -643,7 +646,7 @@ class _ScriptRun:
         error = str(exception)
         level = logging.ERROR
 
-        if isinstance(exception, vol.Invalid):
+        if isinstance(exception, probatio.Invalid):
             error_desc = "Invalid data"
 
         elif isinstance(exception, exceptions.TemplateError):
@@ -1063,12 +1066,12 @@ class _ScriptRun:
                 params[CONF_DOMAIN], params[CONF_SERVICE]
             )
             if supports_response == SupportsResponse.ONLY and not return_response:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
                     f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
                 )
             if supports_response == SupportsResponse.NONE and return_response:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
                     f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}'"
                     " which does not support response data."
@@ -1078,17 +1081,24 @@ class _ScriptRun:
             params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
         ) or params[CONF_DOMAIN] in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
-        response_data = await self._async_run_long_action(
-            self._hass.async_create_task_internal(
-                self._hass.services.async_call(
-                    **params,
-                    blocking=True,
-                    context=self._context,
-                    return_response=return_response,
-                ),
-                eager_start=True,
+        try:
+            response_data = await self._async_run_long_action(
+                self._hass.async_create_task_internal(
+                    self._hass.services.async_call(
+                        **params,
+                        blocking=True,
+                        context=self._context,
+                        return_response=return_response,
+                    ),
+                    eager_start=True,
+                )
             )
-        )
+        except (*CONFIGURATION_ERRORS, exceptions.HomeAssistantError):
+            raise
+        except Exception as ex:
+            if not self._action.get(CONF_CONTINUE_ON_ERROR, False):
+                raise
+            raise exceptions.HomeAssistantError(ex) from ex
         if response_variable:
             self._variables[response_variable] = response_data
 
@@ -1183,10 +1193,10 @@ class _ScriptRun:
 
     def _get_pos_time_period_template(self, key: str) -> timedelta:
         try:
-            return cv.positive_time_period(  # type: ignore[no-any-return]
+            return cv.positive_time_period(
                 template.render_complex(self._action[key], self._variables)
             )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
+        except (exceptions.TemplateError, probatio.Invalid) as ex:
             self._log(
                 "Error rendering %s %s template: %s",
                 self._script.name,
@@ -1494,7 +1504,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | None | UndefinedType
+    conversation_response: str | UndefinedType | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 

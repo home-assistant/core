@@ -368,10 +368,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     (DOMAIN, self.data.info.ha_id), self._config_entry.entry_id
                 )
                 if device:
-                    self.device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self._config_entry.entry_id,
-                    )
+                    self.device_registry.async_remove_device(device.id)
                 for (
                     listener,
                     context,

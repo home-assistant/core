@@ -5,8 +5,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, final, override
 
-from universal_silabs_flasher.flasher import YellowFlasher
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.hassio import (
     SupervisorError,
@@ -24,6 +23,8 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
+    async_get_flasher_cls,
     probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
@@ -49,11 +50,11 @@ from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_HW_SETTINGS_SCHEMA = vol.Schema(
+STEP_HW_SETTINGS_SCHEMA = probatio.Schema(
     {
-        vol.Required("disk_led"): selector.BooleanSelector(),
-        vol.Required("heartbeat_led"): selector.BooleanSelector(),
-        vol.Required("power_led"): selector.BooleanSelector(),
+        probatio.Required("disk_led"): selector.BooleanSelector(),
+        probatio.Required("heartbeat_led"): selector.BooleanSelector(),
+        probatio.Required("power_led"): selector.BooleanSelector(),
     }
 )
 
@@ -81,7 +82,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
     ZIGBEE_BAUDRATE = 115200
-    _flasher_cls = YellowFlasher
+    _flasher_type = FlasherType.YELLOW
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -148,7 +149,7 @@ class HomeAssistantYellowConfigFlow(
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
         self._probed_firmware_info = await probe_silabs_firmware_info(
             self._device,
-            flasher_cls=self._flasher_cls,
+            flasher_cls=await async_get_flasher_cls(self.hass, self._flasher_type),
         )
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
@@ -338,9 +339,9 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
 
     @property
     @override
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
-        return YellowFlasher  # type: ignore[no-any-return]
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
+        return FlasherType.YELLOW
 
     @override
     async def async_step_flashing_complete(

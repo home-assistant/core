@@ -36,7 +36,9 @@ class FreeboxHomeEntity(Entity):
             self._attr_unique_id += "-" + sub_node["name"].strip()
 
         self._available = True
-        self._firmware = node["props"].get("FwVersion")
+        # The Freebox reports the firmware version of home nodes as a number
+        firmware = node["props"].get("FwVersion")
+        self._firmware = str(firmware) if firmware is not None else None
         self._manufacturer = "Freebox SAS"
 
         self._model = CATEGORY_TO_MODEL.get(node["category"])
@@ -54,7 +56,11 @@ class FreeboxHomeEntity(Entity):
             model=self._model,
             name=node["label"].strip(),
             sw_version=self._firmware,
-            via_device=(DOMAIN, router.mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                router.hass,
+                (DOMAIN, router.mac),
+                config_entry_id=router.config_entry.entry_id,
+            ),
         )
 
     async def async_update_signal(self) -> None:

@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import (
+    climate,
     conversation,
     cover,
     light,
@@ -14,6 +15,7 @@ from homeassistant.components import (
     vacuum,
     valve,
 )
+from homeassistant.components.climate import intent as climate_intent
 from homeassistant.components.conversation import DOMAIN
 from homeassistant.components.cover import intent as cover_intent
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -25,6 +27,8 @@ from homeassistant.components.vacuum import intent as vaccum_intent
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
+    STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -445,6 +449,8 @@ async def test_todo_add_item_fr(
 ) -> None:
     """Test that wildcard matches prioritize results with more literal text matched."""
     assert await async_setup_component(hass, todo.DOMAIN, {})
+    # The todo intent handlers are registered by a background task
+    await hass.async_block_till_done()
     hass.states.async_set("todo.liste_des_courses", 0, {})
 
     with (
@@ -461,6 +467,79 @@ async def test_todo_add_item_fr(
         assert mock_handle.call_args.args
         intent_obj = mock_handle.call_args.args[0]
         assert intent_obj.slots.get("item", {}).get("value", "").strip() == "farine"
+
+
+async def test_climate_turn_on_off(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test turning a climate device on and off."""
+    entity_id = f"{climate.DOMAIN}.thermostat"
+    attributes = {
+        ATTR_SUPPORTED_FEATURES: climate.ClimateEntityFeature.TURN_ON
+        | climate.ClimateEntityFeature.TURN_OFF
+    }
+
+    hass.states.async_set(entity_id, STATE_OFF, attributes=attributes)
+    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+
+    # turn on
+    on_calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_TURN_ON)
+    result = await conversation.async_converse(
+        hass, "turn on the thermostat", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(on_calls) == 1
+    call = on_calls[0]
+    assert call.data == {"entity_id": [entity_id]}
+
+    hass.states.async_set(entity_id, STATE_ON, attributes=attributes)
+
+    # turn off
+    off_calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_TURN_OFF)
+    result = await conversation.async_converse(
+        hass, "turn off the thermostat", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(off_calls) == 1
+    call = off_calls[0]
+    assert call.data == {"entity_id": [entity_id]}
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_climate_set_fan_mode(hass: HomeAssistant) -> None:
+    """Test setting the fan mode of a climate device by name."""
+    await climate_intent.async_setup_intents(hass)
+
+    entity_id = f"{climate.DOMAIN}.thermostat"
+    hass.states.async_set(
+        entity_id,
+        climate.HVACMode.COOL,
+        attributes={
+            ATTR_SUPPORTED_FEATURES: climate.ClimateEntityFeature.FAN_MODE,
+            climate.ATTR_FAN_MODE: "low",
+            climate.ATTR_FAN_MODES: ["auto", "low", "high"],
+        },
+    )
+    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
+    result = await conversation.async_converse(
+        hass, "set thermostat fan to high", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.data == {"entity_id": entity_id, "fan_mode": "high"}
 
 
 @pytest.mark.freeze_time(

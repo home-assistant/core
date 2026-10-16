@@ -39,7 +39,7 @@ async def test_time_format_select_initial_state(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     with patch(
@@ -80,7 +80,7 @@ async def test_set_time_format(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_datetime = AsyncMock(
@@ -129,8 +129,8 @@ async def test_set_time_format(
 @pytest.mark.parametrize(
     ("device_state", "option", "expected_state"),
     [
-        (NightLightState.OFF.value, "level_1", NightLightState.LEVEL_1),
-        (NightLightState.LEVEL_1.value, "level_2", NightLightState.LEVEL_2),
+        (NightLightState.OFF.value, "bright", NightLightState.LEVEL_1),
+        (NightLightState.LEVEL_1.value, "soft", NightLightState.LEVEL_2),
         (NightLightState.LEVEL_2.value, "off", NightLightState.OFF),
     ],
 )

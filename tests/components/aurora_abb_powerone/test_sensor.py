@@ -278,6 +278,7 @@ async def test_sensor_unknown_error(
         await hass.async_block_till_done()
 
     with (
+        patch("homeassistant.components.aurora_abb_powerone.coordinator.sleep"),
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
         patch(
             "aurorapy.client.AuroraSerialClient.measure",

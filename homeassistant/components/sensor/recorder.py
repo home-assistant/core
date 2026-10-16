@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import itertools
 import logging
 import math
@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfIrradiance,
     UnitOfSoundPressure,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -50,7 +51,6 @@ from .const import (
     SensorEntityCapabilityAttribute,
     SensorEntityStateAttribute,
     SensorStateClass,
-    UnitOfVolumeFlowRate,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
 
 
 def _time_weighted_arithmetic_mean(
-    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+    fstates: list[tuple[float, State]], start: dt.datetime, end: dt.datetime
 ) -> float:
     """Calculate a time weighted average.
 
@@ -136,7 +136,7 @@ def _time_weighted_arithmetic_mean(
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
-    old_start_time: datetime.datetime | None = None
+    old_start_time: dt.datetime | None = None
     accumulated = 0.0
 
     for fstate, state in fstates:
@@ -165,7 +165,7 @@ def _time_weighted_arithmetic_mean(
 
 
 def _time_weighted_circular_mean(
-    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+    fstates: list[tuple[float, State]], start: dt.datetime, end: dt.datetime
 ) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
@@ -174,7 +174,7 @@ def _time_weighted_circular_mean(
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
-    old_start_time: datetime.datetime | None = None
+    old_start_time: dt.datetime | None = None
     values: list[tuple[float, float]] = []
 
     for fstate, state in fstates:
@@ -358,8 +358,8 @@ def _normalize_states(
         return unit_class, state_unit, fstates
 
     valid_fstates: list[tuple[float, State]] = []
-    convert: Callable[[float], float] | None = None
-    last_unit: str | None | UndefinedType = UNDEFINED
+    convert: Callable[[float | None], float | None] | None = None
+    last_unit: str | UndefinedType | None = UNDEFINED
     valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:
@@ -391,11 +391,17 @@ def _normalize_states(
             if state_unit == statistics_unit:
                 convert = None
             else:
-                convert = converter.converter_factory(state_unit, statistics_unit)
+                convert = converter.converter_factory_allow_none(
+                    state_unit, statistics_unit
+                )
             last_unit = state_unit
 
         if convert is not None:
-            fstate = convert(fstate)
+            if (converted_fstate := convert(fstate)) is None:
+                # Exclude states which can't be converted, e.g. converting 0
+                # between kWh/100km and km/kWh would divide by zero
+                continue
+            fstate = converted_fstate
 
         valid_fstates.append((fstate, state))
 
@@ -529,8 +535,8 @@ def _timestamp_to_isoformat_or_none(timestamp: float | None) -> str | None:
 def compile_statistics(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
-    start: datetime.datetime,
-    end: datetime.datetime,
+    start: dt.datetime,
+    end: dt.datetime,
     custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
@@ -549,7 +555,7 @@ def compile_statistics(  # noqa: C901
         history_list = history.get_full_significant_states_with_session(
             hass,
             session,
-            start - datetime.timedelta.resolution,
+            start - dt.timedelta.resolution,
             end,
             entity_ids=entities_full_history,
             significant_changes_only=False,
@@ -563,7 +569,7 @@ def compile_statistics(  # noqa: C901
         _history_list = history.get_full_significant_states_with_session(
             hass,
             session,
-            start - datetime.timedelta.resolution,
+            start - dt.timedelta.resolution,
             end,
             entity_ids=entities_significant_history,
         )
