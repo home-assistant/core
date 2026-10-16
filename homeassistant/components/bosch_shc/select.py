@@ -174,7 +174,8 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[SHCSelect] = []
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=siren,
@@ -194,7 +195,7 @@ async def async_setup_entry(
             continue
         motion_detectors.append(detector)
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=detector,
@@ -205,7 +206,7 @@ async def async_setup_entry(
         for detector in motion_detectors
     )
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=contact,
@@ -217,7 +218,7 @@ async def async_setup_entry(
         if isinstance(contact, SHCShutterContact2Plus)
     )
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=smoke_detector,
@@ -237,7 +238,7 @@ async def async_setup_entry(
         )
         if isinstance(thermostat, (SHCThermostatGen2, SHCRoomThermostat2))
     ]
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=thermostat,
@@ -248,7 +249,7 @@ async def async_setup_entry(
         for thermostat in thermostats
         if thermostat.supports_display_direction
     )
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=thermostat,
@@ -259,6 +260,8 @@ async def async_setup_entry(
         for thermostat in thermostats
         if thermostat.supports_displayed_temperature
     )
+
+    async_add_entities(entities)
 
 
 class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
