@@ -94,9 +94,12 @@ CONFIG_SCHEMA = probatio.Schema(
 
 
 async def create_compensation_data(
-    hass: HomeAssistant, compensation: str, conf: ConfigType, should_raise: bool = False
+    hass: HomeAssistant, compensation: str, conf: ConfigType
 ) -> None:
-    """Create compensation data."""
+    """Create compensation data.
+
+    Raises FloatingPointError if no polynomial can be fitted to the data points.
+    """
     _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
 
     degree = conf[CONF_DEGREE]
@@ -107,44 +110,23 @@ async def create_compensation_data(
     # get x values and y values from the x,y point pairs
     x_values, y_values = zip(*initial_coefficients, strict=False)
 
-    # try to get valid coefficients for a polynomial
-    coefficients = None
     with np.errstate(all="raise"):
-        try:
-            coefficients = np.polyfit(x_values, y_values, degree)
-        except FloatingPointError as error:
-            _LOGGER.error(
-                "Setup of %s encountered an error, %s",
-                compensation,
-                error,
-            )
-            if should_raise:
-                raise ConfigEntryError(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_error",
-                    translation_placeholders={
-                        "title": conf[CONF_NAME],
-                        "error": str(error),
-                    },
-                ) from error
+        coefficients = np.polyfit(x_values, y_values, degree)
 
-    if coefficients is not None:
-        data = {
-            k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
-        }
-        data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
+    data = {k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]}
+    data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
 
-        if data[CONF_LOWER_LIMIT]:
-            data[CONF_MINIMUM] = sorted_coefficients[0]
-        else:
-            data[CONF_MINIMUM] = None
+    if data[CONF_LOWER_LIMIT]:
+        data[CONF_MINIMUM] = sorted_coefficients[0]
+    else:
+        data[CONF_MINIMUM] = None
 
-        if data[CONF_UPPER_LIMIT]:
-            data[CONF_MAXIMUM] = sorted_coefficients[-1]
-        else:
-            data[CONF_MAXIMUM] = None
+    if data[CONF_UPPER_LIMIT]:
+        data[CONF_MAXIMUM] = sorted_coefficients[-1]
+    else:
+        data[CONF_MAXIMUM] = None
 
-        hass.data[DATA_COMPENSATION][compensation] = data
+    hass.data[DATA_COMPENSATION][compensation] = data
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -157,7 +139,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     for compensation, conf in config[DOMAIN].items():
-        await create_compensation_data(hass, compensation, conf)
+        try:
+            await create_compensation_data(hass, compensation, conf)
+        except FloatingPointError as error:
+            _LOGGER.error(
+                "Setup of %s encountered an error, %s",
+                compensation,
+                error,
+            )
+            continue
+
         hass.async_create_task(
             async_load_platform(
                 hass,
@@ -184,7 +175,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config[CONF_DEGREE] = config[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
     config[CONF_DATAPOINTS] = new_data_points
 
-    await create_compensation_data(hass, entry.entry_id, config, True)
+    try:
+        await create_compensation_data(hass, entry.entry_id, config)
+    except FloatingPointError as error:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_error",
+            translation_placeholders={
+                "title": config[CONF_NAME],
+                "error": str(error),
+            },
+        ) from error
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
