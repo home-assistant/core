@@ -110,86 +110,6 @@
       "g_o_e_total": {
         "name": "Total grid export energy"
       },
-      "pv_1_i_c": {
-        "name": "PV 1 input current"
-      },
-      "pv_1_i_p": {
-        "name": "PV 1 input power"
-      },
-      "pv_1_i_type": {
-        "name": "PV 1 input type",
-        "state": {
-          "ac_pv": "AC PV",
-          "adapter": "Adapter",
-          "car": "Car",
-          "dc_pv": "DC PV",
-          "other": "Other",
-          "reserve": "Reserved"
-        }
-      },
-      "pv_1_i_v": {
-        "name": "PV 1 input voltage"
-      },
-      "pv_2_i_c": {
-        "name": "PV 2 input current"
-      },
-      "pv_2_i_p": {
-        "name": "PV 2 input power"
-      },
-      "pv_2_i_type": {
-        "name": "PV 2 input type",
-        "state": {
-          "ac_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::ac_pv%]",
-          "adapter": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::adapter%]",
-          "car": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::car%]",
-          "dc_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::dc_pv%]",
-          "other": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::other%]",
-          "reserve": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::reserve%]"
-        }
-      },
-      "pv_2_i_v": {
-        "name": "PV 2 input voltage"
-      },
-      "pv_3_i_c": {
-        "name": "PV 3 input current"
-      },
-      "pv_3_i_p": {
-        "name": "PV 3 input power"
-      },
-      "pv_3_i_type": {
-        "name": "PV 3 input type",
-        "state": {
-          "ac_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::ac_pv%]",
-          "adapter": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::adapter%]",
-          "car": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::car%]",
-          "dc_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::dc_pv%]",
-          "other": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::other%]",
-          "reserve": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::reserve%]"
-        }
-      },
-      "pv_3_i_v": {
-        "name": "PV 3 input voltage"
-      },
-      "pv_4_i_c": {
-        "name": "PV 4 input current"
-      },
-      "pv_4_i_p": {
-        "name": "PV 4 input power"
-      },
-      "pv_4_i_type": {
-        "name": "PV 4 input type",
-        "state": {
-          "ac_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::ac_pv%]",
-          "adapter": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::adapter%]",
-          "car": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::car%]",
-          "dc_pv": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::dc_pv%]",
-          "other": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::other%]",
-          "reserve": "[%key:component::bluetti_modbus::entity::sensor::pv_1_i_type::state::reserve%]"
-        }
-      },
-      "pv_4_i_v": {
-        "name": "PV 4 input voltage"
-      },
       "pv_ac_e": {
         "name": "PV AC energy"
       },
@@ -204,6 +124,26 @@
       },
       "pv_i_p_total": {
         "name": "Total PV input power"
+      },
+      "pv_input_current": {
+        "name": "PV {input} input current"
+      },
+      "pv_input_power": {
+        "name": "PV {input} input power"
+      },
+      "pv_input_type": {
+        "name": "PV {input} input type",
+        "state": {
+          "ac_pv": "AC PV",
+          "adapter": "Adapter",
+          "car": "Car",
+          "dc_pv": "DC PV",
+          "other": "Other",
+          "reserve": "Reserved"
+        }
+      },
+      "pv_input_voltage": {
+        "name": "PV {input} input voltage"
       }
     }
   },
