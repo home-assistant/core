@@ -551,19 +551,21 @@ async def test_agents_upload_progress(
     mock_dropbox_client: Mock,
 ) -> None:
     """Test that upload progress reported by the client is forwarded."""
+    open_stream = AsyncMock()
     on_progress = Mock()
     (agent,) = await async_get_backup_agents(hass)
 
     await agent.async_upload_backup(
-        open_stream=AsyncMock(),
+        open_stream=open_stream,
         backup=TEST_AGENT_BACKUP,
         on_progress=on_progress,
     )
 
+    backup_filename = suggested_filename(TEST_AGENT_BACKUP).rsplit(".", 1)[0]
+    upload_call = mock_dropbox_client.upload_file.call_args_list[0]
+    assert upload_call.args == (f"/{backup_filename}.tar", open_stream.return_value)
     # The client calls the callback after each chunk it sends
-    progress_callback = mock_dropbox_client.upload_file.call_args_list[0].kwargs[
-        "progress_callback"
-    ]
+    progress_callback = upload_call.kwargs["progress_callback"]
     progress_callback(3)
     progress_callback(8)
     assert on_progress.call_args_list == [
