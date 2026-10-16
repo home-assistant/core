@@ -509,6 +509,22 @@ async def test_cover_moving_status_with_unknown_target(
             STATE_UNKNOWN,
             id="tilt",
         ),
+        pytest.param(
+            "mock_window_covering_full",
+            "cover.mock_full_window_covering",
+            14,
+            11,
+            CoverState.OPEN,
+            id="lift_and_tilt_lift",
+        ),
+        pytest.param(
+            "mock_window_covering_full",
+            "cover.mock_full_window_covering",
+            15,
+            12,
+            CoverState.OPEN,
+            id="lift_and_tilt_tilt",
+        ),
     ],
 )
 async def test_cover_target_position_subscription(
@@ -869,6 +885,23 @@ async def test_cover_full_features(
             CoverState.CLOSING,
             id="tilt_not_position_aware",
         ),
+        # the same, with tilt positions exposed regardless
+        pytest.param(
+            "mock_window_covering_full",
+            "cover.mock_full_window_covering",
+            0b00111,
+            CoverState.CLOSING,
+            id="tilt_not_position_aware_positions_exposed",
+        ),
+        # a covering which is not position aware on lift but exposes lift
+        # positions regardless
+        pytest.param(
+            "mock_window_covering_pa_lift",
+            "cover.longan_link_wncv_da01",
+            0b00001,
+            CoverState.CLOSING,
+            id="lift_not_position_aware_positions_exposed",
+        ),
         # a covering claiming to be position aware on tilt without exposing
         # the tilt position attributes
         pytest.param(
@@ -909,3 +942,30 @@ async def test_cover_moving_status_axis_selection(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_full", "cover.mock_full_window_covering"),
+    ],
+)
+async def test_cover_moving_status_with_unknown_tilt_position(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the lift at its target does not hide movement with an unknown tilt."""
+
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 12, 0)
+    set_node_attribute(matter_node, 1, 258, 15, None)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
