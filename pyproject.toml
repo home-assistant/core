@@ -92,7 +92,7 @@ dependencies = [
 "Homepage" = "https://www.home-assistant.io/"
 "Source Code" = "https://github.com/home-assistant/core"
 "Bug Reports" = "https://github.com/home-assistant/core/issues"
-"Docs: Dev" = "https://developers.home-assistant.io/"
+"Docs: Dev" = "https://contributors.home-assistant.io/"
 "Discord" = "https://www.home-assistant.io/join-chat/"
 "Forum" = "https://community.home-assistant.io/"
 

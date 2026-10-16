@@ -55,8 +55,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
 }
 
 URL_PIN = (
-    "https://developers.home-assistant.io/docs/"
-    "creating_platform_code_review.html#1-requirements"
+    "https://contributors.home-assistant.io/core/integrations/manifest/#requirements"
 )
 
 
