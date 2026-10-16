@@ -85,7 +85,14 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+from tests.common import (
+    MockAsyncOnlyCondition,
+    MockModule,
+    MockPlatform,
+    mock_async_only_condition,
+    mock_integration,
+    mock_platform,
+)
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -6896,3 +6903,168 @@ async def test_track_changes_isolates_context(hass: HomeAssistant) -> None:
     assert trace.trace_get(clear=False) is caller_trace
 
     unsub()
+
+
+async def _async_create_condition(
+    hass: HomeAssistant, config: ConfigType
+) -> ConditionChecker:
+    """Validate a condition config and create the condition."""
+    config = await condition.async_validate_condition_config(
+        hass, cv.CONDITION_SCHEMA(config)
+    )
+    return await condition.async_from_config(hass, config)
+
+
+def _async_only_config(entity_id: str) -> ConfigType:
+    """Return the config of a test.async_only condition."""
+    return {"condition": "test.async_only", "options": {"entity_id": entity_id}}
+
+
+async def test_async_evaluate_runs_sync_check(hass: HomeAssistant) -> None:
+    """Test that async_evaluate runs the sync check of a condition by default."""
+    test = await _async_create_condition(
+        hass, {"condition": "state", "entity_id": "sensor.test", "state": "on"}
+    )
+    hass.states.async_set("sensor.test", "on")
+    assert await test.async_evaluate() is True
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "entity_id/0": [
+                {"result": {"result": True, "state": "on", "wanted_state": "on"}}
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.test", "off")
+    assert await test.async_evaluate() is False
+
+
+async def test_async_evaluate_not_set_up(hass: HomeAssistant) -> None:
+    """Test that async_evaluate fails if the condition is not set up."""
+    test = MockAsyncOnlyCondition(
+        hass, ConditionConfig(options={"entity_id": "test.entity"})
+    )
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        await test.async_evaluate()
+
+
+async def test_async_evaluate_async_only_condition(hass: HomeAssistant) -> None:
+    """Test a condition that can only be checked with async_evaluate."""
+    mock_async_only_condition(hass)
+    test = await _async_create_condition(hass, _async_only_config("test.entity"))
+
+    hass.states.async_set("test.entity", "on")
+    assert await test.async_evaluate() is True
+    assert_condition_trace({"": [{"result": {"result": True}}]})
+
+    with pytest.raises(ConditionError, match="can only be checked asynchronously"):
+        test.async_check()
+
+
+_TRACE_ON = {"result": {"result": True}}
+_TRACE_OFF = {"result": {"result": False}}
+_TRACE_ERROR = {"error_type": ConditionError}
+
+
+@pytest.mark.parametrize(
+    ("compound", "states", "child_traces", "expected"),
+    [
+        ("and", ["on", "on"], [_TRACE_ON, _TRACE_ON], True),
+        ("and", ["on", "off"], [_TRACE_ON, _TRACE_OFF], False),
+        ("and", ["error", "off"], [_TRACE_ERROR, _TRACE_OFF], False),
+        ("or", ["off", "on"], [_TRACE_OFF, _TRACE_ON], True),
+        ("or", ["off", "off"], [_TRACE_OFF, _TRACE_OFF], False),
+        ("or", ["error", "on"], [_TRACE_ERROR, _TRACE_ON], True),
+        ("not", ["off", "off"], [_TRACE_OFF, _TRACE_OFF], True),
+        ("not", ["off", "on"], [_TRACE_OFF, _TRACE_ON], False),
+        ("not", ["error", "on"], [_TRACE_ERROR, _TRACE_ON], False),
+    ],
+)
+async def test_async_evaluate_compound(
+    hass: HomeAssistant,
+    compound: str,
+    states: list[str],
+    child_traces: list[dict[str, Any]],
+    expected: bool,
+) -> None:
+    """Test that compound conditions evaluate their children asynchronously."""
+    mock_async_only_condition(hass)
+    test = await _async_create_condition(
+        hass,
+        {
+            "condition": compound,
+            "conditions": [
+                _async_only_config("test.entity_1"),
+                _async_only_config("test.entity_2"),
+            ],
+        },
+    )
+    hass.states.async_set("test.entity_1", states[0])
+    hass.states.async_set("test.entity_2", states[1])
+    assert await test.async_evaluate() is expected
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": expected}}],
+            "conditions/0": [child_traces[0]],
+            "conditions/1": [child_traces[1]],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("compound", "other_state"),
+    [("and", "on"), ("or", "off"), ("not", "off")],
+)
+async def test_async_evaluate_compound_error(
+    hass: HomeAssistant, compound: str, other_state: str
+) -> None:
+    """Test that a compound condition raises the child errors without a result."""
+    mock_async_only_condition(hass)
+    test = await _async_create_condition(
+        hass,
+        {
+            "condition": compound,
+            "conditions": [
+                _async_only_config("test.entity_1"),
+                _async_only_config("test.entity_2"),
+            ],
+        },
+    )
+    hass.states.async_set("test.entity_1", "error")
+    hass.states.async_set("test.entity_2", other_state)
+    with pytest.raises(ConditionError, match="error state"):
+        await test.async_evaluate()
+
+
+@pytest.mark.parametrize(
+    ("states", "expected", "error_logged"),
+    [
+        (["on", "on"], True, False),
+        (["on", "off"], False, False),
+        (["off", "error"], False, False),
+        (["error", "on"], False, True),
+    ],
+)
+async def test_conditions_checker_async_evaluate(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    states: list[str],
+    expected: bool,
+    error_logged: bool,
+) -> None:
+    """Test that a conditions checker evaluates its conditions asynchronously."""
+    mock_async_only_condition(hass)
+    configs = [
+        await condition.async_validate_condition_config(
+            hass, _async_only_config(entity_id)
+        )
+        for entity_id in ("test.entity_1", "test.entity_2")
+    ]
+    test = await condition.async_conditions_from_config(
+        hass, configs, logging.getLogger(__name__), "test"
+    )
+    hass.states.async_set("test.entity_1", states[0])
+    hass.states.async_set("test.entity_2", states[1])
+    assert await test.async_evaluate() is expected
+    assert ("Error evaluating condition in 'test'" in caplog.text) is error_logged

@@ -27,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     CoreState,
+    Event,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -54,6 +55,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_async_only_condition,
     mock_integration,
     mock_platform,
 )
@@ -2294,7 +2296,9 @@ async def test_condition_created_once(async_from_config, hass: HomeAssistant) ->
     )
 
     async_from_config.reset_mock()
-    async_from_config.return_value = MagicMock()
+    async_from_config.return_value = MagicMock(
+        async_evaluate=AsyncMock(return_value=True)
+    )
 
     hass.states.async_set("test.entity", "hello")
     await script_obj.async_run(context=Context())
@@ -7534,3 +7538,101 @@ async def test_async_unload_blocks_new_runs_during_stop(
 
     assert not script_obj.is_running
     assert script_id not in hass.data[script.DATA_SCRIPTS]
+
+
+_ASYNC_ONLY_CONDITION = {
+    "condition": "test.async_only",
+    "options": {"entity_id": "test.entity"},
+}
+_TEST_EVENT = {"event": "test_event"}
+
+
+@pytest.mark.parametrize(
+    ("sequence", "state", "expected_events"),
+    [
+        ([_ASYNC_ONLY_CONDITION, _TEST_EVENT], "on", 1),
+        ([_ASYNC_ONLY_CONDITION, _TEST_EVENT], "off", 0),
+        ([{"if": [_ASYNC_ONLY_CONDITION], "then": [_TEST_EVENT]}], "on", 1),
+        ([{"if": [_ASYNC_ONLY_CONDITION], "then": [_TEST_EVENT]}], "off", 0),
+        (
+            [
+                {
+                    "choose": [
+                        {"conditions": [_ASYNC_ONLY_CONDITION], "sequence": _TEST_EVENT}
+                    ]
+                }
+            ],
+            "on",
+            1,
+        ),
+        (
+            [
+                {
+                    "choose": [
+                        {"conditions": [_ASYNC_ONLY_CONDITION], "sequence": _TEST_EVENT}
+                    ]
+                }
+            ],
+            "off",
+            0,
+        ),
+        (
+            [{"repeat": {"while": [_ASYNC_ONLY_CONDITION], "sequence": _TEST_EVENT}}],
+            "on",
+            1,
+        ),
+        (
+            [{"repeat": {"while": [_ASYNC_ONLY_CONDITION], "sequence": _TEST_EVENT}}],
+            "off",
+            0,
+        ),
+        (
+            [{"repeat": {"until": [_ASYNC_ONLY_CONDITION], "sequence": _TEST_EVENT}}],
+            "on",
+            2,
+        ),
+        (
+            [{"repeat": {"until": [_ASYNC_ONLY_CONDITION], "sequence": _TEST_EVENT}}],
+            "off",
+            1,
+        ),
+    ],
+    ids=[
+        "condition_on",
+        "condition_off",
+        "if_on",
+        "if_off",
+        "choose_on",
+        "choose_off",
+        "while_on",
+        "while_off",
+        "until_on",
+        "until_off",
+    ],
+)
+async def test_async_only_condition(
+    hass: HomeAssistant,
+    sequence: list[dict[str, Any]],
+    state: str,
+    expected_events: int,
+) -> None:
+    """Test that script steps check conditions asynchronously."""
+    mock_async_only_condition(hass)
+    events = async_capture_events(hass, "test_event")
+
+    @callback
+    def toggle_state(_: Event) -> None:
+        current = hass.states.get("test.entity")
+        assert current is not None
+        hass.states.async_set("test.entity", "off" if current.state == "on" else "on")
+
+    hass.bus.async_listen("test_event", toggle_state)
+    hass.states.async_set("test.entity", state)
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
+    )
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == expected_events

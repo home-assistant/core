@@ -516,7 +516,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             if not skip_condition and self._condition is not None:
                 try:
-                    conditions_pass = self._condition.async_check(variables=variables)
+                    conditions_pass = await self._condition.async_evaluate(
+                        variables=variables
+                    )
                 except (probatio.Invalid, HomeAssistantError) as err:
                     self._logger.error(
                         "Error while checking conditions of automation %s: %s",

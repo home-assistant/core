@@ -67,6 +67,7 @@ from tests.common import (
     MockModule,
     MockUser,
     async_mock_service,
+    mock_async_only_condition,
     mock_device_registry,
     mock_integration,
     mock_platform,
@@ -2872,6 +2873,51 @@ async def test_subscribe_trigger_template_error_spams_log(
         )
         > 1
     )
+
+
+async def test_test_condition_async_only(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test that testing a condition checks it asynchronously."""
+    mock_async_only_condition(hass)
+    hass.states.async_set("test.entity", "on")
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "test.async_only",
+                "options": {"entity_id": "test.entity"},
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"result": True}
+
+
+async def test_subscribe_condition_async_only(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test that a subscription reports that it cannot check an async-only condition."""
+    mock_async_only_condition(hass)
+    hass.states.async_set("test.entity", "on")
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "test.async_only",
+                "options": {"entity_id": "test.entity"},
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {
+        "error": "In 'test' condition: can only be checked asynchronously"
+    }
 
 
 async def test_test_condition(

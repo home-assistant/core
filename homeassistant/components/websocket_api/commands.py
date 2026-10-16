@@ -1139,7 +1139,9 @@ async def handle_test_condition(
     condition_trace = trace.trace_get()
     try:
         with trace.suppress_template_error_logging():
-            check_result = condition.async_check(variables=msg.get("variables"))
+            check_result = await condition.async_evaluate(
+                variables=msg.get("variables")
+            )
     except HomeAssistantError as err:
         connection.send_error(
             msg["id"],

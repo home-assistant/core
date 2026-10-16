@@ -459,7 +459,23 @@ def check_conditions(
     if not condition_func:
         return True
 
-    condition_result = condition_func.async_check(variables=run_variables)
+    return _log_condition_result(condition_func.async_check(variables=run_variables))
+
+
+async def async_check_conditions(
+    condition_func: ConditionsChecker | None, run_variables: TemplateVarsType
+) -> bool:
+    """Check if conditions have been met using run variables, allowing I/O."""
+    if not condition_func:
+        return True
+
+    return _log_condition_result(
+        await condition_func.async_evaluate(variables=run_variables)
+    )
+
+
+def _log_condition_result(condition_result: bool) -> bool:
+    """Log the condition summary if the conditions are not met."""
     if condition_result is False:
         _LOGGER.debug(
             "Conditions not met, aborting template trigger update. Condition summary: %s",

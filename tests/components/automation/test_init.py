@@ -81,6 +81,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_async_only_condition,
     mock_integration,
     mock_platform,
     mock_restore_cache,
@@ -2235,6 +2236,33 @@ async def test_automation_with_error_in_action_script(
     assert traces[0]["error"] == str(side_effect)
 
 
+@pytest.mark.parametrize(("state", "expected_calls"), [("on", 1), ("off", 0)])
+async def test_automation_async_only_condition(
+    hass: HomeAssistant, calls: list[ServiceCall], state: str, expected_calls: int
+) -> None:
+    """Test that automations check conditions asynchronously."""
+    mock_async_only_condition(hass)
+    hass.states.async_set("test.entity", state)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "test.async_only",
+                    "options": {"entity_id": "test.entity"},
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == expected_calls
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error", "expect_traceback"),
     [
@@ -2285,7 +2313,7 @@ async def test_automation_with_error_in_condition(
     )
 
     with patch(
-        "homeassistant.helpers.condition.ConditionsChecker.async_check",
+        "homeassistant.helpers.condition.ConditionsChecker.async_evaluate",
         side_effect=side_effect,
     ):
         hass.bus.async_fire("test_event")
@@ -2334,7 +2362,7 @@ async def test_automation_with_error_in_condition_continues_after_recovery(
     hass.states.async_set("test.entity", "on")
 
     with patch(
-        "homeassistant.helpers.condition.ConditionsChecker.async_check",
+        "homeassistant.helpers.condition.ConditionsChecker.async_evaluate",
         side_effect=HomeAssistantError("boom"),
     ):
         hass.bus.async_fire("test_event")

@@ -168,6 +168,30 @@ class ConditionChecker(abc.ABC):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
         """Check the condition."""
 
+    @final
+    async def async_evaluate(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool | None:
+        """Check the condition, allowing the check to do I/O.
+
+        Use this method instead of async_check where the caller can await.
+        """
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
+        with trace_condition(variables):
+            result = await self._async_evaluate(variables=variables)
+            condition_trace_update_result(result=result)
+            return result
+
+    async def _async_evaluate(
+        self, **kwargs: Unpack[ConditionCheckParams]
+    ) -> bool | None:
+        """Check the condition, allowing the check to do I/O.
+
+        Intended to be overridden in derived classes that need I/O to check.
+        """
+        return self._async_check(**kwargs)
+
 
 class ConditionsChecker:
     """Condition checker that ANDs multiple conditions.
@@ -219,12 +243,36 @@ class ConditionsChecker:
                     if condition.async_check(variables=variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex(
-                        "condition", index=index, total=len(self._conditions), error=ex
-                    )
-                )
+                errors.append(self._error_index(index, ex))
 
+        return self._result(errors)
+
+    async def async_evaluate(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool:
+        """AND all conditions, allowing the checks to do I/O."""
+        errors: list[ConditionErrorIndex] = []
+        for index, condition in enumerate(self._conditions):
+            try:
+                with trace_path(["condition", str(index)]):
+                    if (
+                        await condition.async_evaluate(variables=variables, **kwargs)
+                        is False
+                    ):
+                        return False
+            except ConditionError as ex:
+                errors.append(self._error_index(index, ex))
+
+        return self._result(errors)
+
+    def _error_index(self, index: int, error: ConditionError) -> ConditionErrorIndex:
+        """Return the error of the condition at index."""
+        return ConditionErrorIndex(
+            "condition", index=index, total=len(self._conditions), error=error
+        )
+
+    def _result(self, errors: list[ConditionErrorIndex]) -> bool:
+        """Log the errors and return the result when no condition was false."""
         if errors:
             self._logger.warning(
                 "Error evaluating condition in '%s':\n%s",

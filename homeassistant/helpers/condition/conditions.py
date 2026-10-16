@@ -1,5 +1,6 @@
 """Common condition classes and constants."""
 
+import abc
 from collections.abc import Callable, Container
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -104,6 +105,10 @@ class DisabledConditionChecker(ConditionChecker):
 class CompoundConditionChecker(ConditionChecker):
     """Base class for compound condition checkers (and/or/not)."""
 
+    _name: str
+    # The result to return when a child result stops the check.
+    _stop_result: bool
+
     def __init__(self, hass: HomeAssistant, conditions: list[ConditionChecker]) -> None:
         """Initialize condition checker."""
         super().__init__(hass)
@@ -134,86 +139,87 @@ class CompoundConditionChecker(ConditionChecker):
         for condition in self._conditions:
             condition.async_unload()
 
+    @callback
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Test compound condition."""
+        errors: list[ConditionErrorIndex] = []
+        for index, condition in enumerate(self._conditions):
+            try:
+                with trace_path(["conditions", str(index)]):
+                    if self._stops(condition.async_check(**kwargs)):
+                        return self._stop_result
+            except ConditionError as ex:
+                errors.append(self._error_index(index, ex))
+
+        return self._result(errors)
+
+    @override
+    async def _async_evaluate(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Test compound condition, allowing the checks to do I/O."""
+        errors: list[ConditionErrorIndex] = []
+        for index, condition in enumerate(self._conditions):
+            try:
+                with trace_path(["conditions", str(index)]):
+                    if self._stops(await condition.async_evaluate(**kwargs)):
+                        return self._stop_result
+            except ConditionError as ex:
+                errors.append(self._error_index(index, ex))
+
+        return self._result(errors)
+
+    @abc.abstractmethod
+    def _stops(self, result: bool | None) -> bool:
+        """Return if a child result decides the compound result."""
+
+    def _error_index(self, index: int, error: ConditionError) -> ConditionErrorIndex:
+        """Return the error of the child condition at index."""
+        return ConditionErrorIndex(
+            self._name, index=index, total=len(self._conditions), error=error
+        )
+
+    def _result(self, errors: list[ConditionErrorIndex]) -> bool:
+        """Return the result when no child result stopped the check.
+
+        Raise the errors if there are any.
+        """
+        if errors:
+            raise ConditionErrorContainer(self._name, errors=errors)
+
+        return not self._stop_result
+
 
 class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
-    @callback
+    _name = "and"
+    _stop_result = False
+
     @override
-    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
-        """Test and condition."""
-        errors = []
-        for index, condition in enumerate(self._conditions):
-            try:
-                with trace_path(["conditions", str(index)]):
-                    if condition.async_check(**kwargs) is False:
-                        return False
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex(
-                        "and", index=index, total=len(self._conditions), error=ex
-                    )
-                )
-
-        # Raise the errors if no check was false
-        if errors:
-            raise ConditionErrorContainer("and", errors=errors)
-
-        return True
+    def _stops(self, result: bool | None) -> bool:
+        return result is False
 
 
 class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
-    @callback
+    _name = "not"
+    _stop_result = False
+
     @override
-    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
-        """Test not condition."""
-        errors = []
-        for index, condition in enumerate(self._conditions):
-            try:
-                with trace_path(["conditions", str(index)]):
-                    if condition.async_check(**kwargs):
-                        return False
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex(
-                        "not", index=index, total=len(self._conditions), error=ex
-                    )
-                )
-
-        # Raise the errors if no check was true
-        if errors:
-            raise ConditionErrorContainer("not", errors=errors)
-
-        return True
+    def _stops(self, result: bool | None) -> bool:
+        return bool(result)
 
 
 class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
-    @callback
+    _name = "or"
+    _stop_result = True
+
     @override
-    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
-        """Test or condition."""
-        errors = []
-        for index, condition in enumerate(self._conditions):
-            try:
-                with trace_path(["conditions", str(index)]):
-                    if condition.async_check(**kwargs) is True:
-                        return True
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex(
-                        "or", index=index, total=len(self._conditions), error=ex
-                    )
-                )
-
-        # Raise the errors if no check was true
-        if errors:
-            raise ConditionErrorContainer("or", errors=errors)
-
-        return False
+    def _stops(self, result: bool | None) -> bool:
+        return result is True
 
 
 def state(

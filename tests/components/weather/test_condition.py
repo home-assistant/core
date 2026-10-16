@@ -1,12 +1,10 @@
 """Test weather conditions."""
 
 from datetime import datetime, timedelta
-from typing import Any
-from unittest.mock import patch
+from typing import Any, cast
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.weather import (
@@ -26,12 +24,14 @@ from homeassistant.components.weather.condition import CONDITIONS
 from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ENTITY_ID,
+    STATE_UNAVAILABLE,
     UnitOfPrecipitationDepth,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.condition import ConditionCheckerTypeOptional
+from homeassistant.helpers.condition import ConditionChecker
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -116,15 +116,30 @@ async def _create_condition(
     options: dict[str, Any],
     entity_ids: list[str] | None = None,
     behavior: str = "any",
-) -> ConditionCheckerTypeOptional:
+) -> ConditionChecker:
     """Create a weather condition."""
-    return await create_target_condition(
-        hass,
-        condition=condition,
-        target={CONF_ENTITY_ID: entity_ids or [ENTITY_ID]},
-        behavior=behavior,
-        condition_options=options,
+    return cast(
+        ConditionChecker,
+        await create_target_condition(
+            hass,
+            condition=condition,
+            target={CONF_ENTITY_ID: entity_ids or [ENTITY_ID]},
+            behavior=behavior,
+            condition_options=options,
+        ),
     )
+
+
+def _set_states(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    states: list[tuple[str, timedelta]],
+) -> None:
+    """Set each state of an entity, then move the time forward."""
+    for state, duration in states:
+        hass.states.async_set(entity_id, state)
+        freezer.tick(duration)
 
 
 @pytest.mark.parametrize(
@@ -153,6 +168,25 @@ def test_condition_target_support() -> None:
 
 
 @pytest.mark.parametrize(
+    ("condition_key", "options"),
+    [
+        ("weather.did_rain", {"within": {"hours": 1}}),
+        ("weather.will_rain", {"within": {"hours": 1}, "threshold": 1}),
+    ],
+)
+async def test_sync_check_not_supported(
+    hass: HomeAssistant, condition_key: str, options: dict[str, Any]
+) -> None:
+    """Test that a check that cannot fetch data raises an error."""
+    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
+    test = await _create_condition(hass, condition_key, options)
+    assert test.needs_polling is True
+
+    with pytest.raises(ConditionError, match="cannot be checked here"):
+        test.async_check()
+
+
+@pytest.mark.parametrize(
     "condition",
     [
         ATTR_CONDITION_RAINY,
@@ -162,174 +196,152 @@ def test_condition_target_support() -> None:
     ],
 )
 async def test_did_rain_rainy_now(hass: HomeAssistant, condition: str) -> None:
-    """Test that the condition passes while it rains."""
+    """Test that the condition passes while it rains, without history."""
+    hass.states.async_set(ENTITY_ID, condition)
+    test = await _create_condition(hass, "weather.did_rain", {"within": {"hours": 1}})
+    assert await test.async_evaluate() is True
+
+
+async def test_did_rain_no_recorder(hass: HomeAssistant) -> None:
+    """Test that past rain cannot be checked without the recorder."""
     hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
     test = await _create_condition(hass, "weather.did_rain", {"within": {"hours": 1}})
-    assert test.needs_polling is True  # type: ignore[attr-defined]
-    assert test(hass) is False
-
-    hass.states.async_set(ENTITY_ID, condition)
-    assert test(hass) is True
+    with pytest.raises(ConditionError, match="recorder is not available"):
+        await test.async_evaluate()
 
 
 @pytest.mark.parametrize(
-    "condition", [ATTR_CONDITION_SUNNY, ATTR_CONDITION_CLOUDY, ATTR_CONDITION_SNOWY]
-)
-async def test_did_rain_not_rainy(hass: HomeAssistant, condition: str) -> None:
-    """Test that other weather conditions do not count as rain."""
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    test = await _create_condition(hass, "weather.did_rain", {"within": {"hours": 1}})
-
-    hass.states.async_set(ENTITY_ID, condition)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    assert test(hass) is False
-
-
-async def test_did_rain_window(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test that rain counts until it falls out of the window."""
-    freezer.move_to(START)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    test = await _create_condition(hass, "weather.did_rain", {"within": {"hours": 2}})
-
-    freezer.tick(timedelta(hours=3))
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    assert test(hass) is True
-
-    freezer.tick(timedelta(hours=2))
-    assert test(hass) is True
-
-    freezer.tick(timedelta(seconds=1))
-    assert test(hass) is False
-
-
-@pytest.mark.parametrize(("behavior", "expected"), [("any", True), ("all", False)])
-async def test_did_rain_behavior(
-    hass: HomeAssistant, behavior: str, expected: bool
-) -> None:
-    """Test the any and all behaviors."""
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    hass.states.async_set(OTHER_ENTITY_ID, ATTR_CONDITION_SUNNY)
-    test = await _create_condition(
-        hass,
-        "weather.did_rain",
-        {"within": {"hours": 1}},
-        [ENTITY_ID, OTHER_ENTITY_ID],
-        behavior,
-    )
-
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    assert test(hass) is expected
-
-    hass.states.async_set(OTHER_ENTITY_ID, ATTR_CONDITION_POURING)
-    assert test(hass) is True
-
-
-@pytest.mark.parametrize(
-    ("rain_hours_ago", "expected"),
-    [(4, True), (7, False)],
+    ("states", "expected"),
+    [
+        pytest.param(
+            [
+                (ATTR_CONDITION_RAINY, timedelta(hours=1)),
+                (ATTR_CONDITION_SUNNY, timedelta(hours=4)),
+            ],
+            True,
+            id="rain_in_window",
+        ),
+        pytest.param(
+            [
+                (ATTR_CONDITION_RAINY, timedelta(hours=1)),
+                (ATTR_CONDITION_SUNNY, timedelta(hours=7)),
+            ],
+            False,
+            id="rain_before_window",
+        ),
+        pytest.param(
+            [
+                (ATTR_CONDITION_POURING, timedelta(hours=10)),
+                (ATTR_CONDITION_SUNNY, timedelta(hours=1)),
+            ],
+            True,
+            id="rain_at_window_start",
+        ),
+        pytest.param(
+            [
+                (ATTR_CONDITION_CLOUDY, timedelta(hours=1)),
+                (ATTR_CONDITION_SNOWY, timedelta(hours=1)),
+                (ATTR_CONDITION_SUNNY, timedelta(hours=1)),
+            ],
+            False,
+            id="no_rain",
+        ),
+    ],
 )
 async def test_did_rain_from_history(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    rain_hours_ago: int,
+    states: list[tuple[str, timedelta]],
     expected: bool,
 ) -> None:
-    """Test that rain before the condition was set up comes from history."""
+    """Test that the condition reads past rain from recorder history."""
     freezer.move_to(START)
     hass.states.async_set(ENTITY_ID, ATTR_CONDITION_CLOUDY)
-    await hass.async_block_till_done()
     freezer.tick(timedelta(hours=1))
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(hours=1))
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    await hass.async_block_till_done()
+    _set_states(hass, freezer, ENTITY_ID, states)
     await async_wait_recording_done(hass)
 
-    freezer.tick(timedelta(hours=rain_hours_ago))
     test = await _create_condition(hass, "weather.did_rain", {"within": {"hours": 6}})
-    assert test(hass) is expected
+    assert await test.async_evaluate() is expected
 
 
-async def test_did_rain_raining_at_window_start(
+@pytest.mark.parametrize(("behavior", "expected"), [("any", True), ("all", False)])
+async def test_did_rain_behavior(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    behavior: str,
+    expected: bool,
 ) -> None:
-    """Test that rain which started before the window counts."""
+    """Test the any and all behaviors."""
     freezer.move_to(START)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(hours=10))
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    await hass.async_block_till_done()
+    hass.states.async_set(OTHER_ENTITY_ID, ATTR_CONDITION_SUNNY)
+    _set_states(
+        hass,
+        freezer,
+        ENTITY_ID,
+        [
+            (ATTR_CONDITION_RAINY, timedelta(hours=1)),
+            (ATTR_CONDITION_SUNNY, timedelta(hours=1)),
+        ],
+    )
     await async_wait_recording_done(hass)
 
-    freezer.tick(timedelta(hours=1))
-    test = await _create_condition(hass, "weather.did_rain", {"within": {"hours": 2}})
-    assert test(hass) is True
+    test = await _create_condition(
+        hass,
+        "weather.did_rain",
+        {"within": {"hours": 6}},
+        [ENTITY_ID, OTHER_ENTITY_ID],
+        behavior,
+    )
+    assert await test.async_evaluate() is expected
+
+    hass.states.async_set(OTHER_ENTITY_ID, ATTR_CONDITION_POURING)
+    assert await test.async_evaluate() is True
 
 
-async def test_did_rain_history_error(
+async def test_did_rain_skips_unavailable(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test that unavailable entities are skipped."""
+    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
+    hass.states.async_set(OTHER_ENTITY_ID, STATE_UNAVAILABLE)
+    test = await _create_condition(
+        hass,
+        "weather.did_rain",
+        {"within": {"hours": 6}},
+        [ENTITY_ID, OTHER_ENTITY_ID],
+        "all",
+    )
+    assert await test.async_evaluate() is True
+
+
+async def test_did_rain_label_target(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a failing history query falls back to live states."""
-    freezer.move_to(START)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(hours=1))
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass)
-
-    with patch(
-        "homeassistant.components.recorder.history.get_significant_states",
-        side_effect=SQLAlchemyError("boom"),
-    ):
-        test = await _create_condition(
-            hass, "weather.did_rain", {"within": {"hours": 2}}
-        )
-    assert test(hass) is False
-
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    assert test(hass) is True
-
-
-async def test_did_rain_entity_removed_from_target(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test that an entity removed from the target is forgotten."""
+    """Test that the condition resolves indirect targets."""
     entity_registry.async_get_or_create(
         DOMAIN, "test", "home", suggested_object_id="home"
     )
     entity_registry.async_update_entity(ENTITY_ID, labels={"garden"})
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    test = await create_target_condition(
-        hass,
-        condition="weather.did_rain",
-        target={ATTR_LABEL_ID: "garden"},
-        behavior="any",
-        condition_options={"within": {"hours": 1}},
-    )
     hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
-    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_SUNNY)
-    assert test(hass) is True
+    test = cast(
+        ConditionChecker,
+        await create_target_condition(
+            hass,
+            condition="weather.did_rain",
+            target={ATTR_LABEL_ID: "garden"},
+            behavior="any",
+            condition_options={"within": {"hours": 1}},
+        ),
+    )
+    assert await test.async_evaluate() is True
 
     entity_registry.async_update_entity(ENTITY_ID, labels=set())
-    await hass.async_block_till_done()
-    assert test(hass) is False
-
-    # The rain is not remembered when the entity joins the target again.
-    entity_registry.async_update_entity(ENTITY_ID, labels={"garden"})
-    await hass.async_block_till_done()
-    assert test(hass) is False
+    assert await test.async_evaluate() is False
 
 
 @pytest.mark.parametrize(
@@ -361,7 +373,7 @@ async def test_will_rain_amount_hourly(
     test = await _create_condition(
         hass, "weather.will_rain", {"within": within, "threshold": threshold}
     )
-    assert test(hass) is expected
+    assert await test.async_evaluate() is expected
 
 
 @pytest.mark.parametrize(
@@ -390,7 +402,7 @@ async def test_will_rain_probability(
         "weather.will_rain",
         {"within": within, "measure": "probability", "threshold": threshold},
     )
-    assert test(hass) is expected
+    assert await test.async_evaluate() is expected
 
 
 @pytest.mark.parametrize(
@@ -422,24 +434,23 @@ async def test_will_rain_forecast_type(
     test = await _create_condition(
         hass, "weather.will_rain", {"within": within, "threshold": threshold}
     )
-    assert test(hass) is expected
+    assert await test.async_evaluate() is expected
 
 
-async def test_will_rain_forecast_update(
+async def test_will_rain_fetches_forecast(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test that the condition uses forecast updates."""
+    """Test that each check fetches the current forecast."""
     freezer.move_to(START)
-    entity = RainWeather(ENTITY_ID, hourly=_forecast(START, timedelta(hours=1), []))
+    entity = RainWeather(ENTITY_ID, hourly=[], daily=[])
     await _setup_entities(hass, entity)
     test = await _create_condition(
         hass, "weather.will_rain", {"within": {"hours": 2}, "threshold": 1}
     )
-    assert test(hass) is False
+    assert await test.async_evaluate() is False
 
     entity.hourly = _forecast(START, timedelta(hours=1), [(1, None), (1, None)])
-    await entity.async_update_listeners(None)
-    assert test(hass) is True
+    assert await test.async_evaluate() is True
 
 
 async def test_will_rain_unit(
@@ -461,100 +472,46 @@ async def test_will_rain_unit(
     test = await _create_condition(
         hass, "weather.will_rain", {"within": {"hours": 1}, "threshold": 1}
     )
-    assert test(hass) is True
+    assert await test.async_evaluate() is True
     test = await _create_condition(
         hass, "weather.will_rain", {"within": {"hours": 1}, "threshold": 1.1}
     )
-    assert test(hass) is False
+    assert await test.async_evaluate() is False
 
 
-async def test_will_rain_no_forecast(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("behavior", "expected"), [("any", False), ("all", True)])
+async def test_will_rain_no_forecast(
+    hass: HomeAssistant, behavior: str, expected: bool
+) -> None:
     """Test that entities without a forecast are skipped."""
-    await _setup_entities(hass, RainWeather(ENTITY_ID))
-    test = await _create_condition(
-        hass, "weather.will_rain", {"within": {"hours": 1}, "threshold": 0}
+    await _setup_entities(
+        hass,
+        RainWeather(ENTITY_ID),
+        RainWeather(OTHER_ENTITY_ID, hourly=None, daily=[]),
     )
-    assert test(hass) is False
-
     test = await _create_condition(
         hass,
         "weather.will_rain",
         {"within": {"hours": 1}, "threshold": 0},
-        behavior="all",
+        [ENTITY_ID, OTHER_ENTITY_ID],
+        behavior,
     )
-    assert test(hass) is True
+    assert await test.async_evaluate() is expected
 
 
-async def test_will_rain_entity_added_later(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+@pytest.mark.parametrize(("behavior", "expected"), [("any", False), ("all", True)])
+async def test_will_rain_no_entity(
+    hass: HomeAssistant, behavior: str, expected: bool
 ) -> None:
-    """Test that the condition subscribes to an entity that is added later."""
-    freezer.move_to(START)
+    """Test a state without a weather entity object."""
+    hass.states.async_set(ENTITY_ID, ATTR_CONDITION_RAINY)
     test = await _create_condition(
-        hass, "weather.will_rain", {"within": {"hours": 1}, "threshold": 1}
-    )
-    assert test(hass) is False
-
-    entity = RainWeather(
-        ENTITY_ID, hourly=_forecast(START, timedelta(hours=1), [(1, None)])
-    )
-    await _setup_entities(hass, entity)
-    assert test(hass) is True
-
-    # A state update keeps the subscription.
-    entity._attr_native_temperature = 21
-    entity.async_write_ha_state()
-    assert len(entity._forecast_listeners["hourly"]) == 1
-
-    await entity.async_remove()
-    assert not entity._forecast_listeners["hourly"]
-    assert test(hass) is False
-
-
-async def test_will_rain_entity_removed_from_target(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that the condition unsubscribes from an entity removed from the target."""
-    freezer.move_to(START)
-    entity = RainWeather(
-        ENTITY_ID, hourly=_forecast(START, timedelta(hours=1), [(1, None)])
-    )
-    await _setup_entities(hass, entity)
-    entity_registry.async_update_entity(ENTITY_ID, labels={"garden"})
-    test = await create_target_condition(
         hass,
-        condition="weather.will_rain",
-        target={ATTR_LABEL_ID: "garden"},
-        behavior="any",
-        condition_options={"within": {"hours": 1}, "threshold": 1},
+        "weather.will_rain",
+        {"within": {"hours": 1}, "threshold": 0},
+        behavior=behavior,
     )
-    assert test(hass) is True
+    assert await test.async_evaluate() is expected
 
-    entity_registry.async_update_entity(ENTITY_ID, labels=set())
-    await hass.async_block_till_done()
-    assert not entity._forecast_listeners["hourly"]
-    assert test(hass) is False
-
-
-async def test_will_rain_unload(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test that unloading the condition ends the forecast subscriptions."""
-    freezer.move_to(START)
-    entity = RainWeather(
-        ENTITY_ID,
-        hourly=_forecast(START, timedelta(hours=1), []),
-        daily=_forecast(START, timedelta(days=1), []),
-    )
-    await _setup_entities(hass, entity)
-    test = await _create_condition(
-        hass, "weather.will_rain", {"within": {"hours": 1}, "threshold": 1}
-    )
-    assert entity._forecast_listeners["hourly"]
-    assert entity._forecast_listeners["daily"]
-
-    test.async_unload()  # type: ignore[attr-defined]
-    assert not entity._forecast_listeners["hourly"]
-    assert not entity._forecast_listeners["daily"]
+    await _setup_entities(hass)
+    assert await test.async_evaluate() is expected

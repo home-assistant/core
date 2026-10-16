@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PLATFORMS
-from .validators import check_conditions
+from .validators import async_check_conditions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not check_conditions(self._cond_func, run_variables):
+        if not await async_check_conditions(self._cond_func, run_variables):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -153,7 +153,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not check_conditions(self._cond_func, run_variables):
+        if not await async_check_conditions(self._cond_func, run_variables):
             return
         self._execute_update(run_variables, context)
 

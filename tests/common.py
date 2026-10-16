@@ -72,6 +72,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ConditionErrorMessage
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
@@ -1647,6 +1648,53 @@ def mock_platform(
     integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache[platform_path] = module or Mock()
+
+
+class MockAsyncOnlyCondition(condition.Condition):
+    """Condition that can only be checked with async_evaluate.
+
+    The condition passes if the entity in the entity_id option is "on". It
+    fails with a condition error if the entity is "error".
+    """
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return config
+
+    def __init__(self, hass: HomeAssistant, config: condition.ConditionConfig) -> None:
+        """Initialize the condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._entity_id: str = config.options["entity_id"]
+
+    def _async_check(self, **kwargs: Any) -> bool:
+        """Refuse a check that cannot wait."""
+        raise ConditionErrorMessage("test", "can only be checked asynchronously")
+
+    async def _async_evaluate(self, **kwargs: Any) -> bool:
+        """Check the condition after yielding to the event loop."""
+        await asyncio.sleep(0)
+        state = self._hass.states.get(self._entity_id)
+        if state is not None and state.state == "error":
+            raise ConditionErrorMessage("test", "error state")
+        return state is not None and state.state == "on"
+
+
+def mock_async_only_condition(hass: HomeAssistant) -> None:
+    """Mock the test.async_only condition, see MockAsyncOnlyCondition."""
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[condition.Condition]]:
+        return {"async_only": MockAsyncOnlyCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
 
 
 def async_capture_events[_DataT: Mapping[str, Any] = dict[str, Any]](

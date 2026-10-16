@@ -90,7 +90,7 @@ from . import (
     template,
     trigger as trigger_helper,
 )
-from .condition import ConditionChecker, trace_condition_function
+from .condition import ConditionChecker, condition_trace_update_result, trace_condition
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
@@ -740,7 +740,7 @@ class _ScriptRun:
     async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
         return await self._script._async_get_condition(config)  # noqa: SLF001
 
-    def _test_conditions(
+    async def _async_test_conditions(
         self,
         conditions: list[ConditionChecker],
         name: str,
@@ -749,16 +749,18 @@ class _ScriptRun:
         if condition_path is None:
             condition_path = name
 
-        @trace_condition_function
-        def traced_test_conditions(
-            hass: HomeAssistant, variables: TemplateVarsType
-        ) -> bool | None:
+        with trace_condition(self._variables):
+            result: bool | None = True
             try:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if cond.async_check(variables=variables) is False:
-                                return False
+                            if (
+                                await cond.async_evaluate(variables=self._variables)
+                                is False
+                            ):
+                                result = False
+                                break
             except exceptions.ConditionError as ex:
                 self._log(
                     "Error in '%s[%s]' evaluation: %s",
@@ -767,11 +769,10 @@ class _ScriptRun:
                     ex,
                     level=logging.WARNING,
                 )
-                return None
+                result = None
 
-            return True
-
-        return traced_test_conditions(self._hass, self._variables)
+            condition_trace_update_result(result=result)
+            return result
 
     async def _async_step_choose(self) -> None:
         """Choose a sequence."""
@@ -781,7 +782,9 @@ class _ScriptRun:
             for idx, (conditions, script) in enumerate(choose_data["choices"]):
                 with trace_path(str(idx)):
                     try:
-                        if self._test_conditions(conditions, "choose", "conditions"):
+                        if await self._async_test_conditions(
+                            conditions, "choose", "conditions"
+                        ):
                             trace_set_result(choice=idx)
                             with trace_path("sequence"):
                                 await self._async_run_script(script)
@@ -808,7 +811,7 @@ class _ScriptRun:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:
                 trace_element.reuse_by_child = True
-            check = cond.async_check(variables=self._variables)
+            check = await cond.async_evaluate(variables=self._variables)
         except exceptions.ConditionError as ex:
             self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
@@ -829,7 +832,7 @@ class _ScriptRun:
 
         test_conditions: bool | None = False
         with trace_path("if"):
-            test_conditions = self._test_conditions(
+            test_conditions = await self._async_test_conditions(
                 if_data["if_conditions"], "if", "condition"
             )
 
@@ -930,7 +933,7 @@ class _ScriptRun:
                 set_repeat_var(iteration)
                 if self._stop.done():
                     break
-                if not self._test_conditions(conditions, "while"):
+                if not await self._async_test_conditions(conditions, "while"):
                     break
 
                 if iteration > 1:
@@ -974,7 +977,10 @@ class _ScriptRun:
                 await async_run_sequence(iteration)
                 if self._stop.done():
                     break
-                if self._test_conditions(conditions, "until") in [True, None]:
+                if await self._async_test_conditions(conditions, "until") in [
+                    True,
+                    None,
+                ]:
                     break
 
                 if iteration >= REPEAT_WARN_ITERATIONS:

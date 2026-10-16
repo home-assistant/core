@@ -1,6 +1,7 @@
 """Test trigger template entity."""
 
 import asyncio
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -26,7 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import async_trigger
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, mock_async_only_condition
 
 _ICON_TEMPLATE = 'mdi:o{{ "n" if value=="on" else "ff" }}'
 _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
@@ -523,3 +524,42 @@ async def test_entity_remove_unloads_condition(
     await entity.async_will_remove_from_hass()
 
     mock_cond.async_unload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "actions",
+    [[], [{"variables": {"value": "from_action"}}]],
+    ids=["without_actions", "with_actions"],
+)
+async def test_trigger_async_only_condition(
+    hass: HomeAssistant, actions: list[dict[str, Any]]
+) -> None:
+    """Test that trigger conditions are checked asynchronously."""
+    mock_async_only_condition(hass)
+    hass.states.async_set("test.entity", STATE_OFF)
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "conditions": {
+                        "condition": "test.async_only",
+                        "options": {"entity_id": "test.entity"},
+                    },
+                    "actions": actions,
+                    "sensor": {"name": "a", "state": "updated"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.a").state == STATE_UNKNOWN
+
+    hass.states.async_set("test.entity", STATE_ON)
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.a").state == "updated"
