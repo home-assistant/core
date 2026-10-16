@@ -32,14 +32,20 @@ from .coordinator import HassioMainDataUpdateCoordinator
 
 STORAGE_KEY = "hassio.auto_update"
 STORAGE_VERSION = 1
-STORAGE_SAVE_DELAY = 10
+
+# Options are stored as text, so store times the way the settings read them
+_time_string = probatio.All(cv.time, time.isoformat)
 
 
 def _validate_window(options: dict[str, Any]) -> dict[str, Any]:
     """Reject an empty time window; one that crosses midnight is fine."""
-    start = options.get(OPTION_CORE_AUTO_UPDATE_WINDOW_START)
-    end = options.get(OPTION_CORE_AUTO_UPDATE_WINDOW_END)
-    if start is not None and start == end:
+    start = options.get(
+        OPTION_CORE_AUTO_UPDATE_WINDOW_START, DEFAULT_CORE_AUTO_UPDATE_WINDOW_START
+    )
+    end = options.get(
+        OPTION_CORE_AUTO_UPDATE_WINDOW_END, DEFAULT_CORE_AUTO_UPDATE_WINDOW_END
+    )
+    if start == end:
         raise probatio.Invalid("The time window must not start and end at once")
     return options
 
@@ -51,8 +57,8 @@ AUTO_UPDATE_OPTIONS_SCHEMA = probatio.All(
             probatio.Optional(OPTION_CORE_AUTO_UPDATE_DELAY): probatio.In(
                 CORE_AUTO_UPDATE_DELAYS
             ),
-            probatio.Optional(OPTION_CORE_AUTO_UPDATE_WINDOW_START): cv.time,
-            probatio.Optional(OPTION_CORE_AUTO_UPDATE_WINDOW_END): cv.time,
+            probatio.Optional(OPTION_CORE_AUTO_UPDATE_WINDOW_START): _time_string,
+            probatio.Optional(OPTION_CORE_AUTO_UPDATE_WINDOW_END): _time_string,
             probatio.Optional(OPTION_CORE_AUTO_UPDATE_WEEKDAYS): probatio.All(
                 cv.weekdays, probatio.Length(min=1)
             ),
@@ -129,6 +135,7 @@ class AutoUpdateManager:
         coordinator: HassioMainDataUpdateCoordinator,
     ) -> None:
         """Initialize the manager."""
+        self._hass = hass
         self._entry = entry
         self._coordinator = coordinator
         self._store: Store[AutoUpdateStoreData] = Store(
@@ -195,8 +202,12 @@ class AutoUpdateManager:
                 del self._first_seen[version]
                 changed = True
 
+        # Save right away as an entry task; unload waits for it, so a reload
+        # cannot read the store before the first-seen time is written.
         if changed:
-            self._store.async_delay_save(self._data_to_save, STORAGE_SAVE_DELAY)
+            self._entry.async_create_task(
+                self._hass, self._store.async_save(self._data_to_save())
+            )
 
     @callback
     def _data_to_save(self) -> AutoUpdateStoreData:

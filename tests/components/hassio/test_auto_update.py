@@ -30,7 +30,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 STORAGE_KEY = "hassio.auto_update"
-STORAGE_SAVE_DELAY = timedelta(seconds=10)
 
 
 @pytest.fixture(autouse=True)
@@ -144,6 +143,12 @@ def test_options_schema_valid(options: dict[str, Any]) -> None:
             },
             id="empty_window",
         ),
+        pytest.param(
+            {"core_auto_update_window_start": "05:00"}, id="start_at_default_end"
+        ),
+        pytest.param(
+            {"core_auto_update_window_end": "03:00"}, id="end_at_default_start"
+        ),
         pytest.param({"core_auto_update_window_start": "25:00"}, id="invalid_time"),
         pytest.param({"core_auto_update_weekdays": []}, id="no_weekdays"),
         pytest.param({"core_auto_update_weekdays": ["someday"]}, id="unknown_weekday"),
@@ -153,6 +158,21 @@ def test_options_schema_invalid(options: dict[str, Any]) -> None:
     """Test invalid automatic update options are rejected."""
     with pytest.raises(probatio.Invalid):
         AUTO_UPDATE_OPTIONS_SCHEMA(options)
+
+
+def test_options_schema_to_settings() -> None:
+    """Test validated options can be read back as settings."""
+    options = AUTO_UPDATE_OPTIONS_SCHEMA(
+        {
+            "core_auto_update_window_start": "23:00",
+            "core_auto_update_window_end": "01:30",
+        }
+    )
+
+    settings = AutoUpdateSettings.from_options(options)
+
+    assert settings.window_start == time(23, 0)
+    assert settings.window_end == time(1, 30)
 
 
 async def _refresh_main_coordinator(
@@ -190,16 +210,27 @@ async def test_first_seen_is_set_once(
     assert manager.async_get_first_seen("2026.10.2") == first_seen
     assert manager.async_get_first_seen("2026.10.3") == newer_first_seen
 
-    freezer.tick(STORAGE_SAVE_DELAY)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     assert hass_storage[STORAGE_KEY]["data"] == {
         "first_seen": {
             "2026.10.2": first_seen.isoformat(),
             "2026.10.3": newer_first_seen.isoformat(),
         }
     }
+
+
+async def test_first_seen_survives_reload(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a reload right after a version is first seen keeps its time."""
+    first_seen = dt_util.utcnow()
+    config_entry = await _setup_hassio(hass)
+
+    freezer.tick(timedelta(seconds=1))
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.data[DATA_AUTO_UPDATE].async_get_first_seen("2026.10.2") == first_seen
 
 
 async def test_first_seen_survives_restart(
