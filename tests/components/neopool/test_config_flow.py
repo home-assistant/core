@@ -395,6 +395,8 @@ async def test_reconfigure_flow_relink_restores_on_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_config_entry_serial.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
+    await hass.async_block_till_done()
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
