@@ -109,7 +109,7 @@ async def test_remove_stale_device(
     )
 
     config_entry.runtime_data.data.pop(1)
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"]
     assert (
@@ -141,7 +141,7 @@ async def test_remove_current_device(
         (DOMAIN, "123456789_1"), config_entry.entry_id
     )
 
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"] is False
     assert device_registry.async_get_device_by_identifier(
@@ -170,7 +170,7 @@ async def test_remove_entry_device(
         (DOMAIN, "123456789"), config_entry.entry_id
     )
 
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"] is False
     assert device_registry.async_get_device_by_identifier(

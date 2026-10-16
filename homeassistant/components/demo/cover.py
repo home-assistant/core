@@ -29,7 +29,15 @@ async def async_setup_entry(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
             DemoCover(hass, "cover_2", "Hall Window", 10),
-            DemoCover(hass, "cover_3", "Living Room Window", 70, 50),
+            DemoCover(
+                hass,
+                "cover_3",
+                "Living Room Window",
+                70,
+                50,
+                supported_speeds=["slow", "default"],
+                translation_key="living_room_window",
+            ),
             DemoCover(
                 hass,
                 "cover_4",
@@ -69,6 +77,8 @@ class DemoCover(CoverEntity):
         tilt_position: int | None = None,
         device_class: CoverDeviceClass | None = None,
         supported_features: CoverEntityFeature | None = None,
+        supported_speeds: list[str] | None = None,
+        translation_key: str | None = None,
     ) -> None:
         """Initialize the cover."""
         self.hass = hass
@@ -76,6 +86,8 @@ class DemoCover(CoverEntity):
         self._position = position
         self._attr_device_class = device_class
         self._attr_supported_features = supported_features
+        self._attr_supported_speeds = supported_speeds
+        self._attr_translation_key = translation_key
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position

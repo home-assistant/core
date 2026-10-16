@@ -20,7 +20,6 @@ from typing import (
 )
 
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,15 +30,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ABCCachedProperties, Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -53,7 +44,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -74,11 +65,13 @@ from .const import (  # noqa: F401
     DATA_COMPONENT,
     DOMAIN,
     INTENT_GET_WEATHER,
+    SERVICE_GET_FORECASTS,
     UNIT_CONVERSIONS,
     VALID_UNITS,
     WeatherEntityFeature,
     WeatherEntityStateAttribute,
 )
+from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,7 +124,6 @@ ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 
 ROUNDING_PRECISION = 2
 
-SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT",
@@ -154,6 +146,81 @@ _TwiceDailyForecastUpdateCoordinatorT = TypeVar(
     bound=TimestampDataUpdateCoordinator[Any],
     default=_DailyForecastUpdateCoordinatorT,
 )
+
+__all__ = [
+    "ATTR_CONDITION_CLASS",
+    "ATTR_CONDITION_CLEAR_NIGHT",
+    "ATTR_CONDITION_CLOUDY",
+    "ATTR_CONDITION_EXCEPTIONAL",
+    "ATTR_CONDITION_FOG",
+    "ATTR_CONDITION_HAIL",
+    "ATTR_CONDITION_LIGHTNING",
+    "ATTR_CONDITION_LIGHTNING_RAINY",
+    "ATTR_CONDITION_PARTLYCLOUDY",
+    "ATTR_CONDITION_POURING",
+    "ATTR_CONDITION_RAINY",
+    "ATTR_CONDITION_SNOWY",
+    "ATTR_CONDITION_SNOWY_RAINY",
+    "ATTR_CONDITION_SUNNY",
+    "ATTR_CONDITION_WINDY",
+    "ATTR_CONDITION_WINDY_VARIANT",
+    "ATTR_FORECAST_APPARENT_TEMP",
+    "ATTR_FORECAST_CLOUD_COVERAGE",
+    "ATTR_FORECAST_CONDITION",
+    "ATTR_FORECAST_DEW_POINT",
+    "ATTR_FORECAST_HUMIDITY",
+    "ATTR_FORECAST_IS_DAYTIME",
+    "ATTR_FORECAST_NATIVE_APPARENT_TEMP",
+    "ATTR_FORECAST_NATIVE_DEW_POINT",
+    "ATTR_FORECAST_NATIVE_PRECIPITATION",
+    "ATTR_FORECAST_NATIVE_PRESSURE",
+    "ATTR_FORECAST_NATIVE_TEMP",
+    "ATTR_FORECAST_NATIVE_TEMP_LOW",
+    "ATTR_FORECAST_NATIVE_WIND_GUST_SPEED",
+    "ATTR_FORECAST_NATIVE_WIND_SPEED",
+    "ATTR_FORECAST_PRECIPITATION",
+    "ATTR_FORECAST_PRECIPITATION_PROBABILITY",
+    "ATTR_FORECAST_PRESSURE",
+    "ATTR_FORECAST_TEMP",
+    "ATTR_FORECAST_TEMP_LOW",
+    "ATTR_FORECAST_TIME",
+    "ATTR_FORECAST_UV_INDEX",
+    "ATTR_FORECAST_WIND_BEARING",
+    "ATTR_FORECAST_WIND_GUST_SPEED",
+    "ATTR_FORECAST_WIND_SPEED",
+    "ATTR_WEATHER_APPARENT_TEMPERATURE",
+    "ATTR_WEATHER_CLOUD_COVERAGE",
+    "ATTR_WEATHER_DEW_POINT",
+    "ATTR_WEATHER_HUMIDITY",
+    "ATTR_WEATHER_OZONE",
+    "ATTR_WEATHER_PRECIPITATION_UNIT",
+    "ATTR_WEATHER_PRESSURE",
+    "ATTR_WEATHER_PRESSURE_UNIT",
+    "ATTR_WEATHER_TEMPERATURE",
+    "ATTR_WEATHER_TEMPERATURE_UNIT",
+    "ATTR_WEATHER_UV_INDEX",
+    "ATTR_WEATHER_VISIBILITY",
+    "ATTR_WEATHER_VISIBILITY_UNIT",
+    "ATTR_WEATHER_WIND_BEARING",
+    "ATTR_WEATHER_WIND_GUST_SPEED",
+    "ATTR_WEATHER_WIND_SPEED",
+    "ATTR_WEATHER_WIND_SPEED_UNIT",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "INTENT_GET_WEATHER",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_GET_FORECASTS",
+    "UNIT_CONVERSIONS",
+    "VALID_UNITS",
+    "CoordinatorWeatherEntity",
+    "Forecast",
+    "SingleCoordinatorWeatherEntity",
+    "WeatherEntity",
+    "WeatherEntityDescription",
+    "WeatherEntityFeature",
+    "WeatherEntityStateAttribute",
+]
 
 # mypy: disallow-any-generics
 
@@ -210,17 +277,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DATA_COMPONENT] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-    component.async_register_entity_service(
-        SERVICE_GET_FORECASTS,
-        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
-        async_get_forecasts_service,
-        required_features=[
-            WeatherEntityFeature.FORECAST_DAILY,
-            WeatherEntityFeature.FORECAST_HOURLY,
-            WeatherEntityFeature.FORECAST_TWICE_DAILY,
-        ],
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
     async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
@@ -1005,40 +1062,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
             converted_forecast_list = self._convert_forecast(native_forecast_list)
             for listener in self._forecast_listeners[forecast_type]:
                 listener(converted_forecast_list)
-
-
-def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
-    """Raise error on attempt to get an unsupported forecast."""
-    raise HomeAssistantError(
-        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
-    )
-
-
-async def async_get_forecasts_service(
-    weather: WeatherEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """Get weather forecast."""
-    forecast_type = service_call.data["type"]
-    supported_features = weather.supported_features or 0
-    if forecast_type == "daily":
-        if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
-            raise_unsupported_forecast(weather.entity_id, forecast_type)
-        native_forecast_list = await weather.async_forecast_daily()
-    elif forecast_type == "hourly":
-        if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
-            raise_unsupported_forecast(weather.entity_id, forecast_type)
-        native_forecast_list = await weather.async_forecast_hourly()
-    else:
-        if (supported_features & WeatherEntityFeature.FORECAST_TWICE_DAILY) == 0:
-            raise_unsupported_forecast(weather.entity_id, forecast_type)
-        native_forecast_list = await weather.async_forecast_twice_daily()
-    if native_forecast_list is None:
-        converted_forecast_list = []
-    else:
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # noqa: SLF001
-    return {
-        "forecast": converted_forecast_list,
-    }
 
 
 class CoordinatorWeatherEntity(

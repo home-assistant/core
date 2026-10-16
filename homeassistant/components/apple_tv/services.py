@@ -1,9 +1,9 @@
 """Define services for the Apple TV integration."""
 
+import probatio
 from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 from pyatv.interface import AppleTV as AppleTVInterface
-import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -13,25 +13,25 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import ATTR_TEXT, DOMAIN
 
 SERVICE_SET_KEYBOARD_TEXT = "set_keyboard_text"
-SERVICE_SET_KEYBOARD_TEXT_SCHEMA = vol.Schema(
+SERVICE_SET_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_TEXT): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_TEXT): cv.string,
     }
 )
 
 SERVICE_APPEND_KEYBOARD_TEXT = "append_keyboard_text"
-SERVICE_APPEND_KEYBOARD_TEXT_SCHEMA = vol.Schema(
+SERVICE_APPEND_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_TEXT): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_TEXT): cv.string,
     }
 )
 
 SERVICE_CLEAR_KEYBOARD_TEXT = "clear_keyboard_text"
-SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = vol.Schema(
+SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
     }
 )
 

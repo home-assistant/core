@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 import pytest
 from rf_protocols.commands.ook import OOKCommand
 

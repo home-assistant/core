@@ -3,6 +3,7 @@
   dict({
     'coordinators': dict({
       '0': dict({
+        'push_enabled': True,
         'status': dict({
           'ac_system': dict({
             'master_serial': '**REDACTED**',

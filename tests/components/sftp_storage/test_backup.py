@@ -339,7 +339,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     # Called 2 times, to remove metadata and backup file.
     assert mock_ssh_connection._sftp._mock_unlink.call_count == 2
@@ -350,17 +350,18 @@ async def test_agents_delete(
     [
         (
             [True, False],
-            {"agent_errors": {}},
+            {"agent_error_translations": {}, "agent_errors": {}},
         ),  # First `True` is to confirm the metadata file exists
         (
             SFTPError(0, "manual"),
             {
+                "agent_error_translations": {},
                 "agent_errors": {
                     f"{DOMAIN}.{TEST_AGENT_ID}": (
                         f"Failed to delete backup id:"
                         f" {TEST_AGENT_BACKUP.backup_id}: manual"
                     )
-                }
+                },
             },
         ),
     ],
@@ -410,7 +411,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:

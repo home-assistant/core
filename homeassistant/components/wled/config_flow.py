@@ -2,8 +2,14 @@
 
 from typing import Any, override
 
-import voluptuous as vol
-from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
+import probatio
+from wled import (
+    WLED,
+    Device,
+    WLEDConnectionError,
+    WLEDError,
+    WLEDUnsupportedVersionError,
+)
 import yarl
 
 from homeassistant.components import onboarding
@@ -64,6 +70,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_version"
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
+            except WLEDError:
+                errors["base"] = "invalid_response"
             else:
                 mac_address = normalize_mac_address(device.info.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
@@ -85,7 +93,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=device.info.name,
                     data={CONF_HOST: host},
                 )
-        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
             data_schema = self.add_suggested_values_to_schema(
@@ -110,12 +118,17 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        # Abort quick if the mac address is provided by discovery info
+        # A changed address has to answer as this device before it replaces
+        # the configured one, so only an unchanged address aborts right away.
         if mac := discovery_info.properties.get(CONF_MAC):
-            await self.async_set_unique_id(normalize_mac_address(mac))
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: discovery_info.host}
-            )
+            unique_id = normalize_mac_address(mac)
+            await self.async_set_unique_id(unique_id)
+            if (
+                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, unique_id
+                )
+            ) and entry.data[CONF_HOST] == discovery_info.host:
+                return self.async_abort(reason="already_configured")
 
         self.discovered_host = discovery_info.host
         try:
@@ -124,6 +137,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unsupported_version")
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except WLEDError:
+            return self.async_abort(reason="invalid_response")
 
         device_mac_address = normalize_mac_address(
             self.discovered_device.info.mac_address
@@ -175,9 +190,9 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_KEEP_MAIN_LIGHT,
                         default=self.config_entry.options.get(
                             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT

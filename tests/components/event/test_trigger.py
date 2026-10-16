@@ -7,15 +7,18 @@ import pytest
 
 from homeassistant.components.event import DOMAIN, EventEntity
 from homeassistant.components.event.const import ATTR_EVENT_TYPE
+from homeassistant.components.event.trigger import TRIGGERS
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntity, setup_test_component_platform
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -48,6 +51,11 @@ async def target_events(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "event")
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "received": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -69,6 +77,11 @@ async def test_event_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

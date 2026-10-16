@@ -14,6 +14,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.entity_class import resolve_entity_description_class
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 # Only flag defaults that are simple constants (None, True, False).
@@ -93,35 +94,6 @@ def _update_defaults(defaults: dict[str, object], class_node: nodes.ClassDef) ->
             defaults.pop(name, None)
 
 
-_ENTITY_DESCRIPTION_QNAME = "homeassistant.helpers.entity.EntityDescription"
-
-
-def _is_entity_description(class_node: nodes.ClassDef) -> bool:
-    """Check if a class is or inherits from EntityDescription."""
-    if class_node.qname() == _ENTITY_DESCRIPTION_QNAME:
-        return True
-    try:
-        return any(
-            ancestor.qname() == _ENTITY_DESCRIPTION_QNAME
-            for ancestor in class_node.ancestors()
-        )
-    except astroid.exceptions.InferenceError:
-        return False
-
-
-def _resolve_description_class(call: nodes.Call) -> nodes.ClassDef | None:
-    """Resolve the EntityDescription subclass from a constructor call."""
-    try:
-        for inferred in call.func.infer():
-            if isinstance(inferred, nodes.ClassDef) and _is_entity_description(
-                inferred
-            ):
-                return inferred
-    except astroid.exceptions.InferenceError:
-        pass
-    return None
-
-
 class EntityDescriptionDefaultsChecker(BaseChecker):
     """Checker for redundant default values in EntityDescription."""
 
@@ -163,7 +135,7 @@ class EntityDescriptionDefaultsChecker(BaseChecker):
         ):
             return
 
-        class_node = _resolve_description_class(node)
+        class_node = resolve_entity_description_class(node)
         if class_node is None:
             return
 

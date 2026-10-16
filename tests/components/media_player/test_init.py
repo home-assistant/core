@@ -4,8 +4,8 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import hdrs
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
@@ -738,7 +738,7 @@ async def test_enqueue_alert_exclusive(hass: HomeAssistant) -> None:
     await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "media_player",
             "play_media",
@@ -828,7 +828,7 @@ async def test_play_media_via_selector(hass: HomeAssistant) -> None:
     assert len(mock_play_media.mock_calls) == 2
     assert mock_play_media.mock_calls[0].args == mock_play_media.mock_calls[1].args
 
-    with pytest.raises(vol.Invalid, match="Play media cannot contain 'media'"):
+    with pytest.raises(probatio.Invalid, match="Play media cannot contain 'media'"):
         await hass.services.async_call(
             "media_player",
             "play_media",

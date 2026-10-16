@@ -67,7 +67,7 @@ def mock_api_call(cmd: str, fetch_data: bool = False) -> dict[str, Any]:
     return {}
 
 
-async def async_init_integration(hass: HomeAssistant):
+async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the AEMET OpenData integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
@@ -92,3 +92,5 @@ async def async_init_integration(hass: HomeAssistant):
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    return config_entry

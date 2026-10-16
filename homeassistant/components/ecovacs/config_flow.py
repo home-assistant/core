@@ -18,7 +18,7 @@ from deebot_client.exceptions import (
 )
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -56,8 +56,8 @@ def _validate_url(
     if urlparse(value).scheme not in schema_list:
         return {field_name: f"invalid_url_schema_{field_name}"}
     try:
-        vol.Schema(vol.Url())(value)
-    except vol.Invalid:
+        probatio.Schema(probatio.Url())(value)
+    except probatio.Invalid:
         return {field_name: "invalid_url"}
     return {}
 
@@ -210,10 +210,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         # Persist account credentials so the runtime can seed the Authenticator
         # on subsequent loads, avoiding the password login that re-triggers the
         # device-verification challenge.
-        if (
-            (authenticator := self._authenticator) is not None
-            and (account := authenticator.account_credentials) is not None
-        ):
+        if (authenticator := self._authenticator) is not None and (
+            account := authenticator.account_credentials
+        ) is not None:
             self._input[CONF_CREDENTIALS] = {
                 "access_token": account.access_token,
                 "user_id": account.user_id,
@@ -239,9 +238,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODE, default=InstanceMode.CLOUD
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
@@ -262,27 +261,29 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the authentication form."""
         schema: VolDictType = {
-            vol.Required(CONF_USERNAME): selector.TextSelector(
+            probatio.Required(CONF_USERNAME): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
             ),
-            vol.Required(CONF_PASSWORD): selector.TextSelector(
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
             ),
-            vol.Required(CONF_COUNTRY): selector.CountrySelector(),
+            probatio.Required(CONF_COUNTRY): selector.CountrySelector(),
         }
         if self._mode == InstanceMode.SELF_HOSTED:
             schema.update(
                 {
-                    vol.Required(CONF_OVERRIDE_REST_URL): selector.TextSelector(
+                    probatio.Required(CONF_OVERRIDE_REST_URL): selector.TextSelector(
                         selector.TextSelectorConfig(type=selector.TextSelectorType.URL)
                     ),
-                    vol.Required(CONF_OVERRIDE_MQTT_URL): selector.TextSelector(
+                    probatio.Required(CONF_OVERRIDE_MQTT_URL): selector.TextSelector(
                         selector.TextSelectorConfig(type=selector.TextSelectorType.URL)
                     ),
                 }
             )
             if errors:
-                schema[vol.Optional(CONF_VERIFY_MQTT_CERTIFICATE, default=True)] = bool
+                schema[
+                    probatio.Optional(CONF_VERIFY_MQTT_CERTIFICATE, default=True)
+                ] = bool
 
         if not user_input:
             user_input = {
@@ -292,7 +293,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="auth",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(schema), suggested_values=user_input
+                data_schema=probatio.Schema(schema), suggested_values=user_input
             ),
             errors=errors,
             last_step=True,
@@ -362,9 +363,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="device_verification",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_VERIFICATION_CODE): selector.TextSelector(
+                        probatio.Required(
+                            CONF_VERIFICATION_CODE
+                        ): selector.TextSelector(
                             selector.TextSelectorConfig(
                                 type=selector.TextSelectorType.TEXT
                             )
@@ -386,9 +389,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_PASSWORD): selector.TextSelector(
+                        probatio.Required(
+                            probatio.Secret(CONF_PASSWORD)
+                        ): selector.TextSelector(
                             selector.TextSelectorConfig(
                                 type=selector.TextSelectorType.PASSWORD
                             )

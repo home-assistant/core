@@ -11,7 +11,7 @@ PLATFORMS = [Platform.SENSOR]
 type WebminConfigEntry = ConfigEntry[WebminUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WebminConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WebminConfigEntry) -> None:
     """Set up Webmin from a config entry."""
 
     coordinator = WebminUpdateCoordinator(hass, entry)
@@ -20,9 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebminConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WebminConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WebminConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

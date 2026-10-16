@@ -1,5 +1,6 @@
 """Data update coordinator for the Ouman EH-800 integration."""
 
+from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
 from typing import override
@@ -10,6 +11,7 @@ from ouman_eh_800_api import (
     L2BaseEndpoints,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
     OumanEh800Client,
     OumanEndpoint,
     OumanRegistrySet,
@@ -27,6 +29,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, OumanDevice
@@ -36,7 +39,15 @@ _LOGGER = logging.getLogger(__name__)
 type OumanEh800ConfigEntry = ConfigEntry[OumanEh800Coordinator]
 
 
-class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValues]]):
+@dataclass
+class OumanEh800Data:
+    """Data fetched from the device on each update."""
+
+    values: dict[OumanEndpoint, OumanValues]
+    l1_summer_function_active: bool
+
+
+class OumanEh800Coordinator(DataUpdateCoordinator[OumanEh800Data]):
     """Ouman EH-800 data update coordinator."""
 
     _registry_set: OumanRegistrySet
@@ -87,8 +98,8 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
     def device_info(self, device: OumanDevice) -> DeviceInfo:
         """Return the device info for a logical device."""
         device_info = self._device_info[device]
-        if device is not OumanDevice.MAIN and "via_device_id" not in device_info:
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+        if device is not OumanDevice.MAIN and device_info.via_device_id is UNDEFINED:
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 self.hass,
                 self._main_device_identifier,
                 config_entry_id=self.config_entry.entry_id,
@@ -108,12 +119,18 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             raise ConfigEntryNotReady("Error communicating with API") from err
 
     @override
-    async def _async_update_data(self) -> dict[OumanEndpoint, OumanValues]:
-        """Fetch registry values from the device."""
+    async def _async_update_data(self) -> OumanEh800Data:
+        """Fetch registry values and the summer function state from the device."""
         try:
-            return await self.client.get_values(self._registry_set)
+            values = await self.client.get_values(self._registry_set)
+            summer_function_active = (
+                await self.client.get_is_l1_summer_function_active()
+            )
         except OumanClientCommunicationError as err:
             raise UpdateFailed("Error communicating with API") from err
+        except OumanClientError as err:
+            raise UpdateFailed("Unexpected response from device") from err
+        return OumanEh800Data(values, summer_function_active)
 
     async def async_set_endpoint_value(
         self, endpoint: ControllableEndpoint, value: OumanValues | int
@@ -128,8 +145,12 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             raise HomeAssistantError("Authentication failed") from err
         except OumanClientCommunicationError as err:
             raise HomeAssistantError("Error communicating with API") from err
+        except OumanClientError as err:
+            raise HomeAssistantError("Unexpected response from device") from err
 
-        self.async_set_updated_data({**self.data, endpoint: result})
+        self.async_set_updated_data(
+            replace(self.data, values={**self.data.values, endpoint: result})
+        )
         # Separate refresh on all endpoints to catch cascading changes.
         await self.async_request_refresh()
 
@@ -143,11 +164,11 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             (OumanDevice.L1, L1BaseEndpoints.CIRCUIT_NAME, "1"),
             (OumanDevice.L2, L2BaseEndpoints.CIRCUIT_NAME, "2"),
         ):
-            if circuit_name := self.data.get(endpoint):
+            if circuit_name := self.data.values.get(endpoint):
                 assert isinstance(circuit_name, str)
                 device_info = self._device_info[device]
-                device_info["translation_key"] = "heating_circuit_with_name"
-                device_info["translation_placeholders"] = {
+                device_info.translation_key = "heating_circuit_with_name"
+                device_info.translation_placeholders = {
                     "circuit_number": circuit_number,
                     "circuit_name": circuit_name,
                 }

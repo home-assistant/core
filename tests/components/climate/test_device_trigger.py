@@ -1,8 +1,8 @@
 """The tests for Climate device triggers."""
 
+from probatio import Invalid, to_field_list
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.climate import (
@@ -332,7 +332,7 @@ async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -382,7 +382,7 @@ async def test_get_trigger_capabilities_temp_humid(
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -406,3 +406,18 @@ async def test_get_trigger_capabilities_temp_humid(
             "type": "positive_time_period_dict",
         },
     ]
+
+
+def test_current_temperature_changed_with_bad_above_is_invalid() -> None:
+    """Test the trigger type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="expected float at 'above'"):
+        device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "climate.test",
+                "type": "current_temperature_changed",
+                "above": "warm",
+            }
+        )

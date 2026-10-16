@@ -1,6 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
 
-import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -13,8 +12,7 @@ from typing import Any, Final, Self, cast, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    ATTR_UNIT_OF_MEASUREMENT,
+from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
     UnitOfTemperature,
@@ -24,7 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -32,7 +29,7 @@ from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.variance import ignore_variance
 
-from .const import (  # noqa: F401
+from .const import (
     AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_OPTIONS,
@@ -68,14 +65,24 @@ UPTIME_DEFAULT_TOLERANCE_SECONDS: Final = 60
 UPTIME_MIN_TOLERANCE_SECONDS: Final = 5
 
 __all__ = [
+    "AMBIGUOUS_UNITS",
     "ATTR_LAST_RESET",
     "ATTR_OPTIONS",
     "ATTR_STATE_CLASS",
     "CONF_STATE_CLASS",
+    "DEVICE_CLASSES",
+    "DEVICE_CLASSES_SCHEMA",
     "DEVICE_CLASS_STATE_CLASSES",
+    "DEVICE_CLASS_UNITS",
     "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "NON_NUMERIC_DEVICE_CLASSES",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "STATE_CLASSES",
+    "STATE_CLASSES_SCHEMA",
+    "STATE_CLASS_UNITS",
+    "UNIT_CONVERTERS",
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",
@@ -84,6 +91,8 @@ __all__ = [
     "SensorEntityStateAttribute",
     "SensorExtraStoredData",
     "SensorStateClass",
+    "async_rounded_state",
+    "async_update_suggested_units",
 ]
 
 # mypy: disallow-any-generics
@@ -225,15 +234,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
         return self._get_uptime(current_uptime)
 
-    @callback
     @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform.
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
 
         Allows integrations to remove legacy custom unit conversion which is no longer
         needed without breaking existing sensors. Only works for sensors which are in
@@ -242,7 +245,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         This can be removed once core integrations have dropped unneeded custom unit
         conversion.
         """
-        super().add_to_platform_start(hass, platform, parallel_updates)
+        await super().async_prepare_to_add_to_hass()
 
         # Bail out if the sensor doesn't have a unique_id or a device class
         if self.unique_id is None or self.device_class is None:
@@ -252,7 +255,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Bail out if the entity is not yet registered
         if not (
             entity_id := registry.async_get_entity_id(
-                platform.domain, platform.platform_name, self.unique_id
+                self.platform.domain, self.platform.platform_name, self.unique_id
             )
         ):
             # Prime _sensor_option_unit_of_measurement to ensure the correct unit

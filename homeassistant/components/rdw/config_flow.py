@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from vehicle import RDW, RDWError, RDWUnknownLicensePlateError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,9 +46,9 @@ class RDWFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_LICENSE_PLATE): str,
+                    probatio.Required(CONF_LICENSE_PLATE): str,
                 }
             ),
             errors=errors,

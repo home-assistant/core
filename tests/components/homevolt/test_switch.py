@@ -2,10 +2,18 @@
 
 from unittest.mock import MagicMock
 
-from homevolt import HomevoltAuthenticationError, HomevoltConnectionError, HomevoltError
+from homevolt import (
+    HomevoltAuthenticationError,
+    HomevoltCommandOutcomeUnknownError,
+    HomevoltCommandRejectedError,
+    HomevoltCommandVerificationError,
+    HomevoltConnectionError,
+    HomevoltError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -128,11 +136,11 @@ async def test_switch_turn_on_off(
 async def test_switch_turn_on_off_exception_handler(
     hass: HomeAssistant,
     mock_homevolt_client: MagicMock,
-    switch_entity_id: str,
     service: str,
     client_method_name: str,
     exception: Exception,
     expected_exception: type[Exception],
+    switch_entity_id: str,
 ) -> None:
     """Test homevolt_exception_handler raises correct exception on turn_on/turn_off."""
     getattr(mock_homevolt_client, client_method_name).side_effect = exception
@@ -144,3 +152,53 @@ async def test_switch_turn_on_off_exception_handler(
             {ATTR_ENTITY_ID: switch_entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "refresh_count"),
+    [
+        pytest.param(
+            HomevoltCommandRejectedError("invalid command"),
+            "command_rejected",
+            0,
+            id="rejected",
+        ),
+        pytest.param(
+            HomevoltCommandVerificationError("state mismatch"),
+            "command_verification_failed",
+            1,
+            id="verification",
+        ),
+        pytest.param(
+            HomevoltCommandOutcomeUnknownError("read-back failed"),
+            "command_outcome_unknown",
+            1,
+            id="outcome-unknown",
+        ),
+    ],
+)
+async def test_switch_command_error(
+    hass: HomeAssistant,
+    mock_homevolt_client: MagicMock,
+    switch_entity_id: str,
+    exception: HomevoltError,
+    translation_key: str,
+    refresh_count: int,
+) -> None:
+    """Test command errors are translated and uncertain state is refreshed."""
+    mock_homevolt_client.enable_local_mode.side_effect = exception
+    mock_homevolt_client.update_info.reset_mock()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: switch_entity_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders is None
+    assert exc_info.value.__cause__ is exception
+    assert mock_homevolt_client.update_info.await_count == refresh_count

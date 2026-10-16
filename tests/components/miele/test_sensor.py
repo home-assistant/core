@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.components.miele.sensor import _convert_temperature
+from homeassistant.components.miele.sensor import _convert_temperature, _get_plate_count
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -902,3 +902,20 @@ def test_convert_temperature_invalid_raw_types() -> None:
     """int() must not raise: bad API payloads become unknown."""
     assert _convert_temperature([_core_temperature_entry("n/a")], 0) is None
     assert _convert_temperature([_core_temperature_entry([1])], 0) is None
+
+
+@pytest.mark.parametrize(
+    ("tech_type", "expected"),
+    [
+        ("KM7575", 6),
+        ("KM7699", 5),
+        ("KM7899", 5),
+        ("KM7999 FR/R01", 5),
+        ("KMX 123", 6),
+        ("KMDA7774-1 R01", 5),
+        ("Unknown model", 4),
+    ],
+)
+def test_get_plate_count(tech_type: str, expected: int) -> None:
+    """Cover _get_plate_count prefix matching, including the KM7999 entry."""
+    assert _get_plate_count(tech_type) == expected

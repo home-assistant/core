@@ -1,13 +1,32 @@
 """Test blueprint models."""
 
+from collections.abc import Callable
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, errors, models
+from homeassistant.config import _get_annotation
 from homeassistant.core import HomeAssistant
 from homeassistant.util.yaml import Input
+from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass, NodeStrClass
+
+from tests.common import get_test_config_dir
+
+# A real blueprint in the test config dir, loaded from disk by DomainBlueprints.
+BLUEPRINT_PATH = "test_event_sensor.yaml"
+BLUEPRINT_FILE = get_test_config_dir("blueprints", "template", BLUEPRINT_PATH)
+
+SUBSTITUTE_XFAIL = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "annotatedyaml's substitute (input.py:51,54) rebuilds containers with "
+        "comprehensions, so the node class and the __config_file__/__line__ slots "
+        "are both dropped"
+    ),
+)
 
 
 @pytest.fixture
@@ -60,6 +79,41 @@ def blueprint_2(request: pytest.FixtureRequest) -> models.Blueprint:
             },
         }
     return models.Blueprint(blueprint, schema=BLUEPRINT_SCHEMA)
+
+
+@pytest.fixture
+async def yaml_blueprint(hass: HomeAssistant) -> models.Blueprint:
+    """Blueprint loaded from a real YAML file, so its nodes carry source annotations."""
+    domain_bps = models.DomainBlueprints(
+        hass,
+        "template",
+        logging.getLogger(__name__),
+        None,
+        AsyncMock(),
+        BLUEPRINT_SCHEMA,
+    )
+    return await domain_bps.async_get_blueprint(BLUEPRINT_PATH)
+
+
+@pytest.fixture
+def yaml_blueprint_inputs(
+    yaml_blueprint: models.Blueprint,
+) -> models.BlueprintInputs:
+    """Validated inputs for the YAML blueprint fixture."""
+    inputs = models.BlueprintInputs(
+        yaml_blueprint,
+        {
+            "use_blueprint": {
+                "path": BLUEPRINT_PATH,
+                "input": {
+                    "event_type": "my_event",
+                    "event_data": {"hello": "world"},
+                },
+            }
+        },
+    )
+    inputs.validate()
+    return inputs
 
 
 @pytest.fixture
@@ -225,6 +279,92 @@ def test_blueprint_inputs_override_default(blueprint_2: models.Blueprint) -> Non
         "test-input-default": "custom",
     }
     assert inputs.async_substitute() == {"example": 1, "example-default": "custom"}
+
+
+def test_yaml_blueprint_keeps_annotations_through_the_schema(
+    yaml_blueprint: models.Blueprint,
+) -> None:
+    """Test the blueprint schema hands the config through with its annotations.
+
+    BLUEPRINT_SCHEMA allows extra keys, and probatio stores the original value
+    object for those, so anything missing after async_substitute was dropped by
+    the substitution rather than by the schema.
+    """
+    data = yaml_blueprint.data
+
+    assert type(data["triggers"]) is NodeListClass
+    assert _get_annotation(data["triggers"]) == (BLUEPRINT_FILE, 18)
+    assert _get_annotation(data["triggers"][0]) == (BLUEPRINT_FILE, 18)
+    assert _get_annotation(data["sensor"]) == (BLUEPRINT_FILE, 24)
+    assert _get_annotation(data["sensor"]["attributes"]) == (BLUEPRINT_FILE, 27)
+
+
+@pytest.mark.parametrize(
+    ("select", "expected_type", "expected_annotation"),
+    [
+        pytest.param(
+            lambda config: next(key for key in config if key == "triggers"),
+            NodeStrClass,
+            (BLUEPRINT_FILE, 17),
+            id="key_at_root",
+        ),
+        pytest.param(
+            lambda config: next(
+                key for key in config["triggers"][0] if key == "trigger"
+            ),
+            NodeStrClass,
+            (BLUEPRINT_FILE, 18),
+            id="key_in_list_element",
+        ),
+        pytest.param(
+            lambda config: config["triggers"],
+            NodeListClass,
+            (BLUEPRINT_FILE, 18),
+            marks=SUBSTITUTE_XFAIL,
+            id="list_in_dict",
+        ),
+        pytest.param(
+            lambda config: config["triggers"][0],
+            NodeDictClass,
+            (BLUEPRINT_FILE, 18),
+            marks=SUBSTITUTE_XFAIL,
+            id="dict_in_list",
+        ),
+        pytest.param(
+            lambda config: config["sensor"],
+            NodeDictClass,
+            (BLUEPRINT_FILE, 24),
+            marks=SUBSTITUTE_XFAIL,
+            id="dict_in_dict",
+        ),
+        pytest.param(
+            lambda config: config["sensor"]["attributes"],
+            NodeDictClass,
+            (BLUEPRINT_FILE, 27),
+            marks=SUBSTITUTE_XFAIL,
+            id="dict_in_dict_in_dict",
+        ),
+    ],
+)
+def test_substituted_blueprint_keeps_annotations(
+    yaml_blueprint_inputs: models.BlueprintInputs,
+    select: Callable[[dict], Any],
+    expected_type: type,
+    expected_annotation: tuple[str, int],
+) -> None:
+    """Test the substituted config keeps the node classes and their locations.
+
+    The keys pass today because substitute's dict comprehension hands them
+    through unchanged, which is the only reason a blueprint-backed config still
+    reports where an error came from. The result's top level is deliberately not
+    asserted: async_substitute merges it into a fresh dict literal, so it can
+    never carry an annotation.
+    """
+    config = yaml_blueprint_inputs.async_substitute()
+    node = select(config)
+
+    assert type(node) is expected_type
+    assert _get_annotation(node) == expected_annotation
 
 
 async def test_domain_blueprints_get_blueprint_errors(

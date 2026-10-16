@@ -3,8 +3,8 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.climate.trigger import CONF_HVAC_MODE
+from homeassistant.components.climate.trigger import CONF_HVAC_MODE, TRIGGERS
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ENTITY_ID,
@@ -24,11 +24,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -51,6 +53,20 @@ _TEMPERATURE_CROSSED_THRESHOLD = {
         "type": "above",
         "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
     }
+}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "hvac_mode_changed": TargetSupport.STANDARD,
+    "started_cooling": TargetSupport.STANDARD,
+    "started_drying": TargetSupport.STANDARD,
+    "target_humidity_changed": TargetSupport.STANDARD,
+    "target_humidity_crossed_threshold": TargetSupport.STANDARD,
+    "target_temperature_changed": TargetSupport.STANDARD,
+    "target_temperature_crossed_threshold": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+    "started_heating": TargetSupport.STANDARD,
 }
 
 
@@ -96,6 +112,11 @@ async def test_climate_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [
@@ -116,18 +137,18 @@ async def test_climate_trigger_options_validation(
             "climate.hvac_mode_changed",
             # Empty hvac_mode list
             {CONF_HVAC_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             # Missing CONF_HVAC_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             {CONF_HVAC_MODE: ["invalid_mode"]},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
