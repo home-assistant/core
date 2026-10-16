@@ -633,29 +633,36 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         result = {}
         for statistic_id in statistic_ids:
             statistic_sum: float | None = None
-            if statistics := current_stats.get(statistic_id):
-                # The change is relative to the last sum before start_time, so
-                # subtracting it from the first statistic that has a sum
-                # recovers that sum. Leading statistics without a sum are
-                # skipped, since their change is unknown.
-                for stat in statistics:
-                    stat_sum = stat["sum"]
-                    stat_change = stat["change"]
-                    if stat_sum is not None and stat_change is not None:
-                        statistic_sum = stat_sum - stat_change
-                        break
+            window_stats = current_stats.get(statistic_id) or []
+            # The change is relative to the last sum before start_time, so
+            # subtracting it from the first statistic that has a sum recovers
+            # that sum. Leading statistics without a sum are skipped.
+            for stat in window_stats:
+                stat_sum = stat["sum"]
+                stat_change = stat["change"]
+                if stat_sum is not None and stat_change is not None:
+                    statistic_sum = stat_sum - stat_change
+                    break
             if statistic_sum is None:
-                # No statistics found in the window yet, or the first one has
-                # no sum, so continue from the last statistic, but use it only
-                # if it's before start_time.
-                last_stat = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+                # No statistic in the window has a usable sum, so continue from
+                # the last statistic before start_time. Fetch one more than the
+                # number of statistics in the window, since all of them can be
+                # missing a sum.
+                last_stats = await get_instance(self.hass).async_add_executor_job(
+                    get_last_statistics,
+                    self.hass,
+                    len(window_stats) + 1,
+                    statistic_id,
+                    True,
+                    {"sum"},
                 )
-                if (
-                    last_stat
-                    and last_stat[statistic_id][0]["start"] < start_time.timestamp()
-                ):
-                    statistic_sum = last_stat[statistic_id][0]["sum"]
+                for last_stat in last_stats.get(statistic_id, []):
+                    if (
+                        last_stat["start"] < start_time.timestamp()
+                        and last_stat["sum"] is not None
+                    ):
+                        statistic_sum = last_stat["sum"]
+                        break
             if statistic_sum is None:
                 # Expected for new installations or if the statistics were
                 # cleared, e.g. from the developer tools

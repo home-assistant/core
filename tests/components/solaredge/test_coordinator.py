@@ -565,6 +565,88 @@ async def test_modules_coordinator_first_window_statistic_without_sum(
     }
 
 
+async def test_modules_coordinator_window_statistics_without_sum(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test the sum is recovered when no in-window statistic has a sum.
+
+    With no usable sum in the window, the baseline must come from the last
+    statistic before the window rather than from the last in-window statistic.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"{DOMAIN}:{SITE_ID}_7a012345_ca"
+    # Every statistic in the window has no sum.
+    async_add_external_statistics(
+        hass,
+        StatisticMetaData(
+            mean_type=StatisticMeanType.ARITHMETIC,
+            has_sum=True,
+            name=f"{entry.title} Optimizer 1.1",
+            source=DOMAIN,
+            statistic_id=statistic_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        ),
+        [
+            StatisticData(
+                start=dt_util.as_utc(datetime(2025, 2, 1, hour, 0)).replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                ),
+                state=None,
+                sum=None,
+            )
+            for hour in (11, 12)
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 10.0},
+        ),
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 12, 0)),
+            values={"7A012345-CA": 5.0},
+        ),
+    ]
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 10.0, "sum": 34.0},
+            {"start": 1738468800.0, "end": 1738472400.0, "state": 5.0, "sum": 39.0},
+        ]
+    }
+
+
 async def test_modules_coordinator_no_energy_data(
     recorder_mock: Recorder,
     hass: HomeAssistant,
