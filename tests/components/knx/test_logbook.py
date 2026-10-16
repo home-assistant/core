@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from xknx.dpt import DPTBinary
 from xknx.telegram import Telegram, TelegramDirection
@@ -22,6 +23,10 @@ from .conftest import KNXTestKit
 from tests.common import MockUser, async_capture_events, mock_restore_cache
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import WebSocketGenerator
+
+LIGHT_ENTITY_ID = "light.test"
+SWITCH_ENTITY_ID = "switch.test"
+COVER_ENTITY_ID = "cover.test"
 
 
 @pytest.mark.parametrize(
@@ -85,7 +90,11 @@ async def test_telegram_context(
 
 @pytest.mark.parametrize("platform", ["light", "switch"])
 async def test_service_context(
-    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser, platform: str
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_admin_user: MockUser,
+    platform: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Preserve HA causes and replace them when a physical switch takes over."""
     await knx.setup_integration({platform: {"name": "test", "address": "1/1/1"}})
@@ -103,7 +112,8 @@ async def test_service_context(
     assert hass.states.get(f"{platform}.test").context is service_context
     assert not events
 
-    # This happens inside HA's recent-context window.
+    # Outside HA's recent-context window, the physical sender takes over.
+    freezer.tick(timedelta(seconds=6))
     await knx.receive_write("1/1/1", False, source="1.1.23")
     assert hass.states.get(f"{platform}.test").context is events[0].context
     assert events[0].context.user_id is None
@@ -137,11 +147,11 @@ async def test_light_brightness_does_not_reuse_sender(
     )
     events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
     await knx.receive_write("1/1/1", True, source="1.1.23")
-    context = hass.states.get("light.test").context
+    context = hass.states.get(LIGHT_ENTITY_ID).context
     assert context is events[0].context
 
     await knx.receive_write("1/1/3", (128,), source="1.1.40")
-    state = hass.states.get("light.test")
+    state = hass.states.get(LIGHT_ENTITY_ID)
     assert state.attributes["brightness"] == 128
     assert state.context.id != context.id
     assert len(events) == 1
@@ -203,7 +213,7 @@ async def test_light_live_activity(
             "id": 1,
             "type": "logbook/event_stream",
             "start_time": (dt_util.utcnow() - timedelta(seconds=1)).isoformat(),
-            "entity_ids": ["light.test"],
+            "entity_ids": [LIGHT_ENTITY_ID],
         }
     )
     result = await asyncio.wait_for(client.receive_json(), 2)
@@ -218,7 +228,7 @@ async def test_light_live_activity(
     assert message["type"] == "event"
     entries = message["event"]["events"]
     assert len(entries) == 1
-    assert entries[0]["entity_id"] == "light.test"
+    assert entries[0]["entity_id"] == LIGHT_ENTITY_ID
     assert entries[0]["context_name"] == "1.1.23"
     assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
 
@@ -257,14 +267,14 @@ async def test_light_recorded_activity(
             "id": 1,
             "type": "logbook/get_events",
             "start_time": start.isoformat(),
-            "entity_ids": ["light.test"],
+            "entity_ids": [LIGHT_ENTITY_ID],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     entries = [entry for entry in response["result"] if entry.get("state") == STATE_ON]
     assert len(entries) == 1
-    assert entries[0]["entity_id"] == "light.test"
+    assert entries[0]["entity_id"] == LIGHT_ENTITY_ID
     assert entries[0]["context_name"] == expected_name
     assert entries[0]["context_domain"] == "knx"
     assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
@@ -332,12 +342,12 @@ async def test_initial_response_has_no_sender_event(
     await knx.setup_integration(
         {"switch": {"name": "test", "address": "1/1/1"}}, state_updater=False
     )
-    assert hass.states.get("switch.test").state == STATE_UNKNOWN
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNKNOWN
     events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
 
     await knx.receive_response("1/1/1", True)
 
-    assert hass.states.get("switch.test").state == STATE_ON
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
     assert not events
 
 
@@ -355,7 +365,7 @@ async def test_initial_light_response_has_no_sender_event(
         },
         state_updater=False,
     )
-    assert hass.states.get("light.test").state == "off"
+    assert hass.states.get(LIGHT_ENTITY_ID).state == "off"
     events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
 
     # Learning brightness does not establish the switch state.
@@ -364,12 +374,12 @@ async def test_initial_light_response_has_no_sender_event(
 
     await knx.receive_response("1/1/1", True)
 
-    assert hass.states.get("light.test").state == STATE_ON
+    assert hass.states.get(LIGHT_ENTITY_ID).state == STATE_ON
     assert not events
 
     await knx.receive_response("1/1/1", False)
     assert len(events) == 1
-    assert hass.states.get("light.test").context is events[0].context
+    assert hass.states.get(LIGHT_ENTITY_ID).context is events[0].context
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -454,7 +464,7 @@ async def test_restored_cover_initial_responses(
         hass,
         (
             State(
-                "cover.test",
+                COVER_ENTITY_ID,
                 "closed",
                 {"current_position": 0, "current_tilt_position": 0},
             ),
@@ -471,19 +481,19 @@ async def test_restored_cover_initial_responses(
         },
         state_updater=False,
     )
-    assert hass.states.get("cover.test").state == "closed"
-    assert hass.states.get("cover.test").attributes["assumed_state"]
+    assert hass.states.get(COVER_ENTITY_ID).state == "closed"
+    assert hass.states.get(COVER_ENTITY_ID).attributes["assumed_state"]
     events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
 
     for address, value in responses:
         await knx.receive_response(address, (value,), source="1.1.40")
         assert not events
 
-    assert hass.states.get("cover.test").state == "open"
-    assert not hass.states.get("cover.test").attributes.get("assumed_state")
+    assert hass.states.get(COVER_ENTITY_ID).state == "open"
+    assert not hass.states.get(COVER_ENTITY_ID).attributes.get("assumed_state")
 
     await knx.receive_response("1/0/2", (255,), source="1.1.40")
-    assert hass.states.get("cover.test").state == "closed"
+    assert hass.states.get(COVER_ENTITY_ID).state == "closed"
     assert len(events) == 1
     assert events[0].data["source"] == "1.1.40"
-    assert hass.states.get("cover.test").context is events[0].context
+    assert hass.states.get(COVER_ENTITY_ID).context is events[0].context

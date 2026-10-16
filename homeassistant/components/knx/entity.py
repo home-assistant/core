@@ -1,11 +1,14 @@
 """Base classes for KNX entities."""
 
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 import logging
+import time
 from typing import TYPE_CHECKING, Any, override
 
 from xknx.devices import Device as XknxDevice, Light as XknxLight
+from xknx.telegram import telegram_context
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
@@ -23,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS, Entity
 from homeassistant.helpers.entity_platform import (
     EntityPlatform,
     async_get_current_platform,
@@ -143,6 +146,8 @@ class _KnxEntityBase(Entity):
 
     _knx_entity_identifier: KnxEntityIdentifier | None = None
     _device_state_initialized = False
+    _service_context: Context | None = None
+    _service_context_set: float = 0
 
     @property
     @override
@@ -153,6 +158,25 @@ class _KnxEntityBase(Entity):
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
         await self._device.sync()
+
+    @callback
+    @override
+    def async_set_context(self, context: Context) -> None:
+        """Remember the context supplied by HA for a new action."""
+        self._service_context = context
+        self._service_context_set = time.time()
+        super().async_set_context(context)
+
+    @property
+    def _recent_service_context(self) -> Context | None:
+        """Return the service cause without extending its window on feedback."""
+        if time.time() - self._service_context_set <= CONTEXT_RECENT_TIME_SECONDS:
+            return self._service_context
+        return None
+
+    def _telegram_context(self) -> AbstractContextManager[None]:
+        """Pass only a recent HA action cause to newly created telegrams."""
+        return telegram_context(self._recent_service_context)
 
     def after_update_callback(self, device: XknxDevice) -> None:
         """Apply the explicit cause and record relevant actor state transitions."""
@@ -166,6 +190,11 @@ class _KnxEntityBase(Entity):
                 update.context if isinstance(update.context, Context) else Context()
             )
             state = self.state
+            if (
+                isinstance(context, KnxTelegramContext)
+                and (service_context := self._recent_service_context) is not None
+            ):
+                context = service_context
             if isinstance(context, KnxTelegramContext):
                 old_state = self.hass.states.get(self.entity_id)
                 can_attribute = old_state is not None and (
@@ -184,11 +213,12 @@ class _KnxEntityBase(Entity):
                     and state is not None
                     and old_state.state != state
                 ):
+                    # Log the origin before the state event for live Activity.
                     context.async_log(self.hass)
                 # Eligibility is per entity; event deduplication is per telegram.
                 if not can_attribute or not context.logged:
                     context = Context()
-            self.async_set_context(context)
+            super().async_set_context(context)
             # Lights expose an uninitialized KNX state as "off" in HA.
             self._device_state_initialized = (
                 state is not None

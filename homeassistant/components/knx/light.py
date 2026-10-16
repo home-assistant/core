@@ -5,7 +5,6 @@ from typing import Any, cast, override
 from propcache.api import cached_property
 from xknx import XKNX
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
-from xknx.telegram import telegram_context
 from xknx.telegram.address import DeviceGroupAddress
 
 from homeassistant import config_entries
@@ -33,6 +32,7 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
+    _KnxEntityBase,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -309,7 +309,7 @@ def _create_ui_light(xknx: XKNX, conf: LightKnxConfig, name: str | None) -> Xknx
     )
 
 
-class _KnxLight(LightEntity):
+class _KnxLight(LightEntity, _KnxEntityBase):
     """Representation of a KNX light."""
 
     _attr_max_color_temp_kelvin: int
@@ -441,7 +441,7 @@ class _KnxLight(LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        with telegram_context(self._context):
+        with self._telegram_context():
             brightness = kwargs.get(ATTR_BRIGHTNESS)
             # LightEntity color translation will ensure that only attributes of supported
             # color modes are passed to this method - so we can't set unsupported mode here
@@ -553,7 +553,7 @@ class _KnxLight(LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        with telegram_context(self._context):
+        with self._telegram_context():
             await self._device.set_off()
 
 

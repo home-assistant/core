@@ -3,7 +3,6 @@
 from typing import Any, override
 
 from xknx.devices import Switch as XknxSwitch
-from xknx.telegram import telegram_context
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
@@ -28,6 +27,7 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
+    _KnxEntityBase,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -70,7 +70,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class _KnxSwitch(SwitchEntity, RestoreEntity):
+class _KnxSwitch(SwitchEntity, RestoreEntity, _KnxEntityBase):
     """Base class for a KNX switch."""
 
     _device: XknxSwitch
@@ -92,13 +92,13 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        with telegram_context(self._context):
+        with self._telegram_context():
             await self._device.set_on()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        with telegram_context(self._context):
+        with self._telegram_context():
             await self._device.set_off()
 
 
