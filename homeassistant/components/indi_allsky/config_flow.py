@@ -325,6 +325,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_mac = formatted_mac
             existing_entry = await self.async_set_unique_id(formatted_mac)
             if existing_entry is None:
+                for entry in self._async_current_entries(include_ignore=False):
+                    if entry.unique_id == fallback_unique_id:
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=formatted_mac
+                        )
+                        existing_entry = entry
+                        break
+
+            if existing_entry is None:
                 if ignored_entry := self._async_find_matching_ignored_entry(
                     fallback_unique_id, matching_hosts, host, port
                 ):
@@ -370,11 +379,9 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             existing_entry = await self.async_set_unique_id(fallback_unique_id)
             updates = {}
             if existing_entry is not None:
-                if (
-                    is_ip_address(existing_entry.data[CONF_HOST])
-                    and existing_entry.data[CONF_HOST] not in matching_hosts
-                ):
-                    updates[CONF_HOST] = host
+                updates = await self._async_calculate_mac_updates(
+                    existing_entry, host, port, ssl, matching_hosts
+                )
             self._abort_if_unique_id_configured(updates=updates)
 
         self._discovered_data = {

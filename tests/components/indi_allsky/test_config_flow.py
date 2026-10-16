@@ -1917,3 +1917,82 @@ async def test_zeroconf_macless_fallback_step_address_change_updates_configured_
     assert result_ip2["type"] is FlowResultType.ABORT
     assert result_ip2["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "192.168.1.60"
+
+
+async def test_zeroconf_mac_announcement_migrates_macless_fallback_id_after_ip_change(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test MAC announcement migrates configured fallback unique ID even after IP change."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="indi-allsky.local_INDI Allsky",
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Server IP changed to 192.168.1.60 and now announces MAC
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.60",
+        ip_addresses=["192.168.1.60"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_https._tcp.local.",
+        name="INDI Allsky._https._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_HOST] == "192.168.1.60"
+
+
+async def test_zeroconf_macless_service_port_update_updates_configured_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test validated port updates for MAC-less configured entries update the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="indi-allsky.local_INDI Allsky",
+        title="INDI Allsky (192.168.1.50:8080)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Server moved from port 8080 to 8081 with same hostname and service name
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=8081,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_PORT] == 8081
