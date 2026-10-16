@@ -262,21 +262,20 @@ class DiscordNotifyEntity(NotifyEntity):
         target = int(self._target_id)
         discord_bot = nextcord.Client()
         try:
-            await discord_bot.login(self._token)
             try:
-                channel = cast(Messageable, await discord_bot.fetch_channel(target))
-            except nextcord.NotFound:
+                await discord_bot.login(self._token)
                 try:
+                    channel = cast(Messageable, await discord_bot.fetch_channel(target))
+                except nextcord.NotFound:
                     channel = await discord_bot.fetch_user(target)
-                except nextcord.NotFound as err:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="target_not_found",
-                        translation_placeholders={"target": self._target_id},
-                    ) from err
-            try:
                 await channel.send(message)
-            except (nextcord.HTTPException, nextcord.NotFound) as err:
+            except nextcord.NotFound as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="target_not_found",
+                    translation_placeholders={"target": self._target_id},
+                ) from err
+            except (aiohttp.ClientConnectorError, nextcord.DiscordException) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="communication_error",

@@ -54,6 +54,13 @@ def _patch_close():
     return patch("homeassistant.components.discord.config_flow.nextcord.Client.close")
 
 
+def _channel_mock(name: str = TARGET_NAME) -> Mock:
+    """Return a mock of a messageable Discord channel."""
+    channel = Mock(spec=nextcord.TextChannel)
+    channel.name = name
+    return channel
+
+
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
@@ -205,8 +212,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
 async def test_subentry_flow_target(hass: HomeAssistant) -> None:
     """Test adding a target through the subentry flow."""
     entry = create_entry(hass)
-    channel = Mock()
-    channel.name = TARGET_NAME
 
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_TARGET),
@@ -215,7 +220,7 @@ async def test_subentry_flow_target(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
+    with patch_discord_login(), _patch_fetch_channel(_channel_mock()), _patch_close():
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             user_input={CONF_TARGET_ID: TARGET},
@@ -241,9 +246,34 @@ async def test_subentry_flow_invalid_target(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_target"}
 
-    channel = Mock()
-    channel.name = TARGET_NAME
-    with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
+    with patch_discord_login(), _patch_fetch_channel(_channel_mock()), _patch_close():
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_TARGET_ID: TARGET},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_subentry_flow_unsupported_target(hass: HomeAssistant) -> None:
+    """Test a non-messageable channel (e.g. a category) is rejected."""
+    entry = create_entry(hass)
+    category = Mock(spec=nextcord.CategoryChannel)
+    category.name = "a category"
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_TARGET),
+        context={"source": SOURCE_USER},
+    )
+
+    with patch_discord_login(), _patch_fetch_channel(category), _patch_close():
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_TARGET_ID: TARGET},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_target"}
+
+    with patch_discord_login(), _patch_fetch_channel(_channel_mock()), _patch_close():
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             user_input={CONF_TARGET_ID: TARGET},
@@ -336,9 +366,7 @@ async def test_subentry_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    channel = Mock()
-    channel.name = TARGET_NAME
-    with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
+    with patch_discord_login(), _patch_fetch_channel(_channel_mock()), _patch_close():
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             user_input={CONF_TARGET_ID: TARGET},

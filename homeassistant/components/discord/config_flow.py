@@ -6,6 +6,7 @@ from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
+from nextcord.abc import Messageable
 import probatio
 
 from homeassistant.config_entries import (
@@ -60,8 +61,11 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if info and (entry := await self.async_set_unique_id(str(info.id))):
-                # The update listener owns reload scheduling.
-                return self.async_update_and_abort(entry, data=entry.data | user_input)
+                # Reload here: during reauth the entry is not loaded, so it has no
+                # active update listener to schedule the reload itself.
+                return self.async_update_reload_and_abort(
+                    entry, data=entry.data | user_input
+                )
             if error:
                 errors["base"] = error
 
@@ -112,20 +116,27 @@ class TargetSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            target_id = user_input[CONF_TARGET_ID]
-            for subentry in entry.subentries.values():
-                if subentry.unique_id == target_id:
-                    return self.async_abort(reason="already_configured")
-
-            error, name = await _async_try_target(entry.data[CONF_API_TOKEN], target_id)
-            if error is not None:
-                errors["base"] = error
+            try:
+                # Canonicalize so leading zeros or whitespace don't create duplicates.
+                target_id = str(int(user_input[CONF_TARGET_ID]))
+            except ValueError:
+                errors["base"] = "invalid_target"
             else:
-                return self.async_create_entry(
-                    title=name,
-                    data={CONF_TARGET_ID: target_id},
-                    unique_id=target_id,
+                for subentry in entry.subentries.values():
+                    if subentry.unique_id == target_id:
+                        return self.async_abort(reason="already_configured")
+
+                error, name = await _async_try_target(
+                    entry.data[CONF_API_TOKEN], int(target_id)
                 )
+                if error is not None:
+                    errors["base"] = error
+                else:
+                    return self.async_create_entry(
+                        title=name,
+                        data={CONF_TARGET_ID: target_id},
+                        unique_id=target_id,
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=TARGET_SCHEMA, errors=errors
@@ -149,21 +160,19 @@ async def _async_try_connect(token: str) -> tuple[str | None, nextcord.AppInfo |
     return None, info
 
 
-async def _async_try_target(token: str, target_id: str) -> tuple[str | None, str]:
+async def _async_try_target(token: str, target: int) -> tuple[str | None, str]:
     """Try resolving a Discord target, returning an error or its name."""
-    try:
-        target = int(target_id)
-    except ValueError:
-        return "invalid_target", ""
-
     discord_bot = nextcord.Client()
     try:
         await discord_bot.login(token)
         try:
             channel = await discord_bot.fetch_channel(target)
-            name = getattr(channel, "name", None)
         except nextcord.NotFound:
-            name = (await discord_bot.fetch_user(target)).name
+            # Not a channel; a user ID resolves to a direct message target.
+            return None, (await discord_bot.fetch_user(target)).name
+        if not isinstance(channel, Messageable):
+            return "unsupported_target", ""
+        name = getattr(channel, "name", None)
     except nextcord.LoginFailure:
         return "invalid_auth", ""
     except nextcord.NotFound:
@@ -175,4 +184,4 @@ async def _async_try_target(token: str, target_id: str) -> tuple[str | None, str
         return "unknown", ""
     finally:
         await discord_bot.close()
-    return None, name or target_id
+    return None, name or str(target)
