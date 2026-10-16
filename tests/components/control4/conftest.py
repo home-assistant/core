@@ -141,6 +141,28 @@ def mock_c4_director_duplicate_source_names() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_c4_director_audio_first_mixed_sources() -> Generator[MagicMock]:
+    """Mock a Director whose room 1 lists an audio source before a video one."""
+    all_items = cast(
+        "list[dict[str, Any]]",
+        copy.deepcopy(load_json_array_fixture("director_all_items.json", DOMAIN)),
+    )
+    all_items.append({"id": 200, "name": "Speakers"})
+    ui_config = cast(
+        "dict[str, Any]",
+        copy.deepcopy(load_json_object_fixture("ui_configuration.json", DOMAIN)),
+    )
+    # A listen experience ahead of the watch experience, so the audio source
+    # (200) is the first one discovered for the room and the video source (100)
+    # the second.
+    ui_config["experiences"].insert(
+        0,
+        {"room_id": 1, "type": "listen", "sources": {"source": [{"id": 200}]}},
+    )
+    yield from _director_mock(all_items, ui_config)
+
+
+@pytest.fixture
 def mock_update_variables() -> Generator[AsyncMock]:
     """Mock the update_variables_for_config_entry function."""
 

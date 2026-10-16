@@ -138,6 +138,36 @@ async def test_media_player_turn_on_ignores_unknown_current_video_source(
 
 
 @pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director_audio_first_mixed_sources",
+    "mock_room_off_update_variables",
+)
+async def test_media_player_turn_on_prefers_video_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_room: MagicMock,
+) -> None:
+    """Test that turn_on prefers a video source even when audio is listed first.
+
+    Room 1 has an audio source (200) listed before a video source (100), and
+    neither the playing source nor the current video device identifies a
+    source, so the final fallback must skip the first (audio) source and start
+    the room with the video one.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": "media_player.living_room"},
+        blocking=True,
+    )
+
+    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(100)
+    mock_c4_room.set_audio_source.assert_not_called()
+
+
+@pytest.mark.usefixtures(
     "mock_c4_account", "mock_c4_director_audio_room", "mock_room_off_update_variables"
 )
 async def test_media_player_turn_on_audio_only_room(
