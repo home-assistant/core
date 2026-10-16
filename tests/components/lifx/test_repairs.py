@@ -43,6 +43,7 @@ async def test_invalid_serial_fix_flow_removes_entry(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
     assert issue.is_fixable
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {

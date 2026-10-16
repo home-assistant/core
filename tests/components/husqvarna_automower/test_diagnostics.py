@@ -1,6 +1,6 @@
 """Test the Husqvarna Automower Diagnostics."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 import zoneinfo
 
@@ -23,7 +23,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_entry_diagnostics(
     hass: HomeAssistant,
@@ -44,7 +44,7 @@ async def test_entry_diagnostics(
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_device_diagnostics(
     hass: HomeAssistant,

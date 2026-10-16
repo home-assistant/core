@@ -1,15 +1,13 @@
 """Coordinator for the iAlarm integration."""
 
 import asyncio
+from datetime import timedelta
 import logging
 from typing import override
 
 from pyialarm import IAlarm
 
-from homeassistant.components.alarm_control_panel import (
-    SCAN_INTERVAL,
-    AlarmControlPanelState,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, IALARM_TO_HASS
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 type IAlarmConfigEntry = ConfigEntry[IAlarmDataUpdateCoordinator]
 

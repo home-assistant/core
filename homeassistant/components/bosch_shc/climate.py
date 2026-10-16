@@ -74,7 +74,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
         )
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
-        self._attr_device_info["name"] = room_name
+        self._attr_device_info.name = room_name
         # Capabilities are fixed by the installation, so evaluate them once.
         hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
         if device.supports_cooling:

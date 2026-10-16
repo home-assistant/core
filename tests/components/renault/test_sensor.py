@@ -1,7 +1,7 @@
 """Tests for Renault sensors."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -132,7 +132,7 @@ async def test_sensor_throttling_during_setup(
     for get_data_mock in patches.values():
         get_data_mock.side_effect = None
     patches["battery_status"].return_value.batteryLevel = 55
-    freezer.tick(datetime.timedelta(minutes=20))
+    freezer.tick(dt.timedelta(minutes=20))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -167,7 +167,7 @@ async def test_sensor_throttling_after_init(
         get_data_mock.side_effect = QuotaLimitException(
             "err.func.wired.overloaded", "You have reached your quota limit"
         )
-    freezer.tick(datetime.timedelta(minutes=10))
+    freezer.tick(dt.timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -181,7 +181,7 @@ async def test_sensor_throttling_after_init(
     for get_data_mock in patches.values():
         get_data_mock.side_effect = None
     patches["battery_status"].return_value.batteryLevel = 55
-    freezer.tick(datetime.timedelta(minutes=20))
+    freezer.tick(dt.timedelta(minutes=20))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -219,13 +219,13 @@ async def test_dynamic_scan_interval(
     assert fixtures_with_data["cockpit"].call_count == vehicle_count
 
     # 2 seconds before the expected scan interval > not called
-    freezer.tick(datetime.timedelta(seconds=scan_interval - 2))
+    freezer.tick(dt.timedelta(seconds=scan_interval - 2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert fixtures_with_data["cockpit"].call_count == vehicle_count
 
     # 2 seconds after the expected scan interval > called
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert fixtures_with_data["cockpit"].call_count == vehicle_count * 2
@@ -267,13 +267,13 @@ async def test_dynamic_scan_interval_failed_coordinator(
     assert fixtures_with_data["cockpit"].call_count == vehicle_count
 
     # 2 seconds before the expected scan interval > not called
-    freezer.tick(datetime.timedelta(seconds=scan_interval - 2))
+    freezer.tick(dt.timedelta(seconds=scan_interval - 2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert fixtures_with_data["cockpit"].call_count == vehicle_count
 
     # 2 seconds after the expected scan interval > called
-    freezer.tick(datetime.timedelta(seconds=4))
+    freezer.tick(dt.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert fixtures_with_data["cockpit"].call_count == vehicle_count * 2
