@@ -12,6 +12,6 @@
     ["tts", "sensecap"]
   ],
   "quality_scale": "bronze",
-  "requirements": ["sensecap-lorawan==0.1.0"],
+  "requirements": ["sensecap-lorawan==1.0.0"],
   "single_config_entry": true
 }

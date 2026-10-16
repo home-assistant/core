@@ -1,11 +1,12 @@
 """Check config flow device validation without retaining subscriptions."""
 
 import asyncio
+from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import replace
 from unittest.mock import Mock, patch
 
-from lorawan_connection import ConnectionUnavailable
+from lorawan_connection import ConnectionUnavailable, DeviceEvent, Unsubscribe
 import pytest
 
 from homeassistant.components.lorawan import (
@@ -42,7 +43,20 @@ async def test_matching_devices(
     collection = ExampleDevices(backend)
     is_supported = Mock(return_value=supported)
     factory = Mock(return_value=collection)
-    with outcome:
+    unsubscribe = Mock()
+    async_subscribe = backend.async_subscribe
+
+    async def subscribe(
+        *,
+        brands: frozenset[tuple[str, int | str]] | None,
+        listener: Callable[[DeviceEvent], None],
+    ) -> Unsubscribe:
+        unsubscribe.side_effect = await async_subscribe(
+            brands=brands, listener=listener
+        )
+        return unsubscribe
+
+    with patch.object(backend, "async_subscribe", side_effect=subscribe), outcome:
         await async_validate_devices(
             hass, create_collection=factory, is_supported=is_supported
         )
@@ -50,7 +64,7 @@ async def test_matching_devices(
     is_supported.assert_called_once()
     assert is_supported.call_args.args[0].closed
     assert not collection.devices
-    assert len(backend._subscribers) == 1
+    unsubscribe.assert_called_once_with()
     assert len(backend._disconnect_listeners) == 1
     assert await async_validate_devices(hass, create_collection=ExampleDevices) is None
 
@@ -108,9 +122,9 @@ async def test_interrupted_validation(
     """Release probe subscriptions when validation fails or is canceled."""
     backend, _ = await registered_backend("network", [DESCRIPTOR])
     with (
-        patch.object(backend, "async_subscribe", side_effect=error),
+        patch.object(backend, "async_subscribe", side_effect=error) as subscribe,
         pytest.raises(error),
     ):
         await async_validate_devices(hass, create_collection=ExampleDevices)
-    assert len(backend._subscribers) == 1
+    subscribe.assert_awaited_once()
     assert len(backend._disconnect_listeners) == 1
