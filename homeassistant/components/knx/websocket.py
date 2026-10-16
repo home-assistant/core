@@ -659,9 +659,10 @@ def ws_get_entities_by_group(
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Get entities by group address."""
+    """Get entities by group address, disabled entities included."""
     data = {
-        str(ga): identifiers for ga, identifiers in knx.group_address_entities.items()
+        str(ga): identifiers
+        for ga, identifiers in knx.get_group_address_entities().items()
     }
     connection.send_result(msg["id"], data)
 

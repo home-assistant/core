@@ -1,7 +1,7 @@
 """Base classes for KNX entities."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import replace
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, KnxEntityIdentifier
 from .storage.config_store import PlatformControllerBase
 from .storage.entity_store_schema import BaseEntityConfig, KnxEntityData
 
@@ -84,15 +84,6 @@ def async_migrate_yaml_unique_id(
         ent_reg.async_remove(entity_id)
 
 
-@dataclass(slots=True, frozen=True)
-class KnxEntityIdentifier:
-    """Class to identify KNX entities in KNX frontend."""
-
-    platform: str
-    unique_id: str
-    ui: bool  # ui or yaml entity
-
-
 class KnxUiEntityPlatformController(PlatformControllerBase):
     """Class to manage dynamic adding and reloading of UI entities."""
 
@@ -118,8 +109,13 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
     async def update_entity(
         self, entity_entry: RegistryEntry, config: KnxEntityData[Any]
     ) -> None:
-        """Update an existing UI entities configuration."""
-        await self._entity_platform.async_remove_entity(entity_entry.entity_id)
+        """Update an existing UI entities configuration.
+
+        A disabled entity was never added to the platform, so there is nothing
+        to remove - the new configuration applies once it is enabled.
+        """
+        if entity_entry.entity_id in self._entity_platform.entities:
+            await self._entity_platform.async_remove_entity(entity_entry.entity_id)
         await self.create_entity(unique_id=entity_entry.unique_id, config=config)
 
 
@@ -152,6 +148,37 @@ class _KnxEntityBase(Entity):
         """Call after device was updated."""
         self.async_write_ha_state()
 
+    def _entity_identifier(self) -> KnxEntityIdentifier | None:
+        """Return the identifier of this entity, if it has a unique id."""
+        if self._knx_entity_identifier is None and (uid := self.unique_id):
+            self._knx_entity_identifier = KnxEntityIdentifier(
+                platform=self.platform_data.domain,
+                unique_id=uid,
+                ui=isinstance(self, KnxUiEntity),
+            )
+        return self._knx_entity_identifier
+
+    @override
+    def add_to_platform_abort(self) -> None:
+        """Track the group addresses of an entity the platform did not add.
+
+        Disabled entities are aborted before `async_added_to_hass` and would
+        otherwise be unknown to the group address map.
+        """
+        if (identifier := self._entity_identifier()) is not None:
+            if self.registry_entry is not None and self.registry_entry.disabled:
+                self._knx_module.add_disabled_entity(
+                    group_addresses=self._device.group_addresses(),
+                    identifier=replace(identifier, disabled=True),
+                )
+            else:
+                # added to the map already if `add_to_platform_finish` failed
+                self._knx_module.remove_from_group_address_entities(
+                    group_addresses=self._device.group_addresses(),
+                    identifier=identifier,
+                )
+        super().add_to_platform_abort()
+
     @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback and start device object."""
@@ -159,15 +186,10 @@ class _KnxEntityBase(Entity):
         self._device.name = self.entity_id
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
-        if uid := self.unique_id:
-            self._knx_entity_identifier = KnxEntityIdentifier(
-                platform=self.platform_data.domain,
-                unique_id=uid,
-                ui=isinstance(self, KnxUiEntity),
-            )
+        if (identifier := self._entity_identifier()) is not None:
             self._knx_module.add_to_group_address_entities(
                 group_addresses=self._device.group_addresses(),
-                identifier=self._knx_entity_identifier,
+                identifier=identifier,
             )
 
         # super call needed to have methods of multi-inherited classes called
@@ -186,11 +208,17 @@ class _KnxEntityBase(Entity):
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
-        if self._knx_entity_identifier:
+        if (identifier := self._knx_entity_identifier) is not None:
             self._knx_module.remove_from_group_address_entities(
                 group_addresses=self._device.group_addresses(),
-                identifier=self._knx_entity_identifier,
+                identifier=identifier,
             )
+            # an entity disabled at runtime removes itself but stays configured
+            if self.registry_entry is not None and self.registry_entry.disabled:
+                self._knx_module.add_disabled_entity(
+                    group_addresses=self._device.group_addresses(),
+                    identifier=replace(identifier, disabled=True),
+                )
 
 
 class KnxYamlEntity(_KnxEntityBase):
