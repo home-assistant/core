@@ -151,11 +151,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         value_fn=_INVERTER_STATUS.get,
     ),
     BluettiModbusSensorEntityDescription(
-        key="d_inverter_type",
-        translation_key="d_inverter_type",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BluettiModbusSensorEntityDescription(
         key="g_i_f",
         translation_key="g_i_f",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
