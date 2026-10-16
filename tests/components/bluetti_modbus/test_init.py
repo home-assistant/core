@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
+from . import setup_integration
 from .conftest import HOST, SERIAL, SERIAL_ADDRESS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -26,17 +27,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
 
 
-async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-
 async def test_load_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """The entry loads, produces entities, and unloads cleanly."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(VOLTAGE_ENTITY)
@@ -55,7 +50,7 @@ async def test_serial_number_is_device_metadata_not_a_sensor(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """The serial number shows up as device info, not a plain sensor entity."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
@@ -72,7 +67,7 @@ async def test_device_info(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """The device shows the display model and the model the device reports."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
@@ -91,7 +86,7 @@ async def test_firmware_versions_are_device_metadata_not_a_sensor(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Firmware versions show up as device info, not sensor entities."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
@@ -113,7 +108,7 @@ async def test_setup_retry_when_device_unresponsive(
     """A device that answers nothing puts the entry in setup retry."""
     mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
 
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -126,7 +121,7 @@ async def test_setup_error_when_link_settings_are_in_use(
         "homeassistant.components.bluetti_modbus.async_get_unit",
         side_effect=HomeAssistantError("already in use with different link settings"),
     ):
-        await _setup(hass, mock_config_entry)
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -159,7 +154,7 @@ async def test_failed_refresh_goes_unavailable_then_recovers(
     teardown_error: Exception | None,
 ) -> None:
     """A device that can't be read goes unavailable, then recovers."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     mock_modbus_unit.fail_requests(request_error)
     with patch.object(mock_modbus_unit, "disconnect", side_effect=teardown_error):
@@ -197,7 +192,7 @@ async def test_transient_busy_response_is_retried(
         return await read_holding_registers(address, count)
 
     with patch.object(mock_modbus_unit, "read_holding_registers", busy_once):
-        await _setup(hass, mock_config_entry)
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -222,7 +217,7 @@ async def test_dead_link_on_the_retry_still_fails_the_refresh(
         raise ModbusTimeoutError("link died")
 
     with patch.object(mock_modbus_unit, "read_holding_registers", busy_then_dead):
-        await _setup(hass, mock_config_entry)
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -235,7 +230,7 @@ async def test_identity_mismatch_raises_a_repair_issue_until_resolved(
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """A different device at the address goes unavailable with a repair issue."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     issue_id = f"wrong_device_{mock_config_entry.entry_id}"
 
     mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
@@ -270,7 +265,7 @@ async def test_repair_issue_is_deleted_when_the_entry_is_unloaded(
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Unloading an entry, as disabling it does, drops its repair issue."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
     await _tick(hass, freezer)
     assert len(issue_registry.issues) == 1
@@ -289,7 +284,7 @@ async def test_repair_issue_is_deleted_when_a_retrying_entry_is_removed(
 ) -> None:
     """An entry removed while its setup retries does not leave its issue behind."""
     mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert len(issue_registry.issues) == 1
 
@@ -305,7 +300,7 @@ async def test_excluded_fields_are_dropped_from_the_read_plan(
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """A field with no entity yet is not polled either, not just not created."""
-    await _setup(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     ac_output = get_device("balco260").get_field("ac_o_switch")
     assert ac_output is not None
