@@ -159,15 +159,21 @@ class _ProgressListener(AbstractProgressListener):  # type: ignore[misc]
         super().__init__()
         self._hass = hass
         self._on_progress = on_progress
+        # The worker thread can outlive a timed out or cancelled upload
+        self.active = True
 
     def set_total_bytes(self, total_byte_count: int) -> None:
         """Ignore the total, the backup size is already known."""
 
     def bytes_completed(self, byte_count: int) -> None:
         """Report the number of bytes uploaded so far."""
-        self._hass.loop.call_soon_threadsafe(
-            functools.partial(self._on_progress, bytes_uploaded=byte_count)
-        )
+        self._hass.loop.call_soon_threadsafe(self._report, byte_count)
+
+    @callback
+    def _report(self, byte_count: int) -> None:
+        """Report progress unless the upload has ended."""
+        if self.active:
+            self._on_progress(bytes_uploaded=byte_count)
 
 
 class BackblazeBackupAgent(BackupAgent):
@@ -373,6 +379,7 @@ class BackblazeBackupAgent(BackupAgent):
 
         stream = await open_stream()
         reader = AsyncIteratorReader(self._hass.loop, stream)
+        progress_listener = _ProgressListener(self._hass, on_progress)
 
         _LOGGER.debug("Uploading backup file %s with streaming", filename)
         try:
@@ -384,7 +391,7 @@ class BackblazeBackupAgent(BackupAgent):
                     filename,
                     content_type or "application/x-tar",
                     file_info,
-                    _ProgressListener(self._hass, on_progress),
+                    progress_listener,
                 ),
                 timeout=UPLOAD_TIMEOUT,
             )
@@ -402,6 +409,7 @@ class BackblazeBackupAgent(BackupAgent):
             raise
         finally:
             reader.close()
+            progress_listener.active = False
 
         _LOGGER.debug("Successfully uploaded %s (ID: %s)", filename, file_version.id_)
 

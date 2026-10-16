@@ -7,6 +7,7 @@ import json
 import logging
 import threading
 import time
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
@@ -22,7 +23,7 @@ from homeassistant.components.backblaze_b2.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BackupAgentError
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -507,6 +508,55 @@ async def test_upload_progress(hass: HomeAssistant) -> None:
         call(bytes_uploaded=16384),
         call(bytes_uploaded=20000),
     ]
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (TimeoutError, BackupAgentError),
+        (asyncio.CancelledError, asyncio.CancelledError),
+    ],
+)
+async def test_upload_progress_after_failed_upload(
+    hass: HomeAssistant,
+    error: type[BaseException],
+    expected_error: type[BaseException],
+) -> None:
+    """Test that a B2 worker outliving a failed upload no longer reports progress."""
+    upload_failed = threading.Event()
+
+    def upload_unbound_stream_sync(*args: Any) -> None:
+        upload_failed.wait()
+        # A part buffered before the failure finishes uploading
+        args[-1].bytes_completed(8192)
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"\0" * 20000
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    with (
+        patch.object(agent, "_upload_unbound_stream_sync", upload_unbound_stream_sync),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            side_effect=error,
+        ),
+        pytest.raises(expected_error),
+    ):
+        await agent.async_upload_backup(
+            open_stream=open_stream,
+            backup=TEST_BACKUP,
+            on_progress=on_progress,
+        )
+
+    upload_failed.set()
+    await hass.async_block_till_done()
+
+    on_progress.assert_not_called()
 
 
 async def test_upload_with_cleanup_and_logging(
