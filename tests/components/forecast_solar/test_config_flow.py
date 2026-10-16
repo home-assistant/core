@@ -1,6 +1,7 @@
 """Test the Forecast.Solar config flow."""
 
 import asyncio
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -24,6 +25,7 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
     ConfigFlowResult,
+    ConfigSubentry,
     ConfigSubentryData,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -690,6 +692,75 @@ async def test_subentry_flow_max_planes(
 
 
 @pytest.mark.parametrize(
+    ("removed_options", "added_planes", "reason"),
+    [
+        pytest.param({CONF_API_KEY}, 0, "api_key_required", id="api_key_removed"),
+        pytest.param(set(), 3, "max_planes", id="max_planes_reached"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_add_plane_rechecks_limits_on_submit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    removed_options: set[str],
+    added_planes: int,
+    reason: str,
+) -> None:
+    """Test the plane form aborts if the entry changed while it was open."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"declination_source": "fixed", "azimuth_source": "fixed"},
+    )
+    assert result["step_id"] == "plane"
+
+    # As the options flow or other plane flows would while this form is open.
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            key: value
+            for key, value in mock_config_entry.options.items()
+            if key not in removed_options
+        },
+    )
+    for index in range(added_planes):
+        hass.config_entries.async_add_subentry(
+            mock_config_entry,
+            ConfigSubentry(
+                data=MappingProxyType(
+                    {CONF_DECLINATION: 10, CONF_AZIMUTH: 90, CONF_MODULES_POWER: 1000}
+                ),
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title=f"Plane {index}",
+                unique_id=None,
+            ),
+        )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 45,
+            CONF_AZIMUTH: 90,
+            CONF_MODULES_POWER: 3000,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert (
+        len(mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE))
+        == 1 + added_planes
+    )
+
+
+@pytest.mark.parametrize(
     ("title", "reconfigured_title"),
     [
         pytest.param("30° / 190° / 5100W", "50° / 200° / 6000W", id="generated_title"),
@@ -887,6 +958,22 @@ async def test_subentry_flow_refuses_non_sensor_uuid(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
 
+    sensor_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
+    hass.states.async_set("sensor.roof_azimuth", "200", DEGREES)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: sensor_entry.id,
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_flow_reconfigure_rejects_new_unusable_sensor(
@@ -919,6 +1006,19 @@ async def test_subentry_flow_reconfigure_rejects_new_unusable_sensor(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
+
+    hass.states.async_set("sensor.roof_azimuth", "200", DEGREES)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError, Plane
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -23,6 +24,8 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from . import async_next_update
 
 from tests.common import MockConfigEntry
 
@@ -311,6 +314,7 @@ async def test_coordinator_multi_plane_initialization(
 async def test_forecast_changes_reload_once_titles_and_renames_do_not(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test titles and sensor renames don't reload, and plane changes reload once."""
     entity_registry.async_get_or_create(
@@ -378,7 +382,7 @@ async def test_forecast_changes_reload_once_titles_and_renames_do_not(
         hass.states.async_set(
             "sensor.camper_azimuth", "200", {"unit_of_measurement": "°"}
         )
-        await mock_config_entry.runtime_data.async_refresh()
+        await async_next_update(hass, freezer, mock_config_entry)
 
         forecast = mock_config_entry.runtime_data.forecast
         assert forecast.azimuth == 200 - 180
@@ -396,6 +400,57 @@ async def test_forecast_changes_reload_once_titles_and_renames_do_not(
     mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_sensor_leaving_registry_does_not_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a sensor removed from the registry doesn't make a title edit reload."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
+    hass.states.async_set("sensor.roof_azimuth", "100", {"unit_of_measurement": "°"})
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="plane_1",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / sensor.roof_azimuth / 5100W",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_remove("sensor.roof_azimuth")
+    hass.states.async_remove("sensor.roof_azimuth")
+    await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            mock_config_entry.subentries["plane_1"],
+            title="South roof",
+        )
+        await hass.async_block_till_done()
+
+    # A reload would lose the last reading and retry setup without the sensor.
+    mock_reload.assert_not_called()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("title", "renamed_title"),
     [
@@ -411,6 +466,7 @@ async def test_forecast_changes_reload_once_titles_and_renames_do_not(
 async def test_plane_follows_renamed_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     title: str,
     renamed_title: str,
 ) -> None:
@@ -476,7 +532,7 @@ async def test_plane_follows_renamed_sensor(
     assert subentry.title == renamed_title
 
     hass.states.async_set("sensor.camper_azimuth", "200", {"unit_of_measurement": "°"})
-    await mock_config_entry.runtime_data.async_refresh()
+    await async_next_update(hass, freezer, mock_config_entry)
 
     # The rename didn't reload the entry; the next update reads the new ID.
     assert mock_config_entry.state is ConfigEntryState.LOADED

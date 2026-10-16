@@ -209,15 +209,19 @@ def _async_refresh_on_home_move(
 
 
 def _forecast_inputs(
-    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry, refs: dict[str, str]
 ) -> tuple[Any, ...]:
-    """Return the entry values the forecast is built from."""
+    """Return the entry values the forecast is built from.
+
+    Sensors are compared by registry ID, so a rename needs no reload; refs
+    remembers those IDs so a sensor leaving the registry doesn't look changed.
+    """
     registry = er.async_get(hass)
 
     def _sensor_ref(entity_id: str) -> str:
-        # Planes read their sensors on every update, so a rename needs no reload.
-        registry_entry = registry.async_get(entity_id)
-        return registry_entry.id if registry_entry else entity_id
+        if registry_entry := registry.async_get(entity_id):
+            refs[entity_id] = registry_entry.id
+        return refs.get(entity_id, entity_id)
 
     return (
         dict(entry.data),
@@ -237,13 +241,14 @@ def _async_reload_on_forecast_change(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> CALLBACK_TYPE:
     """Reload on option and plane changes, but not on a title or sensor rename."""
-    inputs = _forecast_inputs(hass, entry)
+    refs: dict[str, str] = {}
+    inputs = _forecast_inputs(hass, entry, refs)
     reloading = False
 
     async def _async_reload_if_changed() -> None:
         nonlocal reloading
         try:
-            if _forecast_inputs(hass, entry) != inputs:
+            if _forecast_inputs(hass, entry, refs) != inputs:
                 await hass.config_entries.async_reload(entry.entry_id)
         finally:
             # A reload that failed to unload leaves this listener in place.

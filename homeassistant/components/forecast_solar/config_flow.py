@@ -462,18 +462,24 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Choose where the new plane's angles come from."""
-        entry = self._get_entry()
-        planes_count = len(entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE))
-        if planes_count >= MAX_PLANES:
-            return self.async_abort(reason="max_planes")
-        if planes_count >= 1 and not entry.options.get(CONF_API_KEY):
-            return self.async_abort(reason="api_key_required")
+        if reason := self._add_blocked_reason():
+            return self.async_abort(reason=reason)
 
         if user_input is not None:
             self._sources = user_input
             return await self.async_step_plane()
 
         return self.async_show_form(step_id="user", data_schema=_SOURCES_SCHEMA)
+
+    def _add_blocked_reason(self) -> str | None:
+        """Return why another plane can't be added, if it can't."""
+        entry = self._get_entry()
+        planes_count = len(entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE))
+        if planes_count >= MAX_PLANES:
+            return "max_planes"
+        if planes_count >= 1 and not entry.options.get(CONF_API_KEY):
+            return "api_key_required"
+        return None
 
     async def async_step_plane(
         self, user_input: dict[str, Any] | None = None
@@ -482,6 +488,9 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Rechecked: the options or other flows may have changed while it was open.
+            if reason := self._add_blocked_reason():
+                return self.async_abort(reason=reason)
             plane_data = _plane_data(self.hass, user_input)
             if not (errors := _sensor_errors(self.hass, plane_data)):
                 return self.async_create_entry(

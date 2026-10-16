@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -23,6 +24,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+
+from . import async_next_update
 
 from tests.common import MockConfigEntry
 
@@ -69,6 +72,7 @@ AZIMUTH_SENSOR_PLANE = {
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_coordinator_rereads_azimuth_sensor_on_each_update(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the azimuth sensor is read at setup and a changed value on refresh.
 
@@ -84,8 +88,7 @@ async def test_coordinator_rereads_azimuth_sensor_on_each_update(
     assert coordinator.forecast.azimuth == 100 - 180
 
     hass.states.async_set(AZIMUTH_SENSOR, "200", DEGREES)
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    await async_next_update(hass, freezer, entry)
 
     assert coordinator.forecast.azimuth == 200 - 180
 
@@ -148,6 +151,7 @@ async def test_coordinator_uses_last_reading_while_sensor_unreadable(
     hass: HomeAssistant,
     mock_forecast_solar: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
     state: str,
 ) -> None:
     """Test an unreadable sensor keeps its last reading, so the forecast stays up."""
@@ -161,8 +165,8 @@ async def test_coordinator_uses_last_reading_while_sensor_unreadable(
     estimate_calls = mock_forecast_solar.estimate.call_count
 
     hass.states.async_set(AZIMUTH_SENSOR, state, DEGREES)
-    await coordinator.async_refresh()
-    await coordinator.async_refresh()
+    await async_next_update(hass, freezer, entry)
+    await async_next_update(hass, freezer, entry)
 
     assert coordinator.last_update_success is True
     assert coordinator.forecast.azimuth == 100 - 180
@@ -171,14 +175,16 @@ async def test_coordinator_uses_last_reading_while_sensor_unreadable(
     assert caplog.text.count(f"Sensor {AZIMUTH_SENSOR} can't be read") == 1
 
     hass.states.async_set(AZIMUTH_SENSOR, "200", DEGREES)
-    await coordinator.async_refresh()
+    await async_next_update(hass, freezer, entry)
 
     assert coordinator.forecast.azimuth == 200 - 180
     assert f"Sensor {AZIMUTH_SENSOR} can be read again" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
-async def test_last_reading_is_not_kept_across_a_reload(hass: HomeAssistant) -> None:
+async def test_last_reading_is_not_kept_across_a_reload(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test a reload needs a readable sensor again, as the form text says."""
     hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
     entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
@@ -187,7 +193,7 @@ async def test_last_reading_is_not_kept_across_a_reload(hass: HomeAssistant) -> 
     await hass.async_block_till_done()
 
     hass.states.async_set(AZIMUTH_SENSOR, STATE_UNAVAILABLE, DEGREES)
-    await entry.runtime_data.async_refresh()
+    await async_next_update(hass, freezer, entry)
 
     assert entry.runtime_data.last_update_success is True
 
