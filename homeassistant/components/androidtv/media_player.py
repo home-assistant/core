@@ -54,29 +54,45 @@ ANDROIDTV_STATES = {
     "paused": MediaPlayerState.PAUSED,
 }
 
+# Android 8.1/API 27 added the dataspace word to the raw screenshot header.
+SCREENCAP_DATASPACE_HEADER_API_LEVEL = 27
+# Keep decompression bounded while allowing a 4K RGBA frame.
+MAX_SCREENSHOT_SIZE_BYTES = 64 * 1024 * 1024
 
-def _encode_raw_screencap(encoded: str) -> bytes | None:
+
+def _encode_raw_screencap(encoded: str, sdk_version: int) -> bytes | None:
     """Encode Android raw pixels on the host instead of the TV CPU."""
-    raw = gzip.decompress(base64.b64decode(encoded))
-    if len(raw) < 12:
-        raise ValueError("Truncated screenshot header")
-    width, height, pixel_format = struct.unpack_from("<III", raw)
-    formats = {
-        1: ("RGBA", "RGBA", 4),
-        2: ("RGB", "RGBX", 4),
-        3: ("RGB", "RGB", 3),
-        4: ("RGB", "BGR;16", 2),
-        5: ("RGBA", "BGRA", 4),
-    }
-    if pixel_format not in formats:
-        return None
-    mode, raw_mode, bytes_per_pixel = formats[pixel_format]
-    pixel_bytes = width * height * bytes_per_pixel
-    # Newer Android versions add a dataspace field to the raw header.
-    header_bytes = len(raw) - pixel_bytes
-    if width == 0 or height == 0 or header_bytes not in (12, 16):
-        raise ValueError("Invalid screenshot dimensions or pixel length")
-    image = Image.frombytes(mode, (width, height), raw[header_bytes:], "raw", raw_mode)
+    header_bytes = (
+        16
+        if sdk_version >= SCREENCAP_DATASPACE_HEADER_API_LEVEL
+        else 12
+    )
+    with gzip.GzipFile(fileobj=BytesIO(base64.b64decode(encoded))) as raw:
+        header = raw.read(header_bytes)
+        if len(header) != header_bytes:
+            raise ValueError("Truncated screenshot header")
+        width, height, pixel_format = struct.unpack_from("<III", header)
+        formats = {
+            1: ("RGBA", "RGBA", 4),
+            2: ("RGB", "RGBX", 4),
+            3: ("RGB", "RGB", 3),
+            4: ("RGB", "BGR;16", 2),
+            5: ("RGBA", "BGRA", 4),
+        }
+        if pixel_format not in formats:
+            return None
+        mode, raw_mode, bytes_per_pixel = formats[pixel_format]
+        pixel_bytes = width * height * bytes_per_pixel
+        if (
+            width == 0
+            or height == 0
+            or header_bytes + pixel_bytes > MAX_SCREENSHOT_SIZE_BYTES
+        ):
+            raise ValueError("Invalid screenshot dimensions or frame size")
+        pixels = raw.read(pixel_bytes + 1)
+        if len(pixels) != pixel_bytes:
+            raise ValueError("Invalid screenshot pixel length")
+    image = Image.frombytes(mode, (width, height), pixels, "raw", raw_mode)
     output = BytesIO()
     image.save(output, format="PNG", compress_level=1)
     return output.getvalue()
@@ -177,17 +193,23 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     @adb_decorator()
     async def _adb_screencap(self) -> bytes | None:
         """Take a screen capture from the device."""
-        encoded = await self.aftv.adb_shell(
-            "if command -v gzip >/dev/null && command -v base64 >/dev/null; "
-            "then screencap | gzip -1 | base64; fi"
+        response = await self.aftv.adb_shell(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null "
+            "&& command -v getprop >/dev/null; then "
+            "printf '%s\\n' \"$(getprop ro.build.version.sdk)\"; "
+            "screencap | gzip -1 | base64; fi"
         )
-        if not isinstance(encoded, str):
+        if not isinstance(response, str):
             return None
-        if not encoded.strip():
+        sdk_version, separator, encoded = response.partition("\n")
+        sdk_version = sdk_version.strip()
+        encoded = encoded.strip()
+        if not separator or not sdk_version.isdecimal() or not encoded:
             return await self.aftv.adb_screencap()  # type: ignore[no-any-return]
+        sdk_version = int(sdk_version)
         try:
             image = await self.hass.async_add_executor_job(
-                _encode_raw_screencap, encoded
+                _encode_raw_screencap, encoded, sdk_version
             )
         except (ValueError, OSError, EOFError, zlib.error) as err:
             _LOGGER.warning("Unable to decode raw screenshot: %s", err)
