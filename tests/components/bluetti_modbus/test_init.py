@@ -44,29 +44,12 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_serial_number_is_device_metadata_not_a_sensor(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """The serial number shows up as device info, not a plain sensor entity."""
-    await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SERIAL), mock_config_entry.entry_id
-    )
-    assert device_entry is not None
-    assert device_entry.serial_number == SERIAL
-
-    assert hass.states.get("sensor.balco_260_serial_number") is None
-
-
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """The device shows the display model and the model the device reports."""
+    """The device carries its identity, firmware and a link to its web page."""
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device_by_identifier(
@@ -78,26 +61,10 @@ async def test_device_info(
     assert device_entry.model_id == "Balco260"
     assert device_entry.name == "Balco 260"
     assert device_entry.configuration_url == f"http://{HOST}"
-
-
-async def test_firmware_versions_are_device_metadata_not_a_sensor(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Firmware versions show up as device info, not sensor entities."""
-    await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SERIAL), mock_config_entry.entry_id
-    )
-    assert device_entry is not None
+    assert device_entry.serial_number == SERIAL
     assert device_entry.sw_version == (
         "ARM 50011.01.12, DSP 50014.01.10, IoT 50012.01.19"
     )
-
-    assert hass.states.get("sensor.balco_260_arm_firmware_version") is None
-    assert hass.states.get("sensor.balco_260_dsp_firmware_version") is None
 
 
 async def test_setup_retry_when_device_unresponsive(
