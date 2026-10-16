@@ -93,6 +93,9 @@ def async_discover_entities(
     """Run discovery on MatterEndpoint and return matching MatterEntityInfo(s)."""
     discovered_attributes: set[type[ClusterAttributeDescriptor]] = set()
     device_info = endpoint.device_info
+    vendor_id = device_info.vendorID if device_info else None
+    product_id = device_info.productID if device_info else None
+    product_name = device_info.productName if device_info else None
     for schema in iter_schemas():
         # abort if attribute(s) already discovered
         if any(x in schema.required_attributes for x in discovered_attributes):
@@ -101,24 +104,15 @@ def async_discover_entities(
         primary_attribute = schema.required_attributes[0]
 
         # check vendor_id
-        if (
-            schema.vendor_id is not None
-            and device_info.vendorID not in schema.vendor_id
-        ):
+        if schema.vendor_id is not None and vendor_id not in schema.vendor_id:
             continue
 
         # check product_id
-        if (
-            schema.product_id is not None
-            and device_info.productID not in schema.product_id
-        ):
+        if schema.product_id is not None and product_id not in schema.product_id:
             continue
 
         # check product_name
-        if (
-            schema.product_name is not None
-            and device_info.productName not in schema.product_name
-        ):
+        if schema.product_name is not None and product_name not in schema.product_name:
             continue
 
         # check required device_type

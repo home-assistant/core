@@ -159,7 +159,8 @@ class MatterEntity(Entity):
     def _find_matching_labels(self) -> list[str]:
         """Find all labels for a Matter entity."""
 
-        device_info = self._endpoint.device_info
+        if (device_info := self._endpoint.device_info) is None:
+            return []
         labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
             device_info.productID
         )

@@ -174,6 +174,9 @@ class MatterAdapter:
         endpoint = get_device_endpoint(endpoint)
 
         basic_info = endpoint.device_info
+        assert basic_info is not None
+        node_basic_info = endpoint.node.device_info
+        assert node_basic_info is not None
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
             (
@@ -220,7 +223,7 @@ class MatterAdapter:
             # which would make the identifier resolve to the bridge's device
             and not (
                 isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
-                and basic_info_serial_number == endpoint.node.device_info.serialNumber
+                and basic_info_serial_number == node_basic_info.serialNumber
             )
         ):
             # prefix identifier with 'serial_' to be able to filter it
@@ -262,7 +265,7 @@ class MatterAdapter:
             identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
+            manufacturer=basic_info.vendorName or node_basic_info.vendorName,
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
