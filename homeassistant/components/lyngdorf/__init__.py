@@ -36,7 +36,7 @@ def _serial_as_mac(serial: str) -> str | None:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
-) -> bool:
+) -> None:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_model(config_entry.data[CONF_MODEL])
     assert lyngdorf_model is not None
@@ -128,16 +128,10 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        await config_entry.runtime_data.receiver.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    await config_entry.runtime_data.receiver.disconnect()

@@ -17,12 +17,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import (
-    CONF_CHAT_MODEL,
-    CONF_THINKING_EFFORT,
-    DOMAIN,
-    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
-)
+from .config_flow import reconcile_model_options
+from .const import CONF_CHAT_MODEL, DOMAIN
 from .coordinator import model_alias
 
 if TYPE_CHECKING:
@@ -196,33 +192,20 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             **subentry.data,
             CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
         }
-        if (
-            subentry.data.get(CONF_THINKING_EFFORT) == "none"
-            and (alias := model_alias(user_input[CONF_CHAT_MODEL]))
-            not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
-        ):
-            model_info = next(
-                (
-                    model
-                    for model in (self._model_list_cache or {}).get(entry.entry_id, [])
-                    if model_alias(model.id) == alias
-                ),
-                None,
+        alias = model_alias(user_input[CONF_CHAT_MODEL])
+        model_info = next(
+            (
+                model
+                for model in (self._model_list_cache or {}).get(entry.entry_id, [])
+                if model_alias(model.id) == alias
+            ),
+            None,
+        )
+        if model_info is None:
+            model_info = await entry.runtime_data.client.models.retrieve(
+                user_input[CONF_CHAT_MODEL], timeout=10.0
             )
-            if model_info is None:
-                model_info = await entry.runtime_data.client.models.retrieve(
-                    user_input[CONF_CHAT_MODEL], timeout=10.0
-                )
-            if (
-                model_info.capabilities
-                and (
-                    model_info.capabilities.thinking.types.adaptive.supported
-                    or model_info.capabilities.effort.supported
-                )
-                and model_alias(model_info.id)
-                not in THINKING_EFFORT_NONE_SUPPORTED_MODELS
-            ):
-                updated_data.pop(CONF_THINKING_EFFORT)
+        reconcile_model_options(updated_data, model_info)
 
         self.hass.config_entries.async_update_subentry(
             entry,

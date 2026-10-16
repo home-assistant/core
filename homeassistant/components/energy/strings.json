@@ -1,5 +1,9 @@
 {
   "issues": {
+    "entity_gas_price_unit_mismatch": {
+      "description": "Use a price per energy unit (such as kWh) for a gas sensor that measures energy, or a price per volume unit (such as m³) for a gas sensor that measures volume. Until then, the gas cost is not calculated. The following price entities do not match the unit of their gas sensor:",
+      "title": "Gas price unit does not match the gas sensor"
+    },
     "entity_negative_state": {
       "description": "The following entities have a negative state while a positive state is expected:",
       "title": "Entity has a negative state"

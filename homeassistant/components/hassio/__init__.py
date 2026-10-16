@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery_flow,
     issue_registry as ir,
+    system_state,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -61,6 +62,7 @@ from .const import (
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
@@ -368,7 +370,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     # Deprecated in 2026.8: remove this legacy store migration path after the
     # deprecation window for .storage/hassio has elapsed.
@@ -467,6 +469,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    @callback
+    def _mirror_host_reboot_required(_: IssueSubscriptionEvent) -> None:
+        system_state.async_set_host_reboot_required(
+            hass,
+            any(
+                issue.key == ISSUE_KEY_SYSTEM_REBOOT_REQUIRED
+                for issue in issues_coordinator.issues
+            ),
+        )
+
+    entry.async_on_unload(
+        issues_coordinator.subscribe(
+            IssueSubscription(
+                event_callback=_mirror_host_reboot_required,
+                key=ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
+            )
+        )
+    )
+
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
         if restart:
@@ -551,18 +572,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if remove_legacy_store:
         await legacy_store.async_remove()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Pop coordinators and entry-level data
-    hass.data.pop(MAIN_COORDINATOR, None)
-    hass.data.pop(ADDONS_COORDINATOR, None)
-    hass.data.pop(STATS_COORDINATOR, None)
-    hass.data.pop(JOBS_COORDINATOR, None)
-    hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # Pop coordinators and entry-level data
+        hass.data.pop(MAIN_COORDINATOR, None)
+        hass.data.pop(ADDONS_COORDINATOR, None)
+        hass.data.pop(STATS_COORDINATOR, None)
+        hass.data.pop(JOBS_COORDINATOR, None)
+        hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
