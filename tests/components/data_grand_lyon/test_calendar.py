@@ -222,13 +222,7 @@ async def test_state_off_with_upcoming_alert_picks_soonest(
     alerts: list[TclAlert],
     expected_message: str,
 ) -> None:
-    """Test the event is the soonest upcoming alert, not the most severe one.
-
-    Both alerts start later today (frozen time is 14:00), so nothing has
-    started yet. The severe one starting later must not win: HA arms its
-    next on/off transition from the event's start, so picking anything but
-    the soonest alert arms the wrong moment.
-    """
+    """Test the event is the soonest upcoming alert, not the most severe one."""
     mock_tcl_client.get_tcl_alerts.return_value = alerts
     mock_line_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_line_config_entry.entry_id)

@@ -724,9 +724,6 @@ async def test_park_and_ride_subentry_picker_load_errors(
     assert result["reason"] == reason
 
 
-# Line subentry tests
-
-
 @pytest.mark.parametrize(
     ("submitted", "expected"),
     [
