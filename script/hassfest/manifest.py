@@ -20,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
 from script.util import sort_manifest as util_sort_manifest
 
-from .integration_categories import PATH as INTEGRATION_CATEGORIES_PATH
+from .icons import integration_category_keys
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -387,19 +387,21 @@ def validate_version(integration: Integration) -> None:
         return
 
 
-def load_known_categories(config: Config) -> set[str]:
-    """Return the known categories, like `energy` and `energy.ev_charging`."""
-    categories = json.loads((config.root / INTEGRATION_CATEGORIES_PATH).read_text())
+HOMEASSISTANT_STRINGS_PATH = "homeassistant/components/homeassistant/strings.json"
 
-    known_categories = set()
-    for category in categories:
-        known_categories.add(category["slug"])
-        known_categories.update(
-            f"{category['slug']}.{subcategory['slug']}"
-            for subcategory in category["subcategories"]
-        )
 
-    return known_categories
+def load_known_categories(config: Config) -> set[str] | None:
+    """Return the known categories, like `energy` and `energy.ev_charging`.
+
+    Read from the source strings, so a new category can be used before
+    integration_categories.json is regenerated.
+    """
+    # Invalid strings are reported by the json and translations plugins
+    try:
+        strings = json.loads((config.root / HOMEASSISTANT_STRINGS_PATH).read_text())
+        return integration_category_keys(strings.get("integration_category", {}))
+    except ValueError, AttributeError, TypeError:
+        return None
 
 
 def validate_categories(integration: Integration, known_categories: set[str]) -> None:
@@ -418,12 +420,14 @@ def validate_categories(integration: Integration, known_categories: set[str]) ->
             integration.add_error(
                 "manifest",
                 f"Unknown category `{category}`, "
-                f"see {INTEGRATION_CATEGORIES_PATH} for the known categories",
+                f"see {HOMEASSISTANT_STRINGS_PATH} for the known categories",
             )
 
 
 def validate_manifest(
-    integration: Integration, core_components_dir: Path, known_categories: set[str]
+    integration: Integration,
+    core_components_dir: Path,
+    known_categories: set[str] | None,
 ) -> None:
     """Validate manifest."""
     try:
@@ -436,7 +440,8 @@ def validate_manifest(
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
     else:
-        validate_categories(integration, known_categories)
+        if known_categories is not None:
+            validate_categories(integration, known_categories)
 
     if (domain := integration.manifest["domain"]) != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")

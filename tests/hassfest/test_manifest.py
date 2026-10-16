@@ -1,5 +1,7 @@
 """Tests for hassfest manifest validation."""
 
+from dataclasses import replace
+import json
 from pathlib import Path
 from typing import Any
 
@@ -94,7 +96,7 @@ def test_unknown_category(config: Config, category: str) -> None:
     """Test unknown categories are rejected."""
     assert _validate(config, {"categories": ["energy", category]}) == [
         f"Unknown category `{category}`, see "
-        "homeassistant/generated/integration_categories.json for the known categories"
+        "homeassistant/components/homeassistant/strings.json for the known categories"
     ]
 
 
@@ -140,9 +142,75 @@ def test_categories_not_allowed_virtual(config: Config) -> None:
 
 
 def test_load_known_categories(config: Config) -> None:
-    """Test the known categories come from the generated file."""
+    """Test the known categories come from the homeassistant strings."""
     known_categories = manifest.load_known_categories(config)
 
+    assert known_categories is not None
     assert "energy" in known_categories
     assert "energy.ev_charging" in known_categories
     assert "diy_makers.serial_modbus" not in known_categories
+
+
+def test_load_known_categories_before_generating(
+    config: Config, tmp_path: Path
+) -> None:
+    """Test a new category is known before integration_categories.json exists."""
+    strings_path = tmp_path / manifest.HOMEASSISTANT_STRINGS_PATH
+    strings_path.parent.mkdir(parents=True)
+    strings_path.write_text(
+        json.dumps(
+            {
+                "integration_category": {
+                    "pets": {
+                        "name": "Pets",
+                        "description": "Feeders and litter boxes.",
+                        "subcategory": {"feeders": {"name": "Feeders"}},
+                    }
+                }
+            }
+        )
+    )
+
+    known_categories = manifest.load_known_categories(replace(config, root=tmp_path))
+
+    assert known_categories == {"pets", "pets.feeders"}
+
+
+@pytest.mark.parametrize(
+    "strings",
+    [
+        pytest.param("{", id="invalid_json"),
+        pytest.param("[]", id="not_an_object"),
+        pytest.param('{"integration_category": {"pets": null}}', id="category_null"),
+    ],
+)
+def test_load_known_categories_invalid_strings(
+    config: Config, tmp_path: Path, strings: str
+) -> None:
+    """Test invalid strings skip the category check, other plugins report them."""
+    strings_path = tmp_path / manifest.HOMEASSISTANT_STRINGS_PATH
+    strings_path.parent.mkdir(parents=True)
+    strings_path.write_text(strings)
+
+    assert manifest.load_known_categories(replace(config, root=tmp_path)) is None
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_categories_skipped_without_known_categories(config: Config) -> None:
+    """Test categories aren't checked when the known categories can't be loaded."""
+    integration = Integration(
+        Path("test"),
+        _config=config,
+        _manifest={
+            "domain": "test",
+            "name": "Test",
+            "documentation": "https://www.home-assistant.io/integrations/test",
+            "codeowners": ["@awesome"],
+            "iot_class": "local_polling",
+            "categories": ["pets"],
+        },
+    )
+
+    manifest.validate_manifest(integration, Path("components"), None)
+
+    assert integration.errors == []
