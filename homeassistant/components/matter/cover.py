@@ -127,58 +127,41 @@ class MatterCover(MatterEntity, CoverEntity):
         )
 
     @callback
-    def _has_unobservable_axis(self) -> bool:
-        """Return whether a supported axis cannot report its position.
-
-        Lift and tilt are independently position aware (PA_LF conformance
-        `[LF]`, PA_TL conformance `[TL]`), so a covering may support an axis
-        while being unable to report where that axis is.
-        """
-        feature_map = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.FeatureMap
-        )
-        features = clusters.WindowCovering.Bitmaps.Feature
-        return bool(
-            (
-                feature_map & features.kLift
-                and not feature_map & features.kPositionAwareLift
-            )
-            or (
-                feature_map & features.kTilt
-                and not feature_map & features.kPositionAwareTilt
-            )
-        )
-
-    @callback
     def _positions_at_target(self) -> bool | None:
         """Return whether all supported positions match their target position.
 
         Returns None if the positions cannot be compared, e.g. the device is
         not position aware or a position is (still) unknown. The axes to
-        compare are taken from the FeatureMap: a position aware axis without
-        its position attributes is not comparable, while position attributes
-        of an unsupported axis (reported as null by e.g. the Shelly 2PM Gen4)
-        are ignored.
+        compare are taken from the FeatureMap: lift and tilt are independently
+        position aware (PA_LF conformance `[LF]`, PA_TL conformance `[TL]`),
+        so a supported axis which is not position aware, or lacks its position
+        attributes, makes the covering not comparable as a whole, while
+        position attributes of an unsupported axis (reported as null by e.g.
+        the Shelly 2PM Gen4) are ignored.
         """
         feature_map = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.FeatureMap
         )
         features = clusters.WindowCovering.Bitmaps.Feature
         at_target: bool | None = None
-        for feature, current_attribute, target_attribute in (
+        for feature, position_aware_feature, current_attribute, target_attribute in (
             (
                 features.kLift,
+                features.kPositionAwareLift,
                 clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
                 clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
             ),
             (
                 features.kTilt,
+                features.kPositionAwareTilt,
                 clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
                 clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
             ),
         ):
             if not feature_map & feature:
                 continue
+            if not feature_map & position_aware_feature:
+                return None
             if not self._entity_info.endpoint.has_attribute(
                 None, current_attribute
             ) or not self._entity_info.endpoint.has_attribute(None, target_attribute):
@@ -220,21 +203,11 @@ class MatterCover(MatterEntity, CoverEntity):
                 self._attr_is_opening = False
                 self._attr_is_closing = False
 
-        # Some devices report a moving operational status together with
-        # current = target and never report the operational status clearing,
-        # leaving the cover stuck in a moving state. Observed with the
-        # Rademacher SmartHome Box Matter bridge, which reports the target and
-        # the current position as the same value. Treat a position aware
-        # covering at its target as not moving. This only ever clears the
-        # moving state; at movement start the debounce hides a status report
-        # arriving before the target update.
-        if self._has_unobservable_axis():
-            # An axis that is supported but not position aware cannot be
-            # checked, and the remaining axis says nothing about whether
-            # it is moving.
-            at_target = None
-            detection = "supported axis is not position aware"
-        elif (at_target := self._positions_at_target()) is None:
+        # Some bridges (e.g. Rademacher SmartHome Box) report current = target
+        # with a moving status that never clears. Being at the target only ever
+        # clears the moving state; at movement start the debounce hides a status
+        # report arriving before the target update.
+        if (at_target := self._positions_at_target()) is None:
             detection = "positions not comparable"
         else:
             detection = f"positions at target: {at_target}"
