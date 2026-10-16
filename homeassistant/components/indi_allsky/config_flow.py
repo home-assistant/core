@@ -39,6 +39,24 @@ from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
+ALTERNATE_PORT_PAIRS = (
+    {80, 443},
+    {443, 8443},
+)
+
+
+def _matches_server_name(entry: ConfigEntry, server_name: str | None) -> bool:
+    """Return whether the entry title matches the discovered server name."""
+    return bool(
+        server_name
+        and (
+            entry.title == server_name
+            or entry.title.startswith(f"{server_name} (")
+            or entry.title.startswith(f"{server_name}:")
+        )
+    )
+
+
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): TextSelector(
@@ -102,6 +120,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_data: dict[str, Any]
     _matching_hosts: set[str]
     _discovered_mac: str | None = None
+    _discovered_original_mac: str | None = None
+    _discovered_unique_id: str | None = None
 
     async def _async_check_and_adopt_existing_entry(
         self, host: str, port: int, matching_hosts: set[str] | None = None
@@ -129,7 +149,12 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     break
             else:
                 if getattr(self, "_discovered_mac", None):
+                    server_name = self.context.get("title_placeholders", {}).get("name")
                     for entry in adoptable_entries:
+                        if {entry.data[CONF_PORT], port} not in ALTERNATE_PORT_PAIRS:
+                            continue
+                        if not _matches_server_name(entry, server_name):
+                            continue
                         try:
                             await validate_input(self.hass, entry.data)
                         except CannotConnect, InvalidAuth, Unknown:
@@ -153,13 +178,26 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             and port in (80, 443)
         ):
             alt_port = 443 if port == 80 else 80
+            server_name = self.context.get("title_placeholders", {}).get("name")
             for check_host in check_hosts:
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: check_host,
-                        CONF_PORT: alt_port,
-                    }
-                )
+                for entry in self._async_current_entries(include_ignore=False):
+                    if (
+                        entry.data.get(CONF_HOST) == check_host
+                        and entry.data.get(CONF_PORT) == alt_port
+                        and (
+                            (
+                                entry.unique_id is None
+                                and _matches_server_name(entry, server_name)
+                            )
+                            or entry.unique_id == self.unique_id
+                        )
+                    ):
+                        self._async_abort_entries_match(
+                            {
+                                CONF_HOST: check_host,
+                                CONF_PORT: alt_port,
+                            }
+                        )
 
     @override
     async def async_step_user(
@@ -172,9 +210,16 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
             matching_hosts = getattr(self, "_matching_hosts", None)
-            if matching_hosts and user_input[CONF_HOST] not in matching_hosts:
-                await self.async_set_unique_id(None)
-                self._discovered_mac = None
+            discovered_unique_id = getattr(self, "_discovered_unique_id", None)
+            if matching_hosts:
+                if user_input[CONF_HOST] in matching_hosts:
+                    await self.async_set_unique_id(discovered_unique_id)
+                    self._discovered_mac = getattr(
+                        self, "_discovered_original_mac", None
+                    )
+                else:
+                    await self.async_set_unique_id(None)
+                    self._discovered_mac = None
             await self._async_check_and_adopt_existing_entry(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
@@ -225,7 +270,11 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         return None
 
     async def _async_adopt_entry_for_mac(
-        self, formatted_mac: str, port: int, matching_hosts: set[str]
+        self,
+        formatted_mac: str,
+        port: int,
+        matching_hosts: set[str],
+        server_name: str | None = None,
     ) -> ConfigEntry | None:
         """Adopt an existing unassigned entry for the discovered MAC address."""
         adoptable_entries = [
@@ -245,6 +294,10 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 return entry
         for entry in adoptable_entries:
+            if {entry.data[CONF_PORT], port} not in ALTERNATE_PORT_PAIRS:
+                continue
+            if not _matches_server_name(entry, server_name):
+                continue
             try:
                 await validate_input(self.hass, entry.data)
             except CannotConnect, InvalidAuth, Unknown:
@@ -266,6 +319,12 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if (
             is_ip_address(existing_entry.data[CONF_HOST])
             and existing_entry.data[CONF_HOST] not in matching_hosts
+            and not any(
+                other.entry_id != existing_entry.entry_id
+                and other.data.get(CONF_HOST) in (matching_hosts | {host})
+                and other.data.get(CONF_PORT) == existing_entry.data[CONF_PORT]
+                for other in self._async_current_entries(include_ignore=False)
+            )
         ):
             updates[CONF_HOST] = host
         target_host = updates.get(CONF_HOST, existing_entry.data[CONF_HOST])
@@ -323,6 +382,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if mac:
             formatted_mac = format_mac(mac)
             self._discovered_mac = formatted_mac
+            self._discovered_original_mac = formatted_mac
+            self._discovered_unique_id = formatted_mac
             existing_entry = await self.async_set_unique_id(formatted_mac)
             if existing_entry is None:
                 for entry in self._async_current_entries(include_ignore=False):
@@ -344,7 +405,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if existing_entry is None:
                 existing_entry = await self._async_adopt_entry_for_mac(
-                    formatted_mac, port, matching_hosts
+                    formatted_mac, port, matching_hosts, server_name
                 )
 
             if existing_entry is not None:
@@ -361,11 +422,26 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             self._abort_if_unique_id_configured(updates=updates)
         else:
+            self._discovered_unique_id = fallback_unique_id
             for entry in self._async_current_entries(include_ignore=False):
                 if entry.data.get(CONF_HOST) in matching_hosts:
                     entry_port = entry.data.get(CONF_PORT)
-                    if entry_port == port or {entry_port, port} == {80, 443}:
-                        if entry.unique_id is None:
+                    if entry_port == port or (
+                        {entry_port, port} == {80, 443}
+                        and (
+                            (
+                                entry.unique_id is None
+                                and _matches_server_name(entry, server_name)
+                            )
+                            or entry.unique_id == fallback_unique_id
+                        )
+                    ):
+                        if entry.unique_id is None and not any(
+                            other.unique_id == fallback_unique_id
+                            for other in self._async_current_entries(
+                                include_ignore=True
+                            )
+                        ):
                             self.hass.config_entries.async_update_entry(
                                 entry, unique_id=fallback_unique_id
                             )

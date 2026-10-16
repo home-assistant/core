@@ -1996,3 +1996,379 @@ async def test_zeroconf_macless_service_port_update_updates_configured_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_PORT] == 8081
+
+
+async def test_zeroconf_cross_port_adoption_rejects_unrelated_custom_ports(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test cross-port adoption rejects unrelated custom ports."""
+    entry_8080 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50:8080)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry_8080.add_to_hass(hass)
+
+    discovery_8081 = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=8081,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_8081,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert entry_8080.unique_id is None
+
+
+async def test_zeroconf_fallback_step_restores_discovery_identity_after_failed_host_edit(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test discovery identity is restored when retrying with discovered host after failed edit."""
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyConnectionError(
+        "Cannot connect"
+    )
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_https._tcp.local.",
+        name="INDI Allsky._https._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # User enters unrelated host and fails connection
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "10.0.0.99",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # User re-enters discovered IP and succeeds
+    mock_indi_allsky_client.fetch_image.side_effect = None
+    mock_indi_allsky_client.fetch_image.return_value = b"test"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_zeroconf_host_update_skips_when_target_endpoint_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test host update skips when target host and port is already configured by another entry."""
+    entry1 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry1.add_to_hass(hass)
+
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.60)",
+        data={
+            CONF_HOST: "192.168.1.60",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry2.add_to_hass(hass)
+
+    # Server 1 DHCP changes to 192.168.1.60, where entry2 is already configured
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.60",
+        ip_addresses=["192.168.1.60"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_https._tcp.local.",
+        name="INDI Allsky._https._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Entry 1 should preserve 192.168.1.50 to avoid colliding with entry 2
+    assert entry1.data[CONF_HOST] == "192.168.1.50"
+
+
+async def test_zeroconf_alternate_port_does_not_collapse_distinct_instance(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test alternate-port deduplication does not collapse distinct instances."""
+    entry_inst1 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="indi-allsky.local_INDI Allsky 1",
+        title="INDI Allsky 1 (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry_inst1.add_to_hass(hass)
+
+    discovery_inst2 = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky 2._http._tcp.local.",
+        properties={"path": "/indi-allsky"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_inst2,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+
+async def test_zeroconf_fallback_id_collision_prevention_keeps_existing_owner(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test fallback ID is not assigned to a manual entry if already owned by another entry."""
+    # User previously ignored discovery of this instance
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={
+            "unique_id": "indi-allsky.local_INDI Allsky",
+            "title": "INDI Allsky",
+        },
+    )
+
+    # Server was later configured manually without unique ID
+    manual_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 80,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    manual_entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Manual entry should not steal fallback_unique_id from the ignored entry
+    assert manual_entry.unique_id is None
+
+
+async def test_zeroconf_cross_port_adoption_skips_different_server_name(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test discovery with MAC skips cross-port adoption when server name does not match."""
+    manual_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="Other Allsky (192.168.1.50:443)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    manual_entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert manual_entry.unique_id is None
+
+
+async def test_zeroconf_confirmation_cross_port_adoption_skips_unrelated_port_or_name(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test confirmation adoption skips entries with non-alternate ports or mismatched names."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    unrelated_port_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50:8080)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    unrelated_port_entry.add_to_hass(hass)
+
+    mismatched_name_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="Other Allsky (192.168.1.50:443)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    mismatched_name_entry.add_to_hass(hass)
+
+    result_confirm = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
+    assert unrelated_port_entry.unique_id is None
+    assert mismatched_name_entry.unique_id is None
+
+
+async def test_zeroconf_confirmation_macless_alternate_port_aborts_when_name_matches(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test confirmation of MAC-less discovery aborts when an alternate-port entry matches server name."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    # Alternate port manual entry created while confirmation form is open
+    manual_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    manual_entry.add_to_hass(hass)
+
+    result_confirm = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result_confirm["type"] is FlowResultType.ABORT
+    assert result_confirm["reason"] == "already_configured"
