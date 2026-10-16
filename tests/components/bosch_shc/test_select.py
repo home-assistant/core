@@ -10,6 +10,7 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     SmokeSensitivityService,
     VibrationSensorService,
+    WallThermostatConfiguration,
 )
 import pytest
 
@@ -33,6 +34,8 @@ SOUND_LEVEL_ENTITY_ID = "select.outdoor_siren_siren_volume"
 MOTION_SENSITIVITY_ENTITY_ID = "select.motion_detector_motion_sensitivity"
 DISPLAY_DIRECTION_ENTITY_ID = "select.thermostat_gen2_display_orientation"
 DISPLAYED_TEMPERATURE_ENTITY_ID = "select.thermostat_gen2_displayed_temperature"
+VALVE_TYPE_ENTITY_ID = "select.thermostat_gen2_valve_type"
+HEATER_TYPE_ENTITY_ID = "select.thermostat_gen2_heater_type"
 SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
 
@@ -471,3 +474,64 @@ async def test_room_thermostat_2_display_selects(
     )
     assert device.display_direction == DisplayDirection.Direction.REVERSED
     assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is not None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    valve_type=WallThermostatConfiguration.ValveType.NORMALLY_OPEN,
+                    heater_type=WallThermostatConfiguration.HeaterType.RADIATOR,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_valve_and_heater_type(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The valve and heater type are reported and written to the thermostat."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    assert hass.states.get(VALVE_TYPE_ENTITY_ID).state == "normally_open"
+    assert hass.states.get(HEATER_TYPE_ENTITY_ID).state == "radiator"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: VALVE_TYPE_ENTITY_ID, "option": "normally_close"},
+        blocking=True,
+    )
+    assert device.valve_type == WallThermostatConfiguration.ValveType.NORMALLY_CLOSE
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: HEATER_TYPE_ENTITY_ID, "option": "floor_heating"},
+        blocking=True,
+    )
+    assert device.heater_type == WallThermostatConfiguration.HeaterType.FLOOR_HEATING
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_gen2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_valve_and_heater_type_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No valve or heater type selects are created without wall thermostat support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(VALVE_TYPE_ENTITY_ID) is None
+    assert hass.states.get(HEATER_TYPE_ENTITY_ID) is None
