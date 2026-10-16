@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from aioanylist import AuthenticationError, AuthTokens, TransportError
 import pytest
 
-from homeassistant.components.anylist.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
+from homeassistant.components.any_list.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -123,7 +123,7 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
     assert hass.states.get(entity_id).state != "unavailable"
 
     caplog.set_level(
-        logging.INFO, logger="homeassistant.components.anylist.coordinator"
+        logging.INFO, logger="homeassistant.components.any_list.coordinator"
     )
     error = TransportError("AnyList is unreachable")
     status_listener(error)
@@ -132,7 +132,7 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
 
     assert hass.states.get(entity_id).state == "unavailable"
     assert (
-        caplog.text.count("Error requesting anylist data: AnyList is unreachable") == 1
+        caplog.text.count("Error requesting any_list data: AnyList is unreachable") == 1
     )
 
     status_listener(None)
@@ -140,7 +140,7 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state != "unavailable"
-    assert caplog.text.count("Fetching anylist data recovered") == 1
+    assert caplog.text.count("Fetching any_list data recovered") == 1
 
 
 async def test_runtime_auth_failure_marks_unavailable(

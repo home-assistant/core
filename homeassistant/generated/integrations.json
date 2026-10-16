@@ -385,7 +385,7 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
-    "anylist": {
+    "any_list": {
       "name": "AnyList",
       "integration_type": "service",
       "config_flow": true,

@@ -8,7 +8,7 @@ from aioanylist import AuthenticationError, TransportError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.anylist.const import (
+from homeassistant.components.any_list.const import (
     CONF_REFRESH_TOKEN,
     CONF_USER_LOCALE,
     DOMAIN,
@@ -40,7 +40,7 @@ PASSWORD = "secret-password"
 def mock_setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock runtime setup during config flow tests."""
     with patch(
-        "homeassistant.components.anylist.async_setup_entry", return_value=True
+        "homeassistant.components.any_list.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 
@@ -58,7 +58,7 @@ async def test_user_flow(
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.anylist.config_flow.uuid.uuid4",
+        "homeassistant.components.any_list.config_flow.uuid.uuid4",
         return_value=uuid.UUID(hex=CLIENT_ID),
     ):
         result = await hass.config_entries.flow.async_configure(

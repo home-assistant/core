@@ -8,7 +8,7 @@ from aioanylist.proto import PB
 from aioanylist.state import AnyListState
 import pytest
 
-from homeassistant.components.anylist.const import (
+from homeassistant.components.any_list.const import (
     CONF_REFRESH_TOKEN,
     CONF_USER_LOCALE,
     DOMAIN,
@@ -115,10 +115,10 @@ def mock_anylist_client_fixture() -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.anylist.AnyListClient", side_effect=create_client
+            "homeassistant.components.any_list.AnyListClient", side_effect=create_client
         ),
         patch(
-            "homeassistant.components.anylist.config_flow.AnyListClient",
+            "homeassistant.components.any_list.config_flow.AnyListClient",
             side_effect=create_client,
         ),
     ):

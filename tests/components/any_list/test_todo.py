@@ -172,7 +172,7 @@ async def test_todo_action_errors(
             blocking=True,
         )
 
-    assert err.value.translation_domain == "anylist"
+    assert err.value.translation_domain == "any_list"
     assert err.value.translation_key == translation_key
 
 
@@ -187,7 +187,7 @@ async def test_stale_list_entity_removed_on_startup(
     stale_unique_id = f"{mock_config_entry.unique_id}_deleted-list"
     stale = entity_registry.async_get_or_create(
         TODO_DOMAIN,
-        "anylist",
+        "any_list",
         stale_unique_id,
         config_entry=mock_config_entry,
         suggested_object_id="deleted_list",
@@ -198,7 +198,7 @@ async def test_stale_list_entity_removed_on_startup(
     await hass.async_block_till_done()
 
     assert (
-        entity_registry.async_get_entity_id(TODO_DOMAIN, "anylist", stale_unique_id)
+        entity_registry.async_get_entity_id(TODO_DOMAIN, "any_list", stale_unique_id)
         is None
     )
 

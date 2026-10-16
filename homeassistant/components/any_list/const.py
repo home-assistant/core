@@ -2,7 +2,7 @@
 
 from typing import Final
 
-DOMAIN: Final = "anylist"
+DOMAIN: Final = "any_list"
 
 CONF_REFRESH_TOKEN: Final = "refresh_token"
 CONF_USER_LOCALE: Final = "user_locale"

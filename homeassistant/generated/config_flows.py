@@ -68,7 +68,7 @@ FLOWS = {
         "anova",
         "anthemav",
         "anthropic",
-        "anylist",
+        "any_list",
         "aosmith",
         "apcupsd",
         "apple_tv",
