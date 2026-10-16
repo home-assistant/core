@@ -89,9 +89,6 @@
       "d_inverter_total": {
         "name": "Total inverter power"
       },
-      "d_inverter_type": {
-        "name": "Inverter type"
-      },
       "d_num_inverters": {
         "name": "Inverter count"
       },
