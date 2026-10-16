@@ -9,7 +9,7 @@ relevant modes.
 """
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, patch
@@ -45,7 +45,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 PLATFORM = "sensor"
 
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 
 @pytest.fixture

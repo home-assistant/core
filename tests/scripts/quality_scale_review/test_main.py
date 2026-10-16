@@ -23,7 +23,11 @@ _DOCS = rules.QualityScaleDocs(
 
 
 def _pull_request(
-    additions: int = 30, deletions: int = 12, files: int = 3
+    additions: int = 30,
+    deletions: int = 12,
+    files: int = 3,
+    snapshot_lines: int = 0,
+    snapshot_files: int = 0,
 ) -> PullRequest:
     """Return a pull request touching the peblar integration."""
     return PullRequest(
@@ -36,6 +40,8 @@ def _pull_request(
         deletions=deletions,
         changed_files=files,
         file_statuses={"homeassistant/components/peblar/sensor.py": "modified"},
+        snapshot_lines=snapshot_lines,
+        snapshot_files=snapshot_files,
     )
 
 
@@ -81,15 +87,35 @@ def test_skipped_when_too_long(additions: int, deletions: int, files: int) -> No
     decision = decide_skip(_pull_request(additions, deletions, files), ["peblar"])
     assert (decision.skip, decision.too_long) == (True, True)
     assert decision.reason.startswith(
-        f"changes {additions + deletions} lines in {files} files, above the limit of "
+        f"changes {additions + deletions} lines in {files} files "
+        "(excluding test snapshots), above the limit of "
     )
+
+
+@pytest.mark.parametrize(
+    ("additions", "files", "snapshot_lines", "snapshot_files"),
+    [
+        pytest.param(MAX_CHANGED_LINES + 100, 2, 100, 1, id="snapshot-lines"),
+        pytest.param(10, MAX_CHANGED_FILES + 5, 5, 5, id="snapshot-files"),
+    ],
+)
+def test_snapshots_do_not_count_towards_the_limits(
+    additions: int, files: int, snapshot_lines: int, snapshot_files: int
+) -> None:
+    """Changes to test snapshots are not counted against the size limits."""
+    decision = decide_skip(
+        _pull_request(additions, 0, files, snapshot_lines, snapshot_files),
+        ["peblar"],
+    )
+    assert (decision.skip, decision.too_long) == (False, False)
 
 
 def test_reason_reads_as_a_sentence_about_the_pull_request() -> None:
     """The reason is rendered after "this pull request" in the posted comment."""
     decision = decide_skip(_pull_request(5000, 0, 10), ["peblar"])
     assert decision.reason == (
-        "changes 5000 lines in 10 files, above the limit of 4000 lines and 50 files"
+        "changes 5000 lines in 10 files (excluding test snapshots), "
+        "above the limit of 4000 lines and 50 files"
     )
 
 
@@ -120,7 +146,6 @@ def test_writes_the_full_artifact_for_a_reviewed_pull_request(tmp_path: Path) ->
     assert results["skip_reason"] == ""
     assert results["pr_number"] == 42
     assert results["head_sha"] == "abc123"
-    assert results["changed_lines"] == 42
     assert results["domains"] == ["peblar"]
     assert json.loads((output / "pr-meta.json").read_text())["headRefOid"] == "abc123"
     assert (output / "domains.txt").read_text() == "peblar\n"

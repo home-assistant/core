@@ -363,7 +363,7 @@ async def test_stream_source(
     mock_stream.endpoint_url = Mock(return_value="http://home.assistant/playlist.m3u8")
 
     with patch(
-        "homeassistant.components.camera.create_stream",
+        "homeassistant.components.camera.entity.create_stream",
         return_value=mock_stream,
     ):
         # Request playlist through WebSocket
@@ -405,7 +405,7 @@ async def test_stream_source_error(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
+        "homeassistant.components.camera.entity.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_stream_url:
         # Request playlist through WebSocket
@@ -470,7 +470,7 @@ async def test_no_stream_source(
     await help_setup_mock_config_entry(hass, options)
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
+        "homeassistant.components.camera.entity.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_request_stream:
         # Request playlist through WebSocket
@@ -546,14 +546,14 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_timeout_cancelled(
+async def test_timeout(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     fakeimgbytes_jpg: bytes,
 ) -> None:
-    """Test that timeouts and cancellations return last image."""
+    """Test that timeouts return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
@@ -579,7 +579,7 @@ async def test_timeout_cancelled(
 
     with patch(
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        side_effect=asyncio.CancelledError(),
+        side_effect=TimeoutError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == 1
@@ -612,7 +612,7 @@ async def test_frame_interval_property(hass: HomeAssistant) -> None:
 
     request = Mock()
     with patch(
-        "homeassistant.components.camera.async_get_still_stream"
+        "homeassistant.components.camera.entity.async_get_still_stream"
     ) as mock_get_stream:
         await async_get_mjpeg_stream(hass, request, "camera.config_test")
 

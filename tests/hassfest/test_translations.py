@@ -168,6 +168,7 @@ SAMPLE_STRINGS = {
                 "field_one": {
                     "name": "Field one",
                     "description": "Description of field one",
+                    "overview_label": "Field one: {value}",
                 },
                 "field_two": {
                     "name": "Field two",
@@ -500,3 +501,88 @@ def test_allow_urls_in_translation_value(translation_string: str) -> None:
 
     # Should not raise
     schema(translation_string)
+
+
+@pytest.mark.parametrize(
+    "translation_string",
+    [
+        "Field one",
+        "Field one: {name}",
+        "Field one: {value} {name}",
+    ],
+)
+def test_overview_label_requires_value_placeholder(translation_string: str) -> None:
+    """Test that overview labels must only use the value placeholder."""
+    schema = probatio.Schema(translations.overview_label_validator)
+
+    with pytest.raises(probatio.Invalid):
+        schema(translation_string)
+
+    schema("Field one: {value}")
+
+
+INTEGRATION_CATEGORY_STRINGS = {
+    "integration_category": {
+        "energy": {
+            "name": "Energy",
+            "description": "Solar panels, home batteries and energy meters.",
+            "subcategory": {
+                "meters_monitoring": {"name": "Meters & monitoring"},
+            },
+        },
+        "pets": {
+            "name": "Pets",
+            "description": "Feeders, litter boxes and pet doors.",
+        },
+    },
+}
+
+
+def test_homeassistant_schema_integration_category(config: Config) -> None:
+    """Test the homeassistant integration accepts integration categories."""
+    integration = get_integration("homeassistant", config)
+    schema = translations.gen_homeassistant_schema(config, integration)
+
+    assert schema(INTEGRATION_CATEGORY_STRINGS) == INTEGRATION_CATEGORY_STRINGS
+
+
+def test_integration_category_only_for_homeassistant(config: Config) -> None:
+    """Test other integrations can't define integration categories."""
+    integration = get_integration("test_integration", config)
+    schema = translations.gen_strings_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid, match="not a valid option"):
+        schema(INTEGRATION_CATEGORY_STRINGS)
+
+
+@pytest.mark.parametrize(
+    "integration_category",
+    [
+        {"Energy": {"name": "Energy", "description": "Energy things."}},
+        {"energy": {"name": "Energy"}},
+        {"energy": {"description": "Energy things."}},
+        {
+            "energy": {
+                "name": "Energy",
+                "description": "Energy things.",
+                "subcategory": {"Meters": {"name": "Meters"}},
+            }
+        },
+        {
+            "energy": {
+                "name": "Energy",
+                "description": "Energy things.",
+                "subcategory": {"meters": {}},
+            }
+        },
+    ],
+)
+def test_homeassistant_schema_invalid_integration_category(
+    config: Config, integration_category: dict
+) -> None:
+    """Test invalid integration categories are rejected."""
+    integration = get_integration("homeassistant", config)
+    schema = translations.gen_homeassistant_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid):
+        schema({"integration_category": integration_category})

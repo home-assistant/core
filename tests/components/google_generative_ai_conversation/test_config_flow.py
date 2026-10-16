@@ -1,12 +1,14 @@
 """Test the Google Generative AI Conversation config flow."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from requests.exceptions import Timeout
 
 from homeassistant import config_entries
+from homeassistant.components import tts
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
@@ -40,6 +42,9 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TTS_MODEL,
     RECOMMENDED_TTS_OPTIONS,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+)
+from homeassistant.components.google_generative_ai_conversation.entity import (
+    GoogleGenerativeAILLMBaseEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
@@ -878,3 +883,244 @@ async def test_subentry_chat_model_labels_keep_the_full_model_id(
         "learnlm-2.0-flash-experimental",
         "lyria-realtime-exp",
     ]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "subentry_id", ["ulid-conversation", "ulid-ai-task", "ulid-stt"]
+)
+async def test_sampling_options_model_switch_and_reset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    subentry_id: str,
+) -> None:
+    """Reconfigure and reload saved choices before building actual SDK requests."""
+
+    async def sampling_models_pager() -> AsyncGenerator[Mock]:
+        async for model in get_models_pager():
+            yield model
+        for name in (
+            "models/gemini-3.8-flash",
+            "models/gemini-3.6-flash",
+            "models/gemini-2.5-pro",
+        ):
+            model = Mock(supported_actions=["generateContent"])
+            model.name = name
+            yield model
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    advanced = {
+        **subentry.data,
+        CONF_RECOMMENDED: False,
+        CONF_TEMPERATURE: 0.2,
+        CONF_TOP_P: 0.7,
+        CONF_TOP_K: 17,
+        CONF_THINKING_LEVEL: "minimal",
+        CONF_THINKING_BUDGET: 512,
+        CONF_MAX_TOKENS: 900,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=advanced
+    )
+    await hass.async_block_till_done()
+    preserved = {"temperature": 0.2, "topP": 0.7, "topK": 17}
+    minimal = {"include_thoughts": True, "thinking_level": "MINIMAL"}
+    default = {"include_thoughts": True}
+    budget = {"include_thoughts": True, "thinking_budget": 512}
+    for model, expected, thinking in (
+        ("models/gemini-3.1-flash-lite", preserved, minimal),
+        ("models/gemini-3.8-flash", {}, default),
+        ("models/gemini-3.1-flash-lite", preserved, minimal),
+        ("models/gemini-3.6-flash", {}, minimal),
+        ("models/gemini-3.8-flash", {}, default),
+        ("models/gemini-3.6-flash", {}, minimal),
+        ("models/gemini-2.5-pro", preserved, budget),
+        ("models/gemini-3.8-flash", {}, default),
+        ("models/gemini-2.5-pro", preserved, budget),
+    ):
+        with patch(
+            "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+        ):
+            flow = await mock_config_entry.start_subentry_reconfigure_flow(
+                hass, subentry_id
+            )
+            result = await hass.config_entries.subentries.async_configure(
+                flow["flow_id"], {**advanced, CONF_CHAT_MODEL: model}
+            )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert subentry.data[CONF_TEMPERATURE] == 0.2
+        assert subentry.data[CONF_THINKING_LEVEL] == "minimal"
+        assert subentry.data[CONF_THINKING_BUDGET] == 512
+        mock_genai_transport.return_value = [
+            {"candidates": [{"content": {"parts": [{"text": "Done"}]}}]}
+        ]
+        entity = GoogleGenerativeAILLMBaseEntity(mock_config_entry, subentry)
+        await mock_config_entry.runtime_data.aio.models.generate_content(
+            model=subentry.data[CONF_CHAT_MODEL],
+            contents="Hello",
+            config=entity.create_generate_content_config(),
+        )
+        config = mock_genai_transport.call_args.kwargs["http_request"].data[
+            "generationConfig"
+        ]
+        assert {
+            key: config[key] for key in ("temperature", "topP", "topK") if key in config
+        } == expected
+        assert config["thinkingConfig"] == thinking
+        assert config["maxOutputTokens"] == 900
+    with patch(
+        "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+    ):
+        flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry_id
+        )
+        flow = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {CONF_RECOMMENDED: True}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {CONF_RECOMMENDED: True}
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert subentry.data == {CONF_RECOMMENDED: True}
+    mock_genai_transport.return_value = [
+        {"candidates": [{"content": {"parts": [{"text": "Done"}]}}]}
+    ]
+    entity = GoogleGenerativeAILLMBaseEntity(mock_config_entry, subentry)
+    await mock_config_entry.runtime_data.aio.models.generate_content(
+        model=RECOMMENDED_CHAT_MODEL,
+        contents="Hello",
+        config=entity.create_generate_content_config(),
+    )
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert config["temperature"] == 1.0
+    assert config["topP"] == RECOMMENDED_TOP_P
+    assert config["topK"] == RECOMMENDED_TOP_K
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_sampling_options_model_switch_and_reset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+) -> None:
+    """TTS keeps dormant temperature through actual reconfigure/reload requests."""
+
+    async def sampling_models_pager() -> AsyncGenerator[Mock]:
+        async for model in get_models_pager():
+            yield model
+        model = Mock(supported_actions=["generateContent"])
+        model.name = "models/gemini-3.8-flash-tts"
+        yield model
+
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    advanced = {
+        CONF_RECOMMENDED: False,
+        CONF_TEMPERATURE: 0.2,
+        CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=advanced
+    )
+    await hass.async_block_till_done()
+    for model, expected in (
+        (RECOMMENDED_TTS_MODEL, {"temperature": 0.2}),
+        ("models/gemini-3.8-flash-tts", {}),
+        (RECOMMENDED_TTS_MODEL, {"temperature": 0.2}),
+    ):
+        with patch(
+            "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+        ):
+            flow = await mock_config_entry.start_subentry_reconfigure_flow(
+                hass, subentry.subentry_id
+            )
+            result = await hass.config_entries.subentries.async_configure(
+                flow["flow_id"], {**advanced, CONF_CHAT_MODEL: model}
+            )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.ABORT
+        assert subentry.data[CONF_TEMPERATURE] == 0.2
+        mock_genai_transport.return_value = [
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "data": "YXVkaW8=",
+                                        "mimeType": "audio/L16;rate=24000",
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+        entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+        with patch(
+            "homeassistant.components.google_generative_ai_conversation.tts.convert_to_wav",
+            return_value=b"wav",
+        ):
+            assert await entity.async_get_tts_audio(
+                "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+            ) == ("wav", b"wav")
+        config = mock_genai_transport.call_args.kwargs["http_request"].data[
+            "generationConfig"
+        ]
+        assert {
+            key: config[key] for key in ("temperature", "topP", "topK") if key in config
+        } == expected
+        assert "thinkingConfig" not in config
+    with patch(
+        "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+    ):
+        flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+        flow = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {CONF_RECOMMENDED: True}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {CONF_RECOMMENDED: True}
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert subentry.data == {CONF_RECOMMENDED: True}
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "inlineData": {
+                                    "data": "YXVkaW8=",
+                                    "mimeType": "audio/L16;rate=24000",
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.tts.convert_to_wav",
+        return_value=b"wav",
+    ):
+        assert await entity.async_get_tts_audio(
+            "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+        ) == ("wav", b"wav")
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert config["temperature"] == 1.0
+    assert "thinkingConfig" not in config

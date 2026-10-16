@@ -18,12 +18,6 @@
       "auth": {
         "title": "Authenticate to the device"
       },
-      "finish": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]"
-        },
-        "title": "Choose a name for the device"
-      },
       "reset": {
         "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Select the device.\n3. Select `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock.",
         "title": "Unlock the device"
@@ -88,20 +82,38 @@
     }
   },
   "exceptions": {
+    "command_not_found": {
+      "message": "Command not found: {command}"
+    },
+    "commands_not_found": {
+      "message": "Commands not found: {commands}"
+    },
     "connect_failed": {
       "message": "Failed to connect to the device at {host}: {error}"
+    },
+    "device_not_found": {
+      "message": "Device not found: {device}"
     },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
     },
+    "learn_command_failed": {
+      "message": "Failed to learn command {command}: {error}"
+    },
+    "learn_commands_failed": {
+      "message": "Failed to learn commands {commands}: {error}"
+    },
     "send_command_failed": {
-      "message": "Failed to send IR command: {error}"
+      "message": "Failed to send command: {error}"
     },
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
     },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
+    },
+    "unload_failed": {
+      "message": "Failed to unload the device"
     }
   }
 }

@@ -12,7 +12,7 @@ from homeassistant.components.bsblan.const import (
     CONF_PASSKEY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -761,13 +761,7 @@ async def test_reauth_flow_success(
     mock_config_entry.add_to_hass(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     _assert_form_result(result, "reauth_confirm")
 
@@ -813,13 +807,7 @@ async def test_reauth_flow_auth_error(
     mock_bsblan.device.side_effect = BSBLANAuthError
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     _assert_form_result(result, "reauth_confirm")
 
@@ -879,13 +867,7 @@ async def test_reauth_flow_connection_error(
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     _assert_form_result(result, "reauth_confirm")
 
@@ -926,13 +908,7 @@ async def test_reauth_flow_preserves_existing_values(
     mock_config_entry.add_to_hass(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     _assert_form_result(result, "reauth_confirm")
 
@@ -962,13 +938,7 @@ async def test_reauth_flow_partial_credentials_update(
     mock_config_entry.add_to_hass(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     # Submit with only username and password changes
     result = await _configure_flow(
@@ -1014,13 +984,7 @@ async def test_reauth_flow_preserves_non_credential_fields(
     entry.add_to_hass(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     # Submit with only new credentials
     result = await _configure_flow(
@@ -1067,13 +1031,7 @@ async def test_reauth_flow_clears_credentials_with_empty_strings(
     entry.add_to_hass(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     # Submit with empty strings to clear credentials
     result = await _configure_flow(
@@ -1118,13 +1076,7 @@ async def test_reauth_flow_partial_clear_credentials(
     entry.add_to_hass(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     # Submit with mix of clearing and updating credentials
     result = await _configure_flow(

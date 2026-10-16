@@ -123,7 +123,7 @@ class Hub:
             assert hub.installation_id is not None
         device_info = Hub._map_device_info(device, hub.installation_id)
         if device.parent_device is not None:
-            device_info["via_device_id"] = self._ensure_device_registered(
+            device_info.via_device_id = self._ensure_device_registered(
                 device.parent_device, hub.installation_id
             )
         callback = self.new_metric_callbacks.get(metric.metric_kind)
@@ -141,7 +141,7 @@ class Hub:
         """
         device_info = Hub._map_device_info(device, installation_id)
         if device.parent_device is not None:
-            device_info["via_device_id"] = self._ensure_device_registered(
+            device_info.via_device_id = self._ensure_device_registered(
                 device.parent_device, installation_id
             )
         device_entry = self._device_registry.async_get_or_create(
