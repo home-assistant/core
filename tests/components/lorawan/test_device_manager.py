@@ -578,7 +578,7 @@ async def test_reconnect_during_initial_setup(
         assert await task
         await hass.async_block_till_done()
 
-    assert not original_backend._subscribers
+    original_backend.emit(UpdatedEvent(descriptor=replace(DESCRIPTOR, name="Stale")))
     coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
     assert coordinator.data.descriptor.name == "Replacement"
     assert coordinator.last_update_success
@@ -590,4 +590,5 @@ async def test_reconnect_during_initial_setup(
     assert coordinator.data.descriptor.name == "Updated"
     await hass.config_entries.async_unload(entry.entry_id)
     unregister_replacement()
-    assert not backend._subscribers
+    backend.emit(UpdatedEvent(descriptor=replace(DESCRIPTOR, name="After unload")))
+    assert coordinator.data.descriptor.name == "Updated"

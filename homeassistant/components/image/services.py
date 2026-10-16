@@ -21,7 +21,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import ImageEntity
+    from .entity import ImageEntity
 
 IMAGE_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.string}
 

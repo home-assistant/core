@@ -10,6 +10,7 @@ import probatio
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
+    PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
@@ -49,6 +50,7 @@ from .const import (
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
 CONF_REQUEST_NEW_CODE = "request_new_code"
+TERMS_URL = "https://www.icloud.com/terms"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +74,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
         self._forced_2fa = False
+
+        self._accept_terms = False
+        self._resume_step_id = "user"
 
         self._existing_entry_data: dict[str, Any] | None = None
         self._description_placeholders: dict[str, str] | None = None
@@ -262,10 +267,22 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Requested iCloud 2FA verification code")
         return errors
 
+    def _credentials_input(self) -> dict[str, Any]:
+        """Return the credentials collected so far in the shape of step input."""
+        return {
+            CONF_USERNAME: self._username,
+            CONF_PASSWORD: self._password,
+            CONF_WITH_FAMILY: self._with_family,
+            CONF_MAX_INTERVAL: self._max_interval,
+            CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
+            CONF_INCLUDE_COMPLETED: self._include_completed,
+        }
+
     async def _validate_and_create_entry(self, user_input, step_id):
         """Check if config is valid and create entry if so."""
 
         extra_inputs = user_input
+        self._resume_step_id = step_id
 
         # If an existing entry was found, meaning this is a password update attempt,
         # use those to get config values that aren't changing.
@@ -309,8 +326,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                         Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
                         with_family=self._with_family,
                         refresh_interval=None,
+                        accept_terms=self._accept_terms,
                     )
                 )
+            except PyiCloudAcceptTermsException as error:
+                return await self._async_terms_required(error)
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error("Error logging into iCloud service: %s", error)
                 self.api = None
@@ -410,14 +430,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.api = None
             return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
 
-        data = {
-            CONF_USERNAME: self._username,
-            CONF_PASSWORD: self._password,
-            CONF_WITH_FAMILY: self._with_family,
-            CONF_MAX_INTERVAL: self._max_interval,
-            CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
-            CONF_INCLUDE_COMPLETED: self._include_completed,
-        }
+        data = self._credentials_input()
 
         # If this is a password update attempt, don't try creating a new one.
         if self.source == SOURCE_USER:
@@ -427,6 +440,43 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self.hass.config_entries.async_update_entry(entry, data=data)
         await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
+
+    async def _async_terms_required(
+        self, error: PyiCloudAcceptTermsException
+    ) -> ConfigFlowResult:
+        """Drop the unusable session and ask the user to accept the terms."""
+        _LOGGER.error(
+            "Apple updated the iCloud terms of service and they must be "
+            "accepted to continue: %s",
+            error,
+        )
+        self.api = None
+        # A login that already accepted them and still failed cannot be helped
+        # by accepting again, so say so rather than offering the step in a loop.
+        errors = {"base": "accept_terms_failed"} if self._accept_terms else None
+        return await self.async_step_accept_terms(errors=errors)
+
+    async def async_step_accept_terms(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Ask the user to accept Apple's updated terms of service."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="accept_terms",
+                data_schema=probatio.Schema({}),
+                errors=errors or {},
+                description_placeholders={"terms_url": TERMS_URL},
+            )
+
+        self._accept_terms = True
+        # pyicloud only accepts the terms while authenticating, so the session
+        # has to be built again for the acceptance to reach Apple.
+        self.api = None
+        return await self._validate_and_create_entry(
+            self._credentials_input(), self._resume_step_id
+        )
 
     @override
     async def async_step_user(
@@ -578,6 +628,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._verification_code,
             ):
                 raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
+        except PyiCloudAcceptTermsException as error:
+            return await self._async_terms_required(error)
         except PyiCloudException as error:
             # Redisplay the verification form after a failed verification attempt.
             # For 2FA, do not request a new Apple verification code on every bad
@@ -597,16 +649,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         # that follows straight back to this form.
         self._forced_2fa = False
 
-        return await self.async_step_user(
-            {
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_WITH_FAMILY: self._with_family,
-                CONF_MAX_INTERVAL: self._max_interval,
-                CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
-                CONF_INCLUDE_COMPLETED: self._include_completed,
-            }
-        )
+        return await self.async_step_user(self._credentials_input())
 
     async def _show_verification_code_form(
         self, errors: dict[str, str]

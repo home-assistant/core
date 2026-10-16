@@ -7,7 +7,7 @@ from .ast_utils import extended_ancestors
 
 ENTITY_QNAME = "homeassistant.helpers.entity.Entity"
 ENTITY_DESCRIPTION_QNAME = "homeassistant.helpers.entity.EntityDescription"
-LIGHT_ENTITY_QNAME = "homeassistant.components.light.LightEntity"
+LIGHT_ENTITY_QNAME = "homeassistant.components.light.entity.LightEntity"
 
 
 def inherits_from_entity(class_node: nodes.ClassDef) -> bool:

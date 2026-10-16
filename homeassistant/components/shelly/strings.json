@@ -340,6 +340,12 @@
       "current_limit": {
         "name": "Current limit"
       },
+      "effect_intensity": {
+        "name": "Effect intensity"
+      },
+      "effect_speed": {
+        "name": "Effect speed"
+      },
       "external_temperature": {
         "name": "External temperature"
       },
@@ -732,6 +738,9 @@
       },
       "cury_away_mode": {
         "name": "Away mode"
+      },
+      "effect_reverse": {
+        "name": "Reverse effect"
       },
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
