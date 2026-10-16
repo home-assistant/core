@@ -328,7 +328,7 @@ Use `entry.runtime_data` instead of `hass.data[DOMAIN]`. The `runtime_data`
 approach is type-safe (via `ConfigEntry[T]`), automatically cleaned up on
 entry unload, and avoids key collisions in the shared `hass.data` dictionary.
 
-See the [runtime-data quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data)
+See the [runtime-data quality scale rule](https://contributors.home-assistant.io/core/quality-scale/runtime-data/)
 for migration guidance.
 
 
@@ -441,7 +441,7 @@ the config entry. Uses variable tracking to catch indirect usage (e.g.,
 stable hardware identifier instead: a MAC address (via `format_mac`),
 serial number, or device-provided unique ID.
 
-See the [unique-config-entry quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/unique-config-entry).
+See the [unique-config-entry quality scale rule](https://contributors.home-assistant.io/core/quality-scale/unique-config-entry/).
 
 
 ## `home_assistant_enforce_config_flow_no_polling` checker
@@ -457,7 +457,7 @@ Config flow should not include polling interval fields like
 integration author determines the appropriate polling frequency based on
 API rate limits, device capabilities, and data freshness needs.
 
-See the [appropriate-polling quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/appropriate-polling).
+See the [appropriate-polling quality scale rule](https://contributors.home-assistant.io/core/quality-scale/appropriate-polling/).
 
 ## `home_assistant_enforce_config_flow_no_name` checker
 
@@ -687,7 +687,7 @@ for finishing the flow, with the arguments they are called with. A reason
 taken from a test argument counts when all its `pytest.mark.parametrize`
 values end with `_successful`.
 
-See the [config-flow-test-coverage quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow-test-coverage).
+See the [config-flow-test-coverage quality scale rule](https://contributors.home-assistant.io/core/quality-scale/config-flow-test-coverage/).
 
 
 ## `home_assistant_enforce_utcnow` checker
@@ -740,7 +740,7 @@ checkers.
 
 ## `home_assistant_entity_unique_id` checker
 
-Quality-scale-gated checker for the [`entity-unique-id`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unique-id)
+Quality-scale-gated checker for the [`entity-unique-id`](https://contributors.home-assistant.io/core/quality-scale/entity-unique-id/)
 Bronze rule. Only fires for entity-platform modules whose
 `quality_scale.yaml` marks `entity-unique-id` as `done`.
 
@@ -954,7 +954,7 @@ inside helper functions that are called from `async_setup_entry` are
 caught too, as are calls to the conventional `async_setup_services` helper
 from `services.py`.
 
-See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
+See the [action-setup quality scale rule](https://contributors.home-assistant.io/core/quality-scale/action-setup/).
 
 
 ## `home_assistant_actions_services_module` checker
@@ -1122,7 +1122,7 @@ no `assert`. `match` statements have no exemptions.
 ## `home_assistant_reauthentication_flow` checker
 
 Quality-scale-gated checker for the
-[`reauthentication-flow`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/reauthentication-flow)
+[`reauthentication-flow`](https://contributors.home-assistant.io/core/quality-scale/reauthentication-flow/)
 Silver rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7410`: `home-assistant-missing-reauthentication-flow`
@@ -1133,7 +1133,7 @@ Integration's `config_flow.py` should implement `async_step_reauth`.
 ## `home_assistant_parallel_updates` checker
 
 Quality-scale-gated checker for the
-[`parallel-updates`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/parallel-updates)
+[`parallel-updates`](https://contributors.home-assistant.io/core/quality-scale/parallel-updates/)
 Silver rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7411`: `home-assistant-missing-parallel-updates`
@@ -1144,7 +1144,7 @@ Platform module should define a module-level `PARALLEL_UPDATES` constant.
 ## `home_assistant_diagnostics` checker
 
 Quality-scale-gated checker for the
-[`diagnostics`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/diagnostics)
+[`diagnostics`](https://contributors.home-assistant.io/core/quality-scale/diagnostics/)
 Gold rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7412`: `home-assistant-missing-diagnostics`
@@ -1156,7 +1156,7 @@ Integration's `diagnostics.py` should implement
 ## `home_assistant_config_entry_unloading` checker
 
 Quality-scale-gated checker for the
-[`config-entry-unloading`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-entry-unloading)
+[`config-entry-unloading`](https://contributors.home-assistant.io/core/quality-scale/config-entry-unloading/)
 Silver rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7413`: `home-assistant-missing-config-entry-unloading`
@@ -1181,7 +1181,7 @@ blocking calls. The rule applies to integration modules only.
 ## `home_assistant_has_entity_name` checker
 
 Quality-scale-gated checker for the
-[`has-entity-name`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/has-entity-name)
+[`has-entity-name`](https://contributors.home-assistant.io/core/quality-scale/has-entity-name/)
 Bronze rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7416`: `home-assistant-missing-has-entity-name`
@@ -1226,7 +1226,7 @@ subentry handler class names to their type keys.
 ## `home_assistant_test_before_configure` checker
 
 Quality-scale-gated checker for the
-[`test-before-configure`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-configure)
+[`test-before-configure`](https://contributors.home-assistant.io/core/quality-scale/test-before-configure/)
 Bronze rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7433`: `home-assistant-missing-test-before-configure`
