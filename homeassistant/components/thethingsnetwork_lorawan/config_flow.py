@@ -4,11 +4,11 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 import logging
 from typing import Any, override
-from urllib.parse import urlsplit
 
 from lorawan_connection import ConnectionUnavailable
 from lorawan_connection.backend.tts import AuthenticationError, TTSConnection
 import probatio
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -76,11 +76,7 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     for key in (CONF_ENDPOINT, CONF_IDENTITY_SERVER):
                         if endpoint := self._input.get(key, "").strip():
-                            self._input[key] = (
-                                urlsplit(endpoint)
-                                ._replace(path="", query="", fragment="")
-                                .geturl()
-                            )
+                            self._input[key] = str(URL(endpoint).with_path(""))
                     self._input[CONF_IDENTITY_SERVER] = (
                         self._input.get(CONF_IDENTITY_SERVER, "").strip()
                         or self._input[CONF_ENDPOINT]
@@ -97,7 +93,9 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     self._abort_if_unique_id_configured()
                     for entry in self._async_current_entries(include_ignore=False):
-                        if entry.data[CONF_IDENTITY_SERVER] == identity_server and set(
+                        if str(
+                            URL(entry.data[CONF_IDENTITY_SERVER])
+                        ) == identity_server and set(
                             entry.data[CONF_APPLICATION_IDS]
                         ).intersection(applications):
                             raise AbortFlow("already_configured")

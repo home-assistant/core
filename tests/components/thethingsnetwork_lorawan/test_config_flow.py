@@ -60,6 +60,18 @@ async def test_initial_form(hass: HomeAssistant, mock_connection: Mock) -> None:
             "https://identity:8884",
         ),
         ("  http://[::1]:1884/  ", " ", "http://[::1]:1884", "http://[::1]:1884"),
+        (
+            "https://SERVER:8884/console?view=1#devices",
+            "https://IDENTITY:8884/console",
+            "https://server:8884",
+            "https://identity:8884",
+        ),
+        (
+            "http://[FE80::1%25ETH0]:1884/console",
+            "",
+            "http://[fe80::1%25ETH0]:1884",
+            "http://[fe80::1%25ETH0]:1884",
+        ),
     ],
 )
 async def test_user(
@@ -219,15 +231,34 @@ async def test_cancelled_validation(hass: HomeAssistant, mock_connection: Mock) 
 
 
 @pytest.mark.parametrize("applications", [["application"], ["application", "second"]])
+@pytest.mark.parametrize(
+    ("stored_identity_server", "identity_server"),
+    [
+        ("https://identity:8884", "https://identity:8884"),
+        ("https://identity:8884", "https://IDENTITY:8884"),
+        ("https://IDENTITY:8884", "https://identity:8884"),
+        ("https://identity:443", "https://IDENTITY"),
+    ],
+)
 async def test_duplicate_application(
-    hass: HomeAssistant, connection_entry: MockConfigEntry, applications: list[str]
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    applications: list[str],
+    stored_identity_server: str,
+    identity_server: str,
 ) -> None:
     """Overlapping applications cannot register duplicate devices."""
+    hass.config_entries.async_update_entry(
+        connection_entry,
+        data={**connection_entry.data, "identity_server": stored_identity_server},
+        unique_id=f"{stored_identity_server}:application",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**INPUT, "application_ids": applications}
+        result["flow_id"],
+        {**INPUT, "application_ids": applications, "identity_server": identity_server},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
