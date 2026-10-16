@@ -1556,6 +1556,8 @@ class MqttEntityDeviceInfo(Entity):
     _registered_device_id: str | None = None
     # Kept after a failed registration, as the entity stays linked to its device
     _main_device_id: str | None = None
+    # The device of the registry entry before the entity is added, set by MqttEntity
+    _previous_device_id: str | None = None
     _device_registration_failed = False
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
@@ -1628,17 +1630,27 @@ class MqttEntityDeviceInfo(Entity):
     @callback
     @override
     def add_to_platform_abort(self) -> None:
-        """Abort adding the entity and clean up a device registered only for it."""
+        """Abort adding the entity and clean up a device it no longer uses.
+
+        Without a registry entry, this is the device registered for the entity.
+        A disabled entity is linked to its new device before the add is aborted,
+        leaving its previous device unused.
+        """
         hass = self.hass
         super().add_to_platform_abort()
-        # With a registry entry, the entity is still linked to its device
-        if self.registry_entry is not None or self._registered_device_id is None:
+        if self.registry_entry is None:
+            unused_device_id = self._registered_device_id
+        elif self._previous_device_id != self.registry_entry.device_id:
+            unused_device_id = self._previous_device_id
+        else:
+            return
+        if unused_device_id is None:
             return
         self._config_entry.async_create_task(
             hass,
             async_cleanup_device_registry(
                 hass,
-                self._registered_device_id,
+                unused_device_id,
                 self._config_entry.entry_id,
                 include_disabled_entities=True,
             ),
@@ -1685,7 +1697,10 @@ class MqttEntityDeviceInfo(Entity):
             return
         er.async_get(self.hass).async_update_entity(self.entity_id, device_id=device.id)
         await async_cleanup_device_registry(
-            self.hass, old_device_id, self._config_entry.entry_id
+            self.hass,
+            old_device_id,
+            self._config_entry.entry_id,
+            include_disabled_entities=True,
         )
 
     @property
@@ -1712,7 +1727,6 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
-    _previous_device_id: str | None = None
     _update_registry_entity_id: str | None = None
 
     def __init__(

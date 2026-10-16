@@ -1060,6 +1060,66 @@ async def test_disabled_entity_keeps_device(
     assert entity_entry.device_id == child_device.id
 
 
+async def test_disabled_entity_rediscovery_cleans_up_old_child_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the old child device of a rediscovered disabled entity is cleaned up."""
+    await mqtt_mock_entry()
+    payload = json.loads(
+        _switch_config("sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+    )
+    payload["enabled_by_default"] = False
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert _get_child_device(hass, device_registry, "sub") is not None
+
+    payload["device"]["child_device"] = {"identifiers": ["sub2"], "name": "Sub 2"}
+    async_fire_mqtt_message(hass, SWITCH_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    new_child_device = _get_child_device(hass, device_registry, "sub2")
+    assert new_child_device is not None
+    entity_entry = entity_registry.async_get(SWITCH_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == new_child_device.id
+    assert _get_child_device(hass, device_registry, "sub") is None
+
+
+async def test_discovery_update_child_device_keeps_disabled_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test moving an entity to another child device keeps a disabled entity."""
+    await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+    await _discover_switch(
+        hass, "sw2", {**PARENT_DEVICE, "child_device": CHILD_DEVICE}, name="Other"
+    )
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert child_device is not None
+    disabled_entity_id = "switch.parent_sub_other"
+    entity_registry.async_update_entity(
+        disabled_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    await _discover_switch(
+        hass,
+        "sw1",
+        {**PARENT_DEVICE, "child_device": {"identifiers": ["sub2"], "name": "Sub 2"}},
+    )
+    assert _get_child_device(hass, device_registry, "sub2") is not None
+    # The old child device is kept, as removing it would remove the disabled entity
+    assert _get_child_device(hass, device_registry, "sub") is not None
+    entity_entry = entity_registry.async_get(disabled_entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+
 async def test_child_device_registration_error(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
