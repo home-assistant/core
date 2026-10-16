@@ -655,7 +655,7 @@
           'cover.test_charge_port_door': 'polling',
           'cover.test_frunk': 'polling',
           'cover.test_trunk': 'polling',
-          'cover.test_windows': 'polling',
+          'cover.test_vent_windows': 'polling',
           'device_tracker.test_location': 'polling',
           'device_tracker.test_route': 'polling',
           'lock.test_charge_cable_lock': 'polling',
