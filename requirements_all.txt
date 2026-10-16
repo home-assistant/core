@@ -360,6 +360,9 @@ aiomusiccast==0.15.0
 # homeassistant.components.nanoleaf
 aionanoleaf2==1.2.0
 
+# homeassistant.components.nature_remo
+aionatureremo==0.4.0
+
 # homeassistant.components.notion
 aionotion==2024.03.0
 
@@ -841,7 +844,7 @@ debugpy==1.8.22
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==18.6.0
+deebot-client==18.7.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
@@ -3476,7 +3479,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.3.0
+wiim==0.3.2
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
