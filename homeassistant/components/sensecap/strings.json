@@ -11,5 +11,24 @@
         "description": "Set up SenseCAP devices from your LoRaWAN connections."
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "probe_temperature": {
+        "name": "Probe {probe} temperature"
+      },
+      "soil_moisture": {
+        "name": "Soil moisture"
+      },
+      "soil_temperature": {
+        "name": "Soil temperature"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    }
   }
 }

@@ -4,7 +4,22 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from sensecap_lorawan import S2101, S2102, S2103, SenseCapDevice
+from sensecap_lorawan import (
+    S2101,
+    S2102,
+    S2103,
+    S2104,
+    S2105,
+    S2106,
+    S2107,
+    S2120,
+    Gen1AirTemperatureHumidity,
+    Gen1CO2,
+    Gen1Light,
+    Gen1Pressure,
+    Gen1SoilTemperatureMoisture,
+    SenseCapDevice,
+)
 
 from homeassistant.components.lorawan import LoRaWANEntity
 from homeassistant.components.sensor import (
@@ -14,11 +29,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
+    UnitOfConductivity,
+    UnitOfLength,
+    UnitOfPressure,
     UnitOfRatio,
+    UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,41 +60,175 @@ class SenseCapSensorDescription[DeviceT: SenseCapDevice](SensorEntityDescription
 
 
 DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
-    SenseCapSensorDescription[S2101 | S2103](
+    SenseCapSensorDescription[
+        S2101 | S2103 | S2106 | S2120 | Gen1AirTemperatureHumidity
+    ](
         key="temperature",
-        device_types=(S2101, S2103),
+        device_types=(S2101, S2103, S2106, S2120, Gen1AirTemperatureHumidity),
         value_fn=lambda device: device.temperature,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2101 | S2103](
+    SenseCapSensorDescription[S2101 | S2103 | S2120 | Gen1AirTemperatureHumidity](
         key="humidity",
-        device_types=(S2101, S2103),
+        device_types=(S2101, S2103, S2120, Gen1AirTemperatureHumidity),
         value_fn=lambda device: device.humidity,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2102](
+    SenseCapSensorDescription[S2102 | S2120 | Gen1Light](
         key="illuminance",
-        device_types=(S2102,),
+        device_types=(S2102, S2120, Gen1Light),
         value_fn=lambda device: device.illuminance,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SenseCapSensorDescription[S2103](
+    SenseCapSensorDescription[S2103 | Gen1CO2](
         key="carbon_dioxide",
-        device_types=(S2103,),
+        device_types=(S2103, Gen1CO2),
         value_fn=lambda device: device.co2,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SenseCapSensorDescription[S2104 | Gen1SoilTemperatureMoisture](
+        key="soil_temperature",
+        device_types=(S2104, Gen1SoilTemperatureMoisture),
+        value_fn=lambda device: device.soil_temperature,
+        translation_key="soil_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2104 | Gen1SoilTemperatureMoisture](
+        key="soil_moisture",
+        device_types=(S2104, Gen1SoilTemperatureMoisture),
+        value_fn=lambda device: device.soil_moisture,
+        translation_key="soil_moisture",
+        device_class=SensorDeviceClass.MOISTURE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2105](
+        key="conductivity",
+        device_types=(S2105,),
+        value_fn=lambda device: device.conductivity,
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS_PER_CM,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2106](
+        key="ph",
+        device_types=(S2106,),
+        value_fn=lambda device: device.ph,
+        device_class=SensorDeviceClass.PH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2120 | Gen1Pressure](
+        key="pressure",
+        device_types=(S2120, Gen1Pressure),
+        value_fn=lambda device: device.pressure,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2120](
+        key="uv_index",
+        device_types=(S2120,),
+        value_fn=lambda device: device.uv_index,
+        translation_key="uv_index",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2120](
+        key="wind_speed",
+        device_types=(S2120,),
+        value_fn=lambda device: device.wind_speed,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2120](
+        key="wind_direction",
+        device_types=(S2120,),
+        value_fn=lambda device: device.wind_direction,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+    ),
+    SenseCapSensorDescription[S2120](
+        key="wind_gust",
+        device_types=(S2120,),
+        value_fn=lambda device: device.wind_gust,
+        translation_key="wind_gust",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2120](
+        key="rainfall",
+        device_types=(S2120,),
+        value_fn=lambda device: device.rainfall,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2120](
+        key="rain_accumulation",
+        device_types=(S2120,),
+        value_fn=lambda device: device.rain_accumulation,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SenseCapSensorDescription[S2107](
+        key="temperature_1",
+        device_types=(S2107,),
+        value_fn=lambda device: device.temperature(1),
+        translation_key="probe_temperature",
+        translation_placeholders={"probe": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2107](
+        key="temperature_2",
+        device_types=(S2107,),
+        value_fn=lambda device: device.temperature(2),
+        translation_key="probe_temperature",
+        translation_placeholders={"probe": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription[S2107](
+        key="temperature_3",
+        device_types=(S2107,),
+        value_fn=lambda device: device.temperature(3),
+        translation_key="probe_temperature",
+        translation_placeholders={"probe": "3"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     SenseCapSensorDescription[SenseCapDevice](
         key="battery",
-        device_types=(S2101, S2102, S2103),
+        device_types=(
+            S2101,
+            S2102,
+            S2103,
+            S2104,
+            S2106,
+            S2107,
+            S2120,
+            Gen1AirTemperatureHumidity,
+            Gen1CO2,
+            Gen1Light,
+            Gen1Pressure,
+            Gen1SoilTemperatureMoisture,
+        ),
         value_fn=lambda device: (
             battery_level
             if (battery_level := device.battery_level) is not None

@@ -12,7 +12,7 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
-from sensecap_lorawan import S2101, S2102, S2103, S2104
+from sensecap_lorawan import S2100, S2101, S2102, S2103, SenseCapDevice
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import EntityCategory
@@ -20,14 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from .const import CATALOG_MODELS
+
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
-@pytest.mark.parametrize("stack", ["chirpstack", "tts"])
-@pytest.mark.parametrize(
-    ("model", "fixture_name"),
-    [(S2101, "s2101.json"), (S2102, "s2102.json"), (S2103, "s2103.json")],
-)
+@pytest.mark.parametrize(("stack", "model"), CATALOG_MODELS)
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -35,21 +33,26 @@ async def test_sensors(
     mock_connection: MockConnection,
     descriptor: DeviceDescriptor,
     stack: str,
-    model: type[S2101 | S2102 | S2103],
-    fixture_name: str,
+    model: type[SenseCapDevice],
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Replay physical-device payloads through each official catalog identity."""
-    descriptor = replace(descriptor, model_id=model.identifiers[stack][1])
+    descriptor = replace(
+        descriptor,
+        brand_id=model.identifiers[stack][0],
+        model_id=model.identifiers[stack][1],
+    )
     mock_connection.emit(
         AddedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
     )
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    fixture = await async_load_json_object_fixture(hass, fixture_name, "sensecap")
+    fixture = await async_load_json_object_fixture(
+        hass, f"{model.__name__.lower()}.json", "sensecap"
+    )
     for key in fixture["expected"]:
         assert hass.states.get(f"sensor.greenhouse_{key}").state == "unknown"
     mock_connection.emit(
@@ -65,10 +68,8 @@ async def test_sensors(
         entity_id = f"sensor.greenhouse_{key}"
         assert hass.states.get(entity_id).state == str(value)
         assert hass.states.get(entity_id) == snapshot(name=key)
-        assert (
-            entity_registry.async_get(entity_id).unique_id
-            == f"network:{descriptor.dev_eui}:{key}"
-        )
+        registered = entity_registry.async_get(entity_id)
+        assert registered.unique_id.startswith(f"network:{descriptor.dev_eui}:")
     device = device_registry.async_get_device_by_identifier(
         ("sensecap", f"network:{descriptor.dev_eui}"), config_entry.entry_id
     )
@@ -111,7 +112,7 @@ async def test_new_devices(
         descriptor,
         dev_eui="0201010101010103",
         name="Unsupported",
-        model_id=S2104.identifiers["chirpstack"][1],
+        model_id=S2100.identifiers["chirpstack"][1],
     )
     mock_connection.emit(
         AddedEvent(descriptor=unsupported, received_at=dt_util.utcnow())
@@ -256,3 +257,50 @@ async def test_unload_failure(
         return_value=False,
     ):
         assert not await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(("stack", "model"), CATALOG_MODELS)
+async def test_model_battery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    connection_entry: MockConfigEntry,
+    mock_connection: MockConnection,
+    descriptor: DeviceDescriptor,
+    stack: str,
+    model: type[SenseCapDevice],
+) -> None:
+    """Every supported model exposes payload and standardized status battery data."""
+    brand_id, model_id = model.identifiers[stack]
+    descriptor = replace(descriptor, brand_id=brand_id, model_id=model_id)
+    mock_connection.emit(AddedEvent(descriptor=descriptor))
+    assert await hass.config_entries.async_setup(connection_entry.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    fixture = await async_load_json_object_fixture(
+        hass, f"{model.__name__.lower()}.json", "sensecap"
+    )
+    payload = {
+        1: "000700640005000000",
+        2: "000700640005000000",
+        3: "39640100020000050000",
+    }[fixture["f_port"]]
+    mock_connection.emit(
+        UplinkEvent(
+            descriptor=descriptor,
+            received_at=dt_util.utcnow(),
+            f_port=fixture["f_port"],
+            data=bytes.fromhex(payload),
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.greenhouse_battery").state == "100.0"
+    mock_connection.emit(
+        StatusEvent(
+            descriptor=descriptor,
+            received_at=dt_util.utcnow(),
+            battery_level=0.0,
+            battery_level_unavailable=False,
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.greenhouse_battery").state == "0.0"

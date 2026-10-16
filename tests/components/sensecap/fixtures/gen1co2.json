@@ -1,0 +1,8 @@
+{
+  "source": "Synthetic frame using the SenseCAP decoder protocol test vectors.",
+  "f_port": 1,
+  "payload": "010410d0dd06000000",
+  "expected": {
+    "carbon_dioxide": 450.0
+  }
+}
