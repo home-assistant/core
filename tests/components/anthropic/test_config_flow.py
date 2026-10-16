@@ -892,6 +892,75 @@ async def test_model_list(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.freeze_time("2026-10-16T12:00:00Z")
+@pytest.mark.parametrize(
+    ("sdk_dates", "expected_values"),
+    [
+        pytest.param(
+            {"sdk-model-20260101": "October 15th, 2026"},
+            ["active-model"],
+            id="sdk_retired",
+        ),
+        pytest.param(
+            {"sdk-model-20260101": "October 17th, 2026"},
+            ["active-model", "sdk-model"],
+            id="sdk_deprecated",
+        ),
+        pytest.param(
+            {
+                "sdk-model": "October 15th, 2026",
+                "sdk-model-20260101": "October 17th, 2026",
+            },
+            ["active-model"],
+            id="submitted_alias_retired",
+        ),
+        pytest.param(
+            {
+                "sdk-model": "October 17th, 2026",
+                "sdk-model-20260101": "October 15th, 2026",
+            },
+            ["active-model", "sdk-model"],
+            id="submitted_alias_deprecated",
+        ),
+    ],
+)
+async def test_model_list_sdk_lifecycle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    sdk_dates: dict[str, str],
+    expected_values: list[str],
+) -> None:
+    """Filter models using the lifecycle of the alias submitted by the selector."""
+    mock_config_entry.runtime_data.async_set_updated_data(
+        [
+            model_list[0].model_copy(update={"id": "active-model"}),
+            model_list[0].model_copy(update={"id": "sdk-model-20260101"}),
+        ]
+    )
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
+        sdk_dates,
+        clear=True,
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {CONF_RECOMMENDED: False},
+        )
+
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "additional"
+    assert [
+        option["value"]
+        for option in options["data_schema"].schema[CONF_CHAT_MODEL].config["options"]
+    ] == expected_values
+
+
+@pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.parametrize("cached_model_count", [0, 1], ids=["retrieved", "cached"])
 async def test_retired_model(
     hass: HomeAssistant,
