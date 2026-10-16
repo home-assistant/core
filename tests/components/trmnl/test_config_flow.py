@@ -6,10 +6,12 @@ import pytest
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 
 from homeassistant.components.trmnl.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -90,6 +92,74 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="192.168.1.10",
+    hostname="trmnl-og-1rjxs4",
+    macaddress="b0a604aabbcc",
+)
+
+
+@pytest.mark.usefixtures("mock_trmnl_client")
+async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test the DHCP discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "user_aaaaaaaaaa"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test"
+    assert result["data"] == {CONF_API_KEY: "user_aaaaaaaaaa"}
+    assert result["result"].unique_id == "30561"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_device_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test DHCP discovery aborts when the device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "b0:a6:04:aa:bb:cc")},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_already_in_progress(hass: HomeAssistant) -> None:
+    """Test only one DHCP discovery flow is started."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.11",
+            hostname="trmnl-og-2abcd5",
+            macaddress="b0a604ddeeff",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
 
 
 @pytest.mark.usefixtures("mock_trmnl_client", "mock_setup_entry")
