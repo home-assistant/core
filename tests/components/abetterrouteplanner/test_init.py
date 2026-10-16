@@ -328,6 +328,7 @@ async def test_setup_succeeds_with_degraded_device(
         pytest.param(TimeoutError("budget exceeded"), False, id="timeout"),
     ],
 )
+@pytest.mark.usefixtures("mock_telemetry_stream")
 async def test_display_failure_degrades_only_that_vehicle(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
