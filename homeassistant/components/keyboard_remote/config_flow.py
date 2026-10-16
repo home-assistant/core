@@ -22,25 +22,39 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.typing import UNDEFINED
 
 from . import list_input_devices
+from .click_detector import ClickType
 from .const import (
+    CLICK_THRESHOLD_MAX,
+    CLICK_THRESHOLD_MIN,
+    CONF_CLICK_THRESHOLD,
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
     CONF_DEVICE_UNIQ,
+    CONF_DOUBLE_CLICK_TIMEOUT,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
     CONF_KEY_TYPES,
+    CONF_LONG_CLICK_MAX,
+    DEFAULT_CLICK_THRESHOLD,
+    DEFAULT_DOUBLE_CLICK_TIMEOUT,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
     DEFAULT_KEY_TYPES,
+    DEFAULT_LONG_CLICK_MAX,
     DEVINPUT_BY_ID,
     DOMAIN,
+    DOUBLE_CLICK_TIMEOUT_MAX,
+    DOUBLE_CLICK_TIMEOUT_MIN,
     EMULATE_KEY_HOLD_DELAY_MAX,
     EMULATE_KEY_HOLD_DELAY_MIN,
     EMULATE_KEY_HOLD_REPEAT_MAX,
     EMULATE_KEY_HOLD_REPEAT_MIN,
+    KEY_VALUE,
+    LONG_CLICK_MAX_MAX,
+    LONG_CLICK_MAX_MIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -483,9 +497,14 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
         errors: dict[str, str] = {}
         if user_input is not None:
             # An entry with no key types would never fire a command event
-            if user_input[CONF_KEY_TYPES]:
+            if not user_input[CONF_KEY_TYPES]:
+                errors[CONF_KEY_TYPES] = "no_key_types"
+            # A press is a click up to the threshold, so a lower maximum
+            # leaves no hold time for a long click
+            elif user_input[CONF_LONG_CLICK_MAX] < user_input[CONF_CLICK_THRESHOLD]:
+                errors[CONF_LONG_CLICK_MAX] = "long_click_max_below_threshold"
+            else:
                 return self.async_create_entry(data=user_input)
-            errors[CONF_KEY_TYPES] = "no_key_types"
 
         # Entries matched by name store no path
         data = self.config_entry.data
@@ -499,7 +518,7 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                     {
                         probatio.Required(CONF_KEY_TYPES): selector.SelectSelector(
                             selector.SelectSelectorConfig(
-                                options=["key_up", "key_down", "key_hold"],
+                                options=[*KEY_VALUE, *ClickType],
                                 multiple=True,
                                 translation_key=CONF_KEY_TYPES,
                                 mode=selector.SelectSelectorMode.LIST,
@@ -526,6 +545,41 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 min=EMULATE_KEY_HOLD_REPEAT_MIN,
                                 max=EMULATE_KEY_HOLD_REPEAT_MAX,
                                 step=0.001,
+                                unit_of_measurement=UnitOfTime.SECONDS,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                        # Entries created before click types existed lack these
+                        probatio.Required(
+                            CONF_CLICK_THRESHOLD, default=DEFAULT_CLICK_THRESHOLD
+                        ): selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=CLICK_THRESHOLD_MIN,
+                                max=CLICK_THRESHOLD_MAX,
+                                step=0.01,
+                                unit_of_measurement=UnitOfTime.SECONDS,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                        probatio.Required(
+                            CONF_DOUBLE_CLICK_TIMEOUT,
+                            default=DEFAULT_DOUBLE_CLICK_TIMEOUT,
+                        ): selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=DOUBLE_CLICK_TIMEOUT_MIN,
+                                max=DOUBLE_CLICK_TIMEOUT_MAX,
+                                step=0.01,
+                                unit_of_measurement=UnitOfTime.SECONDS,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                        probatio.Required(
+                            CONF_LONG_CLICK_MAX, default=DEFAULT_LONG_CLICK_MAX
+                        ): selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=LONG_CLICK_MAX_MIN,
+                                max=LONG_CLICK_MAX_MAX,
+                                step=0.01,
                                 unit_of_measurement=UnitOfTime.SECONDS,
                                 mode=selector.NumberSelectorMode.BOX,
                             )

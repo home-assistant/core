@@ -9,18 +9,24 @@ import pytest
 
 from homeassistant.components.keyboard_remote import CONFIG_SCHEMA
 from homeassistant.components.keyboard_remote.const import (
+    CONF_CLICK_THRESHOLD,
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
     CONF_DEVICE_UNIQ,
+    CONF_DOUBLE_CLICK_TIMEOUT,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
     CONF_KEY_TYPES,
+    CONF_LONG_CLICK_MAX,
+    DEFAULT_CLICK_THRESHOLD,
+    DEFAULT_DOUBLE_CLICK_TIMEOUT,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
     DEFAULT_KEY_TYPES,
+    DEFAULT_LONG_CLICK_MAX,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigFlowResult
@@ -882,12 +888,62 @@ async def test_import_without_key_types_uses_the_default(
     assert "Imported type lists no key types" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("user_input", "expected"),
+    [
+        pytest.param(
+            {
+                CONF_KEY_TYPES: ["key_up", "key_down", "key_hold"],
+                CONF_EMULATE_KEY_HOLD: True,
+                CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
+                CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
+            },
+            {
+                CONF_KEY_TYPES: ["key_up", "key_down", "key_hold"],
+                CONF_EMULATE_KEY_HOLD: True,
+                CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
+                CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
+                CONF_CLICK_THRESHOLD: DEFAULT_CLICK_THRESHOLD,
+                CONF_DOUBLE_CLICK_TIMEOUT: DEFAULT_DOUBLE_CLICK_TIMEOUT,
+                CONF_LONG_CLICK_MAX: DEFAULT_LONG_CLICK_MAX,
+            },
+            id="click_timing_defaults",
+        ),
+        pytest.param(
+            {
+                CONF_KEY_TYPES: ["click", "double_click", "long_click"],
+                CONF_EMULATE_KEY_HOLD: False,
+                CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
+                CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
+                CONF_CLICK_THRESHOLD: 0.3,
+                CONF_DOUBLE_CLICK_TIMEOUT: 0.25,
+                CONF_LONG_CLICK_MAX: 0.3,
+            },
+            {
+                CONF_KEY_TYPES: ["click", "double_click", "long_click"],
+                CONF_EMULATE_KEY_HOLD: False,
+                CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
+                CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
+                CONF_CLICK_THRESHOLD: 0.3,
+                CONF_DOUBLE_CLICK_TIMEOUT: 0.25,
+                CONF_LONG_CLICK_MAX: 0.3,
+            },
+            id="click_types",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("fake_input")
 async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+    expected: dict[str, Any],
 ) -> None:
-    """Test the options flow allows changing settings."""
+    """Test the options flow allows changing settings.
+
+    Entries created before click types existed have no click timing, so the
+    form fills in the defaults.
+    """
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -898,39 +954,42 @@ async def test_options_flow(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_KEY_TYPES: ["key_up", "key_down", "key_hold"],
-            CONF_EMULATE_KEY_HOLD: True,
-            CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
-            CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
-        },
+        result["flow_id"], user_input=user_input
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_KEY_TYPES: ["key_up", "key_down", "key_hold"],
-        CONF_EMULATE_KEY_HOLD: True,
-        CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
-        CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
-    }
+    assert result["data"] == expected
 
 
+@pytest.mark.parametrize(
+    ("invalid", "errors"),
+    [
+        # An entry with no key types would never fire a command event
+        pytest.param(
+            {CONF_KEY_TYPES: []}, {CONF_KEY_TYPES: "no_key_types"}, id="no_key_types"
+        ),
+        # Presses up to the threshold are clicks, leaving none for a long click
+        pytest.param(
+            {CONF_CLICK_THRESHOLD: 0.5, CONF_LONG_CLICK_MAX: 0.4},
+            {CONF_LONG_CLICK_MAX: "long_click_max_below_threshold"},
+            id="long_click_max_below_threshold",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("fake_input")
-async def test_options_flow_requires_a_key_type(
+async def test_options_flow_rejects_invalid_options(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    invalid: dict[str, Any],
+    errors: dict[str, str],
 ) -> None:
-    """Test the options flow rejects an empty key type list.
-
-    An entry with no key types would never fire a command event.
-    """
+    """Test the options flow shows an error, and accepts corrected options."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     options = {
-        CONF_KEY_TYPES: [],
+        CONF_KEY_TYPES: ["key_down"],
         CONF_EMULATE_KEY_HOLD: False,
         CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
         CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
@@ -938,14 +997,14 @@ async def test_options_flow_requires_a_key_type(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=options
+        result["flow_id"], user_input={**options, **invalid}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_KEY_TYPES: "no_key_types"}
+    assert result["errors"] == errors
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={**options, CONF_KEY_TYPES: ["key_down"]}
+        result["flow_id"], user_input=options
     )
     await hass.async_block_till_done()
 

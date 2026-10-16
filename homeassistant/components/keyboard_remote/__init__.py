@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
+from functools import partial
 import logging
 import os
 from typing import TYPE_CHECKING, Any
@@ -28,15 +29,19 @@ from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
+from .click_detector import ClickDetector, ClickType
 from .const import (
+    CONF_CLICK_THRESHOLD,
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
     CONF_DEVICE_UNIQ,
+    CONF_DOUBLE_CLICK_TIMEOUT,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
     CONF_KEY_TYPES,
+    CONF_LONG_CLICK_MAX,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
@@ -792,13 +797,20 @@ class DeviceHandler:
         self.dev: InputDevice | None = None
         self._descriptor: str | None = None
         self._repeat_tasks: dict[int, asyncio.Task[None]] = {}
+        self._click_detector: ClickDetector | None = None
         self._on_monitor_failure: (
             Callable[[DeviceHandler], Coroutine[Any, Any, None]] | None
         ) = None
         # The options flow reloads the entry, so these cannot change while
         # this handler exists.
         options = entry.options
-        self._key_values = {KEY_VALUE[key_type] for key_type in options[CONF_KEY_TYPES]}
+        key_types = options[CONF_KEY_TYPES]
+        self._key_values = {
+            KEY_VALUE[key_type] for key_type in key_types if key_type in KEY_VALUE
+        }
+        self._click_types = {
+            ClickType(key_type) for key_type in key_types if key_type in ClickType
+        }
         self._emulate_key_hold: bool = options[CONF_EMULATE_KEY_HOLD]
         self._emulate_key_hold_delay: float = options[CONF_EMULATE_KEY_HOLD_DELAY]
         self._emulate_key_hold_repeat: float = options[CONF_EMULATE_KEY_HOLD_REPEAT]
@@ -895,13 +907,28 @@ class DeviceHandler:
         # Created here, not by the task: a teardown before its first step
         # must still cancel the repeats it starts
         self._repeat_tasks = {}
+        self._click_detector = None
+        if self._click_types:
+            # Only entries the options flow saved click types for have the
+            # click timing options
+            options = self.entry.options
+            self._click_detector = ClickDetector(
+                self.hass.loop,
+                partial(self._async_fire_click, dev, self._descriptor),
+                self._click_types,
+                click_threshold=options[CONF_CLICK_THRESHOLD],
+                double_click_timeout=options[CONF_DOUBLE_CLICK_TIMEOUT],
+                long_click_max=options[CONF_LONG_CLICK_MAX],
+            )
         # Not eager: a device that fails immediately would otherwise run the
         # whole monitor body, including the teardown that clears this
         # attribute, before the assignment below overwrites it again. The
         # task gets its own device and descriptor, as the handler can be
         # started on another node while this one is torn down.
         self._monitor_task = self.hass.async_create_background_task(
-            self._async_monitor_input(dev, self._descriptor, self._repeat_tasks),
+            self._async_monitor_input(
+                dev, self._descriptor, self._repeat_tasks, self._click_detector
+            ),
             f"keyboard_remote monitor {dev.path}",
             eager_start=False,
         )
@@ -930,6 +957,7 @@ class DeviceHandler:
         assert dev is not None
         descriptor = self._descriptor
         repeat_tasks = self._repeat_tasks
+        click_detector = self._click_detector
 
         # Claim the teardown before the first await. On unplug the DELETE event
         # and the monitor task's read failure both land here, and a second pass
@@ -953,6 +981,8 @@ class DeviceHandler:
             # would let a key_hold follow the disconnect
             for repeat_task in repeat_tasks.values():
                 repeat_task.cancel()
+            if click_detector is not None:
+                click_detector.cancel()
             self.hass.bus.async_fire(
                 EVENT_KEYBOARD_REMOTE_DISCONNECTED,
                 {
@@ -992,11 +1022,32 @@ class DeviceHandler:
             )
             await asyncio.sleep(repeat)
 
+    @callback
+    def _async_fire_click(
+        self,
+        dev: InputDevice,
+        descriptor: str | None,
+        code: int,
+        click_type: ClickType,
+    ) -> None:
+        """Fire a command event for a detected click."""
+        _LOGGER.debug("Key %s %s on %s", code, click_type, dev.name)
+        self.hass.bus.async_fire(
+            EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
+            {
+                KEY_CODE: code,
+                "type": click_type.value,
+                CONF_DEVICE_DESCRIPTOR: descriptor,
+                CONF_DEVICE_NAME: dev.name,
+            },
+        )
+
     async def _async_monitor_input(
         self,
         dev: InputDevice,
         descriptor: str | None,
         repeat_tasks: dict[int, asyncio.Task[None]],
+        click_detector: ClickDetector | None,
     ) -> None:
         """Monitor one device for key events using evdev with asyncio."""
         from evdev import ecodes  # noqa: PLC0415
@@ -1031,6 +1082,12 @@ class DeviceHandler:
                                 CONF_DEVICE_NAME: dev.name,
                             },
                         )
+
+                    if click_detector is not None:
+                        if event.value == KEY_VALUE["key_down"]:
+                            click_detector.key_down(event.code, event.timestamp())
+                        elif event.value == KEY_VALUE["key_up"]:
+                            click_detector.key_up(event.code, event.timestamp())
 
                     if event.value == KEY_VALUE["key_down"] and self._emulate_key_hold:
                         # A key_up lost while the loop stalled would otherwise

@@ -29,21 +29,28 @@
   },
   "options": {
     "error": {
+      "long_click_max_below_threshold": "Must be at least the click threshold, as shorter presses are clicks.",
       "no_key_types": "Select at least one key event type."
     },
     "step": {
       "init": {
         "data": {
+          "click_threshold": "Click threshold",
+          "double_click_timeout": "Double click timeout",
           "emulate_key_hold": "Emulate key hold",
           "emulate_key_hold_delay": "Key hold delay",
           "emulate_key_hold_repeat": "Key hold repeat interval",
-          "key_types": "Key event types"
+          "key_types": "Key event types",
+          "long_click_max": "Long click maximum"
         },
         "data_description": {
+          "click_threshold": "Presses shorter than this are clicks, longer ones are long clicks.",
+          "double_click_timeout": "How long to wait for a second press of a double click. Clicks fire only after this wait while double clicks are selected.",
           "emulate_key_hold": "Enable software emulation of key hold events.",
           "emulate_key_hold_delay": "Delay before key hold emulation starts.",
           "emulate_key_hold_repeat": "Repeat interval for emulated key hold events.",
-          "key_types": "Select which key events to listen for."
+          "key_types": "Select which key events to listen for. Click, double click and long click are detected from how long and how often a key is pressed.",
+          "long_click_max": "Presses held longer than this fire no click event."
         },
         "description": "Device: `{device}`",
         "title": "Keyboard Remote options"
@@ -53,9 +60,12 @@
   "selector": {
     "key_types": {
       "options": {
+        "click": "Click",
+        "double_click": "Double click",
         "key_down": "Key down",
         "key_hold": "Key hold",
-        "key_up": "Key up"
+        "key_up": "Key up",
+        "long_click": "Long click"
       }
     }
   }

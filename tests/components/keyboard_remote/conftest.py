@@ -382,9 +382,16 @@ class FakeInput:
         self._open_gates[path] = self.new_gate()
         return self._open_gates[path]
 
-    async def press(self, dev: MagicMock, code: int, value: int) -> None:
-        """Send a key event from a device."""
-        await self.send(dev, SimpleNamespace(type=EV_KEY, code=code, value=value))
+    async def press(
+        self, dev: MagicMock, code: int, value: int, timestamp: float = 0.0
+    ) -> None:
+        """Send a key event from a device, stamped with the given time."""
+        await self.send(
+            dev,
+            SimpleNamespace(
+                type=EV_KEY, code=code, value=value, timestamp=lambda: timestamp
+            ),
+        )
 
     async def send(
         self,

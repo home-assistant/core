@@ -15,18 +15,24 @@ import pytest
 
 from homeassistant.components.keyboard_remote import KeyboardRemoteManager
 from homeassistant.components.keyboard_remote.const import (
+    CONF_CLICK_THRESHOLD,
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
     CONF_DEVICE_UNIQ,
+    CONF_DOUBLE_CLICK_TIMEOUT,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
     CONF_KEY_TYPES,
+    CONF_LONG_CLICK_MAX,
+    DEFAULT_CLICK_THRESHOLD,
+    DEFAULT_DOUBLE_CLICK_TIMEOUT,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
     DEFAULT_KEY_TYPES,
+    DEFAULT_LONG_CLICK_MAX,
     DEVINPUT,
     DEVINPUT_BY_ID,
     DOMAIN,
@@ -73,6 +79,12 @@ OPTIONS = {
     CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+}
+# Saved by the options flow along with any click type
+CLICK_OPTIONS = {
+    CONF_CLICK_THRESHOLD: DEFAULT_CLICK_THRESHOLD,
+    CONF_DOUBLE_CLICK_TIMEOUT: DEFAULT_DOUBLE_CLICK_TIMEOUT,
+    CONF_LONG_CLICK_MAX: DEFAULT_LONG_CLICK_MAX,
 }
 
 
@@ -952,6 +964,85 @@ async def test_unplug_stops_key_hold(
     )
 
     await fake_input.press(kbd, 30, KEY_VALUE["key_down"])
+    await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
+    await _advance(hass, 60)
+
+    assert commands == []
+
+
+def _click_entry(key_types: list[str]) -> MockConfigEntry:
+    return _entry(
+        {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        **{CONF_KEY_TYPES: key_types, **CLICK_OPTIONS},
+    )
+
+
+@pytest.mark.parametrize(
+    ("key_types", "held", "expected"),
+    [
+        pytest.param(["key_up", "click"], 0.1, ["key_up", "click"], id="click"),
+        pytest.param(
+            ["key_up", "long_click"], 1.0, ["key_up", "long_click"], id="long_click"
+        ),
+        pytest.param(["click", "long_click"], 5.0, [], id="held_too_long"),
+    ],
+)
+async def test_click_events(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    key_types: list[str],
+    held: float,
+    expected: list[str],
+) -> None:
+    """Test a press fires the click type its hold time matches, by event time."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(hass, fake_input, _click_entry(key_types))
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"], timestamp=100.0)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"], timestamp=100.0 + held)
+
+    assert [e.data["type"] for e in commands] == expected
+    assert {
+        (e.data[KEY_CODE], e.data[CONF_DEVICE_DESCRIPTOR], e.data[CONF_DEVICE_NAME])
+        for e in commands
+    } <= {(30, FAKE_DEVICE_PATH, FAKE_DEVICE_NAME)}
+
+
+async def test_double_click_events(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test two quick presses fire a double click, and one a click after the wait."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(hass, fake_input, _click_entry(["click", "double_click"]))
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"], timestamp=100.0)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"], timestamp=100.1)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"], timestamp=100.2)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"], timestamp=100.3)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"], timestamp=110.0)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"], timestamp=110.1)
+
+    assert [e.data["type"] for e in commands] == ["double_click"]
+
+    await _advance(hass, 60)
+
+    assert [e.data["type"] for e in commands] == ["double_click", "click"]
+
+
+async def test_unplug_drops_pending_click(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a click waiting for a possible double click does not follow an unplug."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(hass, fake_input, _click_entry(["click", "double_click"]))
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"], timestamp=100.0)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"], timestamp=100.1)
     await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
     await _advance(hass, 60)
 
