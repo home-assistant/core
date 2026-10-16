@@ -158,6 +158,34 @@ async def test_menu_changed(
     ] == names
 
 
+async def test_menu_read_recovers(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    mock_menu_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+) -> None:
+    """Test the menu is read again after a read without values."""
+    side_effect = mock_tv.getMenuItemsSettingsCurrentValue.side_effect
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = dict.fromkeys
+
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert MOCK_MENU_STORAGE_KEY not in hass_storage
+    assert hass.states.get(MENU_SWITCH_ENTITY_ID) is None
+
+    # The api keeps the same settings object, the TV stayed on
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = side_effect
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[MOCK_MENU_STORAGE_KEY]["data"] == MOCK_MENU_DATA
+    assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
+    assert state.state == STATE_ON
+
+
 @pytest.mark.parametrize(
     "post_config",
     [

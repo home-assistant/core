@@ -66,13 +66,15 @@ async def async_fetch_menu_data(api: PhilipsTV) -> MenuData:
         raise SettingsNotAvailable("Unable to read menu strings")
 
     # Only parent nodes and nodes without string id are named or chosen by value
-    current = await api.getMenuItemsSettingsCurrentValue(
-        [
-            node["node_id"]
-            for node, *_ in paths
-            if node["type"] == "PARENT_NODE" or not node.get("string_id")
-        ]
-    )
+    node_ids = [
+        node["node_id"]
+        for node, *_ in paths
+        if node["type"] == "PARENT_NODE" or not node.get("string_id")
+    ]
+    current = await api.getMenuItemsSettingsCurrentValue(node_ids)
+    # A failed read is reported as no value for any node
+    if node_ids and not any(current.values()):
+        raise SettingsNotAvailable("Unable to read menu values")
 
     names = {
         node["node_id"]: name
