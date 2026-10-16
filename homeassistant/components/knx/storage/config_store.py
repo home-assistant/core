@@ -349,7 +349,9 @@ class KNXConfigStore:
                 f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
         entity_registry.async_remove(entity_id)
-        # a disabled entity has no entity object to unregister itself
+        # A disabled entity has no entity object to unregister itself. Not guarded
+        # by `entry.disabled`: an entity enabled again stays tracked as disabled
+        # until the config entry is reloaded.
         self.hass.data[KNX_MODULE_KEY].remove_disabled_entity(
             KnxEntityIdentifier(
                 platform=entry.domain, unique_id=entry.unique_id, ui=True, disabled=True
