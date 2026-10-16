@@ -1,4 +1,4 @@
-"""Constants for the shared LoRaWAN integration."""
+"""Constants for the LoRaWAN integration."""
 
 DOMAIN = "lorawan"
 

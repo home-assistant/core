@@ -1,4 +1,4 @@
-"""Expose LoRaWAN devices and observed radio metadata to administrators."""
+"""WebSocket API for the LoRaWAN integration."""
 
 from typing import Any
 

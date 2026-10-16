@@ -1,4 +1,4 @@
-"""Register connections, retain device observations, and discover integrations."""
+"""LoRaWAN connection handling."""
 
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace

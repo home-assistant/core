@@ -1,4 +1,4 @@
-"""Retain LoRaWAN observations for the device overview."""
+"""LoRaWAN device state."""
 
 from dataclasses import dataclass, field
 

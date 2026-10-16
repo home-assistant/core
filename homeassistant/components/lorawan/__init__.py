@@ -1,4 +1,4 @@
-"""Shared LoRaWAN connection registration and vendor discovery."""
+"""The LoRaWAN integration."""
 
 from homeassistant.config_entries import (
     SIGNAL_CONFIG_ENTRY_CHANGED,
