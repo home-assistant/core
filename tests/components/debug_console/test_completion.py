@@ -1166,6 +1166,39 @@ async def test_import_completion_with_odd_search_path(
     assert result["matches"] == []
 
 
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param("import debug_console_absent.x", id="import"),
+        pytest.param("from debug_console_absent import x", id="from_import"),
+    ],
+)
+async def test_import_completion_with_odd_module_names(
+    websocket_client: MockHAClientWebSocket, code: str
+) -> None:
+    """Test completing imports never compares names of modules that are odd."""
+    compared = []
+
+    class CollidingName(str):
+        __slots__ = ()
+
+        def __hash__(self) -> int:
+            return hash("debug_console_absent")
+
+        def __eq__(self, other: object) -> bool:
+            compared.append(True)
+            return False
+
+    with patch.dict(sys.modules, {CollidingName("decoy"): types.ModuleType("decoy")}):
+        compared.clear()
+        result = await async_send(
+            websocket_client, {"type": "debug_console/complete", "code": code}
+        )
+        assert not compared
+
+    assert result["matches"] == []
+
+
 async def test_import_completion_with_path_of_its_own(
     websocket_client: MockHAClientWebSocket,
 ) -> None:

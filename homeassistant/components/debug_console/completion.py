@@ -667,7 +667,7 @@ def _complete_module_attribute(module_name: str, prefix: str) -> list[str]:
     imported modules, and submodules of any package.
     """
     names: set[str] = set()
-    if (module := sys.modules.get(module_name)) is not None:
+    if (module := _imported_modules().get(module_name)) is not None:
         names.update(instance_dict(module) or {})
 
     if (locations := _package_locations(module_name)) is not None:
@@ -681,7 +681,7 @@ def _package_locations(name: str) -> list[str] | None:
 
     Importing runs the code of a module, which completion must not do.
     """
-    if (module := sys.modules.get(name)) is not None:
+    if (module := _imported_modules().get(name)) is not None:
         locations = (instance_dict(module) or {}).get("__path__")
         if locations is None:
             return None
@@ -708,6 +708,15 @@ def _package_locations(name: str) -> list[str] | None:
             namespace.append(folder)
 
     return namespace or None
+
+
+def _imported_modules() -> dict[str, Any]:
+    """Return the imported modules, by names that are a str.
+
+    Code can add one by a subclass of str, whose own __eq__ would run when
+    looking up another module with the same hash.
+    """
+    return with_string_names(dict.items(sys.modules))
 
 
 def _search_path() -> list[str]:
