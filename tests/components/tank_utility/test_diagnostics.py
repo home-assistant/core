@@ -30,6 +30,8 @@ async def test_entry_diagnostics(
     assert "data" in diagnostics
 
     # Verify sensitive data redaction in entry
+    assert diagnostics["entry"]["title"] == "**REDACTED**"
+    assert diagnostics["entry"]["unique_id"] == "**REDACTED**"
     assert diagnostics["entry"]["data"][CONF_EMAIL] == "**REDACTED**"
     assert diagnostics["entry"]["data"][CONF_PASSWORD] == "**REDACTED**"
 

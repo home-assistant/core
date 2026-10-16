@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import TankUtilityConfigEntry
 
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, "address"}
+TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, "address", "title", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
