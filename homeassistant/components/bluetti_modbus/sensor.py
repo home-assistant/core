@@ -427,7 +427,6 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
 
     def __init__(
         self,
-        *,
         entry: BluettiModbusConfigEntry,
         description: BluettiModbusSensorEntityDescription,
     ) -> None:
