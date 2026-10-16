@@ -12,7 +12,7 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
-from sensecap_lorawan import S2101, S2102, S2103
+from sensecap_lorawan import S2101, S2102, S2103, S2104
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import EntityCategory
@@ -25,7 +25,8 @@ from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 @pytest.mark.parametrize("stack", ["chirpstack", "tts"])
 @pytest.mark.parametrize(
-    ("model", "fixture_name"), [(S2101, "s2101.json"), (S2102, "s2102.json")]
+    ("model", "fixture_name"),
+    [(S2101, "s2101.json"), (S2102, "s2102.json"), (S2103, "s2103.json")],
 )
 async def test_sensors(
     hass: HomeAssistant,
@@ -34,7 +35,7 @@ async def test_sensors(
     mock_connection: MockConnection,
     descriptor: DeviceDescriptor,
     stack: str,
-    model: type[S2101 | S2102],
+    model: type[S2101 | S2102 | S2103],
     fixture_name: str,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -110,7 +111,7 @@ async def test_new_devices(
         descriptor,
         dev_eui="0201010101010103",
         name="Unsupported",
-        model_id=S2103.identifiers["chirpstack"][1],
+        model_id=S2104.identifiers["chirpstack"][1],
     )
     mock_connection.emit(
         AddedEvent(descriptor=unsupported, received_at=dt_util.utcnow())
@@ -138,7 +139,15 @@ async def test_new_devices(
 
 
 @pytest.mark.parametrize("stack", ["chirpstack", "tts"])
-@pytest.mark.parametrize("model", [S2101, S2102])
+@pytest.mark.parametrize(
+    ("model", "payload", "expected"),
+    [
+        (S2101, "000700640005000000", "100.0"),
+        (S2102, "000700640005000000", "100.0"),
+        (S2103, "000200e501206000030030f1f72c0007004d000500d21e", "77.0"),
+    ],
+    ids=["S2101", "S2102", "S2103"],
+)
 async def test_battery_uplink(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -146,11 +155,13 @@ async def test_battery_uplink(
     mock_connection: MockConnection,
     descriptor: DeviceDescriptor,
     stack: str,
-    model: type[S2101 | S2102],
+    model: type[S2101 | S2102 | S2103],
+    payload: str,
+    expected: str,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Expose battery uplinks for both supported models and catalogs."""
+    """Expose battery uplinks for supported models on both catalogs."""
     descriptor = replace(descriptor, model_id=model.identifiers[stack][1])
     mock_connection.emit(
         AddedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
@@ -168,25 +179,25 @@ async def test_battery_uplink(
             descriptor=descriptor,
             received_at=dt_util.utcnow(),
             f_port=2,
-            data=bytes.fromhex("000700640005000000"),
+            data=bytes.fromhex(payload),
         )
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "100.0"
+    assert hass.states.get(entity_id).state == expected
     assert hass.states.get(entity_id) == snapshot
     mock_connection.disconnect()
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "unavailable"
 
 
-@pytest.mark.parametrize("model", [S2101, S2102])
+@pytest.mark.parametrize("model", [S2101, S2102, S2103])
 async def test_battery_status(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     connection_entry: MockConfigEntry,
     mock_connection: MockConnection,
     descriptor: DeviceDescriptor,
-    model: type[S2101 | S2102],
+    model: type[S2101 | S2102 | S2103],
 ) -> None:
     """Prefer status reports, including zero, and fall back when unavailable."""
     descriptor = replace(descriptor, model_id=model.identifiers["chirpstack"][1])

@@ -12,7 +12,7 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
-from sensecap_lorawan import S2101, S2102, S2103
+from sensecap_lorawan import S2101, S2102, S2103, S2104
 
 from homeassistant.components.lorawan import (
     LoRaWANDiscoveryInfo,
@@ -40,7 +40,7 @@ def mock_discovery() -> Generator[None]:
     [(SOURCE_USER, None), (SOURCE_INTEGRATION_DISCOVERY, LoRaWANDiscoveryInfo())],
 )
 @pytest.mark.parametrize("stack", ["chirpstack", "tts"])
-@pytest.mark.parametrize("model", [S2101, S2102])
+@pytest.mark.parametrize("model", [S2101, S2102, S2103])
 async def test_setup(
     hass: HomeAssistant,
     source: str,
@@ -49,7 +49,7 @@ async def test_setup(
     mock_connection: MockConnection,
     descriptor: DeviceDescriptor,
     stack: str,
-    model: type[S2101 | S2102],
+    model: type[S2101 | S2102 | S2103],
 ) -> None:
     """Both entry points require a supported device on either backend."""
     mock_connection.emit(
@@ -144,7 +144,7 @@ async def test_empty_connection(
 @pytest.mark.parametrize(
     ("brand_id", "model_id"),
     [
-        S2103.identifiers["chirpstack"],
+        S2104.identifiers["chirpstack"],
         (744, "unknown"),
         (999, S2101.identifiers["chirpstack"][1]),
     ],

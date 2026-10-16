@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast, override
 
-from sensecap_lorawan import S2101, S2102, SenseCapDevice
+from sensecap_lorawan import S2101, S2102, S2103, SenseCapDevice
 
 from homeassistant.components.lorawan import LoRaWANEntity
 from homeassistant.components.sensor import (
@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfRatio,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,7 +34,7 @@ PARALLEL_UPDATES = 0
 class SenseCapSensorDescription(SensorEntityDescription):
     """Select a typed measurement from the device model."""
 
-    device_type: type[S2101 | S2102]
+    device_type: type[S2101 | S2102 | S2103]
     value_fn: Callable[[SenseCapDevice], float | None]
 
 
@@ -40,21 +46,27 @@ def _battery_level(device: SenseCapDevice) -> float | None:
 
 
 DESCRIPTIONS = (
-    SenseCapSensorDescription(
-        key="temperature",
-        device_type=S2101,
-        value_fn=lambda device: cast(S2101, device).temperature,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
+    *(
+        SenseCapSensorDescription(
+            key="temperature",
+            device_type=device_type,
+            value_fn=lambda device: cast(S2101 | S2103, device).temperature,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
+        for device_type in (S2101, S2103)
     ),
-    SenseCapSensorDescription(
-        key="humidity",
-        device_type=S2101,
-        value_fn=lambda device: cast(S2101, device).humidity,
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
+    *(
+        SenseCapSensorDescription(
+            key="humidity",
+            device_type=device_type,
+            value_fn=lambda device: cast(S2101 | S2103, device).humidity,
+            device_class=SensorDeviceClass.HUMIDITY,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
+        for device_type in (S2101, S2103)
     ),
     SenseCapSensorDescription(
         key="illuminance",
@@ -62,6 +74,14 @@ DESCRIPTIONS = (
         value_fn=lambda device: cast(S2102, device).illuminance,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SenseCapSensorDescription(
+        key="carbon_dioxide",
+        device_type=S2103,
+        value_fn=lambda device: cast(S2103, device).co2,
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     *(
@@ -74,7 +94,7 @@ DESCRIPTIONS = (
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         )
-        for device_type in (S2101, S2102)
+        for device_type in (S2101, S2102, S2103)
     ),
 )
 
