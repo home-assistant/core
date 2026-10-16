@@ -8,8 +8,8 @@ import pytest
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
+from . import setup_integration
 from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
@@ -25,15 +25,6 @@ POWER_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_power"
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
 
 VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
-
-
-async def _lazy_setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Set up the integration with the synchronous ``mock_telemetry_stream`` double."""
-    assert await async_setup_component(hass, "auth", {})
-    assert await async_setup_component(hass, DOMAIN, {})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 # Not in the mocked garage, so the stream never subscribes to it.
@@ -59,7 +50,7 @@ async def test_stream_only_metric_creates_entity(
 ) -> None:
     """The seed is empty; a power frame arrives over the stream."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
 
@@ -88,7 +79,7 @@ async def test_post_setup_frame_creates_entity(
 ) -> None:
     """The seed is empty; voltage arrives only after setup completes."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert entity_registry.async_get(SOC_ENTITY_ID) is None
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
@@ -125,7 +116,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
 ) -> None:
     """Two consecutive non-null power frames must create exactly one power entity."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
 
@@ -185,7 +176,7 @@ async def test_multi_vehicle_entity_isolation(
     """Voltage arriving for vehicle A must not create a voltage entity for vehicle B."""
     entry = config_entry_with_vehicles
 
-    await _lazy_setup(hass, entry)
+    await setup_integration(hass, entry)
 
     assert entity_registry.async_get(absent_entity_id) is None
 
@@ -209,7 +200,7 @@ async def test_absent_metric_entities_not_created(
 ) -> None:
     """An empty seed with no stream frames must produce zero telemetry entities."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert entity_registry.async_get(SOC_ENTITY_ID) is None
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
@@ -226,7 +217,7 @@ async def test_soe_sensor_lazy_creates_on_first_frame(
 ) -> None:
     """An ``soe`` frame lazy-creates the SoE sensor; native Wh, display kWh."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe") is None
 
@@ -257,7 +248,7 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
 ) -> None:
     """An ``odometer`` frame lazy-creates the odometer sensor; native m, display km."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "odometer") is None
 
@@ -289,7 +280,7 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
 ) -> None:
     """A ``calibrated_ref_cons`` frame lazy-creates the ref-consumption sensor."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert (
         _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "calibrated_ref_cons")
@@ -329,7 +320,7 @@ async def test_battery_capacity_sensor_lazy_creates_static(
 ) -> None:
     """A ``battery_capacity`` frame lazy-creates the capacity sensor as STATIC."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert (
         _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_capacity") is None
@@ -368,7 +359,7 @@ async def test_soh_sensor_lazy_creates_on_first_frame(
 ) -> None:
     """A ``soh`` frame lazy-creates the State-of-Health sensor (percent)."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh") is None
 
@@ -403,7 +394,7 @@ async def test_battery_temperature_sensor_stays_primary_category(
 ) -> None:
     """Battery Temperature stays primary (``entity_category is None``)."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert (
         _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_temperature")
@@ -439,7 +430,7 @@ async def test_soh_above_100_percent_surfaces_uncapped(
 ) -> None:
     """A post-recalibration SoH overshoot (> 100%) surfaces uncapped."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(105.0))
@@ -463,7 +454,7 @@ async def test_battery_capacity_recalibration_jump_updates_state(
 ) -> None:
     """A capacity recalibration jump is reflected in ``state.state``."""
 
-    await _lazy_setup(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream,
@@ -501,7 +492,7 @@ async def test_new_sensor_multi_vehicle_isolation(
     """A metric frame for vehicle A must not create the entity on vehicle B."""
     entry = config_entry_with_vehicles
 
-    await _lazy_setup(hass, entry)
+    await setup_integration(hass, entry)
 
     fire_frame(
         mock_telemetry_stream,

@@ -11,7 +11,6 @@ from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_VEHICLE_ID, SENSOR_TEST_SUB, build_metric_value, fire_frame
 
@@ -45,8 +44,6 @@ async def _setup(
 ) -> None:
     """Set up the integration, optionally preseeding registry rows."""
     hass.set_state(CoreState.not_running)
-    assert await async_setup_component(hass, "auth", {})
-    assert await async_setup_component(hass, DOMAIN, {})
     entry.add_to_hass(hass)
     if preseed_registry_keys and entity_registry is not None:
         for key in preseed_registry_keys:

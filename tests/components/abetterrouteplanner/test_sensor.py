@@ -29,8 +29,8 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
+from . import setup_integration
 from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
@@ -61,22 +61,6 @@ def _description_for(metric: Metric) -> Any:
     return next(description for description in SENSORS if description.metric is metric)
 
 
-async def _setup_integration(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Register the integration's OAuth implementation and set up the entry.
-
-    Callers with a non-empty garage must also request ``mock_telemetry_stream``, or a real
-    TelemetryStream opens an SSE connection.
-    """
-    assert await async_setup_component(hass, "auth", {})
-    assert await async_setup_component(hass, DOMAIN, {})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    return entry
-
-
 @pytest.mark.parametrize(
     "vehicle_id",
     [
@@ -94,7 +78,7 @@ async def test_every_garage_vehicle_present_in_registries(
     vehicle_id: int,
 ) -> None:
     """Every vehicle in the garage gets a device and entities, with no opt-in step."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     # Read the sub off the fixture so this survives a parametrized unique_id.
     scope = config_entry_with_vehicles.unique_id
@@ -129,7 +113,7 @@ async def test_empty_garage_creates_no_devices_or_entities(
     """An empty garage loads the entry but registers nothing."""
     mock_abrp_client.return_value = []
 
-    await _setup_integration(hass, config_entry)
+    await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
@@ -147,7 +131,7 @@ async def test_telemetry_sensors_snapshot(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Entity registry + states snapshot for the full per-vehicle metric set."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     # Every metric in one frame so the snapshot captures rendered states, with
     # time frozen so the receipt-stamped ``last_reported_at`` is deterministic.
@@ -185,7 +169,7 @@ async def test_soc_native_value_is_percent(
     mock_telemetry_stream: MagicMock,
 ) -> None:
     """SoC surfaces the typed PERCENT ``MetricValue.value`` with one decimal."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(85.7))
@@ -206,7 +190,7 @@ async def test_available_follows_native_value(
     mock_telemetry_stream: MagicMock,
 ) -> None:
     """``available`` tracks ``native_value is not None``."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream,
@@ -248,7 +232,7 @@ async def test_range_sensor_state(
     expected_state: str,
 ) -> None:
     """Range sensor surfaces the meters ``MetricValue.value`` rendered in km."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream,
@@ -282,7 +266,7 @@ async def test_battery_temperature_sensor_state(
     expected_state: str,
 ) -> None:
     """Battery Temperature sensor surfaces the Celsius ``MetricValue.value``."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream,
@@ -339,7 +323,7 @@ async def test_device_info_name_falls_back_to_typecode_when_unnamed(
     """``DeviceInfo.name`` falls back to the raw typecode for an unnamed vehicle."""
     mock_abrp_client.return_value = [_make_vehicle(name=None)]
 
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)),
@@ -415,7 +399,7 @@ async def test_telemetry_sensors_have_no_entity_category(
     value: float,
 ) -> None:
     """These four sensors are primary vehicle data, not diagnostics."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
     fire_frame(
         mock_telemetry_stream,
         MOCK_VEHICLE_ID,
@@ -442,7 +426,7 @@ async def test_calibrated_ref_cons_uses_short_display_name(
     mock_telemetry_stream: MagicMock,
 ) -> None:
     """The calibrated ref cons sensor's friendly name translates to the short form."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
     fire_frame(
         mock_telemetry_stream,
         MOCK_VEHICLE_ID,
@@ -482,7 +466,7 @@ async def test_per_vehicle_device_anchored_at_setup(
     entry = config_entry_with_vehicles
 
     displays = _set_two_make_displays(mock_abrp_client)
-    await _setup_integration(hass, entry)
+    await setup_integration(hass, entry)
 
     expected_names = {
         MOCK_VEHICLE_ID: MOCK_VEHICLE_NAME,
@@ -512,7 +496,7 @@ async def test_no_type_code_entity_created(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """No entity with a ``_type_code`` unique-id suffix is registered."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_with_vehicles.entry_id
@@ -564,7 +548,7 @@ async def test_charging_state_lazy_create_on_first_frame(
     expected_option: str,
 ) -> None:
     """First ``charging_state`` frame after setup lazily creates the enum sensor."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     assert hass.states.get(CHARGING_STATE_ENTITY_ID) is None
 
@@ -595,7 +579,7 @@ async def test_charging_state_registry_shape(
     assert description.state_class is None
     assert description.native_unit_of_measurement is None
 
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
     fire_frame(
         mock_telemetry_stream,
         MOCK_VEHICLE_ID,
@@ -620,7 +604,7 @@ async def test_charging_state_provider_and_stamp_attributes(
     mock_telemetry_stream: MagicMock,
 ) -> None:
     """The enum sensor surfaces ``provider`` + ``last_reported_at`` like numerics."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     stamp = datetime(2026, 5, 24, 12, 0, 0, tzinfo=UTC)
     with freeze_time(stamp):
@@ -669,7 +653,7 @@ async def test_terminal_auth_failure_makes_sensors_unavailable(
     mock_telemetry_stream: MagicMock,
 ) -> None:
     """A value that nothing can refresh stops being reported."""
-    await _setup_integration(hass, config_entry_with_vehicles)
+    await setup_integration(hass, config_entry_with_vehicles)
 
     fire_frame(
         mock_telemetry_stream,
