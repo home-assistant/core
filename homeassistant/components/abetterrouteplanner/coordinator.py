@@ -20,7 +20,7 @@ from aioabrp import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -98,7 +98,7 @@ async def async_fetch_garage(
     return paired
 
 
-class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetry]]):
+class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
     """Thin push-mode coordinator for the v2 telemetry stream."""
 
     config_entry: AbetterrouteplannerConfigEntry
@@ -125,25 +125,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         self.stream_auth_failed: bool = False
 
     @callback
-    def _apply_metrics(self, vehicle_id: int, delta: Telemetry) -> None:
-        """Apply a typed Telemetry delta to the per-vehicle state.
-
-        Does not notify coordinator listeners — the caller decides.
-        """
-        if next(delta.items(), None) is None:
-            return
-        now = dt_util.utcnow()
-        stored = self.data.get(vehicle_id)
-        self.data[vehicle_id] = delta if stored is None else stored.merge(delta)
-        reported = self.last_reported_at.setdefault(vehicle_id, {})
-        providers = self.last_provider.setdefault(vehicle_id, {})
-        for metric, metric_value in delta.items():
-            # The wire time, so a rollup value days old is not stamped "now".
-            reported[metric] = metric_value.time or now
-            if metric_value.provider is not None:
-                providers[metric] = metric_value.provider
-
-    @callback
     def on_update(self, vehicle_id: int, telemetry: Telemetry) -> None:
         """Apply one stream frame and notify coordinator listeners.
 
@@ -151,11 +132,17 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         """
         if next(telemetry.items(), None) is None:
             return
-        self._apply_metrics(vehicle_id, telemetry)
         now = dt_util.utcnow()
+        stored = self.data.get(vehicle_id)
+        self.data[vehicle_id] = telemetry if stored is None else stored.merge(telemetry)
+        reported = self.last_reported_at.setdefault(vehicle_id, {})
+        providers = self.last_provider.setdefault(vehicle_id, {})
+        for metric, metric_value in telemetry.items():
+            # The wire time, so a rollup value days old is not stamped "now".
+            reported[metric] = metric_value.time or now
+            if metric_value.provider is not None:
+                providers[metric] = metric_value.provider
         self.async_set_updated_data(self.data)
-        # ``async_set_updated_data`` skips the polling path that stamps this.
-        self.last_update_success_time = now
 
     @callback
     def on_connection_change(self, event: ConnectionEvent) -> None:
