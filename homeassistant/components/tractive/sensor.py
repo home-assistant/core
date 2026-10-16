@@ -42,7 +42,6 @@ class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
-    pet_detail: bool = False
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -59,7 +58,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         """Initialize sensor entity."""
         super().__init__(coordinator, trackable, description.hardware_sensor)
 
-        self._trackable = trackable
         self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
         self.entity_description = description
 
@@ -67,14 +65,12 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        source: object
-        if self.entity_description.hardware_sensor:
-            source = self._tracker_status
-        elif self.entity_description.pet_detail:
-            source = self._trackable
-        else:
-            source = self._pet_status
-        value: StateType = getattr(source, self.entity_description.key)
+        status = (
+            self._tracker_status
+            if self.entity_description.hardware_sensor
+            else self._pet_status
+        )
+        value: StateType = getattr(status, self.entity_description.key)
         return value
 
     @property
@@ -147,7 +143,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
-        pet_detail=True,
     ),
 )
 

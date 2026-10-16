@@ -37,6 +37,7 @@ async def test_sensor(
             minutes_day_sleep=100,
             minutes_night_sleep=300,
             minutes_rest=122,
+            weight=23700,
         )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -85,17 +86,28 @@ async def test_sensor_device_assignment(
         assert entry.device_id == pet_device.id
 
 
-async def test_sensor_weight_unavailable(
+async def test_sensor_weight_update(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the weight sensor is unavailable when the pet has no weight."""
-    trackable = mock_tractive_client.async_fetch_trackables.return_value[0]
-    del trackable.pet_details["details"]["weight"]
-
+    """Test the weight sensor follows pet status updates."""
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == "23.7"
+
+    mock_tractive_client.set_pet_status(weight=24100)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == "24.1"
+
+    mock_tractive_client.set_pet_status(weight=None)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_pet_weight")
     assert state is not None
