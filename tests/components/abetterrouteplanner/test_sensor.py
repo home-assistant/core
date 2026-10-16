@@ -26,7 +26,8 @@ from homeassistant.components.abetterrouteplanner.sensor import (
     SENSORS,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -635,3 +636,677 @@ async def test_availability_follows_stream_auth_not_connection(
     fire_connection(mock_telemetry_stream, ConnectionEvent(ConnectionState.CONNECTED))
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
+
+
+VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
+
+
+# Not in the mocked garage, so the stream never subscribes to it.
+_ABSENT_VEHICLE_ID = 999999999999
+
+
+def _unique_id_lookup(
+    entity_registry: er.EntityRegistry, vehicle_id: int, key: str
+) -> str | None:
+    """Look up an entity_id via ``unique_id`` to decouple from strings.json slugs."""
+    return entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}_{key}"
+    )
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_only_metric_creates_entity(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """The seed is empty; a power frame arrives over the stream."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert entity_registry.async_get(POWER_ENTITY_ID) is None
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(1234.0)),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == "1234.0"
+
+    assert entity_registry.async_get(SOC_ENTITY_ID) is None
+    assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_post_setup_frame_creates_entity(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """The seed is empty; voltage arrives only after setup completes."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert entity_registry.async_get(SOC_ENTITY_ID) is None
+    assert entity_registry.async_get(POWER_ENTITY_ID) is None
+    assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(voltage=build_metric_value(400.0)),
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is not None
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "400.0"
+
+    assert entity_registry.async_get(SOC_ENTITY_ID) is None
+    assert entity_registry.async_get(POWER_ENTITY_ID) is None
+
+    # Pin via the registry: ``state.attributes`` never carries the category.
+    registry_entry = entity_registry.async_get(VOLTAGE_ENTITY_ID)
+    assert registry_entry is not None
+    assert registry_entry.entity_category is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_lazy_create_idempotent_on_repeated_frames(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Two consecutive non-null power frames must create exactly one power entity."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert entity_registry.async_get(POWER_ENTITY_ID) is None
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(5000.0)),
+    )
+    await hass.async_block_till_done()
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(6000.0)),
+    )
+    await hass.async_block_till_done()
+
+    all_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry_with_vehicles.entry_id
+    )
+    power_entries = [e for e in all_entries if e.entity_id == POWER_ENTITY_ID]
+    assert len(power_entries) == 1
+
+    state = hass.states.get(POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == "6000.0"
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.parametrize(
+    ("active_vehicle_id", "expected_entity_id", "absent_entity_id"),
+    [
+        pytest.param(
+            MOCK_VEHICLE_ID,
+            VOLTAGE_ENTITY_ID,
+            VOLTAGE_ENTITY_ID_2,
+            id="vehicle_a_active",
+        ),
+        pytest.param(
+            MOCK_VEHICLE_ID_2,
+            VOLTAGE_ENTITY_ID_2,
+            VOLTAGE_ENTITY_ID,
+            id="vehicle_b_active",
+        ),
+    ],
+)
+async def test_multi_vehicle_entity_isolation(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+    active_vehicle_id: int,
+    expected_entity_id: str,
+    absent_entity_id: str,
+) -> None:
+    """Voltage arriving for vehicle A must not create a voltage entity for vehicle B."""
+    entry = config_entry_with_vehicles
+
+    await setup_integration(hass, entry)
+
+    assert entity_registry.async_get(absent_entity_id) is None
+
+    fire_frame(
+        mock_telemetry_stream,
+        active_vehicle_id,
+        Telemetry(voltage=build_metric_value(400.0)),
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(expected_entity_id) is not None
+    assert entity_registry.async_get(absent_entity_id) is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
+async def test_absent_metric_entities_not_created(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+) -> None:
+    """An empty seed with no stream frames must produce zero telemetry entities."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert entity_registry.async_get(SOC_ENTITY_ID) is None
+    assert entity_registry.async_get(POWER_ENTITY_ID) is None
+    assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_soe_sensor_lazy_creates_on_first_frame(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """An ``soe`` frame lazy-creates the SoE sensor; native Wh, display kWh."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe") is None
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(soe=build_metric_value(75000.0)),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "75.0"
+    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.attributes["device_class"] == "energy_storage"
+    assert state.attributes["state_class"] == "measurement"
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_odometer_sensor_lazy_creates_on_first_frame(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """An ``odometer`` frame lazy-creates the odometer sensor; native m, display km."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "odometer") is None
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(odometer=build_metric_value(123456.0)),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "odometer")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "123.456"
+    assert float(state.state) == pytest.approx(123.456)
+    assert state.attributes["unit_of_measurement"] == "km"
+    assert state.attributes["device_class"] == "distance"
+    assert state.attributes["state_class"] == "total_increasing"
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A ``calibrated_ref_cons`` frame lazy-creates the ref-consumption sensor."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert (
+        _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "calibrated_ref_cons")
+        is None
+    )
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(
+        entity_registry, MOCK_VEHICLE_ID, "calibrated_ref_cons"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(175.0)
+    assert state.attributes["unit_of_measurement"] == "Wh/km"
+    assert state.attributes["device_class"] == "energy_distance"
+    assert state.attributes["state_class"] == "measurement"
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    assert registry_entry.entity_category is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_battery_capacity_sensor_lazy_creates_static(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A ``battery_capacity`` frame lazy-creates the capacity sensor as STATIC."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert (
+        _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_capacity") is None
+    )
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_capacity=build_metric_value(75000.0)),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_capacity")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "75.0"
+    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.attributes["device_class"] == "energy_storage"
+    assert "state_class" not in state.attributes, (
+        "battery_capacity is STATIC; state_class must be absent (LTS opt-out)"
+    )
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    assert registry_entry.entity_category is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_soh_sensor_lazy_creates_on_first_frame(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A ``soh`` frame lazy-creates the State-of-Health sensor (percent)."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh") is None
+
+    fire_frame(
+        mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(92.0))
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "92.0"
+    assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["state_class"] == "measurement"
+    assert "device_class" not in state.attributes, (
+        "SoH is not SensorDeviceClass.BATTERY (that's SoC); device_class must be absent"
+    )
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    assert registry_entry.entity_category is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_battery_temperature_sensor_stays_primary_category(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Battery Temperature stays primary (``entity_category is None``)."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert (
+        _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_temperature")
+        is None
+    )
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_temperature=build_metric_value(22.5)),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(
+        entity_registry, MOCK_VEHICLE_ID, "battery_temperature"
+    )
+    assert entity_id is not None
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    assert registry_entry.entity_category is None, (
+        "battery_temperature is the canonical preconditioning trigger; "
+        "it must stay primary (no entity_category)"
+    )
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_soh_above_100_percent_surfaces_uncapped(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A post-recalibration SoH overshoot (> 100%) surfaces uncapped."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    fire_frame(
+        mock_telemetry_stream, MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(105.0))
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(105.0)
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_battery_capacity_recalibration_jump_updates_state(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A capacity recalibration jump is reflected in ``state.state``."""
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_capacity=build_metric_value(75000.0)),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "battery_capacity")
+    assert entity_id is not None
+    first_state = hass.states.get(entity_id)
+    assert first_state is not None
+    assert first_state.state == "75.0"
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(battery_capacity=build_metric_value(74500.0)),
+    )
+    await hass.async_block_till_done()
+
+    second_state = hass.states.get(entity_id)
+    assert second_state is not None
+    assert second_state.state == "74.5"
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_new_sensor_multi_vehicle_isolation(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A metric frame for vehicle A must not create the entity on vehicle B."""
+    entry = config_entry_with_vehicles
+
+    await setup_integration(hass, entry)
+
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "calibrated_ref_cons")
+        is not None
+    )
+    assert (
+        _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID_2, "calibrated_ref_cons")
+        is None
+    )
+
+    # A frame for an id outside the garage must not mint an entity either.
+    fire_frame(
+        mock_telemetry_stream,
+        _ABSENT_VEHICLE_ID,
+        Telemetry(soc=build_metric_value(50.0)),
+    )
+    await hass.async_block_till_done()
+
+    assert _unique_id_lookup(entity_registry, _ABSENT_VEHICLE_ID, "soc") is None
+
+
+PROVIDER = "RIVIAN_STREAM"
+
+# Object-id stem matching the mock vehicle's name, so a preseeded registry row
+# fixes the entity_id instead of leaving it to the auto-slug.
+_OBJECT_ID_STEM = "rivian_r2_2027_standard_long_range"
+
+
+def _fire_voltage(
+    mock_telemetry_stream: MagicMock, voltage: float, *, provider: str | None = None
+) -> None:
+    """Drive a single-voltage live frame through the fake telemetry stream."""
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(voltage=build_metric_value(voltage, provider=provider)),
+    )
+
+
+async def _setup(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    *,
+    entity_registry: er.EntityRegistry | None = None,
+    preseed_registry_keys: list[str] | None = None,
+) -> None:
+    """Set up the integration, optionally preseeding registry rows."""
+    hass.set_state(CoreState.not_running)
+    entry.add_to_hass(hass)
+    if preseed_registry_keys and entity_registry is not None:
+        for key in preseed_registry_keys:
+            entity_registry.async_get_or_create(
+                domain="sensor",
+                platform=DOMAIN,
+                unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_{key}",
+                config_entry=entry,
+                suggested_object_id=f"{_OBJECT_ID_STEM}_{key}",
+            )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
+async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Stamp refreshes only on frames whose batch carries the voltage metric."""
+
+    await _setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=["voltage"],
+    )
+
+    t1 = datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)
+    t2 = datetime(2026, 5, 24, 10, 5, 0, tzinfo=UTC)
+    t3 = datetime(2026, 5, 24, 10, 10, 0, tzinfo=UTC)
+
+    with freeze_time(t1):
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(400.0)),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("last_reported_at") == t1
+
+    with freeze_time(t2):
+        # This batch carries soc only, so the voltage slot stays untouched.
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(soc=build_metric_value(50.0)),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("last_reported_at") == t1
+
+    with freeze_time(t3):
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(410.0)),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("last_reported_at") == t3
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
+async def test_wire_time_is_preferred_over_receipt_time(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A reading carrying its own wire time is not stamped with arrival time."""
+
+    await _setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=["voltage"],
+    )
+
+    wire = datetime(2026, 5, 20, 8, 0, 0, tzinfo=UTC)
+    with freeze_time(datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)):
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(400.0, time=wire)),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("last_reported_at") == wire
+
+
+@pytest.mark.parametrize(
+    ("provider", "expected"),
+    [
+        pytest.param(PROVIDER, PROVIDER, id="provider_surfaces"),
+        pytest.param(None, None, id="provider_absent"),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
+async def test_provider_attribute_follows_the_live_frame(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    provider: str | None,
+    expected: str | None,
+) -> None:
+    """``provider`` appears only when the frame carries one."""
+
+    await _setup(hass, config_entry_with_vehicles)
+
+    _fire_voltage(mock_telemetry_stream, 400.0, provider=provider)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("provider") == expected
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_provider_kept_when_a_frame_omits_it(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A frame without a provider keeps the last one; a new provider replaces it."""
+    await _setup(hass, config_entry_with_vehicles)
+
+    for voltage, provider, expected in (
+        (400.0, PROVIDER, PROVIDER),
+        (410.0, None, PROVIDER),
+        (420.0, "APP_LOCATION", "APP_LOCATION"),
+    ):
+        _fire_voltage(mock_telemetry_stream, voltage, provider=provider)
+        await hass.async_block_till_done()
+        assert hass.states.get(VOLTAGE_ENTITY_ID).attributes.get("provider") == expected
