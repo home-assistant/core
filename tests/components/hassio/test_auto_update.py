@@ -24,6 +24,7 @@ from homeassistant.components.hassio.const import (
 )
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -419,3 +420,29 @@ async def test_skipped_version_kept_while_unavailable(
 
     assert hass.states.get(CORE_UPDATE_ENTITY_ID).state == "off"
     assert manager.async_is_skipped("2026.10.2")
+
+
+async def test_skipped_version_after_rename(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test skipping still reaches the skip list after renaming the entity."""
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+    entity_registry.async_update_entity(
+        CORE_UPDATE_ENTITY_ID, new_entity_id="update.renamed_core"
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "skip", {"entity_id": "update.renamed_core"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert manager.async_is_skipped("2026.10.2")
+
+    await hass.services.async_call(
+        "update", "clear_skipped", {"entity_id": "update.renamed_core"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert not manager.async_is_skipped("2026.10.2")

@@ -16,7 +16,13 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -426,6 +432,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         | UpdateEntityFeature.PROGRESS
     )
     _attr_title = "Home Assistant Core"
+    _unsub_skipped_version: CALLBACK_TYPE | None = None
 
     @property
     @override
@@ -486,11 +493,30 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
                 )
             )
         )
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self.entity_id, self._skipped_version_changed
-            )
+        self._async_track_skipped_version()
+        self.async_on_remove(self._async_untrack_skipped_version)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Follow the renamed entity with the skipped version listener."""
+        super().async_entity_id_changed(old_entity_id)
+        self._async_untrack_skipped_version()
+        self._async_track_skipped_version()
+
+    @callback
+    def _async_track_skipped_version(self) -> None:
+        """Listen to this entity's own state for skipped versions."""
+        self._unsub_skipped_version = async_track_state_change_event(
+            self.hass, self.entity_id, self._skipped_version_changed
         )
+
+    @callback
+    def _async_untrack_skipped_version(self) -> None:
+        """Stop listening for skipped versions."""
+        if self._unsub_skipped_version is not None:
+            self._unsub_skipped_version()
+            self._unsub_skipped_version = None
 
     @callback
     def _skipped_version_changed(self, event: Event[EventStateChangedData]) -> None:
