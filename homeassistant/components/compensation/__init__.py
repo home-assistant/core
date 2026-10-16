@@ -181,10 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="setup_error",
-            translation_placeholders={
-                "title": config[CONF_NAME],
-                "error": str(error),
-            },
+            translation_placeholders={"title": entry.title, "error": str(error)},
         ) from error
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
