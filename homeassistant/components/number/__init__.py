@@ -11,11 +11,7 @@ from typing import TYPE_CHECKING, Any, Self, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    ATTR_MODE,
-    CONF_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, async_get_hass_or_none, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -24,7 +20,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
 
-from .const import (  # noqa: F401
+from .const import (
     AMBIGUOUS_UNITS,
     ATTR_MAX,
     ATTR_MIN,
@@ -59,14 +55,18 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 __all__ = [
     "ATTR_MAX",
     "ATTR_MIN",
+    "ATTR_MODE",
     "ATTR_STEP",
     "ATTR_VALUE",
     "DEFAULT_MAX_VALUE",
     "DEFAULT_MIN_VALUE",
     "DEFAULT_STEP",
+    "DEVICE_CLASSES_SCHEMA",
+    "DEVICE_CLASS_UNITS",
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SET_VALUE",
     "NumberDeviceClass",
     "NumberEntity",
     "NumberEntityCapabilityAttribute",

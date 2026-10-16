@@ -2,11 +2,15 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "kamereon_no_account": "Unable to find Kamereon account",
-      "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID"
+      "two_factor_no_email": "No email address is registered for two-factor authentication on your Renault account",
+      "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_code": "Invalid verification code",
       "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -33,6 +37,26 @@
         },
         "description": "Please update your password for {username}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "two_factor_code": {
+        "data": {
+          "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The verification code sent to {email}"
+        },
+        "description": "Your Renault account requires two-factor authentication. Enter the verification code that was sent to {email}.",
+        "title": "Two-factor authentication"
+      },
+      "two_factor_email": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "The email address to send the verification code to"
+        },
+        "description": "Your Renault account requires two-factor authentication. Select the email address to send the verification code to.",
+        "title": "[%key:component::renault::config::step::two_factor_code::title%]"
       },
       "user": {
         "data": {
@@ -212,6 +236,9 @@
   "exceptions": {
     "account_forbidden": {
       "message": "Access to Kamereon account {account_id} was denied by the Renault servers"
+    },
+    "authentication_expired": {
+      "message": "The Renault login has expired, re-authenticate the Renault integration"
     },
     "battery_soc_unavailable": {
       "message": "Battery state of charge data is currently unavailable"

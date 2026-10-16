@@ -134,7 +134,7 @@ class DemoSwitch(SwitchEntity):
                 name=device_name,
             )
             if via_device_id is not None:
-                self._attr_device_info["via_device_id"] = via_device_id
+                self._attr_device_info.via_device_id = via_device_id
         self._attr_name = entity_name
 
     @override

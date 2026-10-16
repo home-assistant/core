@@ -9,7 +9,7 @@ from lunatone_rest_api_client.models import ScanLineState, ScanState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lunatone.coordinator import DEFAULT_SCAN_UPDATE_INTERVAL
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -92,15 +92,17 @@ async def test_sensor_value_update(
     assert coordinator.update_interval == timedelta(seconds=10)
 
 
-async def test_line_scan_status_off_when_line_data_is_missing(
+async def test_line_scan_status_availability_updates_with_line_data(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Lunatone DALI scan status value update."""
+    """Test the availability of line scan status sensors."""
+    scan_data_with_lines = deepcopy(mock_lunatone_scan.data)
     mock_lunatone_scan.data.lines = []
     mock_lunatone_scan.data.status = ScanState.ADDRESSING
 
@@ -108,6 +110,22 @@ async def test_line_scan_status_off_when_line_data_is_missing(
 
     entity_ids = (
         ("binary_sensor.test_scan_status", STATE_ON),
+        ("binary_sensor.dali_line_0_scan_status", STATE_UNAVAILABLE),
+        ("binary_sensor.dali_line_1_scan_status", STATE_UNAVAILABLE),
+    )
+
+    for entity_id, expected_state in entity_ids:
+        entity = hass.states.get(entity_id)
+        assert entity and entity.state == expected_state
+
+    mock_lunatone_scan.data = scan_data_with_lines
+
+    freezer.tick(DEFAULT_SCAN_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_ids = (
+        ("binary_sensor.test_scan_status", STATE_OFF),
         ("binary_sensor.dali_line_0_scan_status", STATE_OFF),
         ("binary_sensor.dali_line_1_scan_status", STATE_OFF),
     )

@@ -1,6 +1,6 @@
 """Tests for the Input slider component."""
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
@@ -14,15 +14,17 @@ from homeassistant.components.input_datetime import (
     ATTR_EDITABLE,
     ATTR_TIME,
     ATTR_TIMESTAMP,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
     CONF_ID,
-    CONF_INITIAL,
     CONF_NAME,
     CONFIG_SCHEMA,
-    DEFAULT_TIME,
     DOMAIN,
     SERVICE_RELOAD,
+)
+from homeassistant.components.input_datetime.const import (
+    CONF_HAS_DATE,
+    CONF_HAS_TIME,
+    CONF_INITIAL,
+    DEFAULT_TIME,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -81,7 +83,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
 
 
 async def async_set_date_and_time(
-    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+    hass: HomeAssistant, entity_id: str, dt_value: dt.datetime
 ) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
@@ -97,7 +99,7 @@ async def async_set_date_and_time(
 
 
 async def async_set_datetime(
-    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+    hass: HomeAssistant, entity_id: str, dt_value: dt.datetime
 ) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
@@ -142,7 +144,7 @@ async def test_set_datetime(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -170,7 +172,7 @@ async def test_set_datetime_2(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -198,7 +200,7 @@ async def test_set_datetime_3(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -226,7 +228,7 @@ async def test_set_datetime_4(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         1969, 12, 31, 16, 00, 00, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -254,7 +256,7 @@ async def test_set_datetime_time(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_time"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46, 30)
 
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
@@ -281,7 +283,7 @@ async def test_set_invalid(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_date"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
     with pytest.raises(probatio.Invalid):
@@ -311,7 +313,7 @@ async def test_set_invalid_2(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_date"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
     with pytest.raises(probatio.Invalid):
@@ -334,7 +336,7 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_date"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     date_portion = dt_obj.date()
 
     await async_set_date_and_time(hass, entity_id, dt_obj)
@@ -344,7 +346,7 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
     assert not state.attributes["has_time"]
     assert state.attributes["has_date"]
 
-    date_dt_obj = datetime.datetime(
+    date_dt_obj = dt.datetime(
         2017, 9, 7, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
@@ -368,8 +370,8 @@ async def test_restore_state(
 
     hass.set_state(CoreState.starting)
 
-    initial = datetime.datetime(2017, 1, 1, 23, 42)
-    default = datetime.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
+    initial = dt.datetime(2017, 1, 1, 23, 42)
+    default = dt.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
 
     await async_setup_component(
         hass,
@@ -390,7 +392,7 @@ async def test_restore_state(
         },
     )
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     state_time = hass.states.get("input_datetime.test_time")
     assert state_time.state == dt_obj.strftime(FORMAT_TIME)
 
@@ -426,7 +428,7 @@ async def test_default_value(
         },
     )
 
-    dt_obj = datetime.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
+    dt_obj = dt.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
     state_time = hass.states.get("input_datetime.test_time")
     assert state_time.state == dt_obj.strftime(FORMAT_TIME)
     assert state_time.attributes.get("timestamp") is not None
@@ -492,7 +494,7 @@ async def test_reload(
     state_2 = hass.states.get("input_datetime.dt2")
     state_3 = hass.states.get("input_datetime.dt3")
 
-    dt_obj = datetime.datetime(2019, 1, 1, 0, 0)
+    dt_obj = dt.datetime(2019, 1, 1, 0, 0)
     assert state_1 is not None
     assert state_2 is None
     assert state_3 is not None
@@ -535,7 +537,7 @@ async def test_reload(
     assert state_2 is not None
     assert state_3 is None
     assert state_1.state == DEFAULT_TIME.strftime(FORMAT_TIME)
-    assert state_2.state == datetime.datetime.combine(
+    assert state_2.state == dt.datetime.combine(
         dt_util.now().date(), DEFAULT_TIME
     ).strftime(FORMAT_DATETIME)
 
@@ -793,8 +795,8 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     # Use datetime.datetime.fromtimestamp
     assert (
         dt_util.as_local(
-            datetime.datetime.fromtimestamp(
-                state_without_tz.attributes[ATTR_TIMESTAMP], datetime.UTC
+            dt.datetime.fromtimestamp(
+                state_without_tz.attributes[ATTR_TIMESTAMP], dt.UTC
             )
         ).strftime(FORMAT_DATETIME)
         == "2020-12-13 10:00:00"

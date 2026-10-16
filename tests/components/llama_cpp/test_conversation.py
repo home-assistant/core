@@ -1,7 +1,7 @@
 """Tests for the llama.cpp conversation platform."""
 
 from collections.abc import AsyncGenerator, Generator
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -226,9 +226,9 @@ async def test_function_call_with_datetime_tool_results(
         {
             "call_call_1": {
                 "speech_slots": {
-                    "time": datetime.time(12, 0),
-                    "date": datetime.date(2026, 8, 23),
-                    "datetime": datetime.datetime(2026, 8, 23, 12, 0),
+                    "time": dt.time(12, 0),
+                    "date": dt.date(2026, 8, 23),
+                    "datetime": dt.datetime(2026, 8, 23, 12, 0),
                 }
             },
         }

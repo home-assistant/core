@@ -3543,7 +3543,7 @@ async def test_handle_intents_with_response_errors(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_code", "return_response"),
+    ("side_effect", "error_code", "return_response", "chat_log_roles"),
     [
         (
             intent.MatchFailedError(
@@ -3552,13 +3552,20 @@ async def test_handle_intents_with_response_errors(
             ),
             intent.IntentResponseErrorCode.NO_VALID_TARGETS,
             False,
+            ["system", "user"],
         ),
         (
             intent.IntentHandleError(),
             intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
             True,
+            ["system", "user", "assistant", "tool_result"],
         ),
-        (intent.IntentUnexpectedError(), intent.IntentResponseErrorCode.UNKNOWN, True),
+        (
+            intent.IntentUnexpectedError(),
+            intent.IntentResponseErrorCode.UNKNOWN,
+            True,
+            ["system", "user", "assistant", "tool_result"],
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_components")
@@ -3569,8 +3576,9 @@ async def test_handle_failed_intents(
     side_effect: intent.IntentError,
     error_code: intent.IntentResponseErrorCode,
     return_response: bool,
+    chat_log_roles: list[str],
 ) -> None:
-    """Test that error results from intent handler are saved to chat_log."""
+    """Test that only error results that are returned are saved to chat_log."""
     assert await async_setup_component(hass, "climate", {})
     area_registry.async_create("living room")
 
@@ -3595,8 +3603,7 @@ async def test_handle_failed_intents(
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(user_input, chat_log)
-        assert len(chat_log.content) == 4  # System + user + tool call + tool results
-        assert chat_log.content[-1].role == "tool_result"
+        assert [content.role for content in chat_log.content] == chat_log_roles
 
     assert len(mock_handle.mock_calls) == 1
 
