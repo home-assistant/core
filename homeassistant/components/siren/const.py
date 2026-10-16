@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import SirenEntity
+    from .entity import SirenEntity
 
 DOMAIN: Final = "siren"
 

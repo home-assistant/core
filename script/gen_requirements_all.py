@@ -11,6 +11,9 @@ import sys
 import tomllib
 from typing import Any
 
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
+
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
 
@@ -102,7 +105,7 @@ uuid==1000000000.0.0
 # httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
 # version constraints on anyio and h11 are quite loose. Pin them so we can
 # directly link HA versions to these library versions.
-anyio==4.14.2
+anyio==4.15.1
 h11==0.16.0
 
 # Many libraries still depend on httpx/httpcore. Those imports are aliased to
@@ -250,6 +253,9 @@ graphql-core<3.3
 # https://github.com/c-ares/c-ares/pull/1256
 pycares==5.0.1
 
+# pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
+pypasser<1.0.0
+
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
 # https://github.com/xolox/python-coloredlogs -> unmaintained
@@ -376,12 +382,44 @@ def gather_modules() -> dict[str, list[str]] | None:
     for value in reqs.values():
         value = sorted(value, key=lambda name: (len(name.split(".")), name))
 
+    if not errors:
+        reqs = merge_requirement_extras(errors, reqs)
+
     if errors:
         print("******* ERROR")
         print("Errors while importing: ", ", ".join(errors))
         return None
 
     return reqs
+
+
+def merge_requirement_extras(
+    errors: list[str], reqs: dict[str, list[str]]
+) -> dict[str, list[str]]:
+    """Merge the requirements of a package into one requirement."""
+    grouped: dict[str, list[str]] = {}
+    for req in reqs:
+        grouped.setdefault(canonicalize_name(Requirement(req).name), []).append(req)
+
+    merged: dict[str, list[str]] = {}
+    for name, group in grouped.items():
+        if len(group) == 1:
+            merged[group[0]] = reqs[group[0]]
+            continue
+        requirements = [Requirement(req) for req in group]
+        if len({(str(req.specifier), str(req.marker)) for req in requirements}) > 1:
+            conflicts = ", ".join(
+                f"{req} ({', '.join(sorted(reqs[req]))})" for req in sorted(group)
+            )
+            errors.append(f"{name}[Conflicting requirements: {conflicts}]")
+            continue
+        requirement = requirements[0]
+        for other in requirements[1:]:
+            requirement.extras |= other.extras
+        merged[str(requirement)] = sorted(
+            {package for req in group for package in reqs[req]}
+        )
+    return merged
 
 
 def gather_entity_platform_requirements() -> set[str]:

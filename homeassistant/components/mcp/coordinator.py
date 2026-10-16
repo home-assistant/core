@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-import datetime
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]

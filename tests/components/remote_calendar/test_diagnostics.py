@@ -1,6 +1,6 @@
 """Test the remote calendar diagnostics."""
 
-import datetime
+import datetime as dt
 
 from httpx2 import Response
 import pytest
@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @respx.mock
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5))
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -41,7 +41,7 @@ async def test_entry_diagnostics(
 
 
 @respx.mock
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5))
 async def test_entry_diagnostics_setup_failed(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

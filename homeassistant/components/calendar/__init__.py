@@ -3,7 +3,7 @@
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 import re
@@ -36,7 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import (  # noqa: F401
+from .const import (
     CREATE_EVENT_SERVICE,
     DATA_COMPONENT,
     DOMAIN,
@@ -79,11 +79,7 @@ from .helper import (
     has_timezone,
     validate_rrule,
 )
-from .services import (  # noqa: F401
-    CREATE_EVENT_SCHEMA,
-    async_create_event,
-    async_setup_services,
-)
+from .services import CREATE_EVENT_SCHEMA, async_setup_services
 
 # mypy: disallow-any-generics
 
@@ -92,7 +88,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
+SCAN_INTERVAL = dt.timedelta(seconds=60)
 EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
 
@@ -130,6 +126,45 @@ CALENDAR_EVENT_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "CREATE_EVENT_SCHEMA",
+    "CREATE_EVENT_SERVICE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "EVENT_DESCRIPTION",
+    "EVENT_DURATION",
+    "EVENT_END",
+    "EVENT_END_DATE",
+    "EVENT_END_DATETIME",
+    "EVENT_IN",
+    "EVENT_IN_DAYS",
+    "EVENT_IN_WEEKS",
+    "EVENT_LOCATION",
+    "EVENT_RECURRENCE_ID",
+    "EVENT_RECURRENCE_RANGE",
+    "EVENT_RRULE",
+    "EVENT_START",
+    "EVENT_START_DATE",
+    "EVENT_START_DATETIME",
+    "EVENT_SUMMARY",
+    "EVENT_TIME_FIELDS",
+    "EVENT_TYPES",
+    "EVENT_UID",
+    "LIST_EVENT_FIELDS",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_GET_EVENTS",
+    "WEBSOCKET_EVENT_SCHEMA",
+    "CalendarEntity",
+    "CalendarEntityDescription",
+    "CalendarEntityFeature",
+    "CalendarEntityStateAttribute",
+    "CalendarEvent",
+    "CalendarEventStatus",
+    "extract_offset",
+    "is_offset_reached",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
@@ -162,14 +197,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-def get_date(date: dict[str, Any]) -> datetime.datetime:
+def get_date(date: dict[str, Any]) -> dt.datetime:
     """Get the dateTime from date or dateTime as a local."""
     if "date" in date:
         parsed_date = dt_util.parse_date(date["date"])
         assert parsed_date
-        return dt_util.start_of_local_day(
-            datetime.datetime.combine(parsed_date, datetime.time.min)
-        )
+        return dt_util.start_of_local_day(dt.datetime.combine(parsed_date, dt.time.min))
     parsed_datetime = dt_util.parse_datetime(date["dateTime"])
     assert parsed_datetime
     return dt_util.as_local(parsed_datetime)
@@ -179,8 +212,8 @@ def get_date(date: dict[str, Any]) -> datetime.datetime:
 class CalendarEvent:
     """An event on a calendar."""
 
-    start: datetime.date | datetime.datetime
-    end: datetime.date | datetime.datetime
+    start: dt.date | dt.datetime
+    end: dt.date | dt.datetime
     summary: str
     description: str | None = None
     location: str | None = None
@@ -191,19 +224,19 @@ class CalendarEvent:
     status: CalendarEventStatus | None = None
 
     @property
-    def start_datetime_local(self) -> datetime.datetime:
+    def start_datetime_local(self) -> dt.datetime:
         """Return event start time as a local datetime."""
         return get_datetime_local(self.start)
 
     @property
-    def end_datetime_local(self) -> datetime.datetime:
+    def end_datetime_local(self) -> dt.datetime:
         """Return event end time as a local datetime."""
         return get_datetime_local(self.end)
 
     @property
     def all_day(self) -> bool:
         """Return true if the event is an all day event."""
-        return not isinstance(self.start, datetime.datetime)
+        return not isinstance(self.start, dt.datetime)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
@@ -229,14 +262,14 @@ class CalendarEvent:
         # an all day event, but that is not a valid duration. Fix to have a
         # duration of one day.
         if (
-            not isinstance(self.start, datetime.datetime)
-            and not isinstance(self.end, datetime.datetime)
+            not isinstance(self.start, dt.datetime)
+            and not isinstance(self.end, dt.datetime)
             and self.start == self.end
         ):
-            self.end = self.start + datetime.timedelta(days=1)
+            self.end = self.start + dt.timedelta(days=1)
 
 
-def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
+def extract_offset(summary: str, offset_prefix: str) -> tuple[str, dt.timedelta]:
     """Extract the offset from the event summary.
 
     Return a tuple with the updated event summary and offset time.
@@ -256,14 +289,12 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
         offset_time = cv.time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
         return (summary, offset_time)
-    return (summary, datetime.timedelta())
+    return (summary, dt.timedelta())
 
 
-def is_offset_reached(
-    start: datetime.datetime, offset_time: datetime.timedelta
-) -> bool:
+def is_offset_reached(start: dt.datetime, offset_time: dt.timedelta) -> bool:
     """Have we reached the offset time specified in the event title."""
-    if offset_time == datetime.timedelta():
+    if offset_time == dt.timedelta():
         return False
     return start + offset_time <= dt_util.now(start.tzinfo)
 
@@ -287,8 +318,8 @@ class CalendarEntity(Entity):
     _event_listeners: (
         list[
             tuple[
-                datetime.datetime,
-                datetime.datetime,
+                dt.datetime,
+                dt.datetime,
                 Callable[[list[JsonValueType] | None], None],
             ]
         ]
@@ -391,7 +422,7 @@ class CalendarEntity(Entity):
             return
 
         @callback
-        def update(_: datetime.datetime) -> None:
+        def update(_: dt.datetime) -> None:
             """Update state and reschedule next alarms."""
             _LOGGER.debug("Running %s update", self.entity_id)
             self.async_write_ha_state()
@@ -437,8 +468,8 @@ class CalendarEntity(Entity):
     @callback
     def async_subscribe_events(
         self,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
         event_listener: Callable[[list[JsonValueType] | None], None],
     ) -> CALLBACK_TYPE:
         """Subscribe to calendar event updates.
@@ -480,7 +511,7 @@ class CalendarEntity(Entity):
         # showing the same days asks for the same range, so those listeners
         # are served from a single fetch.
         listeners_by_range: defaultdict[
-            tuple[datetime.datetime, datetime.datetime],
+            tuple[dt.datetime, dt.datetime],
             list[Callable[[list[JsonValueType] | None], None]],
         ] = defaultdict(list)
         for start_date, end_date, listener in self._event_listeners:
@@ -493,8 +524,8 @@ class CalendarEntity(Entity):
     @callback
     def async_update_single_event_listener(
         self,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
         listener: Callable[[list[JsonValueType] | None], None],
     ) -> None:
         """Schedule an event fetch and push to a single listener."""
@@ -503,8 +534,8 @@ class CalendarEntity(Entity):
     @callback
     def _async_schedule_listener_update(
         self,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
         listeners: list[Callable[[list[JsonValueType] | None], None]],
     ) -> None:
         """Schedule an event fetch and push to the given listeners."""
@@ -514,8 +545,8 @@ class CalendarEntity(Entity):
 
     async def _async_update_listeners(
         self,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
         listeners: list[Callable[[list[JsonValueType] | None], None]],
     ) -> None:
         """Fetch events and push them to the listeners of that range."""
@@ -538,8 +569,8 @@ class CalendarEntity(Entity):
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         raise NotImplementedError

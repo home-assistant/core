@@ -11,6 +11,9 @@
       "send_verification_code": "Failed to send verification code",
       "validate_verification_code": "Failed to verify your verification code, try again"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "reauth_confirm": {
         "data": {

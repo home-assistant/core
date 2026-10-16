@@ -7,6 +7,7 @@ from deebot_client.events import LifeSpan
 
 DOMAIN = "ecovacs"
 
+CONF_ACCOUNT_CREDENTIALS = "account_credentials"
 CONF_CONTINENT = "continent"
 CONF_OVERRIDE_REST_URL = "override_rest_url"
 CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"

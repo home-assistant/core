@@ -1,6 +1,5 @@
 """Default implementation of the Assist pipeline engine."""
 
-import array
 import asyncio
 from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
@@ -9,6 +8,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
+import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
@@ -1000,8 +1000,8 @@ class _DefaultPipelineProcessor:
         timestamp_ms = 0
         async for chunk in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
-                chunk = _multiply_volume(
-                    chunk, self.host.audio_settings.volume_multiplier
+                chunk = audioop.mul(
+                    chunk, SAMPLE_WIDTH, self.host.audio_settings.volume_multiplier
                 )
 
             for sub_chunk in chunk_samples(
@@ -1028,8 +1028,10 @@ class _DefaultPipelineProcessor:
         async for dirty_samples in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 # Static gain
-                dirty_samples = _multiply_volume(
-                    dirty_samples, self.host.audio_settings.volume_multiplier
+                dirty_samples = audioop.mul(
+                    dirty_samples,
+                    SAMPLE_WIDTH,
+                    self.host.audio_settings.volume_multiplier,
                 )
 
             # Split into chunks for audio enhancements/VAD
@@ -1202,19 +1204,6 @@ class _DefaultPipelineProcessor:
             <= end_stage_index
         ):
             await self.prepare_text_to_speech()
-
-
-def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
-    """Multiply 16-bit PCM samples by a constant."""
-
-    def _clamp(val: float) -> float:
-        """Clamp to signed 16-bit."""
-        return max(-32768, min(32767, val))
-
-    return array.array(
-        "h",
-        (int(_clamp(value * volume_multiplier)) for value in array.array("h", chunk)),
-    ).tobytes()
 
 
 @dataclass

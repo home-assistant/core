@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, create_autospec
 import pytest
 import smarttub
 
-from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 

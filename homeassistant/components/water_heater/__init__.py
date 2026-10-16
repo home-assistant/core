@@ -8,10 +8,7 @@ from typing import Any, Final, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-
-# ATTR_TEMPERATURE, SERVICE_TURN_ON and SERVICE_TURN_OFF are re-exported for
-# integrations importing them from the water_heater component root.
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -36,7 +33,7 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
     DATA_COMPONENT,
@@ -78,6 +75,43 @@ ATTR_CURRENT_TEMPERATURE = "current_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
+
+__all__ = [
+    "ATTR_AWAY_MODE",
+    "ATTR_CURRENT_TEMPERATURE",
+    "ATTR_MAX_TEMP",
+    "ATTR_MIN_TEMP",
+    "ATTR_OPERATION_LIST",
+    "ATTR_OPERATION_MODE",
+    "ATTR_TARGET_TEMP_HIGH",
+    "ATTR_TARGET_TEMP_LOW",
+    "ATTR_TARGET_TEMP_STEP",
+    "ATTR_TEMPERATURE",
+    "DEFAULT_MAX_TEMP",
+    "DEFAULT_MIN_TEMP",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SET_AWAY_MODE",
+    "SERVICE_SET_OPERATION_MODE",
+    "SERVICE_SET_TEMPERATURE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_ECO",
+    "STATE_ELECTRIC",
+    "STATE_GAS",
+    "STATE_HEAT_PUMP",
+    "STATE_HIGH_DEMAND",
+    "STATE_OFF",
+    "STATE_ON",
+    "STATE_PERFORMANCE",
+    "WaterHeaterCapabilityAttribute",
+    "WaterHeaterEntity",
+    "WaterHeaterEntityDescription",
+    "WaterHeaterEntityFeature",
+    "WaterHeaterStateAttribute",
+]
 
 # mypy: disallow-any-generics
 
