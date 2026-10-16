@@ -1220,6 +1220,11 @@ async def test_climate_full_ac_state(
 
     mock_client.async_set_ac_states.return_value = {"result": {"status": "Success"}}
 
+    original_ac_states = mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].ac_states
+    assert "timestamp" in original_ac_states
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_FULL_STATE,
@@ -1231,6 +1236,22 @@ async def test_climate_full_ac_state(
             ATTR_SWING_MODE: "stopped",
             ATTR_HORIZONTAL_SWING_MODE: "stopped",
             ATTR_LIGHT: "on",
+        },
+        blocking=True,
+    )
+
+    # Verify device_data.ac_states was not mutated in place
+    assert "timestamp" in original_ac_states
+
+    # Verify calling the service when timestamp is missing does not raise KeyError
+    original_ac_states.pop("timestamp", None)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_FULL_STATE,
+        {
+            ATTR_ENTITY_ID: state.entity_id,
+            ATTR_MODE: "cool",
+            ATTR_TARGET_TEMPERATURE: 22,
         },
         blocking=True,
     )
