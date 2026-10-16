@@ -18,7 +18,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -64,7 +64,7 @@ async def test_sensor_unknown_when_data_becomes_unavailable(
     assert state.state == "42"
 
     mock_skoda_client.get_vehicle.return_value = VehicleResponse.model_validate(
-        load_json_object_fixture("vehicle_unavailable.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "vehicle_unavailable.json", DOMAIN)
     )
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
