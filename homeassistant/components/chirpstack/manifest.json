@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["lorawan-connection[chirpstack]==0.14.0"]
+  "requirements": ["lorawan-connection[chirpstack]==1.0.0"]
 }
