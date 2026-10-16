@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime, time, timedelta
 import os
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
@@ -14,6 +14,12 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 
+from homeassistant.components.backup import (
+    DATA_MANAGER,
+    CreateBackupEvent,
+    CreateBackupStage,
+    CreateBackupState,
+)
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.auto_update import (
     AUTO_UPDATE_OPTIONS_SCHEMA,
@@ -163,6 +169,13 @@ def test_options_schema_valid(options: dict[str, Any]) -> None:
         pytest.param(
             {"core_auto_update_window_end": "03:00"}, id="end_at_default_start"
         ),
+        pytest.param(
+            {
+                "core_auto_update_window_start": "03:00",
+                "core_auto_update_window_end": "03:15",
+            },
+            id="too_short",
+        ),
         pytest.param({"core_auto_update_window_start": "25:00"}, id="invalid_time"),
         pytest.param({"core_auto_update_weekdays": []}, id="no_weekdays"),
         pytest.param({"core_auto_update_weekdays": ["someday"]}, id="unknown_weekday"),
@@ -231,6 +244,7 @@ async def test_first_seen_is_set_once(
         },
         "skipped": [],
         "window_offset": 0.0,
+        "attempted_window": None,
     }
 
 
@@ -496,6 +510,7 @@ async def _setup_scheduled(
             },
             "skipped": skipped or [],
             "window_offset": window_offset,
+            "attempted_window": None,
         },
     }
     await _setup_hassio(hass, ENABLED if options is None else options)
@@ -804,3 +819,85 @@ async def test_one_attempt_per_window(
     await hass.async_block_till_done()
 
     assert _installed(supervisor_client) == ["2026.10.2", "2026.10.2"]
+
+
+async def test_no_install_while_backup_uploads(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test nothing installs while Core still uploads a backup to its agents."""
+    uploading = CreateBackupEvent(
+        reason=None,
+        stage=CreateBackupStage.UPLOAD_TO_AGENTS,
+        state=CreateBackupState.IN_PROGRESS,
+    )
+    with patch.dict(hass.data, {DATA_MANAGER: Mock(last_event=uploading)}):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+        )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_no_install_on_stale_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test nothing installs while Supervisor data cannot be refreshed."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 50),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    homeassistant_info.side_effect = SupervisorError("Boom")
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert dt_util.now() >= _local(22, 3)
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_no_retry_after_reload(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test a failed attempt is remembered when the integration reloads."""
+    supervisor_client.homeassistant.update.side_effect = SupervisorError("Boom")
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    assert hass_storage[STORAGE_KEY]["data"]["attempted_window"] == (
+        _local(22, 3).isoformat()
+    )
+
+    freezer.tick(CHECK_INTERVAL)
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert _installed(supervisor_client) == ["2026.10.2"]

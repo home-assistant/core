@@ -45,8 +45,9 @@ STORAGE_KEY = "hassio.auto_update"
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 3
 
-# Short enough that a window of a few minutes is not missed
 CHECK_INTERVAL = timedelta(minutes=5)
+# Long enough that a check always lands inside the window
+MIN_WINDOW_LENGTH = timedelta(minutes=30)
 
 # Supervisor jobs that must finish before Home Assistant is updated
 _BUSY_JOB_NAME = "home_assistant_core_update"
@@ -56,16 +57,26 @@ _BUSY_JOB_PREFIX = "backup_manager_"
 _time_string = probatio.All(cv.time, time.isoformat)
 
 
+def _window_length(start: time, end: time) -> timedelta:
+    """Return how long a time window is; it may cross midnight."""
+    length = datetime.combine(date.min, end) - datetime.combine(date.min, start)
+    return length % timedelta(days=1)
+
+
 def _validate_window(options: dict[str, Any]) -> dict[str, Any]:
-    """Reject an empty time window; one that crosses midnight is fine."""
-    start = options.get(
-        OPTION_CORE_AUTO_UPDATE_WINDOW_START, DEFAULT_CORE_AUTO_UPDATE_WINDOW_START
+    """Reject a too short time window; one that crosses midnight is fine."""
+    start = time.fromisoformat(
+        options.get(
+            OPTION_CORE_AUTO_UPDATE_WINDOW_START, DEFAULT_CORE_AUTO_UPDATE_WINDOW_START
+        )
     )
-    end = options.get(
-        OPTION_CORE_AUTO_UPDATE_WINDOW_END, DEFAULT_CORE_AUTO_UPDATE_WINDOW_END
+    end = time.fromisoformat(
+        options.get(
+            OPTION_CORE_AUTO_UPDATE_WINDOW_END, DEFAULT_CORE_AUTO_UPDATE_WINDOW_END
+        )
     )
-    if start == end:
-        raise probatio.Invalid("The time window must not start and end at once")
+    if _window_length(start, end) < MIN_WINDOW_LENGTH:
+        raise probatio.Invalid("The time window must be at least 30 minutes long")
     return options
 
 
@@ -138,6 +149,7 @@ class AutoUpdateStoreData(TypedDict):
     first_seen: dict[str, str]
     skipped: list[str]
     window_offset: float
+    attempted_window: str | None
 
 
 class _AutoUpdateStore(Store[AutoUpdateStoreData]):
@@ -161,17 +173,11 @@ class _AutoUpdateStore(Store[AutoUpdateStoreData]):
             # Version 1.2 adds the versions skipped for automatic updates
             old_data["skipped"] = []
         if old_minor_version < 3:
-            # Version 1.3 adds where in the time window this installation updates
+            # Version 1.3 adds where in the time window this installation
+            # updates, and the window it last tried to update in
             old_data["window_offset"] = random.random()
+            old_data["attempted_window"] = None
         return old_data
-
-
-def _window_length(settings: AutoUpdateSettings) -> timedelta:
-    """Return how long the time window is; it may cross midnight."""
-    length = datetime.combine(date.min, settings.window_end) - datetime.combine(
-        date.min, settings.window_start
-    )
-    return length % timedelta(days=1)
 
 
 def _window_start(settings: AutoUpdateSettings, now: datetime) -> datetime | None:
@@ -180,7 +186,7 @@ def _window_start(settings: AutoUpdateSettings, now: datetime) -> datetime | Non
     A window that crosses midnight belongs to the day it starts on, so its
     weekday decides whether it is allowed.
     """
-    length = _window_length(settings)
+    length = _window_length(settings.window_start, settings.window_end)
     for days_back in (0, 1):
         start = datetime.combine(
             now.date() - timedelta(days=days_back),
@@ -228,6 +234,8 @@ class AutoUpdateManager:
             }
             self._skipped = set(data["skipped"])
             self._window_offset = data["window_offset"]
+            if (attempted_window := data["attempted_window"]) is not None:
+                self._attempted_window = datetime.fromisoformat(attempted_window)
         else:
             self._async_save()
 
@@ -331,17 +339,37 @@ class AutoUpdateManager:
         settings = self.settings
         if (start := _window_start(settings, now)) is None:
             return None
-        spread = max(_window_length(settings) - CHECK_INTERVAL, timedelta(0))
+        length = _window_length(settings.window_start, settings.window_end)
+        spread = max(length - CHECK_INTERVAL, timedelta(0))
         return start + spread * self._window_offset
 
     @callback
     def _async_is_busy(self) -> bool:
-        """Return if an update or backup is running."""
+        """Return if an update or backup is running, or the state is unknown."""
+        # Imported here like update_helper does, to keep backup out of startup
+        from homeassistant.components.backup import (  # noqa: PLC0415
+            DATA_MANAGER,
+            IdleEvent,
+        )
+
+        jobs_coordinator = self._hass.data[JOBS_COORDINATOR]
+        if (
+            not self._coordinator.last_update_success
+            or not jobs_coordinator.last_update_success
+        ):
+            return True
+
+        # Supervisor's backup job ends before Core uploads to the backup agents
+        if (backup_manager := self._hass.data.get(DATA_MANAGER)) is not None and (
+            not isinstance(backup_manager.last_event, IdleEvent)
+        ):
+            return True
+
         return any(
             job.done is False
             and job.name is not None
             and (job.name == _BUSY_JOB_NAME or job.name.startswith(_BUSY_JOB_PREFIX))
-            for job in self._hass.data[JOBS_COORDINATOR].current_jobs
+            for job in jobs_coordinator.current_jobs
         )
 
     async def _async_check(self, _now: datetime | None = None) -> None:
@@ -371,7 +399,10 @@ class AutoUpdateManager:
         if (version := self.async_get_install_candidate(now)) is None:
             return
 
+        # Stored before the update starts; Home Assistant restarts during it
         self._attempted_window = window
+        await self._store.async_save(self._data_to_save())
+
         backup = bool(
             async_get_update_options(self._hass, self._entry)[
                 OPTION_CORE_BACKUP_BEFORE_UPDATE
@@ -439,4 +470,9 @@ class AutoUpdateManager:
             },
             "skipped": sorted(self._skipped),
             "window_offset": self._window_offset,
+            "attempted_window": (
+                self._attempted_window.isoformat()
+                if self._attempted_window is not None
+                else None
+            ),
         }
