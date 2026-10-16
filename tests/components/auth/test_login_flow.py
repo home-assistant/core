@@ -438,7 +438,7 @@ async def test_well_known_auth_info(
         "client_id_metadata_document_supported": True,
         "code_challenge_methods_supported": ["S256"],
         "response_types_supported": ["code"],
-        "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
+        "service_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
     }
 
 
@@ -455,7 +455,7 @@ async def test_well_known_auth_info(
             {
                 "resource": "https://example.com",
                 "authorization_servers": ["https://example.com"],
-                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+                "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
             },
         ),
         (
@@ -467,7 +467,7 @@ async def test_well_known_auth_info(
             {
                 "resource": "https://example.com",
                 "authorization_servers": ["https://example.com"],
-                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+                "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
             },
         ),
     ],

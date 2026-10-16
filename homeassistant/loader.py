@@ -833,8 +833,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a version key in the"
                         " manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -856,8 +856,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a valid version key"
                         " (%s) in the manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,

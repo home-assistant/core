@@ -722,5 +722,11 @@
       "version": "Version",
       "virtualenv": "Virtual environment"
     }
+  },
+  "triggers": {
+    "updated": {
+      "description": "Triggers once after Home Assistant starts on a different version than it ran before.",
+      "name": "Home Assistant updated"
+    }
   }
 }
