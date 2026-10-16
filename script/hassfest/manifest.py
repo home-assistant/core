@@ -20,6 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
 from script.util import sort_manifest as util_sort_manifest
 
+from .integration_categories import PATH as INTEGRATION_CATEGORIES_PATH
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -135,6 +136,14 @@ NO_IOT_CLASS = [
     "window",
     "zone",
 ]
+
+
+# Integrations of these types are not something people browse for
+NO_CATEGORIES_INTEGRATION_TYPES = {
+    IntegrationType.ENTITY,
+    IntegrationType.HELPER,
+    IntegrationType.SYSTEM,
+}
 
 
 def core_documentation_url(value: str) -> str:
@@ -312,6 +321,16 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
         probatio.Optional("loggers"): [str],
         probatio.Optional("disabled"): str,
         probatio.Optional("iot_class"): probatio.In(SUPPORTED_IOT_CLASSES),
+        probatio.Optional("categories"): probatio.All(
+            [
+                probatio.Match(
+                    r"^[a-z0-9_]+(\.[a-z0-9_]+)?$",
+                    msg="Expected a category like `energy` or `energy.ev_charging`",
+                )
+            ],
+            probatio.Length(min=1, max=3),
+            probatio.Unique(),
+        ),
         probatio.Optional("single_config_entry"): bool,
         probatio.Optional("preview_features"): probatio.Schema(
             {
@@ -369,7 +388,44 @@ def validate_version(integration: Integration) -> None:
         return
 
 
-def validate_manifest(integration: Integration, core_components_dir: Path) -> None:
+def load_known_categories(config: Config) -> set[str]:
+    """Return the known categories, like `energy` and `energy.ev_charging`."""
+    categories = json.loads((config.root / INTEGRATION_CATEGORIES_PATH).read_text())
+
+    known_categories = set()
+    for category in categories:
+        known_categories.add(category["slug"])
+        known_categories.update(
+            f"{category['slug']}.{subcategory['slug']}"
+            for subcategory in category["subcategories"]
+        )
+
+    return known_categories
+
+
+def validate_categories(integration: Integration, known_categories: set[str]) -> None:
+    """Validate the categories of an integration."""
+    if not (categories := integration.manifest.get("categories")):
+        return
+
+    if integration.integration_type in NO_CATEGORIES_INTEGRATION_TYPES:
+        integration.add_error(
+            "manifest",
+            f"Integrations of type {integration.integration_type} can't have categories",
+        )
+
+    for category in categories:
+        if category not in known_categories:
+            integration.add_error(
+                "manifest",
+                f"Unknown category `{category}`, "
+                f"see {INTEGRATION_CATEGORIES_PATH} for the known categories",
+            )
+
+
+def validate_manifest(
+    integration: Integration, core_components_dir: Path, known_categories: set[str]
+) -> None:
     """Validate manifest."""
     try:
         if integration.core:
@@ -380,6 +436,8 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         integration.add_error(
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
+    else:
+        validate_categories(integration, known_categories)
 
     if (domain := integration.manifest["domain"]) != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
@@ -453,9 +511,10 @@ def sort_manifest(integration: Integration, config: Config) -> bool:
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
     core_components_dir = config.root / "homeassistant/components"
+    known_categories = load_known_categories(config)
     manifests_resorted = []
     for integration in integrations.values():
-        validate_manifest(integration, core_components_dir)
+        validate_manifest(integration, core_components_dir, known_categories)
         if not integration.errors:
             if sort_manifest(integration, config):
                 manifests_resorted.append(integration.manifest_path)
