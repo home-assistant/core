@@ -13,11 +13,22 @@ from awesomeversion import AwesomeVersion
 import probatio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import WEEKDAYS
+from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_NAME,
+    EVENT_LOGBOOK_ENTRY,
+    WEEKDAYS,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -28,6 +39,7 @@ from .const import (
     DEFAULT_CORE_AUTO_UPDATE_DELAY,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_END,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_START,
+    DOMAIN,
     JOBS_COORDINATOR,
     OPTION_CORE_AUTO_UPDATE,
     OPTION_CORE_AUTO_UPDATE_DELAY,
@@ -43,11 +55,16 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = "hassio.auto_update"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 CHECK_INTERVAL = timedelta(minutes=5)
 # Long enough that a check always lands inside the window
 MIN_WINDOW_LENGTH = timedelta(minutes=30)
+
+HISTORY_LENGTH = 10
+
+ISSUE_ROLLED_BACK = "core_auto_update_rolled_back"
+ISSUE_FAILED = "core_auto_update_failed"
 
 # Supervisor jobs that must finish before Home Assistant is updated
 _BUSY_JOB_NAME = "home_assistant_core_update"
@@ -143,6 +160,31 @@ class AutoUpdateSettings:
         )
 
 
+class AutoUpdateResult(StrEnum):
+    """How an automatic update ended."""
+
+    SUCCESS = "success"
+    # Supervisor installed it, but the health check failed and it rolled back
+    ROLLED_BACK = "rolled_back"
+    # The update did not start, like a backup or Supervisor error
+    FAILED = "failed"
+
+
+class PendingUpdate(TypedDict):
+    """An automatic update that Home Assistant restarts in the middle of."""
+
+    from_version: str
+    to_version: str
+    started: str
+
+
+class AutoUpdateHistoryEntry(PendingUpdate):
+    """A finished automatic update."""
+
+    finished: str
+    result: AutoUpdateResult
+
+
 class AutoUpdateStoreData(TypedDict):
     """Stored data for automatic Home Assistant updates."""
 
@@ -150,6 +192,8 @@ class AutoUpdateStoreData(TypedDict):
     skipped: list[str]
     window_offset: float
     attempted_window: str | None
+    pending: PendingUpdate | None
+    history: list[AutoUpdateHistoryEntry]
 
 
 class _AutoUpdateStore(Store[AutoUpdateStoreData]):
@@ -177,6 +221,10 @@ class _AutoUpdateStore(Store[AutoUpdateStoreData]):
             # updates, and the window it last tried to update in
             old_data["window_offset"] = random.random()
             old_data["attempted_window"] = None
+        if old_minor_version < 4:
+            # Version 1.4 adds the update in progress and the past updates
+            old_data["pending"] = None
+            old_data["history"] = []
         return old_data
 
 
@@ -224,6 +272,8 @@ class AutoUpdateManager:
         self._skipped: set[str] = set()
         self._window_offset = random.random()
         self._attempted_window: datetime | None = None
+        self._pending: PendingUpdate | None = None
+        self._history: list[AutoUpdateHistoryEntry] = []
 
     async def async_setup(self) -> None:
         """Load the stored data and start tracking offered versions."""
@@ -236,8 +286,13 @@ class AutoUpdateManager:
             self._window_offset = data["window_offset"]
             if (attempted_window := data["attempted_window"]) is not None:
                 self._attempted_window = datetime.fromisoformat(attempted_window)
+            self._pending = data["pending"]
+            self._history = data["history"]
         else:
             self._async_save()
+
+        if self._pending is not None:
+            self._async_finish_pending(self._pending)
 
         self._async_record_offered_version()
         self._entry.async_on_unload(
@@ -266,6 +321,72 @@ class AutoUpdateManager:
         self._entry.async_create_background_task(
             self._hass, self._async_check(), "hassio automatic update check"
         )
+
+    @callback
+    def _async_finish_pending(self, pending: PendingUpdate) -> None:
+        """Find out how the automatic update that restarted us went.
+
+        Supervisor checks the new version and rolls back when it does not
+        come up healthy. So running the new version means it worked, and
+        running the old one means it was undone.
+        """
+        self._pending = None
+        to_version = pending["to_version"]
+        if to_version == HA_VERSION:
+            self._async_add_history(pending, AutoUpdateResult.SUCCESS)
+            async_delete_issue(self._hass, DOMAIN, ISSUE_FAILED)
+
+            @callback
+            def log_success(hass: HomeAssistant) -> None:
+                """Add the update to the logbook once it records again."""
+                hass.bus.async_fire(
+                    EVENT_LOGBOOK_ENTRY,
+                    {
+                        ATTR_NAME: "Home Assistant",
+                        "message": (
+                            f"was updated automatically from "
+                            f"{pending['from_version']} to {to_version}"
+                        ),
+                        ATTR_DOMAIN: DOMAIN,
+                    },
+                )
+
+            self._entry.async_on_unload(async_at_started(self._hass, log_success))
+        elif pending["from_version"] == HA_VERSION:
+            # Never try this version again on our own
+            self._skipped.add(to_version)
+            self._async_add_history(pending, AutoUpdateResult.ROLLED_BACK)
+            async_create_issue(
+                self._hass,
+                DOMAIN,
+                ISSUE_ROLLED_BACK,
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key=ISSUE_ROLLED_BACK,
+                translation_placeholders={"version": to_version},
+            )
+        # Running neither means someone else changed the version; nothing to tell
+
+        self._async_save()
+
+    @callback
+    def _async_add_history(
+        self, pending: PendingUpdate, result: AutoUpdateResult
+    ) -> None:
+        """Remember how an automatic update ended."""
+        self._history = [
+            *self._history,
+            AutoUpdateHistoryEntry(
+                **pending,
+                finished=dt_util.utcnow().isoformat(),
+                result=result,
+            ),
+        ][-HISTORY_LENGTH:]
+
+    @callback
+    def async_get_history(self) -> list[AutoUpdateHistoryEntry]:
+        """Return the recent automatic updates, oldest first."""
+        return list(self._history)
 
     @property
     def settings(self) -> AutoUpdateSettings:
@@ -445,12 +566,50 @@ class AutoUpdateManager:
                     )
                     return
 
+            # Stored before asking Supervisor; Home Assistant restarts during
+            # the update and finds out afterwards how it went
+            self._pending = PendingUpdate(
+                from_version=HA_VERSION,
+                to_version=version,
+                started=dt_util.utcnow().isoformat(),
+            )
+            await self._store.async_save(self._data_to_save())
+
             _LOGGER.info("Installing Home Assistant %s automatically", version)
             await update_core(self._hass, version, False)
         except HomeAssistantError as err:
             _LOGGER.error(
                 "Automatic update to Home Assistant %s failed: %s", version, err
             )
+            self._async_update_failed(version)
+
+    @callback
+    def _async_update_failed(self, version: str) -> None:
+        """Tell the user an automatic update did not start.
+
+        Unlike a rollback, the version itself may be fine, so it is tried
+        again in the next window.
+        """
+        self._async_add_history(
+            self._pending
+            or PendingUpdate(
+                from_version=HA_VERSION,
+                to_version=version,
+                started=dt_util.utcnow().isoformat(),
+            ),
+            AutoUpdateResult.FAILED,
+        )
+        self._pending = None
+        async_create_issue(
+            self._hass,
+            DOMAIN,
+            ISSUE_FAILED,
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=ISSUE_FAILED,
+            translation_placeholders={"version": version},
+        )
+        self._async_save()
 
     @callback
     def _async_record_offered_version(self) -> None:
@@ -511,4 +670,6 @@ class AutoUpdateManager:
                 if self._attempted_window is not None
                 else None
             ),
+            "pending": self._pending,
+            "history": self._history,
         }
