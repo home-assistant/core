@@ -1,5 +1,6 @@
 """Config flow for the NX584 integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -7,10 +8,17 @@ import probatio
 import requests
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM, CONF_PORT
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_PORT,
+)
 
 from . import PLATFORMS, create_client
 from .const import (
+    CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
     CONF_PLATFORMS,
     CONF_ZONE_TYPES,
@@ -28,6 +36,17 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
+
+
+def _with_entity_namespace(
+    data: Mapping[str, Any], platform: str, namespace: str | None
+) -> dict[str, Any]:
+    """Return the entry data with the entity namespace of one platform replaced."""
+    entry_data = {k: v for k, v in data.items() if k != CONF_ENTITY_NAMESPACES}
+    namespaces = {**data.get(CONF_ENTITY_NAMESPACES, {}), platform: namespace}
+    if namespaces := {p: ns for p, ns in namespaces.items() if ns is not None}:
+        entry_data[CONF_ENTITY_NAMESPACES] = namespaces
+    return entry_data
 
 
 class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -78,6 +97,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         platform: str = import_data[CONF_PLATFORM]
         host: str = import_data[CONF_HOST]
         port: int = import_data[CONF_PORT]
+        namespace: str | None = import_data.get(CONF_ENTITY_NAMESPACE)
         data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
         if CONF_NAME in import_data:
             data[CONF_NAME] = import_data[CONF_NAME]
@@ -103,7 +123,9 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
             # Each platform owns its keys; the other platform's keys are kept.
             return self.async_update_reload_and_abort(
                 entry,
-                data_updates=data,
+                data=_with_entity_namespace(
+                    {**entry.data, **data}, platform, namespace
+                ),
                 options={**entry.options, **options},
                 reason="already_configured",
                 reload_even_if_entry_is_unchanged=False,
@@ -120,5 +142,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         # Only the platforms configured in YAML are set up, as before the import.
         data[CONF_PLATFORMS] = [platform]
         return self.async_create_entry(
-            title=data.get(CONF_NAME, DEFAULT_NAME), data=data, options=options
+            title=data.get(CONF_NAME, DEFAULT_NAME),
+            data=_with_entity_namespace(data, platform, namespace),
+            options=options,
         )

@@ -15,7 +15,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -25,7 +31,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NX584ConfigEntry, async_import_yaml
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
+from .const import CONF_ENTITY_NAMESPACES, DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
+from .entity import NX584Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +61,7 @@ async def async_setup_platform(
             CONF_HOST: config[CONF_HOST],
             CONF_PORT: config[CONF_PORT],
             CONF_NAME: config[CONF_NAME],
+            CONF_ENTITY_NAMESPACE: config.get(CONF_ENTITY_NAMESPACE),
         },
     )
 
@@ -65,11 +73,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NX584 alarm panel from a config entry."""
     async_add_entities(
-        [NX584Alarm(entry.data.get(CONF_NAME, DEFAULT_NAME), entry.runtime_data.client)]
+        [
+            NX584Alarm(
+                entry.data.get(CONF_NAME, DEFAULT_NAME),
+                entry.runtime_data.client,
+                entry.data.get(CONF_ENTITY_NAMESPACES, {}).get(
+                    Platform.ALARM_CONTROL_PANEL
+                ),
+            )
+        ]
     )
 
 
-class NX584Alarm(AlarmControlPanelEntity):
+class NX584Alarm(NX584Entity, AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
@@ -79,10 +95,13 @@ class NX584Alarm(AlarmControlPanelEntity):
     )
     _attr_code_arm_required = False
 
-    def __init__(self, name: str, alarm_client: client.Client) -> None:
+    def __init__(
+        self, name: str, alarm_client: client.Client, entity_namespace: str | None
+    ) -> None:
         """Init the nx584 alarm panel."""
         self._attr_name = name
         self._alarm = alarm_client
+        self._entity_namespace = entity_namespace
 
     def update(self) -> None:
         """Process new events from panel."""

@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -24,7 +24,14 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NX584ConfigEntry, async_import_yaml, create_client
-from .const import CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES, DEFAULT_HOST, DEFAULT_PORT
+from .const import (
+    CONF_ENTITY_NAMESPACES,
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+)
+from .entity import NX584Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +83,7 @@ async def async_setup_platform(
             CONF_PORT: config[CONF_PORT],
             CONF_EXCLUDE_ZONES: config[CONF_EXCLUDE_ZONES],
             CONF_ZONE_TYPES: config[CONF_ZONE_TYPES],
+            CONF_ENTITY_NAMESPACE: config.get(CONF_ENTITY_NAMESPACE),
         },
     )
 
@@ -89,6 +97,9 @@ async def async_setup_entry(
     data = entry.runtime_data
     exclude: list[int] = entry.options.get(CONF_EXCLUDE_ZONES, [])
     zone_types: dict[str, str] = entry.options.get(CONF_ZONE_TYPES, {})
+    entity_namespace: str | None = entry.data.get(CONF_ENTITY_NAMESPACES, {}).get(
+        Platform.BINARY_SENSOR
+    )
 
     if [int(v) for v in data.version.split(".")] < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
@@ -100,6 +111,7 @@ async def async_setup_entry(
             BinarySensorDeviceClass(
                 zone_types.get(str(zone["number"]), BinarySensorDeviceClass.OPENING)
             ),
+            entity_namespace,
         )
         for zone in data.zones
         if zone["number"] not in exclude
@@ -116,17 +128,21 @@ async def async_setup_entry(
         _LOGGER.warning("No zones found on NX584")
 
 
-class NX584ZoneSensor(BinarySensorEntity):
+class NX584ZoneSensor(NX584Entity, BinarySensorEntity):
     """Representation of a NX584 zone as a sensor."""
 
     _attr_should_poll = False
 
     def __init__(
-        self, zone: dict[str, Any], zone_type: BinarySensorDeviceClass
+        self,
+        zone: dict[str, Any],
+        zone_type: BinarySensorDeviceClass,
+        entity_namespace: str | None = None,
     ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
         self._attr_device_class = zone_type
+        self._entity_namespace = entity_namespace
 
     @property
     @override

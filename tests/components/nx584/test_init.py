@@ -12,13 +12,14 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.nx584 import DATA_IMPORT_LOCK
 from homeassistant.components.nx584.const import (
+    CONF_ENTITY_NAMESPACES,
     CONF_EXCLUDE_ZONES,
     CONF_PLATFORMS,
     CONF_ZONE_TYPES,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
@@ -48,6 +49,16 @@ BINARY_SENSOR_YAML = {
 
 
 BOTH_YAML = ALARM_YAML | BINARY_SENSOR_YAML
+NAMESPACED_YAML = {
+    ALARM_CONTROL_PANEL_DOMAIN: {
+        **ALARM_YAML[ALARM_CONTROL_PANEL_DOMAIN],
+        CONF_ENTITY_NAMESPACE: "security",
+    },
+    BINARY_SENSOR_DOMAIN: {
+        **BINARY_SENSOR_YAML[BINARY_SENSOR_DOMAIN],
+        CONF_ENTITY_NAMESPACE: "zones",
+    },
+}
 
 
 async def _async_setup_yaml(
@@ -348,6 +359,49 @@ async def test_import_both_platforms_at_once(
         BINARY_SENSOR_DOMAIN,
     ]
     assert entries[0].options[CONF_EXCLUDE_ZONES] == [2]
+
+
+@pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
+@pytest.mark.parametrize("hass_config", [NAMESPACED_YAML])
+@pytest.mark.parametrize(
+    "domains",
+    [
+        pytest.param(
+            (ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN), id="alarm_first"
+        ),
+        pytest.param(
+            (BINARY_SENSOR_DOMAIN, ALARM_CONTROL_PANEL_DOMAIN),
+            id="binary_sensor_first",
+        ),
+    ],
+)
+async def test_import_entity_namespaces(
+    hass: HomeAssistant, hass_config: ConfigType, domains: tuple[str, str]
+) -> None:
+    """Test the YAML entity namespace of each platform keeps its entity IDs."""
+    await _async_setup_yaml(hass, hass_config, *domains)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_ENTITY_NAMESPACES] == {
+        ALARM_CONTROL_PANEL_DOMAIN: "security",
+        BINARY_SENSOR_DOMAIN: "zones",
+    }
+    expected_entity_ids = {
+        ALARM_CONTROL_PANEL_DOMAIN: ["alarm_control_panel.security_house"],
+        BINARY_SENSOR_DOMAIN: [
+            "binary_sensor.zones_front",
+            "binary_sensor.zones_inside",
+        ],
+    }
+    for domain, entity_ids in expected_entity_ids.items():
+        assert sorted(hass.states.async_entity_ids(domain)) == entity_ids
+
+    # The namespaces are stored, so a reload keeps the entity IDs.
+    assert await hass.config_entries.async_reload(entries[0].entry_id)
+    await hass.async_block_till_done()
+    for domain, entity_ids in expected_entity_ids.items():
+        assert sorted(hass.states.async_entity_ids(domain)) == entity_ids
 
 
 @pytest.mark.usefixtures("mock_watcher", "mock_hass_config")
