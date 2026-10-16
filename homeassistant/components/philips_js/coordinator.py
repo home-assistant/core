@@ -137,6 +137,8 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                         await self._async_update_settings()
                     except GeneralFailure:
                         _LOGGER.debug("Aborting notify due to failed settings update")
+                        self.settings = {}
+                        self.async_set_updated_data(None)
                         break
                     settings_version = self.api.settings_version
                 self.async_set_updated_data(None)

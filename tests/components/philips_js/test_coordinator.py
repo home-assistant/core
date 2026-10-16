@@ -295,7 +295,7 @@ async def test_notify_settings_update_failed(
     assert mock_tv.notifyChange.call_count == 1
     assert "Aborting notify due to failed settings update" in caplog.text
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
-    assert state.state == STATE_ON
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
