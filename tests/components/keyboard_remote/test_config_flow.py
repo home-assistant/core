@@ -961,6 +961,33 @@ async def test_options_flow_requires_a_key_type(
     assert result["data"][CONF_KEY_TYPES] == ["key_down"]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_suggests_exclusive_for_older_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test the options form of an entry without the exclusive option shows it on.
+
+    Such an entry grabs its device, and a toggle without a suggested value
+    would show as off, so saving the form would silently stop the grab.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        options={
+            key: value
+            for key, value in DEFAULT_OPTIONS.items()
+            if key != CONF_EXCLUSIVE
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    [exclusive] = [key for key in result["data_schema"].schema if key == CONF_EXCLUSIVE]
+    assert exclusive.description == {"suggested_value": True}
+
+
 @pytest.mark.parametrize(
     ("data", "expected_device"),
     [

@@ -279,6 +279,10 @@ async def test_async_setup_accepts_values_the_import_fits(
             {"device_descriptor": FAKE_DEVICE_REAL_PATH, "emulate_key_hold_delay": "a"},
             id="delay_not_a_number",
         ),
+        pytest.param(
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH, "exclusive": "maybe"},
+            id="exclusive_not_a_boolean",
+        ),
         pytest.param({"type": "key_up"}, id="no_device"),
         pytest.param({"device_descriptor": ""}, id="empty_descriptor"),
     ],
@@ -986,6 +990,72 @@ async def test_unexpected_read_error_releases_device(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_grabbed", "expected_log"),
+    [
+        pytest.param(
+            {CONF_EXCLUSIVE: True},
+            True,
+            "Start exclusive monitoring of Test Keyboard (/dev/input/event5)",
+            id="exclusive",
+        ),
+        pytest.param(
+            {CONF_EXCLUSIVE: False},
+            False,
+            "Start non-exclusive monitoring of Test Keyboard (/dev/input/event5)",
+            id="non_exclusive",
+        ),
+        pytest.param(
+            {},
+            True,
+            "Start exclusive monitoring of Test Keyboard (/dev/input/event5)",
+            id="created_before_the_option",
+        ),
+    ],
+)
+async def test_exclusive_option_decides_the_grab(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    caplog: pytest.LogCaptureFixture,
+    options: dict[str, bool],
+    expected_grabbed: bool,
+    expected_log: str,
+) -> None:
+    """Test the device is only grabbed when the entry is exclusive.
+
+    An entry created before the option existed grabs, as every entry did
+    then. Either way the device is read and released, and the mode is logged.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_DEVICE_PATH,
+        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        options={
+            **{key: value for key, value in OPTIONS.items() if key != CONF_EXCLUSIVE},
+            **options,
+        },
+    )
+
+    await _set_up(hass, fake_input, entry)
+
+    assert kbd.grab.called is expected_grabbed
+    assert expected_log in caplog.text
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"])
+
+    assert len(commands) == 1
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await fake_input.settle()
+
+    assert kbd.ungrab.called is expected_grabbed
+    kbd.close.assert_called_once()
+    assert len(disconnected) == 1
 
 
 async def test_grab_failure_warns_and_releases(
