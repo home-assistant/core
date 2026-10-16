@@ -42,7 +42,13 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm all supported devices in the selected server applications."""
-        device_types = tuple({description.device_type for description in DESCRIPTIONS})
+        device_types = tuple(
+            {
+                device_type
+                for description in DESCRIPTIONS
+                for device_type in description.device_types
+            }
+        )
         try:
             await async_validate_devices(
                 self.hass,

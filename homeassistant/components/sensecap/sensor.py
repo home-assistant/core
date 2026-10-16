@@ -34,36 +34,30 @@ PARALLEL_UPDATES = 0
 class SenseCapSensorDescription[DeviceT: SenseCapDevice](SensorEntityDescription):
     """Select a typed measurement from the device model."""
 
-    device_type: type[DeviceT]
+    device_types: tuple[type[DeviceT], ...]
     value_fn: Callable[[DeviceT], float | None]
 
 
 DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
-    *(
-        SenseCapSensorDescription[S2101 | S2103](
-            key="temperature",
-            device_type=device_type,
-            value_fn=lambda device: device.temperature,
-            device_class=SensorDeviceClass.TEMPERATURE,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            state_class=SensorStateClass.MEASUREMENT,
-        )
-        for device_type in (S2101, S2103)
+    SenseCapSensorDescription[S2101 | S2103](
+        key="temperature",
+        device_types=(S2101, S2103),
+        value_fn=lambda device: device.temperature,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    *(
-        SenseCapSensorDescription[S2101 | S2103](
-            key="humidity",
-            device_type=device_type,
-            value_fn=lambda device: device.humidity,
-            device_class=SensorDeviceClass.HUMIDITY,
-            native_unit_of_measurement=PERCENTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-        )
-        for device_type in (S2101, S2103)
+    SenseCapSensorDescription[S2101 | S2103](
+        key="humidity",
+        device_types=(S2101, S2103),
+        value_fn=lambda device: device.humidity,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SenseCapSensorDescription[S2102](
         key="illuminance",
-        device_type=S2102,
+        device_types=(S2102,),
         value_fn=lambda device: device.illuminance,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
@@ -71,27 +65,24 @@ DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
     ),
     SenseCapSensorDescription[S2103](
         key="carbon_dioxide",
-        device_type=S2103,
+        device_types=(S2103,),
         value_fn=lambda device: device.co2,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    *(
-        SenseCapSensorDescription[SenseCapDevice](
-            key="battery",
-            device_type=device_type,
-            value_fn=lambda device: (
-                battery_level
-                if (battery_level := device.battery_level) is not None
-                else device.battery_percentage
-            ),
-            device_class=SensorDeviceClass.BATTERY,
-            native_unit_of_measurement=PERCENTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        )
-        for device_type in (S2101, S2102, S2103)
+    SenseCapSensorDescription[SenseCapDevice](
+        key="battery",
+        device_types=(S2101, S2102, S2103),
+        value_fn=lambda device: (
+            battery_level
+            if (battery_level := device.battery_level) is not None
+            else device.battery_percentage
+        ),
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -108,7 +99,7 @@ async def async_setup_entry(
         async_add_entities(
             SenseCapSensor(coordinator, description)
             for description in DESCRIPTIONS
-            if isinstance(coordinator.data, description.device_type)
+            if isinstance(coordinator.data, description.device_types)
         )
 
     entry.async_on_unload(entry.runtime_data.subscribe_coordinator_added(added))
