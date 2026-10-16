@@ -727,6 +727,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
     mock_telemetry_stream: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Two consecutive non-null power frames must create exactly one power entity."""
 
@@ -757,6 +758,8 @@ async def test_lazy_create_idempotent_on_repeated_frames(
     state = hass.states.get(POWER_ENTITY_ID)
     assert state is not None
     assert state.state == "6000.0"
+    # HA would otherwise reject a re-created entity, so only the log shows it.
+    assert "already exists" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -1310,3 +1313,36 @@ async def test_provider_kept_when_a_frame_omits_it(
         _fire_voltage(mock_telemetry_stream, voltage, provider=provider)
         await hass.async_block_till_done()
         assert hass.states.get(VOLTAGE_ENTITY_ID).attributes.get("provider") == expected
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_attributes_kept_per_vehicle(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Each vehicle's sensor reports its own provider and stamp."""
+    await setup_integration(hass, config_entry_with_vehicles)
+    t1 = datetime(2026, 5, 24, 10, 0, 0, tzinfo=UTC)
+    t2 = datetime(2026, 5, 24, 10, 5, 0, tzinfo=UTC)
+
+    with freeze_time(t1):
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID,
+            Telemetry(voltage=build_metric_value(400.0, provider=PROVIDER)),
+        )
+        await hass.async_block_till_done()
+    with freeze_time(t2):
+        fire_frame(
+            mock_telemetry_stream,
+            MOCK_VEHICLE_ID_2,
+            Telemetry(voltage=build_metric_value(380.0)),
+        )
+        await hass.async_block_till_done()
+
+    first = hass.states.get(VOLTAGE_ENTITY_ID).attributes
+    second = hass.states.get(VOLTAGE_ENTITY_ID_2).attributes
+    assert (first["provider"], first["last_reported_at"]) == (PROVIDER, t1)
+    assert "provider" not in second
+    assert second["last_reported_at"] == t2
