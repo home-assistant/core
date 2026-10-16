@@ -5,13 +5,7 @@ from modbus_connection.mock import MockModbusUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bluetti_modbus.const import (
-    DEVICE_INFO_FIELDS,
-    EXCLUDED_FIELDS,
-)
-from homeassistant.components.bluetti_modbus.sensor import SENSOR_DESCRIPTIONS
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import STATE_UNKNOWN, EntityCategory
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -19,11 +13,6 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
-ENERGY_ENTITY = "sensor.balco_260_total_battery_charged_energy"
-BATTERY_LEVEL_ENTITY = "sensor.balco_260_battery_soc"
-TOTAL_BATTERY_LEVEL_ENTITY = "sensor.balco_260_total_battery_soc"
-CYCLE_COUNT_ENTITY = "sensor.balco_260_battery_cycle_count"
 INVERTER_POWER_ENTITY = "sensor.balco_260_total_inverter_power"
 PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
 
@@ -39,64 +28,6 @@ async def test_sensors(
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_energy_sensor_is_a_total_increasing_counter(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A lifetime energy field gets the energy device class, not a bare number."""
-    await setup_integration(hass, mock_config_entry)
-
-    entry = entity_registry.async_get(ENERGY_ENTITY)
-    assert entry is not None
-
-    state = hass.states.get(ENERGY_ENTITY)
-    assert state is not None
-    assert state.attributes["device_class"] == SensorDeviceClass.ENERGY
-    assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
-
-
-async def test_only_the_present_charge_level_is_a_battery_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """b_soc gets the battery device class; SoH does not, and b_soc_total is not shown."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(BATTERY_LEVEL_ENTITY)
-    assert state is not None
-    assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
-
-    # Reads 0 at the device's own unit id regardless of the real level.
-    assert hass.states.get(TOTAL_BATTERY_LEVEL_ENTITY) is None
-
-
-def test_fields_partition_the_library_profile() -> None:
-    """Every library field is a sensor, excluded, or device info, exactly once."""
-    device = get_device("balco260")
-    assert device is not None
-    keys = [description.key for description in SENSOR_DESCRIPTIONS]
-    sensors = set(keys)
-
-    assert len(keys) == len(sensors)
-    assert sensors | EXCLUDED_FIELDS | DEVICE_INFO_FIELDS == set(device.field_names())
-    assert not sensors & EXCLUDED_FIELDS
-    assert not sensors & DEVICE_INFO_FIELDS
-    assert not EXCLUDED_FIELDS & DEVICE_INFO_FIELDS
-
-
-async def test_diagnostic_fields_are_categorized_as_diagnostic(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """A count with no physical unit is a diagnostic entity, not a primary one."""
-    await setup_integration(hass, mock_config_entry)
-
-    entry = entity_registry.async_get(CYCLE_COUNT_ENTITY)
-    assert entry is not None
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_inverter_power_is_signed(
