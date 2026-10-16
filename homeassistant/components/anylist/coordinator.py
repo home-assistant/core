@@ -76,8 +76,6 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
         # arrive here because realtime callbacks intentionally cannot kill the socket.
         if not self.client.ready.is_set():
             return
-        if isinstance(error, AuthenticationError):
-            self.config_entry.async_start_reauth_if_available(self.hass)
         self.async_set_update_error(error)
 
     @callback

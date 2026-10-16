@@ -8,7 +8,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_EMAIL, P
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE, DOMAIN
 from .coordinator import AnyListConfigEntry, AnyListDataUpdateCoordinator
@@ -16,11 +15,6 @@ from .coordinator import AnyListConfigEntry, AnyListDataUpdateCoordinator
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.TODO]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the AnyList integration."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnyListConfigEntry) -> bool:

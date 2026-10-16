@@ -7,7 +7,7 @@ from aioanylist import AuthenticationError, AuthTokens, TransportError
 import pytest
 
 from homeassistant.components.anylist.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -77,12 +77,12 @@ async def test_rotated_tokens_are_persisted(
     assert mock_config_entry.data[CONF_USER_LOCALE] == "de-DE"
 
 
-async def test_setup_starts_reauth_on_authentication_error(
+async def test_setup_auth_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anylist_client: MagicMock,
 ) -> None:
-    """Test invalid stored credentials start reauthentication."""
+    """Test invalid stored credentials fail setup without a reauth flow."""
     mock_anylist_client.load.side_effect = AuthenticationError()
     mock_config_entry.add_to_hass(hass)
 
@@ -90,10 +90,7 @@ async def test_setup_starts_reauth_on_authentication_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
-    )
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_setup_retries_on_connection_error(
@@ -146,20 +143,21 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
     assert caplog.text.count("Fetching anylist data recovered") == 1
 
 
-async def test_runtime_auth_failure_starts_reauth(
+async def test_runtime_auth_failure_marks_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anylist_client: MagicMock,
 ) -> None:
-    """Test a runtime authentication failure starts reauthentication."""
+    """Test a runtime authentication failure marks entities unavailable."""
     await setup_integration(hass, mock_config_entry)
     status_listener = mock_anylist_client.sync_status_listener
     assert status_listener is not None
 
+    entity_id = "todo.groceries"
+    assert hass.states.get(entity_id).state != "unavailable"
+
     status_listener(AuthenticationError())
     await hass.async_block_till_done()
 
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
-    )
+    assert hass.states.get(entity_id).state == "unavailable"
+    assert not hass.config_entries.flow.async_progress()

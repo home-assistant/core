@@ -1,9 +1,9 @@
 """Todo platform for AnyList."""
 
-from collections.abc import Iterable
-from typing import TYPE_CHECKING, Protocol, cast, override
+from typing import TYPE_CHECKING, cast, override
 
 from aioanylist import AnyListError
+from aioanylist.proto import ListItem, ShoppingList
 
 from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
@@ -24,33 +24,7 @@ from .coordinator import AnyListConfigEntry, AnyListDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 
-class _AnyListItem(Protocol):
-    """Fields used from an AnyList protobuf list item."""
-
-    @property
-    def identifier(self) -> str: ...
-
-    @property
-    def name(self) -> str: ...
-
-    @property
-    def checked(self) -> bool: ...
-
-    @property
-    def details(self) -> str: ...
-
-
-class _AnyListShoppingList(Protocol):
-    """Fields used from an AnyList protobuf shopping list."""
-
-    @property
-    def name(self) -> str: ...
-
-    @property
-    def items(self) -> Iterable[_AnyListItem]: ...
-
-
-def _convert_item(item: _AnyListItem) -> TodoItem:
+def _convert_item(item: ListItem) -> TodoItem:
     """Convert an AnyList item to a Home Assistant todo item."""
     return TodoItem(
         uid=str(item.identifier),
@@ -138,12 +112,18 @@ class AnyListTodoListEntity(
         super().__init__(coordinator)
         self._list_id = list_id
         self._attr_unique_id = f"{account_id}_{list_id}"
-        self._attr_name = self.shopping_list.name
 
     @property
-    def shopping_list(self) -> _AnyListShoppingList:
+    def shopping_list(self) -> ShoppingList:
         """Return the backing AnyList shopping list."""
         return self.coordinator.data.shopping_lists[self._list_id]
+
+    @property
+    @override
+    def name(self) -> str | None:
+        """Return the shopping list name."""
+        shopping_list = self.coordinator.data.shopping_lists.get(self._list_id)
+        return shopping_list.name if shopping_list is not None else None
 
     @property
     @override
@@ -162,14 +142,6 @@ class AnyListTodoListEntity(
         return (
             super().available and self._list_id in self.coordinator.data.shopping_lists
         )
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle an updated shopping list."""
-        if self._list_id in self.coordinator.data.shopping_lists:
-            self._attr_name = self.shopping_list.name
-        super()._handle_coordinator_update()
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
