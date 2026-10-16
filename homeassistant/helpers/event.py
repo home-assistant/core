@@ -644,6 +644,8 @@ class _TrackStateChangeFiltered:
             action, f"track state change filtered {track_states}"
         )
         self._listeners: dict[str, Callable[[], None]] = {}
+        self._last_event: Event[EventStateChangedData] | None = None
+        self._event_cleanup_scheduled = False
         self._last_track_states: TrackStates = track_states
 
     @callback
@@ -725,6 +727,24 @@ class _TrackStateChangeFiltered:
         self._listeners.pop(listener_name)()
 
     @callback
+    def _async_process_event(self, event: Event[EventStateChangedData]) -> None:
+        """Process a state change event once."""
+        if event is self._last_event:
+            return
+
+        self._last_event = event
+        if not self._event_cleanup_scheduled:
+            self._event_cleanup_scheduled = True
+            self.hass.loop.call_soon(self._async_clear_event)
+        self.hass.async_run_hass_job(self._action_as_hassjob, event)
+
+    @callback
+    def _async_clear_event(self) -> None:
+        """Clear the state change event."""
+        self._last_event = None
+        self._event_cleanup_scheduled = False
+
+    @callback
     def _setup_entities_listener(self, domains: set[str], entities: set[str]) -> None:
         if domains and entities:
             entities = {
@@ -737,7 +757,7 @@ class _TrackStateChangeFiltered:
             return
 
         self._listeners[_ENTITIES_LISTENER] = _async_track_state_change_event(
-            self.hass, entities, self._action, self._action_as_hassjob.job_type
+            self.hass, entities, self._async_process_event, HassJobType.Callback
         )
 
     @callback
@@ -746,13 +766,13 @@ class _TrackStateChangeFiltered:
             return
 
         self._listeners[_DOMAINS_LISTENER] = _async_track_state_change_domain(
-            self.hass, domains, self._action, self._action_as_hassjob.job_type
+            self.hass, domains, self._async_process_event, HassJobType.Callback
         )
 
     @callback
     def _setup_all_listener(self) -> None:
         self._listeners[_ALL_LISTENER] = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._action
+            EVENT_STATE_CHANGED, self._async_process_event
         )
 
 
