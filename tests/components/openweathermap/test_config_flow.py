@@ -69,6 +69,7 @@ async def test_successful_config_flow(
     assert result["data"][CONF_LATITUDE] == USER_INPUT[CONF_LOCATION][CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == USER_INPUT[CONF_LOCATION][CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
+    assert result["result"].unique_id == f"{LATITUDE}-{LONGITUDE}"
 
     # validate entry state
     conf_entries = hass.config_entries.async_entries(DOMAIN)

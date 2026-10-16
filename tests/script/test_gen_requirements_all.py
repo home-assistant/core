@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from script import gen_requirements_all
 
 
@@ -49,3 +51,50 @@ def test_requirement_override_markers() -> None:
             gen_requirements_all.process_action_requirement("other==1.0", "pytest")
             == "other==1.0"
         )
+
+
+def test_merge_requirement_extras() -> None:
+    """Test requirements that only differ in extras are merged."""
+    reqs = {
+        "lorawan-connection[chirpstack]==1.0.0": ["homeassistant.components.a"],
+        "lorawan-connection==1.0.0": ["homeassistant.components.b"],
+        "lorawan_connection[ttn]==1.0.0": ["homeassistant.components.c"],
+        "other[b,a]==2.0.0": ["homeassistant.components.a"],
+    }
+    errors: list[str] = []
+    assert gen_requirements_all.merge_requirement_extras(errors, reqs) == {
+        "lorawan-connection[chirpstack,ttn]==1.0.0": [
+            "homeassistant.components.a",
+            "homeassistant.components.b",
+            "homeassistant.components.c",
+        ],
+        # Requirements without a merge keep their original form
+        "other[b,a]==2.0.0": ["homeassistant.components.a"],
+    }
+    assert errors == []
+
+
+@pytest.mark.parametrize(
+    "conflicting_req",
+    [
+        pytest.param("pinned==2.0.0", id="version"),
+        pytest.param("pinned[extra]==2.0.0", id="version_with_extra"),
+        pytest.param("pinned==1.0.0;sys_platform=='linux'", id="marker"),
+    ],
+)
+def test_merge_requirement_extras_conflict(conflicting_req: str) -> None:
+    """Test requirements of one package with different versions or markers fail."""
+    reqs = {
+        "pinned==1.0.0": ["homeassistant.components.a"],
+        conflicting_req: ["homeassistant.components.b"],
+        "other==1.0.0": ["homeassistant.components.c"],
+    }
+    errors: list[str] = []
+    assert gen_requirements_all.merge_requirement_extras(errors, reqs) == {
+        "other==1.0.0": ["homeassistant.components.c"],
+    }
+    assert errors == [
+        "pinned[Conflicting requirements: "
+        "pinned==1.0.0 (homeassistant.components.a), "
+        f"{conflicting_req} (homeassistant.components.b)]"
+    ]

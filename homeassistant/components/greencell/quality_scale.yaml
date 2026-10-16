@@ -35,14 +35,14 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: done

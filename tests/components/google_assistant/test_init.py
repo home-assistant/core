@@ -1,9 +1,11 @@
 """The tests for google-assistant init."""
 
 from http import HTTPStatus
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import google_assistant as ga
 from homeassistant.components.google_assistant import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -45,6 +47,28 @@ async def test_import_changed(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries("google_assistant")
     assert len(entries) == 1
     assert entries[0].data[ga.const.CONF_PROJECT_ID] == "1234"
+
+
+async def test_import_changed_setup_error(hass: HomeAssistant) -> None:
+    """Test setup of an imported entry fails when the project id changed."""
+    old_entry = MockConfigEntry(
+        domain=ga.DOMAIN, data={ga.const.CONF_PROJECT_ID: "4321"}, source="import"
+    )
+    old_entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        await async_setup_component(
+            hass,
+            ga.DOMAIN,
+            {"google_assistant": DUMMY_CONFIG},
+        )
+        await hass.async_block_till_done()
+
+    assert old_entry.state is ConfigEntryState.SETUP_ERROR
+    assert old_entry.reason == (
+        "The project ID in configuration.yaml has changed, the entry will be replaced"
+    )
+    mock_remove.assert_awaited_once_with(old_entry.entry_id)
 
 
 async def test_request_sync_service(

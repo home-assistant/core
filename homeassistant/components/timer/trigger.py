@@ -26,8 +26,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, STATUS_ACTIVE
-from .const import TimerEntityStateAttribute
+from .const import DOMAIN, STATUS_ACTIVE, TimerEntityStateAttribute
 
 CONF_REMAINING = "remaining"
 

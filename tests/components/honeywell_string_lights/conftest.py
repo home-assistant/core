@@ -26,8 +26,9 @@ def mock_config_entry(
     return MockConfigEntry(
         domain=DOMAIN,
         title="Honeywell String Lights",
-        data={CONF_TRANSMITTER: entity_entry.id},
+        data={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID},
         unique_id=entity_entry.id,
+        minor_version=2,
     )
 
 

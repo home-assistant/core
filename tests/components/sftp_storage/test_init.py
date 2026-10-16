@@ -1,5 +1,6 @@
 """Tests for SFTP Storage."""
 
+import logging
 from pathlib import Path
 from unittest.mock import patch
 
@@ -145,8 +146,10 @@ async def test_setup_invalid_credentials(
 async def test_async_remove_entry(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_remove_entry."""
+    caplog.set_level(logging.DEBUG)
     # Setup default config entry
     await setup_integration()
 
@@ -194,6 +197,10 @@ async def test_async_remove_entry(
     assert await hass.config_entries.async_remove(new_config_entry.entry_id)
     assert not new_private_key.exists()
     assert not new_private_key.parent.exists()
+    assert (
+        f"Removed storage directory for {DOMAIN} integration for host another@127.0.0.1"
+        in caplog.text
+    )
 
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert config_entry.state is ConfigEntryState.NOT_LOADED

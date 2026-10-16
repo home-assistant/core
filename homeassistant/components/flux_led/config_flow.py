@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -156,7 +156,9 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         host = device[ATTR_IPADDR]
         self.host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         if not device[ATTR_MODEL_DESCRIPTION]:
             mac_address = device[ATTR_ID]
             assert mac_address is not None

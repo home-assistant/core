@@ -36,14 +36,14 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
         "W7406": (
             "unique_id should not be based on '%s' -- IP addresses change; "
             "use a MAC address (format_mac), serial number, or hardware ID "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/unique-config-entry)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/unique-config-entry/)",
             "home-assistant-unique-id-ip-based",
             "Used when a unique_id is set from a host/IP config key. IP "
             "addresses change when devices get new DHCP leases. Use a "
             "stable hardware identifier instead. "
-            "See https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/unique-config-entry",
+            "See https://contributors.home-assistant.io/core/"
+            "quality-scale/unique-config-entry/",
         ),
     }
     options = ()

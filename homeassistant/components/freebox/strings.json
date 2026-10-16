@@ -58,5 +58,10 @@
         "name": "Wi-Fi"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to the Freebox router at {host}"
+    }
   }
 }

@@ -105,7 +105,7 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
             CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
-            CONF_SENSOR_TYPE: "hygrometer_co2",
+            CONF_SENSOR_TYPE: "meter_pro_co2",
         },
         unique_id="aabbccddeeaa",
     )
