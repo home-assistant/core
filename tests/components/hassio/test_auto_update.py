@@ -1,13 +1,15 @@
 """Test automatic Home Assistant updates."""
 
+from collections.abc import Generator
 from dataclasses import replace
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import UpdateChannel
+from aiohasupervisor.models import HomeAssistantUpdateOptions, Job, UpdateChannel
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -15,6 +17,7 @@ import pytest
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.auto_update import (
     AUTO_UPDATE_OPTIONS_SCHEMA,
+    CHECK_INTERVAL,
     AutoUpdateSettings,
     AutoUpdateUnavailableReason,
 )
@@ -32,6 +35,15 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 STORAGE_KEY = "hassio.auto_update"
+
+
+@pytest.fixture(autouse=True)
+def mock_window_offset() -> Generator[None]:
+    """Update at the start of the time window, unless a test says otherwise."""
+    with patch(
+        "homeassistant.components.hassio.auto_update.random.random", return_value=0.0
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -218,6 +230,7 @@ async def test_first_seen_is_set_once(
             "2026.10.3": newer_first_seen.isoformat(),
         },
         "skipped": [],
+        "window_offset": 0.0,
     }
 
 
@@ -446,3 +459,348 @@ async def test_skipped_version_after_rename(
     await hass.async_block_till_done()
 
     assert not manager.async_is_skipped("2026.10.2")
+
+
+ENABLED = {"core_auto_update": True}
+
+
+def _local(day: int, hour: int, minute: int = 0) -> datetime:
+    """Return a local time in October 2026; the 19th is a Monday."""
+    return datetime(2026, 10, day, hour, minute, tzinfo=dt_util.get_default_time_zone())
+
+
+async def _setup_scheduled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    now: datetime,
+    *,
+    first_seen: dict[str, datetime],
+    options: dict[str, Any] | None = None,
+    skipped: list[str] | None = None,
+    window_offset: float = 0.0,
+) -> None:
+    """Set up hassio at a given time with known first-seen times.
+
+    Home Assistant is already running in tests, so the first check runs
+    during setup.
+    """
+    freezer.move_to(now)
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 3,
+        "key": STORAGE_KEY,
+        "data": {
+            "first_seen": {
+                version: seen.isoformat() for version, seen in first_seen.items()
+            },
+            "skipped": skipped or [],
+            "window_offset": window_offset,
+        },
+    }
+    await _setup_hassio(hass, ENABLED if options is None else options)
+
+
+def _installed(supervisor_client: AsyncMock) -> list[str | None]:
+    """Return the versions Supervisor was asked to install."""
+    return [
+        call.args[0].version
+        for call in supervisor_client.homeassistant.update.call_args_list
+    ]
+
+
+async def test_installs_patch_in_window(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test a patch that waited long enough installs inside the window."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    supervisor_client.homeassistant.update.assert_called_once_with(
+        HomeAssistantUpdateOptions(version="2026.10.2", backup=False)
+    )
+
+
+@pytest.mark.parametrize(
+    ("now", "options"),
+    [
+        pytest.param(_local(22, 3, 30), {}, id="not_chosen"),
+        pytest.param(_local(22, 3, 30), {"core_auto_update": False}, id="disabled"),
+        pytest.param(_local(21, 3, 30), ENABLED, id="wait_not_passed"),
+        pytest.param(_local(22, 2, 59), ENABLED, id="before_window"),
+        pytest.param(_local(22, 5, 0), ENABLED, id="after_window"),
+        pytest.param(
+            _local(22, 3, 30),
+            {**ENABLED, "core_auto_update_weekdays": ["mon"]},
+            id="weekday_not_allowed",
+        ),
+    ],
+)
+async def test_no_install(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    now: datetime,
+    options: dict[str, Any],
+) -> None:
+    """Test nothing installs when disabled, too early or outside the window."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        now,
+        first_seen={"2026.10.2": _local(19, 2)},
+        options=options,
+    )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_window_crossing_midnight(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test a window that crosses midnight belongs to the day it starts."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 0, 30),
+        first_seen={"2026.10.2": _local(18, 2)},
+        options={
+            **ENABLED,
+            "core_auto_update_window_start": "23:00:00",
+            "core_auto_update_window_end": "01:00:00",
+            "core_auto_update_weekdays": ["wed"],
+        },
+    )
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+@pytest.mark.parametrize(
+    ("first_seen", "version_latest", "skipped", "expected"),
+    [
+        pytest.param(
+            {"2026.10.2": _local(19, 2), "2026.10.3": _local(21, 2)},
+            "2026.10.3",
+            [],
+            ["2026.10.2"],
+            id="newest_that_waited",
+        ),
+        pytest.param(
+            {"2026.10.2": _local(18, 2), "2026.10.3": _local(19, 2)},
+            "2026.10.3",
+            [],
+            ["2026.10.3"],
+            id="newest_of_both",
+        ),
+        pytest.param(
+            {"2026.10.2": _local(19, 2), "2026.11.0": _local(19, 2)},
+            "2026.11.0",
+            [],
+            ["2026.10.2"],
+            id="major_never",
+        ),
+        pytest.param(
+            {"2026.10.2": _local(19, 2), "2026.10.3": _local(19, 2)},
+            "2026.10.2",
+            [],
+            ["2026.10.2"],
+            id="pulled_release",
+        ),
+        pytest.param(
+            {"2026.10.2": _local(19, 2)},
+            "2026.10.1",
+            [],
+            [],
+            id="everything_pulled",
+        ),
+        pytest.param(
+            {"2026.10.2": _local(19, 2)},
+            "2026.10.2",
+            ["2026.10.2"],
+            [],
+            id="skipped",
+        ),
+        pytest.param(
+            {"2026.10.2": _local(19, 2), "2026.10.3": _local(19, 2)},
+            "2026.10.3",
+            ["2026.10.3"],
+            ["2026.10.2"],
+            id="skipped_newest",
+        ),
+    ],
+)
+async def test_install_candidate(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    homeassistant_info: AsyncMock,
+    first_seen: dict[str, datetime],
+    version_latest: str,
+    skipped: list[str],
+    expected: list[str],
+) -> None:
+    """Test which version is picked for an automatic update."""
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, version_latest=version_latest
+    )
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen=first_seen,
+        skipped=skipped,
+    )
+
+    assert _installed(supervisor_client) == expected
+
+
+async def test_window_offset(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test each installation updates from its own point in the window."""
+    # Halfway the 03:00 to 05:00 window, less one check: 03:57:30
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 55),
+        first_seen={"2026.10.2": _local(19, 2)},
+        window_offset=0.5,
+    )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_no_install_while_busy(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    jobs_info: AsyncMock,
+) -> None:
+    """Test nothing installs while a backup runs."""
+    jobs_info.return_value = replace(
+        jobs_info.return_value,
+        jobs=[
+            Job(
+                name="backup_manager_partial_backup",
+                reference=None,
+                uuid=uuid4(),
+                progress=0,
+                stage=None,
+                done=False,
+                errors=[],
+                created=dt_util.utcnow(),
+                child_jobs=[],
+                extra=None,
+            )
+        ],
+    )
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_no_install_in_safe_mode(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test nothing installs in safe mode."""
+    hass.config.safe_mode = True
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_backup_before_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test a backup is made first when the update settings ask for it."""
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update"
+    ) as mock_backup:
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+
+    mock_backup.assert_called_once_with(hass)
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_one_attempt_per_window(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed update is not retried in the same window."""
+    supervisor_client.homeassistant.update.side_effect = SupervisorError("Boom")
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    assert "Automatic update to Home Assistant 2026.10.2 failed" in caplog.text
+
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+    freezer.move_to(_local(23, 3, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _installed(supervisor_client) == ["2026.10.2", "2026.10.2"]

@@ -2,8 +2,10 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from enum import StrEnum
+import logging
+import random
 from typing import Any, Self, TypedDict, override
 
 from aiohasupervisor.models import UpdateChannel
@@ -13,26 +15,42 @@ import probatio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .config_entry import async_get_update_options
 from .const import (
     CORE_AUTO_UPDATE_DELAYS,
     DEFAULT_CORE_AUTO_UPDATE_DELAY,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_END,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_START,
+    JOBS_COORDINATOR,
     OPTION_CORE_AUTO_UPDATE,
     OPTION_CORE_AUTO_UPDATE_DELAY,
     OPTION_CORE_AUTO_UPDATE_WEEKDAYS,
     OPTION_CORE_AUTO_UPDATE_WINDOW_END,
     OPTION_CORE_AUTO_UPDATE_WINDOW_START,
+    OPTION_CORE_BACKUP_BEFORE_UPDATE,
 )
 from .coordinator import HassioMainDataUpdateCoordinator
+from .update_helper import update_core
+
+_LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = "hassio.auto_update"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
+
+# Short enough that a window of a few minutes is not missed
+CHECK_INTERVAL = timedelta(minutes=5)
+
+# Supervisor jobs that must finish before Home Assistant is updated
+_BUSY_JOB_NAME = "home_assistant_core_update"
+_BUSY_JOB_PREFIX = "backup_manager_"
 
 # Options are stored as text, so store times the way the settings read them
 _time_string = probatio.All(cv.time, time.isoformat)
@@ -119,6 +137,7 @@ class AutoUpdateStoreData(TypedDict):
 
     first_seen: dict[str, str]
     skipped: list[str]
+    window_offset: float
 
 
 class _AutoUpdateStore(Store[AutoUpdateStoreData]):
@@ -141,7 +160,38 @@ class _AutoUpdateStore(Store[AutoUpdateStoreData]):
         if old_minor_version < 2:
             # Version 1.2 adds the versions skipped for automatic updates
             old_data["skipped"] = []
+        if old_minor_version < 3:
+            # Version 1.3 adds where in the time window this installation updates
+            old_data["window_offset"] = random.random()
         return old_data
+
+
+def _window_length(settings: AutoUpdateSettings) -> timedelta:
+    """Return how long the time window is; it may cross midnight."""
+    length = datetime.combine(date.min, settings.window_end) - datetime.combine(
+        date.min, settings.window_start
+    )
+    return length % timedelta(days=1)
+
+
+def _window_start(settings: AutoUpdateSettings, now: datetime) -> datetime | None:
+    """Return when the time window that now falls in started, if any.
+
+    A window that crosses midnight belongs to the day it starts on, so its
+    weekday decides whether it is allowed.
+    """
+    length = _window_length(settings)
+    for days_back in (0, 1):
+        start = datetime.combine(
+            now.date() - timedelta(days=days_back),
+            settings.window_start,
+            tzinfo=now.tzinfo,
+        )
+        if start <= now < start + length:
+            if WEEKDAYS[start.weekday()] in settings.weekdays:
+                return start
+            return None
+    return None
 
 
 def _major(version: str) -> tuple[int, int]:
@@ -166,6 +216,8 @@ class AutoUpdateManager:
         self._store = _AutoUpdateStore(hass)
         self._first_seen: dict[str, datetime] = {}
         self._skipped: set[str] = set()
+        self._window_offset = random.random()
+        self._attempted_window: datetime | None = None
 
     async def async_setup(self) -> None:
         """Load the stored data and start tracking offered versions."""
@@ -175,11 +227,26 @@ class AutoUpdateManager:
                 for version, first_seen in data["first_seen"].items()
             }
             self._skipped = set(data["skipped"])
+            self._window_offset = data["window_offset"]
+        else:
+            self._async_save()
 
         self._async_record_offered_version()
         self._entry.async_on_unload(
             self._coordinator.async_add_listener(self._async_record_offered_version)
         )
+        self._entry.async_on_unload(
+            async_at_started(self._hass, self._async_start_checking)
+        )
+
+    async def _async_start_checking(self, hass: HomeAssistant) -> None:
+        """Check now and on an interval, once Home Assistant has started."""
+        self._entry.async_on_unload(
+            async_track_time_interval(
+                hass, self._async_check, CHECK_INTERVAL, cancel_on_shutdown=True
+            )
+        )
+        await self._async_check()
 
     @property
     def settings(self) -> AutoUpdateSettings:
@@ -226,6 +293,97 @@ class AutoUpdateManager:
             return
         self._skipped.discard(version)
         self._async_save()
+
+    @callback
+    def async_get_install_candidate(self, now: datetime) -> str | None:
+        """Return the patch release to install automatically, if any.
+
+        That is the newest patch of the running major that waited long
+        enough since it was first seen and is not skipped. Never newer than
+        what Supervisor offers now, so rolling back the version file stops
+        a pulled release.
+        """
+        core = self._coordinator.data.core
+        if core.version is None or core.version_latest is None:
+            return None
+
+        running = AwesomeVersion(core.version)
+        offered = AwesomeVersion(core.version_latest)
+        delay = self.settings.delay
+        candidates = [
+            AwesomeVersion(version)
+            for version, first_seen in self._first_seen.items()
+            if _major(version) == _major(core.version)
+            and version not in self._skipped
+            and first_seen + delay <= now
+        ]
+        eligible = [version for version in candidates if running < version <= offered]
+        return str(max(eligible)) if eligible else None
+
+    @callback
+    def _async_install_time(self, now: datetime) -> datetime | None:
+        """Return from when this installation may update in the current window.
+
+        Each installation updates from its own fixed point in the window, so
+        not every installation asks for the new version at the same moment.
+        The point stays one check before the end, so a check still sees it.
+        """
+        settings = self.settings
+        if (start := _window_start(settings, now)) is None:
+            return None
+        spread = max(_window_length(settings) - CHECK_INTERVAL, timedelta(0))
+        return start + spread * self._window_offset
+
+    @callback
+    def _async_is_busy(self) -> bool:
+        """Return if an update or backup is running."""
+        return any(
+            job.done is False
+            and job.name is not None
+            and (job.name == _BUSY_JOB_NAME or job.name.startswith(_BUSY_JOB_PREFIX))
+            for job in self._hass.data[JOBS_COORDINATOR].current_jobs
+        )
+
+    async def _async_check(self, _now: datetime | None = None) -> None:
+        """Install an eligible patch release when it is time.
+
+        Only looks at the current state, so it gives the same answer no
+        matter what made it run.
+        """
+        if (
+            self.settings.enabled is not True
+            or self.unavailable_reason is not None
+            or self._hass.config.safe_mode
+        ):
+            return
+
+        now = dt_util.now()
+        if (
+            install_time := self._async_install_time(now)
+        ) is None or now < install_time:
+            return
+
+        # One attempt per window; a failure must not retry every few minutes
+        window = _window_start(self.settings, now)
+        if window == self._attempted_window or self._async_is_busy():
+            return
+
+        if (version := self.async_get_install_candidate(now)) is None:
+            return
+
+        self._attempted_window = window
+        backup = bool(
+            async_get_update_options(self._hass, self._entry)[
+                OPTION_CORE_BACKUP_BEFORE_UPDATE
+            ]
+        )
+        _LOGGER.info("Installing Home Assistant %s automatically", version)
+        try:
+            await update_core(self._hass, version, backup)
+        except HomeAssistantError as err:
+            _LOGGER.error(
+                "Automatic update to Home Assistant %s failed: %s", version, err
+            )
 
     @callback
     def _async_record_offered_version(self) -> None:
@@ -280,4 +438,5 @@ class AutoUpdateManager:
                 for version, first_seen in self._first_seen.items()
             },
             "skipped": sorted(self._skipped),
+            "window_offset": self._window_offset,
         }
