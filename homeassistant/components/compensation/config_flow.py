@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
+import numpy as np
 import probatio
 
 from homeassistant.const import (
@@ -122,11 +123,20 @@ async def validate_options(
         user_input[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
     )
 
-    if (
-        len(user_input[CONF_POLYNOMIAL_CONFIG][CONF_DATAPOINTS])
-        <= user_input[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
-    ):
+    data_points = user_input[CONF_POLYNOMIAL_CONFIG][CONF_DATAPOINTS]
+    degree = user_input[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
+    if len(data_points) <= degree:
         raise SchemaFlowError("not_enough_datapoints")
+
+    with np.errstate(all="raise"):
+        try:
+            np.polyfit(
+                [data_point[CONF_UNCOMPENSATED_VALUE] for data_point in data_points],
+                [data_point[CONF_COMPENSATED_VALUE] for data_point in data_points],
+                degree,
+            )
+        except FloatingPointError as error:
+            raise SchemaFlowError("invalid_datapoints") from error
 
     handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
 

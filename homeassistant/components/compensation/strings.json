@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
+      "invalid_datapoints": "Unable to calculate a polynomial from the data points. Make sure the uncompensated values are distinct.",
       "not_enough_datapoints": "The number of datapoints needs to be more than the configured degree."
     },
     "step": {
@@ -61,6 +62,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
+      "invalid_datapoints": "[%key:component::compensation::config::error::invalid_datapoints%]",
       "not_enough_datapoints": "[%key:component::compensation::config::error::not_enough_datapoints%]"
     },
     "step": {

@@ -88,6 +88,14 @@ async def test_user_flow(
             "not_enough_datapoints",
             id="not_enough_datapoints",
         ),
+        pytest.param(
+            [
+                {CONF_COMPENSATED_VALUE: 1, CONF_UNCOMPENSATED_VALUE: 0},
+                {CONF_COMPENSATED_VALUE: 1, CONF_UNCOMPENSATED_VALUE: 0},
+            ],
+            "invalid_datapoints",
+            id="invalid_datapoints",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
