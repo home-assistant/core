@@ -232,11 +232,8 @@
       "description": "Build your own: firmware, message brokers, and generic connectors for web APIs, databases, serial ports and Modbus.",
       "name": "DIY & makers",
       "subcategory": {
-        "firmware_boards": {
-          "name": "Firmware & boards"
-        },
-        "serial_modbus": {
-          "name": "Serial & Modbus"
+        "boards_hardware": {
+          "name": "Boards & hardware interfaces"
         },
         "web_data_connectors": {
           "name": "Web & data connectors"
@@ -348,7 +345,7 @@
       "name": "News & social media"
     },
     "other_ecosystems": {
-      "description": "Use your Home Assistant devices from Apple Home, Alexa, Google Assistant and other platforms.",
+      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
       "name": "Other ecosystems"
     },
     "pets": {
