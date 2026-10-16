@@ -65,6 +65,13 @@ SECOND_START_STREAM_RESULT = CameraStartStreamResult(
     audio=None,
 )
 SNAPSHOT_IMAGE = b"\xff\xd8snapshot"
+ANSWER_MESSAGE = {"type": "answer", "answer": "raced"}
+ENDED_MESSAGE = {
+    "type": "error",
+    "code": "webrtc_session_ended",
+    "message": "The camera ended the WebRTC session",
+}
+EVENT_DATA = {"answer": {"sdp": "raced"}, "end": {"reason": 11}}
 
 
 @pytest.fixture
@@ -346,32 +353,97 @@ async def test_camera_webrtc_answer_races_offer(
     assert response["event"] == {"type": "answer", "answer": "raced"}
 
 
+@pytest.mark.parametrize(
+    ("event_types", "expected_messages", "stop_calls"),
+    [
+        pytest.param(
+            ["end", "answer"], [ANSWER_MESSAGE], 1, id="previous_holder_ended"
+        ),
+        pytest.param(["answer", "end"], [ANSWER_MESSAGE], 0, id="answered_then_ended"),
+        pytest.param(["end"], [ENDED_MESSAGE], 0, id="ended_before_answer"),
+    ],
+)
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
 async def test_camera_webrtc_end_races_offer(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     hass_ws_client: WebSocketGenerator,
+    event_types: list[str],
+    expected_messages: list[dict[str, Any]],
+    stop_calls: int,
 ) -> None:
-    """Test buffered events that follow a buffered end are dropped."""
+    """Test end events dispatched before the camera_start_stream result."""
 
     async def racing_offer(**kwargs: Any) -> CameraStartStreamResult:
         callback = _get_webrtc_callback(matter_client)
-        callback(
-            EventType.WEBRTC_CALLBACK,
-            _webrtc_callback_data(matter_node, "end", {"reason": 11}),
-        )
-        callback(
-            EventType.WEBRTC_CALLBACK,
-            _webrtc_callback_data(matter_node, "answer", {"sdp": "late"}),
-        )
+        for event_type in event_types:
+            callback(
+                EventType.WEBRTC_CALLBACK,
+                _webrtc_callback_data(matter_node, event_type, EVENT_DATA[event_type]),
+            )
         return START_STREAM_RESULT
 
     matter_client.camera_start_stream.side_effect = racing_offer
     client = await hass_ws_client(hass)
     subscription_id, _ = await _send_offer(client)
+    for expected_message in expected_messages:
+        response = await client.receive_json()
+        assert response["event"] == expected_message
 
-    # The session ended before it was established, so closing sends nothing.
+    await _unsubscribe(client, subscription_id)
+    await hass.async_block_till_done()
+    assert matter_client.camera_stop_stream.call_count == stop_calls
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_webrtc_session_ended_during_offer(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a server session-ended event that arrives while the offer is in flight."""
+    release = asyncio.Event()
+
+    async def blocked_offer(**kwargs: Any) -> CameraStartStreamResult:
+        await release.wait()
+        return START_STREAM_RESULT
+
+    matter_client.camera_start_stream.side_effect = blocked_offer
+    client = await hass_ws_client(hass)
+    subscription_id, session_id = await _send_offer(client)
+
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/candidate",
+            "entity_id": ENTITY_ID,
+            "session_id": session_id,
+            "candidate": {"candidate": "c1", "sdpMLineIndex": 0},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is True
+
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.CAMERA_SESSION_ENDED,
+        data=CameraSessionEndedData(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            webrtc_session_id=MATTER_SESSION_ID,
+        ),
+    )
+
+    # The session was over before it was established, so the frontend is told
+    # and the buffered candidate is not forwarded.
+    release.set()
+    await hass.async_block_till_done()
+    response = await client.receive_json()
+    assert response["event"] == ENDED_MESSAGE
+    assert matter_client.camera_provide_ice_candidates.call_count == 0
+
     await _unsubscribe(client, subscription_id)
     await hass.async_block_till_done()
     assert matter_client.camera_stop_stream.call_count == 0
@@ -461,8 +533,12 @@ async def test_camera_webrtc_session_id_reuse(
     """Test a stale session is dropped when the camera reuses its session id."""
     client = await hass_ws_client(hass)
     stale_subscription_id, _ = await _start_session(client, matter_client)
-    # The camera restarted and the stale session's end was never seen.
+    # The camera restarted and the stale session's end was never seen, so the
+    # new session takes the id over and the unanswered stale session is told.
     new_subscription_id, _ = await _start_session(client, matter_client)
+    response = await client.receive_json()
+    assert response["id"] == stale_subscription_id
+    assert response["event"] == ENDED_MESSAGE
 
     # Closing the stale session must not end the new one on the camera.
     await _unsubscribe(client, stale_subscription_id)
@@ -482,6 +558,48 @@ async def test_camera_webrtc_session_id_reuse(
     await _unsubscribe(client, new_subscription_id)
     await hass.async_block_till_done()
     assert matter_client.camera_stop_stream.call_count == 1
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_webrtc_session_id_reuse_early_answer(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an early answer for a reused session id reaches the new session."""
+    client = await hass_ws_client(hass)
+    stale_subscription_id, _ = await _start_session(client, matter_client)
+
+    release = asyncio.Event()
+
+    async def blocked_offer(**kwargs: Any) -> CameraStartStreamResult:
+        await release.wait()
+        return START_STREAM_RESULT
+
+    matter_client.camera_start_stream.side_effect = blocked_offer
+    new_subscription_id, _ = await _send_offer(client)
+
+    # The camera restarted and answers the new offer with the stale session's id,
+    # before camera_start_stream has returned it.
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.WEBRTC_CALLBACK,
+        data=_webrtc_callback_data(matter_node, "answer", {"sdp": "reused"}),
+    )
+    response = await client.receive_json()
+    assert response["id"] == stale_subscription_id
+
+    release.set()
+    await hass.async_block_till_done()
+    response = await client.receive_json()
+    assert response["id"] == new_subscription_id
+    assert response["event"] == {"type": "answer", "answer": "reused"}
+
+    await _unsubscribe(client, stale_subscription_id)
+    await hass.async_block_till_done()
+    assert matter_client.camera_stop_stream.call_count == 0
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
@@ -615,6 +733,9 @@ async def test_camera_session_ended_events(
     subscription_id, _ = await _start_session(client, matter_client)
 
     await trigger_subscription_callback(hass, matter_client, event=event, data=data)
+    # The session had not been answered yet, so the frontend is told.
+    response = await client.receive_json()
+    assert response["event"] == ENDED_MESSAGE
 
     await _unsubscribe(client, subscription_id)
     await hass.async_block_till_done()

@@ -14,7 +14,7 @@ from matter_server.common.models import (
     EventType,
     WebRTCIceCandidate,
 )
-from webrtc_models import RTCIceCandidateInit, RTCIceServer
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
@@ -22,6 +22,7 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
     WebRTCAnswer,
     WebRTCCandidate,
+    WebRTCError,
     WebRTCSendMessage,
 )
 from homeassistant.const import Platform
@@ -53,17 +54,8 @@ class _MatterWebRTCSession:
 
     send_message: WebRTCSendMessage
     matter_session_id: int | None = None
+    answered: bool = False
     pending_candidates: list[RTCIceCandidateInit] = field(default_factory=list)
-
-
-def _ice_server(server: RTCIceServer) -> CameraIceServer:
-    """Convert a Home Assistant ICE server to the Matter server's shape."""
-    ice_server: CameraIceServer = {"urls": server.urls}
-    if server.username is not None:
-        ice_server["username"] = server.username
-    if server.credential is not None:
-        ice_server["credential"] = server.credential
-    return ice_server
 
 
 async def async_setup_entry(
@@ -99,9 +91,9 @@ class MatterCamera(MatterEntity, Camera):
         self._sessions: dict[str, _MatterWebRTCSession] = {}
         # Reverse map from the Matter session id to the Home Assistant session id.
         self._matter_session_ids: dict[int, str] = {}
-        # WEBRTC_CALLBACK events whose Matter session id is not yet known, kept
-        # only while an offer is in flight to bound growth.
-        self._buffered_events: list[dict[str, Any]] = []
+        # Events kept while an offer is in flight, so the session it creates can
+        # catch up on those that arrived before its Matter session id was known.
+        self._buffered_events: dict[int, list[dict[str, Any]]] = {}
         self._pending_offers = 0
 
         super().__init__(matter_client, endpoint, entity_info)
@@ -159,9 +151,14 @@ class MatterCamera(MatterEntity, Camera):
         session = _MatterWebRTCSession(send_message=send_message)
         self._sessions[session_id] = session
         config = self.async_get_webrtc_client_configuration()
-        ice_servers = [
-            _ice_server(server) for server in config.configuration.ice_servers
-        ]
+        ice_servers: list[CameraIceServer] = []
+        for server in config.configuration.ice_servers:
+            ice_server: CameraIceServer = {"urls": server.urls}
+            if server.username is not None:
+                ice_server["username"] = server.username
+            if server.credential is not None:
+                ice_server["credential"] = server.credential
+            ice_servers.append(ice_server)
 
         self._pending_offers += 1
         try:
@@ -180,11 +177,7 @@ class MatterCamera(MatterEntity, Camera):
             LOGGER.debug(
                 "WebRTC session %s started for %s", matter_session_id, self.entity_id
             )
-            early_events = [
-                event
-                for event in self._buffered_events
-                if event["webrtc_session_id"] == matter_session_id
-            ]
+            early_events = self._buffered_events.get(matter_session_id, [])
         finally:
             self._pending_offers -= 1
             # Drop orphaned events once no offer is in flight to claim them.
@@ -250,11 +243,23 @@ class MatterCamera(MatterEntity, Camera):
         """Handle a WEBRTC_CALLBACK event from the Matter server."""
         if data["endpoint_id"] != self._endpoint.endpoint_id:
             return
-        if data["webrtc_session_id"] not in self._matter_session_ids:
-            if self._pending_offers:
-                self._buffered_events.append(data)
-            return
-        self._handle_webrtc_event(data)
+        matter_session_id = data["webrtc_session_id"]
+        has_session = matter_session_id in self._matter_session_ids
+        is_end = data["event_type"] == "end"
+
+        # While an offer is in flight the camera may have reused a known id for
+        # the new session, so its events are buffered too. Nothing follows the
+        # "end" of a session, so an "end" for a known id is taken as that
+        # session's, and a buffered "end" belongs to an earlier session once
+        # another event arrives.
+        if self._pending_offers and not (has_session and is_end):
+            events = self._buffered_events.setdefault(matter_session_id, [])
+            if not is_end and events and events[-1]["event_type"] == "end":
+                events.clear()
+            events.append(data)
+
+        if has_session:
+            self._handle_webrtc_event(data)
 
     @callback
     def _handle_webrtc_event(self, data: dict[str, Any]) -> None:
@@ -267,6 +272,7 @@ class MatterCamera(MatterEntity, Camera):
 
         event_type = data["event_type"]
         if event_type == "answer":
+            session.answered = True
             session.send_message(WebRTCAnswer(data["data"]["sdp"]))
         elif event_type == "ice_candidates":
             for candidate in data["data"]["ice_candidates"]:
@@ -288,20 +294,35 @@ class MatterCamera(MatterEntity, Camera):
             self._forget_matter_session(matter_session_id)
 
     @callback
-    def _on_session_ended(self, event: EventType, data: CameraSessionEndedData) -> None:
-        """Handle a session ended by another Matter server connection."""
-        if data.endpoint_id != self._endpoint.endpoint_id:
-            return
-        self._forget_matter_session(data.webrtc_session_id)
-
-    @callback
     def _forget_matter_session(self, matter_session_id: int) -> None:
         """Drop the bookkeeping of a session the camera no longer holds."""
         if (
             session_id := self._matter_session_ids.pop(matter_session_id, None)
         ) is None:
             return
-        self._sessions.pop(session_id, None)
+        if (session := self._sessions.pop(session_id, None)) is None:
+            return
+        # Without an answer the frontend is still waiting for the offer to complete.
+        if not session.answered:
+            session.send_message(
+                WebRTCError(
+                    "webrtc_session_ended", "The camera ended the WebRTC session"
+                )
+            )
+
+    @callback
+    def _on_session_ended(self, event: EventType, data: CameraSessionEndedData) -> None:
+        """Handle a session ended by another Matter server connection."""
+        # Shaped like the camera's own "end" so an offer in flight can claim it.
+        self._on_webrtc_callback(
+            event,
+            {
+                "event_type": "end",
+                "webrtc_session_id": data.webrtc_session_id,
+                "endpoint_id": data.endpoint_id,
+                "data": {"reason": None},
+            },
+        )
 
     @callback
     @override
