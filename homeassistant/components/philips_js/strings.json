@@ -72,9 +72,6 @@
     }
   },
   "options": {
-    "abort": {
-      "menu_not_available": "The menu settings have not been read from the TV yet. Turn on the TV and try again."
-    },
     "step": {
       "init": {
         "data": {

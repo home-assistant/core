@@ -24,6 +24,7 @@ from . import (
     MOCK_CONFIG_PAIRED,
     MOCK_HOSTNAME,
     MOCK_MENU_DATA,
+    MOCK_MENU_SELECTED,
     MOCK_MENU_STORAGE_KEY,
     MOCK_NAME,
     MOCK_PASSWORD,
@@ -323,13 +324,11 @@ async def test_options_flow_menu_not_supported(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    schema = _get_schema(result)
-    assert schema[CONF_MENU_NODES][0].default() == []
-    assert schema[CONF_MENU_NODES][1].config["options"] == []
+    assert CONF_MENU_NODES not in _get_schema(result)
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ALLOW_NOTIFY: True, CONF_MENU_NODES: []},
+        user_input={CONF_ALLOW_NOTIFY: True},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -364,7 +363,7 @@ async def test_options_flow_menu_not_available(
     mock_tv: MagicMock,
     tv_config: dict[str, Any],
 ) -> None:
-    """Test options flow aborts when the menu has never been read."""
+    """Test notifications can be changed when the menu has never been read."""
     mock_tv.configure_mock(**tv_config)
 
     assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
@@ -374,8 +373,20 @@ async def test_options_flow_menu_not_available(
         mock_menu_config_entry.entry_id
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "menu_not_available"
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_MENU_NODES not in _get_schema(result)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ALLOW_NOTIFY: False},
+    )
+
+    # The selected menu settings are kept
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_menu_config_entry.options == {
+        CONF_ALLOW_NOTIFY: False,
+        CONF_MENU_NODES: MOCK_MENU_SELECTED,
+    }
 
 
 @pytest.mark.parametrize(

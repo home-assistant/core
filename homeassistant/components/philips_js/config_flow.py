@@ -48,7 +48,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import PhilipsTVConfigEntry, get_menu_store
-from .helpers import EntitySetupNode, get_menu_nodes
+from .helpers import get_menu_nodes
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -260,52 +260,51 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
+        options = self.config_entry.options
         if user_input is not None:
+            # The menu settings are only offered when the menu is known
+            menu_node_ids = options.get(CONF_MENU_NODES, [])
+            if CONF_MENU_NODES in user_input:
+                menu_node_ids = [
+                    int(node_id) for node_id in user_input[CONF_MENU_NODES]
+                ]
             return self.async_create_entry(
                 data={
                     CONF_ALLOW_NOTIFY: user_input[CONF_ALLOW_NOTIFY],
-                    CONF_MENU_NODES: [
-                        int(node_id) for node_id in user_input[CONF_MENU_NODES]
-                    ],
+                    CONF_MENU_NODES: menu_node_ids,
                 }
             )
 
-        menu_nodes: dict[int, EntitySetupNode] = {}
-        if is_menu_supported_on_system(self.config_entry.data[CONF_SYSTEM]):
-            # The entry may not be loaded, so read the menu stored by the coordinator
-            store = get_menu_store(self.hass, self.config_entry.entry_id)
-            if (menu := await store.async_load()) is None:
-                return self.async_abort(reason="menu_not_available")
+        schema: dict[Any, Any] = {
+            probatio.Required(
+                CONF_ALLOW_NOTIFY,
+                default=options.get(CONF_ALLOW_NOTIFY, False),
+            ): BooleanSelector(),
+        }
+
+        # The entry may not be loaded, so read the menu stored by the coordinator
+        if is_menu_supported_on_system(self.config_entry.data[CONF_SYSTEM]) and (
+            menu := await get_menu_store(
+                self.hass, self.config_entry.entry_id
+            ).async_load()
+        ):
             menu_nodes = get_menu_nodes(menu)
-
-        options = self.config_entry.options
-
-        menu_nodes_selector = SelectSelector(
-            SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(value=str(node_id), label=data["name"])
-                    for node_id, data in menu_nodes.items()
-                ],
-                multiple=True,
+            # Previously selected nodes may no longer be provided by the TV
+            menu_nodes_default = [
+                str(node_id)
+                for node_id in options.get(CONF_MENU_NODES, [])
+                if node_id in menu_nodes
+            ]
+            schema[probatio.Required(CONF_MENU_NODES, default=menu_nodes_default)] = (
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=str(node_id), label=data["name"])
+                            for node_id, data in menu_nodes.items()
+                        ],
+                        multiple=True,
+                    )
+                )
             )
-        )
 
-        # Previously selected nodes may no longer be provided by the TV
-        menu_nodes_default = [
-            str(node_id)
-            for node_id in options.get(CONF_MENU_NODES, [])
-            if node_id in menu_nodes
-        ]
-
-        data_schema = probatio.Schema(
-            {
-                probatio.Required(
-                    CONF_ALLOW_NOTIFY,
-                    default=options.get(CONF_ALLOW_NOTIFY, False),
-                ): BooleanSelector(),
-                probatio.Required(
-                    CONF_MENU_NODES, default=menu_nodes_default
-                ): menu_nodes_selector,
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(schema))
