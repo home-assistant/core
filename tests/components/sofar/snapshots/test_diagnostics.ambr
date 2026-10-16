@@ -22,12 +22,12 @@
     'inverter_type': 1537,
     'link': dict({
       'stats': dict({
-        'answered': 45,
+        'answered': 46,
         'failures': dict({
         }),
         'median': float,
         'p95': float,
-        'requests': 45,
+        'requests': 46,
         'slowest': float,
       }),
       'tuning': dict({

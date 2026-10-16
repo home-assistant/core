@@ -24,12 +24,7 @@ from homeassistant.components.airos.const import (
     MAC_ADDRESS,
     SECTION_ADDITIONAL_SETTINGS,
 )
-from homeassistant.config_entries import (
-    SOURCE_DHCP,
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -226,11 +221,7 @@ async def test_reauth_flow_scenario(
         "homeassistant.components.airos.config_flow.async_get_firmware_data",
         side_effect=AirOSConnectionAuthenticationError,
     ):
-        flow = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
+        flow = await mock_config_entry.start_reauth_flow(hass)
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
@@ -300,11 +291,7 @@ async def test_reauth_flow_scenarios(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-        flow = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
+        flow = await mock_config_entry.start_reauth_flow(hass)
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
@@ -361,11 +348,7 @@ async def test_reauth_unique_id_mismatch(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-        flow = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
+        flow = await mock_config_entry.start_reauth_flow(hass)
 
     fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
     valid_data = DetectDeviceData(
@@ -401,10 +384,7 @@ async def test_successful_reconfigure(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == RECONFIGURE_STEP
@@ -462,10 +442,7 @@ async def test_reconfigure_flow_failure(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
@@ -511,10 +488,7 @@ async def test_reconfigure_unique_id_mismatch(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     flow_id = result["flow_id"]
 
     fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])

@@ -1,8 +1,6 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'alarm_hubs': list([
-    ]),
     'bootstrap': dict({
       'authUserId': '**REDACTED_ID**',
       'bridges': list([
@@ -740,6 +738,34 @@
       ]),
     }),
     'options': dict({
+    }),
+    'public_bootstrap': dict({
+      'arm_mode': False,
+      'bridges': list([
+      ]),
+      'cameras': list([
+      ]),
+      'chimes': list([
+      ]),
+      'fobs': list([
+      ]),
+      'lights': list([
+      ]),
+      'link_stations': list([
+      ]),
+      'nvr': dict({
+        'name': '**REDACTED_NAME**',
+      }),
+      'relays': list([
+      ]),
+      'sensors': list([
+      ]),
+      'sirens': list([
+      ]),
+      'speakers': list([
+      ]),
+      'viewers': list([
+      ]),
     }),
   })
 # ---

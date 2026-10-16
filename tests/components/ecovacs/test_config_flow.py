@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
+    ACCOUNT_CREDENTIALS_DATA,
     CLOUD_DEVICE_ID,
     SELF_HOSTED_DEVICE_ID,
     STORED_ENTRY_DATA_CLOUD,
@@ -122,10 +123,24 @@ async def test_user_flow(
     result = await _test_user_flow(hass, test_fn_user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
-    assert result["data"] == entry_data
+    assert result["data"] == entry_data | ACCOUNT_CREDENTIALS_DATA
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()
+
+
+@pytest.mark.usefixtures("mock_device_id", "mock_setup_entry", "mock_mqtt_client")
+async def test_user_flow_without_account_credentials(
+    hass: HomeAssistant,
+    mock_authenticator: Mock,
+) -> None:
+    """Test no account credentials are stored when the login returned none."""
+    mock_authenticator.account_credentials = None
+
+    result = await _test_user_flow(hass, _TestFnUserInput(VALID_ENTRY_DATA_CLOUD))
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == STORED_ENTRY_DATA_CLOUD
 
 
 def _cannot_connect_error(user_input: dict[str, Any]) -> dict[str, str]:
@@ -219,7 +234,7 @@ async def test_user_flow_raise_error(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
-    assert result["data"] == entry_data
+    assert result["data"] == entry_data | ACCOUNT_CREDENTIALS_DATA
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()
@@ -276,7 +291,10 @@ async def test_user_flow_self_hosted_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == data[CONF_USERNAME]
-    assert result["data"] == data | {CONF_DEVICE_ID: SELF_HOSTED_DEVICE_ID}
+    assert (
+        result["data"]
+        == data | {CONF_DEVICE_ID: SELF_HOSTED_DEVICE_ID} | ACCOUNT_CREDENTIALS_DATA
+    )
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()
@@ -345,7 +363,7 @@ async def test_device_verification(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == entry_data
+    assert result["data"] == entry_data | ACCOUNT_CREDENTIALS_DATA
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
     mock_authenticator.teardown.assert_awaited_once()
     mock_mqtt_client.verify_config.assert_called_once()
@@ -475,7 +493,12 @@ async def test_mqtt_retry_after_device_verification(
     assert mock_create_rest_config.call_args_list[1].kwargs["device_id"] == device_id
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: device_id}
+    assert (
+        result["data"]
+        == VALID_ENTRY_DATA_CLOUD
+        | {CONF_DEVICE_ID: device_id}
+        | ACCOUNT_CREDENTIALS_DATA
+    )
     mock_authenticator.request_device_verification_code.assert_awaited_once()
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
     # The superseded authenticator and the one of the created entry are torn down
@@ -501,9 +524,12 @@ async def test_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     # The already verified device ID is kept, so no new verification is required
-    assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD | {
-        CONF_PASSWORD: "new-password"
-    }
+    assert (
+        mock_config_entry.data
+        == STORED_ENTRY_DATA_CLOUD
+        | {CONF_PASSWORD: "new-password"}
+        | ACCOUNT_CREDENTIALS_DATA
+    )
     mock_authenticator.request_device_verification_code.assert_not_called()
     mock_authenticator.verify_device.assert_not_called()
     mock_setup_entry.assert_called_once()

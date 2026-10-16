@@ -5,7 +5,7 @@ pubsub subscriber.
 """
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -105,7 +105,7 @@ def webrtc_camera_device(create_device: CreateDevice) -> None:
 def make_motion_event(
     event_id: str = MOTION_EVENT_ID,
     event_session_id: str = EVENT_SESSION_ID,
-    timestamp: datetime.datetime | None = None,
+    timestamp: dt.datetime | None = None,
 ) -> EventMessage:
     """Create an EventMessage for a motion event."""
     if not timestamp:
@@ -130,12 +130,12 @@ def make_motion_event(
 
 
 def make_stream_url_response(
-    expiration: datetime.datetime | None = None, token_num: int = 0
+    expiration: dt.datetime | None = None, token_num: int = 0
 ) -> aiohttp.web.Response:
     """Make response for the API that generates a streaming url."""
     if not expiration:
         # Default to an arbitrary time in the future
-        expiration = utcnow() + datetime.timedelta(seconds=100)
+        expiration = utcnow() + dt.timedelta(seconds=100)
     return aiohttp.web.json_response(
         {
             "results": {
@@ -194,7 +194,7 @@ async def async_frontend_stream_types(
     return msg["result"].get("frontend_stream_types")
 
 
-async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
+async def fire_alarm(hass: HomeAssistant, point_in_time: dt.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
@@ -375,9 +375,9 @@ async def test_refresh_expired_stream_token(
 ) -> None:
     """Test a camera stream expiration and refresh."""
     now = utcnow()
-    stream_1_expiration = now + datetime.timedelta(seconds=90)
-    stream_2_expiration = now + datetime.timedelta(seconds=180)
-    stream_3_expiration = now + datetime.timedelta(seconds=360)
+    stream_1_expiration = now + dt.timedelta(seconds=90)
+    stream_2_expiration = now + dt.timedelta(seconds=180)
+    stream_3_expiration = now + dt.timedelta(seconds=360)
     auth.responses = [
         # Stream URL #1
         make_stream_url_response(stream_1_expiration, token_num=1),
@@ -406,13 +406,13 @@ async def test_refresh_expired_stream_token(
     assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
 
     # Fire alarm before stream_1_expiration. The stream url is not refreshed
-    next_update = now + datetime.timedelta(seconds=25)
+    next_update = now + dt.timedelta(seconds=25)
     await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
 
     # Alarm is near stream_1_expiration which causes the stream extension
-    next_update = now + datetime.timedelta(seconds=65)
+    next_update = now + dt.timedelta(seconds=65)
     await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
@@ -425,13 +425,13 @@ async def test_refresh_expired_stream_token(
         assert hls_url == hls_url1
 
     # Next alarm is well before stream_2_expiration, no change
-    next_update = now + datetime.timedelta(seconds=100)
+    next_update = now + dt.timedelta(seconds=100)
     await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # Alarm is near stream_2_expiration, causing it to be extended
-    next_update = now + datetime.timedelta(seconds=155)
+    next_update = now + dt.timedelta(seconds=155)
     await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
@@ -452,8 +452,8 @@ async def test_stream_response_already_expired(
 ) -> None:
     """Test a API response returning an expired stream url."""
     now = utcnow()
-    stream_1_expiration = now + datetime.timedelta(seconds=-90)
-    stream_2_expiration = now + datetime.timedelta(seconds=+90)
+    stream_1_expiration = now + dt.timedelta(seconds=-90)
+    stream_2_expiration = now + dt.timedelta(seconds=+90)
     auth.responses = [
         make_stream_url_response(stream_1_expiration, token_num=1),
         make_stream_url_response(stream_2_expiration, token_num=2),
@@ -484,9 +484,9 @@ async def test_extending_stream_already_expired(
 ) -> None:
     """Test a API response when extending the stream returns an expired stream url."""
     now = utcnow()
-    stream_1_expiration = now + datetime.timedelta(seconds=180)
-    stream_2_expiration = now + datetime.timedelta(seconds=30)  # Will be in the past
-    stream_3_expiration = now + datetime.timedelta(seconds=600)
+    stream_1_expiration = now + dt.timedelta(seconds=180)
+    stream_2_expiration = now + dt.timedelta(seconds=30)  # Will be in the past
+    stream_3_expiration = now + dt.timedelta(seconds=600)
     auth.responses = [
         make_stream_url_response(stream_1_expiration, token_num=1),
         make_stream_url_response(stream_2_expiration, token_num=2),
@@ -504,19 +504,19 @@ async def test_extending_stream_already_expired(
     assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
 
     # Jump to when the stream will be refreshed
-    await fire_alarm(hass, now + datetime.timedelta(seconds=160))
+    await fire_alarm(hass, now + dt.timedelta(seconds=160))
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # The stream will have expired in the past, but 1 minute min
     # refresh interval is applied.
     # The stream token is not updated.
-    await fire_alarm(hass, now + datetime.timedelta(seconds=170))
+    await fire_alarm(hass, now + dt.timedelta(seconds=170))
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # Now go past the min update interval and the stream is refreshed
-    await fire_alarm(hass, now + datetime.timedelta(seconds=225))
+    await fire_alarm(hass, now + dt.timedelta(seconds=225))
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
 
@@ -587,8 +587,8 @@ async def test_refresh_expired_stream_failure(
 ) -> None:
     """Tests a failure when refreshing the stream."""
     now = utcnow()
-    stream_1_expiration = now + datetime.timedelta(seconds=90)
-    stream_2_expiration = now + datetime.timedelta(seconds=180)
+    stream_1_expiration = now + dt.timedelta(seconds=90)
+    stream_2_expiration = now + dt.timedelta(seconds=180)
     auth.responses = [
         make_stream_url_response(expiration=stream_1_expiration, token_num=1),
         # Extending the stream fails with arbitrary error
@@ -617,7 +617,7 @@ async def test_refresh_expired_stream_failure(
 
     # Fire alarm when stream is nearing expiration, causing it to be extended.
     # The stream expires.
-    next_update = now + datetime.timedelta(seconds=65)
+    next_update = now + dt.timedelta(seconds=65)
     await fire_alarm(hass, next_update)
 
     # The stream is entirely refreshed
@@ -644,7 +644,7 @@ async def test_camera_web_rtc(
     setup_platform,
 ) -> None:
     """Test a basic camera that supports web rtc."""
-    expiration = utcnow() + datetime.timedelta(seconds=100)
+    expiration = utcnow() + dt.timedelta(seconds=100)
     auth.responses = [
         aiohttp.web.json_response(
             {
@@ -801,7 +801,7 @@ async def test_camera_multiple_streams(
     setup_platform,
 ) -> None:
     """Test a camera supporting multiple stream types."""
-    expiration = utcnow() + datetime.timedelta(seconds=100)
+    expiration = utcnow() + dt.timedelta(seconds=100)
     auth.responses = [
         # WebRTC response
         aiohttp.web.json_response(
@@ -887,8 +887,8 @@ async def test_webrtc_refresh_expired_stream(
     """Test a camera webrtc expiration and refresh."""
     now = utcnow()
 
-    stream_1_expiration = now + datetime.timedelta(seconds=90)
-    stream_2_expiration = now + datetime.timedelta(seconds=180)
+    stream_1_expiration = now + dt.timedelta(seconds=90)
+    stream_2_expiration = now + dt.timedelta(seconds=180)
     auth.responses = [
         aiohttp.web.json_response(
             {
@@ -956,12 +956,12 @@ async def test_webrtc_refresh_expired_stream(
     )
 
     # Fire alarm before stream_1_expiration. The stream url is not refreshed
-    next_update = now + datetime.timedelta(seconds=25)
+    next_update = now + dt.timedelta(seconds=25)
     await fire_alarm(hass, next_update)
     assert len(auth.captured_requests) == 1
 
     # Alarm is near stream_1_expiration which causes the stream extension
-    next_update = now + datetime.timedelta(seconds=60)
+    next_update = now + dt.timedelta(seconds=60)
     await fire_alarm(hass, next_update)
 
     assert len(auth.captured_requests) >= 2
@@ -986,7 +986,7 @@ async def test_webrtc_refresh_failed_precondition(
                 "results": {
                     "answerSdp": "v=0\r\ns=-\r\n",
                     "mediaSessionId": "yP2grqz0Y1V_wgiX9KEbMWHoLd...",
-                    "expiresAt": (now + datetime.timedelta(seconds=90)).isoformat(
+                    "expiresAt": (now + dt.timedelta(seconds=90)).isoformat(
                         timespec="seconds"
                     ),
                 },
@@ -1020,10 +1020,10 @@ async def test_webrtc_refresh_failed_precondition(
     assert response["success"]
 
     # The stream extension fails because the session is no longer valid
-    await fire_alarm(hass, now + datetime.timedelta(seconds=60))
+    await fire_alarm(hass, now + dt.timedelta(seconds=60))
     # Retrying the extension can't succeed, so it is not attempted again
-    await fire_alarm(hass, now + datetime.timedelta(minutes=10))
-    await fire_alarm(hass, now + datetime.timedelta(hours=1))
+    await fire_alarm(hass, now + dt.timedelta(minutes=10))
+    await fire_alarm(hass, now + dt.timedelta(hours=1))
 
     extend_requests = [
         request

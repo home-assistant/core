@@ -12,11 +12,7 @@ from homeassistant.components.flexit.const import (
     DOMAIN,
     TYPE_TCP,
 )
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigEntryState,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -278,10 +274,7 @@ async def test_reconfigure_flow(
 ) -> None:
     """Test reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -300,13 +293,7 @@ async def test_reconfigure_flow_serial(
 ) -> None:
     """Test reconfiguration flow for a serial connection."""
     mock_serial_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_serial_config_entry.entry_id,
-        },
-    )
+    result = await mock_serial_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -328,13 +315,7 @@ async def test_reconfigure_loaded_entry_releases_connection(
     mock_serial_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_serial_config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_serial_config_entry.entry_id,
-        },
-    )
+    result = await mock_serial_config_entry.start_reconfigure_flow(hass)
 
     async def check_connection_after_unload(*_: object) -> None:
         assert mock_serial_config_entry.state is not ConfigEntryState.LOADED
@@ -358,13 +339,7 @@ async def test_reconfigure_loaded_entry_restored_after_error(
     mock_serial_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_serial_config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_serial_config_entry.entry_id,
-        },
-    )
+    result = await mock_serial_config_entry.start_reconfigure_flow(hass)
 
     with patch(
         "homeassistant.components.flexit.config_flow.check_connection",
@@ -394,13 +369,7 @@ async def test_reconfigure_stops_when_unload_fails(
     mock_serial_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_serial_config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_serial_config_entry.entry_id,
-        },
-    )
+    result = await mock_serial_config_entry.start_reconfigure_flow(hass)
 
     with (
         patch.object(
@@ -434,10 +403,7 @@ async def test_reconfigure_flow_errors(
 ) -> None:
     """Test error handling in reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     mock_modbus_unit.fail_requests(ModbusError("update failed"))
@@ -472,10 +438,7 @@ async def test_reconfigure_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
     other_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
