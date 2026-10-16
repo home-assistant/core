@@ -17,6 +17,7 @@ from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.components.anthropic.coordinator import (
     UPDATE_INTERVAL_CONNECTED,
     UPDATE_INTERVAL_DISCONNECTED,
+    AnthropicCoordinator,
     model_alias,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -47,6 +48,243 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def test_model_alias(model_id: str, expected_alias: str) -> None:
     """Test model aliases preserve versions and remove date suffixes."""
     assert model_alias(model_id) == expected_alias
+
+
+@pytest.mark.freeze_time("2026-10-16T12:00:00Z")
+@pytest.mark.parametrize(
+    ("model_id", "cached_id", "deprecated_id"),
+    [
+        pytest.param(
+            "claude-haiku-5-5-20261007",
+            "claude-haiku-5-5-20261007",
+            "claude-haiku-5-5-20261007",
+            id="exact_model",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            "claude-haiku-5-5-20261007",
+            "claude-haiku-5-5",
+            id="requested_alias_listed",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            "claude-haiku-5-5-20261007",
+            "claude-haiku-5-5-20261007",
+            id="cached_version_listed",
+        ),
+        pytest.param(
+            "claude-haiku-5-5-20261007",
+            "claude-haiku-5-5",
+            "claude-haiku-5-5-20261007",
+            id="requested_version_listed",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("sdk_date", "lifecycle", "retires_at"),
+    [
+        pytest.param(
+            "November 1st, 2026",
+            "deprecated",
+            dt.datetime(2026, 11, 1, tzinfo=dt.UTC),
+            id="ordinal_first_future",
+        ),
+        pytest.param(
+            "January 2nd, 2026",
+            "retired",
+            dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
+            id="ordinal_second_past",
+        ),
+        pytest.param(
+            "January 3rd, 2027",
+            "deprecated",
+            dt.datetime(2027, 1, 3, tzinfo=dt.UTC),
+            id="ordinal_third_future",
+        ),
+        pytest.param(
+            "October 16th, 2026",
+            "retired",
+            dt.datetime(2026, 10, 16, tzinfo=dt.UTC),
+            id="ordinal_today",
+        ),
+        pytest.param(
+            "2027-01-03",
+            "deprecated",
+            dt.datetime(2027, 1, 3, tzinfo=dt.UTC),
+            id="iso_future",
+        ),
+        pytest.param(
+            "2026-01-02",
+            "retired",
+            dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
+            id="iso_past",
+        ),
+        pytest.param(
+            "2026-10-16",
+            "retired",
+            dt.datetime(2026, 10, 16, tzinfo=dt.UTC),
+            id="iso_today",
+        ),
+        pytest.param(
+            "2026-10-16T13:00:00+00:00",
+            "deprecated",
+            dt.datetime(2026, 10, 16, 13, tzinfo=dt.UTC),
+            id="iso_timestamp_future",
+        ),
+        pytest.param(
+            "2026-10-16T14:00:00+03:00",
+            "retired",
+            dt.datetime(2026, 10, 16, 11, tzinfo=dt.UTC),
+            id="iso_timestamp_timezone",
+        ),
+        pytest.param("not a date", "deprecated", None, id="unparseable_date"),
+        pytest.param("", "deprecated", None, id="empty_date"),
+    ],
+)
+def test_active_model_sdk_deprecation_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model_id: str,
+    cached_id: str,
+    deprecated_id: str,
+    sdk_date: str,
+    lifecycle: str,
+    retires_at: dt.datetime | None,
+) -> None:
+    """Reconcile active API metadata with SDK dates without changing the cache."""
+    cached_model = model_list[0].model_copy(update={"id": cached_id}, deep=True)
+    original_metadata = cached_model.model_copy(deep=True)
+    coordinator = AnthropicCoordinator(hass, mock_config_entry)
+    coordinator.async_set_updated_data([cached_model])
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
+        {deprecated_id: sdk_date},
+        clear=True,
+    ):
+        model_info, found = coordinator.get_model_info(model_id)
+
+    assert found
+    assert model_info == original_metadata.model_copy(
+        update={"lifecycle": lifecycle, "retires_at": retires_at}
+    )
+    assert model_info is not cached_model
+    assert cached_model == original_metadata
+    assert coordinator.data == [original_metadata]
+
+
+def test_invalid_sdk_retirement_preserves_api_date(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Keep an existing API retirement date when the SDK date cannot be parsed."""
+    model = model_list[0].model_copy(
+        update={"retires_at": dt.datetime(2027, 1, 1, tzinfo=dt.UTC)}
+    )
+    coordinator = AnthropicCoordinator(hass, mock_config_entry)
+    coordinator.async_set_updated_data([model])
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
+        {model.id: "not a date"},
+        clear=True,
+    ):
+        model_info, found = coordinator.get_model_info(model.id)
+
+    assert found
+    assert model_info == model.model_copy(update={"lifecycle": "deprecated"})
+    assert model.lifecycle == "active"
+
+
+@pytest.mark.parametrize(
+    "lifecycle",
+    [
+        pytest.param("active", id="active"),
+        pytest.param("deprecated", id="deprecated"),
+        pytest.param("retired", id="retired"),
+    ],
+)
+def test_model_lifecycle_without_sdk_deprecation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    lifecycle: str,
+) -> None:
+    """Return API metadata unchanged when the SDK has no deprecation entry."""
+    model = model_list[0].model_copy(update={"lifecycle": lifecycle})
+    coordinator = AnthropicCoordinator(hass, mock_config_entry)
+    coordinator.async_set_updated_data([model])
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS", clear=True
+    ):
+        model_info, found = coordinator.get_model_info(model.id)
+
+    assert found
+    assert model_info is model
+
+
+@pytest.mark.freeze_time("2026-10-16T12:00:00Z")
+@pytest.mark.parametrize(
+    "lifecycle",
+    [
+        pytest.param("deprecated", id="deprecated"),
+        pytest.param("retired", id="retired"),
+    ],
+)
+@pytest.mark.parametrize(
+    "sdk_date",
+    [
+        pytest.param("2020-01-01", id="past_sdk_date"),
+        pytest.param("2030-01-01", id="future_sdk_date"),
+    ],
+)
+def test_inactive_api_model_takes_precedence_over_sdk(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    lifecycle: str,
+    sdk_date: str,
+) -> None:
+    """Preserve authoritative API lifecycle and dates over SDK metadata."""
+    model = model_list[0].model_copy(
+        update={
+            "lifecycle": lifecycle,
+            "deprecated_at": dt.datetime(2026, 9, 1, tzinfo=dt.UTC),
+            "retires_at": dt.datetime(2027, 2, 1, tzinfo=dt.UTC),
+        }
+    )
+    coordinator = AnthropicCoordinator(hass, mock_config_entry)
+    coordinator.async_set_updated_data([model])
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
+        {model.id: sdk_date},
+        clear=True,
+    ):
+        model_info, found = coordinator.get_model_info(model.id)
+
+    assert found
+    assert model_info is model
+
+
+def test_unknown_sdk_deprecated_model_is_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """SDK deprecations do not turn an unknown model into a catalogue match."""
+    coordinator = AnthropicCoordinator(hass, mock_config_entry)
+    coordinator.async_set_updated_data(model_list)
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
+        {"unknown-model": "January 1st, 2020"},
+        clear=True,
+    ):
+        model_info, found = coordinator.get_model_info("unknown-model")
+
+    assert not found
+    assert model_info.id == "unknown-model"
+    assert model_info.lifecycle == "retired"
+    assert model_info.retires_at is None
 
 
 async def test_model_pagination(

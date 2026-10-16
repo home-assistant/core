@@ -934,7 +934,11 @@ async def test_repair_flow_lifecycle_metadata(
     "metadata",
     [
         pytest.param(
-            [DEPRECATED_MODEL_LIST[0].model_copy(update={"lifecycle": "active"})],
+            [
+                DEPRECATED_MODEL_LIST[0].model_copy(
+                    update={"id": "claude-active-haiku", "lifecycle": "active"}
+                )
+            ],
             id="active_model",
         ),
         pytest.param([], id="unknown_model_retired_fallback"),
@@ -952,7 +956,7 @@ async def test_repair_flow_skips_active_and_unknown_models(
         api_key="key",
         subentries_data=[
             {
-                "data": {CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"},
+                "data": {CONF_CHAT_MODEL: "claude-active-haiku"},
                 "subentry_type": "conversation",
                 "title": "Conversation",
                 "unique_id": None,
@@ -968,7 +972,7 @@ async def test_repair_flow_skips_active_and_unknown_models(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     entry.runtime_data.client.models.list.assert_not_awaited()
     assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"
+        CONF_CHAT_MODEL: "claude-active-haiku"
     }
 
 
