@@ -99,8 +99,10 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
                             "rssi": reception.rssi,
                             "snr": reception.snr,
                         }
-                        for reception in getattr(state.uplink, "receptions", ())
-                    ],
+                        for reception in state.uplink.receptions
+                    ]
+                    if state.uplink
+                    else [],
                     "battery_level": status.battery_level
                     if status
                     and not status.battery_level_unavailable
