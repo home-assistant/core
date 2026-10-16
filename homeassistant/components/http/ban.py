@@ -19,6 +19,7 @@ from aiohttp.web import (
     middleware,
 )
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
+from hass_nabucasa import remote
 import probatio
 
 from homeassistant.config import load_yaml_config_file
@@ -50,6 +51,21 @@ SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
 )
 
 
+def _is_cloud_loopback_request(request: Request) -> bool:
+    """Check if the request arrived via Nabu Casa Cloud Remote UI on loopback.
+
+    Remote UI requests are relayed through a local tunnel, so request.remote is
+    a loopback address shared by every remote UI client. Ban accounting against
+    it would ban all remote UI traffic, so it is exempt.
+    """
+    return (
+        remote.is_cloud_request.get()
+        and ip_address(
+            request.remote  # type: ignore[arg-type]
+        ).is_loopback
+    )
+
+
 @callback
 def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
     """Create IP Ban middleware for the app."""
@@ -79,10 +95,13 @@ async def ban_middleware(
         return await handler(request)
 
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
-        # Verify if IP is not banned
-        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
-        if ip_address_ in ip_bans_lookup:
-            raise HTTPForbidden
+        # Requests arriving via the cloud Remote UI share the loopback
+        # identity, so a ban entry for it must not block remote UI traffic.
+        if not _is_cloud_loopback_request(request):
+            # Verify if IP is not banned
+            ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+            if ip_address_ in ip_bans_lookup:
+                raise HTTPForbidden
 
     try:
         return await handler(request)
@@ -146,6 +165,11 @@ async def process_wrong_login(request: Request) -> None:
 
     # Check if ban middleware is loaded
     if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
+        return
+
+    # Requests arriving via the cloud Remote UI share the loopback identity,
+    # so counting their failed logins would ban all remote UI traffic.
+    if _is_cloud_loopback_request(request):
         return
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
