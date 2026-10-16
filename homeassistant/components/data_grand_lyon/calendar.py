@@ -78,7 +78,9 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
             return _calendar_event(
                 min(started, key=lambda alert: (alert.niveau_severite, alert.debut))
             )
-        return _calendar_event(min(alerts, key=lambda alert: alert.debut))
+        return _calendar_event(
+            min(alerts, key=lambda alert: (alert.debut, alert.niveau_severite))
+        )
 
     @override
     async def async_get_events(

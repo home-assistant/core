@@ -96,6 +96,36 @@ async def test_state_off_when_every_alert_has_ended(
     assert state.state == STATE_OFF
 
 
+async def test_state_on_picks_most_severe_started_alert(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test the most severe running alert wins over one that started earlier."""
+    mock_tcl_client.get_tcl_alerts.return_value = [
+        replace(
+            MOCK_TCL_ALERTS[0],
+            debut=datetime(2026, 4, 10, 8, 0),
+            titre="Earlier minor alert",
+            niveau_severite=30,
+        ),
+        replace(
+            MOCK_TCL_ALERTS[0],
+            debut=datetime(2026, 4, 10, 9, 0),
+            titre="Later severe alert",
+            niveau_severite=10,
+        ),
+    ]
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Later severe alert"
+
+
 async def test_state_on_prefers_started_alert_over_later_one(
     hass: HomeAssistant,
     mock_line_config_entry: MockConfigEntry,
@@ -212,6 +242,24 @@ async def test_state_on_prefers_started_alert_over_later_one(
             ],
             "Soonest information",
             id="soonest_upcoming_alert_wins_over_severity",
+        ),
+        pytest.param(
+            [
+                replace(
+                    MOCK_TCL_ALERTS[0],
+                    debut=datetime(2026, 4, 10, 18, 0),
+                    titre="Minor alert",
+                    niveau_severite=30,
+                ),
+                replace(
+                    MOCK_TCL_ALERTS[0],
+                    debut=datetime(2026, 4, 10, 18, 0),
+                    titre="Severe alert",
+                    niveau_severite=10,
+                ),
+            ],
+            "Severe alert",
+            id="same_start_most_severe_wins",
         ),
     ],
 )
