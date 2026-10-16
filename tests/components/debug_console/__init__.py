@@ -38,6 +38,8 @@ COMMANDS = [
         id="signature",
     ),
     pytest.param({"type": "debug_console/clear", "session_id": SESSION_ID}, id="clear"),
+    pytest.param({"type": "debug_console/stop", "session_id": SESSION_ID}, id="stop"),
+    pytest.param({"type": "debug_console/check_input", "code": "1"}, id="check_input"),
     pytest.param({"type": "debug_console/info"}, id="info"),
     pytest.param({"type": "debug_console/warning/accept"}, id="warning_accept"),
 ]

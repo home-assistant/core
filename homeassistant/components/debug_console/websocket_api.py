@@ -23,7 +23,7 @@ from .safeguards import (
     async_log_property_evaluation,
     async_warning_required,
 )
-from .session import async_get_session
+from .session import async_get_session, async_stop_executions
 
 ERR_EXECUTION_STOPPED = "execution_stopped"
 ERR_WARNING_NOT_ACCEPTED = "warning_not_accepted"
@@ -35,6 +35,7 @@ SESSION_ID = probatio.All(str, probatio.Length(min=1, max=64))
 @callback
 def async_register_websocket_commands(hass: HomeAssistant) -> None:
     """Register the websocket commands of the debug console."""
+    websocket_api.async_register_command(hass, handle_check_input)
     websocket_api.async_register_command(hass, handle_clear)
     websocket_api.async_register_command(hass, handle_complete)
     websocket_api.async_register_command(hass, handle_execute)
@@ -42,6 +43,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_inspect)
     websocket_api.async_register_command(hass, handle_signature)
+    websocket_api.async_register_command(hass, handle_stop)
     websocket_api.async_register_command(hass, handle_warning_accept)
 
 
@@ -98,7 +100,6 @@ async def handle_warning_accept(
         probatio.Required("type"): "debug_console/execute",
         probatio.Required("session_id"): SESSION_ID,
         probatio.Required("code"): str,
-        probatio.Optional("check_complete", default=False): bool,
     }
 )
 @websocket_api.require_admin
@@ -108,17 +109,13 @@ async def handle_execute(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Execute Python code in the running Home Assistant instance."""
-    if msg["check_complete"] and is_incomplete(msg["code"]):
-        connection.send_result(msg["id"], {"incomplete": True})
-        return
-
     async_log_execution(connection, msg["code"])
     session = async_get_session(hass, connection, msg["session_id"])
 
     try:
         result = await async_execute(hass, session, msg["code"])
     except asyncio.CancelledError:
-        # Stopped when the console got disabled, or Home Assistant stops.
+        # Stopped by the user, or when Home Assistant stops.
         connection.send_error(
             msg["id"], ERR_EXECUTION_STOPPED, "The code was stopped before it finished"
         )
@@ -230,6 +227,26 @@ def handle_signature(
 
 @websocket_api.websocket_command(
     {
+        probatio.Required("type"): "debug_console/check_input",
+        probatio.Required("code"): str,
+    }
+)
+@websocket_api.require_admin
+@_require_accepted_warning
+@callback
+def handle_check_input(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return if code needs more input before it runs, like in the Python REPL.
+
+    Apart from running it, so the frontend can take code off the prompt before
+    it runs, which can take a while.
+    """
+    connection.send_result(msg["id"], {"incomplete": is_incomplete(msg["code"])})
+
+
+@websocket_api.websocket_command(
+    {
         probatio.Required("type"): "debug_console/clear",
         probatio.Required("session_id"): SESSION_ID,
     }
@@ -242,4 +259,21 @@ def handle_clear(
 ) -> None:
     """Release the objects kept alive for inspection, keeping the namespace."""
     async_get_session(hass, connection, msg["session_id"]).release_objects()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "debug_console/stop",
+        probatio.Required("session_id"): SESSION_ID,
+    }
+)
+@websocket_api.require_admin
+@_require_accepted_warning
+@callback
+def handle_stop(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Stop the code the session is running, which answers that it stopped."""
+    async_stop_executions(hass, connection, msg["session_id"])
     connection.send_result(msg["id"])

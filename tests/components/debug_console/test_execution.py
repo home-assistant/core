@@ -133,13 +133,16 @@ async def test_print_to_file(websocket_client: MockHAClientWebSocket) -> None:
         pytest.param("    # comment", False, id="comment_only"),
     ],
 )
-async def test_check_complete(
+async def test_check_input(
     websocket_client: MockHAClientWebSocket, code: str, incomplete: bool
 ) -> None:
-    """Test incomplete code is not executed when checking for completeness."""
-    result = await async_execute(websocket_client, code, check_complete=True)
+    """Test checking if code needs more input, without running it."""
+    await websocket_client.send_json_auto_id(
+        {"type": "debug_console/check_input", "code": code}
+    )
+    msg = await websocket_client.receive_json()
 
-    assert result.get("incomplete", False) is incomplete
+    assert msg["result"] == {"incomplete": incomplete}
 
 
 async def test_namespace_persists(websocket_client: MockHAClientWebSocket) -> None:

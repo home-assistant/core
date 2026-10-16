@@ -35,6 +35,42 @@ async def _async_start_waiting_execution(client: MockHAClientWebSocket) -> None:
     await async_execute(client, "1")
 
 
+async def test_stop(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test stopping the code a session runs, while the console stays usable."""
+    await _async_start_waiting_execution(websocket_client)
+    (session,) = hass.data[DATA_SESSIONS].values()
+    (execution,) = session.executions
+
+    await websocket_client.send_json_auto_id(
+        {"type": "debug_console/stop", "session_id": SESSION_ID}
+    )
+    responses = {
+        msg["id"]: msg
+        for msg in (
+            await websocket_client.receive_json(),
+            await websocket_client.receive_json(),
+        )
+    }
+    await hass.async_block_till_done()
+
+    assert execution.cancelled()
+    stopped, done = (responses[msg_id] for msg_id in sorted(responses))
+    assert stopped["error"]["code"] == "execution_stopped"
+    assert done["success"]
+
+    result = await async_execute(websocket_client, "1 + 1")
+    assert result["result"] == {"type": "number", "value": "2"}
+
+
+async def test_stop_without_session(websocket_client: MockHAClientWebSocket) -> None:
+    """Test stopping a session that does not exist does nothing."""
+    result = await async_send(websocket_client, {"type": "debug_console/stop"})
+
+    assert result is None
+
+
 async def _async_stop(hass: HomeAssistant) -> None:
     """Stop Home Assistant, as far as the console sees it."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)

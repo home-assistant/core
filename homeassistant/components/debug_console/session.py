@@ -143,6 +143,16 @@ def async_get_session(
     return session
 
 
+@callback
+def async_stop_executions(
+    hass: HomeAssistant, connection: ActiveConnection, session_id: str
+) -> None:
+    """Stop the code a session of the user is running, if any."""
+    if session := hass.data[DATA_SESSIONS].get((connection.user.id, session_id)):
+        for execution in session.executions:
+            execution.cancel()
+
+
 async def async_close_sessions(sessions: ConsoleSessions) -> None:
     """Close all sessions, and give code they still run a moment to clean up."""
     executions = [
