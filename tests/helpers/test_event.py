@@ -533,6 +533,339 @@ async def test_async_track_state_change_filtered_removal_preserves_shared_listen
     unsub_shared()
 
 
+async def test_async_track_state_change_filtered_domain_to_entity_update_once(
+    hass: HomeAssistant,
+) -> None:
+    """Test a domain-to-entity update does not redeliver the current event."""
+    calls = []
+    shared_calls = []
+    hass.states.async_set("light.target", "off")
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_update_listeners(TrackStates(False, {"light.target"}, set()))
+
+    @callback
+    def shared_action(event: Event[EventStateChangedData]) -> None:
+        shared_calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+    unsub_shared = async_track_state_change_event(hass, "light.target", shared_action)
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("light.target", "off")
+    hass.states.async_set("switch.unrelated", "on")
+
+    assert calls == ["light.target", "light.target"]
+    assert shared_calls == ["light.target", "light.target"]
+
+    tracker.async_remove()
+    hass.states.async_set("light.target", "on")
+
+    assert calls == ["light.target", "light.target"]
+    assert shared_calls == ["light.target", "light.target", "light.target"]
+
+    unsub_shared()
+
+
+async def test_async_track_state_change_filtered_entity_to_domain_update_once(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entity-to-domain update does not redeliver the current event."""
+    calls = []
+    shared_calls = []
+    hass.states.async_set("light.target", "off")
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_update_listeners(TrackStates(False, set(), {"light"}))
+
+    @callback
+    def shared_action(event: Event[EventStateChangedData]) -> None:
+        shared_calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, {"light.target"}, set()),
+        action,
+    )
+    shared_tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        shared_action,
+    )
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("light.target", "off")
+    hass.states.async_set("switch.unrelated", "on")
+
+    assert calls == ["light.target", "light.target"]
+    assert shared_calls == ["light.target", "light.target"]
+
+    tracker.async_remove()
+    hass.states.async_set("light.target", "on")
+
+    assert calls == ["light.target", "light.target"]
+    assert shared_calls == ["light.target", "light.target", "light.target"]
+
+    shared_tracker.async_remove()
+
+
+async def test_async_track_state_change_filtered_domain_to_entity_first_add_once(
+    hass: HomeAssistant,
+) -> None:
+    """Test a domain-to-entity update on first add is delivered once."""
+    calls = []
+    shared_calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_update_listeners(TrackStates(False, {"light.target"}, set()))
+
+    @callback
+    def shared_action(event: Event[EventStateChangedData]) -> None:
+        shared_calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+    unsub_shared = async_track_state_change_event(hass, "light.target", shared_action)
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("light.target", "off")
+
+    assert calls == ["light.target", "light.target"]
+    assert shared_calls == ["light.target", "light.target"]
+
+    tracker.async_remove()
+    unsub_shared()
+
+
+async def test_async_track_state_change_filtered_repeated_domain_to_entity_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test repeated domain-to-entity updates do not accumulate subscriptions."""
+    calls = []
+    hass.states.async_set("light.target", "off")
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_update_listeners(TrackStates(False, {"light.target"}, set()))
+
+    @callback
+    def shared_action(_: Event[EventStateChangedData]) -> None:
+        pass
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+    unsub_shared = async_track_state_change_event(hass, "light.target", shared_action)
+
+    hass.states.async_set("light.target", "on")
+    tracker.async_update_listeners(TrackStates(False, set(), {"light"}))
+    hass.states.async_set("light.target", "off")
+
+    assert calls == ["light.target", "light.target"]
+
+    tracker.async_remove()
+    unsub_shared()
+
+
+async def test_async_track_state_change_filtered_domain_to_all_states_update_once(
+    hass: HomeAssistant,
+) -> None:
+    """Test a domain-to-all-states update does not duplicate the current event."""
+    calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_update_listeners(TrackStates(True, None, None))
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("switch.unrelated", "on")
+    tracker.async_update_listeners(TrackStates(False, {"light.target"}, set()))
+    hass.states.async_set("switch.unrelated", "off")
+    hass.states.async_set("light.target", "off")
+
+    assert calls == ["light.target", "switch.unrelated", "light.target"]
+
+    tracker.async_remove()
+
+
+async def test_async_track_state_change_filtered_nested_events_are_delivered(
+    hass: HomeAssistant,
+) -> None:
+    """Test nested state changes are distinct events."""
+    calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        hass.states.async_set("light.nested", "on")
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+
+    hass.states.async_set("light.initial", "on")
+
+    assert calls == ["light.initial", "light.nested"]
+
+    tracker.async_remove()
+
+
+async def test_async_track_state_change_filtered_update_queues_nested_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test an update during dispatch does not redeliver the outer event."""
+    calls = []
+    shared_calls = []
+    hass.states.async_set("light.target", "off")
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        entity_id = event.data["entity_id"]
+        calls.append(entity_id)
+        if entity_id == "light.target":
+            tracker.async_update_listeners(TrackStates(False, set(), {"light"}))
+            hass.states.async_set("light.nested", "on")
+
+    @callback
+    def shared_action(event: Event[EventStateChangedData]) -> None:
+        shared_calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, {"light.target"}, set()),
+        action,
+    )
+    shared_tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        shared_action,
+    )
+
+    hass.states.async_set("light.target", "on")
+
+    assert calls == ["light.target", "light.nested"]
+    assert shared_calls == ["light.target", "light.nested"]
+
+    tracker.async_remove()
+    shared_tracker.async_remove()
+
+
+async def test_async_track_state_change_filtered_rapid_events_are_delivered(
+    hass: HomeAssistant,
+) -> None:
+    """Test separate events before loop cleanup are not suppressed."""
+    calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["new_state"].state)
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+
+    hass.states.async_set("light.target", "one")
+    hass.states.async_set("light.target", "two")
+    hass.states.async_set("light.target", "three")
+
+    assert calls == ["one", "two", "three"]
+
+    tracker.async_remove()
+
+
+async def test_async_track_state_change_filtered_all_states_to_entity_update_once(
+    hass: HomeAssistant,
+) -> None:
+    """Test an all-states-to-entity update does not redeliver the event."""
+    calls = []
+    shared_calls = []
+    hass.states.async_set("light.target", "off")
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_update_listeners(TrackStates(False, {"light.target"}, set()))
+
+    @callback
+    def shared_action(event: Event[EventStateChangedData]) -> None:
+        shared_calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(True, None, None),
+        action,
+    )
+    unsub_shared = async_track_state_change_event(hass, "light.target", shared_action)
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("light.target", "off")
+
+    assert calls == ["light.target", "light.target"]
+    assert shared_calls == ["light.target", "light.target"]
+
+    tracker.async_remove()
+    unsub_shared()
+
+
+async def test_async_track_state_change_filtered_remove_during_dispatch(
+    hass: HomeAssistant,
+) -> None:
+    """Test removal during dispatch preserves an independent subscriber."""
+    calls = []
+    shared_calls = []
+
+    @callback
+    def action(event: Event[EventStateChangedData]) -> None:
+        calls.append(event.data["entity_id"])
+        tracker.async_remove()
+
+    @callback
+    def shared_action(event: Event[EventStateChangedData]) -> None:
+        shared_calls.append(event.data["entity_id"])
+
+    tracker = async_track_state_change_filtered(
+        hass,
+        TrackStates(False, set(), {"light"}),
+        action,
+    )
+    unsub_shared = async_track_state_change_event(hass, "light.target", shared_action)
+
+    hass.states.async_set("light.target", "on")
+    hass.states.async_set("light.target", "off")
+
+    assert calls == ["light.target"]
+    assert shared_calls == ["light.target", "light.target"]
+
+    unsub_shared()
+
+
 async def test_async_track_state_change_event(hass: HomeAssistant) -> None:
     """Test async_track_state_change_event."""
     single_entity_id_tracker = []
