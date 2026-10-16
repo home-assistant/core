@@ -7,6 +7,7 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
 
+from homeassistant.components.matter.entity import MatterEntity
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -643,3 +644,11 @@ async def test_entity_removal_unsubscribes_events(
 
     assert hass.states.get(entity_id) is None
     assert all(unsubscribe.called for _, unsubscribe in entity_subscriptions)
+
+
+def test_find_matching_labels_without_device_info() -> None:
+    """Test label matching returns no labels while the node hasn't reported device info."""
+    fake_self = MagicMock()
+    fake_self._endpoint.device_info = None
+
+    assert MatterEntity._find_matching_labels(fake_self) == []
