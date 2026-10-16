@@ -496,8 +496,7 @@ async def test_a_device_losing_its_battery_stops_reporting_a_level(
     device = account.devices[DEVICE["id"]]
     assert device.battery_level == 80
 
-    # Off the loop, as the account does: update() announces through the
-    # thread-safe dispatcher_send.
+    # Off the loop, as the account does: the poll runs in an executor thread.
     await hass.async_add_executor_job(
         device.update, DEVICE | {"batteryStatus": "Unknown", "batteryLevel": None}
     )
