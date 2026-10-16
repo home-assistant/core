@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.number import (
+    AMBIGUOUS_UNITS,
     ATTR_MAX,
     ATTR_MIN,
     ATTR_MODE,
@@ -20,7 +21,6 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.components.number.const import (
-    AMBIGUOUS_UNITS,
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
 )
 from homeassistant.components.sensor import (

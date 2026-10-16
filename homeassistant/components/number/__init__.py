@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    AMBIGUOUS_UNITS,
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -23,6 +24,7 @@ from .const import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_SET_VALUE,
+    UNIT_CONVERTERS,
     NumberDeviceClass,
     NumberEntityCapabilityAttribute,
     NumberMode,
@@ -47,6 +49,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 __all__ = [
+    "AMBIGUOUS_UNITS",
     "ATTR_MAX",
     "ATTR_MIN",
     "ATTR_MODE",
@@ -61,6 +64,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "SERVICE_SET_VALUE",
+    "UNIT_CONVERTERS",
     "NumberDeviceClass",
     "NumberEntity",
     "NumberEntityCapabilityAttribute",
