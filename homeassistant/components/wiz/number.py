@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WizConfigEntry, WizData
-from .entity import WizEntity, wiz_exception_handler
+from .entity import WizEntity, get_wiz_state, wiz_exception_handler
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,7 +46,11 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_min_value=10,
         native_max_value=200,
         native_step=1,
-        value_fn=lambda device: cast(int | None, device.state.get_speed()),
+        value_fn=lambda device: (
+            cast(int | None, state.get_speed())
+            if (state := get_wiz_state(device))
+            else None
+        ),
         set_value_fn=_async_set_speed,
         required_feature="effect",
         entity_category=EntityCategory.CONFIG,
@@ -57,12 +61,17 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        value_fn=lambda device: cast(int | None, device.state.get_ratio()),
+        value_fn=lambda device: (
+            cast(int | None, state.get_ratio())
+            if (state := get_wiz_state(device))
+            else None
+        ),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
         # Some ratio-based dual-head lights do not advertise this feature.
         supported_fn=lambda device: (
-            device.state is not None and device.state.get_ratio() is not None
+            (state := get_wiz_state(device)) is not None
+            and state.get_ratio() is not None
         ),
         entity_category=EntityCategory.CONFIG,
     ),

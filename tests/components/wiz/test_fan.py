@@ -26,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -36,6 +37,7 @@ from . import (
     FAKE_DIMMABLE_FAN,
     FAKE_DIMMABLE_FAN_2,
     FAKE_MAC,
+    _mocked_wizlight,
     async_push_update,
     async_setup_integration,
 )
@@ -257,3 +259,18 @@ async def test_fan_set_direction(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+
+
+async def test_fan_without_primary_state(hass: HomeAssistant) -> None:
+    """Test missing state does not prevent setting up the fan."""
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_FAN)
+    bulb.state = []
+    bulb.updateState.return_value = []
+
+    await async_setup_integration(hass, wizlight=bulb)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_PERCENTAGE] is None
+    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_DIRECTION] is None

@@ -95,7 +95,10 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        state = self._device.state
+        state = self._state
+        if state is None:
+            super()._async_update_attrs()
+            return
 
         if (brightness := state.get_brightness()) is not None:
             self._attr_brightness = max(0, min(255, brightness))

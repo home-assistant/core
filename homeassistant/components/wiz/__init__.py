@@ -96,11 +96,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
     )
 
     @callback
-    def _async_push_update(state: PilotParser) -> None:
+    def _async_push_update(states: list[PilotParser | None]) -> None:
         """Receive a push update."""
-        _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
+        _LOGGER.debug(
+            "%s: Got push update: %s",
+            bulb.mac,
+            [state.pilotResult if state else None for state in states],
+        )
         coordinator.async_set_updated_data(coordinator.data)
-        if state.get_source() in OCCUPANCY_SOURCES:
+        if states and (state := states[0]) and state.get_source() in OCCUPANCY_SOURCES:
             async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
 
     await bulb.start_push(_async_push_update)

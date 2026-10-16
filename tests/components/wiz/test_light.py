@@ -24,6 +24,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -276,9 +277,30 @@ async def test_light_without_any_color_state(hass: HomeAssistant) -> None:
     # A bulb can report being on without any of the values the color mode is
     # otherwise picked from, and there is no color mode to fall back on for a
     # bulb that supports more than one.
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})
+    bulb.state = [PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})]
     await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_RGBWW_BULB)
 
     state = hass.states.get("light.mock_title")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "states",
+    [
+        pytest.param([], id="empty"),
+        pytest.param([None], id="missing-primary"),
+        pytest.param([None, PilotParser({"state": True})], id="secondary-only"),
+    ],
+)
+async def test_light_without_primary_state(
+    hass: HomeAssistant, states: list[PilotParser | None]
+) -> None:
+    """Test missing primary state does not prevent setting up the light."""
+    bulb = _mocked_wizlight(None, None, FAKE_RGBWW_BULB)
+    bulb.state = states
+    bulb.updateState.return_value = states
+
+    await async_setup_integration(hass, wizlight=bulb)
+
+    assert hass.states.get("light.mock_title").state == STATE_UNKNOWN
