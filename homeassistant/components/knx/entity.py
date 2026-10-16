@@ -1,7 +1,6 @@
 """Base classes for KNX entities."""
 
 from collections.abc import Callable
-from dataclasses import replace
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -169,7 +168,7 @@ class _KnxEntityBase(Entity):
             if self.registry_entry is not None and self.registry_entry.disabled:
                 self._knx_module.add_disabled_entity(
                     group_addresses=self._device.group_addresses(),
-                    identifier=replace(identifier, disabled=True),
+                    identifier=identifier,
                 )
             else:
                 # added to the map already if `add_to_platform_finish` failed
@@ -217,7 +216,7 @@ class _KnxEntityBase(Entity):
             if self.registry_entry is not None and self.registry_entry.disabled:
                 self._knx_module.add_disabled_entity(
                     group_addresses=self._device.group_addresses(),
-                    identifier=replace(identifier, disabled=True),
+                    identifier=identifier,
                 )
 
 

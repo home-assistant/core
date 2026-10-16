@@ -116,7 +116,8 @@ class KNXModule:
         self.group_address_entities: dict[
             DeviceGroupAddress, set[KnxEntityIdentifier]
         ] = {}
-        # configured entities disabled in the entity registry
+        # configured entities disabled in the entity registry - keyed like the
+        # live map, `disabled` is only set when both are merged
         self.disabled_group_address_entities: dict[
             KnxEntityIdentifier, set[DeviceGroupAddress]
         ] = {}
@@ -246,9 +247,7 @@ class KNXModule:
     ) -> None:
         """Register entity in group_address_entities map."""
         # the entity may have been enabled without a reload of the config entry yet
-        self.disabled_group_address_entities.pop(
-            replace(identifier, disabled=True), None
-        )
+        self.disabled_group_address_entities.pop(identifier, None)
         for ga in group_addresses:
             if ga not in self.group_address_entities:
                 self.group_address_entities[ga] = set()
@@ -287,8 +286,9 @@ class KNXModule:
             for ga, identifiers in self.group_address_entities.items()
         }
         for identifier, group_addresses in self.disabled_group_address_entities.items():
+            disabled_identifier = replace(identifier, disabled=True)
             for ga in group_addresses:
-                result.setdefault(ga, set()).add(identifier)
+                result.setdefault(ga, set()).add(disabled_identifier)
         return result
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:

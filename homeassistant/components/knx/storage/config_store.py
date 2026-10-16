@@ -354,7 +354,7 @@ class KNXConfigStore:
         # until the config entry is reloaded.
         self.hass.data[KNX_MODULE_KEY].remove_disabled_entity(
             KnxEntityIdentifier(
-                platform=entry.domain, unique_id=entry.unique_id, ui=True, disabled=True
+                platform=entry.domain, unique_id=entry.unique_id, ui=True
             )
         )
         await self._store.async_save(self.data)

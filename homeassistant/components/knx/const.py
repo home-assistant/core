@@ -28,7 +28,7 @@ class KnxEntityIdentifier:
     platform: str
     unique_id: str
     ui: bool  # ui or yaml entity
-    disabled: bool = False  # disabled in the entity registry
+    disabled: bool = False  # disabled in the entity registry - set when reported
 
 
 # Prefix of device identifiers created via the `knx/create_device` websocket
