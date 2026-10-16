@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+import asyncio
 import datetime as dt
 from typing import Literal
 from unittest.mock import AsyncMock, call, patch
@@ -7,7 +8,6 @@ from unittest.mock import AsyncMock, call, patch
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
 from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import URL, Request, Response
 import pytest
@@ -26,7 +26,7 @@ from homeassistant.helpers import intent, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import model_list
+from . import create_content_block, model_list
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -326,6 +326,7 @@ async def test_model_pagination(
     assert mock_config_entry.runtime_data.data == [*active_models, *inactive_models]
 
 
+@pytest.mark.freeze_time("2026-10-16T00:00:00Z")
 @pytest.mark.parametrize(
     "lifecycle",
     [
@@ -335,12 +336,14 @@ async def test_model_pagination(
 )
 async def test_model_lifecycle_refresh(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
     issue_registry: ir.IssueRegistry,
     lifecycle: Literal["deprecated", "retired"],
 ) -> None:
-    """Create a repair when a model leaves the active catalogue."""
+    """Successful conversations do not postpone catalogue polling or repairs."""
     active_model = model_list[0].model_copy(deep=True)
     hass.config_entries.async_update_subentry(
         mock_config_entry,
@@ -359,8 +362,25 @@ async def test_model_lifecycle_refresh(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])] * 2
 
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL_CONNECTED)
+    freezer.tick(dt.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    freezer.tick(dt.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert mock_model_list.await_count == 2
+
+    freezer.tick(dt.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     assert (
@@ -748,11 +768,12 @@ async def test_auth_error_handling(
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-@freeze_time("2026-02-27 12:00:00")
+@pytest.mark.freeze_time("2026-02-27T12:00:00Z")
 @pytest.mark.usefixtures("mock_init_component")
 async def test_connection_error_handling(
     mock_model_list: AsyncMock,
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test making entity unavailable on connection error."""
@@ -805,16 +826,147 @@ async def test_connection_error_handling(
     assert state
     assert state.state == "2026-02-27T12:00:00+00:00"
 
-    # Verify the background check period
-    test_time = dt_util.utcnow() + UPDATE_INTERVAL_DISCONNECTED
-    async_fire_time_changed(hass, test_time)
-    await hass.async_block_till_done()
-    mock_model_list.assert_not_awaited()
+    freezer.tick(dt.timedelta(seconds=20))
+    mock_create_stream.side_effect = APITimeoutError(
+        request=Request(method="POST", url=URL()),
+    )
+    await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+    freezer.tick(dt.timedelta(seconds=20))
+    mock_create_stream.side_effect = RateLimitError(
+        message=None,
+        response=Response(status_code=429, request=Request(method="POST", url=URL())),
+        body=None,
+    )
+    await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
 
-    test_time += UPDATE_INTERVAL_CONNECTED - UPDATE_INTERVAL_DISCONNECTED
-    async_fire_time_changed(hass, test_time)
+    # Connection recovery keeps the original pending catalogue check.
+    freezer.tick(dt.timedelta(seconds=20))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    mock_model_list.assert_awaited_once_with(lifecycle=["active"], timeout=10.0)
+
+    freezer.tick(UPDATE_INTERVAL_CONNECTED - UPDATE_INTERVAL_DISCONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     mock_model_list.assert_awaited_once()
+
+    freezer.tick(UPDATE_INTERVAL_DISCONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_model_list.await_count == 2
+
+
+@pytest.mark.freeze_time("2026-10-16T00:00:00Z")
+@pytest.mark.usefixtures("mock_init_component")
+async def test_successful_conversation_preserves_queued_catalogue_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """A healthy connection report does not cancel a queued debounced refresh."""
+    mock_model_list.reset_mock()
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        side_effect=AuthenticationError(
+            message="Invalid API key",
+            response=Response(
+                status_code=401, request=Request(method="POST", url=URL())
+            ),
+            body=None,
+        ),
+    ):
+        for _ in range(2):
+            result = await conversation.async_converse(
+                hass,
+                "hello",
+                None,
+                Context(),
+                agent_id="conversation.claude_conversation",
+            )
+            assert result.response.response_type is intent.IntentResponseType.ERROR
+    mock_model_list.assert_awaited_once()
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    freezer.tick(dt.timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert mock_model_list.await_args_list == [
+        call(lifecycle=["active"], timeout=10.0),
+        call(lifecycle=["active"], timeout=10.0),
+    ]
+
+
+@pytest.mark.freeze_time("2026-10-16T00:00:00Z")
+@pytest.mark.usefixtures("mock_init_component")
+async def test_successful_conversation_preserves_in_flight_catalogue_retry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Successful messages during a timed-out catalogue retry keep its short interval."""
+    coordinator = mock_config_entry.runtime_data
+    request_started = asyncio.Event()
+    finish_request = asyncio.Event()
+
+    async def timeout_models_list(**_kwargs: object) -> AsyncPage[ModelInfo]:
+        request_started.set()
+        await finish_request.wait()
+        raise APITimeoutError(
+            request=Request("GET", "https://api.anthropic.com/v1/models")
+        )
+
+    mock_model_list.reset_mock()
+    mock_model_list.side_effect = timeout_models_list
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])] * 2
+    coordinator.mark_connection_error()
+
+    freezer.tick(UPDATE_INTERVAL_DISCONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    try:
+        await request_started.wait()
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+        )
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+        assert coordinator.last_update_success
+        assert coordinator.update_interval == UPDATE_INTERVAL_DISCONNECTED
+    finally:
+        finish_request.set()
+        await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL_DISCONNECTED
+    mock_model_list.assert_awaited_once()
+    mock_model_list.side_effect = None
+    mock_model_list.return_value = AsyncPage(data=model_list, has_more=False)
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL_DISCONNECTED
+
+    freezer.tick(UPDATE_INTERVAL_DISCONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert mock_model_list.await_count == 2
+    assert coordinator.last_update_success
+    assert coordinator.update_interval == UPDATE_INTERVAL_CONNECTED
 
 
 @pytest.mark.usefixtures("mock_init_component")

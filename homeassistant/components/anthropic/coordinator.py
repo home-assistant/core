@@ -113,13 +113,6 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             self.hass, self.config_entry.data[CONF_API_KEY]
         )
 
-    @callback
-    @override
-    def async_set_updated_data(self, data: list[anthropic.types.ModelInfo]) -> None:
-        """Manually update data, notify listeners and update refresh interval."""
-        self.update_interval = UPDATE_INTERVAL_CONNECTED
-        super().async_set_updated_data(data)
-
     async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
         """Fetch model list from the API.
 
@@ -184,14 +177,22 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
                 translation_placeholders={"message": err.message},
             ) from err
 
+    @callback
+    def mark_connection_healthy(self) -> None:
+        """Restore connection health without changing catalogue polling."""
+        if not self.last_update_success:
+            self.last_update_success = True
+            self.async_update_listeners()
+
     def mark_connection_error(self) -> None:
         """Mark the connection as having an error and reschedule background check."""
+        reschedule_refresh = self.update_interval != UPDATE_INTERVAL_DISCONNECTED
         self.update_interval = UPDATE_INTERVAL_DISCONNECTED
         if self.last_update_success:
             self.last_update_success = False
             self.async_update_listeners()
-            if self._listeners and not self.hass.is_stopping:
-                self._schedule_refresh()
+        if reschedule_refresh and self._listeners and not self.hass.is_stopping:
+            self._schedule_refresh()
 
     @callback
     def get_model_info(self, model_id: str) -> tuple[anthropic.types.ModelInfo, bool]:
