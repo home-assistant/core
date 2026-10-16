@@ -1,11 +1,14 @@
 """Tests for the login flow."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.auth.const import LOGIN_FLOW_EVICTION_INTERVAL, LOGIN_FLOW_EXPIRATION
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -635,3 +638,80 @@ async def test_well_known_auth_info_allows_cors(
 
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
+
+
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 3)
+async def test_login_flow_limit(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oldest login flow is aborted when the limit is reached."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    payload = {
+        "client_id": CLIENT_ID,
+        "handler": ["insecure_example", None],
+        "redirect_uri": CLIENT_REDIRECT_URI,
+    }
+
+    flow_ids = []
+    for _ in range(4):
+        resp = await client.post("/auth/login_flow", json=payload)
+        assert resp.status == HTTPStatus.OK
+        flow_ids.append((await resp.json())["flow_id"])
+
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[1:]
+
+    # Only one flow is evicted per interval.
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.TOO_MANY_REQUESTS
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[1:]
+
+    freezer.tick(LOGIN_FLOW_EVICTION_INTERVAL)
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    flow_ids.append((await resp.json())["flow_id"])
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[2:]
+
+    # Expired flows are aborted when the next flow is created.
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    assert len(hass.auth.login_flow.async_progress()) == 1
+
+
+async def test_login_flow_expired(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an expired login flow can't be continued."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert hass.auth.login_flow.async_progress() == []

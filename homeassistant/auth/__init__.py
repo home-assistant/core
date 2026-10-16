@@ -22,7 +22,14 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
-from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
+from .const import (
+    ACCESS_TOKEN_EXPIRATION,
+    GROUP_ID_ADMIN,
+    LOGIN_FLOW_EVICTION_INTERVAL,
+    LOGIN_FLOW_EXPIRATION,
+    MAX_LOGIN_FLOWS,
+    REFRESH_TOKEN_EXPIRATION,
+)
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowContext, AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
@@ -43,6 +50,10 @@ class InvalidAuthError(Exception):
 
 class InvalidProvider(Exception):
     """Authentication provider not found."""
+
+
+class TooManyRequestsError(Exception):
+    """Raised when too many login flows are in progress."""
 
 
 async def auth_manager_from_config(
@@ -108,6 +119,7 @@ class AuthManagerFlowManager(
         """Init auth manager flows."""
         super().__init__(hass)
         self.auth_manager = auth_manager
+        self._next_eviction = dt_util.utcnow()
 
     @override
     async def async_create_flow(
@@ -121,7 +133,39 @@ class AuthManagerFlowManager(
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {handler_key}")
+        now = dt_util.utcnow()
+        expired = now - LOGIN_FLOW_EXPIRATION
+        for flow in list(self._progress.values()):
+            if cast(LoginFlow, flow).created_at < expired:
+                self.async_abort(flow.flow_id)
+        if len(self._progress) >= MAX_LOGIN_FLOWS:
+            # Flows waiting for MFA passed a password check, so a flood can't
+            # create them. Evicting at most one other flow per interval lets new
+            # logins in without pushing out the ones in progress.
+            evictable = next(
+                (
+                    flow
+                    for flow in self._progress.values()
+                    if cast(LoginFlow, flow).user is None
+                ),
+                None,
+            )
+            if evictable is None or now < self._next_eviction:
+                raise TooManyRequestsError
+            self._next_eviction = now + LOGIN_FLOW_EVICTION_INTERVAL
+            self.async_abort(evictable.flow_id)
         return await auth_provider.async_login_flow(context)
+
+    @override
+    async def async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> AuthFlowResult:
+        """Continue a login flow unless it has expired."""
+        if (flow := self._progress.get(flow_id)) is not None and cast(
+            LoginFlow, flow
+        ).created_at < dt_util.utcnow() - LOGIN_FLOW_EXPIRATION:
+            self.async_abort(flow_id)
+        return await super().async_configure(flow_id, user_input)
 
     @override
     async def async_finish_flow(
