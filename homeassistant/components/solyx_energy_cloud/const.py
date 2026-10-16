@@ -1,6 +1,6 @@
 """Constants for the Solyx Energy integration."""
 
-DOMAIN = "solyx_energy"
+DOMAIN = "solyx_energy_cloud"
 
 # Integration variables
 BASE_URL = "https://cloud.solyxenergy.nl"

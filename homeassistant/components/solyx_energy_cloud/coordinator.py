@@ -36,6 +36,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+type SolyxEnergyConfigEntry = ConfigEntry[SolyxEnergyCoordinator]
+
 
 @dataclass(frozen=True)
 class SolyxEnergyData:
@@ -60,7 +62,7 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
         hass: HomeAssistant,
         api_client: SolyxEnergyApiClient,
         device_id: str,
-        config_entry: ConfigEntry,
+        config_entry: SolyxEnergyConfigEntry,
     ) -> None:
         """Initialize the main coordinator for the Solyx Energy integration."""
         super().__init__(

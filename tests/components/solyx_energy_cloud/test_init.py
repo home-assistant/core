@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 from solyx_energy_api.exceptions import SolyxEnergyDataError, SolyxEnergyTokenError
 
-from homeassistant.components.solyx_energy.const import DOMAIN
+from homeassistant.components.solyx_energy_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
 from .const import NYMO_DEVICE_ID

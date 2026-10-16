@@ -13,7 +13,7 @@ from solyx_energy_api.exceptions import (
     SolyxEnergyTokenError,
 )
 
-from homeassistant.components.solyx_energy.const import (
+from homeassistant.components.solyx_energy_cloud.const import (
     CONF_NYMO_CLIENT_ID,
     CONF_NYMO_CLIENT_SECRET,
     CONF_NYMO_DEVICE_ID,
@@ -71,17 +71,31 @@ async def test_user_flow_errors(
     side_effect,
     error_key,
 ) -> None:
-    """A failed connection test returns to the form with the right error (see pytest parameters)."""
+    """A failed connection test shows the right error; fixing it finishes the flow."""
     mock_api_client_class.async_test_connection.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_INPUT,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error_key}
+
+    mock_api_client_class.async_test_connection.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Nymo {NYMO_DEVICE_ID}"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == NYMO_DEVICE_ID
 
 
 @pytest.mark.usefixtures("mock_api_client_class")
@@ -93,9 +107,12 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_INPUT,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

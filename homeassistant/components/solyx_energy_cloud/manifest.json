@@ -1,9 +1,9 @@
 {
-  "domain": "solyx_energy",
-  "name": "Solyx Energy",
+  "domain": "solyx_energy_cloud",
+  "name": "Solyx Energy Cloud",
   "codeowners": ["@MartinaeyNL"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/solyx_energy",
+  "documentation": "https://www.home-assistant.io/integrations/solyx_energy_cloud",
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",

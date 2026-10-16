@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from homeassistant.components.solyx_energy.const import DOMAIN
+from homeassistant.components.solyx_energy_cloud.const import DOMAIN
 
 from .const import NYMO_DEVICE_ID
 
