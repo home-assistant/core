@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
+    PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
@@ -396,6 +397,33 @@ async def test_failed_login_is_not_retried_under_the_user(
         assert service.call_count == attempts
 
     assert hass.states.get("sensor.iphone_battery") is None
+
+
+async def test_terms_acceptance_starts_reauth(hass: HomeAssistant) -> None:
+    """Test that a login waiting on new terms asks the user to act.
+
+    Only the config flow can accept them, so the account has to stay loaded
+    with its fetch timer running while the reauth flow it started is open.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloudAcceptTermsException("Terms not accepted"),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
+        assert config_entry.runtime_data.api is None
+        assert [
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == "reauth"
+        ]
 
 
 async def test_device_without_identity_is_skipped(
