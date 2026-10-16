@@ -1,5 +1,6 @@
 """Tests for WiiM audio output selection."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -13,15 +14,18 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import fire_general_update, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-ENTITY_ID = "select.test_wiim_device"
+ENTITY_ID = "select.test_wiim_device_audio_output"
 OPTIONS = ["Line Out", "Optical Out", "Other Out"]
 
 pytestmark = pytest.mark.usefixtures("mock_wiim_controller", "mock_audio_output")
@@ -35,7 +39,12 @@ def mock_audio_output(mock_wiim_device: AsyncMock) -> None:
     mock_wiim_device.output_mode = "Line Out"
     mock_wiim_device.async_refresh_audio_capabilities = AsyncMock()
     mock_wiim_device.get_audio_output_hw_mode.return_value = "Line Out"
-    mock_wiim_device.async_set_output_mode = AsyncMock()
+
+    async def set_output_mode(option: str) -> None:
+        mock_wiim_device.output_mode = option
+        mock_wiim_device.get_audio_output_hw_mode.return_value = option
+
+    mock_wiim_device.async_set_output_mode = AsyncMock(side_effect=set_output_mode)
 
 
 async def test_setup(
@@ -63,6 +72,43 @@ async def test_no_http_api(
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID) is None
     mock_wiim_device.async_refresh_audio_capabilities.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "method_name",
+    ["async_refresh_audio_capabilities", "get_audio_output_hw_mode"],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        WiimRequestException("failed"),
+        UpnpError("failed"),
+        aiohttp.ClientError("failed"),
+        TimeoutError(),
+    ],
+)
+async def test_initial_read_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+    method_name: str,
+    error: Exception,
+) -> None:
+    """Retry platform setup after a transient initial output read failure."""
+    await hass.async_start()
+    method = getattr(mock_wiim_device, method_name)
+    method.side_effect = error
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID) is None
+    method.assert_awaited_once_with()
+
+    method.side_effect = None
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "Line Out"
+    assert method.await_count == 2
 
 
 @pytest.mark.parametrize("option", ["Optical Out", "Other Out"])
@@ -166,3 +212,47 @@ async def test_availability(
         state = hass.states.get(ENTITY_ID)
         assert state is not None
         assert state.state == expected
+
+
+async def test_updates_without_media_player(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Keep output updates independent of a disabled media player."""
+    mock_config_entry.add_to_hass(hass)
+    media_player = entity_registry.async_get_or_create(
+        "media_player",
+        DOMAIN,
+        mock_wiim_device.udn,
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(media_player.entity_id) is None
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "Line Out"
+
+    mock_wiim_device.output_mode = "Optical Out"
+    mock_wiim_device.rendering_control_event_callback(MagicMock(), [])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "Optical Out"
+
+    for available, expected in ((False, STATE_UNAVAILABLE), (True, "Optical Out")):
+        mock_wiim_device.available = available
+        await fire_general_update(hass, mock_wiim_device)
+        state = hass.states.get(ENTITY_ID)
+        assert state is not None
+        assert state.state == expected
+
+    mock_wiim_device.ensure_subscriptions.assert_awaited_once_with()
+    mock_wiim_device.get_audio_output_hw_mode.assert_awaited_once_with()
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_wiim_device.general_event_callback is None
+    assert mock_wiim_device.rendering_control_event_callback is None

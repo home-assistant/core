@@ -9,11 +9,16 @@ from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_DEVICE_UPDATED, WiimConfigEntry
+from .const import (
+    DOMAIN,
+    SIGNAL_DEVICE_GENERAL_UPDATED,
+    SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED,
+    WiimConfigEntry,
+)
 from .entity import WiimBaseEntity
 
 PARALLEL_UPDATES = 1
@@ -25,8 +30,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the device's audio output selector."""
-    if entry.runtime_data.supports_http_api:
-        async_add_entities([WiimOutputSelect(entry.runtime_data)], True)
+    if not entry.runtime_data.supports_http_api:
+        return
+
+    device = entry.runtime_data
+    try:
+        await device.async_refresh_audio_capabilities()
+        entity = WiimOutputSelect(device)
+        await entity.async_update()
+    except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+        raise PlatformNotReady(
+            translation_domain=DOMAIN,
+            translation_key="audio_output_setup_failed",
+            translation_placeholders={"device": device.name},
+        ) from err
+    async_add_entities([entity])
 
 
 class WiimOutputSelect(WiimBaseEntity, SelectEntity):
@@ -52,19 +70,23 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe without replacing the media player's SDK callbacks."""
+        """Subscribe to device updates from the config-entry event bridge."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_DEVICE_UPDATED.format(self._device.udn),
-                self._async_handle_device_update,
+        for signal in (
+            SIGNAL_DEVICE_GENERAL_UPDATED,
+            SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED,
+        ):
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    signal.format(self._device.udn),
+                    self._async_handle_device_update,
+                )
             )
-        )
 
     @callback
-    def _async_handle_device_update(self) -> None:
-        """Publish output changes from the SDK cache without making requests."""
+    def _async_handle_device_update(self, *_args: object) -> None:
+        """Publish current output and availability from the SDK cache."""
         self._attr_options = list(self._device.supported_output_modes)
         current = self._device.output_mode
         self._attr_current_option = current if current in self._attr_options else None
@@ -72,7 +94,6 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
 
     async def async_update(self) -> None:
         """Refresh available outputs and the active output."""
-        await self._device.async_refresh_audio_capabilities()
         self._attr_options = list(self._device.supported_output_modes)
         current = await self._device.get_audio_output_hw_mode()
         self._attr_current_option = current if current in self._attr_options else None

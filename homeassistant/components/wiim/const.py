@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 type WiimConfigEntry = ConfigEntry[WiimDevice]
 
 DOMAIN: Final = "wiim"
-SIGNAL_DEVICE_UPDATED: Final = "wiim_device_updated_{}"
+SIGNAL_DEVICE_GENERAL_UPDATED: Final = "wiim_device_general_updated_{}"
+SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED: Final = (
+    "wiim_device_rendering_control_updated_{}"
+)
 LOGGER = logging.getLogger(__package__)
 DATA_WIIM: HassKey[WiimData] = HassKey(DOMAIN)
 
