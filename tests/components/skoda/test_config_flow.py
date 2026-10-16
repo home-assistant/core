@@ -22,6 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
 
+from tests.common import MockConfigEntry
+
 VIN = "TMBJM7NP2M1TMP511"
 API_KEY = "test-api-key"
 
@@ -82,6 +84,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Škoda Enyaq Coupé"
+    assert result["result"].unique_id == VIN
     assert result["data"] == {
         CONF_VIN: VIN,
         CONF_API_KEY: API_KEY,
@@ -102,10 +105,15 @@ async def test_success_without_vehicle_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Škoda {VIN}"
+    assert result["result"].unique_id == VIN
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_invalid_vin_length(hass: HomeAssistant) -> None:
+async def test_invalid_vin_length(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_skoda_client: AsyncMock,
+) -> None:
     """Test the VIN length is validated before contacting the API."""
     result = await _init_flow(hass)
     result = await _configure_flow(
@@ -114,14 +122,21 @@ async def test_invalid_vin_length(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_VIN: "invalid_vin_length"}
+    mock_skoda_client.get_vehicle.assert_not_called()
 
-
-@pytest.mark.usefixtures("mock_skoda_client", "mock_setup_entry")
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
-    """Test that the same VIN cannot be configured twice."""
-    result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == VIN
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_skoda_client")
+async def test_duplicate_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that the same VIN cannot be configured twice."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -174,5 +189,6 @@ async def test_api_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Škoda Enyaq Coupé"
+    assert result["result"].unique_id == VIN
     assert mock_skoda_client.get_vehicle.await_count == 2
     assert len(mock_setup_entry.mock_calls) == 1
