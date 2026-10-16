@@ -1,6 +1,7 @@
 """Tests for the Data Grand Lyon calendar platform."""
 
-from datetime import datetime
+from dataclasses import replace
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from data_grand_lyon_ha import TclAlert, TclAlertSeverityType, TclAlertType
@@ -317,3 +318,58 @@ async def test_get_events(
     )
     summaries = [event["summary"] for event in response[ENTITY_ID]["events"]]
     assert sorted(summaries) == sorted(expected)
+
+
+@pytest.mark.parametrize(
+    ("debut", "fin", "start", "end", "expected"),
+    [
+        pytest.param(
+            datetime(2026, 10, 25, 2, 50),
+            datetime(2026, 10, 25, 3, 0),
+            datetime(2026, 10, 25, 0, 45, tzinfo=UTC),
+            datetime(2026, 10, 25, 1, 15, tzinfo=UTC),
+            ["DST alert"],
+            id="overlapping_alert_included",
+        ),
+        pytest.param(
+            datetime(2026, 10, 25, 2, 20),
+            datetime(2026, 10, 25, 2, 40),
+            datetime(2026, 10, 25, 1, 15, tzinfo=UTC),
+            datetime(2026, 10, 25, 2, 0, tzinfo=UTC),
+            [],
+            id="earlier_alert_excluded",
+        ),
+    ],
+)
+async def test_get_events_across_dst_rollback(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    debut: datetime,
+    fin: datetime,
+    start: datetime,
+    end: datetime,
+    expected: list[str],
+) -> None:
+    """Test the window is compared in absolute time when Paris falls back an hour."""
+    await hass.config.async_set_time_zone("Europe/Paris")
+    mock_tcl_client.get_tcl_alerts.return_value = [
+        replace(MOCK_TCL_ALERTS[0], debut=debut, fin=fin, titre="DST alert")
+    ]
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "entity_id": ENTITY_ID,
+            "start_date_time": start.isoformat(),
+            "end_date_time": end.isoformat(),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    summaries = [event["summary"] for event in response[ENTITY_ID]["events"]]
+    assert summaries == expected

@@ -92,10 +92,13 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return the line's alerts overlapping the requested window."""
-        window_start = start_date.astimezone(TZ_PARIS).replace(tzinfo=None)
-        window_end = end_date.astimezone(TZ_PARIS).replace(tzinfo=None)
+        # Compare in UTC: datetimes sharing a tzinfo compare naively, which breaks
+        # across the DST rollback when HA itself runs in Europe/Paris.
+        window_start = dt_util.as_utc(start_date)
+        window_end = dt_util.as_utc(end_date)
         return [
             _calendar_event(alert)
             for alert in self.coordinator.data[self._subentry_id]
-            if alert.debut < window_end and alert.fin > window_start
+            if dt_util.as_utc(alert.debut.replace(tzinfo=TZ_PARIS)) < window_end
+            and dt_util.as_utc(alert.fin.replace(tzinfo=TZ_PARIS)) > window_start
         ]
