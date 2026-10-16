@@ -36,12 +36,16 @@ POWER_PERMISSIONS = {
         "VM.PowerMgmt": 1,
     },
     "/vms": {"VM.PowerMgmt": 1},
-    "/vms/101": {"VM.PowerMgmt": 0},
+    "/vms/101": {"VM.Audit": 1},
 }
 
 SNAPSHOT_PERMISSIONS = {
     "/vms": {"VM.Snapshot": 1},
-    "/vms/101": {"VM.Snapshot": 0},
+    "/vms/101": {"VM.Audit": 1},
+}
+SYSMOD_PERMISSIONS = {
+    "/": {"Sys.Modify": 1},
+    "/nodes": {"Sys.Modify": 1},
 }
 
 MERGED_PERMISSIONS = {
@@ -49,10 +53,12 @@ MERGED_PERMISSIONS = {
         **AUDIT_PERMISSIONS.get(key, {}),
         **POWER_PERMISSIONS.get(key, {}),
         **SNAPSHOT_PERMISSIONS.get(key, {}),
+        **SYSMOD_PERMISSIONS.get(key, {}),
     }
     for key in set(AUDIT_PERMISSIONS)
     | set(POWER_PERMISSIONS)
     | set(SNAPSHOT_PERMISSIONS)
+    | set(SYSMOD_PERMISSIONS)
 }
 
 PVEVMUSER_PERMISSIONS = deepcopy(MERGED_PERMISSIONS)

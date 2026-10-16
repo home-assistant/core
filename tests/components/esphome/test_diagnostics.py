@@ -131,6 +131,7 @@ async def test_diagnostics_with_bluetooth(
             "device_info": {
                 "api_encryption_provisionable": False,
                 "api_encryption_supported": False,
+                "api_outgoing_connection_supported": False,
                 "area": {"area_id": 0, "name": ""},
                 "areas": [],
                 "bluetooth_mac_address": "**REDACTED**",

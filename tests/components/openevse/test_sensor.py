@@ -2,17 +2,16 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -77,7 +76,7 @@ async def test_missing_sensor_graceful_handling(
     # Other sensors should still work
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state is not None
-    assert state.state == "Charging"
+    assert state.state == "charging"
 
 
 async def test_websocket_callback_updates_entities(
@@ -92,7 +91,7 @@ async def test_websocket_callback_updates_entities(
 
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state
-    assert state.state == "Charging"
+    assert state.state == "charging"
 
     mock_charger.status = "Sleeping"
     await mock_charger.callback()
@@ -100,11 +99,12 @@ async def test_websocket_callback_updates_entities(
 
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state
-    assert state.state == "Sleeping"
+    assert state.state == "sleeping"
 
 
 async def test_sensor_unavailable_on_coordinator_timeout(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
@@ -118,72 +118,53 @@ async def test_sensor_unavailable_on_coordinator_timeout(
     assert state.state != STATE_UNAVAILABLE
 
     mock_charger.update.side_effect = TimeoutError("Connection timed out")
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_yaml_import_success(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test successful YAML import creates deprecated_yaml issue."""
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": DOMAIN, CONF_HOST: "192.168.1.100"}},
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue("homeassistant", "deprecated_yaml")
-    assert issue is not None
-    assert issue.issue_domain == DOMAIN
-
-
-async def test_yaml_import_unavailable_host(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test YAML import with unavailable host creates domain-specific issue."""
-    mock_charger.test_and_get.side_effect = TimeoutError("Connection timed out")
-
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": DOMAIN, CONF_HOST: "192.168.1.100"}},
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_unavailable_host"
-    )
-    assert issue is not None
-
-
-async def test_yaml_import_already_configured(
+@pytest.mark.parametrize(
+    ("raw_status", "expected_state"),
+    [
+        pytest.param("not connected", "not_connected", id="not_connected"),
+        pytest.param("connected", "connected", id="connected"),
+        pytest.param("charging", "charging", id="charging"),
+        pytest.param("vent required", "vent_required", id="vent_required"),
+        pytest.param(
+            "diode check failed", "diode_check_failed", id="diode_check_failed"
+        ),
+        pytest.param("gfci fault", "gfci_fault", id="gfci_fault"),
+        pytest.param("no ground", "no_ground", id="no_ground"),
+        pytest.param("stuck relay", "stuck_relay", id="stuck_relay"),
+        pytest.param(
+            "gfci self-test failure",
+            "gfci_self_test_failure",
+            id="gfci_self_test_failure",
+        ),
+        pytest.param("over temperature", "over_temperature", id="over_temperature"),
+        pytest.param("sleeping", "sleeping", id="sleeping"),
+        pytest.param("disabled", "disabled", id="disabled"),
+        pytest.param("unknown", STATE_UNKNOWN, id="unknown"),
+        pytest.param("unrecognized_raw_status", STATE_UNKNOWN, id="fallback_unknown"),
+        pytest.param(None, STATE_UNKNOWN, id="none_status"),
+    ],
+)
+async def test_status_sensor_mapping(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
-    issue_registry: ir.IssueRegistry,
+    raw_status: str | None,
+    expected_state: str,
 ) -> None:
-    """Test YAML import when already configured creates deprecated_yaml issue."""
-    # Only add the entry, don't set it up - this allows the YAML platform setup
-    # to run while the config flow will still see the existing entry
+    """Test status sensor mapping to enum options."""
+    mock_charger.status = raw_status
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": DOMAIN, CONF_HOST: "192.168.1.100"}},
-    )
-    await hass.async_block_till_done()
-
-    # When already configured, it should still create deprecated_yaml issue
-    issue = issue_registry.async_get_issue("homeassistant", "deprecated_yaml")
-    assert issue is not None
-    assert issue.issue_domain == DOMAIN
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state is not None
+    assert state.state == expected_state

@@ -1,5 +1,7 @@
 """Define tests for the Dune HD config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from homeassistant.components.dunehd.const import DOMAIN
@@ -16,13 +18,39 @@ CONFIG_IP = {CONF_HOST: "10.10.10.12"}
 DUNEHD_STATE = {"protocol_version": "4", "player_state": "navigator"}
 
 
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the Dune HD player to respond and skip entry setup."""
+    with (
+        patch("homeassistant.components.dunehd.async_setup_entry"),
+        patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
+    ):
+        yield
+
+
 async def test_user_invalid_host(hass: HomeAssistant) -> None:
     """Test that errors are shown when the host is invalid."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "invalid/host"}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "invalid/host"},
     )
 
     assert result["errors"] == {CONF_HOST: "invalid_host"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_HOSTNAME,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_very_long_host(hass: HomeAssistant) -> None:
@@ -34,20 +62,52 @@ async def test_user_very_long_host(hass: HomeAssistant) -> None:
         "host_very_long_host_very_long_host"
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: long_host}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: long_host},
     )
 
     assert result["errors"] == {CONF_HOST: "invalid_host"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_HOSTNAME,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test that errors are shown when cannot connect to the host."""
     with patch("pdunehd.DuneHDPlayer.update_state", return_value={}):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_IP
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_IP,
         )
 
         assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_IP,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_duplicate_error(hass: HomeAssistant) -> None:
@@ -61,10 +121,26 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
 
     with patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_HOSTNAME,
         )
 
         assert result["errors"] == {CONF_HOST: "already_configured"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_IP,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -74,7 +150,15 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_HOSTNAME,
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -89,9 +173,15 @@ async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
         patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_HOST: "2001:db8::1428:57ab"},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "2001:db8::1428:57ab"},
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY

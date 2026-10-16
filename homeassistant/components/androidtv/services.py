@@ -1,10 +1,10 @@
 """Services for Android/Fire TV devices."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_COMMAND
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
@@ -24,8 +24,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "adb_command",
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_COMMAND): cv.string},
+        schema={probatio.Required(ATTR_COMMAND): cv.string},
         func="adb_command",
+        supports_response=SupportsResponse.OPTIONAL,
     )
     service.async_register_platform_entity_service(
         hass,
@@ -41,8 +42,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "download",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_DEVICE_PATH): cv.string,
-            vol.Required(ATTR_LOCAL_PATH): cv.string,
+            probatio.Required(ATTR_DEVICE_PATH): cv.string,
+            probatio.Required(ATTR_LOCAL_PATH): cv.string,
         },
         func="service_download",
     )
@@ -52,8 +53,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "upload",
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_DEVICE_PATH): cv.string,
-            vol.Required(ATTR_LOCAL_PATH): cv.string,
+            probatio.Required(ATTR_DEVICE_PATH): cv.string,
+            probatio.Required(ATTR_LOCAL_PATH): cv.string,
         },
         func="service_upload",
     )

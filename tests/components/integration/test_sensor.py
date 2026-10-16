@@ -749,6 +749,153 @@ async def test_units(hass: HomeAssistant) -> None:
     assert new_state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("source_config", "extra_config", "expected_class"),
+    [
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.WATER,
+            },
+            SensorDeviceClass.WATER,
+        ),
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.ENERGY,
+            },
+            None,
+        ),
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+            },
+            None,
+        ),
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            },
+            {
+                "source": "sensor.power",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.WATER,
+            },
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            },
+            {
+                "source": "sensor.power",
+                "unit_time": UnitOfTime.HOURS,
+            },
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.DATE,
+            },
+            None,
+        ),
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.MONETARY,
+            },
+            SensorDeviceClass.MONETARY,
+        ),
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: "NotADeviceClass",
+            },
+            {
+                "source": "sensor.bad_sensor_class",
+                "unit_time": UnitOfTime.HOURS,
+            },
+            None,
+        ),
+    ],
+)
+async def test_device_class_user(
+    hass: HomeAssistant,
+    source_config: dict[str, Any],
+    extra_config: dict[str, Any],
+    expected_class: SensorDeviceClass | None,
+) -> None:
+    """Test the user-supplied device class hint is applied based on unit and state class compatibility."""
+
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "method": "trapezoidal",
+            "round": 2,
+        }
+        | extra_config,
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+
+    await _setup_device_class_test(hass, entity_id)
+
+    hass.states.async_set(entity_id, 300, source_config, force_update=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_class
+
+
+async def test_device_class_user_incompatible_logs_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an incompatible configured device class logs a warning."""
+    caplog.set_level("WARNING", logger="homeassistant.components.integration.sensor")
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.cubic_meters_per_hour",
+            "round": 2,
+            "method": "trapezoidal",
+            "unit_time": UnitOfTime.HOURS,
+            "device_class": SensorDeviceClass.ENERGY,
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+
+    await _setup_device_class_test(hass, entity_id)
+
+    hass.states.async_set(
+        entity_id, 300, {ATTR_UNIT_OF_MEASUREMENT: "m³/h"}, force_update=True
+    )
+
+    await hass.async_block_till_done()
+
+    assert "Specified device class" in caplog.text
+
+
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
 async def test_device_class(hass: HomeAssistant, method) -> None:
     """Test integration sensor units using a power source."""
@@ -764,23 +911,8 @@ async def test_device_class(hass: HomeAssistant, method) -> None:
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    # This replicates the current sequence when HA starts up in a real runtime
-    # by updating the base sensor state before the base sensor's units
-    # or state have been correctly populated.  Those interim updates
-    # include states of None and Unknown
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert "device_class" not in state.attributes
+    await _setup_device_class_test(hass, entity_id)
 
     hass.states.async_set(
         entity_id,
@@ -892,7 +1024,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     integration_config_entry = MockConfigEntry(
         data={},
@@ -901,7 +1033,7 @@ async def test_device_id(
             "method": "trapezoidal",
             "name": "integration",
             "round": 1.0,
-            "source": "sensor.test_source",
+            "source": "sensor.mock_title",
             "unit_prefix": "k",
             "unit_time": "min",
         },
@@ -913,7 +1045,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    integration_entity = entity_registry.async_get("sensor.integration")
+    integration_entity = entity_registry.async_get("sensor.mock_title_integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
 
@@ -981,6 +1113,26 @@ async def _setup_integral_sensor(
         hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
     )
     await hass.async_block_till_done()
+
+
+async def _setup_device_class_test(hass: HomeAssistant, entity_id: str) -> None:
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert "device_class" not in state.attributes
 
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:

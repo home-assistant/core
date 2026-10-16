@@ -17,7 +17,7 @@ PLATFORMS = [Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: S20ConfigEntry) -> bool:
+async def async_setup_entry(hass: core.HomeAssistant, entry: S20ConfigEntry) -> None:
     """Set up platform from a ConfigEntry."""
 
     try:
@@ -42,10 +42,8 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: S20ConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: S20ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: S20ConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

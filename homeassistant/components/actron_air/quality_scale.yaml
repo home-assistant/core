@@ -3,7 +3,11 @@ rules:
   action-setup:
     status: exempt
     comment: This integration does not have custom service actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: done
+    comment: |
+      Primarily uses push, but polls with a long interval for availability and missed
+      updates. Falls back to short interval polling when push is unavailable.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -23,7 +27,7 @@ rules:
     comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
-    comment: This integration does not subscribe to external events.
+    comment: Push subscriptions are owned by the coordinator, not by individual entities.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -50,7 +54,7 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: This integration uses DHCP discovery, however is cloud polling. Therefore there is no information to update.
+    comment: This integration uses DHCP discovery, however all communication goes via the cloud. Therefore there is no information to update.
   discovery: done
   docs-data-update: done
   docs-examples: done
@@ -74,5 +78,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
+  inject-websession: done
   strict-typing: done

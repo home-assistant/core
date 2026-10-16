@@ -1,11 +1,13 @@
 """Test the Portainer initial specific behavior."""
 
 from typing import Any, cast
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerError,
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer, EndpointStatus
@@ -15,6 +17,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -33,7 +36,11 @@ from homeassistant.setup import async_setup_component
 from . import setup_integration
 from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
 
-from tests.common import MockConfigEntry, async_load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -114,9 +121,7 @@ async def test_remove_config_entry_device(
     )
 
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"] == expected_result
 
 
@@ -246,18 +251,46 @@ async def test_migration_v4_to_v5(
 
 
 @pytest.mark.parametrize(
-    ("exception"),
+    ("exception", "state", "reason"),
     [
-        (PortainerAuthenticationError),
-        (PortainerConnectionError),
-        (PortainerTimeoutError),
-        (Exception("Some other error")),
+        pytest.param(
+            PortainerAuthenticationError,
+            ConfigEntryState.MIGRATION_ERROR,
+            "An error occurred while trying to authenticate",
+            id="authentication_error",
+        ),
+        pytest.param(
+            PortainerConnectionError,
+            ConfigEntryState.SETUP_RETRY,
+            "An error occurred while trying to connect to the Portainer instance",
+            id="connection_error",
+        ),
+        pytest.param(
+            PortainerTimeoutError,
+            ConfigEntryState.SETUP_RETRY,
+            "A timeout occurred while trying to connect to the Portainer instance",
+            id="timeout_error",
+        ),
+        pytest.param(
+            PortainerError,
+            ConfigEntryState.MIGRATION_ERROR,
+            "Failed to fetch the Portainer instance ID",
+            id="portainer_error",
+        ),
+        pytest.param(
+            Exception("Some other error"),
+            ConfigEntryState.MIGRATION_ERROR,
+            None,
+            id="unexpected_error",
+        ),
     ],
 )
 async def test_migration_v4_to_v5_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     exception: type[Exception],
+    state: ConfigEntryState,
+    reason: str | None,
 ) -> None:
     """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
@@ -275,7 +308,9 @@ async def test_migration_v4_to_v5_exceptions(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
+    assert entry.reason == reason
+    assert entry.version == 4
 
 
 async def test_device_registry(
@@ -355,8 +390,9 @@ async def test_docker_system_df_refresh_runs_on_ha_start(
     """Test docker system df coordinator refreshes DF data on HA start."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.my_environment_image_disk_usage_total_size")
-    assert state is not None
+    assert (
+        state := hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    )
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -366,6 +402,7 @@ async def test_new_endpoint_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
@@ -373,7 +410,10 @@ async def test_new_endpoint_callback(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 0
+    # Only the Portainer update exists without endpoints
+    assert [entity.unique_id for entity in entities] == [
+        f"{mock_config_entry.entry_id}_server_update"
+    ]
 
     mock_portainer_client.get_endpoints.return_value = [
         Endpoint.from_dict(endpoint)
@@ -384,9 +424,11 @@ async def test_new_endpoint_callback(
         if endpoint["Status"] == EndpointStatus.UP
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    # Without entities nothing listens to the coordinator, so it wouldn't poll.
+    mock_config_entry.runtime_data.async_add_listener(lambda: None)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -409,11 +451,33 @@ async def test_new_endpoint_callback(
     assert stack_device.via_device_id == endpoint_device.id
 
 
+async def test_removed_endpoint_stops_event_listener(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_event_listeners: dict[int, MagicMock],
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a removed endpoint's Docker event listener is stopped and dropped."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert 1 in coordinator._event_listeners
+
+    mock_portainer_client.get_endpoints.return_value = []
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_portainer_event_listeners[1].stop.assert_called_once()
+    assert 1 not in coordinator._event_listeners
+
+
 async def test_new_container_callback(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new container creates entities after refresh."""
     mock_portainer_client.get_containers.return_value = []
@@ -431,9 +495,9 @@ async def test_new_container_callback(
         if "/focused_einstein" in container["Names"]
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -460,6 +524,7 @@ async def test_new_stack_callback(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new stack creates entities after refresh."""
     mock_portainer_client.get_stacks.return_value = []
@@ -477,9 +542,9 @@ async def test_new_stack_callback(
         if stack["Name"] == "webstack"
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -491,6 +556,7 @@ async def test_stack_recreated_with_new_id(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a stack recreated with the same name but a new ID re-registers its device.
 
@@ -540,8 +606,9 @@ async def test_stack_recreated_with_new_id(
     ]
 
     coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success
 

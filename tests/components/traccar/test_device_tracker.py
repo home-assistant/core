@@ -29,13 +29,15 @@ def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
-async def test_restore_state(hass: HomeAssistant) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that the previous location is restored for a known device."""
     assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, {})
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_WEBHOOK_ID: "webhook_id"})
     entry.add_to_hass(hass)
-    dr.async_get(hass).async_get_or_create(  # pylint: disable=home-assistant-tests-registry-fixtures
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, DEVICE_ID)},
     )

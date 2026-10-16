@@ -1,11 +1,11 @@
 """The nexia integration base entity."""
 
-from typing import TYPE_CHECKING, override
+from typing import override
 
+from nexia.sensor import NexiaSensor
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME, ATTR_SUGGESTED_AREA
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +28,7 @@ class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
     """Base class for nexia entities."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(self, coordinator: NexiaDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the entity."""
@@ -98,23 +99,27 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         coordinator: NexiaDataUpdateCoordinator,
         zone: NexiaThermostatZone,
         unique_id: str,
+        dev_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, zone.thermostat, unique_id)
         self._zone = zone
-        zone_name = self._zone.get_name()
-        if TYPE_CHECKING:
-            assert self._attr_device_info is not None
-        self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
-            ATTR_NAME: zone_name,
-            ATTR_SUGGESTED_AREA: zone_name,
-            "via_device_id": dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
-        }
+        if dev_info is None:
+            thermostat = zone.thermostat
+            dev_info = DeviceInfo(
+                configuration_url=coordinator.nexia_home.root_url,
+                identifiers={(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+                manufacturer=MANUFACTURER,
+                model=thermostat.get_model(),
+                name=zone.get_name(),
+                sw_version=thermostat.get_firmware(),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
+            )
+        self._attr_device_info = dev_info
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
     @override
@@ -138,3 +143,36 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         Update a single zone.
         """
         async_dispatcher_send(self.hass, self._zone_signal)
+
+
+class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
+    """Base class for RoomIQ sensor entities."""
+
+    def __init__(
+        self,
+        coordinator: NexiaDataUpdateCoordinator,
+        zone: NexiaThermostatZone,
+        sensor: NexiaSensor,
+        key: str,
+    ) -> None:
+        """Initialize the entity."""
+        dev_info: DeviceInfo | None = None
+        if sensor.has_online:
+            # has_online indicates the RoomIQ sensor connects remotely
+            dev_info = DeviceInfo(
+                configuration_url=coordinator.nexia_home.root_url,
+                identifiers={(DOMAIN, str(sensor.id))},
+                manufacturer=MANUFACTURER,
+                model=None,  # not reported
+                name=sensor.name,
+                suggested_area=sensor.name,
+                sw_version=None,  # not reported
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, zone.zone_id),  # type: ignore[arg-type] # until fix issue #139773
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
+            )
+        super().__init__(coordinator, zone, f"{sensor.id}-{key}", dev_info)
+        self._attr_translation_key = key
+        self._sensor_id = sensor.id

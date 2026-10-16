@@ -1,13 +1,20 @@
 """Base entity for the Fronius integration."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
+
+from fronius_modbus import Controls, FroniusModbusInverter, Storage
 
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 if TYPE_CHECKING:
     from .coordinator import FroniusCoordinatorBase
+
+# the model a writable setting lives in, picked off a discovered inverter
+type ModbusComponent = Controls | Storage
+type ModbusComponentFn = Callable[[FroniusModbusInverter], ModbusComponent | None]
 
 
 @dataclass(frozen=True)

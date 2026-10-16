@@ -1,6 +1,6 @@
 """Coordinator for the Anthropic integration."""
 
-import datetime
+import datetime as dt
 from functools import partial
 from typing import override
 
@@ -15,8 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-UPDATE_INTERVAL_CONNECTED = datetime.timedelta(hours=12)
-UPDATE_INTERVAL_DISCONNECTED = datetime.timedelta(minutes=1)
+UPDATE_INTERVAL_CONNECTED = dt.timedelta(hours=12)
+UPDATE_INTERVAL_DISCONNECTED = dt.timedelta(minutes=1)
 
 type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 
@@ -37,10 +37,9 @@ async def async_create_client(
 @callback
 def model_alias(model_id: str) -> str:
     """Resolve alias from versioned model name."""
-    if model_id[-2:-1] != "-" and not model_id.endswith("-preview"):
-        model_id = model_id[:-9]
-    if model_id.endswith("-4"):
-        return model_id + "-0"
+    model, _, version = model_id.rpartition("-")
+    if len(version) == 8 and version.isdecimal():
+        return model
     return model_id
 
 
@@ -128,6 +127,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
         return anthropic.types.ModelInfo(
             type="model",
             id=model_id,
-            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            lifecycle="retired",
+            created_at=dt.datetime(1970, 1, 1, tzinfo=dt.UTC),
             display_name=alias,
         ), False

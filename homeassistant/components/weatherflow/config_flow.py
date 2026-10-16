@@ -9,7 +9,7 @@ from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.errors import AddressInUseError, EndpointError, ListenerError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 
 from .const import (
     DOMAIN,
@@ -17,6 +17,8 @@ from .const import (
     ERROR_MSG_CANNOT_CONNECT,
     ERROR_MSG_NO_DEVICE_FOUND,
 )
+
+DISCOVERY_TIMEOUT = 10
 
 
 async def _async_can_discover_devices() -> bool:
@@ -30,10 +32,11 @@ async def _async_can_discover_devices() -> bool:
         if not future_event.done():
             future_event.set_result(None)
 
-    async with WeatherFlowListener() as client, asyncio.timeout(10):
+    async with WeatherFlowListener() as client:
         try:
             client.on(EVENT_DEVICE_DISCOVERED, _async_found)
-            await future_event
+            async with asyncio.timeout(DISCOVERY_TIMEOUT):
+                await future_event
         except TimeoutError:
             return False
 
@@ -55,7 +58,10 @@ class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
         # will pick up all devices on the network and we don't want to
         # create multiple entries.
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
         found = False
         errors = {}
         try:

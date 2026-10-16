@@ -53,6 +53,20 @@
       }
     }
   },
+  "exceptions": {
+    "agent_authentication_failed": {
+      "message": "Authentication with the backup location failed"
+    },
+    "agent_operation_failed": {
+      "message": "Backup operation failed"
+    },
+    "agent_operation_timed_out": {
+      "message": "Backup operation timed out"
+    },
+    "backup_not_found": {
+      "message": "Backup {backup_id} not found"
+    }
+  },
   "issues": {
     "automatic_backup_agents_unavailable": {
       "description": "The backup location `{agent_id}` is unavailable but is still configured for automatic backups.\n\nPlease visit the [automatic backup configuration page]({backup_settings}) to review and update your backup locations. Backups will not be uploaded to selected locations that are unavailable.",

@@ -12,11 +12,9 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from tests.common import MockConfigEntry
 
 
-async def init_integration(
-    hass: HomeAssistant, region: str = "EU", brand: str = "Whirlpool"
-) -> MockConfigEntry:
-    """Set up the Whirlpool integration in Home Assistant."""
-    entry = MockConfigEntry(
+def create_mock_entry(region: str = "EU", brand: str = "Whirlpool") -> MockConfigEntry:
+    """Create a Whirlpool config entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_USERNAME: "nobody",
@@ -27,7 +25,12 @@ async def init_integration(
         unique_id="nobody",
     )
 
-    return await init_integration_with_entry(hass, entry)
+
+async def init_integration(
+    hass: HomeAssistant, region: str = "EU", brand: str = "Whirlpool"
+) -> MockConfigEntry:
+    """Set up the Whirlpool integration in Home Assistant."""
+    return await init_integration_with_entry(hass, create_mock_entry(region, brand))
 
 
 async def init_integration_with_entry(

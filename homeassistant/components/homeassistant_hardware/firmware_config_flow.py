@@ -8,9 +8,6 @@ from typing import Any, override
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
-from universal_silabs_flasher.common import Version
-from universal_silabs_flasher.firmware import NabuCasaMetadata
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -31,15 +28,20 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.importlib import async_import_module
 
 from .const import DOMAIN, OTBR_DOMAIN, Z2M_EMBER_DOCS_URL, ZHA_DOMAIN
 from .util import (
+    COMMON_MODULE,
+    FIRMWARE_MODULE,
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     OwningAddon,
     OwningIntegration,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
     get_otbr_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,
@@ -79,7 +81,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
-    _flasher_cls: type[DeviceSpecificFlasher]
+    _flasher_type: FlasherType
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
@@ -234,9 +236,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             # Installing new firmware is only truly required if the wrong type is
             # installed: upgrading to the latest release of the current firmware type
             # isn't strictly necessary for functionality.
+            flasher_cls = await async_get_flasher_cls(self.hass, self._flasher_type)
             self._probed_firmware_info = await probe_silabs_firmware_info(
                 self._device,
-                flasher_cls=self._flasher_cls,
+                flasher_cls=flasher_cls,
             )
 
             firmware_install_required = self._probed_firmware_info is None or (
@@ -273,9 +276,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 assert self._probed_firmware_info is not None
 
                 # Make sure we do not downgrade the firmware
-                fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
+                firmware_module = await async_import_module(self.hass, FIRMWARE_MODULE)
+                common_module = await async_import_module(self.hass, COMMON_MODULE)
+                fw_metadata = firmware_module.NabuCasaMetadata.from_json(
+                    fw_manifest.metadata
+                )
                 fw_version = fw_metadata.get_public_version()
-                probed_fw_version = Version(self._probed_firmware_info.firmware_version)
+                probed_fw_version = common_module.Version(
+                    self._probed_firmware_info.firmware_version
+                )
 
                 if probed_fw_version >= fw_version:
                     _LOGGER.debug(
@@ -308,7 +317,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 hass=self.hass,
                 device=self._device,
                 fw_data=fw_data,
-                flasher_cls=self._flasher_cls,
+                flasher_cls=flasher_cls,
                 expected_installed_firmware_type=expected_installed_firmware_type,
                 progress_callback=lambda offset, total: self.async_update_progress(
                     offset / total

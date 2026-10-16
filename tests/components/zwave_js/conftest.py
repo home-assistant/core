@@ -188,6 +188,12 @@ def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_heatit_z_trm6_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_heatit_z_trm7_state", scope="package")
+def climate_heatit_z_trm7_state_fixture() -> dict[str, Any]:
+    """Load the climate HEATIT Z-TRM7 thermostat node state fixture data."""
+    return load_json_object_fixture("climate_heatit_z_trm7_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="package")
 def climate_heatit_z_trm3_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -254,6 +260,12 @@ def hs_fc200_state_fixture() -> dict[str, Any]:
 def leviton_zw4sf_state_fixture() -> dict[str, Any]:
     """Load the Leviton ZW4SF node state fixture data."""
     return load_json_object_fixture("leviton_zw4sf_state.json", DOMAIN)
+
+
+@pytest.fixture(name="leviton_vrf01_state", scope="package")
+def leviton_vrf01_state_fixture() -> dict[str, Any]:
+    """Load the Leviton VRF01 node state fixture data."""
+    return load_json_object_fixture("leviton_vrf01_state.json", DOMAIN)
 
 
 @pytest.fixture(name="fan_honeywell_39358_state", scope="package")
@@ -449,6 +461,12 @@ def aeotec_zw164_siren_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("aeotec_zw164_siren_state.json", DOMAIN)
 
 
+@pytest.fixture(name="aeotec_zwa046_state", scope="package")
+def aeotec_zwa046_state_fixture() -> dict[str, Any]:
+    """Load the Aeotec ZWA046 Home Energy Meter 8 node state fixture data."""
+    return load_json_object_fixture("aeotec_ltd_zwa046_state.json", DOMAIN)
+
+
 @pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="package")
 def lock_popp_electric_strike_lock_control_state_fixture() -> dict[str, Any]:
     """Load the popp electric strike lock control node state fixture data."""
@@ -503,6 +521,12 @@ def lock_home_connect_620_state_fixture() -> dict[str, Any]:
 def switch_zooz_zen72_state_fixture() -> dict[str, Any]:
     """Load the Zooz Zen72 switch node state fixture data."""
     return load_json_object_fixture("switch_zooz_zen72_state.json", DOMAIN)
+
+
+@pytest.fixture(name="zooz_zse43_state", scope="package")
+def zooz_zse43_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZSE43 tilt/shock sensor node state fixture data."""
+    return load_json_object_fixture("zooz_zse43_state.json", DOMAIN)
 
 
 @pytest.fixture(name="indicator_test_state", scope="package")
@@ -636,9 +660,12 @@ def mock_client_fixture(
     listen_block: asyncio.Event,
 ):
     """Mock a client."""
-    with patch(
-        "homeassistant.components.zwave_js.ZwaveClient", autospec=True
-    ) as client_class:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.ZwaveClient", autospec=True
+        ) as client_class,
+        patch("homeassistant.components.zwave_js.config_flow.Client", client_class),
+    ):
         client = client_class.return_value
 
         async def connect():
@@ -910,6 +937,16 @@ def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     return node
 
 
+@pytest.fixture(name="climate_heatit_z_trm7")
+def climate_heatit_z_trm7_fixture(
+    client: MagicMock, climate_heatit_z_trm7_state: dict[str, Any]
+) -> Node:
+    """Mock a climate HEATIT Z-TRM7 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm7_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_no_value")
 def climate_heatit_z_trm3_no_value_fixture(
     client, climate_heatit_z_trm3_no_value_state
@@ -1064,6 +1101,14 @@ def hs_fc200_fixture(client, hs_fc200_state) -> Node:
 def leviton_zw4sf_fixture(client, leviton_zw4sf_state) -> Node:
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(leviton_zw4sf_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="leviton_vrf01")
+def leviton_vrf01_fixture(client, leviton_vrf01_state) -> Node:
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(leviton_vrf01_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1288,6 +1333,14 @@ def vision_security_zl7432_fixture(client, vision_security_zl7432_state) -> Node
     return node
 
 
+@pytest.fixture(name="aeotec_zwa046")
+def aeotec_zwa046_fixture(client: MagicMock, aeotec_zwa046_state: NodeDataType) -> Node:
+    """Mock an Aeotec ZWA046 Home Energy Meter 8 node."""
+    node = Node(client, copy.deepcopy(aeotec_zwa046_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="zen_31")
 def zen_31_fixture(client, zen_31_state) -> Node:
     """Mock a bulb 6 multi-color node."""
@@ -1398,6 +1451,14 @@ def lock_home_connect_620_fixture(client, lock_home_connect_620_state) -> Node:
 def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state) -> Node:
     """Mock a Zooz Zen72 switch node."""
     node = Node(client, copy.deepcopy(switch_zooz_zen72_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zooz_zse43")
+def zooz_zse43_fixture(client: MagicMock, zooz_zse43_state: NodeDataType) -> Node:
+    """Mock a Zooz ZSE43 tilt/shock sensor node."""
+    node = Node(client, copy.deepcopy(zooz_zse43_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

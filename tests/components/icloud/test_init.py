@@ -54,7 +54,9 @@ async def test_setup_2fa(hass: HomeAssistant) -> None:
     assert not hass.config_entries.flow.async_progress()
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    # The first calendars/reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps the reauth flow count deterministic.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.state is ConfigEntryState.LOADED
     in_progress_flows = hass.config_entries.flow.async_progress()
@@ -75,7 +77,9 @@ async def test_setup_password_failed(hass: HomeAssistant) -> None:
     assert not hass.config_entries.flow.async_progress()
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    # The first calendars/reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps the reauth flow count deterministic.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.state is ConfigEntryState.LOADED
     in_progress_flows = hass.config_entries.flow.async_progress()
@@ -95,7 +99,9 @@ async def test_unique_id_set_on_setup(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    # The first calendars/reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps the reauth flow count deterministic.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.unique_id == USERNAME
     assert config_entry.state is ConfigEntryState.LOADED

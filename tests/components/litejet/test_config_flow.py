@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -28,7 +29,15 @@ async def test_create_entry(hass: HomeAssistant, mock_litejet) -> None:
     test_data = {CONF_PORT: "/dev/test"}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=test_data,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -44,16 +53,15 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     )
     first_entry.add_to_hass(hass)
 
-    test_data = {CONF_PORT: "/dev/test"}
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("mock_litejet")
 async def test_flow_open_failed(hass: HomeAssistant) -> None:
     """Test user input when serial port open fails."""
     test_data = {CONF_PORT: "/dev/test"}
@@ -62,11 +70,26 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
         mock_pylitejet.side_effect = SerialException
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=test_data,
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_PORT] == "open_failed"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=test_data,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options(hass: HomeAssistant) -> None:

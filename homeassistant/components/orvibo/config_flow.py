@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception, discover
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
@@ -17,10 +17,10 @@ from .const import CONF_SWITCH_LIST, DEFAULT_NAME, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-FULL_EDIT_SCHEMA = vol.Schema(
+FULL_EDIT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MAC): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_MAC): cv.string,
     }
 )
 
@@ -180,7 +180,9 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="choose_switch",
-            data_schema=vol.Schema({vol.Required(CONF_SWITCH_LIST): vol.In(_options)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_SWITCH_LIST): probatio.In(_options)}
+            ),
         )
 
     async def async_step_discovery_failed(
