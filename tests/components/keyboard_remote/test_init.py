@@ -22,10 +22,12 @@ from homeassistant.components.keyboard_remote.const import (
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_EXCLUSIVE,
     CONF_KEY_TYPES,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT,
     DEVINPUT_BY_ID,
@@ -70,6 +72,7 @@ OTHER_LINK = "/dev/input/by-id/usb-Other-event-kbd"
 
 OPTIONS = {
     CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+    CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
     CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
@@ -196,6 +199,7 @@ async def test_async_setup_imports_each_normalized_block(
                 {
                     "device_name": "Keyboard",
                     "type": "key_down",
+                    "exclusive": False,
                     "emulate_key_hold_delay": 1,
                 },
             ]
@@ -220,6 +224,7 @@ async def test_async_setup_imports_each_normalized_block(
             {
                 **OPTIONS,
                 CONF_KEY_TYPES: ["key_down"],
+                CONF_EXCLUSIVE: False,
                 CONF_EMULATE_KEY_HOLD_DELAY: 1.0,
             },
         ),
