@@ -10,12 +10,10 @@ from energyid_webhooks.client_v2 import WebhookClient
 import probatio
 
 from homeassistant.config_entries import (
-    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    FlowType,
     OptionsFlow,
 )
 from homeassistant.const import CONF_DEVICE_ID
@@ -41,6 +39,17 @@ from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
+DIRECTIVES_PLACEHOLDERS = {
+    "directives_url": "https://app.energyid.eu/integrations/home-assistant"
+}
+
+
+def _directives_schema(enabled: bool) -> probatio.Schema:
+    """Return the schema of the directives opt-in."""
+    return probatio.Schema(
+        {probatio.Optional(CONF_ENABLE_DIRECTIVES, default=enabled): BooleanSelector()}
+    )
+
 
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the EnergyID integration."""
@@ -49,16 +58,6 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._flow_data: dict[str, Any] = {}
         self._polling_task: asyncio.Task | None = None
-
-    @override
-    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
-        """Offer directive selection immediately after connecting EnergyID."""
-        options_result = await self.hass.config_entries.options.async_init(
-            result["result"].entry_id,
-            context={"source": SOURCE_USER},
-        )
-        result["next_flow"] = (FlowType.OPTIONS_FLOW, options_result["flow_id"])
-        return result
 
     async def _perform_auth_and_get_details(self) -> str | None:
         """Authenticate with EnergyID and retrieve device details."""
@@ -165,15 +164,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             if auth_status is None:
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
-                _LOGGER.debug(
-                    "Creating entry with title: %s", self._flow_data["record_name"]
-                )
-                return self.async_create_entry(
-                    title=self._flow_data["record_name"],
-                    data=self._flow_data,
-                    description="add_sensor_mapping_hint",
-                    description_placeholders={"integration_name": NAME},
-                )
+                return await self.async_step_directives()
 
             if auth_status == "needs_claim":
                 _LOGGER.debug("Redirecting to auth and claim step")
@@ -228,7 +219,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             if self._polling_task and not self._polling_task.done():
                 self._polling_task.cancel()
                 self._polling_task = None
-            return self.async_external_step_done(next_step_id="create_entry")
+            return self.async_external_step_done(next_step_id="directives")
 
         # Device not claimed yet, show the external step again
         if self._polling_task and not self._polling_task.done():
@@ -240,16 +231,26 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=claim_info,
         )
 
-    async def async_step_create_entry(
+    async def async_step_directives(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Final step to create the entry after successful claim."""
-        _LOGGER.debug("Creating entry with title: %s", self._flow_data["record_name"])
-        return self.async_create_entry(
-            title=self._flow_data["record_name"],
-            data=self._flow_data,
-            description="add_sensor_mapping_hint",
-            description_placeholders={"integration_name": NAME},
+        """Ask whether to receive directives, then create the entry."""
+        if user_input is not None:
+            _LOGGER.debug(
+                "Creating entry with title: %s", self._flow_data["record_name"]
+            )
+            return self.async_create_entry(
+                title=self._flow_data["record_name"],
+                data=self._flow_data,
+                options={CONF_ENABLE_DIRECTIVES: user_input[CONF_ENABLE_DIRECTIVES]},
+                description="add_sensor_mapping_hint",
+                description_placeholders={"integration_name": NAME},
+            )
+
+        return self.async_show_form(
+            step_id="directives",
+            data_schema=_directives_schema(False),
+            description_placeholders=DIRECTIVES_PLACEHOLDERS,
         )
 
     async def async_step_reauth(
@@ -340,19 +341,8 @@ class EnergyIDOptionsFlow(OptionsFlow):
                 }
             )
 
-        directives_enabled = async_directives_enabled(self.config_entry)
-
         return self.async_show_form(
             step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_ENABLE_DIRECTIVES,
-                        default=directives_enabled,
-                    ): BooleanSelector()
-                }
-            ),
-            description_placeholders={
-                "directives_url": "https://app.energyid.eu/integrations/home-assistant"
-            },
+            data_schema=_directives_schema(async_directives_enabled(self.config_entry)),
+            description_placeholders=DIRECTIVES_PLACEHOLDERS,
         )
