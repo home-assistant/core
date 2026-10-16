@@ -101,15 +101,7 @@ async def test_state_on_prefers_started_alert_over_later_one(
     mock_line_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test an alert already running is preferred over one starting later today.
-
-    Both alerts share the library's relevance bucket (an alert starting later
-    today counts as CURRENT too), and within that bucket the lower-severity
-    (more disruptive) alert would normally sort first. If the entity naively
-    took that top-ranked alert, it would report an alert starting at 18:00 as
-    the event at 14:00, and HA would compute the on/off state as off despite
-    the ongoing alert.
-    """
+    """Test a running alert wins over a more severe one starting later today."""
     ongoing = TclAlert(
         type=TclAlertType.INFORMATION,
         cause="événement",

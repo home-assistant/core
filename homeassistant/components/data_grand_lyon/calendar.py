@@ -3,11 +3,7 @@
 from datetime import datetime
 from typing import override
 
-from data_grand_lyon_ha import (
-    TclAlert,
-    filter_tcl_active_alerts,
-    sort_tcl_alerts_by_relevance,
-)
+from data_grand_lyon_ha import TclAlert, filter_tcl_active_alerts
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -72,20 +68,17 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
     @property
     @override
     def event(self) -> CalendarEvent | None:
-        """Return the alert in progress, or the most relevant upcoming one."""
+        """Return the most severe alert in progress, or the soonest upcoming one."""
         now = _tcl_now()
         alerts = filter_tcl_active_alerts(self.coordinator.data[self._subentry_id], now)
         if not alerts:
             return None
-        ranked = sort_tcl_alerts_by_relevance(alerts, now)
-        # An alert starting later today shares the library's CURRENT bucket with
-        # one already running, so an in-progress alert must be preferred here
-        # for the on/off state (computed from event start/end) to stay truthful.
-        # Among alerts that haven't started yet, the soonest one governs when
-        # HA arms the next on/off transition, so it must win over severity too.
-        started = [alert for alert in ranked if alert.debut <= now]
-        event = started[0] if started else min(ranked, key=lambda alert: alert.debut)
-        return _calendar_event(event)
+        # HA derives the on/off state and its next transition from this event.
+        if started := [alert for alert in alerts if alert.debut <= now]:
+            return _calendar_event(
+                min(started, key=lambda alert: (alert.niveau_severite, alert.debut))
+            )
+        return _calendar_event(min(alerts, key=lambda alert: alert.debut))
 
     @override
     async def async_get_events(
