@@ -28,52 +28,55 @@
   },
   "entity": {
     "sensor": {
-      "ac_1_o_c": {
+      "ac_output_current": {
         "name": "AC output current"
       },
-      "ac_1_o_v": {
-        "name": "AC output voltage"
-      },
-      "ac_o_e_total": {
-        "name": "Total AC output energy"
-      },
-      "ac_o_p_total": {
+      "ac_output_power": {
         "name": "AC output power"
       },
-      "b_c": {
+      "ac_output_voltage": {
+        "name": "AC output voltage"
+      },
+      "battery_current": {
         "name": "Battery current"
       },
-      "b_cell_count": {
-        "name": "Cell count"
-      },
-      "b_cycle_count": {
+      "battery_cycle_count": {
         "name": "Battery cycle count"
       },
-      "b_i_e": {
-        "name": "Total battery charged energy"
-      },
-      "b_ntc_count": {
-        "name": "Temperature sensor count"
-      },
-      "b_o_e": {
-        "name": "Total battery discharged energy"
-      },
-      "b_soc": {
+      "battery_soc": {
         "name": "Battery SoC"
       },
-      "b_soh": {
+      "battery_soh": {
         "name": "Battery SoH"
       },
-      "b_v": {
+      "battery_voltage": {
         "name": "Battery voltage"
       },
-      "d_inverter_1_c": {
+      "cell_count": {
+        "name": "Cell count"
+      },
+      "dc_pv_input_count": {
+        "name": "DC PV input count"
+      },
+      "grid_current": {
+        "name": "Grid current"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "grid_input_power": {
+        "name": "Grid input power"
+      },
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "inverter_count": {
+        "name": "Inverter count"
+      },
+      "inverter_current": {
         "name": "Inverter current"
       },
-      "d_inverter_1_v": {
-        "name": "Inverter voltage"
-      },
-      "d_inverter_status": {
+      "inverter_status": {
         "name": "Inverter status",
         "state": {
           "abnormal_off_grid": "Off-grid (abnormal)",
@@ -86,44 +89,14 @@
           "stop": "Stopped"
         }
       },
-      "d_inverter_total": {
-        "name": "Total inverter power"
+      "inverter_voltage": {
+        "name": "Inverter voltage"
       },
-      "d_num_inverters": {
-        "name": "Inverter count"
-      },
-      "g_1_i_c": {
-        "name": "Grid current"
-      },
-      "g_1_i_v": {
-        "name": "Grid voltage"
-      },
-      "g_i_e_total": {
-        "name": "Total grid import energy"
-      },
-      "g_i_f": {
-        "name": "Grid frequency"
-      },
-      "g_i_p_total": {
-        "name": "Grid input power"
-      },
-      "g_o_e_total": {
-        "name": "Total grid export energy"
-      },
-      "pv_ac_e": {
+      "pv_ac_energy": {
         "name": "PV AC energy"
       },
-      "pv_ac_p": {
+      "pv_ac_power": {
         "name": "PV AC power"
-      },
-      "pv_dc_count": {
-        "name": "DC PV input count"
-      },
-      "pv_i_e_total": {
-        "name": "Total PV input energy"
-      },
-      "pv_i_p_total": {
-        "name": "Total PV input power"
       },
       "pv_input_current": {
         "name": "PV {input} input current"
@@ -144,6 +117,33 @@
       },
       "pv_input_voltage": {
         "name": "PV {input} input voltage"
+      },
+      "temperature_sensor_count": {
+        "name": "Temperature sensor count"
+      },
+      "total_ac_output_energy": {
+        "name": "Total AC output energy"
+      },
+      "total_battery_charged_energy": {
+        "name": "Total battery charged energy"
+      },
+      "total_battery_discharged_energy": {
+        "name": "Total battery discharged energy"
+      },
+      "total_grid_export_energy": {
+        "name": "Total grid export energy"
+      },
+      "total_grid_import_energy": {
+        "name": "Total grid import energy"
+      },
+      "total_inverter_power": {
+        "name": "Total inverter power"
+      },
+      "total_pv_input_energy": {
+        "name": "Total PV input energy"
+      },
+      "total_pv_input_power": {
+        "name": "Total PV input power"
       }
     }
   },
