@@ -41,6 +41,7 @@ from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
+from .generated.locations import LOCATIONS
 from .generated.lorawan import LORAWAN
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -324,6 +325,7 @@ class Manifest(TypedDict, total=False):
     dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
+    locations: list[str]
     is_built_in: bool
     overwrites_built_in: bool
     version: str
@@ -629,6 +631,19 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
             )
 
     return bluetooth
+
+
+async def async_get_locations(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Return the domains of the integrations serving each region."""
+    locations = {region: list(domains) for region, domains in LOCATIONS.items()}
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.locations:
+            continue
+        for region in integration.locations:
+            locations.setdefault(region, []).append(integration.domain)
+    return locations
 
 
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
@@ -1066,6 +1081,11 @@ class Integration:
     def homekit(self) -> dict[str, list[str]] | None:
         """Return Integration homekit entries."""
         return self.manifest.get("homekit")
+
+    @property
+    def locations(self) -> list[str] | None:
+        """Return Integration location regions."""
+        return self.manifest.get("locations")
 
     @property
     def is_built_in(self) -> bool:
