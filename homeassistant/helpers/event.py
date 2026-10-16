@@ -34,6 +34,7 @@ from homeassistant.core import (
     async_noop,
     callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import dt as dt_util
@@ -750,7 +751,8 @@ class _TrackStateChangeFiltered:
             entities = {
                 entity_id
                 for entity_id in entities
-                if split_entity_id(entity_id)[0] not in domains
+                if not valid_entity_id(entity_id)
+                or entity_id.partition(".")[0] not in domains
             }
 
         if not entities:
