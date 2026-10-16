@@ -13,7 +13,7 @@ import aiohttp
 import aiohttp.client_exceptions
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util.network import is_loopback
+from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -393,9 +393,9 @@ def _parse_client_id(
 ) -> ParseResult:
     """Test if client id is a valid URL according to IndieAuth section 3.2.
 
-    An IP address that is not loopback is allowed when the client_id has the
-    same scheme and netloc (host including port) as the request, which is how
-    the frontend builds its client_id.
+    An IP address that is not local is allowed when the client_id has the same
+    scheme and netloc (host including port) as the request, which is how the
+    frontend builds its client_id.
 
     https://indieauth.spec.indieweb.org/#client-identifier
     """
@@ -438,6 +438,9 @@ def _parse_client_id(
     # MUST NOT be IPv4 or IPv6 addresses except for IPv4 127.0.0.1
     # or IPv6 [::1]
 
+    # We are not goint to follow the spec here. We are going to allow
+    # any internal network IP to be used inside a client id.
+
     # We additionally allow the netloc the request was made to, since the
     # frontend uses its own origin as client_id.
 
@@ -449,7 +452,7 @@ def _parse_client_id(
     with suppress(ValueError):
         address = ip_address(parts.hostname)
 
-    if address is None or is_loopback(address):
+    if address is None or is_local(address):
         return parts
 
     # Compare parsed values so default ports and IPv6 notation do not matter.
@@ -462,5 +465,5 @@ def _parse_client_id(
         return parts
 
     raise ValueError(
-        "Hostname should be a domain name, a loopback IP address or the request netloc"
+        "Hostname should be a domain name, a local IP address or the request netloc"
     )

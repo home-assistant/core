@@ -137,14 +137,7 @@ def test_client_id_hostname() -> None:
         request_netloc=REQUEST_NETLOC,
     )
     assert indieauth._parse_client_id(
-        "http://[::1]",
-        request_scheme=REQUEST_SCHEME,
-        request_netloc=REQUEST_NETLOC,
-    )
-    assert indieauth._parse_client_id(
-        "http://127.0.0.1",
-        request_scheme=REQUEST_SCHEME,
-        request_netloc=REQUEST_NETLOC,
+        "http://[::1]", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
     )
     assert indieauth._parse_client_id(
         "http://[::1]:8123/",
@@ -152,110 +145,96 @@ def test_client_id_hostname() -> None:
         request_netloc=REQUEST_NETLOC,
     )
     assert indieauth._parse_client_id(
-        "http://127.1.2.3",
+        "http://[fe80::1]:8123/",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://127.0.0.1", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
+    assert indieauth._parse_client_id(
+        "http://10.0.0.0", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
+    assert indieauth._parse_client_id(
+        "http://10.255.255.255",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://172.16.0.0",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://172.31.255.255",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://192.168.0.0",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://192.168.255.255",
         request_scheme=REQUEST_SCHEME,
         request_netloc=REQUEST_NETLOC,
     )
 
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://10.0.0.0/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://172.16.0.0/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://192.168.0.0/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://[fd00::1]/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://169.254.0.1/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://[fe80::1]/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://255.255.255.255/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://11.0.0.0/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://172.32.0.0/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://192.167.0.0/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
-
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://8.8.8.8:8123/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://[2001:db8::1]/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://[2001:db8::1]:8123/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://192.168.1.10:8123/",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
+        assert indieauth._parse_client_id(
+            "http://", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
-            "http://",
-            request_scheme=REQUEST_SCHEME,
-            request_netloc=REQUEST_NETLOC,
-        )
-    with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "https:///callback",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
         )
     with pytest.raises(ValueError):
-        indieauth._parse_client_id(
+        assert indieauth._parse_client_id(
             "http://:8123/",
             request_scheme=REQUEST_SCHEME,
             request_netloc=REQUEST_NETLOC,
@@ -321,7 +300,6 @@ def test_client_id_request_origin_allowed(
         ),
         pytest.param("http://100.64.1.1/", "http", "100.64.1.1:0", id="request-port-0"),
         pytest.param("http://100.64.1.1/", "http", "ha.example.com", id="domain"),
-        pytest.param("http://192.168.1.10/", "http", "192.168.1.11", id="private-host"),
     ],
 )
 def test_client_id_request_origin_mismatch(
