@@ -14,14 +14,12 @@ from aioabrp import (
     ConnectionState,
     Metric,
     Telemetry,
-    TelemetryStream,
     VehicleModelDisplay,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -34,10 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 class AbrpData:
     """Runtime data stored on the config entry."""
 
-    session: OAuth2Session
     vehicles: list[tuple[AbrpVehicle, VehicleModelDisplay | None]]
     telemetry_coordinator: AbrpTelemetryCoordinator
-    stream: TelemetryStream | None
 
 
 type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]

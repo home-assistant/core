@@ -122,7 +122,6 @@ async def async_setup_entry(
     # endpoint rejects as a whole if it is malformed.
     vehicle_ids = list(dict.fromkeys(raw.vehicle_id for raw, _ in vehicles))
 
-    stream: TelemetryStream | None = None
     if vehicle_ids:
         stream = TelemetryStream(
             websession,
@@ -137,10 +136,7 @@ async def async_setup_entry(
         entry.async_on_unload(stream.stop)
 
     entry.runtime_data = AbrpData(
-        session=session,
-        vehicles=vehicles,
-        telemetry_coordinator=telemetry_coordinator,
-        stream=stream,
+        vehicles=vehicles, telemetry_coordinator=telemetry_coordinator
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
