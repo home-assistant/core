@@ -57,6 +57,23 @@ def _matches_server_name(entry: ConfigEntry, server_name: str | None) -> bool:
     )
 
 
+def _matches_instance_identity(
+    entry: ConfigEntry,
+    server_name: str | None,
+    expected_unique_id: str | None = None,
+) -> bool:
+    """Return True if entry matches instance identity across fallback and MAC IDs."""
+    if expected_unique_id and entry.unique_id == expected_unique_id:
+        return True
+    if not _matches_server_name(entry, server_name):
+        return False
+    if entry.unique_id is None:
+        return True
+    if server_name and entry.unique_id.endswith(f"_{server_name}"):
+        return True
+    return entry.unique_id.count(":") == 5 and "_" not in entry.unique_id
+
+
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): TextSelector(
@@ -144,9 +161,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 and entry.data[CONF_HOST] in check_hosts
             ]
             for entry in adoptable_entries:
-                if entry.data[CONF_PORT] == port and _matches_server_name(
-                    entry, server_name
-                ):
+                if entry.data[CONF_PORT] == port:
                     self.hass.config_entries.async_update_entry(
                         entry, unique_id=self.unique_id
                     )
@@ -187,12 +202,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     if (
                         entry.data.get(CONF_HOST) == check_host
                         and entry.data.get(CONF_PORT) == alt_port
-                        and (
-                            (
-                                entry.unique_id is None
-                                and _matches_server_name(entry, server_name)
-                            )
-                            or entry.unique_id == self.unique_id
+                        and _matches_instance_identity(
+                            entry, server_name, self.unique_id
                         )
                     ):
                         self._async_abort_entries_match(
@@ -228,6 +239,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id(None)
                     self._discovered_mac = None
+                    matching_hosts = None
             await self._async_check_and_adopt_existing_entry(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
@@ -271,7 +283,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         matching_hosts: set[str],
         host: str,
         port: int,
-        server_name: str | None = None,
         instance_unique_id: str | None = None,
         mac: str | None = None,
     ) -> ConfigEntry | None:
@@ -282,11 +293,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 or (mac and entry.unique_id == mac)
                 or (instance_unique_id and entry.unique_id == instance_unique_id)
                 or entry.unique_id in {f"{h}:{port}" for h in matching_hosts}
-                or (
-                    server_name
-                    and entry.unique_id
-                    and entry.unique_id.endswith(f"_{server_name}")
-                )
             ):
                 return entry
         return None
@@ -310,9 +316,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             and entry.data[CONF_HOST] in matching_hosts
         ]
         for entry in adoptable_entries:
-            if entry.data[CONF_PORT] == port and _matches_server_name(
-                entry, server_name
-            ):
+            if entry.data[CONF_PORT] == port:
                 self.hass.config_entries.async_update_entry(
                     entry, unique_id=instance_unique_id
                 )
@@ -431,7 +435,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     matching_hosts,
                     host,
                     port,
-                    server_name,
                     instance_unique_id,
                     formatted_mac,
                 ):
@@ -462,12 +465,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry_port = entry.data.get(CONF_PORT)
                     if entry_port == port or (
                         {entry_port, port} == {80, 443}
-                        and (
-                            (
-                                entry.unique_id is None
-                                and _matches_server_name(entry, server_name)
-                            )
-                            or entry.unique_id == fallback_unique_id
+                        and _matches_instance_identity(
+                            entry, server_name, fallback_unique_id
                         )
                     ):
                         if entry.unique_id is None and not any(
@@ -482,7 +481,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="already_configured")
 
             if self._async_find_matching_ignored_entry(
-                fallback_unique_id, matching_hosts, host, port, server_name, None
+                fallback_unique_id, matching_hosts, host, port
             ):
                 return self.async_abort(reason="already_configured")
 
