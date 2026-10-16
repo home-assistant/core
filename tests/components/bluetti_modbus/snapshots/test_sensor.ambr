@@ -1058,7 +1058,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_1_i_c',
+    'translation_key': 'pv_input_current',
     'unique_id': '1234_pv_1_i_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -1116,7 +1116,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_1_i_p',
+    'translation_key': 'pv_input_power',
     'unique_id': '1234_pv_1_i_p',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1178,7 +1178,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_1_i_type',
+    'translation_key': 'pv_input_type',
     'unique_id': '1234_pv_1_i_type',
     'unit_of_measurement': None,
   })
@@ -1242,7 +1242,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_1_i_v',
+    'translation_key': 'pv_input_voltage',
     'unique_id': '1234_pv_1_i_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1300,7 +1300,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_2_i_c',
+    'translation_key': 'pv_input_current',
     'unique_id': '1234_pv_2_i_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -1358,7 +1358,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_2_i_p',
+    'translation_key': 'pv_input_power',
     'unique_id': '1234_pv_2_i_p',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1420,7 +1420,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_2_i_type',
+    'translation_key': 'pv_input_type',
     'unique_id': '1234_pv_2_i_type',
     'unit_of_measurement': None,
   })
@@ -1484,7 +1484,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_2_i_v',
+    'translation_key': 'pv_input_voltage',
     'unique_id': '1234_pv_2_i_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1542,7 +1542,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_3_i_c',
+    'translation_key': 'pv_input_current',
     'unique_id': '1234_pv_3_i_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -1600,7 +1600,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_3_i_p',
+    'translation_key': 'pv_input_power',
     'unique_id': '1234_pv_3_i_p',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1662,7 +1662,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_3_i_type',
+    'translation_key': 'pv_input_type',
     'unique_id': '1234_pv_3_i_type',
     'unit_of_measurement': None,
   })
@@ -1726,7 +1726,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_3_i_v',
+    'translation_key': 'pv_input_voltage',
     'unique_id': '1234_pv_3_i_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1784,7 +1784,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_4_i_c',
+    'translation_key': 'pv_input_current',
     'unique_id': '1234_pv_4_i_c',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -1842,7 +1842,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_4_i_p',
+    'translation_key': 'pv_input_power',
     'unique_id': '1234_pv_4_i_p',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1904,7 +1904,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_4_i_type',
+    'translation_key': 'pv_input_type',
     'unique_id': '1234_pv_4_i_type',
     'unit_of_measurement': None,
   })
@@ -1968,7 +1968,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pv_4_i_v',
+    'translation_key': 'pv_input_voltage',
     'unique_id': '1234_pv_4_i_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
