@@ -1,5 +1,6 @@
 """Tests for light platform."""
 
+import pytest
 from pywizlight import PilotBuilder, PilotParser
 
 from homeassistant.components.light import (
@@ -346,3 +347,28 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
     assert pilot.pilot_params == {"dimming": 100}
+
+
+@pytest.mark.parametrize(
+    ("states", "entity_id"),
+    [
+        pytest.param([], "light.mock_title", id="empty"),
+        pytest.param([None], "light.mock_title", id="missing-primary"),
+        pytest.param(
+            [None, PilotParser({"state": True})],
+            "light.mock_title_zone_a",
+            id="secondary-only",
+        ),
+    ],
+)
+async def test_light_without_primary_state(
+    hass: HomeAssistant, states: list[PilotParser | None], entity_id: str
+) -> None:
+    """Test missing primary state does not prevent setting up the light."""
+    bulb = _mocked_wizlight(None, None, FAKE_RGBWW_BULB)
+    bulb.state = states
+    bulb.updateState.return_value = states
+
+    await async_setup_integration(hass, wizlight=bulb)
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
