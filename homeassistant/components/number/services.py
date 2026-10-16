@@ -10,7 +10,7 @@ from homeassistant.exceptions import ServiceValidationError
 from .const import ATTR_VALUE, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
 
 if TYPE_CHECKING:
-    from . import NumberEntity
+    from .entity import NumberEntity
 
 
 async def _async_set_value(entity: NumberEntity, service_call: ServiceCall) -> None:
