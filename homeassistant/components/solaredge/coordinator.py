@@ -608,30 +608,43 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         self, equipment_ids: Iterable[int | str], start_time: datetime
     ) -> dict[str, float]:
         """Get the last sum from the recorder before start_time for each statistic."""
-        start = start_time - timedelta(hours=1)
         statistic_ids = {self.get_statistic_id(eq_id) for eq_id in equipment_ids}
         LOGGER.debug(
-            "Getting sum for %s statistic IDs at: %s", len(statistic_ids), start
+            "Getting sum for %s statistic IDs before: %s",
+            len(statistic_ids),
+            start_time,
         )
+        # The statistics are cumulative, so the sums must continue from the last
+        # sum before the window. Taking it from the change of the first statistic
+        # in the window works even when the previous statistics are older than
+        # the window, and unlike the absolute last statistic it is not reset by
+        # an earlier update that already wrote statistics inside the window.
+        # See https://github.com/home-assistant/core/issues/186653 .
         current_stats = await get_instance(self.hass).async_add_executor_job(
             statistics_during_period,
             self.hass,
-            start,
-            start + timedelta(seconds=1),
+            start_time,
+            None,
             statistic_ids,
             "hour",
             None,
-            {"sum"},
+            {"sum", "change"},
         )
         result = {}
         for statistic_id in statistic_ids:
-            if statistic_id in current_stats:
-                statistic_sum = current_stats[statistic_id][0]["sum"]
-            else:
-                # If no statistics found right before start_time,
-                # try to get the last statistic but use it only
-                # if it's before start_time. This is needed if
-                # the integration hasn't run for at least a week.
+            statistic_sum: float | None = None
+            if statistics := current_stats.get(statistic_id):
+                # The change is relative to the last sum before start_time,
+                # so subtracting it recovers that sum.
+                first_stat = statistics[0]
+                first_sum = first_stat["sum"]
+                first_change = first_stat["change"]
+                if first_sum is not None and first_change is not None:
+                    statistic_sum = first_sum - first_change
+            if statistic_sum is None:
+                # No statistics found in the window yet, or the first one has
+                # no sum, so continue from the last statistic, but use it only
+                # if it's before start_time.
                 last_stat = await get_instance(self.hass).async_add_executor_job(
                     get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
                 )
@@ -640,10 +653,9 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
                     and last_stat[statistic_id][0]["start"] < start_time.timestamp()
                 ):
                     statistic_sum = last_stat[statistic_id][0]["sum"]
-                else:
-                    # Expected for new installations or if the statistics were cleared,
-                    # e.g. from the developer tools
-                    statistic_sum = 0.0
-            assert isinstance(statistic_sum, float)
+            if statistic_sum is None:
+                # Expected for new installations or if the statistics were
+                # cleared, e.g. from the developer tools
+                statistic_sum = 0.0
             result[statistic_id] = statistic_sum
         return result

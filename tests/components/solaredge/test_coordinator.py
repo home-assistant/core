@@ -339,6 +339,144 @@ async def test_modules_coordinator_subsequent_run_with_gap(
     }
 
 
+async def test_modules_coordinator_reprocess_same_window_after_gap(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test the sum doesn't reset when the same window is refreshed again.
+
+    After a gap the window is filled starting from the last sum before it. A
+    later refresh of the same window, e.g. after reloading the integration the
+    same day, must keep continuing from that sum. The window is taken from the
+    energy data returned by the API, so the gap is simulated by moving the
+    returned data instead of the clock.
+
+    Regression test for https://github.com/home-assistant/core/issues/186653 .
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+
+    # Values a month later, simulating a gap in data. The first row is also
+    # exactly at the start of the window, with older statistics before it.
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 24.0, "7A012346-CA": 30.0},
+        ),
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    # Refresh the same window again, e.g. after reloading the integration the
+    # same day. The sums must not reset to 0.
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca", f"{DOMAIN}:{SITE_ID}_7a012346_ca"},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 24.0, "sum": 48.0},
+        ],
+        f"{DOMAIN}:{SITE_ID}_7a012346_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 20.0, "sum": 20.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 24.0, "sum": 44.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 30.0, "sum": 74.0},
+        ],
+    }
+
+
+async def test_modules_coordinator_reprocess_same_window_new_equipment(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test reprocessing the same window with a newly added optimizer.
+
+    The optimizer that already has statistics continues from the last sum before
+    the window, while the newly added one, which has no earlier statistics,
+    starts from 0.
+    """
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1"},
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+
+    # A second optimizer is added a month later, after a gap in the data.
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012346-CA": {"name": "Optimizer 1.2"},
+    }
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 24.0, "7A012346-CA": 30.0},
+        ),
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    # Refresh the same window again, e.g. after reloading the integration the
+    # same day.
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca", f"{DOMAIN}:{SITE_ID}_7a012346_ca"},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 24.0, "sum": 48.0},
+        ],
+        f"{DOMAIN}:{SITE_ID}_7a012346_ca": [
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 30.0, "sum": 30.0},
+        ],
+    }
+
+
 async def test_modules_coordinator_no_energy_data(
     recorder_mock: Recorder,
     hass: HomeAssistant,
