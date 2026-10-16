@@ -18,12 +18,6 @@
       "auth": {
         "title": "Authenticate to the device"
       },
-      "finish": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]"
-        },
-        "title": "Choose a name for the device"
-      },
       "reset": {
         "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Select the device.\n3. Select `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock.",
         "title": "Unlock the device"
