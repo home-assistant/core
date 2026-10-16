@@ -50,6 +50,17 @@ from tests.common import MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
+WEB_SEARCH_OPTIONS = {
+    CONF_WEB_SEARCH: True,
+    CONF_WEB_SEARCH_MAX_USES: 3,
+    CONF_WEB_SEARCH_USER_LOCATION: True,
+    CONF_WEB_SEARCH_CITY: "San Francisco",
+    CONF_WEB_SEARCH_REGION: "California",
+    CONF_WEB_SEARCH_COUNTRY: "US",
+    CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+}
+SERVER_TOOL_OPTIONS = {CONF_CODE_EXECUTION: True, **WEB_SEARCH_OPTIONS}
+
 
 def _copy_model_info(model_id: str) -> ModelInfo:
     """Return an independent copy of the live model metadata."""
@@ -64,6 +75,20 @@ def _model_info_without_thinking() -> ModelInfo:
     assert model_info.capabilities
     model_info.capabilities.thinking.supported = False
     model_info.capabilities.thinking.types.enabled.supported = False
+    return model_info
+
+
+def _model_info_with_server_tools(
+    code_execution_supported: bool, web_search_supported: bool
+) -> ModelInfo:
+    """Return model metadata with independent server-tool capabilities."""
+    model_info = _copy_model_info("claude-haiku-5-5")
+    assert model_info.capabilities
+    assert model_info.capabilities.code_execution.supported
+    server_tools = model_info.capabilities.server_tools
+    server_tools.code_execution.supported = code_execution_supported
+    server_tools.web_search.supported = web_search_supported
+    server_tools.supported = code_execution_supported or web_search_supported
     return model_info
 
 
@@ -534,6 +559,126 @@ async def test_repair_flow_model_options(
     assert (
         retrieve.await_args_list
         == [call(model, timeout=10.0)][: 1 - cached_model_count]
+    )
+
+
+@pytest.mark.parametrize(
+    "cached_model_count",
+    [
+        pytest.param(1, id="listed_model"),
+        pytest.param(0, id="custom_model"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("model_info", "server_tool_options", "expected_options"),
+    [
+        pytest.param(
+            _model_info_with_server_tools(False, True),
+            SERVER_TOOL_OPTIONS,
+            {CONF_THINKING_EFFORT: "high", **WEB_SEARCH_OPTIONS},
+            id="unsupported_code_execution",
+        ),
+        pytest.param(
+            _model_info_with_server_tools(True, False),
+            SERVER_TOOL_OPTIONS,
+            {CONF_THINKING_EFFORT: "high", CONF_CODE_EXECUTION: True},
+            id="unsupported_web_search",
+        ),
+        pytest.param(
+            _model_info_with_server_tools(False, False),
+            SERVER_TOOL_OPTIONS,
+            {CONF_THINKING_EFFORT: "high"},
+            id="unsupported_server_tools",
+        ),
+        pytest.param(
+            _model_info_with_server_tools(True, True),
+            SERVER_TOOL_OPTIONS,
+            {CONF_THINKING_EFFORT: "high", **SERVER_TOOL_OPTIONS},
+            id="supported_server_tools",
+        ),
+        pytest.param(
+            _model_info_with_server_tools(False, False).model_copy(
+                update={"capabilities": None}, deep=True
+            ),
+            SERVER_TOOL_OPTIONS,
+            SERVER_TOOL_OPTIONS,
+            id="unknown_capabilities",
+        ),
+        pytest.param(
+            _model_info_with_server_tools(False, False),
+            {CONF_CODE_EXECUTION: False, CONF_WEB_SEARCH: False},
+            {CONF_THINKING_EFFORT: "high"},
+            id="disabled_unsupported_server_tools",
+        ),
+    ],
+)
+async def test_repair_flow_server_tool_options(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cached_model_count: int,
+    model_info: ModelInfo,
+    server_tool_options: dict[str, bool | int | str],
+    expected_options: dict[str, bool | int | str],
+) -> None:
+    """Clear unsupported server-tool options while preserving unrelated settings."""
+    preserved_options = {
+        CONF_MAX_TOKENS: 8192,
+        CONF_WEB_FETCH: True,
+        CONF_WEB_FETCH_MAX_USES: 7,
+    }
+    entry = _make_entry(
+        hass,
+        title="Claude",
+        api_key="key",
+        subentries_data=[
+            {
+                "data": {
+                    CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
+                    CONF_THINKING_EFFORT: "high",
+                    CONF_TOOL_SEARCH: True,
+                    **preserved_options,
+                    **server_tool_options,
+                },
+                "subentry_type": "conversation",
+                "title": "Conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.runtime_data.client.models.list.return_value = AsyncPage(
+        data=[model_info][:cached_model_count]
+    )
+    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
+        return_value=model_info
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "model_deprecated",
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="model_deprecated",
+    )
+    await _setup_repairs(hass)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await process_repair_fix_flow(
+        client,
+        result["flow_id"],
+        json={CONF_CHAT_MODEL: "claude-haiku-5-5-20261007"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert _get_subentry(entry, "conversation").data == {
+        CONF_CHAT_MODEL: "claude-haiku-5-5-20261007",
+        **preserved_options,
+        **expected_options,
+    }
+    assert (
+        retrieve.await_args_list
+        == [call("claude-haiku-5-5-20261007", timeout=10.0)][: 1 - cached_model_count]
     )
 
 

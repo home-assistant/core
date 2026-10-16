@@ -206,9 +206,7 @@ async def test_setup_skips_seeding_an_unusable_restored_total(
                 unit_id
             ),
         ),
-        patch(
-            "sofar_modbus.model.TornReadCorrectedComponent.seed_high_water"
-        ) as mock_seed,
+        patch("sofar_modbus.model.CorrectedTotal.seed") as mock_seed,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
