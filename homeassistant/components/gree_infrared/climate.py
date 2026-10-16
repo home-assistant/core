@@ -154,8 +154,17 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
     @override
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize stored data from a dict."""
-        if (climate_data := ClimateExtraStoredData.from_dict(restored)) is None:
-            return None
+        climate_data = ClimateExtraStoredData.from_dict(restored)
+        if climate_data is None:
+            # Older Gree snapshots predate climate temperature fields. Those
+            # values are restored from the entity state; keep the Gree options.
+            climate_data = ClimateExtraStoredData(
+                native_current_temperature=None,
+                native_target_temperature=None,
+                native_target_temperature_high=None,
+                native_target_temperature_low=None,
+                native_temperature_unit=UnitOfTemperature.CELSIUS.value,
+            )
         if not isinstance(
             last_active_hvac_mode := restored.get("last_active_hvac_mode"), str
         ):
@@ -600,11 +609,19 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 await self._send_command(command)
             except HomeAssistantError as err:
                 _LOGGER.warning(
-                    "Coalesced Gree IR send failed; keeping staged state: %s", err
+                    "Coalesced Gree IR send failed; retaining staged settings: %s", err
                 )
-                # Keep the staged settings so a later flush retries them
-                # instead of falling back to previously received values.
-                state.pending_timer_reset = reset_timer
+                # A failed timer replacement must not supersede the committed
+                # timer deadline; other settings remain staged for a later send.
+                state.pending_timer_reset = False
+                if reset_timer:
+                    state.timer_hours = (
+                        self._remaining_timer_hours()
+                        if self._timer_deadline is not None
+                        else None
+                    )
+                    self.async_write_ha_state()
+                    state.async_notify_switches()
                 state.pending_explicit_temp = explicit_temp
                 return
             state.timer_hours = command.timer_hours
