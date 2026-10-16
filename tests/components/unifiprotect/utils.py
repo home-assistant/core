@@ -321,7 +321,13 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "arm_profiles"):
+    for attr in (
+        *_PUBLIC_STORE_ATTRS.values(),
+        "arm_profiles",
+        "speakers",
+        "link_stations",
+        "bridges",
+    ):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -642,6 +648,7 @@ def make_public_camera(
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
+    is_mic_enabled: bool = True,
     hdr_type: PublicHdrMode | None = None,
     lcd_message: PublicLcdMessage | None = None,
     active_patrol_slot: int | None = None,
@@ -678,6 +685,7 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.is_mic_enabled = is_mic_enabled
     public.lcd_message = lcd_message
     public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
     # The doorbell text falls back to the default message of the private NVR.

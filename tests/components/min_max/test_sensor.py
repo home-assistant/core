@@ -20,6 +20,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -416,6 +417,65 @@ async def test_device_class(hass: HomeAssistant) -> None:
 
     assert state.state == str(float(MAX_VALUE))
     assert state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE
+
+
+@pytest.mark.parametrize(
+    ("device_class_1", "device_class_2", "expected_device_class"),
+    [
+        # Energy storage allows the measurement state class, so it is inherited
+        (
+            SensorDeviceClass.ENERGY_STORAGE,
+            SensorDeviceClass.ENERGY_STORAGE,
+            SensorDeviceClass.ENERGY_STORAGE,
+        ),
+        # Different device classes are never inherited
+        (SensorDeviceClass.ENERGY_STORAGE, SensorDeviceClass.ENERGY, None),
+        # Energy does not allow the measurement state class
+        (SensorDeviceClass.ENERGY, SensorDeviceClass.ENERGY, None),
+    ],
+)
+async def test_energy_device_class_not_inherited(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class_1: SensorDeviceClass,
+    device_class_2: SensorDeviceClass,
+    expected_device_class: SensorDeviceClass | None,
+) -> None:
+    """Test only a device class that allows measurement is inherited."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_energy",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2"],
+        }
+    }
+
+    for entity_id, value, device_class in (
+        ("sensor.test_1", 2.5, device_class_1),
+        ("sensor.test_2", 4.0, device_class_2),
+    ):
+        hass.states.async_set(
+            entity_id,
+            value,
+            {
+                ATTR_DEVICE_CLASS: device_class,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_energy")
+
+    assert state.state == "6.5"
+    assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
+    # This warning is what users see when the energy device class is inherited.
+    assert "which is impossible considering device class" not in caplog.text
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:

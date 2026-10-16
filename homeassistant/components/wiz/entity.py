@@ -12,7 +12,6 @@ from pywizlight.exceptions import (
     WizLightTimeOutError,
 )
 
-from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -46,8 +45,8 @@ class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
         board = hw_data.pop(0)
         model = hw_data.pop(0)
         hw_version = f"{board} {hw_data[0]}" if hw_data else board
-        self._attr_device_info[ATTR_HW_VERSION] = hw_version
-        self._attr_device_info[ATTR_MODEL] = model
+        self._attr_device_info.hw_version = hw_version
+        self._attr_device_info.model = model
 
     @callback
     @override

@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator"
+        }
+      }
+    },
     "sensor": {
       "tilt_state": {
         "state": {
