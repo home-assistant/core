@@ -5,7 +5,8 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -164,21 +165,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up an entry."""
     component: EntityComponent[BaseTrackerEntity] | None = hass.data.get(DOMAIN)
 
-    if component is not None:
-        return await component.async_setup_entry(entry)
+    if component is None:
+        component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
+            LOGGER, DOMAIN, hass
+        )
+        component.register_shutdown()
 
-    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
-        LOGGER, DOMAIN, hass
-    )
-    component.register_shutdown()
+    if not await component.async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
-    return await component.async_setup_entry(entry)
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload an entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
