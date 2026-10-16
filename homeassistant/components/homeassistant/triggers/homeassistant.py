@@ -2,13 +2,7 @@
 
 import probatio
 
-from homeassistant.config import DATA_PREVIOUS_VERSION
-from homeassistant.const import (
-    CONF_EVENT,
-    CONF_PLATFORM,
-    EVENT_HOMEASSISTANT_STARTED,
-    __version__,
-)
+from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -18,14 +12,11 @@ from ..const import DOMAIN
 
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
-EVENT_UPDATED = "updated"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_PLATFORM): DOMAIN,
-        probatio.Required(CONF_EVENT): probatio.Any(
-            EVENT_START, EVENT_SHUTDOWN, EVENT_UPDATED
-        ),
+        probatio.Required(CONF_EVENT): probatio.Any(EVENT_START, EVENT_SHUTDOWN),
     }
 )
 
@@ -60,26 +51,6 @@ async def async_attach_trigger(
     def hass_started(_: Event) -> None:
         nonlocal unsub
         unsub = None
-
-        if event == EVENT_UPDATED:
-            # A downgrade, like restoring an older backup, counts as well
-            if (previous_version := hass.data.get(DATA_PREVIOUS_VERSION)) is None:
-                return
-            hass.async_run_hass_job(
-                job,
-                {
-                    "trigger": {
-                        **trigger_data,
-                        "platform": DOMAIN,
-                        "event": event,
-                        "description": "Home Assistant updated",
-                        "from_version": previous_version,
-                        "to_version": __version__,
-                    }
-                },
-            )
-            return
-
         hass.async_run_hass_job(
             job,
             {

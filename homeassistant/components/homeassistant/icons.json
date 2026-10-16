@@ -342,5 +342,10 @@
     "update_entity": {
       "service": "mdi:update"
     }
+  },
+  "triggers": {
+    "updated": {
+      "trigger": "mdi:update"
+    }
   }
 }
