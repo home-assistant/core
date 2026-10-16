@@ -1408,7 +1408,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[vehicle_hybrid.json][sensor.superb_charging_state-entry]

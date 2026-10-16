@@ -174,8 +174,6 @@ def _charging_power_value(entity: SkodaEntity) -> float | None:
     charging = entity.open_api_charging
     if not charging or not charging.status:
         return None
-    if charging.status.state != ChargingState.CHARGING:
-        return None
     return charging.status.charge_power_in_kw
 
 
