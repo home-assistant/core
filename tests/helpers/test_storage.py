@@ -93,6 +93,44 @@ async def test_loading(hass: HomeAssistant, store: storage.Store) -> None:
     assert data == MOCK_DATA
 
 
+async def test_remove_pending_save(store: storage.Store) -> None:
+    """Removal discards delayed data instead of returning it on the next load."""
+    await store.async_save(MOCK_DATA)
+    store.async_delay_save(lambda: MOCK_DATA2, 60)
+
+    await store.async_remove()
+
+    assert await store.async_load() is None
+
+
+async def test_remove_during_write(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """An active write cannot recreate removed storage."""
+    write_started = asyncio.Event()
+    finish_write = asyncio.Event()
+    async_write = store._io.async_write
+
+    async def blocked_write(mode: str, data: str | bytes) -> None:
+        write_started.set()
+        await finish_write.wait()
+        await async_write(mode, data)
+
+    with patch.object(store._io, "async_write", side_effect=blocked_write):
+        write_task = hass.async_create_task(store.async_save(MOCK_DATA))
+        await write_started.wait()
+        remove_task = hass.async_create_task(store.async_remove())
+        await asyncio.sleep(0)
+        finish_write.set()
+        await asyncio.gather(write_task, remove_task)
+
+    assert MOCK_KEY not in hass_storage
+    assert await store.async_load() is None
+
+    await store.async_save(MOCK_DATA2)
+    assert await store.async_load() == MOCK_DATA2
+
+
 async def test_custom_encoder(hass: HomeAssistant) -> None:
     """Test we can save and load data."""
 
