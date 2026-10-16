@@ -143,6 +143,7 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
     fresh_air: int = int(GreeAcFreshAir.OFF)
     timer_hours: float | None = None
     timer_deadline: str | None = None
+    timer_expiry_power: bool | None = None
     swing_h_position: int = 0
     econo: bool = False
     absence: bool = False
@@ -206,6 +207,9 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
             or dt_util.parse_datetime(timer_deadline) is None
         ):
             return None
+        timer_expiry_power = restored.get("timer_expiry_power")
+        if timer_expiry_power is not None and not isinstance(timer_expiry_power, bool):
+            return None
         swing_h_position = restored.get("swing_h_position", 0)
         econo = restored.get("econo", False)
         absence = restored.get("absence", False)
@@ -237,6 +241,7 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
             fresh_air=int(fresh_air),
             timer_hours=None if timer_hours is None else float(timer_hours),
             timer_deadline=timer_deadline,
+            timer_expiry_power=timer_expiry_power,
             swing_h_position=swing_h_position,
             econo=econo,
             absence=absence,
@@ -319,6 +324,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         # with, since the protocol has no dedicated OFF mode.
         self._last_active_hvac_mode = self._attr_hvac_modes[1]
         self._timer_deadline: datetime | None = None
+        self._timer_expiry_power: bool | None = None
         self._timer_expiry_unsub: Callable[[], None] | None = None
         self._state.climate = self
 
@@ -436,6 +442,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self._state.sleep = restored.sleep
             self._state.fresh_air = restored.fresh_air
             self._state.timer_hours = restored.timer_hours
+            self._timer_expiry_power = restored.timer_expiry_power
             self._timer_deadline = (
                 (
                     dt_util.as_utc(parsed_timer_deadline)
@@ -503,6 +510,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             timer_deadline=self._timer_deadline.isoformat()
             if self._timer_deadline
             else None,
+            timer_expiry_power=self._timer_expiry_power,
             swing_h_position=self._state.swing_h_position,
             econo=self._state.econo,
             absence=self._state.absence,
@@ -556,11 +564,16 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self._state.timer_hours = None
         if self._state.pending_power_change or self._state.pending_timer_reset:
             return
-        self._attr_hvac_mode = (
-            self._last_active_hvac_mode
-            if self._attr_hvac_mode is HVACMode.OFF
-            else HVACMode.OFF
-        )
+        if self._timer_expiry_power is None:
+            self._attr_hvac_mode = (
+                self._last_active_hvac_mode
+                if self._attr_hvac_mode is HVACMode.OFF
+                else HVACMode.OFF
+            )
+        else:
+            self._attr_hvac_mode = (
+                self._last_active_hvac_mode if self._timer_expiry_power else HVACMode.OFF
+            )
 
     def _reconcile_overdue_timer_locked(self) -> None:
         """Apply overdue timer power transition while holding the command lock.
@@ -610,9 +623,10 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 _LOGGER.warning(
                     "Coalesced Gree IR send failed; retaining staged settings: %s", err
                 )
-                # A failed timer replacement must not supersede the committed
-                # timer deadline; other settings remain staged for a later send.
+                # Failed timer replacement must not supersede the committed deadline.
                 state.pending_timer_reset = False
+                state.pending_power_change = False
+                self._reconcile_overdue_timer_locked()
                 if reset_timer:
                     state.timer_hours = (
                         self._remaining_timer_hours()
@@ -628,6 +642,9 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 dt_util.utcnow() + timedelta(hours=command.timer_hours)
                 if command.timer_hours is not None
                 else None
+            )
+            self._timer_expiry_power = (
+                not power if command.timer_hours is not None else None
             )
             self._schedule_timer_expiry()
             if explicit_temp:
@@ -1047,12 +1064,8 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
 
         self._attr_hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
-        # The received frame supersedes anything staged but unsent: drop the
-        # pending flags so the next flush preserves these wire values instead
-        # of re-applying the superseded HA edit.
-        self._state.pending_explicit_temp = False
-        self._state.pending_timer_reset = False
-        self._state.pending_power_change = False
+        # The received frame supersedes anything staged but unsent.
+        self._state._clear_coalesced()
         self._received_fahrenheit_temperature = (
             command.temperature if command.fahrenheit else None
         )
@@ -1082,6 +1095,9 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
             dt_util.utcnow() + timedelta(hours=command.timer_hours)
             if command.timer_hours is not None
             else None
+        )
+        self._timer_expiry_power = (
+            not command.power if command.timer_hours is not None else None
         )
         self._schedule_timer_expiry()
         if self._is_yap1f:
