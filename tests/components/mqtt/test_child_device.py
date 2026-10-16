@@ -925,6 +925,88 @@ async def test_remove_last_child_device_keeps_parent_device(
     mqtt_mock.async_publish.assert_not_called()
 
 
+async def test_remove_entity_without_child_device_keeps_device_discovery_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removing an entity of a child device that could not be registered."""
+    mqtt_mock = await mqtt_mock_entry()
+    # A device registered in this session can not be used as a child device
+    await _discover_switch(hass, "old", {"identifiers": ["sub"], "name": "Old"})
+    payload = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw1": DISCOVERY_SWITCH}}],
+        "cmps": {"sw2": {**DISCOVERY_SWITCH, "uniq_id": "sw2"}},
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, "sw1")
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id is None
+    mqtt_mock.async_publish.reset_mock()
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("switch.parent_switch")
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_remove_child_device_after_failed_parent_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removing a child device after its parent device could not be changed."""
+    mqtt_mock = await mqtt_mock_entry()
+    payload: dict[str, Any] = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [
+            {
+                "ids": ["sub1"],
+                "name": "Sub 1",
+                "cmps": {"sw1": {**DISCOVERY_SWITCH, "uniq_id": "sw1"}},
+            },
+            {
+                "ids": ["sub2"],
+                "name": "Sub 2",
+                "cmps": {"sw2": {**DISCOVERY_SWITCH, "uniq_id": "sw2"}},
+            },
+        ],
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    child_device_1 = _get_child_device(hass, device_registry, "sub1")
+    assert child_device_1 is not None
+
+    # The child devices can not be moved to another parent device
+    payload["dev"] = {"ids": ["new_parent"], "name": "New parent"}
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    assert _get_device(hass, device_registry, "new_parent") is None
+    switch_1 = entity_registry.async_get("switch.parent_sub_1_switch")
+    assert switch_1 is not None
+    assert switch_1.device_id == child_device_1.id
+    mqtt_mock.async_publish.reset_mock()
+
+    device_registry.async_remove_device(child_device_1.id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+
 async def test_rejected_entity_cleans_up_devices(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
