@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-import httpx
+import httpx2
 from openai import PermissionDeniedError
 import probatio
 import pytest
@@ -459,8 +459,8 @@ async def test_repair_issue(
         patch(
             "openai.resources.responses.AsyncResponses.create",
             side_effect=PermissionDeniedError(
-                response=httpx.Response(
-                    status_code=403, request=httpx.Request(method="GET", url="")
+                response=httpx2.Response(
+                    status_code=403, request=httpx2.Request(method="GET", url="")
                 ),
                 body=None,
                 message="Please click on Verify Organization.",

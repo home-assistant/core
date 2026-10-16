@@ -6,7 +6,7 @@ import json
 import ssl
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -414,8 +414,8 @@ async def test_image_from_url_content_type(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        httpx.RequestError("server offline", request=MagicMock()),
-        httpx.TimeoutException,
+        httpx2.RequestError("server offline", request=MagicMock()),
+        httpx2.TimeoutException,
         ssl.SSLError,
     ],
 )
@@ -709,7 +709,11 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry, image.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
+        hass,
+        mqtt_mock_entry,
+        image.DOMAIN,
+        DEFAULT_CONFIG,
+        ["test_topic", "avty-topic"],
     )
 
 

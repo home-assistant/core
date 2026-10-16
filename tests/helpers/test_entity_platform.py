@@ -1524,6 +1524,42 @@ async def test_device_info_called(
     assert device.via_device_id == via.id
 
 
+@pytest.mark.parametrize(
+    "device_info",
+    [
+        pytest.param({}, id="dict"),
+        pytest.param(dr.DeviceInfo(), id="device_info"),
+    ],
+)
+async def test_device_info_empty(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device_info: dict[str, Any] | dr.DeviceInfo,
+) -> None:
+    """Test an entity with an empty device info is added without a device."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([MockEntity(unique_id="abcd", device_info=device_info)])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+
+
 async def test_device_info_not_overrides(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

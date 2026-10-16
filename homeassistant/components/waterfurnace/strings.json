@@ -98,5 +98,16 @@
         "name": "Water flow rate"
       }
     }
+  },
+  "exceptions": {
+    "invalid_account_id": {
+      "message": "WaterFurnace returned an invalid account ID"
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for {username}, update your credentials"
+    },
+    "login_failed": {
+      "message": "Failed to log in to WaterFurnace as {username}"
+    }
   }
 }

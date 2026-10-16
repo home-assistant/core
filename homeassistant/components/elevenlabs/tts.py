@@ -158,9 +158,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
 
         except ApiError as exc:
-            _LOGGER.warning(
-                "Error during processing of TTS request %s", exc, exc_info=True
-            )
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
 
@@ -302,9 +299,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                                 )
                                 previous_request_ids.clear()
                 except ApiError as exc:
-                    _LOGGER.warning(
-                        "Error during processing of TTS request %s", exc, exc_info=True
-                    )
                     _add_sentences_task.cancel()
                     with contextlib.suppress(asyncio.CancelledError):
                         await _add_sentences_task

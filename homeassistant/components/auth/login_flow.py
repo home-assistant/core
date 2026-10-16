@@ -106,6 +106,8 @@ if TYPE_CHECKING:
 
     from . import StoreResultType
 
+MAX_URL_LENGTH = 2048
+
 
 @callback
 def async_setup(hass: HomeAssistant, store_result: StoreResultType) -> None:
@@ -308,13 +310,18 @@ class LoginFlowBaseView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
+        context = result["context"]
         if not await indieauth.verify_redirect_uri(
-            hass, client_id, result["context"]["redirect_uri"]
+            hass,
+            client_id,
+            context["redirect_uri"],
+            allow_loopback_port_change=bool(context.get("code_challenge"))
+            and context.get("code_challenge_method") == "S256",
         ):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
         result.pop("data")
-        context = result.pop("context")
+        result.pop("context")
 
         result_obj = result.pop("result")
 
@@ -353,13 +360,17 @@ class LoginFlowIndexView(LoginFlowBaseView):
     @RequestDataValidator(
         probatio.Schema(
             {
-                probatio.Required("client_id"): str,
+                probatio.Required("client_id"): probatio.All(
+                    str, probatio.Length(max=MAX_URL_LENGTH)
+                ),
                 probatio.Required("handler"): probatio.All(
                     [probatio.Any(str, None)],
                     probatio.Length(2, 2),
                     probatio.Coerce(tuple),
                 ),
-                probatio.Required("redirect_uri"): str,
+                probatio.Required("redirect_uri"): probatio.All(
+                    str, probatio.Length(max=MAX_URL_LENGTH)
+                ),
                 # S256 challenges are always 43 unpadded base64url characters.
                 probatio.Optional("code_challenge"): probatio.Match(
                     r"^[A-Za-z0-9_-]{43}\Z"
