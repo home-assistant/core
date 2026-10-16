@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Self, override
 import probatio
 
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -355,13 +354,13 @@ class AbstractTemplateWaterHeater(
         """Set new target temperature."""
         write_state = False
 
-        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+        if (operation_mode := kwargs.get("operation_mode")) is not None:
             await self._async_set_operation_mode(operation_mode)
             if self._attr_assumed_state:
                 self._attr_current_operation = operation_mode
                 write_state = True
 
-        if (value := kwargs.get(ATTR_TEMPERATURE)) is not None and (
+        if (value := kwargs.get("temperature")) is not None and (
             validated := tcv.number(
                 self,
                 f"{SET_TEMPERATURE_ACTION} {ATTR_TEMPERATURE}",
