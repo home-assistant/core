@@ -405,12 +405,10 @@ class _DefaultPipelineProcessor:
         stream: AsyncIterable[EnhancedAudioChunk],
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
-        # Create a background task to prepare the conversation agent
-        if self.host.end_stage >= PipelineStage.INTENT and self.intent_agent:
+        # Create a background task to prepare the conversation agents
+        if self.intent_agent:
             self.host.hass.async_create_background_task(
-                conversation.async_prepare_agent(
-                    self.host.hass, self.intent_agent.id, self.host.language
-                ),
+                self._async_prepare_intent_agents(self.intent_agent.id),
                 f"prepare conversation agent {self.intent_agent.id}",
             )
 
@@ -566,6 +564,36 @@ class _DefaultPipelineProcessor:
 
         self.intent_agent = agent_info
 
+    def _intent_input_language(self) -> str:
+        """Return the language that intent recognition uses."""
+        if self.host.pipeline.conversation_language == MATCH_ALL:
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            return (
+                self.host.pipeline.stt_language
+                or self.host.pipeline.tts_language
+                or self.host.pipeline.language
+            )
+        return self.host.pipeline.conversation_language
+
+    async def _async_prepare_intent_agents(self, agent_id: str) -> None:
+        """Prepare the agents that intent recognition uses."""
+        language = self._intent_input_language()
+        # Local intents run on the default agent before the pipeline agent.
+        # Without them, loading the language intents would only cost memory.
+        if (
+            agent_id != conversation.HOME_ASSISTANT_AGENT
+            and self.host.pipeline.prefer_local_intents
+            and not self._intent_agent_only
+        ):
+            await conversation.async_prepare_intents(self.host.hass, language)
+        await conversation.async_prepare_agent(self.host.hass, agent_id, language)
+
     async def recognize_intent(
         self,
         intent_input: str,
@@ -579,21 +607,7 @@ class _DefaultPipelineProcessor:
         if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
 
-        if self.host.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use languages from the
-            # pipeline for intent fallback.
-            #
-            # We prioritize the STT and TTS languages because they may be more
-            # specific, such as "zh-CN" instead of just "zh". This is necessary
-            # for languages whose intents are split out by region when
-            # preferring local intent matching.
-            input_language = (
-                self.host.pipeline.stt_language
-                or self.host.pipeline.tts_language
-                or self.host.pipeline.language
-            )
-        else:
-            input_language = self.host.pipeline.conversation_language
+        input_language = self._intent_input_language()
 
         self.host.process_event(
             PipelineEvent(
