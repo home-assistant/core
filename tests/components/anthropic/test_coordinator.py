@@ -512,20 +512,28 @@ async def test_empty_model_catalogue(
 
 @pytest.mark.freeze_time("2026-10-16T00:00:00Z")
 @pytest.mark.parametrize(
-    "date_field",
+    ("date_field", "event_offset", "extra_requests"),
     [
-        pytest.param("deprecated_at", id="deprecation"),
-        pytest.param("retires_at", id="retirement"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("event_offset", "extra_requests"),
-    [
-        pytest.param(dt.timedelta(hours=-1), 0, id="past"),
-        pytest.param(dt.timedelta(), 0, id="previous_success"),
-        pytest.param(dt.timedelta(hours=6), 1, id="crossed"),
-        pytest.param(UPDATE_INTERVAL_CONNECTED, 1, id="current_time"),
-        pytest.param(dt.timedelta(hours=13), 0, id="future"),
+        pytest.param("deprecated_at", dt.timedelta(hours=-1), 0, id="deprecation_past"),
+        pytest.param(
+            "deprecated_at", dt.timedelta(), 0, id="deprecation_previous_success"
+        ),
+        pytest.param(
+            "deprecated_at", dt.timedelta(hours=6), 1, id="deprecation_crossed"
+        ),
+        pytest.param(
+            "deprecated_at", UPDATE_INTERVAL_CONNECTED, 1, id="deprecation_current_time"
+        ),
+        pytest.param(
+            "deprecated_at", dt.timedelta(hours=13), 0, id="deprecation_future"
+        ),
+        pytest.param("retires_at", dt.timedelta(hours=-1), 1, id="retirement_past"),
+        pytest.param("retires_at", dt.timedelta(), 1, id="retirement_previous_success"),
+        pytest.param("retires_at", dt.timedelta(hours=6), 1, id="retirement_crossed"),
+        pytest.param(
+            "retires_at", UPDATE_INTERVAL_CONNECTED, 1, id="retirement_current_time"
+        ),
+        pytest.param("retires_at", dt.timedelta(hours=13), 0, id="retirement_future"),
     ],
 )
 async def test_scheduled_lifecycle_refresh(
@@ -537,7 +545,7 @@ async def test_scheduled_lifecycle_refresh(
     event_offset: dt.timedelta,
     extra_requests: int,
 ) -> None:
-    """Refresh inactive metadata only when a scheduled date has just been crossed."""
+    """Refresh after a crossed deprecation date or any passed retirement date."""
     active_model = model_list[0]
     inactive_model = model_list[1].model_copy(
         update={"lifecycle": "deprecated", date_field: dt_util.utcnow() + event_offset}
@@ -560,6 +568,73 @@ async def test_scheduled_lifecycle_refresh(
     assert mock_model_list.await_args_list == [
         call(lifecycle=["active"], timeout=10.0),
         *[call(lifecycle=["deprecated", "retired"], timeout=10.0)][:extra_requests],
+    ]
+
+
+@pytest.mark.freeze_time("2026-10-16T00:00:00Z")
+async def test_passed_retirement_date_retries_until_model_is_retired(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+) -> None:
+    """Retry pending retirement and remove cached retired models on another trigger."""
+    active_model = model_list[0]
+    updated_active_model = active_model.model_copy(update={"max_tokens": 123456})
+    deprecated_model = model_list[1].model_copy(
+        update={
+            "lifecycle": "deprecated",
+            "retires_at": dt_util.utcnow() - dt.timedelta(days=1),
+        }
+    )
+    retired_model = deprecated_model.model_copy(update={"lifecycle": "retired"})
+    mock_model_list.side_effect = [
+        AsyncPage(data=[active_model], has_more=False),
+        AsyncPage(data=[deprecated_model], has_more=False),
+        AsyncPage(data=[active_model], has_more=False),
+        AsyncPage(data=[deprecated_model], has_more=False),
+        AsyncPage(data=[active_model], has_more=False),
+        AsyncPage(data=[retired_model], has_more=False),
+        AsyncPage(data=[active_model], has_more=False),
+        AsyncPage(data=[updated_active_model], has_more=False),
+        AsyncPage(data=[], has_more=False),
+    ]
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data == [active_model, deprecated_model]
+
+    freezer.tick(UPDATE_INTERVAL_CONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert coordinator.data == [active_model, deprecated_model]
+
+    freezer.tick(UPDATE_INTERVAL_CONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert coordinator.data == [active_model, retired_model]
+
+    freezer.tick(UPDATE_INTERVAL_CONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert coordinator.data == [active_model, retired_model]
+    assert mock_model_list.await_count == 7
+
+    freezer.tick(UPDATE_INTERVAL_CONNECTED)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert coordinator.data == [updated_active_model]
+    assert mock_model_list.await_args_list == [
+        call(lifecycle=["active"], timeout=10.0),
+        call(lifecycle=["deprecated", "retired"], timeout=10.0),
+    ] * 3 + [
+        call(lifecycle=["active"], timeout=10.0),
+        call(lifecycle=["active"], timeout=10.0),
+        call(lifecycle=["deprecated", "retired"], timeout=10.0),
     ]
 
 

@@ -123,10 +123,10 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
     async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
         """Fetch model list from the API.
 
-        Regular updates only fetch active models.
+        Regular updates fetch active models.
         Deprecated and retired models are only fetched on first refresh,
-        if the active models has changed, or if we have passed a deprecation
-        or retirement date for any already fetched model.
+        if the active models have changed, if a deprecation date has passed
+        since the previous update, or if a deprecated model's retirement date is past.
         """
         self.update_interval = UPDATE_INTERVAL_DISCONNECTED
         active_models = await self._async_get_models(["active"])
@@ -140,10 +140,14 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             last_update is None
             or active_models != cached_active_models
             or any(
-                last_update < date <= now
+                model.retires_at is not None and model.retires_at <= now
                 for model in models
-                for date in (model.deprecated_at, model.retires_at)
-                if date is not None
+                if model.lifecycle == "deprecated"
+            )
+            or any(
+                last_update < model.deprecated_at <= now
+                for model in models
+                if model.deprecated_at is not None
             )
         ):
             inactive_models = await self._async_get_models(["deprecated", "retired"])
