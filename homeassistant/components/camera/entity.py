@@ -5,7 +5,6 @@ import collections
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import partial
-import logging
 from random import SystemRandom
 import time
 from typing import Any, Final, final, override
@@ -36,11 +35,9 @@ from .webrtc import (
     CameraWebRTCProvider,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
+    async_call_webrtc_provider,
     async_get_supported_provider,
 )
-
-_LOGGER = logging.getLogger(__package__)
-
 
 _RND: Final = SystemRandom()
 
@@ -111,21 +108,6 @@ async def async_get_still_stream(
             await asyncio.sleep(sleep_time)
 
     return response
-
-
-async def _async_call_webrtc_provider(
-    coro: Coroutine[Any, Any, None], description: str, entity_id: str
-) -> None:
-    """Await a WebRTC provider callback without letting exceptions propagate.
-
-    Provider callbacks can do I/O and must not break camera setup or removal.
-    """
-    try:
-        await coro
-    except HomeAssistantError as ex:
-        _LOGGER.error("Error %s %s: %s", description, entity_id, ex)
-    except Exception:
-        _LOGGER.exception("Unexpected error %s %s", description, entity_id)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -421,7 +403,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._webrtc_provider:
-            await _async_call_webrtc_provider(
+            await async_call_webrtc_provider(
                 self._webrtc_provider.async_unregister_camera(self),
                 "unregistering WebRTC provider for",
                 self.entity_id,
@@ -449,14 +431,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         if old_provider:
-            await _async_call_webrtc_provider(
+            await async_call_webrtc_provider(
                 old_provider.async_unregister_camera(self),
                 "unregistering WebRTC provider for",
                 self.entity_id,
             )
 
         if new_provider:
-            await _async_call_webrtc_provider(
+            await async_call_webrtc_provider(
                 new_provider.async_register_camera(self),
                 "registering WebRTC provider for",
                 self.entity_id,

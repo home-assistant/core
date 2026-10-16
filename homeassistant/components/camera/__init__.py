@@ -58,7 +58,6 @@ from .entity import (
     Camera,
     CameraCapabilities,
     CameraEntityDescription,
-    _async_call_webrtc_provider,
     async_get_still_stream,
 )
 from .helper import (
@@ -81,6 +80,7 @@ from .webrtc import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
+    async_call_webrtc_provider,
     async_register_webrtc_provider,
     async_register_ws,
 )
@@ -503,7 +503,7 @@ async def websocket_update_prefs(
         if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
             provider := camera.webrtc_provider
         ):
-            await _async_call_webrtc_provider(
+            await async_call_webrtc_provider(
                 provider.async_on_camera_prefs_update(camera),
                 "notifying WebRTC provider of preferences update for",
                 entity_id,
