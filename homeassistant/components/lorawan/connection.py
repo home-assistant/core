@@ -38,8 +38,10 @@ class DeviceState:
     status: StatusEvent | None = None
 
     def receive(self, event: DeviceEvent) -> bool:
-        """Store observations without replacing newer data with a delayed event."""
-        if isinstance(event, UplinkEvent):
+        """Update device metadata and the latest observations."""
+        if event.type in (EventType.ADDED, EventType.UPDATED):
+            self.descriptor = event.descriptor
+        elif isinstance(event, UplinkEvent):
             if self.uplink is not None and event.received_at < self.uplink.received_at:
                 return False
             self.uplink = event
@@ -136,17 +138,15 @@ class RegisteredConnection:
         """Update device observations and discover matching integrations."""
         if self._disconnected:
             return
-        if event.type in (EventType.ADDED, EventType.UPDATED):
-            if (state := self.devices.get(event.dev_eui)) is not None:
-                state.descriptor = event.descriptor
-            else:
-                self.devices[event.dev_eui] = DeviceState(event.descriptor)
-        elif event.type == EventType.REMOVED:
+        if event.type == EventType.REMOVED:
             self.devices.pop(event.dev_eui, None)
-        else:
-            state = self.devices.get(event.dev_eui)
-            if state is None or not state.receive(event):
+        elif (state := self.devices.get(event.dev_eui)) is not None:
+            if not state.receive(event):
                 return
+        elif event.type in (EventType.ADDED, EventType.UPDATED):
+            self.devices[event.dev_eui] = DeviceState(event.descriptor)
+        else:
+            return
         if self._active:
             async_dispatcher_send(self._hass, SIGNAL_DEVICES_CHANGED)
         if event.type != EventType.ADDED:
