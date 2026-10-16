@@ -118,7 +118,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import validate_child_device_has_unique_id
+from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA, validate_child_device_has_unique_id
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
@@ -800,6 +800,20 @@ async def async_remove_discovery_payload(
     await async_publish(hass, discovery_topic, None, retain=True)
 
 
+@callback
+def _async_get_discovered_device(
+    hass: HomeAssistant, discovery_payload: MQTTDiscoveryPayload, config_entry_id: str
+) -> DeviceEntry | None:
+    """Return the device of a device discovery payload, which is not a child device."""
+    device_config = MQTT_ENTITY_DEVICE_INFO_SCHEMA(discovery_payload[CONF_DEVICE])
+    devices = dr.async_get(hass).async_get_devices(
+        identifiers={(DOMAIN, id_) for id_ in device_config[CONF_IDENTIFIERS]},
+        connections={(conn_[0], conn_[1]) for conn_ in device_config[CONF_CONNECTIONS]},
+        config_entry_id=config_entry_id,
+    )
+    return devices[0] if devices else None
+
+
 async def async_remove_entity_discovery_payload(
     hass: HomeAssistant,
     entity_id: str,
@@ -809,14 +823,21 @@ async def async_remove_entity_discovery_payload(
     """Clear the retained discovery payload of an entity removed from the registry.
 
     A device discovery topic is only cleared when the device is removed as well,
-    as clearing it removes all components of the device.
+    as clearing it removes all components of the device, including the components
+    of its child devices. Removing a child device keeps the topic.
     """
     discovery_payload: MQTTDiscoveryPayload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
     if (
         discovery_payload.device_discovery
         and registry_entry is not None
         and registry_entry.device_id is not None
-        and dr.async_get(hass).async_get(registry_entry.device_id) is not None
+        and registry_entry.config_entry_id is not None
+        and (
+            discovered_device := _async_get_discovered_device(
+                hass, discovery_payload, registry_entry.config_entry_id
+            )
+        )
+        is not None
     ):
         application: str = discovery_payload[CONF_ORIGIN][CONF_NAME]
         _LOGGER.warning(
@@ -833,6 +854,10 @@ async def async_remove_entity_discovery_payload(
         # discovery payload can no longer clean it up
         await async_cleanup_device_registry(
             hass, registry_entry.device_id, registry_entry.config_entry_id
+        )
+        # The entity's child device may have been removed, leaving its parent
+        await async_cleanup_device_registry(
+            hass, discovered_device.id, registry_entry.config_entry_id
         )
         return
     await async_remove_discovery_payload(hass, discovery_data)

@@ -824,6 +824,94 @@ async def test_cleanup_parent_device_with_child_device(
     assert _get_device(hass, device_registry, "parent") is None
 
 
+async def test_remove_child_device_keeps_device_discovery_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removing a child device keeps the components of the other devices."""
+    mqtt_mock = await mqtt_mock_entry()
+    payload = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [
+            {
+                "ids": ["sub1"],
+                "name": "Sub 1",
+                "cmps": {"sw1": {**DISCOVERY_SWITCH, "uniq_id": "sw1"}},
+            },
+            {
+                "ids": ["sub2"],
+                "name": "Sub 2",
+                "cmps": {"sw2": {**DISCOVERY_SWITCH, "uniq_id": "sw2"}},
+            },
+        ],
+        "cmps": {"sw": {**DISCOVERY_SWITCH, "uniq_id": "sw"}},
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    child_device_1 = _get_child_device(hass, device_registry, "sub1")
+    assert child_device_1 is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    device_registry.async_remove_device(child_device_1.id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
+    assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    assert entity_registry.async_is_registered("switch.parent_switch")
+    assert _get_device(hass, device_registry, "parent") is not None
+    assert (
+        "Although entity switch.parent_sub_1_switch was removed from Home Assistant"
+        in caplog.text
+    )
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+    # The child device is discovered again with the next device discovery payload
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert _get_child_device(hass, device_registry, "sub1") is not None
+    assert entity_registry.async_is_registered("switch.parent_sub_1_switch")
+
+    # Removing the parent device also removes its child devices and clears the topic
+    parent = _get_device(hass, device_registry, "parent")
+    assert parent is not None
+    device_registry.async_remove_device(parent.id)
+    await hass.async_block_till_done()
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    assert _get_child_device(hass, device_registry, "sub2") is None
+    assert not entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    mqtt_mock.async_publish.assert_any_call(
+        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
+    )
+
+
+async def test_remove_last_child_device_cleans_up_parent_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing the last child device cleans up a parent without components."""
+    mqtt_mock = await mqtt_mock_entry()
+    payload = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": DISCOVERY_SWITCH}}],
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert child_device is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    device_registry.async_remove_device(child_device.id)
+    await hass.async_block_till_done()
+    assert _get_device(hass, device_registry, "parent") is None
+    mqtt_mock.async_publish.assert_not_called()
+
+
 async def test_rejected_entity_cleans_up_devices(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
