@@ -225,14 +225,19 @@ def with_string_names(items: Iterable[tuple[Any, Any]]) -> dict[str, Any]:
     """Return names and their values, keeping only names that are a str.
 
     A name can be a subclass of str, whose own __hash__, __eq__, and other
-    methods would run when comparing or matching it.
+    methods would run when comparing or matching it. Copied in one go first,
+    as other threads can change a dictionary, like sys.modules, meanwhile.
     """
-    return {name: value for name, value in items if type(name) is str}
+    return {name: value for name, value in list(items) if type(name) is str}
 
 
 def class_name(value: Any) -> str:
-    """Return the name of the class of a value, without running code."""
-    return _CLASS_QUALNAME.__get__(type(value))  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
+    """Return the name of the class of a value, without running code.
+
+    As a str itself: a class can name itself with a subclass of str, whose own
+    __str__ and __format__ would run when the name is logged or formatted.
+    """
+    return str.__str__(_CLASS_QUALNAME.__get__(type(value)))  # pylint: disable=unnecessary-dunder-call
 
 
 def static_attribute(value: Any, name: str, default: Any = None) -> Any:

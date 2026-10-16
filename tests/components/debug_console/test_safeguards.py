@@ -186,6 +186,48 @@ async def test_logging_inspection(
     )
 
 
+async def test_logging_class_with_odd_name(
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a class named by a subclass of str is logged without running it."""
+    await _async_send(websocket_client, {"type": "debug_console/warning/accept"})
+    msg = await _async_send(
+        websocket_client,
+        {
+            **EXECUTE,
+            "code": (
+                "class Name(str):\n"
+                "    def __str__(self):\n"
+                "        raise SystemExit\n\n"
+                "    def __format__(self, spec):\n"
+                "        raise SystemExit\n\n"
+                "class Thing:\n"
+                "    pass\n\n"
+                "Thing.__qualname__ = Name('Thing')\n"
+                "Thing()"
+            ),
+        },
+    )
+
+    with caplog.at_level(logging.WARNING):
+        msg = await _async_send(
+            websocket_client,
+            {
+                "type": "debug_console/inspect",
+                "session_id": SESSION_ID,
+                "object_id": msg["result"]["result"]["object_id"],
+            },
+        )
+
+    assert msg["success"]
+    assert re.search(
+        _logged_user(hass_admin_user) + " expanded a Thing in the debug console",
+        caplog.text,
+    )
+
+
 async def test_logging_property_evaluation(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
