@@ -3,26 +3,23 @@
 import logging
 from typing import Any, Literal, override
 
-from aiohttp import RequestInfo
-from multidict import CIMultiDict, CIMultiDictProxy
 import probatio
 from switchbot import (
-    OAUTH_AUTHORIZE_URL,
-    OAUTH_SCOPE,
-    OAUTH_TOKEN_URL,
     SwitchbotAccountConnectionError,
     SwitchBotAdvertisement,
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotModel,
-    exchange_oauth_code,
     fetch_cloud_devices,
     fetch_cloud_devices_by_token,
     parse_advertisement_data,
 )
-from yarl import URL
 
 from homeassistant.components import bluetooth
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -38,13 +35,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import (
-    OAuth2TokenRequestReauthError,
-    OAuth2TokenRequestTransientError,
-)
 from homeassistant.helpers import config_entry_oauth2_flow, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import MY_AUTH_CALLBACK_PATH
 
 from .const import (
     CONF_CURTAIN_SPEED,
@@ -84,64 +76,6 @@ def short_address(address: str) -> str:
 def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
     """Get the name from a discovery."""
     return f"{discovery.data['modelFriendlyName']} {short_address(discovery.address)}"
-
-
-def _oauth_request_info() -> RequestInfo:
-    """Return request metadata for HA OAuth exception adaptation."""
-    url = URL(OAUTH_TOKEN_URL)
-    return RequestInfo(url, "POST", CIMultiDictProxy(CIMultiDict()), url)
-
-
-class SwitchbotOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
-    """SwitchBot OAuth implementation with its registered callback URI."""
-
-    @property
-    @override
-    def redirect_uri(self) -> str:
-        """Return the callback URI registered for the public client."""
-        return MY_AUTH_CALLBACK_PATH
-
-    @property
-    @override
-    def extra_authorize_data(self) -> dict[str, str]:
-        """Return additional authorization parameters."""
-        return {"scope": OAUTH_SCOPE}
-
-    @override
-    async def async_resolve_external_data(
-        self, external_data: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Resolve the callback through pySwitchbot's OAuth implementation."""
-        try:
-            token = await exchange_oauth_code(
-                async_get_clientsession(self.hass),
-                self.client_id,
-                external_data["state"]["redirect_uri"],
-                external_data["code"],
-            )
-        except SwitchbotAuthenticationError as err:
-            # OAuth2TokenRequestReauthError provides its own translation.
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise OAuth2TokenRequestReauthError(
-                request_info=_oauth_request_info(),
-                status=401,
-                domain=DOMAIN,
-            ) from err
-        except SwitchbotAccountConnectionError as err:
-            # OAuth2TokenRequestTransientError provides its own translation.
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise OAuth2TokenRequestTransientError(
-                request_info=_oauth_request_info(),
-                status=503,
-                domain=DOMAIN,
-            ) from err
-        except SwitchbotApiError:
-            return {}
-
-        # The shared OAuth flow logs the full mapping when expires_in is missing.
-        if "expires_in" not in token:
-            return {}
-        return token
 
 
 class SwitchbotConfigFlow(
@@ -184,16 +118,10 @@ class SwitchbotConfigFlow(
     ) -> ConfigFlowResult:
         """Start OAuth and remember where to continue after authorization."""
         self._oauth_next_step = next_step
-        self.async_register_implementation(
+        await async_import_client_credential(
             self.hass,
-            SwitchbotOAuth2Implementation(
-                self.hass,
-                DOMAIN,
-                OAUTH_CLIENT_ID,
-                "",
-                OAUTH_AUTHORIZE_URL,
-                OAUTH_TOKEN_URL,
-            ),
+            DOMAIN,
+            ClientCredential(OAUTH_CLIENT_ID, "", name="SwitchBot"),
         )
         return await self.async_step_pick_implementation()
 

@@ -2362,7 +2362,7 @@ async def test_oauth_malformed_library_token_not_logged(
     assert response.status == 200
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.exchange_oauth_code",
+        "homeassistant.components.switchbot.application_credentials.exchange_oauth_code",
         return_value={"access_token": OAUTH_ACCESS_TOKEN},
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
