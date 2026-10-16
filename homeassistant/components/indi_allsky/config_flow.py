@@ -29,7 +29,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .util import get_ssl_context, normalize_host
+from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,33 +154,53 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         ssl = discovery_info.type != "_http._tcp.local."
         mac = discovery_info.properties.get("mac")
 
+        matching_hosts = {host}
+        if discovery_info.hostname:
+            matching_hosts.add(normalize_host(discovery_info.hostname))
+
         if mac:
             formatted_mac = format_mac(mac)
-            await self.async_set_unique_id(formatted_mac)
-            for entry in self._async_current_entries(include_ignore=False):
+            existing_entry = await self.async_set_unique_id(formatted_mac)
+            if existing_entry is None:
+                for entry in self._async_current_entries(include_ignore=False):
+                    if (
+                        entry.unique_id is None
+                        and entry.data[CONF_HOST] in matching_hosts
+                        and entry.data[CONF_PORT] == port
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=formatted_mac
+                        )
+                        existing_entry = entry
+                        break
+
+            updates: dict[str, Any] = {}
+            if existing_entry is not None:
                 if (
-                    entry.unique_id is None
-                    and entry.data[CONF_HOST] == host
-                    and entry.data[CONF_PORT] == port
+                    is_ip_address(existing_entry.data[CONF_HOST])
+                    and existing_entry.data[CONF_HOST] != host
                 ):
-                    self.hass.config_entries.async_update_entry(
-                        entry, unique_id=formatted_mac
-                    )
-                    break
-            self._abort_if_unique_id_configured(
-                updates={
+                    updates[CONF_HOST] = host
+                if (
+                    existing_entry.data[CONF_SSL] == ssl
+                    and existing_entry.data[CONF_PORT] != port
+                ):
+                    updates[CONF_PORT] = port
+            else:
+                updates = {
                     CONF_HOST: host,
                     CONF_PORT: port,
                     CONF_SSL: ssl,
                 }
-            )
+            self._abort_if_unique_id_configured(updates=updates)
         else:
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: host,
-                    CONF_PORT: port,
-                }
-            )
+            for match_host in matching_hosts:
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: match_host,
+                        CONF_PORT: port,
+                    }
+                )
             await self._async_handle_discovery_without_unique_id()
 
         self._discovered_data = {

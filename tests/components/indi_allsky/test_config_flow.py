@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.indi_allsky.const import DOMAIN
-from homeassistant.components.indi_allsky.util import get_ssl_context, normalize_host
+from homeassistant.components.indi_allsky.util import (
+    get_ssl_context,
+    is_ip_address,
+    normalize_host,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -243,6 +247,16 @@ def test_get_ssl_context() -> None:
     ctx_no_verify = get_ssl_context(ssl_enabled=True, verify_ssl=False)
     assert isinstance(ctx_no_verify, ssl.SSLContext)
     assert ctx_no_verify.verify_mode == ssl.CERT_NONE
+
+
+def test_is_ip_address() -> None:
+    """Test is_ip_address detection for IPv4, IPv6, and hostnames."""
+    assert is_ip_address("127.0.0.1") is True
+    assert is_ip_address("192.168.1.1") is True
+    assert is_ip_address("::1") is True
+    assert is_ip_address("[::1]") is True
+    assert is_ip_address("indi-allsky.local") is False
+    assert is_ip_address("allsky.domain.com") is False
 
 
 @pytest.mark.parametrize(
@@ -482,3 +496,169 @@ async def test_zeroconf_already_configured_manual_entry_adopts_mac(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_zeroconf_already_configured_manual_entry_with_hostname_adopts_mac_and_preserves_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test Zeroconf discovery adopts MAC for hostname-configured entry and preserves the hostname."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (indi-allsky.local)",
+        data={
+            CONF_HOST: "indi-allsky.local",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_HOST] == "indi-allsky.local"
+
+
+async def test_zeroconf_alternate_protocol_announcement_preserves_configured_protocol(
+    hass: HomeAssistant,
+) -> None:
+    """Test alternate HTTP announcement does not overwrite configured HTTPS endpoint."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_PORT] == 443
+    assert entry.data[CONF_SSL] is True
+
+
+async def test_zeroconf_skips_adoption_if_mac_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test Zeroconf skips adopting manual entry if an entry with the MAC already exists."""
+    existing_mac_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    existing_mac_entry.add_to_hass(hass)
+
+    manual_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    manual_entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert existing_mac_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert manual_entry.unique_id is None
+
+
+async def test_zeroconf_already_configured_without_mac_matches_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test Zeroconf discovery without MAC aborts if hostname matches an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="INDI Allsky (indi-allsky.local)",
+        data={
+            CONF_HOST: "indi-allsky.local",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_https._tcp.local.",
+        name="INDI Allsky._https._tcp.local.",
+        properties={"path": "/indi-allsky"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
