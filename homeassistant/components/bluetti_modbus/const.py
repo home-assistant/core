@@ -78,6 +78,7 @@ EXCLUDED_FIELDS: Final = frozenset(
         "d_inverter_1_p",
         "d_inverter_1_status",
         # Identity of the battery pack and IoT module, not of this device.
+        "b_type",
         "b_serial",
         "b_ver_count",
         "b_ver_1",
