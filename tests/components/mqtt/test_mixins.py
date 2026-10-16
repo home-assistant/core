@@ -1210,36 +1210,6 @@ async def test_previous_device_cleanup_keeps_retained_discovery_payload(
     mqtt_mock.async_publish.assert_not_called()
 
 
-async def test_previous_device_kept_with_via_device_link(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the previous device is kept while another device links to it."""
-    await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    topic, payload = _single_component_discovery(MOVED_DEVICE_A)
-    async_fire_mqtt_message(hass, topic, json.json_dumps(payload), retain=True)
-    await hass.async_block_till_done()
-    device_a = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOVED_DEVICE_A), entry.entry_id
-    )
-    assert device_a is not None
-
-    await _async_reload_mqtt_entry(hass)
-    topic, payload = _single_component_discovery(MOVED_DEVICE_B)
-    payload["device"]["via_device"] = MOVED_DEVICE_A
-    async_fire_mqtt_message(hass, topic, json.json_dumps(payload), retain=True)
-    await hass.async_block_till_done()
-
-    device_b = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOVED_DEVICE_B), entry.entry_id
-    )
-    assert device_b is not None
-    assert device_b.via_device_id == device_a.id
-    assert device_registry.async_get(device_a.id) is not None
-
-
 @pytest.mark.parametrize(
     "hass_config",
     [

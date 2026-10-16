@@ -1703,12 +1703,6 @@ class MqttEntity(
             assert self.registry_entry is not None
         if previous_device_id == self.registry_entry.device_id:
             return
-        # Removing the device would clear the via_device_id of devices linked to it
-        if any(
-            device.via_device_id == previous_device_id
-            for device in dr.async_get(self.hass).devices
-        ):
-            return
         await async_cleanup_device_registry(
             self.hass,
             previous_device_id,
