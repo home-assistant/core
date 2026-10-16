@@ -13,13 +13,39 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_global_key(hass: HomeAssistant, mock_connection: Mock) -> None:
-    """A global key discovers the sole tenant and offers applications."""
-    result = await hass.config_entries.flow.async_init(
-        "chirpstack",
-        context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
-    )
+@pytest.mark.parametrize(
+    ("endpoint", "expected_endpoint"),
+    [
+        ("http://server:8080", "http://server:8080"),
+        (
+            "http://192.168.1.74:8080/#/tenants/"
+            "e434c4e4-534f-4991-9613-c6b90aa871a3/api-keys/create",
+            "http://192.168.1.74:8080",
+        ),
+        ("https://server/devices?limit=10#details", "https://server"),
+        ("http://[::1]:8080/#/tenants", "http://[::1]:8080"),
+        ("  https://server:8443/  ", "https://server:8443"),
+    ],
+)
+async def test_global_key(
+    hass: HomeAssistant,
+    mock_connection: Mock,
+    endpoint: str,
+    expected_endpoint: str,
+) -> None:
+    """Connect and save the server address from a pasted ChirpStack URL."""
+    with patch(
+        "homeassistant.components.chirpstack.config_flow.ChirpStackConnection",
+        return_value=mock_connection,
+    ) as constructor:
+        result = await hass.config_entries.flow.async_init(
+            "chirpstack",
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"endpoint": endpoint, "api_key": "secret"}
+        )
+    assert constructor.call_args.args[0] == expected_endpoint
     assert result["step_id"] == "applications"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"application_ids": ["application"]}
@@ -27,6 +53,7 @@ async def test_global_key(hass: HomeAssistant, mock_connection: Mock) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "tenant"
     assert result["data"]["tenant_id"] == "tenant"
+    assert result["data"]["endpoint"] == expected_endpoint
     assert "network_id" not in result["data"]
     mock_connection.inventory.assert_awaited_once()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -43,7 +70,9 @@ async def test_scoped_key(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "readonly"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "readonly"}
     )
     assert result["step_id"] == "tenant"
     mock_connection.close.assert_awaited_once()
@@ -66,7 +95,9 @@ async def test_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "bad"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "bad"}
     )
     assert result["step_id"] == "tenant"
     mock_connection.applications.side_effect = grpc.aio.AioRpcError(status, (), (), "")
@@ -113,7 +144,10 @@ async def test_initial_form(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
 
-async def test_invalid_endpoint(hass: HomeAssistant, mock_connection: Mock) -> None:
+@pytest.mark.parametrize("endpoint", ["ftp://server", "http://[invalid"])
+async def test_invalid_endpoint(
+    hass: HomeAssistant, mock_connection: Mock, endpoint: str
+) -> None:
     """Keep malformed endpoints in the connection form."""
     with patch(
         "homeassistant.components.chirpstack.config_flow.ChirpStackConnection",
@@ -122,7 +156,9 @@ async def test_invalid_endpoint(hass: HomeAssistant, mock_connection: Mock) -> N
         result = await hass.config_entries.flow.async_init(
             "chirpstack",
             context={"source": SOURCE_USER},
-            data={"endpoint": "http://server/path", "api_key": "secret"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"endpoint": endpoint, "api_key": "secret"}
         )
     assert result["errors"] == {"base": "invalid_endpoint"}
     mock_connection.tenants.assert_not_awaited()
@@ -154,7 +190,9 @@ async def test_tenant_listing_failure(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["errors"] == {"base": "cannot_connect"}
     mock_connection.close.assert_awaited_once()
@@ -179,7 +217,9 @@ async def test_multiple_tenants(hass: HomeAssistant, mock_connection: Mock) -> N
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["step_id"] == "tenant"
     result = await hass.config_entries.flow.async_configure(
@@ -203,7 +243,9 @@ async def test_application_listing_failure(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["step_id"] == "tenant"
     assert result["errors"] == {"base": "cannot_connect"}
@@ -229,7 +271,9 @@ async def test_no_applications(hass: HomeAssistant, mock_connection: Mock) -> No
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["reason"] == "no_applications"
     mock_connection.inventory.assert_not_awaited()
@@ -240,7 +284,9 @@ async def test_empty_selection(hass: HomeAssistant, mock_connection: Mock) -> No
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"application_ids": []}
@@ -273,7 +319,9 @@ async def test_inventory_access_failure(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"application_ids": ["application"]}
@@ -304,7 +352,9 @@ async def test_inventory_auth_failure(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "rejected"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "rejected"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"application_ids": ["application"]}
@@ -360,7 +410,9 @@ async def test_duplicate_network(hass: HomeAssistant, mock_connection: Mock) -> 
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["reason"] == "already_configured"
 
@@ -375,7 +427,9 @@ async def test_reenter_key_after_tenant_auth_failure(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "wrong"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "wrong"}
     )
     assert result["step_id"] == "tenant"
     mock_connection.applications.side_effect = grpc.aio.AioRpcError(
@@ -420,7 +474,9 @@ async def test_unexpected_error(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["step_id"] == step
     assert result["errors"] == {"base": "unknown"}
@@ -446,7 +502,9 @@ async def test_unexpected_validation_error(
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
-        data={"endpoint": "http://server:8080", "api_key": "secret"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"application_ids": ["application"]}

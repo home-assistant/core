@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 import logging
 from typing import Any, override
+from urllib.parse import urlsplit
 
 import grpc
 from lorawan_connection import ConnectionUnavailable
@@ -76,6 +77,11 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
             self._input = dict(user_input)
             self._tenants = {}
             try:
+                self._input[CONF_ENDPOINT] = (
+                    urlsplit(self._input[CONF_ENDPOINT].strip())
+                    ._replace(path="", query="", fragment="")
+                    .geturl()
+                )
                 async with self._async_connection(errors) as connection:
                     self._tenants = await connection.tenants()
             except ValueError:
