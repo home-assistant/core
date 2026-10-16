@@ -11,7 +11,7 @@ from xknx.telegram import Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_TYPE, SERVICE_RELOAD, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -21,7 +21,10 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    async_register_platform_entity_service,
+)
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -35,6 +38,7 @@ from .const import (
     SERVICE_KNX_EVENT_REGISTER,
     SERVICE_KNX_EXPOSURE_REGISTER,
     SERVICE_KNX_READ,
+    SERVICE_KNX_SAVE_SCENE,
     SERVICE_KNX_SEND,
 )
 from .expose import create_knx_exposure
@@ -95,6 +99,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_RELOAD,
         service_reload_integration,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_KNX_SAVE_SCENE,
+        entity_domain=Platform.SCENE,
+        schema=None,
+        func="async_save_scene",
     )
 
 

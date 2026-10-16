@@ -455,6 +455,7 @@ async def test_name(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass, "media_player", {"media_player": CONFIG_CHILDREN_ONLY}
     )
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test") is not None
 
 
