@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> None:
     """Set up Slack from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
     slack = AsyncWebClient(
@@ -87,5 +87,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
-
-    return True

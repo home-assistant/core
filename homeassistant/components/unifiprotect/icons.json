@@ -446,6 +446,9 @@
     },
     "set_chime_paired_doorbells": {
       "service": "mdi:bell-cog"
+    },
+    "trigger_alarm_webhook": {
+      "service": "mdi:webhook"
     }
   }
 }

@@ -304,6 +304,14 @@
         }
       }
     },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "Infrared emitter"
+      },
+      "infrared_receiver": {
+        "name": "Infrared receiver"
+      }
+    },
     "light": {
       "ledstrip": {
         "state_attributes": {
@@ -331,6 +339,12 @@
     "number": {
       "current_limit": {
         "name": "Current limit"
+      },
+      "effect_intensity": {
+        "name": "Effect intensity"
+      },
+      "effect_speed": {
+        "name": "Effect speed"
       },
       "external_temperature": {
         "name": "External temperature"
@@ -470,6 +484,106 @@
       },
       "lamp_life": {
         "name": "Lamp life"
+      },
+      "last_command_source": {
+        "name": "Last command source",
+        "state": {
+          "activate": "Input activation",
+          "analog": "Analog input",
+          "ble": "Bluetooth",
+          "ble_indicate": "Bluetooth indication",
+          "button": "Button",
+          "calibration": "Calibration",
+          "dim": "Dimming started",
+          "dimstop": "Dimming stopped",
+          "double": "Double press",
+          "dual_dim": "Dual dimming started",
+          "http": "HTTP",
+          "init": "Restored state",
+          "knx": "KNX",
+          "limit_switch": "Limit switch",
+          "local": "Manual operation",
+          "long_push": "Long press",
+          "loopback": "Internal",
+          "mqtt": "MQTT",
+          "night_mode_end_period": "Night mode ended",
+          "night_mode_start_full_period": "Night mode full period",
+          "night_mode_start_period": "Night mode started",
+          "night_mode_started_period": "Night mode already active",
+          "overcurrent": "Overcurrent",
+          "overpower": "Overpower",
+          "overtemp": "Overheating",
+          "overvoltage": "Overvoltage",
+          "overvoltage_clear": "Overvoltage cleared",
+          "profile_change": "Profile change",
+          "reboot": "Reboot",
+          "rpc": "RPC",
+          "rpc_set": "RPC",
+          "safety_switch": "Safety switch",
+          "shc": "Shelly Cloud",
+          "short_push": "Short press",
+          "stuck": "Stuck",
+          "switch": "Switch input",
+          "timeout": "Timeout",
+          "timer": "Timer",
+          "transition": "Transition",
+          "ui": "Device controls",
+          "undervoltage": "Undervoltage",
+          "undervoltage_clear": "Undervoltage cleared",
+          "unknown": "Unknown",
+          "unsupported_load": "Unsupported load",
+          "ws_in": "WebSocket"
+        }
+      },
+      "last_command_source_with_channel_name": {
+        "name": "{channel_name} last command source",
+        "state": {
+          "activate": "[%key:component::shelly::entity::sensor::last_command_source::state::activate%]",
+          "analog": "[%key:component::shelly::entity::sensor::last_command_source::state::analog%]",
+          "ble": "[%key:component::shelly::entity::sensor::last_command_source::state::ble%]",
+          "ble_indicate": "[%key:component::shelly::entity::sensor::last_command_source::state::ble_indicate%]",
+          "button": "[%key:component::shelly::entity::sensor::last_command_source::state::button%]",
+          "calibration": "[%key:component::shelly::entity::sensor::last_command_source::state::calibration%]",
+          "dim": "[%key:component::shelly::entity::sensor::last_command_source::state::dim%]",
+          "dimstop": "[%key:component::shelly::entity::sensor::last_command_source::state::dimstop%]",
+          "double": "[%key:component::shelly::entity::sensor::last_command_source::state::double%]",
+          "dual_dim": "[%key:component::shelly::entity::sensor::last_command_source::state::dual_dim%]",
+          "http": "[%key:component::shelly::entity::sensor::last_command_source::state::http%]",
+          "init": "[%key:component::shelly::entity::sensor::last_command_source::state::init%]",
+          "knx": "[%key:component::shelly::entity::sensor::last_command_source::state::knx%]",
+          "limit_switch": "[%key:component::shelly::entity::sensor::last_command_source::state::limit_switch%]",
+          "local": "[%key:component::shelly::entity::sensor::last_command_source::state::local%]",
+          "long_push": "[%key:component::shelly::entity::sensor::last_command_source::state::long_push%]",
+          "loopback": "[%key:component::shelly::entity::sensor::last_command_source::state::loopback%]",
+          "mqtt": "[%key:component::shelly::entity::sensor::last_command_source::state::mqtt%]",
+          "night_mode_end_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_end_period%]",
+          "night_mode_start_full_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_start_full_period%]",
+          "night_mode_start_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_start_period%]",
+          "night_mode_started_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_started_period%]",
+          "overcurrent": "[%key:component::shelly::entity::sensor::last_command_source::state::overcurrent%]",
+          "overpower": "[%key:component::shelly::entity::sensor::last_command_source::state::overpower%]",
+          "overtemp": "[%key:component::shelly::entity::sensor::last_command_source::state::overtemp%]",
+          "overvoltage": "[%key:component::shelly::entity::sensor::last_command_source::state::overvoltage%]",
+          "overvoltage_clear": "[%key:component::shelly::entity::sensor::last_command_source::state::overvoltage_clear%]",
+          "profile_change": "[%key:component::shelly::entity::sensor::last_command_source::state::profile_change%]",
+          "reboot": "[%key:component::shelly::entity::sensor::last_command_source::state::reboot%]",
+          "rpc": "[%key:component::shelly::entity::sensor::last_command_source::state::rpc%]",
+          "rpc_set": "[%key:component::shelly::entity::sensor::last_command_source::state::rpc_set%]",
+          "safety_switch": "[%key:component::shelly::entity::sensor::last_command_source::state::safety_switch%]",
+          "shc": "[%key:component::shelly::entity::sensor::last_command_source::state::shc%]",
+          "short_push": "[%key:component::shelly::entity::sensor::last_command_source::state::short_push%]",
+          "stuck": "[%key:component::shelly::entity::sensor::last_command_source::state::stuck%]",
+          "switch": "[%key:component::shelly::entity::sensor::last_command_source::state::switch%]",
+          "timeout": "[%key:component::shelly::entity::sensor::last_command_source::state::timeout%]",
+          "timer": "[%key:component::shelly::entity::sensor::last_command_source::state::timer%]",
+          "transition": "[%key:component::shelly::entity::sensor::last_command_source::state::transition%]",
+          "ui": "[%key:component::shelly::entity::sensor::last_command_source::state::ui%]",
+          "undervoltage": "[%key:component::shelly::entity::sensor::last_command_source::state::undervoltage%]",
+          "undervoltage_clear": "[%key:component::shelly::entity::sensor::last_command_source::state::undervoltage_clear%]",
+          "unknown": "[%key:component::shelly::entity::sensor::last_command_source::state::unknown%]",
+          "unsupported_load": "[%key:component::shelly::entity::sensor::last_command_source::state::unsupported_load%]",
+          "ws_in": "[%key:component::shelly::entity::sensor::last_command_source::state::ws_in%]"
+        }
       },
       "last_seen": {
         "name": "Last seen"
@@ -624,6 +738,9 @@
       },
       "cury_away_mode": {
         "name": "Away mode"
+      },
+      "effect_reverse": {
+        "name": "Reverse effect"
       },
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"

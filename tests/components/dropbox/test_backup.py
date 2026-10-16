@@ -6,7 +6,7 @@ from dataclasses import replace
 from io import StringIO
 import json
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from python_dropbox_api import DropboxAuthException
@@ -21,6 +21,7 @@ from homeassistant.components.dropbox.backup import (
     METADATA_DOWNLOAD_CONCURRENCY,
     DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.dropbox.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -279,7 +280,7 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        TEST_AGENT_ID: "Failed to list backups"
+        TEST_AGENT_ID: "Backup operation failed"
     }
 
 
@@ -301,7 +302,9 @@ async def test_agents_list_backups_reauth(
 
     assert response["success"]
     assert response["result"]["backups"] == []
-    assert response["result"]["agent_errors"] == {TEST_AGENT_ID: "Authentication error"}
+    assert response["result"]["agent_errors"] == {
+        TEST_AGENT_ID: "Authentication with the backup location failed"
+    }
 
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
@@ -391,7 +394,7 @@ async def test_agents_download_fail(
 
     assert resp.status == 500
     body = await resp.content.read()
-    assert b"Failed to get backup" in body
+    assert b"Backup operation failed" in body
 
 
 async def test_agents_download_not_found(
@@ -536,8 +539,43 @@ async def test_agents_upload_fail(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Failed to upload backup" in caplog.text
+    assert "Backup operation failed" in caplog.text
     mock_dropbox_client.delete_file.assert_awaited_once()
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    mock_dropbox_client: Mock,
+) -> None:
+    """Test that upload progress is reported as the backup stream is consumed."""
+    uploaded: dict[str, bytes] = {}
+
+    async def upload_side_effect(path: str, stream: AsyncIterator[bytes]) -> None:
+        uploaded[path] = b"".join([chunk async for chunk in stream])
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"abc"
+        yield b"defgh"
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    mock_dropbox_client.upload_file = AsyncMock(side_effect=upload_side_effect)
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    backup_filename = suggested_filename(TEST_AGENT_BACKUP).rsplit(".", 1)[0]
+    assert uploaded[f"/{backup_filename}.tar"] == b"abcdefgh"
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=3),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_delete(
@@ -560,7 +598,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_dropbox_client.delete_file.await_count == 2
 
 
@@ -586,7 +624,14 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"}
+        "agent_error_translations": {
+            TEST_AGENT_ID: {
+                "translation_domain": "backup",
+                "translation_key": "agent_operation_failed",
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {TEST_AGENT_ID: "Backup operation failed"},
     }
 
 
@@ -609,7 +654,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_remove_backup_agents_listener(

@@ -12,6 +12,12 @@
       }
     },
     "number": {
+      "effect_intensity": {
+        "default": "mdi:brightness-percent"
+      },
+      "effect_speed": {
+        "default": "mdi:shimmer"
+      },
       "external_temperature": {
         "default": "mdi:thermometer-check"
       },
@@ -40,6 +46,12 @@
       },
       "lamp_life": {
         "default": "mdi:progress-wrench"
+      },
+      "last_command_source": {
+        "default": "mdi:ray-start-arrow"
+      },
+      "last_command_source_with_channel_name": {
+        "default": "mdi:ray-start-arrow"
       },
       "left_slot_level": {
         "default": "mdi:bottle-tonic-outline"
@@ -86,6 +98,9 @@
           "off": "mdi:home-import-outline",
           "on": "mdi:home-export-outline"
         }
+      },
+      "effect_reverse": {
+        "default": "mdi:swap-horizontal"
       },
       "left_slot": {
         "default": "mdi:scent",

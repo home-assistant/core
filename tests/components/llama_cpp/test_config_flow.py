@@ -648,3 +648,119 @@ async def test_config_flow_unexpected_exception(
     await hass.async_block_till_done()
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup: AsyncMock,
+    mock_models_list: AsyncMock,
+) -> None:
+    """Test the reauthentication flow."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "llama.cpp",
+        CONF_BASE_URL: "http://localhost:8080/v1",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "sk-new-key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "sk-new-key",
+        CONF_BASE_URL: "http://localhost:8080/v1",
+    }
+    assert mock_models_list.call_count == 1
+    assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "api_key",
+    [
+        pytest.param("sk-new-key", id="changed_key"),
+        pytest.param("sk-0000000000000000000", id="same_key"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_reauth_flow_loaded_entry_reloads_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_models_list: AsyncMock,
+    api_key: str,
+) -> None:
+    """Test reauth of a loaded entry reloads it exactly once."""
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    mock_models_list.reset_mock()
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: api_key}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == api_key
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    # One call validates the key in the flow, one comes from the single reload
+    assert mock_models_list.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(
+            openai.AuthenticationError(
+                message="Invalid Key",
+                response=httpx2.Response(
+                    status_code=401,
+                    request=httpx2.Request(method="GET", url="test"),
+                ),
+                body=None,
+            ),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            openai.APIConnectionError(request=httpx2.Request(method="GET", url="test")),
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(openai.OpenAIError("generic error"), "api_error", id="api_error"),
+        pytest.param(RuntimeError("Unexpected error"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_models_list: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth flow errors and recovery."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_models_list.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "sk-new-key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_models_list.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "sk-new-key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "sk-new-key"

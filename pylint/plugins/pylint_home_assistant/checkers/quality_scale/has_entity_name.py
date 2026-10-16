@@ -41,7 +41,7 @@ intentional scope choices to be aware of:
 ``# pylint: disable=home-assistant-missing-has-entity-name`` on the
 offending class declaration is the recommended escape hatch.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/has-entity-name
+https://contributors.home-assistant.io/core/quality-scale/has-entity-name/
 """
 
 import astroid
@@ -227,8 +227,8 @@ class HasEntityNameChecker(BaseChecker):
         "W7416": (
             (
                 "Entity class `%s` should set `_attr_has_entity_name = True` "
-                "(https://developers.home-assistant.io/docs/core/"
-                "integration-quality-scale/rules/has-entity-name)"
+                "(https://contributors.home-assistant.io/core/"
+                "quality-scale/has-entity-name/)"
             ),
             "home-assistant-missing-has-entity-name",
             (

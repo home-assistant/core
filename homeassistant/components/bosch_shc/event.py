@@ -1,5 +1,6 @@
 """Platform for event integration."""
 
+from functools import partial
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import SHCMotionDetector, SHCMotionDetector2, SHCSmokeDetector
@@ -85,17 +86,6 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
         # pre-existing timestamp isn't replayed as a new event on startup.
         self._last_fired_timestamp = ""
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
@@ -104,15 +94,12 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
         for service in self._device.device_services:
             if service.id == "LatestMotion":
                 service.register_event(self._device.id, self._event_callback)
+                # register_event() has no public unsubscribe counterpart.
+                self.async_on_remove(partial(self._unregister_event, service))
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister the LatestMotion event callback."""
-        await super().async_will_remove_from_hass()
-        # register_event() has no public unsubscribe counterpart.
-        for service in self._device.device_services:
-            if service.id == "LatestMotion":
-                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+    def _unregister_event(self, service: Any) -> None:
+        """Remove this entity's callback from the service."""
+        service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
 
     def _event_callback(self) -> None:
         """Handle a LatestMotion update from the SHC polling thread."""
@@ -165,17 +152,6 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
         # long-poll updates for the same device, same as LatestMotion above.
         self._last_fired_state = ""
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
@@ -184,15 +160,12 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
         for service in self._device.device_services:
             if service.id == "Alarm":
                 service.register_event(self._device.id, self._event_callback)
+                # register_event() has no public unsubscribe counterpart.
+                self.async_on_remove(partial(self._unregister_event, service))
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister the Alarm event callback."""
-        await super().async_will_remove_from_hass()
-        # register_event() has no public unsubscribe counterpart.
-        for service in self._device.device_services:
-            if service.id == "Alarm":
-                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+    def _unregister_event(self, service: Any) -> None:
+        """Remove this entity's callback from the service."""
+        service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
 
     def _event_callback(self) -> None:
         """Handle an Alarm update from the SHC polling thread."""

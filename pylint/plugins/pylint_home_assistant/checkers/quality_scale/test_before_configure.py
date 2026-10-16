@@ -28,7 +28,7 @@ skipped: the OAuth token exchange is the connection test. Integrations
 that rely on auto-discovery without user-provided connection data should
 mark the rule ``exempt`` instead, per the rule's exceptions.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-configure/
+https://contributors.home-assistant.io/core/quality-scale/test-before-configure/
 """
 
 from astroid import nodes
@@ -116,8 +116,8 @@ class TestBeforeConfigureChecker(BaseChecker):
             (
                 "Config flow should test the connection with the user-provided "
                 "data and show failures to the user before creating an entry "
-                "(https://developers.home-assistant.io/docs/core/"
-                "integration-quality-scale/rules/test-before-configure)"
+                "(https://contributors.home-assistant.io/core/"
+                "quality-scale/test-before-configure/)"
             ),
             "home-assistant-missing-test-before-configure",
             (

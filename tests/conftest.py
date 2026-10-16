@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager, suppress
-import datetime
+import datetime as dt
 import functools
 import gc
 import ipaddress
@@ -47,7 +47,7 @@ from syrupy.assertion import SnapshotAssertion
 # Setup patching of JSON functions before any other Home Assistant imports
 from . import patch_json  # isort:skip
 
-from homeassistant import block_async_io
+from homeassistant import block_async_io, block_shared_serial
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
@@ -92,6 +92,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
     config_entry_oauth2_flow,
+    deprecation,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -480,10 +481,10 @@ def verify_cleanup(
 
     try:
         # Verify the default time zone has been restored
-        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+        assert dt_util.DEFAULT_TIME_ZONE is dt.UTC
     finally:
         # Restore the default time zone to not break subsequent tests
-        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
+        dt_util.DEFAULT_TIME_ZONE = dt.UTC
 
     try:
         # Verify respx.mock has been cleaned up
@@ -518,6 +519,7 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+    deprecation._REPORTED_DEPRECATED_ENTITY_USAGE.clear()
 
     # Reset patch_json
     if patch_json.mock_objects:
@@ -2323,6 +2325,13 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+@pytest.fixture
+def disable_block_shared_serial() -> Generator[None]:
+    """Fixture to restore pyserial after block_shared_serial patched it."""
+    yield
+    block_shared_serial.disable()
 
 
 # Ensure that incorrectly formatted mac addresses are rejected during
