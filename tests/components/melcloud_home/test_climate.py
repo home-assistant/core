@@ -29,12 +29,14 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -217,6 +219,60 @@ async def test_ata_set_fan_mode(
 
     mock_melcloud_client.control_ata_unit.assert_called_once_with(
         "ata-unit-uuid-1", set_fan_speed=expected_speed
+    )
+
+
+@pytest.mark.parametrize(
+    ("apply_capabilities", "expected_features"),
+    [
+        pytest.param(
+            lambda _: None,
+            ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+            id="no_capabilities",
+        ),
+        pytest.param(
+            lambda caps: {**caps, "hasAirDirection": False},
+            ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+            id="swing_only",
+        ),
+        pytest.param(
+            lambda caps: {**caps, "hasSwing": False},
+            ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+            id="air_direction_only",
+        ),
+        pytest.param(
+            lambda caps: {**caps, "hasAirDirection": False, "hasSwing": False},
+            ClimateEntityFeature(0),
+            id="no_vanes",
+        ),
+    ],
+)
+async def test_ata_swing_features(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    apply_capabilities: Callable[[dict[str, Any]], dict[str, Any] | None],
+    expected_features: ClimateEntityFeature,
+) -> None:
+    """Test ATA swing features follow the unit's capabilities."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    ata_unit = context["buildings"][0]["airToAirUnits"][0]
+    ata_unit["capabilities"] = apply_capabilities(ata_unit["capabilities"])
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ATA_ENTITY_ID))
+    swing_features = (
+        ClimateEntityFeature.SWING_MODE | ClimateEntityFeature.SWING_HORIZONTAL_MODE
+    )
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES] & swing_features == expected_features
     )
 
 
@@ -539,6 +595,11 @@ async def test_atw_zone_temperature_range(
             {"OperationMode": "HeatZones"}, HVACAction.HEATING, id="heat_zones"
         ),
         pytest.param({"OperationMode": "Cool"}, HVACAction.COOLING, id="cool"),
+        pytest.param({"OperationMode": "Heating"}, HVACAction.HEATING, id="heating"),
+        pytest.param(
+            {"OperationMode": "FreezeStat"}, HVACAction.HEATING, id="freeze_stat"
+        ),
+        pytest.param({"OperationMode": "Cooling"}, HVACAction.COOLING, id="cooling"),
         pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
         pytest.param(
             {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"

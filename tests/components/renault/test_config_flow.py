@@ -164,6 +164,54 @@ async def test_config_flow_no_account(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_config_flow_missing_vehicle_details(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test vehicle details missing from the vehicle list are requested separately."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    renault_vehicles = schemas.KamereonVehiclesResponseSchema.loads(
+        await async_load_fixture(hass, "vehicle_zoe_40.json", DOMAIN)
+    )
+    renault_vehicles.vehicleLinks = renault_vehicles.vehicleLinks[:1]
+    vehicle_details = renault_vehicles.vehicleLinks[0].vehicleDetails
+    renault_vehicles.vehicleLinks[0].vehicleDetails = None
+    renault_account = AsyncMock()
+    type(renault_account).account_id = PropertyMock(return_value="account_id_1")
+    renault_account.get_vehicles.return_value = renault_vehicles
+    renault_account.get_api_vehicle.return_value.get_details.return_value = (
+        vehicle_details
+    )
+
+    with (
+        patch(
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
+        ),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_accounts",
+            return_value=[renault_account],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
+            },
+        )
+
+    renault_account.get_api_vehicle.assert_awaited_once_with("VF1ZOE40VIN")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "account_id_1"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_config_flow_multiple_accounts(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:

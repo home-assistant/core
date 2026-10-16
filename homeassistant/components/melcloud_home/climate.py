@@ -100,7 +100,10 @@ ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
     ATWOperationMode.HOT_WATER: HVACAction.IDLE,
     ATWOperationMode.HEAT: HVACAction.HEATING,
     ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
+    ATWOperationMode.HEATING: HVACAction.HEATING,
+    ATWOperationMode.FREEZE_STAT: HVACAction.HEATING,
     ATWOperationMode.COOL: HVACAction.COOLING,
+    ATWOperationMode.COOLING: HVACAction.COOLING,
 }
 
 
@@ -158,7 +161,11 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if (settings := self.unit.settings) is not None:
+        if (settings := self.unit.settings) is not None and (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_air_direction is not False
+            or self.unit.capabilities.has_swing is not False
+        ):
             if settings.get("VaneVerticalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_MODE
             if settings.get("VaneHorizontalDirection") is not None:

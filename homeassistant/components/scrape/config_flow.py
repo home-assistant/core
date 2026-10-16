@@ -306,7 +306,7 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to reconfigure a sensor subentry."""
         if user_input is not None:
-            self.async_update_and_abort(
+            return self.async_update_and_abort(
                 self._get_entry(), self._get_reconfigure_subentry(), data=user_input
             )
 

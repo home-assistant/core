@@ -807,7 +807,8 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
             self.async_discovery_update,
         )
-        config_entry.async_on_unload(self._entry_unload)
+        # Tear down before the client disconnects, so subscriptions are not restored
+        hass.data[DATA_MQTT].reload_dispatchers.append(self._entry_unload)
         if device_id is not None:
             self._remove_device_updated = async_track_device_registry_updated_event(
                 hass, device_id, self._async_device_removed

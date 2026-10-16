@@ -49,6 +49,7 @@ async def test_full_flow(
         (TimeoutError, "cannot_connect"),
         (gaierror, "cannot_connect"),
         (mpd.ConnectionError, "cannot_connect"),
+        (mpd.ProtocolError, "cannot_connect"),
         (OSError, "cannot_connect"),
         (Exception, "unknown"),
     ],

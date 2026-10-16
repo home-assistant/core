@@ -4,7 +4,7 @@ import errno
 import socket
 from unittest.mock import call, patch
 
-import broadlink.exceptions as blke
+import broadlink_async.exceptions as blke
 import pytest
 
 from homeassistant import config_entries

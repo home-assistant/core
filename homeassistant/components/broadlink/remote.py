@@ -9,7 +9,7 @@ from itertools import product
 import logging
 from typing import Any, override
 
-from broadlink.exceptions import (
+from broadlink_async.exceptions import (
     AuthorizationError,
     BroadlinkException,
     NetworkTimeoutError,
