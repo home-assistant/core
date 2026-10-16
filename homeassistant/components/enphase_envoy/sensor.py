@@ -662,7 +662,24 @@ ENCHARGE_INVENTORY_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda encharge: dt_util.utc_from_timestamp(encharge.last_report_date),
     ),
+    EnvoyEnchargeSensorEntityDescription(
+        key="comm_level_2_4_ghz",
+        translation_key="comm_level_2_4_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_2_4_ghz"),
+    ),
+    EnvoyEnchargeSensorEntityDescription(
+        key="comm_level_sub_ghz",
+        translation_key="comm_level_sub_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_sub_ghz"),
+    ),
 )
+
 ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="soc",
@@ -708,6 +725,22 @@ ENPOWER_SENSORS = (
         translation_key=LAST_REPORTED_KEY,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda enpower: dt_util.utc_from_timestamp(enpower.last_report_date),
+    ),
+    EnvoyEnpowerSensorEntityDescription(
+        key="comm_level_2_4_ghz",
+        translation_key="comm_level_2_4_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_2_4_ghz"),
+    ),
+    EnvoyEnpowerSensorEntityDescription(
+        key="comm_level_sub_ghz",
+        translation_key="comm_level_sub_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_sub_ghz"),
     ),
 )
 

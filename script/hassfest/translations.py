@@ -181,6 +181,26 @@ def custom_translation_value_validator(
     return _validator
 
 
+def overview_label_validator(value: Any) -> str:
+    """Validate an object selector field overview label.
+
+    The frontend only provides the formatted field value, so the translation
+    must contain the {value} placeholder and no other placeholders.
+    """
+    string_value = translation_value_validator(value)
+    placeholders = {
+        field_name
+        for _, field_name, _, _ in string.Formatter().parse(string_value)
+        if field_name
+    }
+    if placeholders != {"value"}:
+        raise probatio.Invalid(
+            "the overview label must contain the {value} placeholder "
+            "and no other placeholders"
+        )
+    return string_value
+
+
 def string_no_single_quoted_placeholders(value: str) -> str:
     """Validate that the value does not contain placeholders inside single quotes."""
     if RE_PLACEHOLDER_IN_SINGLE_QUOTES.search(value):
@@ -455,7 +475,8 @@ def _gen_strings_schema(
                         # New format:
                         # "key": {
                         #   "name": "translated field name",
-                        #   "description": "translated field description"
+                        #   "description": "translated field description",
+                        #   "overview_label": "translated label: {value}"
                         # }
                         cv.schema_with_slug_keys(
                             {
@@ -463,6 +484,9 @@ def _gen_strings_schema(
                                 probatio.Optional(
                                     "description"
                                 ): translation_value_validator,
+                                probatio.Optional(
+                                    "overview_label"
+                                ): overview_label_validator,
                             },
                             slug_validator=translation_key_validator,
                         ),
@@ -669,6 +693,30 @@ def gen_ha_hardware_schema(
     return _with_integration(schema, config, integration)
 
 
+def gen_homeassistant_schema(
+    config: Config, integration: Integration
+) -> Callable[[Any], Any]:
+    """Generate the strings schema for the homeassistant integration."""
+    schema = _gen_strings_schema(False, _frontend_issues(integration)).extend(
+        {
+            # The integration categories shared by the website, the
+            # frontend and the Marketplace.
+            probatio.Optional("integration_category"): cv.schema_with_slug_keys(
+                {
+                    probatio.Required("name"): translation_value_validator,
+                    probatio.Required("description"): translation_value_validator,
+                    probatio.Optional("subcategory"): cv.schema_with_slug_keys(
+                        {probatio.Required("name"): translation_value_validator},
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
+        }
+    )
+    return _with_integration(schema, config, integration)
+
+
 ONBOARDING_SCHEMA = probatio.Schema(
     {
         probatio.Required("area"): {str: translation_value_validator},
@@ -701,6 +749,8 @@ def validate_translation_file(
         strings_schema = ONBOARDING_SCHEMA
     elif integration.domain == "homeassistant_hardware":
         strings_schema = gen_ha_hardware_schema(config, integration)
+    elif integration.domain == "homeassistant":
+        strings_schema = gen_homeassistant_schema(config, integration)
     else:
         strings_schema = gen_strings_schema(config, integration)
 

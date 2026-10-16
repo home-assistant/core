@@ -81,7 +81,7 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.23",
+  "uv==0.12.24",
   "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
@@ -92,7 +92,7 @@ dependencies = [
 "Homepage" = "https://www.home-assistant.io/"
 "Source Code" = "https://github.com/home-assistant/core"
 "Bug Reports" = "https://github.com/home-assistant/core/issues"
-"Docs: Dev" = "https://developers.home-assistant.io/"
+"Docs: Dev" = "https://contributors.home-assistant.io/"
 "Discord" = "https://www.home-assistant.io/join-chat/"
 "Forum" = "https://community.home-assistant.io/"
 
