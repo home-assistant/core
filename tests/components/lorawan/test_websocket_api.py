@@ -19,6 +19,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lorawan import async_register_connection
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.components.lorawan.websocket_api import _snapshot
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -164,13 +165,15 @@ async def test_battery_states(
     assert device["external_power_source"] is external_power
 
 
+@pytest.mark.parametrize("entry_id", ["network", "different_entry_id"])
 async def test_support_and_registry_link(
     hass: HomeAssistant,
     registered_backend: RegisterBackend,
     device_registry: dr.DeviceRegistry,
+    entry_id: str,
 ) -> None:
     """Report setup guidance and use the registry's device ID and user name."""
-    backend, _ = await registered_backend("network", [DESCRIPTOR])
+    backend, _ = await registered_backend(entry_id, [DESCRIPTOR])
     assert _snapshot(hass)["devices"][0]["support"] == "integration_not_configured"
     entry = MockConfigEntry(domain="test_vendor")
     entry.add_to_hass(hass)
@@ -196,6 +199,17 @@ async def test_support_and_registry_link(
     )
     assert _snapshot(hass)["devices"][1]["support"] == "missing_identity"
     assert len(device_registry.devices) == 1
+
+
+async def test_ignored_vendor_entry(
+    hass: HomeAssistant,
+    registered_backend: RegisterBackend,
+) -> None:
+    """Ignored discovery entries do not configure a device integration."""
+    await registered_backend("network", [DESCRIPTOR])
+    entry = MockConfigEntry(domain="test_vendor", source=SOURCE_IGNORE)
+    entry.add_to_hass(hass)
+    assert _snapshot(hass)["devices"][0]["support"] == "integration_not_configured"
 
 
 async def test_subscribe_unsubscribe(

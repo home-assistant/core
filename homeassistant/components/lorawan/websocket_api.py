@@ -48,7 +48,9 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
             vendor_entries = [
                 vendor_entry
                 for domain in domains
-                for vendor_entry in hass.config_entries.async_entries(domain)
+                for vendor_entry in hass.config_entries.async_entries(
+                    domain, include_ignore=False
+                )
             ]
             device = next(
                 (
@@ -56,7 +58,10 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
                     for vendor_entry in vendor_entries
                     if (
                         device := device_registry.async_get_device_by_identifier(
-                            (vendor_entry.domain, f"{entry_id}:{descriptor.dev_eui}"),
+                            (
+                                vendor_entry.domain,
+                                f"{descriptor.network_id}:{descriptor.dev_eui}",
+                            ),
                             vendor_entry.entry_id,
                         )
                     )
