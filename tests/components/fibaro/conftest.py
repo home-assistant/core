@@ -560,7 +560,7 @@ def mock_multilevel_sensor() -> Mock:
     }
     value_mock = Mock()
     value_mock.has_value = True
-    value_mock.float_value = 230.1
+    value_mock.float_value.return_value = 230.1
     sensor.value = value_mock
     return sensor
 
