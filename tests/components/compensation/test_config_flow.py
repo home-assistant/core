@@ -142,9 +142,11 @@ async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the options flow updates the entry and reloads it."""
+    hass.states.async_set("sensor.uncompensated", "5")
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert hass.states.get("sensor.my_compensation").state == "6.0"
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -181,6 +183,5 @@ async def test_options_flow(
         CONF_UPPER_LIMIT: False,
     }
 
-    hass.states.async_set("sensor.uncompensated", "5")
-    await hass.async_block_till_done()
+    # The reloaded sensor picks up the existing source state without a new change
     assert hass.states.get("sensor.my_compensation").state == "10.0"
