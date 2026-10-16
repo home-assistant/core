@@ -591,6 +591,166 @@ async def test_single_ban_file_entry(
     assert m_open.call_count == 1
 
 
+async def test_cloud_remote_ui_failed_logins_do_not_ban_loopback(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test failed logins via cloud Remote UI are not counted against loopback.
+
+    Every remote UI client shares the loopback identity, so counting failed
+    logins against it would ban all remote UI traffic for the instance.
+    """
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 2)
+    mock_real_ip(app)("127.0.0.1")
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={},
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    m_open = mock_open()
+
+    with (
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
+        patch(
+            "hass_nabucasa.remote.is_cloud_request",
+            Mock(get=Mock(return_value=True)),
+        ),
+    ):
+        for _ in range(3):
+            resp = await client.get("/example")
+            assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # No failed login attempts were counted and no ban was written.
+    assert len(manager.ip_bans_lookup) == 0
+    assert len(app[KEY_FAILED_LOGIN_ATTEMPTS]) == 0
+    assert m_open.call_count == 0
+
+    # The failed attempts are still surfaced to the user.
+    notifications = async_get_persistent_notifications(hass)
+    assert "http-login" in notifications
+
+
+async def test_cloud_remote_ui_bypasses_stale_loopback_ban(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a stale loopback ban does not block cloud Remote UI traffic."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={"127.0.0.1": {"banned_at": "2016-11-16T19:20:03"}},
+    ):
+        client = await aiohttp_client(app)
+
+    set_real_ip("127.0.0.1")
+
+    # Sanity check: a genuine non-cloud loopback request is still blocked.
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+    with patch(
+        "hass_nabucasa.remote.is_cloud_request",
+        Mock(get=Mock(return_value=True)),
+    ):
+        resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_failed_logins_still_ban_real_remote_ip(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test failed logins from a real remote IP are still banned."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 2)
+    mock_real_ip(app)("203.0.113.7")
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={},
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    m_open = mock_open()
+
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.FORBIDDEN
+
+    assert len(manager.ip_bans_lookup) == 1
+    assert m_open.call_count == 1
+
+
+async def test_cloud_non_loopback_remote_still_banned(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test the cloud exemption only applies to the shared loopback identity.
+
+    A cloud request carrying a real, attributable remote IP must still be
+    subject to ban accounting.
+    """
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 2)
+    mock_real_ip(app)("203.0.113.8")
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={},
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    m_open = mock_open()
+
+    with (
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
+        patch(
+            "hass_nabucasa.remote.is_cloud_request",
+            Mock(get=Mock(return_value=True)),
+        ),
+    ):
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        resp = await client.get("/example")
+        assert resp.status == HTTPStatus.FORBIDDEN
+
+    assert len(manager.ip_bans_lookup) == 1
+    assert m_open.call_count == 1
+
+
 async def test_unix_socket_skips_ban_check(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
