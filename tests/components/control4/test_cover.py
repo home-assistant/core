@@ -1,7 +1,6 @@
 """Test Control4 Cover."""
 
 from collections.abc import Generator
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.control4.const import SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -328,7 +327,7 @@ async def test_cover_unavailable_when_data_disappears(
     assert state.state != STATE_UNAVAILABLE
 
     mock_cover_variables.clear()
-    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

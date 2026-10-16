@@ -209,6 +209,7 @@ def mock_config_entry() -> MockConfigEntry:
             **FIXTURE_USER_INPUT,
         },
         unique_id=format_mac(FIXTURE_MAC),
+        title=f"Mock {FIXTURE_DEVICE_NAME} {FIXTURE_MAC}",
     )
 
 

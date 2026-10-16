@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pyintelliclima import IntelliClimaECO3
 from pyintelliclima.api import (
     IntelliClimaAPIError,
     IntelliClimaAuthError,
@@ -14,6 +15,8 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import create_eco_device
 
 from tests.common import MockConfigEntry
 
@@ -86,16 +89,36 @@ async def test_form_auth_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param(
+            IntelliClimaDevices(ecocomfort2_devices={}, c800_devices={}),
+            id="no_devices",
+        ),
+        pytest.param(
+            IntelliClimaDevices(
+                ecocomfort2_devices={},
+                c800_devices={},
+                ecocomfort3_devices={
+                    "56789": IntelliClimaECO3(
+                        **vars(create_eco_device("56789", "11223344", "Test VMC"))
+                    )
+                },
+            ),
+            # ECOCOMFORT 3 is discovered by the library but not yet supported here.
+            id="only_ecocomfort3",
+        ),
+    ],
+)
 async def test_form_no_devices(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
     single_eco_device: IntelliClimaDevices,
+    devices: IntelliClimaDevices,
 ) -> None:
-    """Test we handle no devices found error."""
-    # Return empty devices list
-    mock_cloud_interface.get_all_device_status.return_value = IntelliClimaDevices(
-        ecocomfort2_devices={}, c800_devices={}
-    )
+    """Test we handle no supported devices found error."""
+    mock_cloud_interface.get_all_device_status.return_value = devices
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

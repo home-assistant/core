@@ -43,7 +43,7 @@ OPTION_SCHEMA = {
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): TextSelector(),
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
         probatio.Required(CONF_FROM): TextSelector(),
         probatio.Required(CONF_TO): TextSelector(),
         probatio.Optional(CONF_TIME): TimeSelector(),
@@ -59,7 +59,7 @@ DATA_SCHEMA = probatio.Schema(
 ).extend(OPTION_SCHEMA)
 DATA_SCHEMA_REAUTH = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
     }
 )
 

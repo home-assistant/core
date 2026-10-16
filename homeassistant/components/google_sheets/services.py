@@ -43,7 +43,7 @@ SHEET_SERVICE_SCHEMA = probatio.All(
         ),
         probatio.Optional(WORKSHEET): cv.string,
         probatio.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
-        probatio.Required(DATA): probatio.Any(cv.ensure_list, [dict]),
+        probatio.Required(DATA): probatio.Any(probatio.EnsureList(), [dict]),
     },
 )
 

@@ -24,7 +24,9 @@ from .const import CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+)
 
 
 class CannotConnect(HomeAssistantError):
@@ -251,6 +253,8 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+            ),
             errors=errors,
         )

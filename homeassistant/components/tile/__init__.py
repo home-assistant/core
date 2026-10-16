@@ -19,7 +19,7 @@ DEFAULT_INIT_TASK_LIMIT = 2
 CONF_SHOW_INACTIVE = "show_inactive"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TileConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TileConfigEntry) -> None:
     """Set up Tile as config entry."""
 
     # Tile's API uses cookies to identify a consumer; in order to allow for multiple
@@ -54,9 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TileConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TileConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TileConfigEntry) -> None:
     """Unload a Tile config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

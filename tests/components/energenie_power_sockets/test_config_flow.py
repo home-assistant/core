@@ -35,6 +35,7 @@ async def test_user_flow(
         result1["flow_id"], user_input=demo_config_data
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == demo_config_data[CONF_DEVICE_API_ID]
 
 
 async def test_user_flow_already_exists(
@@ -44,15 +45,21 @@ async def test_user_flow_already_exists(
     mock_search_for_devices: MagicMock,
 ) -> None:
     """Test the flow when device has been already configured."""
-    valid_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_DEVICE_API_ID: valid_config_entry.data[CONF_DEVICE_API_ID]},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
 
-    await hass.async_block_till_done()
+    # Adding the entry before init would filter out the device and abort with no_device
+    valid_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DEVICE_API_ID: valid_config_entry.data[CONF_DEVICE_API_ID]},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

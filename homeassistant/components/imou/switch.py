@@ -10,6 +10,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -17,10 +18,17 @@ from .const import (
     PARAM_AB_ALARM_SOUND,
     PARAM_AUDIO_ENCODE_CONTROL,
     PARAM_CLOSE_CAMERA,
+    PARAM_FRAME_REVERSE,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
+    PARAM_LINKAGE_SIREN,
+    PARAM_LINKAGE_WHITE_LIGHT,
+    PARAM_PET_DETECT,
+    PARAM_PLAY_SOUND,
     PARAM_PLUG_SWITCH,
+    PARAM_SMART_TRACK,
     PARAM_WHITE_LIGHT,
+    PARAM_WIDE_DYNAMIC,
     imou_device_identifier,
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
@@ -33,32 +41,72 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_AB_ALARM_SOUND,
         translation_key=PARAM_AB_ALARM_SOUND,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_AUDIO_ENCODE_CONTROL,
         translation_key=PARAM_AUDIO_ENCODE_CONTROL,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_CLOSE_CAMERA,
         translation_key=PARAM_CLOSE_CAMERA,
     ),
     SwitchEntityDescription(
+        key=PARAM_FRAME_REVERSE,
+        translation_key=PARAM_FRAME_REVERSE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
         key=PARAM_HEADER_DETECT,
         translation_key=PARAM_HEADER_DETECT,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_LIGHT,
         translation_key=PARAM_LIGHT,
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_LINKAGE_SIREN,
+        translation_key=PARAM_LINKAGE_SIREN,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_LINKAGE_WHITE_LIGHT,
+        translation_key=PARAM_LINKAGE_WHITE_LIGHT,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_MOTION_DETECT,
         translation_key=PARAM_MOTION_DETECT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_PET_DETECT,
+        translation_key=PARAM_PET_DETECT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_PLAY_SOUND,
+        translation_key=PARAM_PLAY_SOUND,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_SMART_TRACK,
+        translation_key=PARAM_SMART_TRACK,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_PLUG_SWITCH,
         translation_key=PARAM_PLUG_SWITCH,
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_WIDE_DYNAMIC,
+        translation_key=PARAM_WIDE_DYNAMIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_WHITE_LIGHT,
