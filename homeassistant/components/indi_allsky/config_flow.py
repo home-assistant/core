@@ -94,6 +94,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _discovered_data: dict[str, Any]
+    _matching_hosts: set[str]
 
     @override
     async def async_step_user(
@@ -105,6 +106,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
+            self._abort_if_unique_id_configured()
             self._async_abort_entries_match(
                 {
                     CONF_HOST: user_input[CONF_HOST],
@@ -134,10 +136,11 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        suggested_values = user_input or getattr(self, "_discovered_data", None)
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
         )
@@ -148,16 +151,23 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of an INDI Allsky server."""
         host = normalize_host(discovery_info.host)
-        port = discovery_info.port or (
-            80 if discovery_info.type == "_http._tcp.local." else 443
-        )
-        ssl = discovery_info.type != "_http._tcp.local."
+        if discovery_info.type == "_http._tcp.local.":
+            ssl = False
+        elif discovery_info.type == "_https._tcp.local.":
+            ssl = True
+        elif "ssl" in discovery_info.properties:
+            ssl = str(discovery_info.properties["ssl"]).lower() == "true"
+        else:
+            ssl = True
+
+        port = discovery_info.port or (443 if ssl else 80)
         mac = discovery_info.properties.get("mac")
 
         matching_hosts = {normalize_host(addr) for addr in discovery_info.addresses}
         matching_hosts.add(host)
         if discovery_info.hostname:
             matching_hosts.add(normalize_host(discovery_info.hostname))
+        self._matching_hosts = matching_hosts
 
         if mac:
             formatted_mac = format_mac(mac)
@@ -215,8 +225,14 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, self._discovered_data)
-        except CannotConnect, InvalidAuth, Unknown:
-            return self.async_abort(reason="cannot_connect")
+        except CannotConnect, InvalidAuth:
+            if discovery_info.hostname:
+                self._discovered_data[CONF_HOST] = normalize_host(
+                    discovery_info.hostname
+                )
+            return await self.async_step_user()
+        except Unknown:
+            return self.async_abort(reason="unknown")
 
         server_name = discovery_info.name.split("._")[0]
         self.context["title_placeholders"] = {"name": server_name}
@@ -228,6 +244,28 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovery."""
         if user_input is not None:
+            matching_hosts = getattr(
+                self, "_matching_hosts", {self._discovered_data[CONF_HOST]}
+            )
+            if self.unique_id:
+                for entry in self._async_current_entries(include_ignore=False):
+                    if (
+                        entry.unique_id is None
+                        and entry.data[CONF_HOST] in matching_hosts
+                        and entry.data[CONF_PORT] == self._discovered_data[CONF_PORT]
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=self.unique_id
+                        )
+                        break
+            self._abort_if_unique_id_configured()
+            for match_host in matching_hosts:
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: match_host,
+                        CONF_PORT: self._discovered_data[CONF_PORT],
+                    }
+                )
             port = self._discovered_data[CONF_PORT]
             default_port = 443 if self._discovered_data[CONF_SSL] else 80
             host_str = (
