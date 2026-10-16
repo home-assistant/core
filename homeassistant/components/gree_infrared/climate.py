@@ -29,7 +29,6 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     SWING_OFF,
     SWING_ON,
-    ClimateEntity,
     ClimateEntityFeature,
     ClimateExtraStoredData,
     HVACMode,
@@ -55,7 +54,6 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -151,8 +149,6 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
     fahrenheit: bool = False
     display_temp: int = 2
     received_fahrenheit_temperature: int | None = None
-
-
 
     @classmethod
     @override
@@ -318,11 +314,25 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         self._state.climate = self
 
     @override
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Drain staged commands before the restore snapshot is taken.
+
+        The restore snapshot is cached before the removal hook runs, so the
+        final frame must be transmitted first for the snapshot to hold the
+        final deadline. Any expiry listener the flush schedules is dropped so
+        no callback outlives the removed entity.
+        """
+        self._cancel_timer_expiry()
+        await self._state.async_unload_coalesced_flush(self._async_flush_coalesced)
+        self._cancel_timer_expiry()
+        await super().async_internal_will_remove_from_hass()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Flush staged changes, then clear the shared climate owner."""
         await super().async_will_remove_from_hass()
-        self._cancel_timer_expiry()
         await self._state.async_unload_coalesced_flush(self._async_flush_coalesced)
+        self._cancel_timer_expiry()
         if self._state.climate is self:
             self._state.climate = None
             self._state.async_notify_switches()
@@ -397,9 +407,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             )
             and last_active_hvac_mode
             in (
-                mode.value
-                for mode in self._attr_hvac_modes
-                if mode is not HVACMode.OFF
+                mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
             )
         ):
             # Saved before 2026.11 without the temperatures, remove in 2027.5
@@ -528,10 +536,18 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         )
 
     def _expire_timer_power(self) -> None:
-        """Clear an overdue timer and flip assumed HVAC power without transmitting."""
+        """Clear an overdue timer and flip assumed HVAC power without transmitting.
+
+        Staged but unsent requests win over the expiry: a staged power mode is
+        left alone (the flush sends it) and a staged timer replacement is kept
+        (only the old deadline is retired).
+        """
         self._cancel_timer_expiry()
         self._timer_deadline = None
-        self._state.timer_hours = None
+        if not self._state.pending_timer_reset:
+            self._state.timer_hours = None
+        if self._state.coalesce_dirty:
+            return
         self._attr_hvac_mode = (
             self._last_active_hvac_mode
             if self._attr_hvac_mode is HVACMode.OFF
@@ -575,7 +591,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             command = self._build_command(
                 active_hvac_mode,
                 power,
-                int(self._attr_target_temperature or MIN_TEMP),
+                int(self._attr_native_target_temperature or MIN_TEMP),
                 self._attr_fan_mode or FAN_AUTO,
                 reset_timer=reset_timer,
                 preserve_received_temperature=not explicit_temp,
@@ -586,6 +602,10 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 _LOGGER.warning(
                     "Coalesced Gree IR send failed; keeping staged state: %s", err
                 )
+                # Keep the staged settings so a later flush retries them
+                # instead of falling back to previously received values.
+                state.pending_timer_reset = reset_timer
+                state.pending_explicit_temp = explicit_temp
                 return
             state.timer_hours = command.timer_hours
             self._timer_deadline = (
@@ -753,8 +773,10 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         """Resume the last active mode instead of selecting a heating default."""
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
-
-            self._stage_hvac_mode_locked(self._last_active_hvac_mode)
+            mode = self._attr_hvac_mode
+            if mode is None or mode is HVACMode.OFF:
+                mode = self._last_active_hvac_mode
+            self._stage_hvac_mode_locked(mode)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -774,11 +796,6 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         self._state.async_schedule_coalesced_flush(
             self.hass, self._async_flush_coalesced
         )
-
-    @override
-    async def async_turn_on(self) -> None:
-        """Turn the entity on in the mode it was last active in."""
-        await self.async_set_hvac_mode(self._last_active_hvac_mode)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -1011,6 +1028,11 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
 
         self._attr_hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
+        # The received frame supersedes anything staged but unsent: drop the
+        # pending flags so the next flush preserves these wire values instead
+        # of re-applying the superseded HA edit.
+        self._state.pending_explicit_temp = False
+        self._state.pending_timer_reset = False
         self._received_fahrenheit_temperature = (
             command.temperature if command.fahrenheit else None
         )
