@@ -1,4 +1,4 @@
-"""Connect an external The Things Stack server to the shared LoRaWAN integration."""
+"""Connect The Things Stack to the shared LoRaWAN integration."""
 
 from dataclasses import dataclass
 
