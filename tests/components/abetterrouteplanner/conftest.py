@@ -4,6 +4,7 @@ import base64
 from collections.abc import Generator
 from datetime import datetime
 from http import HTTPStatus
+import inspect
 import json
 import time
 from typing import Any
@@ -12,10 +13,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioabrp import (
     AbrpApiError,
     AbrpVehicle,
+    AbstractAuth,
     ChargingState,
     ConnectionEvent,
     MetricValue,
     Telemetry,
+    TelemetryStream,
     VehicleModelDisplay,
 )
 import pytest
@@ -222,6 +225,17 @@ def fire_connection(mock_telemetry_stream: MagicMock, event: ConnectionEvent) ->
     """Deliver a connection transition through on_connection_change."""
     assert mock_telemetry_stream.call_args is not None, "no stream was constructed"
     mock_telemetry_stream.call_args.kwargs["on_connection_change"](event)
+
+
+def stream_auth(mock_telemetry_stream: MagicMock) -> AbstractAuth:
+    """Return the auth the integration handed to the telemetry stream."""
+    assert mock_telemetry_stream.call_args is not None, "no stream was constructed"
+    call = mock_telemetry_stream.call_args
+    return (
+        inspect.signature(TelemetryStream)
+        .bind(*call.args, **call.kwargs)
+        .arguments["auth"]
+    )
 
 
 @pytest.fixture

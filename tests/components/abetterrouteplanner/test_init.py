@@ -16,12 +16,19 @@ from homeassistant.components.abetterrouteplanner.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestTransientError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from .conftest import MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2, MOCK_VEHICLE_MODEL
+from . import setup_integration
+from .conftest import (
+    MOCK_VEHICLE_ID,
+    MOCK_VEHICLE_ID_2,
+    MOCK_VEHICLE_MODEL,
+    stream_auth,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -144,6 +151,79 @@ async def test_reload_restores_deleted_credential(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+def _expire_token(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Mark the stored token as expired so the next use refreshes it."""
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, "token": {**entry.data["token"], "expires_at": 0}},
+    )
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_auth_refreshes_expired_token(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """The stream gets a refreshed token once the stored one expires."""
+    await setup_integration(hass, config_entry_with_vehicles)
+    _expire_token(hass, config_entry_with_vehicles)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "refreshed-access-token",
+            "refresh_token": "refreshed-refresh-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    token = await stream_auth(mock_telemetry_stream).async_get_access_token()
+
+    assert token == "refreshed-access-token"
+    assert (
+        config_entry_with_vehicles.data["token"]["access_token"]
+        == "refreshed-access-token"
+    )
+
+
+@pytest.mark.parametrize(
+    ("status", "exc", "expected"),
+    [
+        pytest.param(HTTPStatus.BAD_REQUEST, None, AbrpAuthError, id="rejected"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            None,
+            OAuth2TokenRequestTransientError,
+            id="server_error",
+        ),
+        pytest.param(None, ClientError("boom"), ClientError, id="client_error"),
+        pytest.param(None, TimeoutError(), TimeoutError, id="timeout"),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_auth_refresh_failure(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus | None,
+    exc: Exception | None,
+    expected: type[Exception],
+) -> None:
+    """Only a rejected refresh is terminal for the stream; the rest are retried.
+
+    The library stops on ``AbrpAuthError`` and backs off on anything else.
+    """
+    await setup_integration(hass, config_entry_with_vehicles)
+    _expire_token(hass, config_entry_with_vehicles)
+    aioclient_mock.post(OAUTH2_TOKEN, status=status, exc=exc)
+
+    with pytest.raises(expected):
+        await stream_auth(mock_telemetry_stream).async_get_access_token()
 
 
 async def test_setup_missing_implementation(
