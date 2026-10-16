@@ -89,6 +89,7 @@ Every check has a code following the
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
+| `C7416` | [`home-assistant-noqa-f401-with-all`](#c7416-home-assistant-noqa-f401-with-all) | List re-exported names in `__all__` instead of using `# noqa: F401` |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
@@ -210,6 +211,14 @@ Aliased `DOMAIN` import from another integration should use a descriptive alias.
 ### `C7408`: `home-assistant-import-constant-unnecessary-alias`
 
 Unnecessary alias when importing `DOMAIN` from within the same integration.
+
+### `C7416`: `home-assistant-noqa-f401-with-all`
+
+In an integration module that defines `__all__`, re-exported names must be
+listed in `__all__` instead of being kept with a `# noqa: F401` marker.
+Imports of submodules only (e.g. `from . import sensor, switch  # noqa: F401`,
+used to preload platforms) are allowed, as are imports inside functions or
+classes, which cannot be exported through `__all__`.
 
 
 ## `home_assistant_enforce_type_hints` checker

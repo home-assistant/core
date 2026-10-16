@@ -4200,3 +4200,100 @@ async def test_upload_progress_debounced(
     ]
     assert len(remote_events) == 4
     assert remote_events[3].uploaded_bytes == remote_events[3].total_bytes
+
+
+@pytest.mark.usefixtures("generate_backup_id")
+async def test_upload_progress_replayed_on_subscribe(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a new subscriber gets the latest upload progress of each agent."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    manager = hass.data[DATA_MANAGER]
+
+    progress_done = asyncio.Event()
+    upload_done = asyncio.Event()
+
+    async def upload_with_progress(**kwargs: Any) -> None:
+        """Report progress and wait until the test lets the upload finish."""
+        kwargs["on_progress"](bytes_uploaded=100)
+        progress_done.set()
+        await upload_done.wait()
+
+    mock_agents["test.remote"].async_upload_backup.side_effect = upload_with_progress
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID, "test.remote"]}
+        )
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        await progress_done.wait()
+
+        # A client that subscribes during the upload, e.g. after a page reload
+        subscriber = await hass_ws_client(hass)
+        await subscriber.send_json_auto_id({"type": "backup/subscribe_events"})
+        events = []
+        while (result := await subscriber.receive_json())["type"] == "event":
+            events.append(result["event"])
+        assert result["success"] is True
+
+        upload_done.set()
+        await hass.async_block_till_done()
+
+    assert events[0] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+    replayed = {event["agent_id"]: event for event in events[1:]}
+    assert replayed.keys() == {LOCAL_AGENT_ID, "test.remote"}
+    assert replayed["test.remote"]["uploaded_bytes"] == 100
+    local_event = replayed[LOCAL_AGENT_ID]
+    assert local_event["uploaded_bytes"] == local_event["total_bytes"]
+
+    assert manager.state == BackupManagerState.IDLE
+    assert manager.last_upload_events == {}
+
+
+@pytest.mark.usefixtures("generate_backup_id")
+async def test_upload_progress_dropped_after_failed_upload(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that buffered progress of a failed upload is not sent later."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    manager = hass.data[DATA_MANAGER]
+
+    async def upload_and_fail(**kwargs: Any) -> None:
+        """Report progress, buffering the second report, and then fail."""
+        on_progress = kwargs["on_progress"]
+        on_progress(bytes_uploaded=100)
+        on_progress(bytes_uploaded=500)
+        raise BackupAgentError("Boom!")
+
+    mock_agents["test.remote"].async_upload_backup.side_effect = upload_and_fail
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": ["test.remote"]}
+        )
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        await hass.async_block_till_done()
+
+    assert manager.state == BackupManagerState.IDLE
+
+    events: list[Any] = []
+    manager.async_subscribe_events(events.append)
+    # Let the debounce cooldown pass
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+
+    assert events == []
+    assert manager.last_upload_events == {}
