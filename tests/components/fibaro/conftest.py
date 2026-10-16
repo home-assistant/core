@@ -539,6 +539,33 @@ def mock_lock() -> Mock:
 
 
 @pytest.fixture
+def mock_multilevel_sensor() -> Mock:
+    """Fixture for an individual multilevel sensor."""
+    sensor = Mock()
+    sensor.fibaro_id = 12
+    sensor.parent_fibaro_id = 0
+    sensor.name = "Test multilevel sensor"
+    sensor.room_id = 1
+    sensor.unit = "V"
+    sensor.visible = True
+    sensor.enabled = True
+    sensor.type = "com.fibaro.multilevelSensor"
+    sensor.base_type = "com.fibaro.sensor"
+    sensor.properties = {"zwaveCompany": "Goap", "unit": "V"}
+    sensor.actions = {}
+    sensor.raw_data = {
+        "fibaro_id": 12,
+        "name": "Test multilevel sensor",
+        "properties": {"unit": "V", "value": "230.1"},
+    }
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.float_value = 230.1
+    sensor.value = value_mock
+    return sensor
+
+
+@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     mock_config_entry = MockConfigEntry(
