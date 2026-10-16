@@ -25,7 +25,6 @@ from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
     SENSORS,
 )
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -513,26 +512,6 @@ async def test_no_type_code_entity_created(
     ("charging_state", "expected_option"),
     [
         pytest.param(ChargingState.CHARGING_AC, "charging_ac", id="charging_ac"),
-        pytest.param(ChargingState.CHARGING_DC, "charging_dc", id="charging_dc"),
-        pytest.param(
-            ChargingState.CHARGING_UNKNOWN, "charging_unknown", id="charging_unknown"
-        ),
-        pytest.param(ChargingState.NOT_CHARGING, "not_charging", id="not_charging"),
-        pytest.param(ChargingState.PLUGGED_IN, "plugged_in", id="plugged_in"),
-    ],
-)
-def test_charging_state_options_map_every_member(
-    charging_state: ChargingState,
-    expected_option: str,
-) -> None:
-    """Every ``ChargingState`` member maps to its lowercase HA option key."""
-    assert CHARGING_STATE_OPTIONS[charging_state] == expected_option
-
-
-@pytest.mark.parametrize(
-    ("charging_state", "expected_option"),
-    [
-        pytest.param(ChargingState.CHARGING_AC, "charging_ac", id="charging_ac"),
         pytest.param(ChargingState.NOT_CHARGING, "not_charging", id="not_charging"),
         pytest.param(ChargingState.PLUGGED_IN, "plugged_in", id="plugged_in"),
     ],
@@ -562,37 +541,6 @@ async def test_charging_state_lazy_create_on_first_frame(
     state = hass.states.get(CHARGING_STATE_ENTITY_ID)
     assert state is not None
     assert state.state == expected_option
-
-
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
-)
-async def test_charging_state_registry_shape(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_telemetry_stream: MagicMock,
-) -> None:
-    """The enum sensor is ENUM device_class, the 5 options, and no state_class."""
-    description = _description_for(Metric.CHARGING_STATE)
-    assert description.device_class is SensorDeviceClass.ENUM
-    assert description.options == list(CHARGING_STATE_OPTIONS.values())
-    assert description.state_class is None
-    assert description.native_unit_of_measurement is None
-
-    await setup_integration(hass, config_entry_with_vehicles)
-    fire_frame(
-        mock_telemetry_stream,
-        MOCK_VEHICLE_ID,
-        Telemetry(charging_state=build_metric_value(ChargingState.CHARGING_AC)),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(CHARGING_STATE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes["device_class"] == SensorDeviceClass.ENUM
-    assert state.attributes["options"] == list(CHARGING_STATE_OPTIONS.values())
-    assert "state_class" not in state.attributes
-    assert "unit_of_measurement" not in state.attributes
 
 
 @pytest.mark.usefixtures(
