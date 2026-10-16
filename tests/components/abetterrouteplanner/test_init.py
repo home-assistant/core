@@ -5,7 +5,13 @@ import logging
 import time
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
+from aioabrp import (
+    AbrpApiError,
+    AbrpAuthError,
+    AbrpVehicle,
+    ConnectionEvent,
+    ConnectionState,
+)
 from aiohttp import ClientError
 import pytest
 
@@ -27,6 +33,9 @@ from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
     MOCK_VEHICLE_MODEL,
+    MOCK_VEHICLE_MODEL_2,
+    build_vehicle_model_display,
+    fire_connection,
     stream_auth,
 )
 
@@ -308,6 +317,75 @@ async def test_setup_succeeds_with_degraded_device(
         and MOCK_VEHICLE_MODEL in record.message
         for record in caplog.records
     )
+
+
+@pytest.mark.parametrize(
+    ("display_error", "warns"),
+    [
+        pytest.param(AbrpAuthError("HTTP 401"), True, id="auth_error"),
+        pytest.param(ValueError("boom"), True, id="unexpected_error"),
+        pytest.param(AbrpApiError("HTTP 404"), False, id="api_error"),
+        pytest.param(TimeoutError("budget exceeded"), False, id="timeout"),
+    ],
+)
+async def test_display_failure_degrades_only_that_vehicle(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    display_error: Exception,
+    warns: bool,
+) -> None:
+    """A failed display lookup falls back for that vehicle only.
+
+    Rejections and unexpected errors warn; a 404 or timeout is routine.
+    """
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = display_error
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL_2] = (
+        build_vehicle_model_display(manufacturer="Rivian", model="R1S")
+    )
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    scope = config_entry_with_vehicles.unique_id
+    degraded = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{scope}_{MOCK_VEHICLE_ID}"), config_entry_with_vehicles.entry_id
+    )
+    enriched = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{scope}_{MOCK_VEHICLE_ID_2}"), config_entry_with_vehicles.entry_id
+    )
+    assert degraded.manufacturer is None
+    assert degraded.model == MOCK_VEHICLE_MODEL
+    assert enriched.manufacturer == "Rivian"
+    assert (
+        any(
+            record.levelno == logging.WARNING and MOCK_VEHICLE_MODEL in record.message
+            for record in caplog.records
+        )
+        is warns
+    )
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_connection_logged_once_per_transition(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Repeated identical connection states log only on the transition."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    for reason in ("first", "second"):
+        fire_connection(
+            mock_telemetry_stream,
+            ConnectionEvent(ConnectionState.DISCONNECTED, reason),
+        )
+    fire_connection(mock_telemetry_stream, ConnectionEvent(ConnectionState.CONNECTED))
+
+    assert caplog.text.count("stream disconnected") == 1
+    assert caplog.text.count("stream connected") == 1
 
 
 @pytest.mark.usefixtures("mock_abrp_client")

@@ -595,18 +595,24 @@ def test_charging_state_options_cross_pinned() -> None:
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "mock_telemetry_stream"
 )
-async def test_terminal_auth_failure_makes_sensors_unavailable(
+async def test_availability_follows_stream_auth_not_connection(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_telemetry_stream: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A value that nothing can refresh stops being reported."""
+    """Idle disconnects keep values; a terminal auth failure hides them until reconnect."""
     await setup_integration(hass, config_entry_with_vehicles)
-
     fire_frame(
         mock_telemetry_stream,
         MOCK_VEHICLE_ID,
         Telemetry(power=build_metric_value(12000.0)),
+    )
+    await hass.async_block_till_done()
+
+    fire_connection(
+        mock_telemetry_stream,
+        ConnectionEvent(ConnectionState.DISCONNECTED, "idle close"),
     )
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
@@ -616,3 +622,16 @@ async def test_terminal_auth_failure_makes_sensors_unavailable(
     )
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "unavailable"
+    assert "auth failed" in caplog.text
+    assert not hass.config_entries.flow.async_progress()
+
+    fire_connection(
+        mock_telemetry_stream,
+        ConnectionEvent(ConnectionState.DISCONNECTED, "idle close"),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "unavailable"
+
+    fire_connection(mock_telemetry_stream, ConnectionEvent(ConnectionState.CONNECTED))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"

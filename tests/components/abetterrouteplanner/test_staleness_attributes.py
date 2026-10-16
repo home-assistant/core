@@ -173,3 +173,22 @@ async def test_provider_attribute_follows_the_live_frame(
     state = hass.states.get(VOLTAGE_ENTITY_ID)
     assert state is not None
     assert state.attributes.get("provider") == expected
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_provider_kept_when_a_frame_omits_it(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """A frame without a provider keeps the last one; a new provider replaces it."""
+    await _setup(hass, config_entry_with_vehicles)
+
+    for voltage, provider, expected in (
+        (400.0, PROVIDER, PROVIDER),
+        (410.0, None, PROVIDER),
+        (420.0, "APP_LOCATION", "APP_LOCATION"),
+    ):
+        _fire_voltage(mock_telemetry_stream, voltage, provider=provider)
+        await hass.async_block_till_done()
+        assert hass.states.get(VOLTAGE_ENTITY_ID).attributes.get("provider") == expected
