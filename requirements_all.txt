@@ -1572,7 +1572,7 @@ london-tube-status==0.7
 loqedAPI==2.1.16
 
 # homeassistant.components.lorawan
-lorawan-connection==1.0.0
+lorawan-connection==1.2.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
