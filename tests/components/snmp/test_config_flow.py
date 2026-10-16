@@ -689,6 +689,18 @@ async def test_user_flow_v3_auth_creation_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    # Once the auth data can be created the flow finishes
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "test-user"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_v3_wrong_value_error(
     hass: HomeAssistant, mock_setup_entry: Mock
@@ -715,6 +727,19 @@ async def test_user_flow_v3_wrong_value_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "usm_wrong_digests"}
+
+    # Once the agent accepts the digests the flow finishes
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_transport_cannot_connect(
@@ -955,6 +980,19 @@ async def test_user_flow_v3_incoherent_credentials(
     assert result["step_id"] == "v3"
     assert result["errors"] == expected_errors
 
+    # A coherent set of credentials finishes the flow
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "user", "auth_key": "auth-key", "auth_protocol": "hmac-sha"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_v3_auth_without_privacy(hass: HomeAssistant) -> None:
@@ -1080,6 +1118,20 @@ async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
     assert result["step_id"] == "v1_v2c"
     assert result["errors"] == {"base": "invalid_auth"}
     assert entry.data["community"] == "public"
+
+    # Working credentials finish the reconfigure and update the entry
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"community": "private"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["community"] == "private"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1222,3 +1274,11 @@ async def test_subentry_flow_reconfigure_invalid_oid(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"baseoid": "invalid_oid"}
+
+    # A resolvable OID finishes the reconfigure
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"baseoid": "1.3.6.1.2.1.4.22.1.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

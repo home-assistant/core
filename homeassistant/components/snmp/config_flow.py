@@ -83,7 +83,7 @@ PRIV_PROTOCOL_SELECTOR = SelectSelector(
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): SNMP_VERSION_SELECTOR,
     }
 )
