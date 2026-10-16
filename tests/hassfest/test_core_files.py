@@ -152,8 +152,23 @@ def test_core_integration_with_all(config: Config, tmp_path: Path, code: str) ->
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param('DOMAIN = "http"\n', id="no_all"),
+        pytest.param(
+            'DOMAIN = "http"\n\ndef func() -> None:\n    __all__ = ["DOMAIN"]\n',
+            id="local_all",
+        ),
+        pytest.param("__all__: list[str]\n", id="annotation_only"),
+    ],
+)
 def test_core_integration_missing_all(
-    config: Config, tmp_path: Path, core_files: dict, extra_base_platforms: set[str]
+    config: Config,
+    tmp_path: Path,
+    core_files: dict,
+    extra_base_platforms: set[str],
+    code: str,
 ) -> None:
     """Test error when a core integration does not define __all__."""
     domain = "http"
@@ -162,7 +177,7 @@ def test_core_integration_missing_all(
             config,
             tmp_path,
             domain,
-            'DOMAIN = "http"\n\ndef func() -> None:\n    __all__ = ["DOMAIN"]\n',
+            code,
         )
     }
 

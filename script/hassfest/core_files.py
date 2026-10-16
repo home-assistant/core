@@ -70,7 +70,7 @@ def _defines_all(init_file: Path) -> bool:
     for node in ast.parse(init_file.read_text(), str(init_file)).body:
         if isinstance(node, ast.Assign):
             targets = node.targets
-        elif isinstance(node, ast.AnnAssign):
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
             targets = [node.target]
         else:
             continue
