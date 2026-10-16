@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 4
+  CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2026.10"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
@@ -69,7 +69,7 @@ env:
     tests/components/recorder
     tests/components/sensor
   UV_CACHE_DIR: /tmp/uv-cache
-  APT_CACHE_VERSION: 1
+  APT_CACHE_VERSION: 2
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -83,7 +83,7 @@ concurrency:
 jobs:
   info:
     name: Collect information & changes data
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       pull-requests: read # For paths-filter to detect changed files
@@ -271,7 +271,7 @@ jobs:
 
   prek:
     name: Run prek checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [info]
@@ -298,7 +298,7 @@ jobs:
 
   zizmor:
     name: Check GitHub Actions workflows
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
     needs: [info]
@@ -318,7 +318,7 @@ jobs:
 
   lint-hadolint:
     name: Check ${{ matrix.file }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [info]
@@ -348,7 +348,7 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [info]
@@ -390,7 +390,7 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -409,7 +409,7 @@ jobs:
         timeout-minutes: 10
         uses: $/.github/actions/cache-apt-packages
         with:
-          packages: libturbojpeg
+          packages: libturbojpeg0
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python and restore venv
         id: python
@@ -427,7 +427,7 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -458,7 +458,7 @@ jobs:
 
   gen-copilot-instructions:
     name: Check copilot instructions
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -484,7 +484,7 @@ jobs:
 
   gen-recorder-db-versions:
     name: Check recorder database versions
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -510,7 +510,7 @@ jobs:
 
   dependency-review:
     name: Dependency review
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -533,7 +533,7 @@ jobs:
 
   audit-licenses:
     name: Audit licenses
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -582,7 +582,7 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -628,7 +628,7 @@ jobs:
 
   pylint-tests:
     name: Check pylint on tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -675,7 +675,7 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -737,7 +737,7 @@ jobs:
 
   benchmarks:
     name: Run benchmarks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       id-token: write # OIDC token CodSpeed mints (no CODSPEED_TOKEN secret)
@@ -778,7 +778,7 @@ jobs:
 
   prepare-pytest-full:
     name: Split tests for full run
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     if: |
@@ -799,7 +799,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
       - name: Set up Python and restore venv
@@ -864,7 +864,7 @@ jobs:
 
   pytest-full:
     name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -895,7 +895,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -987,7 +987,7 @@ jobs:
 
   pytest-mariadb:
     name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     services:
@@ -1028,7 +1028,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libmariadb-dev-compat
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
@@ -1125,7 +1125,7 @@ jobs:
 
   pytest-postgres:
     name: Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     services:
@@ -1169,7 +1169,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1273,7 +1273,7 @@ jobs:
 
   pytest-sqlite:
     name: Run SQLite ${{ matrix.sqlite-group.version }} tests Python ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -1303,7 +1303,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1386,7 +1386,7 @@ jobs:
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -1415,7 +1415,7 @@ jobs:
 
   pytest-partial:
     name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -1446,7 +1446,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1542,7 +1542,7 @@ jobs:
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     timeout-minutes: 10
@@ -1567,7 +1567,7 @@ jobs:
 
   upload-test-results:
     name: Upload test results to Codecov
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs:
       - info
       - pytest-partial
