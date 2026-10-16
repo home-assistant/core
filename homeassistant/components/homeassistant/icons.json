@@ -359,7 +359,7 @@
       "trigger": "mdi:restart-alert"
     },
     "updated": {
-      "trigger": "mdi:update"
+      "trigger": "mdi:package-up"
     }
   }
 }
