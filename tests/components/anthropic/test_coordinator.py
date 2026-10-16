@@ -1,8 +1,10 @@
 """Tests for the Anthropic integration."""
 
+from typing import Literal
 from unittest.mock import AsyncMock, patch
 
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
+from anthropic.pagination import AsyncPage
 from freezegun import freeze_time
 from httpx2 import URL, Request, Response
 import pytest
@@ -16,8 +18,11 @@ from homeassistant.components.anthropic.coordinator import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import model_list
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -39,6 +44,70 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def test_model_alias(model_id: str, expected_alias: str) -> None:
     """Test model aliases preserve versions and remove date suffixes."""
     assert model_alias(model_id) == expected_alias
+
+
+async def test_model_pagination(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Fetch later catalogue pages, including historical retired models."""
+    active_model = model_list[0].model_copy(deep=True)
+    retired_model = model_list[1].model_copy(update={"lifecycle": "retired"}, deep=True)
+    first_page = AsyncPage(data=[active_model], has_more=True)
+    second_page = AsyncPage(data=[retired_model], has_more=False)
+    with (
+        patch(
+            "anthropic.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+            return_value=first_page,
+        ) as mock_list,
+        patch.object(AsyncPage, "has_next_page", side_effect=[True, False]),
+        patch.object(
+            AsyncPage, "get_next_page", return_value=second_page
+        ) as mock_next_page,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    mock_list.assert_awaited_once_with(
+        lifecycle=["active", "deprecated", "retired"], timeout=10.0
+    )
+    mock_next_page.assert_awaited_once_with()
+    assert mock_config_entry.runtime_data.data == [active_model, retired_model]
+
+
+@pytest.mark.parametrize("lifecycle", ["deprecated", "retired"])
+async def test_model_lifecycle_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    lifecycle: Literal["deprecated", "retired"],
+) -> None:
+    """Create a repair when a model's lifecycle changes during a refresh."""
+    active_model = model_list[0].model_copy(deep=True)
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={"chat_model": active_model.id},
+    )
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        return_value=AsyncPage(data=[active_model], has_more=False),
+    ) as mock_list:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+        mock_list.return_value = AsyncPage(
+            data=[active_model.model_copy(update={"lifecycle": lifecycle})],
+            has_more=False,
+        )
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL_CONNECTED)
+        await hass.async_block_till_done()
+
+    assert mock_list.await_count == 2
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)

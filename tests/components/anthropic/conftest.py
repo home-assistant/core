@@ -90,7 +90,7 @@ async def mock_init_component(
     with patch(
         "anthropic.resources.models.AsyncModels.list",
         new_callable=AsyncMock,
-        return_value=AsyncPage(data=model_list),
+        return_value=AsyncPage(data=model_list, has_more=False),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()

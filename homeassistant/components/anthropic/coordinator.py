@@ -84,7 +84,10 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
         """Fetch data from the API."""
         try:
             self.update_interval = UPDATE_INTERVAL_DISCONNECTED
-            result = await self.client.models.list(timeout=10.0)
+            result = await self.client.models.list(
+                lifecycle=["active", "deprecated", "retired"], timeout=10.0
+            )
+            models = [model async for model in result]
             self.update_interval = UPDATE_INTERVAL_CONNECTED
         except anthropic.APITimeoutError as err:
             raise TimeoutError(err.message or str(err)) from err
@@ -100,7 +103,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
                 translation_key="api_error",
                 translation_placeholders={"message": err.message},
             ) from err
-        return result.data
+        return models
 
     def mark_connection_error(self) -> None:
         """Mark the connection as having an error and reschedule background check."""

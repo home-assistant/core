@@ -1,7 +1,8 @@
 """Tests for the Anthropic integration."""
 
-from typing import TypedDict
-from unittest.mock import patch
+from datetime import UTC, datetime
+from typing import Literal, TypedDict
+from unittest.mock import AsyncMock, patch
 
 from anthropic import (
     APIConnectionError,
@@ -10,6 +11,7 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
 )
+from anthropic.pagination import AsyncPage
 import attr
 import httpx2
 from httpx2 import URL, Request, Response
@@ -32,6 +34,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
+
+from . import model_list
 
 from tests.common import MockConfigEntry
 
@@ -109,23 +113,87 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("lifecycle", "retires_at", "chat_model", "expected_issue"),
+    [
+        pytest.param("active", None, "claude-test-9", False, id="active"),
+        pytest.param(
+            "active",
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            False,
+            id="active_with_past_retirement_date",
+        ),
+        pytest.param(
+            "deprecated",
+            datetime(2030, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            True,
+            id="deprecated",
+        ),
+        pytest.param(
+            "deprecated",
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            True,
+            id="deprecated_with_overdue_retirement",
+        ),
+        pytest.param(
+            "deprecated", None, "claude-test-9", True, id="no_retirement_date"
+        ),
+        pytest.param(
+            "retired",
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            True,
+            id="retired",
+        ),
+        pytest.param(
+            "deprecated",
+            None,
+            "claude-test-9-20261001",
+            True,
+            id="dated_model",
+        ),
+        pytest.param(
+            "deprecated", None, "claude-unknown-model", False, id="missing_model"
+        ),
+    ],
+)
 async def test_init_repair_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
+    lifecycle: Literal["active", "deprecated", "retired"],
+    retires_at: datetime | None,
+    chat_model: str,
+    expected_issue: bool,
 ) -> None:
-    """Test that repair issue is created on deprecated model."""
+    """Use API lifecycle rather than model names or retirement dates for repairs."""
+    model_info = model_list[0].model_copy(
+        update={
+            "id": "claude-test-9",
+            "lifecycle": lifecycle,
+            "deprecated_at": datetime(2024, 1, 1, tzinfo=UTC),
+            "retires_at": retires_at,
+        }
+    )
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={
-            "chat_model": "claude-opus-4-20250514",
-        },
+        data={"chat_model": chat_model},
     )
-    await hass.async_block_till_done()
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        return_value=AsyncPage(data=[model_info], has_more=False),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated")
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    ) is expected_issue
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

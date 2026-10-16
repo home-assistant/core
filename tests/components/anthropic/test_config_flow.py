@@ -864,7 +864,15 @@ async def test_model_list(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test fetching and processing the list of models."""
+    """Test the model selector excludes retired models from the catalogue."""
+    mock_config_entry.runtime_data.async_set_updated_data(
+        [
+            *model_list,
+            model_list[0].model_copy(
+                update={"id": "retired-model", "lifecycle": "retired"}
+            ),
+        ]
+    )
     subentry = next(iter(mock_config_entry.subentries.values()))
     options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
@@ -881,6 +889,50 @@ async def test_model_list(
     assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "additional"
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("cached_model_count", [0, 1], ids=["retrieved", "cached"])
+async def test_retired_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    cached_model_count: int,
+) -> None:
+    """Reject retired models entered as a custom model ID."""
+    retired_model = model_list[0].model_copy(
+        update={"id": "retired-model", "lifecycle": "retired"}
+    )
+    mock_config_entry.runtime_data.async_set_updated_data(
+        [retired_model][:cached_model_count]
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_NAME: "Claude", CONF_RECOMMENDED: False}
+    )
+    with patch(
+        "anthropic.resources.models.AsyncModels.retrieve", return_value=retired_model
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: retired_model.id}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "additional"
+    assert result["errors"] == {CONF_CHAT_MODEL: "model_retired"}
+
+    with patch(
+        "anthropic.resources.models.AsyncModels.retrieve", return_value=model_list[0]
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: model_list[0].id}
+        )
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CHAT_MODEL] == model_list[0].id
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -1428,7 +1480,7 @@ async def setup_api_key_entry(
         with patch(
             "anthropic.resources.models.AsyncModels.list",
             new_callable=AsyncMock,
-            return_value=AsyncPage(data=model_list),
+            return_value=AsyncPage(data=model_list, has_more=False),
         ):
             assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
             await hass.async_block_till_done()
@@ -1485,7 +1537,7 @@ async def test_update_api_key(
         patch(
             "anthropic.resources.models.AsyncModels.list",
             new_callable=AsyncMock,
-            return_value=AsyncPage(data=model_list),
+            return_value=AsyncPage(data=model_list, has_more=False),
         ),
         patch.object(
             hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
