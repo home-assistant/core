@@ -409,7 +409,7 @@ async def test_async_browse_image(
         )
 
         with patch(
-            "homeassistant.components.media_player.async_fetch_image"
+            "homeassistant.components.media_player.entity.async_fetch_image"
         ) as mock_fetch_image:
             for media_type, media_id in (
                 (MediaType.ALBUM, "8009851123233197743"),
