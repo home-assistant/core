@@ -257,6 +257,9 @@ SAMPLE_STRINGS = {
         },
     },
     "entity_component": {
+        "release_notes_messages": {
+            "battery_powered_update": "Battery powered devices may take longer to update.",
+        },
         "_": {
             "name": "Test Integration",
             "state": {
@@ -333,6 +336,13 @@ SAMPLE_STRINGS = {
         "switch": {
             "power": {
                 "name": "Power",
+            },
+        },
+        "update": {
+            "release_notes_messages": {
+                "network_reliability": (
+                    "Review {docs_url} before starting the update."
+                ),
             },
         },
     },
