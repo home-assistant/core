@@ -11,7 +11,6 @@ import pytest
 
 from homeassistant.components import vacuum
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.vacuum.const import ISSUE_SEGMENTS_CHANGED
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -391,7 +390,7 @@ async def test_raise_segment_changed_issue(
         await notify_and_wait(hass, event_bus, event)
 
     entity_entry = entity_registry.async_get(entity_id)
-    issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{entity_entry.id}"
+    issue_id = f"segments_changed_{entity_entry.id}"
     issue = issue_registry.async_get_issue(vacuum.DOMAIN, issue_id)
     assert issue is not None
 
