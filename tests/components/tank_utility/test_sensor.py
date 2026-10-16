@@ -135,7 +135,7 @@ async def test_sensor_update_token_refresh(
     ]
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
     assert state is not None

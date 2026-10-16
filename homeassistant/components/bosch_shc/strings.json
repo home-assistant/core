@@ -87,12 +87,26 @@
       }
     },
     "select": {
+      "display_direction": {
+        "name": "Display orientation",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "reversed": "Rotated by 180°"
+        }
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature",
+        "state": {
+          "measured": "Measured",
+          "setpoint": "Set temperature"
+        }
+      },
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "middle": "Medium"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
         }
       },
       "siren_sound_level": {
@@ -100,25 +114,25 @@
         "state": {
           "high": "Loud",
           "low": "Reduced",
-          "medium": "Medium"
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "smoke_sensitivity": {
         "name": "Smoke sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "middle": "Medium"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
         }
       },
       "vibration_sensitivity": {
         "name": "Vibration sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
-          "very_high": "Very high",
-          "very_low": "Very low"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         }
       }
     },

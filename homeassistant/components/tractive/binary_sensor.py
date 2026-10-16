@@ -19,6 +19,8 @@ from .const import ATTR_POWER_SAVING
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
+PARALLEL_UPDATES = 0
+
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""

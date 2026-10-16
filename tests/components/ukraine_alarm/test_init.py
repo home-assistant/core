@@ -67,10 +67,10 @@ async def test_migration_v1_to_v2_state_with_districts_fails(
         result = await hass.config_entries.async_setup(entry.entry_id)
         assert result is False
 
-        assert (
-            DOMAIN,
-            f"deprecated_state_region_{entry.entry_id}",
-        ) in issue_registry.issues
+        issue_id = f"deprecated_state_region_{entry.entry_id}"
+        issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.reason == (
@@ -78,6 +78,10 @@ async def test_migration_v1_to_v2_state_with_districts_fails(
         " Remove this integration entry and add it again, selecting a district or"
         " community"
     )
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_migration_v1_to_v2_cannot_connect(hass: HomeAssistant) -> None:

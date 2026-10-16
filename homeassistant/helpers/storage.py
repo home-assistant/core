@@ -223,6 +223,72 @@ class _StoreManager:
             self._files = set(os.listdir(self._storage_path))
 
 
+class _FileStoreIO:
+    """File operations and preload cache for one Store."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        key: str,
+        path: str,
+        private: bool,
+        atomic_writes: bool,
+    ) -> None:
+        self._hass = hass
+        self._key = key
+        self._manager = get_internal_store_manager(hass)
+        self.path = path
+        self._private = private
+        self._atomic_writes = atomic_writes
+
+    async def async_load(self) -> json_util.JsonValueType:
+        """Read from the file cache or disk."""
+        if cache := self._manager.async_fetch(self._key):
+            exists, data = cache
+            return data if exists else {}
+        return await self._hass.async_add_executor_job(self._load)
+
+    async def async_write(self, mode: str, json_data: str | bytes) -> None:
+        """Persist a prepared storage envelope in the executor."""
+        await self._hass.async_add_executor_job(self._write, mode, json_data)
+
+    async def async_move_corrupt(self, postfix: str) -> str:
+        """Preserve a corrupt file in the executor."""
+        return await self._hass.async_add_executor_job(self._move_corrupt, postfix)
+
+    async def async_remove(self) -> None:
+        """Remove the stored envelope in the executor."""
+        await self._hass.async_add_executor_job(self._remove)
+
+    @callback
+    def async_invalidate_cache(self) -> None:
+        """Invalidate file data before a write or removal."""
+        self._manager.async_invalidate(self._key)
+
+    def _load(self) -> json_util.JsonValueType:
+        """Read the serialized storage envelope."""
+        return json_util.load_json(self.path)
+
+    def _write(self, mode: str, json_data: str | bytes) -> None:
+        """Persist a prepared storage envelope."""
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        write_method = (
+            write_utf8_file_atomic if self._atomic_writes else write_utf8_file
+        )
+        write_method(self.path, json_data, self._private, mode=mode)
+
+    def _move_corrupt(self, postfix: str) -> str:
+        """Preserve a corrupt file for recovery."""
+        corrupt_path = f"{self.path}{postfix}"
+        os.rename(self.path, corrupt_path)
+        return corrupt_path
+
+    def _remove(self) -> None:
+        """Remove the stored envelope, if present."""
+        with suppress(FileNotFoundError):
+            os.unlink(self.path)
+
+
 class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     """Class to help storing data."""
 
@@ -265,21 +331,19 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self.minor_version = minor_version
         self.key = key
         self.hass = hass
-        self._private = private
+        self._io = _FileStoreIO(hass, key, self.path, private, atomic_writes)
         self._data: dict[str, Any] | None = None
         self._delay_handle: asyncio.TimerHandle | None = None
         self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
         self._load_future: asyncio.Future[_T | None] | None = None
         self._encoder = encoder
-        self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._load_empty = False
         self._max_readable_version = (
             max_readable_version if max_readable_version is not None else version
         )
         self._next_write_time = 0.0
-        self._manager = get_internal_store_manager(hass)
         self._serialize_in_event_loop = serialize_in_event_loop
 
     @cached_property
@@ -358,15 +422,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
-        elif cache := self._manager.async_fetch(self.key):
-            exists, data = cache
-            if not exists:
-                return None
         else:
             try:
-                data = await self.hass.async_add_executor_job(
-                    json_util.load_json, self.path
-                )
+                data = await self._io.async_load()
             except HomeAssistantError as err:
                 if isinstance(err.__cause__, JSONDecodeError):
                     # If we have a JSONDecodeError, it means the file is corrupt.
@@ -376,10 +434,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                     # allow startup to continue so they can restore from a backup.
                     isotime = dt_util.utcnow().isoformat()
                     corrupt_postfix = f".corrupt.{isotime}"
-                    corrupt_path = f"{self.path}{corrupt_postfix}"
-                    await self.hass.async_add_executor_job(
-                        os.rename, self.path, corrupt_path
-                    )
+                    corrupt_path = await self._io.async_move_corrupt(corrupt_postfix)
                     storage_key = self.key
                     _LOGGER.error(
                         "Unrecoverable error decoding storage %s at %s; "
@@ -570,7 +625,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
         async with self._write_lock:
-            self._manager.async_invalidate(self.key)
+            self._io.async_invalidate_cache()
             self._async_cleanup_delay_listener()
             self._async_cleanup_final_write_listener()
 
@@ -591,32 +646,19 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def _async_write_data(self, data: dict) -> None:
         if self._serialize_in_event_loop:
-            if "data_func" in data:
-                data["data"] = data.pop("data_func")()
-            mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
-            await self.hass.async_add_executor_job(
-                self._write_prepared_data, mode, json_data
+            mode, json_data = self._prepare_data(data)
+        else:
+            mode, json_data = await self.hass.async_add_executor_job(
+                self._prepare_data, data
             )
-            return
-        await self.hass.async_add_executor_job(self._write_data, data)
+        _LOGGER.debug("Writing data for %s to %s", self.key, self.path)
+        await self._io.async_write(mode, json_data)
 
-    def _write_data(self, data: dict) -> None:
-        """Write the data."""
+    def _prepare_data(self, data: dict) -> tuple[str, str | bytes]:
+        """Serialize data for the I/O implementation."""
         if "data_func" in data:
             data["data"] = data.pop("data_func")()
-        mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
-        self._write_prepared_data(mode, json_data)
-
-    def _write_prepared_data(self, mode: str, json_data: str | bytes) -> None:
-        """Write the data."""
-        path = self.path
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
-        _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        write_method = (
-            write_utf8_file_atomic if self._atomic_writes else write_utf8_file
-        )
-        write_method(path, json_data, self._private, mode=mode)
+        return json_helper.prepare_save_json(data, encoder=self._encoder)
 
     async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version."""
@@ -624,9 +666,8 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def async_remove(self) -> None:
         """Remove all data."""
-        self._manager.async_invalidate(self.key)
+        self._io.async_invalidate_cache()
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        with suppress(FileNotFoundError):
-            await self.hass.async_add_executor_job(os.unlink, self.path)
+        await self._io.async_remove()
