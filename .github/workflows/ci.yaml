@@ -581,16 +581,8 @@ jobs:
           python -m script.licenses check licenses-${PYTHON_VERSION}.json
 
   pylint:
-    name: >-
-      Check pylint${{ needs.info.outputs.test_full_suite == 'true'
-      && format(' ({0}/2)', matrix.shard) || '' }}
+    name: Check pylint
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: >-
-          ${{ fromJSON(needs.info.outputs.test_full_suite == 'true'
-          && '[1, 2]' || '[1]') }}
     permissions:
       contents: read
     needs:
@@ -620,18 +612,10 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
-        env:
-          PYLINT_SHARD: ${{ matrix.shard }}
         run: |
           . venv/bin/activate
           python --version
-          # Shard 1 lints components 0-9 and a-m, shard 2 everything else
-          if [[ "${PYLINT_SHARD}" == "1" ]]; then
-            ignore="^homeassistant/(?!components/[0-9_a-m])"
-          else
-            ignore="^homeassistant/components/[0-9_a-m]"
-          fi
-          pylint --jobs 0 --ignore-paths="${ignore}" --ignore-missing-annotations=y homeassistant
+          pylint --jobs 0 --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -643,16 +627,8 @@ jobs:
           pylint --ignore-missing-annotations=y $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   pylint-tests:
-    name: >-
-      Check pylint on tests${{ needs.info.outputs.test_full_suite == 'true'
-      && format(' ({0}/2)', matrix.shard) || '' }}
+    name: Check pylint on tests
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: >-
-          ${{ fromJSON(needs.info.outputs.test_full_suite == 'true'
-          && '[1, 2]' || '[1]') }}
     permissions:
       contents: read
     needs:
@@ -683,18 +659,10 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
-        env:
-          PYLINT_SHARD: ${{ matrix.shard }}
         run: |
           . venv/bin/activate
           python --version
-          # Shard 1 lints components 0-9 and a-m, shard 2 everything else
-          if [[ "${PYLINT_SHARD}" == "1" ]]; then
-            ignore="^tests/(?!components/[0-9_a-m])"
-          else
-            ignore="^tests/components/[0-9_a-m]"
-          fi
-          pylint --jobs 0 --ignore-paths="${ignore}" tests
+          pylint --jobs 0 tests
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
