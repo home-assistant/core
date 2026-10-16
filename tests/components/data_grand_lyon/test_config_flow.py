@@ -776,7 +776,7 @@ async def test_line_subentry_flow_rejects_empty_line_code(
     mock_config_entry: MockConfigEntry,
     line_code: str,
 ) -> None:
-    """Test an empty (or whitespace-only) line code re-renders the form with an error."""
+    """Test an empty (or whitespace-only) line code shows an error, then recovers."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -791,6 +791,12 @@ async def test_line_subentry_flow_rejects_empty_line_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_LINE: "invalid_line"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LINE: "C3"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_LINE: "C3"}
 
 
 @pytest.mark.usefixtures("mock_tcl_client")
