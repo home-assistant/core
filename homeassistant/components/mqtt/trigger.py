@@ -15,10 +15,11 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
+from homeassistant.helpers.trigger.template import async_track_trigger_template
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.json import json_loads
 
@@ -80,9 +81,8 @@ async def async_attach_trigger(
 
     wanted_payload = command_template(None, variables)
 
-    topic_template: Template = config[CONF_TOPIC]
-    topic = topic_template.async_render(variables, limited=True, parse_result=False)
-    valid_subscribe_topic(topic)
+    topic: str
+    unsubscribe_topic: CALLBACK_TYPE
 
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
@@ -106,15 +106,79 @@ async def async_attach_trigger(
 
             hass.async_run_hass_job(job, {"trigger": data})
 
+    @callback
+    def async_subscribe(topic: str) -> CALLBACK_TYPE:
+        """Subscribe the trigger to a topic."""
+        return async_subscribe_internal(
+            hass,
+            topic,
+            mqtt_automation_listener,
+            encoding=encoding,
+            qos=qos,
+            job_type=HassJobType.Callback,
+        )
+
+    @callback
+    def async_topic_changed(new_topic: str) -> None:
+        """Move the subscription to the newly rendered topic."""
+        nonlocal topic, unsubscribe_topic
+
+        if new_topic == topic:
+            return
+
+        try:
+            valid_subscribe_topic(new_topic)
+        except probatio.Invalid as err:
+            _LOGGER.error(
+                "Invalid MQTT trigger topic '%s' in %s, keeping topic '%s': %s",
+                new_topic,
+                trigger_info["name"],
+                topic,
+                err,
+            )
+            return
+
+        _LOGGER.debug("Re-subscribing MQTT trigger from '%s' to '%s'", topic, new_topic)
+
+        # Subscribe first, so no message is missed while switching topics.
+        unsubscribe_new_topic = async_subscribe(new_topic)
+        unsubscribe_topic()
+        topic = new_topic
+        unsubscribe_topic = unsubscribe_new_topic
+
+    @callback
+    def async_topic_error(err: TemplateError) -> None:
+        """Keep the current subscription when the topic fails to render."""
+        _LOGGER.error(
+            "Error rendering MQTT trigger topic in %s, keeping topic '%s': %s",
+            trigger_info["name"],
+            topic,
+            err,
+        )
+
+    topic, stop_tracking_topic = async_track_trigger_template(
+        hass,
+        config[CONF_TOPIC],
+        variables,
+        async_topic_changed,
+        async_topic_error,
+    )
+
     _LOGGER.debug(
         "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
-    return async_subscribe_internal(
-        hass,
-        topic,
-        mqtt_automation_listener,
-        encoding=encoding,
-        qos=qos,
-        job_type=HassJobType.Callback,
-    )
+    try:
+        valid_subscribe_topic(topic)
+        unsubscribe_topic = async_subscribe(topic)
+    except Exception:
+        stop_tracking_topic()
+        raise
+
+    @callback
+    def async_remove() -> None:
+        """Stop tracking the topic and unsubscribe."""
+        stop_tracking_topic()
+        unsubscribe_topic()
+
+    return async_remove
