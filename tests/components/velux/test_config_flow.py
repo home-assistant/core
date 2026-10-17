@@ -1,7 +1,7 @@
 """Test the Velux config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyvlx import PyVLXException
@@ -250,6 +250,150 @@ async def test_reauth_errors(
 
     assert mock_config_entry.data[CONF_PASSWORD] == "New Password"
     mock_pyvlx.disconnect.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that an existing entry can be reconfigured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.0.2.1",
+            CONF_PASSWORD: "New Password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.0.2.1",
+        CONF_PASSWORD: "New Password",
+    }
+    mock_pyvlx.connect.assert_awaited_once()
+    mock_pyvlx.disconnect.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_loaded_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that a loaded entry is unloaded before reconfiguration."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.velux.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "127.0.0.1",
+                CONF_PASSWORD: "New Password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_unload_entry.assert_awaited_once()
+    mock_pyvlx.connect.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            PyVLXException("Login to KLF 200 failed, check credentials"),
+            "invalid_auth",
+        ),
+        (PyVLXException("DUMMY"), "cannot_connect"),
+        (Exception("DUMMY"), "unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyvlx: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reconfiguration errors."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    mock_pyvlx.connect.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.0.2.1", CONF_PASSWORD: "New Password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_PASSWORD] == "NotAStrongPassword"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_error_reloads_loaded_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyvlx: AsyncMock,
+) -> None:
+    """Test that a loaded entry is restored after reconfiguration fails."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_pyvlx.connect.side_effect = PyVLXException("DUMMY")
+
+    with patch(
+        "homeassistant.components.velux.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PASSWORD: "New Password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    mock_unload_entry.assert_awaited_once()
+    assert mock_config_entry.data[CONF_PASSWORD] == "NotAStrongPassword"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unload_failure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that reconfiguration does not probe when unloading fails."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.velux.async_unload_entry", return_value=False
+    ) as mock_unload_entry:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PASSWORD: "New Password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+    mock_unload_entry.assert_awaited_once()
+    mock_pyvlx.connect.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
