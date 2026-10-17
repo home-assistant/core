@@ -221,6 +221,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "alpha_bidet_infrared": {
+      "name": "Alpha Bidet Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
