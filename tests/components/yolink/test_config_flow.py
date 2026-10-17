@@ -379,6 +379,10 @@ async def test_oauth_flow_aborts_when_home_configured_by_uac(
             {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: "home_99999"},
             id="entry_of_other_home",
         ),
+        pytest.param(
+            {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: TEST_HOME_ID},
+            id="entry_of_same_home",
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
@@ -467,7 +471,11 @@ async def test_oauth_reauthentication_aborts_when_home_lookup_fails(
     ("home_info", "title"),
     [
         pytest.param(home_info_response(), TEST_HOME_NAME, id="named_home"),
-        pytest.param(home_info_response(name=None), "YoLink Home", id="unnamed_home"),
+        pytest.param(
+            BRDP(code="000000", data={"id": TEST_HOME_ID}),
+            "YoLink Home",
+            id="unnamed_home",
+        ),
     ],
 )
 async def test_uac_flow(

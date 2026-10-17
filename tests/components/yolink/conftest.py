@@ -36,14 +36,9 @@ TEST_HOME_ID = "home_12345"
 TEST_HOME_NAME = "My Test Home"
 
 
-def home_info_response(
-    home_id: str = TEST_HOME_ID, name: str | None = TEST_HOME_NAME
-) -> BRDP:
+def home_info_response(home_id: str = TEST_HOME_ID, name: str = TEST_HOME_NAME) -> BRDP:
     """Return a Home.getGeneralInfo response for a home."""
-    data: dict[str, Any] = {"id": home_id}
-    if name is not None:
-        data["name"] = name
-    return BRDP(code="000000", data=data)
+    return BRDP(code="000000", data={"id": home_id, "name": name})
 
 
 def build_yolink_home() -> AsyncMock:

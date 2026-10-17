@@ -288,6 +288,7 @@ async def test_uac_failed_refresh_raises_once_the_token_expired(
         await auth.check_and_refresh_token()
 
     assert type(err.value) is YoLinkClientError
+    assert err.value.code == "unknown"
     assert err.value.message == "HTTP 500"
 
 
