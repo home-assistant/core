@@ -1953,6 +1953,7 @@ async def test_somfy_flow_no_sites(
             "application_not_allowed",
             id="application_not_allowed",
         ),
+        pytest.param(Exception, "unknown", id="unknown"),
     ],
 )
 async def test_somfy_flow_errors(
