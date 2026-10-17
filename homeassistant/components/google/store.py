@@ -61,14 +61,13 @@ class LocalCalendarStore(CalendarStore):
 
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
-    async def async_flush(self) -> None:
-        """Write cached data and finish pending saves before unloading."""
+    async def async_close(self) -> None:
+        """Write cached data and prevent further writes before unloading."""
         if self._data is not None:
             await self._store.async_save(self._data)
+        self._store.make_read_only()
 
     async def async_remove(self) -> None:
         """Remove persisted data and prevent further writes."""
         self._store.make_read_only()
-        # Wait for active writes before removing the file.
-        await self.async_flush()
         await self._store.async_remove()

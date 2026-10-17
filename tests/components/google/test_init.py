@@ -918,10 +918,20 @@ async def test_remove_entry(
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
     storage_key = f"google.{entry.entry_id}"
-    assert await entry.runtime_data.store.async_load()
+    store = entry.runtime_data.store
+    data = await store.async_load()
+    assert data
     assert storage_key not in hass_storage
 
-    assert await hass.config_entries.async_remove(entry.entry_id)
+    async_write = store._store._io.async_write
+
+    async def save_during_write(mode: str, json_data: str | bytes) -> None:
+        await async_write(mode, json_data)
+        # A sync can finish while the unload flush is waiting for disk I/O.
+        await store.async_save(data)
+
+    with patch.object(store._store._io, "async_write", side_effect=save_during_write):
+        assert await hass.config_entries.async_remove(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert storage_key not in hass_storage
 
