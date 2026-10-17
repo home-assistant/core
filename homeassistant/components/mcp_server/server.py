@@ -82,11 +82,7 @@ async def create_server(
 
     async def get_api_instance(ctx: ServerRequestContext[Any]) -> llm.APIInstance:
         """Get the LLM API selected."""
-        meta = ctx.meta
-        if isinstance(meta, dict):
-            device_id = meta.get(META_DEVICE_ID)
-        else:
-            device_id = getattr(meta, META_DEVICE_ID, None)
+        device_id = ctx.meta.get(META_DEVICE_ID) if ctx.meta else None
         if device_id is not None and not isinstance(device_id, str):
             raise ValueError(f"{META_DEVICE_ID} must be a string")
 
@@ -204,14 +200,7 @@ async def create_server(
         params: types.CallToolRequestParams,
     ) -> types.CallToolResult:
         """Handle calling tools."""
-        try:
-            llm_api = await get_api_instance(ctx)
-        except ValueError as err:
-            return types.CallToolResult(
-                content=[types.TextContent(type="text", text=str(err))],
-                is_error=True,
-            )
-
+        llm_api = await get_api_instance(ctx)
         tool_input = llm.ToolInput(
             tool_name=params.name, tool_args=params.arguments or {}
         )

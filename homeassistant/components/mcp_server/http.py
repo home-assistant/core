@@ -274,7 +274,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         json_data = await request.json()
         try:
             message = JSONRPC_MESSAGE_ADAPTER.validate_python(json_data)
-        except (ValueError, pydantic.ValidationError) as err:
+        except ValueError as err:
             _LOGGER.info("Failed to parse message: %s", err)
             raise HTTPBadRequest(text="Could not parse message") from err
 
@@ -300,7 +300,7 @@ async def _async_handle_streamable_message(
     try:
         json_data = await request.json()
         message = JSONRPC_MESSAGE_ADAPTER.validate_python(json_data)
-    except (ValueError, pydantic.ValidationError) as err:
+    except ValueError as err:
         _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
         raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
 

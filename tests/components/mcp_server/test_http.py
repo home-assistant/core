@@ -573,20 +573,17 @@ async def test_tool_call_invalid_device_id(
     mcp_client: MCPClientFactory,
     hass_supervisor_access_token: str,
 ) -> None:
-    """Invalid caller metadata returns a tool error without performing the action."""
+    """Invalid caller metadata raises an error without performing the action."""
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.call_tool(
-            name="intent__HassTurnOn",
-            arguments={"name": "kitchen light"},
-            meta={DEVICE_ID_META_KEY: 123},
-        )
+        with pytest.raises(
+            McpError, match="io.home-assistant/device_id must be a string"
+        ):
+            await session.call_tool(
+                name="intent__HassTurnOn",
+                arguments={"name": "kitchen light"},
+                meta={DEVICE_ID_META_KEY: 123},
+            )
 
-    assert result.is_error
-    assert result.content == [
-        mcp.types.TextContent(
-            type="text", text="io.home-assistant/device_id must be a string"
-        )
-    ]
     assert hass.states.get(TEST_ENTITY).state == STATE_OFF
 
 
