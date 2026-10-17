@@ -677,7 +677,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen
-besen==0.5.0rc1
+besen==0.5.0
 
 # homeassistant.components.bitvis
 bitvis-protobuf==2.0.4
