@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Self, override
 import probatio
 
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
     ENTITY_ID_FORMAT,
     WaterHeaterCapabilityAttribute,
@@ -363,7 +362,7 @@ class AbstractTemplateWaterHeater(
         if (value := kwargs.get("temperature")) is not None and (
             validated := tcv.number(
                 self,
-                f"{SET_TEMPERATURE_ACTION} {ATTR_TEMPERATURE}",
+                f"{SET_TEMPERATURE_ACTION} temperature",
                 self.min_temp,
                 self.max_temp,
             )(value)
