@@ -105,6 +105,7 @@ async def test_operation_status(
     assert state.state == expected_state
 
 
+@pytest.mark.usefixtures("websocket_unavailable")
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -148,6 +149,7 @@ async def test_energy_last_reset_month_rollover(
     assert state.attributes[ATTR_LAST_RESET] == "2026-07-01T00:00:00+00:00"
 
 
+@pytest.mark.usefixtures("websocket_unavailable")
 async def test_outdoor_temperature_sensor_added_when_reported(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
