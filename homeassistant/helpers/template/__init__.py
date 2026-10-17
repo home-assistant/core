@@ -674,7 +674,7 @@ class Template:
         self._log_fn = log_fn
         env = self._env
 
-        self._compiled = jinja2.Template.from_code(
+        self._compiled = env.template_class.from_code(
             env, self._compiled_code, env.globals, None
         )
 
@@ -819,8 +819,50 @@ class HassLoader(jinja2.BaseLoader):
         return self._sources[template], template, lambda: cur_reload == self._reload
 
 
+class HassContext(jinja2.runtime.Context):
+    """Render context for the Home Assistant template environment.
+
+    ``jinja2.runtime.Context`` eagerly materializes ``set(globals)`` on every
+    render. The Home Assistant environment exposes over a hundred globals and
+    the key set is only read when a template imports another template, so the
+    mapping's keys view is used instead of a copy.
+    """
+
+    def __init__(self, environment, parent, name, blocks, globals=None):
+        """Initialize the context without copying the globals keys."""
+        super().__init__(environment, parent, name, blocks)
+        if globals is not None:
+            self.globals_keys = globals.keys()
+
+
+class HassTemplate(jinja2.Template):
+    """Compiled template for the Home Assistant template environment.
+
+    ``jinja2.Template.new_context`` copies the globals into a fresh dict for
+    every render. The Home Assistant environment exposes over a hundred
+    globals, so for a render without variables the mapping is used as the
+    context parent directly; jinja never mutates ``parent``.
+    """
+
+    @override
+    def new_context(self, vars=None, shared=False, locals=None):
+        """Create a new render context."""
+        if not vars and not shared and not locals and type(self.globals) is dict:
+            return self.environment.context_class(
+                self.environment,
+                self.globals,
+                self.name,
+                self.blocks,
+                globals=self.globals,
+            )
+        return super().new_context(vars, shared, locals)
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
+
+    context_class = HassContext
+    template_class = HassTemplate
 
     def __init__(
         self,
