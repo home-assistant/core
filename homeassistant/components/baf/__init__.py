@@ -27,7 +27,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> None:
     """Set up Big Ass Fans from a config entry."""
     ip_address = entry.data[CONF_IP_ADDRESS]
 
@@ -55,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
     entry.async_on_unload(_async_cancel_run)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

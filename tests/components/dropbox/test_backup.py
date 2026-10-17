@@ -1,10 +1,13 @@
 """Test the Dropbox backup platform."""
 
+import asyncio
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from io import StringIO
 import json
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from python_dropbox_api import DropboxAuthException
@@ -16,8 +19,10 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.components.dropbox.backup import (
+    METADATA_DOWNLOAD_CONCURRENCY,
     DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.dropbox.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -155,6 +160,58 @@ async def test_agents_list_backups(
     mock_dropbox_client.list_folder.assert_awaited()
 
 
+async def test_agents_list_multiple_backups(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_dropbox_client: Mock,
+) -> None:
+    """Test listing more backups than the concurrent download limit."""
+
+    backups = [
+        replace(
+            TEST_AGENT_BACKUP,
+            backup_id=f"dropbox-backup-{i}",
+            name=f"Dropbox backup {i}",
+        )
+        for i in range(10)
+    ]
+    files = {}
+    for backup in backups:
+        tar_name, metadata_name = _suggested_filenames(backup)
+        files[tar_name] = b""
+        files[metadata_name] = json.dumps(backup.as_dict()).encode()
+    files["invalid.tar"] = b""
+    files["invalid.metadata.json"] = b"not valid json"
+
+    active = peak = 0
+
+    async def _download(path: str) -> AsyncIterator[bytes]:
+        nonlocal active, peak
+        active += 1
+        peak = max(peak, active)
+        # Yield so the other downloads can start before this one finishes
+        await asyncio.sleep(0)
+        active -= 1
+        yield files[path.removeprefix("/")]
+
+    mock_dropbox_client.list_folder = AsyncMock(
+        return_value=[SimpleNamespace(name=name) for name in files]
+    )
+    mock_dropbox_client.download_file = Mock(side_effect=_download)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert sorted(b["backup_id"] for b in response["result"]["backups"]) == [
+        backup.backup_id for backup in backups
+    ]
+    assert mock_dropbox_client.download_file.call_count == 11
+    assert peak == METADATA_DOWNLOAD_CONCURRENCY
+
+
 async def test_agents_list_backups_metadata_without_tar(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -224,7 +281,7 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        TEST_AGENT_ID: "Failed to list backups"
+        TEST_AGENT_ID: "Backup operation failed"
     }
 
 
@@ -246,7 +303,9 @@ async def test_agents_list_backups_reauth(
 
     assert response["success"]
     assert response["result"]["backups"] == []
-    assert response["result"]["agent_errors"] == {TEST_AGENT_ID: "Authentication error"}
+    assert response["result"]["agent_errors"] == {
+        TEST_AGENT_ID: "Authentication with the backup location failed"
+    }
 
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
@@ -336,7 +395,7 @@ async def test_agents_download_fail(
 
     assert resp.status == 500
     body = await resp.content.read()
-    assert b"Failed to get backup" in body
+    assert b"Backup operation failed" in body
 
 
 async def test_agents_download_not_found(
@@ -449,7 +508,9 @@ async def test_agents_upload_fail(
 
     call_count = 0
 
-    async def upload_side_effect(path: str, stream: AsyncIterator[bytes]) -> None:
+    async def upload_side_effect(
+        path: str, stream: AsyncIterator[bytes], **kwargs: Any
+    ) -> None:
         nonlocal call_count
         call_count += 1
         async for _ in stream:
@@ -481,8 +542,36 @@ async def test_agents_upload_fail(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Failed to upload backup" in caplog.text
+    assert "Backup operation failed" in caplog.text
     mock_dropbox_client.delete_file.assert_awaited_once()
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    mock_dropbox_client: Mock,
+) -> None:
+    """Test that upload progress reported by the client is forwarded."""
+    open_stream = AsyncMock()
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    backup_filename = suggested_filename(TEST_AGENT_BACKUP).rsplit(".", 1)[0]
+    upload_call = mock_dropbox_client.upload_file.call_args_list[0]
+    assert upload_call.args == (f"/{backup_filename}.tar", open_stream.return_value)
+    # The client calls the callback after each chunk it sends
+    progress_callback = upload_call.kwargs["progress_callback"]
+    progress_callback(3)
+    progress_callback(8)
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=3),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_delete(
@@ -505,7 +594,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_dropbox_client.delete_file.await_count == 2
 
 
@@ -531,7 +620,14 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"}
+        "agent_error_translations": {
+            TEST_AGENT_ID: {
+                "translation_domain": "backup",
+                "translation_key": "agent_operation_failed",
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {TEST_AGENT_ID: "Backup operation failed"},
     }
 
 
@@ -554,7 +650,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_remove_backup_agents_listener(

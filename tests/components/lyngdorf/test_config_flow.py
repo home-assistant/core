@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from lyngdorf.const import LyngdorfModel
+from lyngdorf import LyngdorfModel
 import pytest
 
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -26,8 +27,10 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCK_SERIAL = "0050c27c76b2"
 
 
-@pytest.mark.usefixtures("mock_find_receiver_model", "mock_get_device_serial")
-async def test_user_flow(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_find_receiver_model")
+async def test_user_flow(
+    hass: HomeAssistant, mock_get_device_serial: AsyncMock
+) -> None:
     """Test the user configuration flow with serial lookup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -48,6 +51,9 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert config_entry.data[CONF_HOST] == "192.168.1.100"
     assert config_entry.data[CONF_SERIAL_NUMBER] == MOCK_SERIAL
     assert config_entry.title == "mp-60"
+    assert mock_get_device_serial.call_args.kwargs[
+        "session"
+    ] is async_get_clientsession(hass)
 
 
 @pytest.mark.usefixtures("mock_find_receiver_model")

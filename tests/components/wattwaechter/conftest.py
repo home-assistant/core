@@ -3,7 +3,13 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aio_wattwaechter.models import AliveResponse, _parse_meter_data, _parse_system_info
+from aio_wattwaechter.models import (
+    AliveResponse,
+    OtaCheckResponse,
+    OtaData,
+    _parse_meter_data,
+    _parse_system_info,
+)
 import pytest
 
 from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
@@ -49,6 +55,21 @@ MOCK_METER_DATA_MINIMAL = _parse_meter_data(
     load_json_object_fixture("meter_data_minimal.json", DOMAIN)
 )
 
+MOCK_OTA_CHECK = OtaCheckResponse(
+    ok=True,
+    data=OtaData(
+        update_available=True,
+        version="1.3.0",
+        tag="v1.3.0",
+        release_date="2026-07-01",
+        release_note_de="Fehlerbehebungen und Verbesserungen",
+        release_note_en="Bug fixes and improvements",
+        last_checked=1720000000,
+        url="https://example.com/firmware/1.3.0.bin",
+        md5="0123456789abcdef",
+    ),
+)
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -78,6 +99,8 @@ def mock_client() -> Generator[AsyncMock]:
         client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
         client.settings = AsyncMock(return_value=MOCK_SETTINGS)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
+        client.ota_check = AsyncMock(return_value=MOCK_OTA_CHECK)
+        client.ota_start = AsyncMock(return_value=True)
         yield client
 
 

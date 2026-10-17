@@ -1,5 +1,7 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
 
+from copy import deepcopy
+import logging
 from unittest.mock import Mock
 
 import pytest
@@ -205,25 +207,119 @@ async def test_scene_updates(
     assert test_entity is None
 
 
+@pytest.mark.parametrize(
+    "resource_type",
+    [pytest.param("scene", id="regular"), pytest.param("smart_scene", id="smart")],
+)
 async def test_scene_with_orphaned_group(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
     caplog: pytest.LogCaptureFixture,
+    resource_type: str,
 ) -> None:
     """Test that a scene referencing a non-existent group is skipped and logged."""
-    orphaned_scene = {
-        **FAKE_SCENE,
-        "id": "orphaned_scene_id",
-        "group": {"rid": "non-existent-group-id", "rtype": "room"},
-    }
+    caplog.set_level(logging.WARNING)
+    orphaned_scene = deepcopy(
+        next(
+            resource
+            for resource in v2_resources_test_data
+            if resource["type"] == resource_type
+        )
+    )
+    orphaned_scene["id"] = "orphaned_scene_id"
+    orphaned_scene["group"] = {"rid": "non-existent-group-id", "rtype": "room"}
     await mock_bridge_v2.api.load_test_data([*v2_resources_test_data, orphaned_scene])
 
     await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
 
-    # the orphaned scene should not be created as an entity
-    assert hass.states.get("scene.test_room_mocked_scene_orphaned") is None
-    # the valid scenes should still be created
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SCENE, DOMAIN, orphaned_scene["id"]
+        )
+        is None
+    )
     assert len(hass.states.async_all()) == 3
-    # an error should be logged for the orphaned scene
-    assert "Unable to create Hue scene entity for orphaned_scene_id" in caplog.text
+    record = next(
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.components.hue.scene"
+    )
+    assert record.levelno == logging.WARNING
+    assert record.getMessage() == (
+        "Skipping Hue scene orphaned_scene_id: group non-existent-group-id "
+        "could not be resolved"
+    )
+    assert record.exc_info is None
+
+
+@pytest.mark.parametrize(
+    "resource_type",
+    [pytest.param("scene", id="regular"), pytest.param("smart_scene", id="smart")],
+)
+async def test_scene_added_after_group_deleted(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    caplog: pytest.LogCaptureFixture,
+    resource_type: str,
+) -> None:
+    """Test a late scene for a deleted group is skipped without blocking valid scenes."""
+    caplog.set_level(logging.WARNING)
+    room = next(
+        resource for resource in v2_resources_test_data if resource["type"] == "room"
+    )
+    zone = next(
+        resource for resource in v2_resources_test_data if resource["type"] == "zone"
+    )
+    late_scene = deepcopy(
+        next(
+            resource
+            for resource in v2_resources_test_data
+            if resource["type"] == resource_type
+            and resource["group"]["rid"] == room["id"]
+        )
+    )
+    late_scene["id"] = "late_scene_id"
+    late_scene["metadata"]["name"] = "Late scene"
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
+
+    mock_bridge_v2.api.emit_event("delete", {"type": "room", "id": room["id"]})
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert room["id"] not in mock_bridge_v2.api.groups
+
+    caplog.clear()
+    mock_bridge_v2.api.emit_event("add", late_scene)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.SCENE, DOMAIN, late_scene["id"])
+        is None
+    )
+    record = next(
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.components.hue.scene"
+    )
+    assert record.levelno == logging.WARNING
+    assert record.getMessage() == (
+        f"Skipping Hue scene late_scene_id: group {room['id']} could not be resolved"
+    )
+    assert record.exc_info is None
+
+    valid_scene = deepcopy(late_scene)
+    valid_scene["id"] = "valid_scene_id"
+    valid_scene["group"] = {"rid": zone["id"], "rtype": "zone"}
+    mock_bridge_v2.api.emit_event("add", valid_scene)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SCENE, DOMAIN, valid_scene["id"]
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None

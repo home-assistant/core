@@ -1,6 +1,10 @@
 {
   "domain": "vicare",
   "name": "Viessmann ViCare",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@CFenner", "@lackas"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -13,5 +17,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.61.0"]
+  "requirements": ["PyViCare==2.63.0"]
 }

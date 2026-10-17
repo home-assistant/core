@@ -60,7 +60,6 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "expires_at": expires_at,
                 "scope": SCOPES,
             },
-            "id": "1112264111",
             "name": "spotify_account_1",
         },
         entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",

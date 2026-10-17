@@ -14,7 +14,7 @@ type EnvertechEVT800ConfigEntry = ConfigEntry[EnvertechEVT800Coordinator]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EnvertechEVT800ConfigEntry
-) -> bool:
+) -> None:
     """Set up Envertech EVT800 from a config entry."""
     evt800 = EnvertechEVT800(entry.data[CONF_IP_ADDRESS], entry.data[CONF_PORT])
     evt800.start()
@@ -27,11 +27,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: EnvertechEVT800ConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

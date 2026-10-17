@@ -13,11 +13,11 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize("platforms", [(BUTTON_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_button_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,

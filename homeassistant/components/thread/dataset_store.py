@@ -515,6 +515,17 @@ class DatasetStore:
             # don't set the router as preferred.
             _LOGGER.debug("Own router not found, do not set dataset as default")
 
+        elif self._preferred_dataset is not None:
+            # Discovery takes up to BORDER_AGENT_DISCOVERY_TIMEOUT, and a
+            # preferred dataset was chosen while we were waiting. Whoever set
+            # it knows the network as it is now, so leave it alone: this task
+            # only exists to pick a preference when there is none.
+            _LOGGER.debug("Preferred dataset already set, do not overwrite it")
+
+        elif dataset_id not in self.datasets:
+            # The dataset was deleted while discovery was running.
+            _LOGGER.debug("Dataset is gone, do not set it as default")
+
         else:
             # We've discovered the router connected to the dataset, but we did not
             # find any other router on the network - mark the dataset as preferred.

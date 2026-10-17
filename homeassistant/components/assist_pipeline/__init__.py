@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
@@ -23,16 +23,18 @@ from .const import (
     SAMPLES_PER_CHUNK,
 )
 from .error import PipelineNotFound
-from .pipeline import (
+from .models import (
     AudioSettings,
     Pipeline,
     PipelineEvent,
     PipelineEventCallback,
     PipelineEventType,
-    PipelineInput,
-    PipelineRun,
     PipelineStage,
     WakeWordSettings,
+)
+from .pipeline import (
+    PipelineInput,
+    PipelineRun,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
@@ -66,15 +68,15 @@ __all__ = (
     "async_update_pipeline",
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEBUG_RECORDING_DIR): str,
+                probatio.Optional(CONF_DEBUG_RECORDING_DIR): str,
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

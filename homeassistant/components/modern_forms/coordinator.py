@@ -25,12 +25,12 @@ type ModernFormsConfigEntry = ConfigEntry[ModernFormsDataUpdateCoordinator]
 class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: ModernFormsConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ModernFormsConfigEntry,
     ) -> None:
         """Initialize global Modern Forms data updater."""
         self.modern_forms = ModernFormsDevice(

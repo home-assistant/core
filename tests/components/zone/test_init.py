@@ -8,6 +8,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import device_tracker, zone
 from homeassistant.components.zone import ATTR_RADIUS, DOMAIN
+from homeassistant.components.zone.const import ZoneEntityStateAttribute
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
-    ATTR_PERSONS,
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -841,8 +841,116 @@ async def test_async_get_enclosing_zones_skips_unavailable_other(
     assert zone.async_get_enclosing_zones(hass, "zone.inner") == []
 
 
-async def test_state(hass: HomeAssistant) -> None:
-    """Test the state of a zone."""
+@pytest.mark.parametrize(
+    (
+        "tracked_domain",
+        "tracked_attr",
+        "untracked_attr",
+        "test_zone_states",
+        "home_states",
+    ),
+    [
+        pytest.param(
+            "person",
+            ZoneEntityStateAttribute.PERSONS,
+            ZoneEntityStateAttribute.DEVICE_TRACKERS,
+            ["0", "1", "2", "1", "2", "1", "0"],
+            ["0", "0", "0", "1", "1", "0", "0"],
+            id="person",
+        ),
+        pytest.param(
+            "device_tracker",
+            ZoneEntityStateAttribute.DEVICE_TRACKERS,
+            ZoneEntityStateAttribute.PERSONS,
+            # Device trackers are not counted towards the zone state.
+            ["0", "0", "0", "0", "0", "0", "0"],
+            ["0", "0", "0", "0", "0", "0", "0"],
+            id="device_tracker",
+        ),
+    ],
+)
+async def test_state(
+    hass: HomeAssistant,
+    tracked_domain: str,
+    tracked_attr: ZoneEntityStateAttribute,
+    untracked_attr: ZoneEntityStateAttribute,
+    test_zone_states: list[str],
+    home_states: list[str],
+) -> None:
+    """Test the state and the persons / device_trackers attributes of a zone."""
+    one = f"{tracked_domain}.one"
+    two = f"{tracked_domain}.two"
+
+    info = {
+        "name": "Test Zone",
+        "latitude": 32.880837,
+        "longitude": -117.237561,
+        "radius": 250,
+        "passive": False,
+    }
+    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
+
+    def assert_zone(
+        entity_id: str, expected_state: str, expected_tracked: list[str]
+    ) -> None:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+        assert sorted(state.attributes[tracked_attr]) == expected_tracked
+        # The other collection must stay empty, they are tracked independently.
+        assert state.attributes[untracked_attr] == []
+
+    assert_zone("zone.test_zone", test_zone_states[0], [])
+    assert_zone("zone.home", home_states[0], [])
+
+    # Entity enters the zone
+    hass.states.async_set(
+        one, "Test Zone", {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]}
+    )
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[1], [one])
+    assert_zone("zone.home", home_states[1], [])
+
+    # A second entity enters the zone (case insensitive state)
+    hass.states.async_set(
+        two, "TEST zone", {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]}
+    )
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[2], sorted([one, two]))
+    assert_zone("zone.home", home_states[2], [])
+
+    # The first entity moves to another zone
+    hass.states.async_set(one, "home", {device_tracker.ATTR_IN_ZONES: ["zone.home"]})
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[3], [two])
+    assert_zone("zone.home", home_states[3], [one])
+
+    # The first entity is in two zones
+    hass.states.async_set(
+        one, "home", {device_tracker.ATTR_IN_ZONES: ["zone.home", "zone.test_zone"]}
+    )
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[4], sorted([one, two]))
+    assert_zone("zone.home", home_states[4], [one])
+
+    # The first entity enters not_home
+    hass.states.async_set(one, "not_home", {device_tracker.ATTR_IN_ZONES: []})
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[5], [two])
+    assert_zone("zone.home", home_states[5], [])
+
+    # The second entity is removed
+    hass.states.async_remove(two)
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[6], [])
+    assert_zone("zone.home", home_states[6], [])
+
+
+async def test_persons_and_device_trackers_tracked_independently(
+    hass: HomeAssistant,
+) -> None:
+    """Test persons and device trackers in the same zone don't interfere."""
     info = {
         "name": "Test Zone",
         "latitude": 32.880837,
@@ -852,14 +960,13 @@ async def test_state(hass: HomeAssistant) -> None:
     }
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
-    state = hass.states.get("zone.test_zone")
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
-
-    # Person entity enters zone
     hass.states.async_set(
         "person.person1",
+        "Test Zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
+    )
+    hass.states.async_set(
+        "device_tracker.tracker1",
         "Test Zone",
         {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
@@ -867,97 +974,41 @@ async def test_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.test_zone")
     assert state
+    # Only persons are counted towards the state.
     assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
+    assert state.attributes[ZoneEntityStateAttribute.PERSONS] == ["person.person1"]
+    assert state.attributes[ZoneEntityStateAttribute.DEVICE_TRACKERS] == [
+        "device_tracker.tracker1"
+    ]
 
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
 
-    # Person entity enters zone (case insensitive)
+async def test_trackers_present_before_zone_setup(hass: HomeAssistant) -> None:
+    """Test persons and device trackers already in a zone at setup are picked up."""
     hass.states.async_set(
-        "person.person2",
-        "TEST zone",
+        "person.person1",
+        "Test Zone",
         {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
+    hass.states.async_set(
+        "device_tracker.tracker1",
+        "Test Zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
+    )
+
+    info = {
+        "name": "Test Zone",
+        "latitude": 32.880837,
+        "longitude": -117.237561,
+        "radius": 250,
+        "passive": False,
+    }
+    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
     await hass.async_block_till_done()
 
     state = hass.states.get("zone.test_zone")
     assert state
-    assert state.state == "2"
-    assert sorted(state.attributes[ATTR_PERSONS]) == [
-        "person.person1",
-        "person.person2",
+    assert state.state == "1"
+    assert state.attributes[ZoneEntityStateAttribute.PERSONS] == ["person.person1"]
+    assert state.attributes[ZoneEntityStateAttribute.DEVICE_TRACKERS] == [
+        "device_tracker.tracker1"
     ]
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
-
-    # Person entity enters another zone
-    hass.states.async_set(
-        "person.person1",
-        "home",
-        {device_tracker.ATTR_IN_ZONES: ["zone.home"]},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
-
-    # Person entity is in two zones
-    hass.states.async_set(
-        "person.person1",
-        "home",
-        {device_tracker.ATTR_IN_ZONES: ["zone.home", "zone.test_zone"]},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "2"
-    assert sorted(state.attributes[ATTR_PERSONS]) == [
-        "person.person1",
-        "person.person2",
-    ]
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
-
-    # Person entity enters not_home
-    hass.states.async_set(
-        "person.person1",
-        "not_home",
-        {device_tracker.ATTR_IN_ZONES: []},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
-
-    # Person entity removed
-    hass.states.async_remove("person.person2")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []

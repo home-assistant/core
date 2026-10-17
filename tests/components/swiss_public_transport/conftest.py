@@ -1,7 +1,6 @@
 """Common fixtures for the swiss_public_transport tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,7 +11,7 @@ from homeassistant.components.swiss_public_transport.const import (
     DOMAIN,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 START = "Zürich"
 DESTINATION = "Bern"
@@ -35,7 +34,7 @@ def mock_opendata_client() -> Generator[AsyncMock]:
         client.async_get_data.return_value = None
         client.from_name = START
         client.to_name = DESTINATION
-        client.connections = json.loads(load_fixture("connections.json", DOMAIN))[0:3]
+        client.connections = load_json_array_fixture("connections.json", DOMAIN)[0:3]
         yield client
 
 

@@ -3,10 +3,11 @@
 import asyncio
 import dataclasses
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
@@ -89,20 +90,24 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="first", data_schema=probatio.Schema([str])
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
                 return self.async_create_entry(
                     title="Test Entry", data=self.init_data + user_input
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="second", data_schema=probatio.Schema([str])
+            )
 
     form = await manager.async_init(
         "test", context={"init_step": "first"}, data=["INIT-DATA"]
     )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         form = await manager.async_configure(form["flow_id"], "INCORRECT-DATA")
 
     form = await manager.async_configure(form["flow_id"], ["SECOND-DATA"])
@@ -114,9 +119,201 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
     assert result["data"] == ["INIT-DATA", "SECOND-DATA"]
 
 
+async def test_flow_step_nested_step_id(manager: MockFlowManager) -> None:
+    """Test a decorated step that hands off to another step reports the inner id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+        data: list[str] | None = None
+
+        @data_entry_flow.flow_step
+        async def async_step_first(self, user_input=None):
+            if user_input is not None:
+                self.data = user_input
+                return await self.async_step_second()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        @data_entry_flow.flow_step
+        async def async_step_second(self, user_input=None):
+            return await self.async_step_third()
+
+        @data_entry_flow.flow_step
+        async def async_step_third(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title="Test Entry", data=self.data + user_input
+                )
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+    form = await manager.async_configure(form["flow_id"], ["FIRST-DATA"])
+    assert form["step_id"] == "third"
+    form = await manager.async_configure(form["flow_id"], ["THIRD-DATA"])
+    assert form["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert form["data"] == ["FIRST-DATA", "THIRD-DATA"]
+
+
+@pytest.mark.parametrize(
+    ("method", "params"),
+    [
+        pytest.param("async_show_form", {}, id="form"),
+        pytest.param("async_show_menu", {"menu_options": ["first"]}, id="menu"),
+        pytest.param(
+            "async_show_progress",
+            {"progress_action": "task", "progress_task": Mock()},
+            id="progress",
+        ),
+        pytest.param("async_external_step", {"url": "https://example.com"}, id="ext"),
+    ],
+)
+async def test_flow_step_all_result_types(
+    manager: MockFlowManager, method: str, params: dict[str, Any]
+) -> None:
+    """Test every result builder picks up the id of the decorated step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_first(self, user_input=None):
+            return await self.async_step_second()
+
+        @data_entry_flow.flow_step
+        async def async_step_second(self, user_input=None):
+            return getattr(self, method)(**params)
+
+    result = await manager.async_init("test", context={"init_step": "first"})
+    assert result["step_id"] == "second"
+
+
+async def test_flow_step_restores_outer_step_id(manager: MockFlowManager) -> None:
+    """Test a step that resumes after awaiting another step keeps its own id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_init(self, user_input=None):
+            await self.async_step_helper()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        @data_entry_flow.flow_step
+        async def async_step_helper(self, user_input=None):
+            return self.async_abort(reason="unused")
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "init"
+    assert form["flow_id"] in [flow["flow_id"] for flow in manager.async_progress()]
+
+
+async def test_flow_step_concurrent_configure(
+    hass: HomeAssistant, manager: MockFlowManager
+) -> None:
+    """Test overlapping configure calls on one flow keep their own step ids."""
+    confirm_entered = asyncio.Event()
+    release = asyncio.Event()
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_user(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(data_schema=probatio.Schema([str]))
+            if user_input == ["confirm"]:
+                return await self.async_step_confirm()
+            # Suspend here so the other call reaches the confirm step meanwhile
+            await confirm_entered.wait()
+            return self.async_show_form(errors={"base": "invalid"})
+
+        @data_entry_flow.flow_step
+        async def async_step_confirm(self, user_input=None):
+            confirm_entered.set()
+            await release.wait()
+            return self.async_show_form()
+
+    form = await manager.async_init("test", context={"init_step": "user"})
+    erroring = hass.async_create_task(
+        manager.async_configure(form["flow_id"], ["error"])
+    )
+    confirming = hass.async_create_task(
+        manager.async_configure(form["flow_id"], ["confirm"])
+    )
+    assert (await erroring)["step_id"] == "user"
+    release.set()
+    assert (await confirming)["step_id"] == "confirm"
+
+
+async def test_flow_step_does_not_leak_into_nested_flow(
+    manager: MockFlowManager,
+) -> None:
+    """Test a step that starts another flow does not leak its id into it."""
+    inner_results: list[data_entry_flow.FlowResult] = []
+
+    @manager.mock_reg_handler("inner")
+    class InnerFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    @manager.mock_reg_handler("outer")
+    class OuterFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_start(self, user_input=None):
+            inner_results.append(await manager.async_init("inner"))
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    outer = await manager.async_init("outer", context={"init_step": "start"})
+    assert outer["step_id"] == "start"
+    assert inner_results[0]["step_id"] == "init"
+
+
+async def test_flow_step_explicit_step_id_wins(manager: MockFlowManager) -> None:
+    """Test an explicit step_id overrides the decorated step's id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(step_id="other")
+
+        async def async_step_other(self, user_input=None):
+            return self.async_create_entry(title="done", data={})
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "other"
+
+
+async def test_undecorated_step_uses_dispatched_step_id(
+    manager: MockFlowManager,
+) -> None:
+    """Test the manager still fills in the dispatched step for undecorated steps."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_first(self, user_input=None):
+            return await self.async_step_second()
+
+        async def async_step_second(self, user_input=None):
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+
+
+def test_flow_step_rejects_non_step_method() -> None:
+    """Test the decorator requires the async_step_ naming convention."""
+
+    with pytest.raises(TypeError, match="is not an async_step_ method"):
+
+        @data_entry_flow.flow_step
+        async def async_not_a_step(self, user_input=None):
+            return None
+
+
 async def test_show_form(manager: MockFlowManager) -> None:
     """Test that we can show a form."""
-    schema = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
+    schema = probatio.Schema(
+        {probatio.Required("username"): str, probatio.Required("password"): str}
+    )
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -136,7 +333,9 @@ async def test_show_form(manager: MockFlowManager) -> None:
 async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
     """Test that we can show a form with suggested values."""
 
-    def compare_schemas(schema: vol.Schema, expected_schema: vol.Schema) -> None:
+    def compare_schemas(
+        schema: probatio.Schema, expected_schema: probatio.Schema
+    ) -> None:
         """Compare two schemas."""
         assert schema.schema is not expected_schema.schema
 
@@ -148,14 +347,14 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
                 continue
             assert validator == expected_schema.schema[key]
 
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("username"): str,
-            vol.Required("password"): str,
-            vol.Required("section_1"): data_entry_flow.section(
-                vol.Schema(
+            probatio.Required("username"): str,
+            probatio.Required("password"): str,
+            probatio.Required("section_1"): data_entry_flow.section(
+                probatio.Schema(
                     {
-                        vol.Optional("full_name"): str,
+                        probatio.Optional("full_name"): str,
                     }
                 ),
                 {"collapsed": False},
@@ -252,6 +451,30 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert form["reason"] == "True"
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
+
+
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_abort_translation_domain(
+    manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test the abort reason can be translated by another integration."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(
+                reason="some_reason", translation_domain=translation_domain
+            )
+
+    result = await manager.async_init("test")
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "some_reason"
+    assert result.get("translation_domain") == translation_domain
 
 
 async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
@@ -420,7 +643,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if input is not None:
                 return self.async_create_entry(title="init", data=input)
             return self.async_show_form(
-                step_id="init", data_schema=vol.Schema({"count": int})
+                step_id="init", data_schema=probatio.Schema({"count": int})
             )
 
     class FlowManager(data_entry_flow.FlowManager):
@@ -433,7 +656,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
                 if result["data"] is None or result["data"].get("count", 0) <= 1:
                     return flow.async_show_form(
-                        step_id="init", data_schema=vol.Schema({"count": int})
+                        step_id="init", data_schema=probatio.Schema({"count": int})
                     )
                 result["result"] = result["data"]["count"]
             return result
@@ -971,6 +1194,59 @@ async def test_abort_flow_exception_finish_flow(hass: HomeAssistant) -> None:
     assert form["description_placeholders"] == {"placeholder": "yo"}
 
 
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_abort_flow_exception_step_translation_domain(
+    manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test AbortFlow can be translated by another integration from a step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            raise data_entry_flow.AbortFlow(
+                "mock-reason", translation_domain=translation_domain
+            )
+
+    form = await manager.async_init("test")
+
+    assert form["type"] is data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form.get("translation_domain") == translation_domain
+
+
+async def test_abort_flow_exception_finish_flow_translation_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test AbortFlow can be translated by another integration when finishing."""
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, input):
+            return self.async_create_entry(title="init", data=input)
+
+    class FlowManager(data_entry_flow.FlowManager):
+        async def async_create_flow(self, handler_key, *, context, data):
+            return TestFlow()
+
+        async def async_finish_flow(self, flow, result):
+            raise data_entry_flow.AbortFlow(
+                "mock-reason", translation_domain="homeassistant"
+            )
+
+    manager = FlowManager(hass)
+
+    form = await manager.async_init("test")
+
+    assert form["type"] is data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form["translation_domain"] == "homeassistant"
+
+
 async def test_init_unknown_flow(manager: MockFlowManager) -> None:
     """Test that UnknownFlow is raised when async_create_flow returns None."""
 
@@ -1147,7 +1423,9 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="first", data_schema=probatio.Schema([str])
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
@@ -1155,7 +1433,9 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
                     title="Test Entry",
                     data={"init": self.init_data, "user": user_input},
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="second", data_schema=probatio.Schema([str])
+            )
 
     bluetooth_data = BluetoothDiscoveryData("aa:bb:cc:dd:ee:ff")
     wifi_data = WiFiDiscoveryData("host")
@@ -1226,10 +1506,10 @@ def test_section_in_serializer() -> None:
     """Test section with custom_serializer."""
     assert cv.custom_serializer(
         data_entry_flow.section(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional("option_1", default=False): bool,
-                    vol.Required("option_2"): int,
+                    probatio.Optional("option_1", default=False): bool,
+                    probatio.Required("option_2"): int,
                 }
             ),
             {"collapsed": False},
@@ -1257,13 +1537,13 @@ def test_nested_section_in_serializer() -> None:
     ):
         cv.custom_serializer(
             data_entry_flow.section(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required("section_1"): data_entry_flow.section(
-                            vol.Schema(
+                        probatio.Required("section_1"): data_entry_flow.section(
+                            probatio.Schema(
                                 {
-                                    vol.Optional("option_1", default=False): bool,
-                                    vol.Required("option_2"): int,
+                                    probatio.Optional("option_1", default=False): bool,
+                                    probatio.Required("option_2"): int,
                                 }
                             )
                         )

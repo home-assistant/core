@@ -3,8 +3,8 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import time_pattern
@@ -370,5 +370,5 @@ async def test_invalid_schemas() -> None:
     )
 
     for value in schemas:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             time_pattern.TRIGGER_SCHEMA(value)

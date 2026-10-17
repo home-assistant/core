@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 from wmspro.webcontrol import WebControlPro
 
 from homeassistant.config_entries import SOURCE_DHCP, ConfigFlow, ConfigFlowResult
@@ -18,9 +18,9 @@ from .const import DOMAIN, SUGGESTED_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
