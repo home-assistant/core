@@ -50,6 +50,9 @@ def mock_tv():
     tv.ambilight_current_configuration = None
     tv.ambilight_styles = {}
     tv.ambilight_cached = {}
+    tv.settings = None
+    tv.settings_version = 0
+    tv.strings = {}
 
     with (
         patch(
