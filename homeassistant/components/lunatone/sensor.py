@@ -1,5 +1,6 @@
 """Platform for Lunatone sensor integration."""
 
+import contextlib
 from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
@@ -136,6 +137,7 @@ class LunatoneSensor(
         self._attr_unique_id = (
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
+
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry_unique_id)},
         )
@@ -143,6 +145,15 @@ class LunatoneSensor(
             self.sensor.data.address_type == SensorAddressType.DALI
             and self.sensor.data.dali_sensor_address
         ):
+            extra_device_info: dict = {}
+            with contextlib.suppress(ValueError):
+                extra_device_info["via_device_id"] = (
+                    dr.async_get_device_id_by_identifier(
+                        self.coordinator.hass,
+                        (DOMAIN, str(self._config_entry_unique_id)),
+                        config_entry_id=self.coordinator.config_entry.entry_id,
+                    )
+                )
             device_info = DeviceInfo(
                 identifiers={
                     (
@@ -157,11 +168,7 @@ class LunatoneSensor(
                     "line_id": str(self.sensor.data.dali_sensor_address.line),
                     "dali_address": str(self.sensor.data.dali_sensor_address.address),
                 },
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    self.coordinator.hass,
-                    (DOMAIN, str(self._config_entry_unique_id)),
-                    config_entry_id=self.coordinator.config_entry.entry_id,
-                ),
+                **extra_device_info,
             )
         self._attr_device_info = device_info
 
@@ -225,6 +232,9 @@ class LunatoneDALILineStatusSensor(
     @override
     def native_value(self) -> str:
         """Return the value of the sensor."""
-        return DALI_LINE_STATUS_SENSOR_MAPPING[
-            self.coordinator.data.lines[self._line_id].line_status
-        ]
+        line_data = self.coordinator.data.lines.get(self._line_id)
+        return (
+            DALI_LINE_STATUS_SENSOR_MAPPING[line_data.line_status]
+            if line_data is not None
+            else "not_reachable"
+        )

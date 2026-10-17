@@ -99,17 +99,20 @@ class LunatoneLight(
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.unique_id
+        extra_device_info: dict = {}
+        with contextlib.suppress(ValueError):
+            extra_device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{self._config_entry_unique_id}-line{self._line_id}",
+                ),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            )
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=self._device.data.name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
-                (
-                    DOMAIN,
-                    f"{self._config_entry_unique_id}-line{self._device.data.line}",
-                ),
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
+            **extra_device_info,
         )
 
     @property
