@@ -362,6 +362,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/daikin_onecta/ @jwillemsen
+/tests/components/daikin_onecta/ @jwillemsen
 /homeassistant/components/data_grand_lyon/ @Crocmagnon
 /tests/components/data_grand_lyon/ @Crocmagnon
 /homeassistant/components/date/ @home-assistant/core
