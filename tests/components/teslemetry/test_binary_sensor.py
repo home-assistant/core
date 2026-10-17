@@ -1,10 +1,15 @@
 """Test the Teslemetry binary sensor platform."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiopowerwall import PowerwallConnectionError
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 from habluetooth import CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 import pytest
@@ -14,9 +19,20 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
-from homeassistant.components.teslemetry.const import DOMAIN, SUBENTRY_TYPE_VEHICLE
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.const import (
+    CONF_SITE_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_ENERGY_SITE,
+    SUBENTRY_TYPE_VEHICLE,
+)
+from homeassistant.components.teslemetry.coordinator import (
+    LOCAL_STATUS_INTERVAL,
+    VEHICLE_INTERVAL,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -31,18 +47,41 @@ from . import (
     assert_entities,
     assert_entities_alt,
     mock_ble_config_entry,
+    mock_config_entry,
     setup_ble_platform,
     setup_platform,
 )
-from .const import ADDRESS, METADATA, VEHICLE_DATA_ALT, VIN
+from .const import ADDRESS, METADATA, POWERWALL_STATUS, VEHICLE_DATA_ALT, VIN
 
-from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
 from tests.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement,
     patch_all_discovered_devices,
     patch_bluetooth_time,
+)
+
+SITE_ID = 123456
+LOCAL_STATUS_KEYS = (
+    "contactor_closed",
+    "escan_firmware_updating",
+    "grid_ok",
+    "microgrid_ok",
+    "pw3can_firmware_updating",
+    "site_manager_running",
+    "site_running",
+)
+
+# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# that build one need a real (if undersized, for speed) RSA key rather than
+# arbitrary bytes.
+_TEST_RSA_KEY_PEM = rsa.generate_private_key(
+    public_exponent=65537, key_size=1024
+).private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.TraditionalOpenSSL,
+    encryption_algorithm=serialization.NoEncryption(),
 )
 
 
@@ -440,3 +479,186 @@ async def test_gps_state_requires_location_scope(
         )
         is not None
     ) is expected
+
+
+async def _setup_paired(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the binary sensor platform with the energy site paired locally."""
+    entry = mock_config_entry()
+    entry = MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                unique_id=str(SITE_ID),
+                title="Energy Site",
+                data={
+                    CONF_SITE_ID: SITE_ID,
+                    CONF_HOST: "192.168.91.1",
+                    CONF_PASSWORD: "abcde",
+                },
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
+
+
+def _local_entity_ids(entity_registry: er.EntityRegistry) -> dict[str, str]:
+    """Return the entity ids of the local status binary sensors by key."""
+    return {
+        key: entity_id
+        for key in LOCAL_STATUS_KEYS
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{SITE_ID}-{key}"
+            )
+        )
+    }
+
+
+def _without(*path: str) -> dict[str, Any]:
+    """Return the gateway status without the key at a path."""
+    data = deepcopy(POWERWALL_STATUS)
+    parent = data
+    for key in path[:-1]:
+        parent = parent[key]
+    del parent[path[-1]]
+    return data
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_binary_sensors(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a paired energy site creates the local status binary sensors."""
+    await _setup_paired(hass)
+
+    entity_ids = _local_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert entity_registry.async_get(entity_id) == snapshot(
+            name=f"{entity_id}-entry"
+        )
+        assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+
+async def test_local_binary_sensors_unpaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+) -> None:
+    """Test an energy site without local pairing creates no local sensors."""
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    mock_powerwall_status.assert_not_called()
+    assert not _local_entity_ids(entity_registry)
+
+
+@pytest.mark.parametrize(
+    ("status", "missing"),
+    [
+        pytest.param(_without("pw3Can"), "pw3can_firmware_updating", id="pw3can"),
+        pytest.param(
+            _without("control", "siteShutdown", "isShutDown"),
+            "site_running",
+            id="site_shutdown",
+        ),
+    ],
+)
+async def test_local_binary_sensors_missing_signal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    status: dict[str, Any],
+    missing: str,
+) -> None:
+    """Test a signal absent from the first refresh skips its sensor."""
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = status
+
+    await _setup_paired(hass)
+
+    assert _local_entity_ids(entity_registry).keys() == set(LOCAL_STATUS_KEYS) - {
+        missing
+    }
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_binary_sensors_first_refresh_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors from a failed first local refresh recover without a reload."""
+    mock_powerwall_status.side_effect = PowerwallConnectionError("offline")
+
+    entry = await _setup_paired(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    entity_ids = _local_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = POWERWALL_STATUS
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_ids["grid_ok"]))
+    assert state.state == STATE_ON
+
+
+async def test_local_binary_sensors_poll_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed local poll makes the sensors unavailable until it recovers."""
+    await _setup_paired(hass)
+    entity_id = _local_entity_ids(entity_registry)["grid_ok"]
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    mock_powerwall_status.side_effect = PowerwallConnectionError("offline")
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    status = deepcopy(POWERWALL_STATUS)
+    status["control"]["islanding"]["gridOK"] = False
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = status
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
