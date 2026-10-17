@@ -444,6 +444,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         err.message if isinstance(err, anthropic.APIError) else str(err)
                     )
 
+            if not errors and self.model_info.lifecycle == "retired":
+                errors[CONF_CHAT_MODEL] = "model_retired"
+
             if not errors:
                 return await self.async_step_model()
 
@@ -622,6 +625,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 value=model_alias(model_info.id),
             )
             for model_info in coordinator.data or []
+            if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
+            != "retired"
         ]
 
     async def _get_location_data(self) -> dict[str, str]:
