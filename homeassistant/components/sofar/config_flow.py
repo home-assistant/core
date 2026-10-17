@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
     DOMAIN,
+    HAS_FAULT_LOG,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -197,6 +198,8 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
             if device is not None:
                 await self.async_set_unique_id(probed)
                 self._abort_if_unique_id_mismatch()
+                if entry.data.get(HAS_FAULT_LOG):
+                    data[HAS_FAULT_LOG] = True
                 return self.async_update_reload_and_abort(entry, data=data)
 
         suggested = user_input or (

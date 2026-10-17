@@ -20,6 +20,7 @@ from homeassistant.components.sofar.const import (
     CONF_UNIT_ID,
     DEFAULT_NAME,
     DOMAIN,
+    HAS_FAULT_LOG,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -315,11 +316,20 @@ async def _start_reconfigure(
     return result
 
 
+@pytest.mark.parametrize(
+    "stored",
+    [
+        pytest.param({}, id="no_fault_log_stored"),
+        pytest.param({HAS_FAULT_LOG: True}, id="fault_log_stored"),
+    ],
+)
 async def test_reconfigure_updates_the_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, stored: dict[str, Any]
 ) -> None:
-    """Test reconfigure updates the entry and reloads it."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA)
+    """Test reconfigure updates the entry, keeping a known fault log."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data={**MOCK_ENTRY_DATA, **stored}
+    )
     entry.add_to_hass(hass)
     result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
 
@@ -333,7 +343,7 @@ async def test_reconfigure_updates_the_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {CONF_TYPE: TYPE_TCP, **_NEW_TCP_INPUT}
+    assert entry.data == {CONF_TYPE: TYPE_TCP, **_NEW_TCP_INPUT, **stored}
 
 
 async def test_reconfigure_offers_the_current_settings(
@@ -553,7 +563,7 @@ async def test_reconfigure_new_line_settings_silent_inverter(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "inverter_silent"}
-    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.data == {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True}
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 
@@ -589,7 +599,7 @@ async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
-    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.data == {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True}
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 
