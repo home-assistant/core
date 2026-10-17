@@ -1,6 +1,10 @@
 {
   "domain": "unifiprotect",
   "name": "UniFi Protect",
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@RaHehl"],
   "config_flow": true,
   "dependencies": ["http", "repairs", "unifi_discovery"],

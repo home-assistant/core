@@ -1,6 +1,7 @@
 {
   "domain": "onewire",
   "name": "1-Wire",
+  "categories": ["diy_makers.boards_hardware", "sensors.temperature_humidity"],
   "codeowners": ["@garbled1", "@epenet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onewire",

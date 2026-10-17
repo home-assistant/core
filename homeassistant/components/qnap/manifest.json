@@ -1,6 +1,7 @@
 {
   "domain": "qnap",
   "name": "QNAP",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@disforw"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/qnap",
