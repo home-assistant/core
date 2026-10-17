@@ -3,10 +3,11 @@
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+from typing import Any
 
+from aiohttp import ClientError, ClientResponseError
 from pydactyl import AsyncPterodactylClient
 from pydactyl.exceptions import BadRequestError, PterodactylApiError
-from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.core import HomeAssistant
 
@@ -71,7 +72,7 @@ class PterodactylAPI:
         self.pterodactyl = None
         self.game_servers = []
 
-    async def get_game_servers(self) -> list[str]:
+    async def get_game_servers(self) -> list[dict[str, Any]]:
         """Get all game servers."""
         paginated_response = await self.pterodactyl.client.servers.list_servers()  # type: ignore[union-attr]
 
@@ -83,18 +84,18 @@ class PterodactylAPI:
 
         try:
             game_servers = await self.get_game_servers()
-        except (
-            BadRequestError,
-            PterodactylApiError,
-            ConnectionError,
-            StopIteration,
-        ) as error:
-            raise PterodactylConnectionError(error) from error
-        except HTTPError as error:
-            if error.response.status_code == 401:
+        except ClientResponseError as error:
+            if error.status == 401:
                 raise PterodactylAuthorizationError(error) from error
 
             raise PterodactylConnectionError(error) from error
+        except (
+            BadRequestError,
+            PterodactylApiError,
+            ClientError,
+        ) as error:
+            raise PterodactylConnectionError(error) from error
+
         else:
             for game_server in game_servers:
                 self.game_servers.append(
@@ -132,12 +133,12 @@ class PterodactylAPI:
         for game_server in self.game_servers:
             try:
                 server, utilization = await self.get_server_data(game_server)
-            except (BadRequestError, PterodactylApiError, ConnectionError) as error:
-                raise PterodactylConnectionError(error) from error
-            except HTTPError as error:
-                if error.response.status_code == 401:
+            except ClientResponseError as error:
+                if error.status == 401:
                     raise PterodactylAuthorizationError(error) from error
 
+                raise PterodactylConnectionError(error) from error
+            except (BadRequestError, PterodactylApiError, ClientError) as error:
                 raise PterodactylConnectionError(error) from error
             else:
                 name = server["name"]
@@ -192,10 +193,10 @@ class PterodactylAPI:
                 identifier,
                 command,
             )
-        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
-            raise PterodactylConnectionError(error) from error
-        except HTTPError as error:
-            if error.response.status_code == 401:
+        except ClientResponseError as error:
+            if error.status == 401:
                 raise PterodactylAuthorizationError(error) from error
 
+            raise PterodactylConnectionError(error) from error
+        except (BadRequestError, PterodactylApiError, ClientError) as error:
             raise PterodactylConnectionError(error) from error
