@@ -1,6 +1,6 @@
 """The binary_sensor tests for the august platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -382,7 +382,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -392,7 +392,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
 
     pubnub.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -402,7 +402,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
 
     # Ensure pubnub status is always preserved
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
     await hass.async_block_till_done()
 
     assert (
@@ -428,7 +428,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
     await hass.async_block_till_done()
     assert (
         states.get(

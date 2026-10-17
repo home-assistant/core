@@ -236,5 +236,5 @@
   })
 # ---
 # name: test_diagnostics_without_a_rate_limit
-  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character: line 1 column 1 (char 0)"
+  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character, expected a JSON value: line 1 column 1 (char 0)"
 # ---

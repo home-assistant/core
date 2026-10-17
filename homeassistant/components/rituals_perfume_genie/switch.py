@@ -7,6 +7,7 @@ from typing import Any, override
 from ritualsgenie import RitualsGenie, RitualsGenieHub
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,6 +21,7 @@ PARALLEL_UPDATES = 1
 class RitualsSwitchEntityDescription(SwitchEntityDescription):
     """Class describing Rituals switch entities."""
 
+    has_fn: Callable[[RitualsGenieHub], bool] = lambda _: True
     is_on_fn: Callable[[RitualsGenieHub], bool | None]
     turn_on_fn: Callable[[RitualsGenie, str], Awaitable[None]]
     turn_off_fn: Callable[[RitualsGenie, str], Awaitable[None]]
@@ -34,6 +36,19 @@ ENTITY_DESCRIPTIONS = (
         turn_on_fn=lambda client, hub_hash: client.turn_on(hub_hash),
         turn_off_fn=lambda client, hub_hash: client.turn_off(hub_hash),
     ),
+    RitualsSwitchEntityDescription(
+        key="standby_led",
+        translation_key="standby_led",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda hub: hub.supports_standby_led,
+        is_on_fn=lambda hub: hub.standby_led,
+        turn_on_fn=lambda client, hub_hash: client.set_standby_led(
+            hub_hash, enabled=True
+        ),
+        turn_off_fn=lambda client, hub_hash: client.set_standby_led(
+            hub_hash, enabled=False
+        ),
+    ),
 )
 
 
@@ -47,8 +62,9 @@ async def async_setup_entry(
 
     async_add_entities(
         RitualsSwitchEntity(hubs, hublot, description)
-        for hublot in hubs.data
+        for hublot, hub in hubs.data.items()
         for description in ENTITY_DESCRIPTIONS
+        if description.has_fn(hub)
     )
 
 

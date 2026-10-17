@@ -24,7 +24,8 @@ requirements_test.txt @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
-/pylint/ @home-assistant/core
+/packages/pylint-home-assistant/ @home-assistant/core
+/packages/pytest-home-assistant/ @home-assistant/core
 /script/ @home-assistant/core
 
 # Home Assistant Supervisor
@@ -370,6 +371,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
+/homeassistant/components/debug_console/ @frenck
+/tests/components/debug_console/ @frenck
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -1263,6 +1266,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/nanoleaf/ @milanmeu @joostlek @loebi-ch @JaspervRijbroek @jonathanrobichaud4
 /homeassistant/components/nasweb/ @nasWebio
 /tests/components/nasweb/ @nasWebio
+/homeassistant/components/nature_remo/ @tnj
+/tests/components/nature_remo/ @tnj
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /homeassistant/components/neopool/ @svasek

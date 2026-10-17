@@ -1,6 +1,6 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -134,7 +134,7 @@ async def test_function_call(
                 data={
                     "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                    "speech_slots": {"time": dt.time(16, 24, 17, 813343)},
                     "data": {"success": [], "failed": []},
                 }
             ),

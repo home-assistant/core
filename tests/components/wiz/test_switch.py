@@ -1,6 +1,6 @@
 """Tests for switch platform."""
 
-import datetime
+import datetime as dt
 
 import pytest
 from pywizlight.exceptions import WizLightConnectionError
@@ -80,7 +80,7 @@ async def test_update_fails(
 
     switch.updateState.side_effect = OSError
 
-    async_fire_time_changed(hass, utcnow() + datetime.timedelta(seconds=15))
+    async_fire_time_changed(hass, utcnow() + dt.timedelta(seconds=15))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
