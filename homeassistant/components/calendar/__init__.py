@@ -59,12 +59,7 @@ from .const import (
     CalendarEntityStateAttribute,
     CalendarEventStatus,
 )
-from .entity import (
-    CALENDAR_EVENT_SCHEMA,
-    CalendarEntity,
-    CalendarEntityDescription,
-    CalendarEvent,
-)
+from .entity import CalendarEntity, CalendarEntityDescription, CalendarEvent
 from .helper import (
     MIN_NEW_EVENT_DURATION,
     api_event_dict_factory,
@@ -106,7 +101,6 @@ WEBSOCKET_EVENT_SCHEMA = probatio.Schema(
 
 
 __all__ = [
-    "CALENDAR_EVENT_SCHEMA",
     "CREATE_EVENT_SCHEMA",
     "CREATE_EVENT_SERVICE",
     "DOMAIN",

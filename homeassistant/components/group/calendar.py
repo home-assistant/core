@@ -1,17 +1,14 @@
 """Platform allowing several calendar entities to be grouped into one calendar."""
 
+import asyncio
 import datetime as dt
-from typing import Any, cast, override
+from typing import Any, override
 
 import probatio
 
 from homeassistant.components.calendar import (
-    CALENDAR_EVENT_SCHEMA,
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
-    SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEntityStateAttribute,
     CalendarEvent,
@@ -24,12 +21,20 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateReportedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.event import async_track_state_report_event
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -144,6 +149,22 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         self._attr_unique_id = unique_id
         self._member_events: list[CalendarEvent] = []
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        @callback
+        def async_member_reported(_: Event[EventStateReportedData]) -> None:
+            """Refresh event subscribers when a member rewrites an unchanged state."""
+            self.async_update_event_listeners()
+
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass, self._entity_ids, async_member_reported
+            )
+        )
+
     @property
     @override
     def event(self) -> CalendarEvent | None:
@@ -163,30 +184,44 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events of all members within a datetime range."""
-        response = cast(
-            dict[str, dict[str, list[dict[str, str]]]],
-            await hass.services.async_call(
-                CALENDAR_DOMAIN,
-                SERVICE_GET_EVENTS,
-                {
-                    ATTR_ENTITY_ID: self._entity_ids,
-                    EVENT_START_DATETIME: start_date,
-                    EVENT_END_DATETIME: end_date,
-                },
-                blocking=True,
-                context=self._context,
-                return_response=True,
-            ),
+        # Members are queried directly: calling the get_events action would
+        # make polling members refresh and write their state on every fetch.
+        component: EntityComponent[CalendarEntity] = hass.data[CALENDAR_DOMAIN]
+        calendars = self.async_member_calendars(component, {self.entity_id})
+        member_events = await asyncio.gather(
+            *(
+                calendar.async_get_events(hass, start_date, end_date)
+                for calendar in calendars
+            )
         )
-        events = [
-            CalendarEvent(**CALENDAR_EVENT_SCHEMA(event))
-            for member_response in response.values()
-            for event in member_response["events"]
-        ]
+        events = [event for events in member_events for event in events]
         return sorted(
             events,
             key=lambda event: (event.start_datetime_local, event.end_datetime_local),
         )
+
+    @callback
+    def async_member_calendars(
+        self, component: EntityComponent[CalendarEntity], visited: set[str]
+    ) -> list[CalendarEntity]:
+        """Return the available member calendars, expanding nested groups.
+
+        Each calendar is returned once, which also breaks membership cycles.
+        """
+        calendars: list[CalendarEntity] = []
+        for entity_id in self._entity_ids:
+            if entity_id in visited:
+                continue
+            visited.add(entity_id)
+            if (entity := component.get_entity(entity_id)) is None or not (
+                entity.available
+            ):
+                continue
+            if isinstance(entity, CalendarGroup):
+                calendars.extend(entity.async_member_calendars(component, visited))
+            else:
+                calendars.append(entity)
+        return calendars
 
     @callback
     @override

@@ -1,17 +1,19 @@
 """The tests for the group calendar platform."""
 
 import datetime as dt
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEvent,
 )
-from homeassistant.components.group import DOMAIN
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,7 +21,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockPlatform, async_fire_time_changed, mock_platform
+from tests.common import (
+    MockPlatform,
+    async_fire_time_changed,
+    get_fixture_path,
+    mock_platform,
+)
+from tests.typing import WebSocketGenerator
 
 GROUP_ENTITY_ID = "calendar.family"
 NOW = dt.datetime(2026, 10, 17, 12, 0, tzinfo=dt.UTC)
@@ -41,6 +49,28 @@ HOME_ATTRIBUTES = {
     "description": "With friends",
 }
 
+WORK_EVENTS = [
+    CalendarEvent(
+        start=NOW - dt.timedelta(hours=1),
+        end=NOW + dt.timedelta(hours=1),
+        summary="Meeting",
+        location="Office",
+    ),
+]
+HOME_EVENTS = [
+    CalendarEvent(
+        start=NOW.date(),
+        end=NOW.date() + dt.timedelta(days=1),
+        summary="Holiday",
+    ),
+    CalendarEvent(
+        start=NOW + dt.timedelta(hours=6),
+        end=NOW + dt.timedelta(hours=8),
+        summary="Dinner",
+        description="With friends",
+    ),
+]
+
 
 class MockCalendarEntity(CalendarEntity):
     """Calendar entity serving a fixed list of events."""
@@ -49,6 +79,11 @@ class MockCalendarEntity(CalendarEntity):
         """Initialize the calendar."""
         self._attr_name = name
         self._events = events
+        self.update_count = 0
+
+    async def async_update(self) -> None:
+        """Count polling updates."""
+        self.update_count += 1
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -211,36 +246,12 @@ async def test_event_ends(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
     assert state.attributes["message"] == "Dinner"
 
 
-async def test_get_events(hass: HomeAssistant) -> None:
-    """Test the group returns the events of all members."""
+@pytest.fixture
+def calendar_platform(hass: HomeAssistant) -> list[MockCalendarEntity]:
+    """Register a calendar platform providing calendar.work and calendar.home."""
     entities = [
-        MockCalendarEntity(
-            "Work",
-            [
-                CalendarEvent(
-                    start=NOW - dt.timedelta(hours=1),
-                    end=NOW + dt.timedelta(hours=1),
-                    summary="Meeting",
-                    location="Office",
-                ),
-            ],
-        ),
-        MockCalendarEntity(
-            "Home",
-            [
-                CalendarEvent(
-                    start=NOW.date(),
-                    end=NOW.date() + dt.timedelta(days=1),
-                    summary="Holiday",
-                ),
-                CalendarEvent(
-                    start=NOW + dt.timedelta(hours=6),
-                    end=NOW + dt.timedelta(hours=8),
-                    summary="Dinner",
-                    description="With friends",
-                ),
-            ],
-        ),
+        MockCalendarEntity("Work", list(WORK_EVENTS)),
+        MockCalendarEntity("Home", list(HOME_EVENTS)),
     ]
 
     async def async_setup_platform(
@@ -256,6 +267,13 @@ async def test_get_events(hass: HomeAssistant) -> None:
         f"test.{CALENDAR_DOMAIN}",
         MockPlatform(async_setup_platform=async_setup_platform),
     )
+    return entities
+
+
+async def test_get_events(
+    hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
+) -> None:
+    """Test the group returns the events of all members."""
     await _setup_group(hass, [{"platform": "test"}])
 
     state = hass.states.get(GROUP_ENTITY_ID)
@@ -297,3 +315,143 @@ async def test_get_events(hass: HomeAssistant) -> None:
             ]
         }
     }
+
+    # Members are not refreshed by the group fetching their events
+    assert [entity.update_count for entity in calendar_platform] == [0, 0]
+
+
+@pytest.mark.parametrize(
+    ("groups", "expected_summaries"),
+    [
+        pytest.param(
+            [{"name": "Family", "entities": ["calendar.work", "calendar.family"]}],
+            ["Meeting"],
+            id="self_reference",
+        ),
+        pytest.param(
+            [
+                {"name": "Family", "entities": ["calendar.work", "calendar.friends"]},
+                {"name": "Friends", "entities": ["calendar.home", "calendar.family"]},
+            ],
+            ["Holiday", "Meeting", "Dinner"],
+            id="two_group_cycle",
+        ),
+        pytest.param(
+            [
+                {"name": "Family", "entities": ["calendar.work", "calendar.friends"]},
+                {"name": "Friends", "entities": ["calendar.work"]},
+            ],
+            ["Meeting"],
+            id="shared_member",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("calendar_platform")
+async def test_get_events_nested_groups(
+    hass: HomeAssistant,
+    groups: list[ConfigType],
+    expected_summaries: list[str],
+) -> None:
+    """Test nested groups fetch each calendar once, even with membership cycles."""
+    await async_setup_component(
+        hass,
+        CALENDAR_DOMAIN,
+        {
+            CALENDAR_DOMAIN: [
+                {"platform": "test"},
+                *({"platform": DOMAIN, **group} for group in groups),
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: GROUP_ENTITY_ID,
+            "start_date_time": dt_util.start_of_local_day(),
+            "duration": {"days": 1},
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert [
+        event["summary"] for event in response[GROUP_ENTITY_ID]["events"]
+    ] == expected_summaries
+
+
+async def test_reload(hass: HomeAssistant) -> None:
+    """Test reloading YAML calendar groups."""
+    await async_setup_component(
+        hass,
+        CALENDAR_DOMAIN,
+        {
+            CALENDAR_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["calendar.work", "calendar.home"],
+                "name": "Family",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(GROUP_ENTITY_ID) is not None
+
+    yaml_path = get_fixture_path("calendar_configuration.yaml", DOMAIN)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(GROUP_ENTITY_ID) is None
+    assert hass.states.get("calendar.friends") is not None
+
+
+async def test_subscribe_updates_on_member_report(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calendar_platform: list[MockCalendarEntity],
+) -> None:
+    """Test subscribers are updated when a member refreshes without a state change."""
+    await _setup_group(hass, [{"platform": "test"}])
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": GROUP_ENTITY_ID,
+            "start": dt_util.start_of_local_day().isoformat(),
+            "end": (dt_util.start_of_local_day() + dt.timedelta(days=1)).isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert len(msg["event"]["events"]) == 3
+
+    # A later event doesn't change the member's current event, so its state
+    # write is reported instead of changed
+    home = calendar_platform[1]
+    home._events.append(
+        CalendarEvent(
+            start=NOW + dt.timedelta(hours=9),
+            end=NOW + dt.timedelta(hours=10),
+            summary="Movie",
+        )
+    )
+    home.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert [event["summary"] for event in msg["event"]["events"]] == [
+        "Holiday",
+        "Meeting",
+        "Dinner",
+        "Movie",
+    ]
