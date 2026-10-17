@@ -13,6 +13,7 @@ from homeassistant.components.playstation_network.config_flow import (
 from homeassistant.components.playstation_network.const import (
     CONF_ACCOUNT_ID,
     CONF_NPSSO,
+    CONF_TOKEN_RESPONSE,
     DOMAIN,
 )
 from homeassistant.config_entries import (
@@ -25,7 +26,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import NPSSO_TOKEN, NPSSO_TOKEN_INVALID_JSON, PSN_ID
+from .conftest import NPSSO_TOKEN, NPSSO_TOKEN_INVALID_JSON, PSN_ID, TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry
 
@@ -49,6 +50,7 @@ async def test_manual_config(hass: HomeAssistant, mock_psnawpapi: MagicMock) -> 
     assert result["result"].unique_id == PSN_ID
     assert result["data"] == {
         CONF_NPSSO: "TEST_NPSSO_TOKEN",
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
     }
 
 
@@ -160,6 +162,7 @@ async def test_form_failures(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_NPSSO: NPSSO_TOKEN,
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
     }
 
 
@@ -193,6 +196,7 @@ async def test_parse_npsso_token_failures(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_NPSSO: NPSSO_TOKEN,
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
     }
 
 
@@ -220,7 +224,10 @@ async def test_flow_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert config_entry.data[CONF_NPSSO] == "NEW_NPSSO_TOKEN"
+    assert config_entry.data == {
+        CONF_NPSSO: "NEW_NPSSO_TOKEN",
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
+    }
 
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -275,7 +282,10 @@ async def test_flow_reauth_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert config_entry.data[CONF_NPSSO] == "NEW_NPSSO_TOKEN"
+    assert config_entry.data == {
+        CONF_NPSSO: "NEW_NPSSO_TOKEN",
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
+    }
 
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -320,7 +330,10 @@ async def test_flow_reauth_token_error(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert config_entry.data[CONF_NPSSO] == "NEW_NPSSO_TOKEN"
+    assert config_entry.data == {
+        CONF_NPSSO: "NEW_NPSSO_TOKEN",
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
+    }
 
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -378,7 +391,10 @@ async def test_flow_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    assert config_entry.data[CONF_NPSSO] == "NEW_NPSSO_TOKEN"
+    assert config_entry.data == {
+        CONF_NPSSO: "NEW_NPSSO_TOKEN",
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
+    }
 
     assert len(hass.config_entries.async_entries()) == 1
 
