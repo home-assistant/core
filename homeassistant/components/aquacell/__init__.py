@@ -25,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
     coordinator = AquacellCoordinator(hass, entry, aquacell_api)
 
     await coordinator.async_config_entry_first_refresh()
+    # Only at setup, as sensors for new softeners are only created at setup
+    coordinator.async_remove_stale_devices()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

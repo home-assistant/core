@@ -1,5 +1,6 @@
 """Test the Aquacell init module."""
 
+from dataclasses import replace
 import time
 from unittest.mock import AsyncMock
 
@@ -165,15 +166,38 @@ async def test_stale_device_removed(
 
 async def test_devices_kept_when_no_softeners_returned(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_aquacell_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test devices are kept when the API returns no softeners."""
-    await setup_integration(hass, mock_config_entry)
-
+    mock_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, DSN)},
+    )
     mock_aquacell_api.get_all_softeners.return_value = []
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+
+
+async def test_devices_kept_while_running(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_aquacell_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices are only removed at setup, not on later updates."""
+    await setup_integration(hass, mock_config_entry)
+    softener = mock_aquacell_api.get_all_softeners.return_value[0]
+    mock_aquacell_api.get_all_softeners.return_value = [
+        replace(softener, dsn="NEW-DSN")
+    ]
+
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -181,3 +205,4 @@ async def test_devices_kept_when_no_softeners_returned(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, DSN), mock_config_entry.entry_id
     )
+

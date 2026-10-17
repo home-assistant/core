@@ -14,7 +14,7 @@ from aioaquacell import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -87,14 +87,14 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
             except (AquacellApiException, TimeoutError) as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        data = {softener.dsn: softener for softener in softeners}
-        # An empty list is more likely a cloud error than all softeners being removed
-        if data:
-            self._remove_stale_devices(data)
-        return data
+        return {softener.dsn: softener for softener in softeners}
 
-    def _remove_stale_devices(self, softeners: dict[str, Softener]) -> None:
+    @callback
+    def async_remove_stale_devices(self) -> None:
         """Remove devices of softeners that are no longer returned by the API."""
+        # An empty list is more likely a cloud error than all softeners being removed
+        if not (softeners := self.data):
+            return
         device_registry = dr.async_get(self.hass)
         for device in dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
