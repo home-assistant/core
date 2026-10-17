@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'options': dict({
+      'api_key': '**REDACTED**',
+      'main_user': 'testaccount1',
+      'users': list([
+        'testaccount1',
+        'testaccount2',
+      ]),
+    }),
+    'users': dict({
+      'testaccount1': dict({
+        'image': 'image',
+        'last_track': 'artist - title',
+        'now_playing': 'artist - title',
+        'play_count': 1,
+        'top_track': 'artist - title',
+      }),
+      'testaccount2': dict({
+        'image': 'image',
+        'last_track': 'artist - title',
+        'now_playing': 'artist - title',
+        'play_count': 1,
+        'top_track': 'artist - title',
+      }),
+    }),
+  })
+# ---
