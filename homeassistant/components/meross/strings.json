@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_bluetooth_adapter": "No Bluetooth adapter or proxy is configured in Home Assistant",
+      "no_devices_found": "No Meross Bluetooth devices found nearby",
+      "not_supported": "Device not supported"
+    },
+    "error": {
+      "identify_failed": "Could not connect to send Identify. Bring the device closer and try again."
+    },
+    "flow_title": "{name} ({address})",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Do you want to set up {name} ({address})?",
+        "title": "Meross Bluetooth"
+      },
+      "user": {
+        "data": {
+          "address": "Device"
+        },
+        "data_description": {
+          "address": "Select the Meross Bluetooth device to set up."
+        },
+        "description": "Choose a discovered Meross Bluetooth device nearby.",
+        "title": "Meross Bluetooth"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "vpd": {
+        "name": "Vapor pressure deficit"
+      }
+    }
+  }
+}
