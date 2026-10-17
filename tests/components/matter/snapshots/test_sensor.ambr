@@ -31633,9 +31633,6 @@
     'name': None,
     'object_id_base': 'Power factor',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
@@ -34982,9 +34979,6 @@
     'name': None,
     'object_id_base': 'Power factor',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,

@@ -1181,7 +1181,6 @@ DISCOVERY_SCHEMAS = [
             translation_key="power_factor",
             device_class=SensorDeviceClass.POWER_FACTOR,
             entity_category=EntityCategory.DIAGNOSTIC,
-            suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
             # PowerFactor is reported as -10000 to 10000, representing -1 to 1
             device_to_ha=lambda x: x / 10000,
