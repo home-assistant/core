@@ -7338,7 +7338,7 @@
     "tank_utility": {
       "name": "Tank Utility",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "tankerkoenig": {

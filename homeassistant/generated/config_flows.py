@@ -802,6 +802,7 @@ FLOWS = {
         "tailscale",
         "tailwind",
         "tami4",
+        "tank_utility",
         "tankerkoenig",
         "tasmota",
         "tautulli",

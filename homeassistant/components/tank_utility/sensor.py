@@ -1,118 +1,152 @@
-"""Support for the Tank Utility propane monitor."""
+"""Support for Tank Utility propane monitor sensors."""
 
-import datetime as dt
-import logging
+from typing import Any, override
 
 import probatio
-import requests
-from tank_utility import auth, device as tank_monitor
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = dt.timedelta(hours=1)
+from .const import DOMAIN, SENSOR_ATTRS, SENSOR_ROUNDING_PRECISION, SENSOR_TYPE
+from .coordinator import TankUtilityConfigEntry, TankUtilityDataUpdateCoordinator
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_EMAIL): cv.string,
         probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
-        probatio.Required(CONF_DEVICES): probatio.All(
+        probatio.Optional(CONF_DEVICES): probatio.All(
             probatio.EnsureList(), probatio.NonEmpty()
         ),
     }
 )
 
-SENSOR_TYPE = "tank"
-SENSOR_ROUNDING_PRECISION = 1
-SENSOR_ATTRS = [
-    "name",
-    "address",
-    "capacity",
-    "fuelType",
-    "orientation",
-    "status",
-    "time",
-    "time_iso",
-]
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: TankUtilityConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Tank Utility sensor entities based on a config entry."""
+    coordinator = entry.runtime_data
+    known_devices: set[str] = set()
+
+    @callback
+    def _async_add_new_devices() -> None:
+        new_devices = set(coordinator.data) - known_devices
+        if not new_devices:
+            return
+        known_devices.update(new_devices)
+        async_add_entities(
+            TankUtilitySensor(coordinator, device_id) for device_id in new_devices
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Tank Utility sensor."""
+    """Set up Tank Utility platform from YAML (deprecated)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=dict(config),
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        reason = result.get("reason", "unknown")
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+        )
+        return
 
-    email = config[CONF_EMAIL]
-    password = config[CONF_PASSWORD]
-    devices = config[CONF_DEVICES]
-
-    try:
-        token = auth.get_token(email, password)
-    except requests.exceptions.HTTPError as http_error:
-        if http_error.response.status_code == requests.codes.unauthorized:
-            _LOGGER.error("Invalid credentials")
-            return
-        raise
-
-    all_sensors = []
-    for device in devices:
-        sensor = TankUtilitySensor(email, password, token, device)
-        all_sensors.append(sensor)
-    add_entities(all_sensors, True)
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Tank Utility",
+        },
+    )
 
 
-class TankUtilitySensor(SensorEntity):
+class TankUtilitySensor(
+    CoordinatorEntity[TankUtilityDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Tank Utility sensor."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, email, password, token, device):
+    def __init__(
+        self,
+        coordinator: TankUtilityDataUpdateCoordinator,
+        device_id: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._email = email
-        self._password = password
-        self._token = token
-        self._device = device
-        self._attr_name = f"Tank Utility {device}"
+        super().__init__(coordinator)
+        self._device_id = device_id
+        self._attr_unique_id = f"{device_id}_tank"
+        device_data = coordinator.data.get(device_id, {})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=device_data.get("name") or f"Tank Utility {device_id}",
+            manufacturer="Tank Utility",
+            model=f"{device_data.get('fuelType', 'Propane').capitalize()} Monitor",
+            configuration_url="https://data.tankutility.com",
+        )
 
-    def get_data(self):
-        """Get data from the device.
+    @property
+    def device_data(self) -> dict[str, Any]:
+        """Return data for this device from the coordinator."""
+        return self.coordinator.data.get(self._device_id, {})
 
-        Flatten dictionary to map device to map of device data.
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        if (val := self.device_data.get(SENSOR_TYPE)) is not None:
+            return round(val, SENSOR_ROUNDING_PRECISION)
+        return None
 
-        """
-
-        data = {}
-        try:
-            data = tank_monitor.get_device_data(self._token, self._device)
-        except requests.exceptions.HTTPError as http_error:
-            if http_error.response.status_code in (
-                requests.codes.unauthorized,
-                requests.codes.bad_request,
-            ):
-                _LOGGER.debug("Getting new token")
-                self._token = auth.get_token(self._email, self._password, force=True)
-                data = tank_monitor.get_device_data(self._token, self._device)
-            else:
-                raise
-        data.update(data.pop("device", {}))
-        data.update(data.pop("lastReading", {}))
-        return data
-
-    def update(self) -> None:
-        """Set the device state and attributes."""
-        data = self.get_data()
-        self._attr_native_value = round(data[SENSOR_TYPE], SENSOR_ROUNDING_PRECISION)
-        self._attr_extra_state_attributes = {
-            k: v for k, v in data.items() if k in SENSOR_ATTRS
-        }
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        data = self.device_data
+        return {k: v for k, v in data.items() if k in SENSOR_ATTRS}
