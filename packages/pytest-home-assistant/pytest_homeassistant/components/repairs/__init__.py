@@ -12,8 +12,7 @@ from homeassistant.components.repairs.websocket_api import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
+from pytest_homeassistant.typing import WebSocketGenerator
 
 
 async def get_repairs(

@@ -34,6 +34,8 @@ come from; compatibility across Home Assistant versions is not guaranteed.
 | `pytest_homeassistant.components.mqtt.common` | MQTT client mocks, message helpers, and shared assertions. |
 | `pytest_homeassistant.components.recorder.common` | Recorder setup, database, and history test helpers. |
 | `pytest_homeassistant.components.diagnostics` | Helpers for requesting integration and device diagnostics. |
+| `pytest_homeassistant.components.repairs` | Helpers for listing repair issues and starting and completing repair flows. |
+| `pytest_homeassistant.components.infrared.common`, `.radio_frequency.common` | Mock IR and RF entities and commands, plus integration setup helpers. |
 | `pytest_homeassistant.test_util.aiohttp` | Mock HTTP client responses and sessions. |
 | `pytest_homeassistant.syrupy` | Snapshot extensions for Home Assistant objects. |
 | `pytest_homeassistant.typing` | Type aliases for shared test fixtures. |
