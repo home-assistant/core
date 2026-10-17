@@ -149,11 +149,26 @@ async def test_install_firmware_success(
     assert await_args[0].mac == "54-AF-97-00-00-01"
 
 
+@pytest.mark.parametrize(
+    ("version_data", "expected_installed_version", "latest_version"),
+    [
+        pytest.param(
+            {"currentVersion": "1.0.0"}, "1.0.0", "1.0.1", id="version_present"
+        ),
+        pytest.param({}, "6.2.10.17", "6.3.0.110", id="version_missing"),
+        pytest.param(
+            {"currentVersion": None}, "6.2.10.17", "6.3.0.110", id="version_null"
+        ),
+    ],
+)
 async def test_install_controller_firmware_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    version_data: dict[str, str | None],
+    expected_installed_version: str,
+    latest_version: str,
 ) -> None:
     """Test successful controller firmware installation."""
     entity_id = "update.oc200_test_omada_controller_firmware"
@@ -161,8 +176,8 @@ async def test_install_controller_firmware_success(
         {
             "hardware": {
                 "upgrade": True,
-                "currentVersion": "1.0.0",
-                "latestVersion": "1.0.1",
+                **version_data,
+                "latestVersion": latest_version,
                 "fwReleaseLog": "Fixed things.",
                 "releaseUrl": "https://example.com/firmware-release-notes",
                 "downloadLink": "https://example.com/firmware.bin",
@@ -178,8 +193,8 @@ async def test_install_controller_firmware_success(
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert entity.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert entity.attributes[ATTR_INSTALLED_VERSION] == expected_installed_version
+    assert entity.attributes[ATTR_LATEST_VERSION] == latest_version
     assert entity.attributes[ATTR_SUPPORTED_FEATURES] == (
         UpdateEntityFeature.RELEASE_NOTES | UpdateEntityFeature.INSTALL
     )
@@ -197,7 +212,9 @@ async def test_install_controller_firmware_success(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_omada_client.install_controller_firmware.assert_awaited_once_with("1.0.1")
+    mock_omada_client.install_controller_firmware.assert_awaited_once_with(
+        latest_version
+    )
     mock_omada_client.check_firmware_updates.assert_awaited_once()
 
 
@@ -222,10 +239,165 @@ async def test_controller_update_check_failure_does_not_block_setup(
     assert entity.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("update_type", ["hardware", "software"])
+@pytest.mark.parametrize(
+    ("update_data", "expected_latest_version", "expected_state"),
+    [
+        pytest.param(
+            {"upgrade": True, "latestVersion": "6.3.0.110"},
+            "6.3.0.110",
+            STATE_ON,
+            id="update_available",
+        ),
+        pytest.param({"upgrade": False}, "6.2.10.17", STATE_OFF, id="no_update"),
+        pytest.param({}, "6.2.10.17", STATE_OFF, id="empty_update"),
+        pytest.param(
+            {"currentVersion": None, "latestVersion": "6.3.0.110"},
+            "6.3.0.110",
+            STATE_ON,
+            id="null_current_version",
+        ),
+        pytest.param(
+            {
+                "currentVersion": None,
+                "latestVersion": None,
+                "upgrade": None,
+                "releaseLog": None,
+                "fwReleaseLog": None,
+                "downloadLink": None,
+                "releaseUrl": None,
+            },
+            "6.2.10.17",
+            STATE_OFF,
+            id="null_fields",
+        ),
+    ],
+)
+async def test_controller_update_without_current_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    update_type: str,
+    update_data: dict[str, str | bool | None],
+    expected_latest_version: str,
+    expected_state: str,
+) -> None:
+    """Test missing controller update versions do not block update entity setup."""
+    mock_omada_client.check_firmware_updates.return_value = OmadaControllerUpdateInfo(
+        {update_type: update_data}
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.states.get("update.oc200_test_omada_controller_firmware")
+    assert entity is not None
+    assert entity.state == expected_state
+    assert entity.attributes[ATTR_INSTALLED_VERSION] == "6.2.10.17"
+    assert entity.attributes[ATTR_LATEST_VERSION] == expected_latest_version
+    assert "download_url" not in entity.attributes
+
+    controller_entity = hass.data[DATA_COMPONENT].get_entity(entity.entity_id)
+    assert controller_entity.release_notes() is None
+
+    device_entity = hass.states.get("update.test_poe_switch_firmware")
+    assert device_entity is not None
+    assert device_entity.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "update_data",
+    [
+        pytest.param({}, id="missing_sections"),
+        pytest.param({"hardware": None}, id="null_hardware"),
+        pytest.param({"software": None}, id="null_software"),
+        pytest.param({"hardware": None, "software": None}, id="null_sections"),
+    ],
+)
+async def test_controller_update_without_update_sections(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    update_data: dict[str, None],
+) -> None:
+    """Test absent controller update sections do not block device update entities."""
+    mock_omada_client.check_firmware_updates.return_value = OmadaControllerUpdateInfo(
+        update_data
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.states.get("update.oc200_test_omada_controller_firmware")
+    assert entity is not None
+    assert entity.state == STATE_OFF
+    assert entity.attributes[ATTR_INSTALLED_VERSION] == "6.2.10.17"
+    assert entity.attributes[ATTR_LATEST_VERSION] == "6.2.10.17"
+    assert entity.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert "download_url" not in entity.attributes
+
+    controller_entity = hass.data[DATA_COMPONENT].get_entity(entity.entity_id)
+    assert controller_entity.release_notes() is None
+    with pytest.raises(HomeAssistantError) as err:
+        await controller_entity.async_install(version=None, backup=False)
+    assert err.value.translation_key == "firmware_update_rejected"
+    mock_omada_client.install_controller_firmware.assert_not_awaited()
+
+    device_entity = hass.states.get("update.test_poe_switch_firmware")
+    assert device_entity is not None
+    assert device_entity.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "version_data",
+    [
+        pytest.param({}, id="missing_latest_version"),
+        pytest.param({"latestVersion": None}, id="null_latest_version"),
+        pytest.param({"latestVersion": ""}, id="empty_latest_version"),
+    ],
+)
+async def test_install_controller_firmware_without_latest_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    version_data: dict[str, str | None],
+) -> None:
+    """Test installation is rejected when no target firmware version is known."""
+    mock_omada_client.check_firmware_updates.return_value = OmadaControllerUpdateInfo(
+        {"hardware": version_data}
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.data[DATA_COMPONENT].get_entity(
+        "update.oc200_test_omada_controller_firmware"
+    )
+    assert entity is not None
+    with pytest.raises(HomeAssistantError) as err:
+        await entity.async_install(version=None, backup=False)
+    assert err.value.translation_key == "firmware_update_rejected"
+    mock_omada_client.install_controller_firmware.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "hardware_data",
+    [
+        pytest.param({}, id="hardware_missing"),
+        pytest.param({"hardware": None}, id="hardware_null"),
+    ],
+)
 async def test_controller_software_update_installed_version_prefers_status_coordinator(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
+    hardware_data: dict[str, None],
 ) -> None:
     """Test controller software update installed version prefers controller status."""
     entity_id = "update.oc200_test_omada_controller_firmware"
@@ -240,11 +412,12 @@ async def test_controller_software_update_installed_version_prefers_status_coord
     )
     mock_omada_client.check_firmware_updates.return_value = OmadaControllerUpdateInfo(
         {
+            **hardware_data,
             "software": {
                 "upgrade": True,
                 "currentVersion": "6.2.10.17",
                 "latestVersion": "6.3.0.45",
-            }
+            },
         }
     )
     mock_config_entry.add_to_hass(hass)
