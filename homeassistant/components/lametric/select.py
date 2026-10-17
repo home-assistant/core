@@ -1,7 +1,7 @@
 """Support for LaMetric selects."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, override
 
 from demetriek import (
@@ -163,25 +163,29 @@ class LaMetricScreensaverModeSelect(LaMetricEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Switch to another screensaver mode."""
         mode = ScreensaverMode(option)
-        if mode is not ScreensaverMode.TIME_BASED:
-            await self.coordinator.lametric.display(
+        if mode is ScreensaverMode.TIME_BASED:
+            # The device only takes the time based mode together with its times.
+            time_based = self._modes.time_based
+            if time_based.start_time is None or time_based.end_time is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="screensaver_times_required",
+                )
+
+            display = await self.coordinator.lametric.display(
+                screensaver_mode=mode,
+                screensaver_mode_enabled=True,
+                screensaver_start_time=time_based.start_time,
+                screensaver_end_time=time_based.end_time,
+            )
+        else:
+            display = await self.coordinator.lametric.display(
                 screensaver_mode=mode, screensaver_mode_enabled=True
             )
-            await self.coordinator.async_request_refresh()
-            return
 
-        # The device only takes the time based mode together with its times.
-        time_based = self._modes.time_based
-        if time_based.start_time is None or time_based.end_time is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="screensaver_times_required",
-            )
-
-        await self.coordinator.lametric.display(
-            screensaver_mode=mode,
-            screensaver_mode_enabled=True,
-            screensaver_start_time=time_based.start_time,
-            screensaver_end_time=time_based.end_time,
+        # The device answers with its new state, use that right away. A refresh
+        # requested shortly after the previous one is held back, and a schedule
+        # change right after would switch back to a stale mode otherwise.
+        self.coordinator.async_set_updated_data(
+            replace(self.coordinator.data, display=display)
         )
-        await self.coordinator.async_request_refresh()

@@ -1,7 +1,8 @@
 """Tests for the LaMetric select platform."""
 
+from dataclasses import replace
 from datetime import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 from demetriek import (
     BrightnessMode,
@@ -17,6 +18,11 @@ from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
+)
+from homeassistant.components.time import (
+    ATTR_TIME,
+    DOMAIN as TIME_DOMAIN,
+    SERVICE_SET_VALUE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -178,6 +184,57 @@ async def test_screensaver_mode_when_dark(
     )
 
 
+async def test_screensaver_mode_then_schedule_change(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a schedule change right after selecting a mode keeps that mode.
+
+    A refresh requested shortly after the previous one is held back, so the
+    select has to use what the device answered.
+    """
+    display = mock_lametric.device.return_value.display
+    assert display.screensaver
+    assert display.screensaver.modes
+    assert display.screensaver.modes.when_dark
+    mock_lametric.display.return_value = replace(
+        display,
+        screensaver=replace(
+            display.screensaver,
+            modes=replace(
+                display.screensaver.modes,
+                time_based=replace(display.screensaver.modes.time_based, enabled=False),
+                when_dark=replace(display.screensaver.modes.when_dark, enabled=True),
+            ),
+        ),
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ENTITY_SCREENSAVER_MODE, ATTR_OPTION: "when_dark"},
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_SCREENSAVER_MODE)
+    assert state
+    assert state.state == "when_dark"
+
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
+            ATTR_TIME: "20:00:00",
+        },
+        blocking=True,
+    )
+
+    assert mock_lametric.display.call_args == call(
+        screensaver_mode=ScreensaverMode.WHEN_DARK, screensaver_mode_enabled=True
+    )
+
+
 async def test_screensaver_mode_time_based(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
@@ -230,7 +287,8 @@ async def test_screensaver_mode_time_based_without_times(
     mock_lametric.display.assert_not_called()
 
 
-@pytest.mark.parametrize("device_fixture", ["device_sa5_bluetooth_unavailable"])
+@pytest.mark.parametrize("device_fixture", ["device_sa5"])
 async def test_no_screensaver_mode_on_sky(hass: HomeAssistant) -> None:
-    """Test the SKY gets no screensaver mode select."""
-    assert hass.states.get("select.sky_screensaver_mode") is None
+    """Test the SKY gets no screensaver mode select, even when reporting modes."""
+    assert hass.states.get("select.spyfly_s_lametric_sky_brightness_mode")
+    assert hass.states.get("select.spyfly_s_lametric_sky_screensaver_mode") is None
