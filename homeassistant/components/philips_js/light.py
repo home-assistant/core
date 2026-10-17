@@ -33,6 +33,10 @@ EFFECT_AUTO = "Auto"
 EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
 
+class TVUnavailableError(HomeAssistantError):
+    """Raised when the TV does not answer."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: PhilipsTVConfigEntry,
@@ -342,7 +346,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
                     raise
                 await asyncio.sleep(1)
                 if not await self.coordinator.async_ensure_reachable(force=True):
-                    raise HomeAssistantError("TV is not available") from err
+                    raise TVUnavailableError("TV is not available") from err
             else:
                 return
 
@@ -350,7 +354,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
         if not await self.coordinator.async_ensure_reachable():
-            raise HomeAssistantError("TV is not available")
+            raise TVUnavailableError("TV is not available")
         self._update_from_coordinator()
         await self._async_retry(lambda: self._async_turn_on(kwargs))
         await self.coordinator.async_request_refresh()
@@ -399,7 +403,11 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         # A TV that is not reachable has no ambilight running.
         if not self.coordinator.tv_on:
             return
-        await self._async_retry(self._async_turn_off)
+        try:
+            await self._async_retry(self._async_turn_off)
+        except TVUnavailableError:
+            # The TV went away while turning off, so no ambilight is running.
+            return
         await self.coordinator.async_request_refresh()
 
     async def _async_turn_off(self) -> None:

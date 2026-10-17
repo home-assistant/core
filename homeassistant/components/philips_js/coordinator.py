@@ -158,12 +158,19 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_poll(self) -> bool:
         """Poll the TV and return if it really answered."""
+        probing = False
         if not self.api.on and self.in_grace and self.api.system:
             # Make haphilipsjs take the cheap poll path instead of the full
             # re-init. The library resets `on` itself if the TV does not answer.
             self.api.on = True
+            probing = True
         try:
             await self.api.update()
+        except asyncio.CancelledError:
+            # The probe never finished, so the TV did not answer.
+            if probing:
+                self.api.on = False
+            raise
         except AutenticationFailure as exception:
             raise ConfigEntryAuthFailed(str(exception)) from exception
         except GeneralFailure as exception:
