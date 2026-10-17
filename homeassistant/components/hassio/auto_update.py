@@ -8,6 +8,7 @@ import logging
 import random
 from typing import Any, Self, TypedDict, override
 
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
@@ -32,6 +33,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .config_entry import async_get_update_options
 from .const import (
@@ -65,6 +67,10 @@ HISTORY_LENGTH = 10
 
 ISSUE_ROLLED_BACK = "core_auto_update_rolled_back"
 ISSUE_FAILED = "core_auto_update_failed"
+
+# Set when this process asked Supervisor for an update. It outlives a reload
+# of the integration, but not the restart that comes with the update.
+_DATA_UPDATE_REQUESTED: HassKey[bool] = HassKey("hassio_auto_update_requested")
 
 # Supervisor jobs that must finish before Home Assistant is updated
 _BUSY_JOB_NAME = "home_assistant_core_update"
@@ -291,8 +297,12 @@ class AutoUpdateManager:
         else:
             self._async_save()
 
+        # Settled once started: Supervisor rolls back a version that does not
+        # come up, and that has to find the record still there.
         if self._pending is not None:
-            self._async_finish_pending(self._pending)
+            self._entry.async_on_unload(
+                async_at_started(self._hass, self._async_finish_pending)
+            )
 
         self._async_record_offered_version()
         self._entry.async_on_unload(
@@ -323,44 +333,44 @@ class AutoUpdateManager:
         )
 
     @callback
-    def _async_finish_pending(self, pending: PendingUpdate) -> None:
+    def _async_finish_pending(self, hass: HomeAssistant) -> None:
         """Find out how the automatic update that restarted us went.
 
         Supervisor checks the new version and rolls back when it does not
         come up healthy. So running the new version means it worked, and
         running the old one means it was undone.
         """
+        # A reload while Supervisor is still updating; nothing to settle yet
+        if (pending := self._pending) is None or hass.data.get(_DATA_UPDATE_REQUESTED):
+            return
+
         self._pending = None
         to_version = pending["to_version"]
         if to_version == HA_VERSION:
             self._async_add_history(pending, AutoUpdateResult.SUCCESS)
-            async_delete_issue(self._hass, DOMAIN, ISSUE_FAILED)
-
-            @callback
-            def log_success(hass: HomeAssistant) -> None:
-                """Add the update to the logbook once it records again."""
-                hass.bus.async_fire(
-                    EVENT_LOGBOOK_ENTRY,
-                    {
-                        ATTR_NAME: "Home Assistant",
-                        "message": (
-                            f"was updated automatically from "
-                            f"{pending['from_version']} to {to_version}"
-                        ),
-                        ATTR_DOMAIN: DOMAIN,
-                    },
-                )
-
-            self._entry.async_on_unload(async_at_started(self._hass, log_success))
+            async_delete_issue(hass, DOMAIN, ISSUE_FAILED)
+            hass.bus.async_fire(
+                EVENT_LOGBOOK_ENTRY,
+                {
+                    ATTR_NAME: "Home Assistant",
+                    "message": (
+                        f"was updated automatically from "
+                        f"{pending['from_version']} to {to_version}"
+                    ),
+                    ATTR_DOMAIN: DOMAIN,
+                },
+            )
         elif pending["from_version"] == HA_VERSION:
             # Never try this version again on our own
             self._skipped.add(to_version)
             self._async_add_history(pending, AutoUpdateResult.ROLLED_BACK)
+            async_delete_issue(hass, DOMAIN, ISSUE_FAILED)
             async_create_issue(
-                self._hass,
+                hass,
                 DOMAIN,
                 ISSUE_ROLLED_BACK,
                 is_fixable=False,
+                is_persistent=True,
                 severity=IssueSeverity.ERROR,
                 translation_key=ISSUE_ROLLED_BACK,
                 translation_placeholders={"version": to_version},
@@ -535,7 +545,7 @@ class AutoUpdateManager:
         # Compared in UTC; a local start in the hour the clocks go back would
         # never match the stored one.
         window = dt_util.as_utc(window)
-        if window == self._attempted_window:
+        if window == self._attempted_window or self._pending is not None:
             return
 
         if (version := self._async_due_version(now)) is None or self._async_is_busy():
@@ -574,10 +584,12 @@ class AutoUpdateManager:
                 started=dt_util.utcnow().isoformat(),
             )
             await self._store.async_save(self._data_to_save())
+            self._hass.data[_DATA_UPDATE_REQUESTED] = True
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)
             await update_core(self._hass, version, False)
-        except HomeAssistantError as err:
+        # The backup can raise SupervisorError directly while finding its location
+        except (HomeAssistantError, SupervisorError) as err:
             _LOGGER.error(
                 "Automatic update to Home Assistant %s failed: %s", version, err
             )
@@ -600,11 +612,13 @@ class AutoUpdateManager:
             AutoUpdateResult.FAILED,
         )
         self._pending = None
+        self._hass.data.pop(_DATA_UPDATE_REQUESTED, None)
         async_create_issue(
             self._hass,
             DOMAIN,
             ISSUE_FAILED,
             is_fixable=False,
+            is_persistent=True,
             severity=IssueSeverity.ERROR,
             translation_key=ISSUE_FAILED,
             translation_placeholders={"version": version},
