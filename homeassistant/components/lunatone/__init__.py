@@ -7,7 +7,7 @@ from lunatone_rest_api_client import Auth, DALIScan, Devices, Info, Sensors
 from lunatone_rest_api_client.models import DeviceCapabilities
 
 from homeassistant.const import CONF_URL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -80,60 +80,68 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
-    if info_api.data is None:
+    info_data = info_api.data
+    if info_data is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="missing_device_info"
         )
 
-    if info_api.data.uid is not None:
-        new_unique_id = info_api.data.uid.replace("-", "")
+    if info_data.uid is not None:
+        new_unique_id = info_data.uid.replace("-", "")
         if new_unique_id != entry.unique_id:
             await _update_unique_id(hass, entry, new_unique_id)
 
-    assert entry.unique_id
+    entry_unique_id = entry.unique_id
+    assert entry_unique_id is not None
 
     device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=info_api.data.name,
+        identifiers={(DOMAIN, entry_unique_id)},
+        name=info_data.name,
         manufacturer=MANUFACTURER,
-        sw_version=info_api.data.version,
+        sw_version=info_data.version,
         hw_version=coordinator_info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
-        serial_number=str(info_api.data.device.serial),
-        model=info_api.data.product_name,
+        serial_number=str(info_data.device.serial),
+        model=info_data.product_name,
         model_id=(
             f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
         ),
     )
 
-    for line_id, line_info in info_api.data.lines.items():
-        line_unique_id = f"{entry.unique_id}-line{line_id}"
+    @callback
+    def _async_register_devices() -> None:
+        info_data = coordinator_info.data
+        for line_id, line_info in info_data.lines.items():
+            line_unique_id = f"{entry_unique_id}-line{line_id}"
 
-        extra_info: dict = {}
-        if line_info.device.serial != info_api.data.device.serial:
-            extra_info.update(
-                serial_number=str(line_info.device.serial),
-                hw_version=line_info.device.pcb,
-                model_id=(
-                    f"{line_info.device.article_number}{line_info.device.article_info}"
+            extra_info: dict = {}
+            if line_info.device.serial != info_data.device.serial:
+                extra_info.update(
+                    serial_number=str(line_info.device.serial),
+                    hw_version=line_info.device.pcb,
+                    model_id=(
+                        f"{line_info.device.article_number}{line_info.device.article_info}"
+                    ),
+                )
+
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, line_unique_id)},
+                translation_key="dali_line",
+                translation_placeholders={"line_id": str(line_id)},
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass, (DOMAIN, entry_unique_id), config_entry_id=entry.entry_id
                 ),
+                **extra_info,
             )
 
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, line_unique_id)},
-            translation_key="dali_line",
-            translation_placeholders={"line_id": str(line_id)},
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
-            ),
-            **extra_info,
-        )
+    _async_register_devices()
+    entry.async_on_unload(coordinator_info.async_add_listener(_async_register_devices))
 
-    devices_api = Devices(auth_api, info_api.data.version)
+    devices_api = Devices(auth_api, info_data.version)
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
     await coordinator_devices.async_config_entry_first_refresh()
 
@@ -142,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     await coordinator_scan.async_config_entry_first_refresh()
 
     coordinator_sensors = None
-    if DeviceCapabilities.SENSORS in info_api.data.device_capabilities:
+    if DeviceCapabilities.SENSORS in info_data.device_capabilities:
         sensors_api = Sensors(auth_api)
         coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(
             hass, entry, sensors_api
