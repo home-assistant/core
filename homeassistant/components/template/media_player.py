@@ -126,7 +126,7 @@ STRING_TEMPLATES = (
 )
 
 # Deprecated states must not be produced by new entities.
-DEPRECATED_STATES = (MediaPlayerState.STANDBY,)
+DEPRECATED_STATES = (MediaPlayerState("standby"),)
 
 MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
     {
@@ -153,6 +153,8 @@ _MEDIA_PLAYER_VALIDATION = (
     tcv.requires_option(SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST),
     tcv.requires_option(CONF_SOUND_MODE, CONF_SOUND_MODE_LIST),
     tcv.requires_option(SERVICE_SELECT_SOUND_MODE, CONF_SOUND_MODE_LIST),
+    tcv.requires_option(SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN),
+    tcv.requires_option(SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP),
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
@@ -260,6 +262,7 @@ class AbstractTemplateMediaPlayer(
                 MediaPlayerState.OFF,
                 deprecated_enums=DEPRECATED_STATES,
             ),
+            self._update_player_state,
         )
 
         for option, attr in STRING_TEMPLATES:
@@ -364,6 +367,14 @@ class AbstractTemplateMediaPlayer(
                 self._attr_supported_features |= supported_feature
 
     @callback
+    def _update_player_state(self, state: MediaPlayerState | None) -> None:
+        """Update the state and rebase the position timestamp on transitions."""
+        # Resuming at an unchanged position must not extrapolate over the pause.
+        if state != self._attr_state and self._attr_media_position is not None:
+            self._attr_media_position_updated_at = dt_util.utcnow()
+        self._attr_state = state
+
+    @callback
     def _update_media_position(self, position: int | None) -> None:
         """Update the position and the time it was last valid."""
         if position is None:
@@ -392,7 +403,7 @@ class AbstractTemplateMediaPlayer(
                 script, run_variables=run_variables, context=self._context
             )
         if state is not None and self._attr_assumed_state:
-            self._attr_state = state
+            self._update_player_state(state)
             self.async_write_ha_state()
 
     @override
@@ -447,7 +458,12 @@ class AbstractTemplateMediaPlayer(
         """Play a piece of media."""
         await self._async_run_action(
             SERVICE_PLAY_MEDIA,
-            {CONF_MEDIA_CONTENT_TYPE: media_type, CONF_MEDIA_CONTENT_ID: media_id},
+            {
+                "media_content_type": media_type,
+                "media_content_id": media_id,
+                **kwargs,
+            },
+            MediaPlayerState.PLAYING,
         )
 
     @override

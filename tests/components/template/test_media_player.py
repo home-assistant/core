@@ -1,6 +1,7 @@
 """The tests for the Template media player platform."""
 
 from enum import StrEnum
+from http import HTTPStatus
 from itertools import chain
 from typing import Any
 
@@ -23,6 +24,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -46,6 +48,8 @@ from .conftest import (
 )
 
 from tests.common import async_mock_restore_state_shutdown_restart
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.availability"
@@ -246,6 +250,74 @@ async def test_media_position_updated_at(
 
 
 @pytest.mark.parametrize("style", BOTH_STYLES)
+async def test_media_position_updated_at_state_change(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the position timestamp is rebased when resuming at the same position."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {"media_position": _attribute_template("media_position")},
+        STATE_TEMPLATE,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "paused", {"media_position": 30})
+
+    freezer.tick(300)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing", {"media_position": 30})
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        {"media_position": 30, "media_position_updated_at": dt_util.utcnow()},
+    )
+
+
+@pytest.mark.usefixtures("calls")
+@pytest.mark.parametrize("style", BOTH_STYLES)
+async def test_media_position_updated_at_optimistic_play(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the play action rebases the position timestamp."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {
+            **PLAYBACK_ACTIONS,
+            "media_position": _attribute_template("media_position"),
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"media_position": 30})
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        "media_pause",
+        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER.entity_id},
+        blocking=True,
+    )
+
+    freezer.tick(300)
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        "media_play",
+        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER.entity_id},
+        blocking=True,
+    )
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        {"media_position": 30, "media_position_updated_at": dt_util.utcnow()},
+    )
+
+
+@pytest.mark.parametrize("style", BOTH_STYLES)
 async def test_entity_picture(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test the media image is proxied and the picture is used as a fallback."""
     await setup_entity(
@@ -276,6 +348,44 @@ async def test_entity_picture(hass: HomeAssistant, style: ConfigurationStyle) ->
 
 
 @pytest.mark.parametrize("style", BOTH_STYLES)
+async def test_media_image_relative_url(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a relative media image url is fetched from Home Assistant."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"}
+    )
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {"media_image_url": _attribute_template("media_image_url")},
+        STATE_TEMPLATE,
+    )
+    # Images are cached across tests by url, so each style needs its own.
+    image_path = f"/local/art_{style.name.lower()}.png"
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "playing", {"media_image_url": image_path}
+    )
+    aioclient_mock.get(
+        f"http://example.local:8123{image_path}",
+        content=b"art",
+        headers={"Content-Type": "image/png"},
+    )
+    state = hass.states.get(TEST_MEDIA_PLAYER.entity_id)
+    client = await hass_client_no_auth()
+
+    resp = await client.get(state.attributes[ATTR_ENTITY_PICTURE])
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"art"
+    assert aioclient_mock.call_count == 1
+
+
+@pytest.mark.parametrize("style", BOTH_STYLES)
 @pytest.mark.parametrize(
     ("config", "expected_features"),
     [
@@ -286,7 +396,7 @@ async def test_entity_picture(hass: HomeAssistant, style: ConfigurationStyle) ->
             id="on_off",
         ),
         pytest.param(
-            make_test_action("volume_up"),
+            {**make_test_action("volume_up"), **make_test_action("volume_down")},
             MediaPlayerEntityFeature.VOLUME_STEP,
             id="volume_step",
         ),
@@ -334,8 +444,22 @@ async def test_supported_features(
         pytest.param(
             "clear_playlist", {}, "clear_playlist", {}, {}, id="clear_playlist"
         ),
-        pytest.param("volume_up", {}, "volume_up", {}, {}, id="volume_up"),
-        pytest.param("volume_down", {}, "volume_down", {}, {}, id="volume_down"),
+        pytest.param(
+            "volume_up",
+            make_test_action("volume_down"),
+            "volume_up",
+            {},
+            {},
+            id="volume_up",
+        ),
+        pytest.param(
+            "volume_down",
+            make_test_action("volume_up"),
+            "volume_down",
+            {},
+            {},
+            id="volume_down",
+        ),
         pytest.param(
             "media_seek",
             {},
@@ -632,14 +756,16 @@ async def test_optimistic_attributes(
         pytest.param(make_test_action("select_source"), id="select_source"),
         pytest.param({"sound_mode": "{{ 'Movie' }}"}, id="sound_mode_without_list"),
         pytest.param(make_test_action("select_sound_mode"), id="select_sound_mode"),
+        pytest.param(make_test_action("volume_up"), id="volume_up_without_down"),
+        pytest.param(make_test_action("volume_down"), id="volume_down_without_up"),
     ],
 )
-async def test_option_requires_list(
+async def test_option_requires_option(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     config: ConfigType,
 ) -> None:
-    """Test source and sound mode options require their lists."""
+    """Test options are rejected without the option they depend on."""
     await setup_entity(hass, TEST_MEDIA_PLAYER, style, 0, config, STATE_TEMPLATE)
     assert hass.states.async_all(media_player.DOMAIN) == []
 
