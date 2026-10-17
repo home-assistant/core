@@ -15,7 +15,7 @@
         "title": "Failed to import Caséta bridge configuration."
       },
       "link": {
-        "description": "To pair with {name} ({host}), after submitting this form, press the black button on the back of the bridge.",
+        "description": "To pair with {name} ({host}), after submitting this form, press the pairing button on your bridge or processor.",
         "title": "Pair with the bridge"
       },
       "user": {
@@ -23,7 +23,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Lutron Caseta Smart Bridge."
+          "host": "The hostname or IP address of your Lutron bridge or processor — Caséta Smart Bridge, RA2 Select, RadioRA 3, HomeWorks QSX, or Athena."
         },
         "description": "Enter the IP address of the device.",
         "title": "Automatically connect to the bridge"

@@ -42,7 +42,7 @@ BUTTON_STATUS_LONG_HOLD = "LongHold"
 # native LongHold events over LEAP. Used to gate the long_press device
 # trigger so it only appears in the automation UI for supported hardware.
 # Caseta and RadioRA3 processors do not emit LongHold.
-BRIDGE_DEVICE_TYPES_WITH_LONG_HOLD = frozenset({"HWQSProcessor"})
+BRIDGE_DEVICE_TYPES_WITH_LONG_HOLD = frozenset({"HWQSProcessor", "AthenaProcessor"})
 
 CONF_SUBTYPE = "subtype"
 
