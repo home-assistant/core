@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 
 from .const import MOCK_CONFIG, USERNAME
 
@@ -105,3 +106,38 @@ async def test_unique_id_set_on_setup(hass: HomeAssistant) -> None:
 
     assert config_entry.unique_id == USERNAME
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("service_2fa")
+async def test_reload_unsubscribes_platform_listeners(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that reload detaches the old account's dispatcher listeners.
+
+    The device_new signal is keyed by username, so it survives a reload and
+    stale listeners from the previous account would otherwise pile up on it.
+    """
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # The first calendars/reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps the reauth flow count deterministic.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    old_account = config_entry.runtime_data
+    signal = old_account.signal_device_new
+    dispatchers = hass.data[DATA_DISPATCHER]
+    # device_tracker and sensor each connect one new-device listener.
+    assert len(dispatchers[signal]) == 2
+    assert len(old_account.listeners) == 2
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    new_account = config_entry.runtime_data
+    assert new_account is not old_account
+    assert old_account.listeners == []
+    # Only the new account's two listeners remain on the shared signal.
+    assert len(dispatchers[signal]) == 2
