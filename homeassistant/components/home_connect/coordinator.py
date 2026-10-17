@@ -3,6 +3,7 @@
 from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import override
 
@@ -29,20 +30,25 @@ from aiohomeconnect.model.error import (
     TooManyRequestsError,
     UnauthorizedError,
 )
+from aiohomeconnect.model.image import Image
 from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     API_DEFAULT_RETRY_AFTER,
+    APPLIANCES_WITH_IMAGES,
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_PAUSE,
     DOMAIN,
+    DOOR_CLOSED_STATES,
     FAVORITE_PROGRAMS,
+    IMAGES_REFRESH_DELAY,
 )
 from .utils import get_dict_from_home_connect_error
 
@@ -60,6 +66,7 @@ class HomeConnectApplianceData:
 
     commands: set[CommandKey]
     events: dict[EventKey, Event]
+    images: dict[str, Image]
     info: HomeAppliance
     options: dict[OptionKey, ProgramDefinitionOption]
     programs: list[EnumerateProgram]
@@ -71,6 +78,8 @@ class HomeConnectApplianceData:
         self.commands.clear()
         self.commands.update(other.commands)
         self.events.update(other.events)
+        self.images.clear()
+        self.images.update(other.images)
         self.info.connected = other.info.connected
         self.options.clear()
         self.options.update(other.options)
@@ -85,6 +94,7 @@ class HomeConnectApplianceData:
         return cls(
             commands=set(),
             events={},
+            images={},
             info=appliance,
             options={},
             programs=[],
@@ -191,7 +201,8 @@ class HomeConnectRuntimeData:
     ) -> Callable[[], None]:
         """Listen for special data updates.
 
-        These listeners will not be called on refresh.
+        These listeners are called on PAIRED, CONNECTED and DEPAIRED events,
+        after each appliance refresh and when a camera is discovered.
         """
 
         @callback
@@ -268,8 +279,15 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
+        self._images_refresh_unsub: CALLBACK_TYPE | None = None
 
-    def _get_listeners_for_event_key(self, event_key: EventKey) -> list[CALLBACK_TYPE]:
+    @override
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and ignore new runs."""
+        self._cancel_images_refresh()
+        await super().async_shutdown()
+
+    def _get_listeners_for_event_key(self, event_key: str) -> list[CALLBACK_TYPE]:
         return [
             listener
             for listener, context in list(self._listeners.values())
@@ -307,6 +325,12 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         ) in self.global_listeners.values():
                             if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
                                 listener()
+                    if (
+                        event.value in DOOR_CLOSED_STATES
+                        and self.data.info.type in APPLIANCES_WITH_IMAGES
+                    ):
+                        # Appliances with cameras take new images when a door is closed
+                        self._schedule_images_refresh()
                 self._call_event_listener(event_message)
 
             case EventType.NOTIFY:
@@ -567,10 +591,25 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         except HomeConnectError:
             commands = set()
 
+        # Keep the known images if the request fails, so that the cameras stay
+        # available. Rate limits are not retried either, as the images are
+        # refreshed again when a door is closed.
+        images = self.data.images.copy()
+        if appliance.type in APPLIANCES_WITH_IMAGES:
+            try:
+                images = await self.get_latest_images()
+            except HomeConnectError as error:
+                _LOGGER.debug(
+                    "Error fetching images for %s: %s",
+                    appliance.ha_id,
+                    error,
+                )
+
         self.data.update(
             HomeConnectApplianceData(
                 commands=commands,
                 events=events,
+                images=images,
                 info=appliance,
                 options=options,
                 programs=programs,
@@ -578,6 +617,68 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 status=status,
             )
         )
+
+    async def get_latest_images(self) -> dict[str, Image]:
+        """Get the latest image taken by each camera of the appliance."""
+        latest_images: dict[str, Image] = {}
+        for image in (await self.client.get_images(self.data.info.ha_id)).images:
+            latest_image = latest_images.get(image.key)
+            if latest_image is None or image.timestamp > latest_image.timestamp:
+                latest_images[image.key] = image
+        return latest_images
+
+    @callback
+    def _schedule_images_refresh(self) -> None:
+        """Schedule an images refresh, delaying any already scheduled one."""
+        self._cancel_images_refresh()
+        self._images_refresh_unsub = async_call_later(
+            self.hass, IMAGES_REFRESH_DELAY, self._async_refresh_images
+        )
+
+    @callback
+    def _cancel_images_refresh(self) -> None:
+        """Cancel the scheduled images refresh, if any."""
+        if self._images_refresh_unsub:
+            self._images_refresh_unsub()
+            self._images_refresh_unsub = None
+
+    async def _async_refresh_images(self, _: datetime) -> None:
+        """Refresh the images and notify the entities whose image changed."""
+        self._images_refresh_unsub = None
+        try:
+            latest_images = await self.get_latest_images()
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching images for %s: %s",
+                self.data.info.ha_id,
+                error,
+            )
+            return
+
+        images = self.data.images
+        old_image_keys = {key: image.image_key for key, image in images.items()}
+        new_image_keys = {key: image.image_key for key, image in latest_images.items()}
+        new_cameras = new_image_keys.keys() - old_image_keys.keys()
+        # Cameras whose image changed, that stopped reporting images or that
+        # started reporting them again
+        changed_cameras = [
+            key
+            for key in old_image_keys.keys() | new_image_keys.keys()
+            if old_image_keys.get(key) != new_image_keys.get(key)
+        ]
+        images.clear()
+        images.update(latest_images)
+
+        for key in changed_cameras:
+            for listener in self._get_listeners_for_event_key(key):
+                listener()
+        if new_cameras:
+            for (
+                listener,
+                context,
+            ) in self.global_listeners.values():
+                if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
+                    listener()
 
     async def get_options_definitions(
         self, program_key: ProgramKey
