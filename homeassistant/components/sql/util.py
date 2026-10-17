@@ -1,5 +1,4 @@
 """Utils for sql."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import date
 from decimal import Decimal
@@ -22,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
 
-from .const import DB_URL_RE, DOMAIN
+from .const import DB_URL_RE, DOMAIN, DOMAIN_DATA
 from .models import SQLData
 
 _LOGGER = logging.getLogger(__name__)
@@ -172,8 +171,7 @@ def validate_query(
 @callback
 def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
     """Get or initialize domain data."""
-    if DOMAIN in hass.data:
-        sql_data: SQLData = hass.data[DOMAIN]
+    if (sql_data := hass.data.get(DOMAIN_DATA)) is not None:
         return sql_data
 
     session_makers_by_db_url: dict[str, scoped_session] = {}
@@ -194,8 +192,9 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
         EVENT_HOMEASSISTANT_STOP, _shutdown_db_engines
     )
 
-    sql_data = SQLData(cancel_shutdown, session_makers_by_db_url)
-    hass.data[DOMAIN] = sql_data
+    sql_data = hass.data[DOMAIN_DATA] = SQLData(
+        cancel_shutdown, session_makers_by_db_url
+    )
     return sql_data
 
 
