@@ -455,11 +455,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 case _:
                     self._attr_hvac_mode = HVACMode.OFF
             # running state is an optional attribute
-            # which we map to hvac_action if it exists (its value is not None)
+            # which we map to hvac_action if it exists (its value is not None);
+            # a value of 0 (no relay active) is a valid state and means idle
             self._attr_hvac_action = None
-            if running_state_value := self.get_matter_attribute_value(
-                clusters.Thermostat.Attributes.ThermostatRunningState
-            ):
+            if (
+                running_state_value := self.get_matter_attribute_value(
+                    clusters.Thermostat.Attributes.ThermostatRunningState
+                )
+            ) is not None:
                 if running_state_value & (
                     ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
                 ):
@@ -474,8 +477,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     | ThermostatRunningState.FanStage3
                 ):
                     self._attr_hvac_action = HVACAction.FAN
-                else:
+                elif self._attr_hvac_mode == HVACMode.OFF:
+                    # the system mode is off
                     self._attr_hvac_action = HVACAction.OFF
+                else:
+                    # the device is on but no relay is active
+                    self._attr_hvac_action = HVACAction.IDLE
 
     @callback
     def _update_target_temperatures(self) -> None:
