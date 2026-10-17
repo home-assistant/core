@@ -1,5 +1,6 @@
 """Config flow for the Nature Remo integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -56,6 +57,34 @@ class NatureRemoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = error_code
         return self.async_show_form(
             step_id="user",
+            data_schema=STEP_TOKEN_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=TOKEN_URL_PLACEHOLDERS,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauthentication after the access token was rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new personal access token for the same account."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            user, error_code = await self._async_validate(user_input[CONF_API_TOKEN])
+            if user is not None:
+                await self.async_set_unique_id(user.id)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
+            if error_code is not None:
+                errors["base"] = error_code
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=STEP_TOKEN_DATA_SCHEMA,
             errors=errors,
             description_placeholders=TOKEN_URL_PLACEHOLDERS,

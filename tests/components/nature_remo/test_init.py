@@ -4,11 +4,14 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from aionatureremo import Appliance, NatureRemoAuthError, NatureRemoConnectionError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.nature_remo.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from . import async_poll
 
 from tests.common import MockConfigEntry
 
@@ -92,12 +95,12 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_auth_error_is_setup_error(
+async def test_setup_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
 ) -> None:
-    """An auth failure during first refresh marks the entry as errored."""
+    """An auth failure during first refresh errors the entry and asks for a token."""
     mock_client.get_devices.side_effect = NatureRemoAuthError(401, "bad token")
     mock_config_entry.add_to_hass(hass)
 
@@ -105,6 +108,29 @@ async def test_setup_auth_error_is_setup_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_auth_error_while_polling_starts_reauth(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A token revoked after setup asks for a new one on the next poll."""
+    mock_client.get_devices.side_effect = NatureRemoAuthError(401, "bad token")
+    await async_poll(hass, freezer)
+
+    assert init_integration.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == init_integration.entry_id
 
 
 async def test_appliance_rename_reaches_the_device_registry_on_reload(
