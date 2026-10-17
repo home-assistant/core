@@ -253,14 +253,23 @@ def _equivalent_units(
 def _entity_history_to_float_and_state(
     entity_history: Iterable[State],
 ) -> list[tuple[float, State]]:
-    """Return a list of (float, state) tuples for the given entity."""
+    """Return a list of (float, state) tuples for the given entity.
+
+    States which can't be used to compile statistics are left out.
+    """
     float_states: list[tuple[float, State]] = []
     append = float_states.append
     isfinite = math.isfinite
     for state in entity_history:
         try:
-            if (float_state := float(state.state)) is not None and isfinite(
-                float_state
+            if (
+                (float_state := float(state.state)) is not None
+                and isfinite(float_state)
+                # Only the current state is checked when picking the sensors to
+                # compile, so an earlier state may still have a malformed unit
+                and _is_hashable(
+                    state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+                )
             ):
                 append((float_state, state))
         except ValueError, TypeError:
@@ -951,8 +960,12 @@ def _update_issues(
                     custom_units_for_entities.get(entity_id)
                 )
 
-                if numeric and not _equivalent_units(
-                    {state_unit, metadata_unit}, equivalent_units_for_entity
+                if numeric and (
+                    # An unhashable unit can't match the unit of the statistics
+                    not _is_hashable(state_unit)
+                    or not _equivalent_units(
+                        {state_unit, metadata_unit}, equivalent_units_for_entity
+                    )
                 ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
@@ -967,7 +980,9 @@ def _update_issues(
                             "supported_unit": metadata_unit,
                         },
                     )
-            elif numeric and state_unit not in converter.VALID_UNITS:
+            elif numeric and (
+                not _is_hashable(state_unit) or state_unit not in converter.VALID_UNITS
+            ):
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
