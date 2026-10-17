@@ -1,4 +1,4 @@
-"""Shared LoRaWAN connection registration and vendor discovery."""
+"""The LoRaWAN integration."""
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback

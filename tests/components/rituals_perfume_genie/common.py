@@ -175,6 +175,7 @@ def mock_client(diffusers: list[MockDiffuser]) -> AsyncMock:
     by_hash = {diffuser.hub_hash: diffuser for diffuser in diffusers}
 
     client = create_autospec(RitualsGenie, instance=True)
+    client.token = "mock-token"
     client.hubs.side_effect = lambda: [diffuser.hub() for diffuser in diffusers]
     client.hub.side_effect = lambda hub_hash: by_hash[hub_hash].hub()
     client.sensors.side_effect = lambda hub, only=None: by_hash[hub.hash].sensors(only)

@@ -10,6 +10,7 @@ from pyicloud import PyiCloudService
 from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
+    PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
@@ -163,6 +164,7 @@ class IcloudAccount:
             PyiCloud2FARequiredException,
             PyiCloudFailedLoginException,
             PyiCloudAuthRequiredException,
+            PyiCloudAcceptTermsException,
         ) as err:
             # Refreshing the devices can reject a session that logging in
             # accepted. The entry still loads: the user is asked to act on it,
@@ -265,13 +267,6 @@ class IcloudAccount:
 
         try:
             api_devices = self.api.devices
-            if locate:
-                # Since pyicloud 2.3.0 device reads are cache-only and the
-                # library requests an active locate from Apple only at service
-                # creation, so explicitly refresh with locate=True to get a
-                # fresh GPS fix on every poll instead of Apple's cached
-                # location.
-                api_devices.refresh(locate=True)
         except Exception as err:
             if _is_auth_failure(err):
                 # Refreshing the devices is where a stored session is usually
@@ -283,6 +278,21 @@ class IcloudAccount:
             dispatcher_send(self.hass, self.signal_device_update)
             self._schedule_next_fetch()
             return
+
+        if locate:
+            # Since pyicloud 2.3.0 device reads are cache-only and the library
+            # requests an active locate from Apple only at service creation, so
+            # explicitly refresh with locate=True to get a fresh GPS fix on
+            # every poll instead of Apple's cached location.
+            try:
+                api_devices.refresh(locate=True)
+            except Exception as err:
+                if _is_auth_failure(err):
+                    raise
+                # Best effort: the devices read below still carry whichever
+                # fixes iCloud already held, which beats skipping the poll
+                # altogether.
+                _LOGGER.debug("Could not request an iCloud location refresh: %s", err)
 
         if self._owner_fullname is None and api_devices.user_info is not None:
             # setup() returns before reading these when iCloud asks for a
@@ -557,6 +567,7 @@ class IcloudAccount:
                 PyiCloud2FARequiredException,
                 PyiCloudFailedLoginException,
                 PyiCloudAuthRequiredException,
+                PyiCloudAcceptTermsException,
             ) as err:
                 # None of these comes back on its own, so ask the user instead
                 # of retrying every couple of minutes forever.
