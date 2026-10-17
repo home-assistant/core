@@ -286,6 +286,7 @@ DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE = "air_purifier_table"
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_LOCK_NIGHTLATCH = False
+DEFAULT_BOT_PRESS_BUTTON = False
 DEFAULT_CURTAIN_SPEED = 255
 CURTAIN_SPEED_MIN = 0
 CURTAIN_SPEED_MAX = 255
@@ -295,6 +296,7 @@ CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
+CONF_BOT_PRESS_BUTTON = "bot_press_button"
 CONF_CURTAIN_SPEED = "curtain_speed"
 
 # Roller shade motor modes, exposed as cover speeds
