@@ -64,9 +64,10 @@ class OAuth2FlowHandler(
 
     @property
     @override
-    def extra_authorize_data(self) -> dict[str, Any]:
+    def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": "create"}
+        scopes = ["create"]
+        return {"scope": " ".join(scopes)}
 
     @override
     async def async_step_user(

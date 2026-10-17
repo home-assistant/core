@@ -12,7 +12,7 @@ from yolink.const import OAUTH2_TOKEN
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,20 +62,20 @@ class ConfigEntryAuth(YoLinkAuthMgr):
         self,
         hass: HomeAssistant,
         websession: ClientSession,
-        oauth_session: OAuth2Session,
+        oauth2Session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize yolink Auth."""
-        super().__init__(websession)
         self.hass = hass
-        self._oauth_session = oauth_session
+        self.oauth_session = oauth2Session
+        super().__init__(websession)
 
     def access_token(self) -> str:
         """Return the access token."""
-        return self._oauth_session.token["access_token"]
+        return self.oauth_session.token["access_token"]
 
     async def check_and_refresh_token(self) -> str:
-        """Check and refresh the token if needed."""
-        await self._oauth_session.async_ensure_token_valid()
+        """Check the token."""
+        await self.oauth_session.async_ensure_token_valid()
         return self.access_token()
 
 

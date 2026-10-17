@@ -22,6 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_SECRET_KEY, TEST_UAID, build_yolink_home, home_info_response
 
@@ -73,11 +74,13 @@ async def test_oauth_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_credentials", "mock_yolink_home")
+@pytest.mark.usefixtures("setup_credentials", "mock_auth_manager", "mock_yolink_home")
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test that an unavailable OAuth2 implementation raises ConfigEntryNotReady."""
+    """Test that an unavailable OAuth implementation raises ConfigEntryNotReady."""
+    assert await async_setup_component(hass, "cloud", {})
+
     with patch(
         "homeassistant.components.yolink.async_get_config_entry_implementation",
         side_effect=ImplementationUnavailableError,

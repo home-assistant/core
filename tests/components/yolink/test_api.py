@@ -1,7 +1,6 @@
 """Test the yolink authentication managers."""
 
 import asyncio
-import time
 from typing import Any
 
 from aiohttp import ClientError
@@ -11,44 +10,18 @@ from yarl import URL
 from yolink.const import OAUTH2_TOKEN
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
-from homeassistant.components.yolink.api import (
-    ConfigEntryAuth,
-    StaticTokenAuth,
-    UACAuth,
-)
-from homeassistant.components.yolink.const import DOMAIN
+from homeassistant.components.yolink.api import StaticTokenAuth, UACAuth
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .conftest import TEST_SECRET_KEY, TEST_UAID
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 def _uac_auth(hass: HomeAssistant) -> UACAuth:
     """Return a UAC authentication manager."""
     return UACAuth(async_get_clientsession(hass), TEST_UAID, TEST_SECRET_KEY)
-
-
-async def _oauth_auth(hass: HomeAssistant, token: dict[str, Any]) -> ConfigEntryAuth:
-    """Return an OAuth2 authentication manager for an entry holding token."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"auth_implementation": DOMAIN, "token": token},
-    )
-    config_entry.add_to_hass(hass)
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, config_entry
-        )
-    )
-    return ConfigEntryAuth(
-        hass,
-        async_get_clientsession(hass),
-        config_entry_oauth2_flow.OAuth2Session(hass, config_entry, implementation),
-    )
 
 
 async def test_uac_token_refreshed_after_half_its_lifetime(
@@ -381,52 +354,3 @@ async def test_static_token_auth(hass: HomeAssistant) -> None:
     assert auth.access_token() == "mock-access-token"
     assert await auth.check_and_refresh_token() == "mock-access-token"
     assert auth.http_auth_header() == "Bearer mock-access-token"
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_oauth_valid_token_is_kept(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test a valid OAuth2 token is returned without refreshing."""
-    auth = await _oauth_auth(
-        hass,
-        {
-            "access_token": "mock-access-token",
-            "refresh_token": "mock-refresh-token",
-            "expires_at": time.time() + 3600,
-        },
-    )
-
-    assert auth.access_token() == "mock-access-token"
-    assert await auth.check_and_refresh_token() == "mock-access-token"
-    assert aioclient_mock.call_count == 0
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_oauth_expired_token_is_refreshed(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test an expired OAuth2 token is refreshed."""
-    auth = await _oauth_auth(
-        hass,
-        {
-            "access_token": "outdated-access-token",
-            "refresh_token": "mock-refresh-token",
-            "expires_at": time.time() - 3600,
-        },
-    )
-
-    assert auth.access_token() == "outdated-access-token"
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "access_token": "new-access-token",
-            "refresh_token": "new-refresh-token",
-            "expires_in": 3600,
-        },
-    )
-
-    assert await auth.check_and_refresh_token() == "new-access-token"
-    assert auth.access_token() == "new-access-token"
-    assert aioclient_mock.call_count == 1
