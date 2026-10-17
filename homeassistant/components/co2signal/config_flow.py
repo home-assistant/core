@@ -37,7 +37,7 @@ TYPE_SPECIFY_COUNTRY = "specify_country_code"
 _LOGGER = logging.getLogger(__name__)
 
 DESCRIPTION_PLACEHOLDER = {
-    "register_link": "https://app.electricitymaps.com/home-assistant?utm_source=home-assistant&utm_campaign=config-flow",
+    "register_link": "https://app.electricitymaps.com/home-assistant",
 }
 
 
