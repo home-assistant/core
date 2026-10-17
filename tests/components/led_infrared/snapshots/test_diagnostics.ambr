@@ -13,6 +13,13 @@
     'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
   })
 # ---
+# name: test_diagnostics[generic_21_key]
+  dict({
+    'device_type': 'generic_21_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
 # name: test_diagnostics[generic_24_key]
   dict({
     'device_type': 'generic_24_key',
