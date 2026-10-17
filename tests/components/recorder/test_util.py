@@ -1246,21 +1246,31 @@ async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
     await instance.async_add_executor_job(_query)
 
 
-def _execute_failing_once(session: Session) -> None:
+def _execute_failing_once(session: Session) -> Any:
     """Run a query through execute which fails on the first attempt."""
     query = MagicMock(session=session)
-    query.all.side_effect = [OperationalError("SELECT", {}, Exception()), []]
-    util.execute(query)
+    query.all.side_effect = [OperationalError("SELECT", {}, Exception()), ["row"]]
+    return util.execute(query)
 
 
-def _execute_stmt_lambda_element_failing_once(session: Session) -> None:
+def _execute_stmt_lambda_element_failing_once(session: Session) -> Any:
     """Run a statement through execute_stmt_lambda_element which fails once."""
+    result = MagicMock()
+    result.all.return_value = ["row"]
     with patch.object(
         session,
         "execute",
-        side_effect=[OperationalError("SELECT", {}, Exception()), MagicMock()],
+        side_effect=[OperationalError("SELECT", {}, Exception()), result],
     ):
-        util.execute_stmt_lambda_element(session, MagicMock())
+        return util.execute_stmt_lambda_element(session, MagicMock())
+
+
+QUERIES_FAILING_ONCE = [
+    pytest.param(_execute_failing_once, id="execute"),
+    pytest.param(
+        _execute_stmt_lambda_element_failing_once, id="execute_stmt_lambda_element"
+    ),
+]
 
 
 @pytest.mark.parametrize(
@@ -1270,21 +1280,12 @@ def _execute_stmt_lambda_element_failing_once(session: Session) -> None:
         pytest.param(False, True, id="write_session_not_rolled_back"),
     ],
 )
-@pytest.mark.parametrize(
-    "run_query",
-    [
-        pytest.param(_execute_failing_once, id="execute"),
-        pytest.param(
-            _execute_stmt_lambda_element_failing_once,
-            id="execute_stmt_lambda_element",
-        ),
-    ],
-)
+@pytest.mark.parametrize("run_query", QUERIES_FAILING_ONCE)
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_query_retry_only_rolls_back_read_only_session(
     hass: HomeAssistant,
     setup_recorder: None,
-    run_query: Callable[[Session], None],
+    run_query: Callable[[Session], Any],
     read_only: bool,
     pending_write_kept: bool,
 ) -> None:
@@ -1305,20 +1306,23 @@ async def test_query_retry_only_rolls_back_read_only_session(
         session.expunge_all()
 
 
+@pytest.mark.parametrize("run_query", QUERIES_FAILING_ONCE)
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_query_retry_continues_after_failed_rollback(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
+    run_query: Callable[[Session], Any],
 ) -> None:
     """Test a rollback which fails neither replaces the query error nor ends the retries."""
-    with session_scope(hass=hass, read_only=True) as session:
-        query = MagicMock(session=session)
-        query.all.side_effect = [OperationalError("SELECT", {}, Exception()), ["row"]]
-        with patch.object(
+    with (
+        session_scope(hass=hass, read_only=True) as session,
+        patch.object(
             session, "rollback", side_effect=SQLAlchemyError("rollback failed")
-        ):
-            assert util.execute(query) == ["row"]
+        ),
+    ):
+        # The retry after the failed rollback returns the rows
+        assert run_query(session) == ["row"]
 
     assert "rollback failed" in caplog.text
 
