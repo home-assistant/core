@@ -45,6 +45,20 @@ TIMEOUT = 10
 type TokenManager = Callable[[], Awaitable[str]]
 
 
+async def _raise_on_post_error(response: httpx2.Response) -> None:
+    """Raise HTTPStatusError for non-404 error responses on POST requests."""
+    if response.request.method == "POST" and response.status_code != 404:
+        response.raise_for_status()
+
+
+def _first_exception(err: ExceptionGroup) -> Exception:
+    """Return the first leaf exception from a possibly nested ExceptionGroup."""
+    exc: Exception = err
+    while isinstance(exc, ExceptionGroup):
+        exc = exc.exceptions[0]
+    return exc
+
+
 def create_mcp_httpx_client(
     headers: dict[str, str] | None = None,
     timeout: httpx2.Timeout | None = None,
@@ -64,6 +78,7 @@ def create_mcp_httpx_client(
         follow_redirects=True,
         headers={USER_AGENT: SERVER_SOFTWARE, **(headers or {})},
         auth=auth,
+        event_hooks={"response": [_raise_on_post_error]},
         **kwargs,
     )
 
@@ -96,7 +111,7 @@ async def mcp_client(
             result = await session.initialize()
             yield session, result
     except ExceptionGroup as streamable_err:
-        main_error = streamable_err.exceptions[0]
+        main_error = _first_exception(streamable_err)
         # Method not Allowed likely means this is not a streamable HTTP server,
         # but it may be an SSE server. This is part of the MCP Transport
         # backwards compatibility specification.
@@ -123,7 +138,7 @@ async def mcp_client(
                     yield session, result
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
-                raise sse_err.exceptions[0] from sse_err
+                raise _first_exception(sse_err) from sse_err
         else:
             _LOGGER.debug("Error creating MCP client: %s", streamable_err)
             raise main_error from streamable_err
