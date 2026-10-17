@@ -72,6 +72,11 @@ def disable_block_async_io(disable_block_async_io):
     """Disable the loop protection from block_async_io after each test."""
 
 
+@pytest.fixture(autouse=True)
+def disable_block_shared_serial(disable_block_shared_serial: None) -> None:
+    """Restore pyserial after each test."""
+
+
 @pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
@@ -287,8 +292,6 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_asyncio_debug_on_turns_hass_debug_on(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -754,15 +757,6 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_is_virtual_env() -> Generator[Mock]:
-    """Mock is_virtual_env."""
-    with patch(
-        "homeassistant.bootstrap.is_virtual_env", return_value=False
-    ) as is_virtual_env:
-        yield is_virtual_env
-
-
-@pytest.fixture
 def mock_enable_logging() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
@@ -770,19 +764,10 @@ def mock_enable_logging() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_mount_local_lib_path() -> Generator[AsyncMock]:
-    """Mock enable logging."""
-    with patch(
-        "homeassistant.bootstrap.async_mount_local_lib_path"
-    ) as mount_local_lib_path:
-        yield mount_local_lib_path
-
-
-@pytest.fixture
 def mock_process_ha_config_upgrade() -> Generator[Mock]:
     """Mock enable logging."""
     with patch(
-        "homeassistant.config.process_ha_config_upgrade"
+        "homeassistant.config.process_ha_config_upgrade", return_value=None
     ) as process_ha_config_upgrade:
         yield process_ha_config_upgrade
 
@@ -800,8 +785,6 @@ def mock_ensure_config_exists() -> Generator[AsyncMock]:
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -839,9 +822,9 @@ async def test_setup_hass(
         log_file,
         log_no_color,
     )
-    assert len(mock_mount_local_lib_path.mock_calls) == 1
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+    assert config_util.DATA_PREVIOUS_VERSION not in hass.data
 
     # debug in RuntimeConfig should set it it in hass.config
     assert hass.config.debug is True
@@ -850,11 +833,30 @@ async def test_setup_hass(
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures(
+    "mock_hass_config", "mock_enable_logging", "mock_ensure_config_exists"
+)
+async def test_setup_hass_keeps_previous_version(
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test the version that ran before an update is kept for the trigger."""
+    mock_process_ha_config_upgrade.return_value = "2026.9.4"
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass.data[config_util.DATA_PREVIOUS_VERSION] == "2026.9.4"
+
+
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -894,8 +896,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
 
 async def test_setup_hass_invalid_yaml(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -916,13 +916,10 @@ async def test_setup_hass_invalid_yaml(
         )
 
     assert "recovery_mode" in hass.config.components
-    assert len(mock_mount_local_lib_path.mock_calls) == 0
 
 
 async def test_setup_hass_config_dir_nonexistent(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -947,8 +944,6 @@ async def test_setup_hass_config_dir_nonexistent(
 
 async def test_setup_hass_recovery_mode(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -978,18 +973,18 @@ async def test_setup_hass_recovery_mode(
     mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
-    assert len(mock_mount_local_lib_path.mock_calls) == 0
 
     # Validate we didn't try to set up config entry.
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
 
+    # Downloading custom integrations is the last thing recovery mode needs
+    assert "marketplace" not in hass.config.components
+
 
 @pytest.mark.parametrize("domain", ["cloud", "backup"])
 async def test_setup_hass_recovery_mode_with_failing_integration(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     domain: str,
@@ -1018,8 +1013,6 @@ async def test_setup_hass_recovery_mode_with_failing_integration(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_safe_mode(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -1053,8 +1046,6 @@ async def test_setup_hass_safe_mode(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_recovery_mode_and_safe_mode(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -1086,21 +1077,29 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 
 
 @pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.parametrize(
+    "storage_key",
+    [
+        # Loading the entity registry waits for the device registry
+        "core.device_registry",
+        # Loading restore state waits for the entity registry
+        "core.entity_registry",
+    ],
+)
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_storage_version_too_new_triggers_recovery_mode(
     hass_storage: dict[str, Any],
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
+    storage_key: str,
 ) -> None:
     """Test that a storage file with a newer major version triggers recovery mode."""
-    hass_storage["core.entity_registry"] = {
+    hass_storage[storage_key] = {
         "version": 99,
         "minor_version": 1,
-        "key": "core.entity_registry",
+        "key": storage_key,
         "data": {},
     }
 
@@ -1120,7 +1119,7 @@ async def test_storage_version_too_new_triggers_recovery_mode(
     assert hass.config.recovery_mode is True
     assert "recovery_mode" in hass.config.components
     assert (
-        "Storage file core.entity_registry was created"
+        f"Storage file {storage_key} was created"
         " by a newer version of Home Assistant" in caplog.text
     )
 
@@ -1129,8 +1128,6 @@ async def test_storage_version_too_new_triggers_recovery_mode(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -1168,8 +1165,6 @@ async def test_setup_hass_invalid_core_config(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_recovery_mode_if_no_frontend(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:

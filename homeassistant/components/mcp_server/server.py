@@ -70,7 +70,10 @@ def _format_tool(
 
 
 async def create_server(
-    hass: HomeAssistant, llm_api_id: str | list[str], llm_context: llm.LLMContext
+    hass: HomeAssistant,
+    llm_api_id: str | list[str],
+    llm_context: llm.LLMContext,
+    read_only: bool,
 ) -> Server:
     """Create a new Model Context Protocol Server.
 
@@ -90,9 +93,15 @@ async def create_server(
             raise ValueError(f"{META_DEVICE_ID} must be a string")
 
         # Backwards compatibility with old MCP Server config
-        return await llm.async_get_api(
+        llm_api = await llm.async_get_api(
             hass, llm_api_id, replace(llm_context, device_id=device_id)
         )
+        if read_only:
+            # Removing the tools also blocks calls to them.
+            llm_api.tools = [
+                tool for tool in llm_api.tools if tool.annotations.read_only
+            ]
+        return llm_api
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:

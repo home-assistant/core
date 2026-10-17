@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components import llm as llm_component, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import llm as todo_llm
+from homeassistant.components.todo.services import TODO_SERVICE_GET_ITEMS_SCHEMA
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.setup import async_setup_component
@@ -67,7 +68,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         hass,
         domain=todo.DOMAIN,
         service=todo.TodoServices.GET_ITEMS,
-        schema=cv.make_entity_service_schema(todo.TODO_SERVICE_GET_ITEMS_SCHEMA),
+        schema=cv.make_entity_service_schema(TODO_SERVICE_GET_ITEMS_SCHEMA),
         response={
             ENTITY_ID: {
                 "items": [
@@ -113,7 +114,7 @@ async def test_todo_get_items_status_filter(
         hass,
         domain=todo.DOMAIN,
         service=todo.TodoServices.GET_ITEMS,
-        schema=cv.make_entity_service_schema(todo.TODO_SERVICE_GET_ITEMS_SCHEMA),
+        schema=cv.make_entity_service_schema(TODO_SERVICE_GET_ITEMS_SCHEMA),
         response={ENTITY_ID: {"items": []}},
     )
     await tool.async_call(

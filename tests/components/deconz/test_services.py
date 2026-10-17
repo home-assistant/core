@@ -174,6 +174,58 @@ async def test_configure_service_with_faulty_entity(
     assert len(aioclient_mock.mock_calls) == 0
 
 
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Dimmable light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
+        }
+    ],
+)
+async def test_configure_service_with_renamed_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: MockConfigEntry,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+) -> None:
+    """Test that the service resolves an entity by its new entity_id after rename."""
+    entity_registry.async_update_entity("light.test", new_entity_id="light.renamed")
+    await hass.async_block_till_done()
+    assert config_entry_setup.runtime_data.deconz_ids == {"light.renamed": "/lights/0"}
+
+    aioclient_mock = mock_put_request("/lights/0")
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CONFIGURE_DEVICE,
+        service_data={SERVICE_ENTITY: "light.renamed", SERVICE_DATA: {"on": True}},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": True}
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CONFIGURE_DEVICE,
+            service_data={SERVICE_ENTITY: "light.test", SERVICE_DATA: {}},
+            blocking=True,
+        )
+    assert err.value.translation_key == "entity_not_found"
+
+    # The renamed entity is not treated as orphaned
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REMOVE_ORPHANED_ENTRIES,
+        service_data={CONF_BRIDGE_ID: BRIDGE_ID},
+        blocking=True,
+    )
+    assert entity_registry.async_get("light.renamed") is not None
+
+    assert await hass.config_entries.async_unload(config_entry_setup.entry_id)
+
+
 @pytest.mark.parametrize("config_entry_options", [{CONF_MASTER_GATEWAY: False}])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_calling_service_with_no_master_gateway_fails(

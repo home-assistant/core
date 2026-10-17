@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.titlehub.models import Image, Title, TitleFields
 
 from homeassistant.components.media_player import BrowseError, MediaClass

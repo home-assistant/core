@@ -1,5 +1,7 @@
 """Tests for Overkiz config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -98,6 +100,17 @@ FAKE_ZERO_CONF_INFO_LOCAL = ZeroconfServiceInfo(
         "fw_version": "2021.5.4-29",
     },
 )
+
+
+@contextmanager
+def _patch_client_success() -> Generator[None]:
+    """Patch the Overkiz client to log in successfully."""
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        yield
 
 
 async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -233,6 +246,7 @@ async def test_form_local_happy_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -244,6 +258,7 @@ async def test_form_local_happy_flow(
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceError, "server_in_maintenance"),
+        (ServiceUnavailableError, "cannot_connect"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
         (ApplicationNotAllowedError, "application_not_allowed"),
@@ -290,6 +305,13 @@ async def test_form_invalid_auth_cloud(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "description_placeholder", "server"),
@@ -335,6 +357,13 @@ async def test_form_invalid_hardware_cloud(
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
     }
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -386,6 +415,13 @@ async def test_form_invalid_hardware_cloud_local(
         "unsupported_device": description_placeholder
     }
 
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -399,6 +435,7 @@ async def test_form_invalid_hardware_cloud_local(
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceError, "server_in_maintenance"),
+        (ServiceUnavailableError, "cannot_connect"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
         (NoSuchTokenError, "invalid_auth"),
@@ -449,6 +486,17 @@ async def test_form_invalid_auth_local(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": TEST_HOST,
+                "token": TEST_TOKEN,
+                "verify_ssl": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -488,6 +536,13 @@ async def test_form_invalid_cozytouch_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "cloud"
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_cloud_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
@@ -652,6 +707,7 @@ async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
         "password": TEST_PASSWORD,
         "hub": TEST_SERVER,
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
 
 async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
@@ -1174,6 +1230,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1251,6 +1308,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1309,6 +1367,7 @@ async def test_local_zeroconf_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1397,8 +1456,7 @@ async def test_rexel_full_flow_single_gateway(
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
-    # Azure AD B2C needs the policy on the authorize URL; the helper rebuilds
-    # the query string, so it must survive via extra_authorize_data.
+    # Azure AD B2C needs the policy on the authorize URL.
     assert f"p={REXEL_OAUTH_POLICY}" in result["url"]
     # offline_access is required for B2C to return a refresh token.
     assert f"{REXEL_OAUTH_SCOPE}+offline_access" in result["url"]
@@ -1889,15 +1947,21 @@ async def test_somfy_flow_no_sites(
         pytest.param(
             TooManyAttemptsBannedError, "too_many_attempts", id="too_many_attempts"
         ),
+        pytest.param(UnknownUserError, "unsupported_hardware", id="unknown_user"),
+        pytest.param(
+            ApplicationNotAllowedError,
+            "application_not_allowed",
+            id="application_not_allowed",
+        ),
     ],
 )
-async def test_somfy_flow_error_buckets(
+async def test_somfy_flow_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     side_effect: type[Exception],
     error: str,
 ) -> None:
-    """Somfy login/discovery failures map to the expected error bucket."""
+    """Somfy login/discovery failures show an error and the flow can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1924,36 +1988,37 @@ async def test_somfy_flow_error_buckets(
     assert result["step_id"] == "somfy"
     assert result["errors"] == {"base": error}
 
-
-async def test_somfy_flow_unsupported_hardware(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """A Somfy Protect account maps to unsupported_hardware."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"hub": "somfy"}
+    credentials = SomfyTokenCredentials(
+        refresh_token=TEST_REFRESH_TOKEN,
+        site_oid=TEST_SITE_OID,
+        region=TEST_REGION,
+        gateway_id=TEST_GATEWAY_ID,
     )
 
-    assert result["step_id"] == "local_or_cloud"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_type": "cloud"}
-    )
-
-    with patch(
-        "pyoverkiz.client.OverkizClient.login",
-        side_effect=UnknownUserError,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[
+                GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="My Home")
+            ],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "somfy"
-    assert result["errors"] == {"base": "unsupported_hardware"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_GATEWAY_ID
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_somfy_reauth_success(

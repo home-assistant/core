@@ -104,6 +104,9 @@
   "exceptions": {
     "device_disconnected": {
       "message": "The device is not plugged in"
+    },
+    "duplicate_entry": {
+      "message": "Another configuration entry exists for the adapter with serial number {serial_number}"
     }
   },
   "issues": {

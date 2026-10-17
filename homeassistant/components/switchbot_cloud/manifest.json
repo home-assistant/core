@@ -2,6 +2,7 @@
   "domain": "switchbot_cloud",
   "name": "SwitchBot Cloud",
   "after_dependencies": ["cloud"],
+  "categories": ["sensors", "blinds_curtains", "plugs_switches"],
   "codeowners": [
     "@SeraphicRav",
     "@laurence-presland",

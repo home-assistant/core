@@ -1,6 +1,7 @@
 {
   "domain": "tonewinner",
   "name": "Tonewinner",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@emma-sg"],
   "config_flow": true,
   "dependencies": ["usb"],

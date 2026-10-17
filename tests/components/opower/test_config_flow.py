@@ -384,6 +384,16 @@ async def test_form_exceptions(
     assert get_schema_suggested_value(data_schema, "password") == "test-password"
     assert mock_login.call_count == 1
 
+    with patch("homeassistant.components.opower.config_flow.Opower.async_login"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_already_configured(
     recorder_mock: Recorder,

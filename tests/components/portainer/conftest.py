@@ -1,6 +1,6 @@
 """Common fixtures for the portainer tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyportainer import PortainerEventListener
@@ -13,7 +13,12 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
+from pyportainer.models.image_pull import DockerImagePullEvent
+from pyportainer.models.portainer import (
+    Endpoint,
+    PortainerSystemStatus,
+    PortainerSystemVersion,
+)
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
@@ -116,12 +121,27 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
         client.container_recreate = AsyncMock(return_value=None)
+        pull_events = [
+            DockerImagePullEvent.from_dict(event)
+            for event in load_json_array_fixture("image_pull.json", DOMAIN)
+        ]
+
+        async def _image_pull(
+            endpoint_id: int, image: str
+        ) -> AsyncGenerator[DockerImagePullEvent]:
+            for event in pull_events:
+                yield event
+
+        client.image_pull = MagicMock(side_effect=_image_pull)
         client.get_stacks.return_value = [
             Stack.from_dict(stack)
             for stack in load_json_array_fixture("stacks.json", DOMAIN)
         ]
         client.portainer_system_status.return_value = PortainerSystemStatus.from_dict(
             load_json_value_fixture("portainer_system_status.json", DOMAIN)
+        )
+        client.portainer_system_version.return_value = PortainerSystemVersion.from_dict(
+            load_json_value_fixture("portainer_system_version.json", DOMAIN)
         )
         client.get_volumes.return_value = [
             DockerVolume.from_dict(volume)

@@ -46,6 +46,9 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     assert data[CONF_ZIP_CODE] == ZIP_CODE
     assert data[CONF_HOUSE_NUMBER] == HOUSE_NUMBER
     assert data[CONF_HOUSE_NUMBER_SUFFIX] == HOUSE_NUMBER_SUFFIX
+    assert (
+        result["result"].unique_id == f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}"
+    )
 
 
 async def test_error_if_not_rova_area(

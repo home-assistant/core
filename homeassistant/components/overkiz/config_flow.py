@@ -267,10 +267,10 @@ class OverkizConfigFlow(
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
-                errors["base"] = "cannot_connect"
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except TimeoutError, ClientError, ServiceUnavailableError:
+                errors["base"] = "cannot_connect"
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
@@ -309,7 +309,7 @@ class OverkizConfigFlow(
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=self._user): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -344,11 +344,11 @@ class OverkizConfigFlow(
             except ClientConnectorCertificateError as exception:
                 errors["base"] = "certificate_verify_failed"
                 LOGGER.debug(exception)
-            except (TimeoutError, ClientError) as exception:
-                errors["base"] = "cannot_connect"
-                LOGGER.debug(exception)
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except (TimeoutError, ClientError, ServiceUnavailableError) as exception:
+                errors["base"] = "cannot_connect"
+                LOGGER.debug(exception)
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
@@ -369,7 +369,7 @@ class OverkizConfigFlow(
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_HOST, default=self._host): str,
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                     probatio.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),

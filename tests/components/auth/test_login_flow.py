@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.setup import async_setup_component
 
 from . import BASE_CONFIG, async_setup_auth
 
@@ -245,8 +246,14 @@ async def test_invalid_redirect_uri(
     assert data["message"] == "Invalid redirect URI"
 
 
+@pytest.mark.parametrize(
+    "authorization_data",
+    [{}, {"response_type": "code"}],
+)
 async def test_login_exist_user(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    authorization_data: dict[str, str],
 ) -> None:
     """Test logging in with exist user."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
@@ -261,6 +268,7 @@ async def test_login_exist_user(
             "client_id": CLIENT_ID,
             "handler": ["insecure_example", None],
             "redirect_uri": CLIENT_REDIRECT_URI,
+            **authorization_data,
         },
     )
     assert resp.status == HTTPStatus.OK
@@ -425,10 +433,13 @@ async def test_well_known_auth_info(
         "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "token_endpoint_auth_methods_supported": ["none"],
+        "revocation_endpoint_auth_methods_supported": ["none"],
         "client_id_metadata_document_supported": True,
         "code_challenge_methods_supported": ["S256"],
         "response_types_supported": ["code"],
-        "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
+        "service_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
     }
 
 
@@ -445,7 +456,7 @@ async def test_well_known_auth_info(
             {
                 "resource": "https://example.com",
                 "authorization_servers": ["https://example.com"],
-                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+                "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
             },
         ),
         (
@@ -457,7 +468,7 @@ async def test_well_known_auth_info(
             {
                 "resource": "https://example.com",
                 "authorization_servers": ["https://example.com"],
-                "resource_documentation": "https://developers.home-assistant.io/docs/auth_api",
+                "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
             },
         ),
     ],
@@ -535,6 +546,12 @@ async def test_well_known_protected_resource_no_url(
             },
             "Message format incorrect",
         ),
+        (
+            {
+                "response_type": "token",
+            },
+            "Response type not supported",
+        ),
     ],
     ids=[
         "method_without_challenge",
@@ -542,6 +559,7 @@ async def test_well_known_protected_resource_no_url(
         "unsupported_plain_method",
         "challenge_too_short",
         "challenge_padded",
+        "unsupported_response_type",
     ],
 )
 async def test_login_flow_pkce_validation(
@@ -564,3 +582,152 @@ async def test_login_flow_pkce_validation(
     assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert expected_message in result["message"]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"client_id": CLIENT_ID + "?" + "x" * 2048}, id="client_id"),
+        pytest.param(
+            {"redirect_uri": CLIENT_REDIRECT_URI + "?" + "x" * 2048},
+            id="redirect_uri",
+        ),
+    ],
+)
+async def test_login_flow_url_too_long(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+) -> None:
+    """Test login flows reject overly long URLs."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert not hass.auth.login_flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(
+            "/.well-known/oauth-authorization-server", id="authorization-server"
+        ),
+        pytest.param("/.well-known/oauth-protected-resource", id="protected-resource"),
+    ],
+)
+async def test_well_known_auth_info_allows_cors(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, path: str
+) -> None:
+    """Test browser clients can discover authorization server capabilities."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+
+    resp = await client.get(
+        path,
+        headers={"origin": "https://client.example"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
+
+
+@pytest.mark.parametrize(
+    ("http_config", "headers"),
+    [
+        pytest.param({}, {"Host": "[2001:db8::1]"}, id="direct"),
+        pytest.param(
+            {"use_x_forwarded_for": True, "trusted_proxies": ["127.0.0.1"]},
+            {
+                "X-Forwarded-For": "2001:db8::10",
+                "X-Forwarded-Host": "[2001:db8::1]",
+                "X-Forwarded-Proto": "http",
+            },
+            id="trusted-proxy",
+        ),
+    ],
+)
+async def test_login_client_id_matches_request_origin(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    http_config: dict[str, Any],
+    headers: dict[str, str],
+) -> None:
+    """Test logging in with a public IP client_id that matches the request origin."""
+    assert await async_setup_component(hass, "http", {"http": http_config})
+    client = await async_setup_auth(hass, aiohttp_client)
+    client_id = "http://[2001:db8::1]/"
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": client_id,
+            "handler": ["insecure_example", None],
+            "redirect_uri": "http://[2001:db8::1]/?auth_callback=1",
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": client_id,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    assert step["type"] == "create_entry"
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": client_id,
+            "grant_type": "authorization_code",
+            "code": step["result"],
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    tokens = await resp.json()
+    assert "access_token" in tokens
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": client_id,
+            "grant_type": "refresh_token",
+            "refresh_token": tokens["refresh_token"],
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+
+
+async def test_login_client_id_does_not_match_request_origin(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a public IP client_id is rejected when the request origin differs."""
+    client = await async_setup_auth(hass, aiohttp_client)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": "http://[2001:db8::1]/",
+            "handler": ["insecure_example", None],
+            "redirect_uri": "http://[2001:db8::1]/?auth_callback=1",
+        },
+        headers={"Host": "[2001:db8::2]"},
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["message"] == "Invalid client id"
