@@ -1,0 +1,150 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A virtual remote with this name is already configured.",
+            "no_available_infrared_entities": "No infrared entities are available.",
+            "no_virtual_remotes": "No virtual remotes are configured.",
+            "reconfigure_successful": "Reconfiguration was successful."
+        },
+        "error": {
+            "infrared_entity_unavailable": "Selected infrared entity is unavailable.",
+            "remote_name_required": "Remote name is required."
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "infrared_entity_id": "Infrared entity",
+                    "name": "Remote name"
+                },
+                "data_description": {
+                    "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
+                    "name": "Name of the virtual remote."
+                },
+                "description": "Update the configured virtual remote.",
+                "title": "Reconfigure Virtual Remote"
+            },
+            "user": {
+                "data": {
+                    "infrared_entity_id": "Infrared entity",
+                    "name": "Remote name"
+                },
+                "data_description": {
+                    "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
+                    "name": "Name of the virtual remote to create."
+                },
+                "description": "Create a virtual remote linked to an infrared entity.",
+                "title": "Create Virtual Remote"
+            }
+        }
+    },
+    "exceptions": {
+        "remote_command_missing": {
+            "message": "Command {command} is not configured and is not a valid raw infrared command."
+        },
+        "remote_infrared_missing": {
+            "message": "Infrared entity {entity_id} is unavailable or does not exist."
+        },
+        "remote_invalid_command": {
+            "message": "Invalid infrared command: {error}"
+        },
+        "remote_invalid_service_parameter": {
+            "message": "{error}"
+        },
+        "remote_send_failed": {
+            "message": "Failed to send infrared command: {error}"
+        },
+        "remote_unknown_or_invalid_command": {
+            "message": "Unknown or invalid infrared command: {command}"
+        }
+    },
+    "issues": {
+        "linked_infrared_entity_missing": {
+            "description": "Virtual remote {remote_name} is linked to infrared entity {infrared_entity_id}, but that entity is unavailable or no longer exists. Open the Virtual Remote integration options and select a valid infrared entity.",
+            "title": "Linked infrared entity is missing"
+        }
+    },
+    "options": {
+        "abort": {
+            "command_not_found": "The selected command was not found.",
+            "no_available_infrared_entities": "No infrared entities are available.",
+            "no_remote_commands": "No commands are configured.",
+            "no_virtual_remotes": "No virtual remotes are configured."
+        },
+        "error": {
+            "command_data_required": "Command data is required.",
+            "command_name_exists": "A command with this name already exists.",
+            "command_name_required": "Command name is required.",
+            "infrared_entity_unavailable": "Selected infrared entity is unavailable.",
+            "invalid_command": "Command data is not a supported infrared command format.",
+            "remote_name_required": "Remote name is required."
+        },
+        "step": {
+            "add_command": {
+                "data": {
+                    "command_data": "Command data",
+                    "command_name": "Command name"
+                },
+                "data_description": {
+                    "command_data": "Infrared command payload in a supported format.",
+                    "command_name": "Name used with remote.send_command."
+                },
+                "title": "Add Command"
+            },
+            "edit_command": {
+                "data": {
+                    "command_data": "Command data",
+                    "command_name": "Command name"
+                },
+                "data_description": {
+                    "command_data": "Infrared command payload in a supported format.",
+                    "command_name": "Name used with remote.send_command."
+                },
+                "title": "Edit Command"
+            },
+            "edit_remote": {
+                "data": {
+                    "infrared_entity_id": "Infrared entity",
+                    "name": "Remote name"
+                },
+                "data_description": {
+                    "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
+                    "name": "Name of the virtual remote."
+                },
+                "title": "Edit Virtual Remote"
+            },
+            "init": {
+                "menu_options": {
+                    "edit_remote": "Edit virtual remote",
+                    "manage_commands": "Manage commands"
+                },
+                "title": "Virtual Remote Options"
+            },
+            "manage_commands": {
+                "menu_options": {
+                    "add_command": "Add command",
+                    "edit_command": "Edit command",
+                    "remove_command": "Remove command"
+                },
+                "title": "Manage Commands"
+            },
+            "remove_command": {
+                "data": {
+                    "command_name": "Command"
+                },
+                "data_description": {
+                    "command_name": "Command to remove."
+                },
+                "title": "Remove Command"
+            },
+            "select_command_for_edit": {
+                "data": {
+                    "command_name": "Command"
+                },
+                "data_description": {
+                    "command_name": "Command to edit."
+                },
+                "title": "Select Command"
+            }
+        }
+    }
+}
