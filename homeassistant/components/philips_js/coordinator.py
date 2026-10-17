@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from haphilipsjs import (
@@ -18,9 +19,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_SYSTEM,
+    DOMAIN,
+    UNREACHABLE_GRACE,
+    WAKE_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +48,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Set up the coordinator."""
         self.api = api
         self._notify_future: asyncio.Task | None = None
+        self._last_seen: float | None = None
 
         super().__init__(
             hass,
@@ -132,15 +140,68 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
-    @override
-    async def _async_update_data(self):
-        """Fetch the latest data from the source."""
+    @property
+    def in_grace(self) -> bool:
+        """Return if the TV answered recently enough to trust its last state."""
+        return (
+            self._last_seen is not None
+            and time.monotonic() - self._last_seen < UNREACHABLE_GRACE
+        )
+
+    @property
+    def tv_on(self) -> bool:
+        """Return if the TV counts as on for entity state.
+
+        A TV that answered within UNREACHABLE_GRACE keeps its last known state.
+        """
+        return self.api.on or (self.in_grace and bool(self.api.system))
+
+    async def _async_poll(self) -> bool:
+        """Poll the TV and return if it really answered."""
+        probing = False
+        if not self.api.on and self.in_grace and self.api.system:
+            # Make haphilipsjs take the cheap poll path instead of the full
+            # re-init. The library resets `on` itself if the TV does not answer.
+            self.api.on = True
+            probing = True
         try:
             await self.api.update()
-            self._async_notify_schedule()
-        except ConnectionFailure:
-            pass
+        except asyncio.CancelledError:
+            # The probe never finished, so the TV did not answer.
+            if probing:
+                self.api.on = False
+            raise
         except AutenticationFailure as exception:
             raise ConfigEntryAuthFailed(str(exception)) from exception
         except GeneralFailure as exception:
-            raise UpdateFailed(str(exception)) from exception
+            _LOGGER.debug("Update failed: %r", exception)
+            self.api.on = False
+
+        if self.api.on:
+            self._last_seen = time.monotonic()
+        return self.api.on
+
+    @override
+    async def _async_update_data(self):
+        """Fetch the latest data from the source.
+
+        A TV in standby regularly drops single requests. Polls within
+        UNREACHABLE_GRACE of the last answer use the cheap poll path, and
+        entities keep the last known state through `tv_on`. `api.on` always
+        reflects whether the TV really answered the last poll.
+        """
+        if await self._async_poll():
+            self._async_notify_schedule()
+
+    async def async_ensure_reachable(self, force: bool = False) -> bool:
+        """Wait until the TV answers, for at most WAKE_TIMEOUT seconds."""
+        if not force and self.api.on and self.in_grace:
+            return True
+
+        try:
+            async with asyncio.timeout(WAKE_TIMEOUT):
+                while not await self._async_poll():
+                    await asyncio.sleep(2)
+        except TimeoutError:
+            return False
+        return True
