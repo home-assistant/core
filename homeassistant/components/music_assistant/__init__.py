@@ -54,6 +54,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
 ]
 
 CONNECT_TIMEOUT = 10
