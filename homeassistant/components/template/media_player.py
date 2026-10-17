@@ -467,8 +467,11 @@ class AbstractTemplateMediaPlayer(
     def _update_media_position(self, position: int | None) -> None:
         """Update the position and the time it was last valid."""
         # Trigger entities re-render unchanged samples, which must not undo the
-        # position kept by a state transition or reset the clock.
-        if position == self._rendered_media_position:
+        # position kept by a state transition or reset the clock. Template errors
+        # and restoring change the position without updating the last sample.
+        if position == self._rendered_media_position and (position is None) == (
+            self._attr_media_position is None
+        ):
             return
         self._rendered_media_position = position
         self._attr_media_position = position

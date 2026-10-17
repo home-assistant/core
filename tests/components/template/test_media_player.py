@@ -1295,6 +1295,79 @@ async def test_restore_state_is_saved(
     }
 
 
+async def test_media_position_sample_after_template_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a repeated position sample is applied after a template error cleared it."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        ConfigurationStyle.MODERN,
+        1,
+        {
+            "media_position": (
+                f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', 'media_position') + 0 }}}}"
+            )
+        },
+        STATE_TEMPLATE,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing", {"media_position": 30})
+
+    # A missing attribute makes the template raise, which clears the position.
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing")
+    assert_state_and_attributes(
+        hass, TEST_MEDIA_PLAYER, "playing", {"media_position": None}
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing", {"media_position": 30})
+    assert_state_and_attributes(
+        hass, TEST_MEDIA_PLAYER, "playing", {"media_position": 30}
+    )
+
+
+async def test_restored_media_position_cleared_by_empty_sample(
+    hass: HomeAssistant,
+) -> None:
+    """Test the first empty position sample clears a restored position."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        saved_extra_data={
+            "is_volume_muted": None,
+            "media": {**NO_MEDIA_DATA["media"], "media_position": 30},
+            "media_position_updated_at": "2026-10-17T00:00:00+00:00",
+            "repeat": None,
+            "shuffle": None,
+            "sound_mode": None,
+            "sound_mode_list": None,
+            "source": None,
+            "source_list": None,
+            "volume_level": None,
+        },
+    )
+    await setup_restore_template_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        ConfigurationStyle.TRIGGER,
+        {
+            "state": STATE_TEMPLATE,
+            "media_position": _attribute_template("media_position"),
+        },
+    )
+    assert_state_and_attributes(
+        hass, TEST_MEDIA_PLAYER, "playing", {"media_position": 30}
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing")
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        {"media_position": None, "media_position_updated_at": None},
+    )
+
+
 async def test_restore_media_metadata_trigger(hass: HomeAssistant) -> None:
     """Test media metadata is restored before a trigger entity renders."""
     saved_media = {
