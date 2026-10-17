@@ -43,7 +43,7 @@ async def test_diagnostics_diffuser_added(
     diffusers.append(mock_diffuser(hublot="lot456"))
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -51,4 +51,4 @@ async def test_diagnostics_diffuser_added(
 
     assert len(diagnostics["diffusers"]) == 2
     assert diagnostics["diffusers"][0]["sensors"] is not None
-    assert diagnostics["diffusers"][1]["sensors"] is None
+    assert diagnostics["diffusers"][1]["sensors"] is not None

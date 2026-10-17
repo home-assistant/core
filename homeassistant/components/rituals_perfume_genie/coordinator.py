@@ -36,6 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 # The fill level is fetched separately, and far less often.
 HOURLY_SENSORS = (Sensor.BATTERY, Sensor.PERFUME, Sensor.WIFI)
 
+# The sensors with entities that are enabled by default.
+DEFAULT_SENSORS = frozenset({Sensor.BATTERY, Sensor.FILL, Sensor.PERFUME})
+
 type RitualsConfigEntry = ConfigEntry[RitualsRuntimeData]
 
 
@@ -160,10 +163,17 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
         config_entry: RitualsConfigEntry,
         hubs: RitualsHubsCoordinator,
         hublot: str,
+        *,
+        added: bool = False,
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the coordinator.
+
+        A diffuser added to the account after setup has its entities added
+        at about the same time as this coordinator first updates.
+        """
         self.hubs = hubs
         self.hublot = hublot
+        self._added = added
         self._fill_updated: datetime | None = None
         super().__init__(
             hass,
@@ -183,6 +193,12 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
         previous = self.data
 
         wanted = set(self.async_contexts())
+
+        # Its entities may not all be listening yet; being new, none of them
+        # can be disabled other than by default.
+        if self._added and previous is None:
+            wanted |= DEFAULT_SENSORS
+
         fill_wanted = Sensor.FILL in wanted and Sensor.FILL in hub.supported_sensors
         hourly = wanted.intersection(HOURLY_SENSORS)
 

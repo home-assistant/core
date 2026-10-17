@@ -1,17 +1,46 @@
 """Base classes for Rituals Perfume Genie diffuser entities."""
 
+from collections.abc import Callable
 from typing import override
 
 from ritualsgenie import RitualsGenieHub, RitualsGenieHublot, Sensor
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import RitualsHubsCoordinator, RitualsSensorsCoordinator
+from .coordinator import (
+    RitualsConfigEntry,
+    RitualsHubsCoordinator,
+    RitualsSensorsCoordinator,
+)
 
 MANUFACTURER = "Rituals Cosmetics"
+
+
+@callback
+def async_add_diffusers(
+    config_entry: RitualsConfigEntry, add_diffusers: Callable[[list[str]], None]
+) -> None:
+    """Add the entities of the diffusers on the account, now and later on.
+
+    A diffuser that left the account is forgotten here, so it gets its
+    entities back when it returns.
+    """
+    hubs = config_entry.runtime_data.hubs
+    known: set[str] = set()
+
+    @callback
+    def _async_add_new() -> None:
+        known.intersection_update(hubs.data)
+        if new := [hublot for hublot in hubs.data if hublot not in known]:
+            known.update(new)
+            add_diffusers(new)
+
+    _async_add_new()
+    config_entry.async_on_unload(hubs.async_add_listener(_async_add_new))
 
 
 def _device_info(

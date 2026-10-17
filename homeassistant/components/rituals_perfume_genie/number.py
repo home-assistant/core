@@ -7,11 +7,11 @@ from typing import override
 from ritualsgenie import Attribute, RitualsGenie, RitualsGenieHub
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserEntity
+from .entity import DiffuserEntity, async_add_diffusers
 
 PARALLEL_UPDATES = 1
 
@@ -48,11 +48,15 @@ async def async_setup_entry(
     """Set up the diffuser numbers."""
     hubs = config_entry.runtime_data.hubs
 
-    async_add_entities(
-        RitualsNumberEntity(hubs, hublot, description)
-        for hublot in hubs.data
-        for description in ENTITY_DESCRIPTIONS
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsNumberEntity(hubs, hublot, description)
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsNumberEntity(DiffuserEntity, NumberEntity):
