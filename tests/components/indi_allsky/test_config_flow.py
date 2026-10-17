@@ -584,3 +584,42 @@ async def test_zeroconf_confirmation_collision_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_rejects_protocol_downgrade(
+    hass: HomeAssistant,
+) -> None:
+    """Test Zeroconf discovery aborts without changing protocol if SSL settings differ."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        title="INDI Allsky (192.168.1.50)",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_http._tcp.local.",
+        name="INDI Allsky._http._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_PORT] == 443
+    assert entry.data[CONF_SSL] is True

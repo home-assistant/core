@@ -178,6 +178,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                         current_entry = entry
                         break
             current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+            if current_entry and current_entry.data.get(CONF_SSL, True) != ssl:
+                return self.async_abort(reason="already_configured")
             updates: dict[str, Any] = {
                 CONF_PORT: port,
                 CONF_SSL: ssl,
