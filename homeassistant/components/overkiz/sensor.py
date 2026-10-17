@@ -589,7 +589,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        # 0 is a valid value, but an empty string is not a valid enum option
+        # Empty strings are not valid enum options, but 0 is a valid value
         if state is None or state.value is None or state.value == "":
             return None
 
