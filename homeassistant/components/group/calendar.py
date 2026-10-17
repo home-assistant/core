@@ -10,24 +10,11 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
-    CalendarEntityStateAttribute,
     CalendarEvent,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_ENTITIES,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.core import (
-    Event,
-    EventStateReportedData,
-    HomeAssistant,
-    State,
-    callback,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITIES, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import (
@@ -35,7 +22,6 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import async_track_state_report_event
-from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -106,30 +92,6 @@ def async_create_preview_calendar(
     )
 
 
-def _event_from_state(state: State) -> CalendarEvent | None:
-    """Rebuild the current or next event of a member from its state attributes."""
-    attributes = state.attributes
-    if (summary := attributes.get(CalendarEntityStateAttribute.MESSAGE)) is None:
-        return None
-
-    timezone = dt_util.get_default_time_zone()
-    start = dt.datetime.strptime(
-        attributes[CalendarEntityStateAttribute.START_TIME], DATE_STR_FORMAT
-    ).replace(tzinfo=timezone)
-    end = dt.datetime.strptime(
-        attributes[CalendarEntityStateAttribute.END_TIME], DATE_STR_FORMAT
-    ).replace(tzinfo=timezone)
-    return CalendarEvent(
-        start=start.date()
-        if attributes[CalendarEntityStateAttribute.ALL_DAY]
-        else start,
-        end=end.date() if attributes[CalendarEntityStateAttribute.ALL_DAY] else end,
-        summary=summary,
-        description=attributes.get(CalendarEntityStateAttribute.DESCRIPTION) or None,
-        location=attributes.get(CalendarEntityStateAttribute.LOCATION) or None,
-    )
-
-
 class CalendarGroup(GroupEntity, CalendarEntity):
     """Representation of a calendar group."""
 
@@ -157,7 +119,8 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         @callback
         def async_member_reported(_: Event[EventStateReportedData]) -> None:
             """Refresh event subscribers when a member rewrites an unchanged state."""
-            self.async_update_event_listeners()
+            if self._event_listener_debouncer:
+                self._event_listener_debouncer.async_schedule_call()
 
         self.async_on_remove(
             async_track_state_report_event(
@@ -184,14 +147,10 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events of all members within a datetime range."""
-        # Members are queried directly: calling the get_events action would
-        # make polling members refresh and write their state on every fetch.
-        component: EntityComponent[CalendarEntity] = hass.data[CALENDAR_DOMAIN]
-        calendars = self.async_member_calendars(component, {self.entity_id})
         member_events = await asyncio.gather(
             *(
                 calendar.async_get_events(hass, start_date, end_date)
-                for calendar in calendars
+                for calendar in self._async_calendars()
             )
         )
         events = [event for events in member_events for event in events]
@@ -199,6 +158,19 @@ class CalendarGroup(GroupEntity, CalendarEntity):
             events,
             key=lambda event: (event.start_datetime_local, event.end_datetime_local),
         )
+
+    @callback
+    def _async_calendars(self) -> list[CalendarEntity]:
+        """Return the available member calendars."""
+        # Members are used directly: the get_events action would make polling
+        # members refresh on every fetch, and their state attributes lose the
+        # event's UTC offset.
+        component: EntityComponent[CalendarEntity] | None = self.hass.data.get(
+            CALENDAR_DOMAIN
+        )
+        if component is None:
+            return []
+        return self.async_member_calendars(component, {self.entity_id})
 
     @callback
     def async_member_calendars(
@@ -213,13 +185,11 @@ class CalendarGroup(GroupEntity, CalendarEntity):
             if entity_id in visited:
                 continue
             visited.add(entity_id)
-            if (entity := component.get_entity(entity_id)) is None or not (
-                entity.available
-            ):
+            if (entity := component.get_entity(entity_id)) is None:
                 continue
             if isinstance(entity, CalendarGroup):
                 calendars.extend(entity.async_member_calendars(component, visited))
-            else:
+            elif entity.available:
                 calendars.append(entity)
         return calendars
 
@@ -227,18 +197,10 @@ class CalendarGroup(GroupEntity, CalendarEntity):
     @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the calendar group state."""
-        states = [
-            state
-            for entity_id in self._entity_ids
-            if (state := self.hass.states.get(entity_id)) is not None
-        ]
-
+        calendars = self._async_calendars()
         self._member_events = [
-            event
-            for state in states
-            if state.state != STATE_UNAVAILABLE
-            and (event := _event_from_state(state)) is not None
+            event for calendar in calendars if (event := calendar.event) is not None
         ]
 
-        # Set group as unavailable if all members are unavailable or missing
-        self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
+        # Set group as unavailable if no member calendar is available
+        self._attr_available = bool(calendars)

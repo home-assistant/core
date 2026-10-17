@@ -30,7 +30,6 @@ from tests.typing import WebSocketGenerator
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("button", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
-        ("calendar", "off", "off", {}, {}, {}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         (
             "event",
@@ -212,7 +211,6 @@ async def test_config_flow_hides_members(
     [
         ("binary_sensor", "on", {"all": False}, {}),
         ("button", "2021-01-01T23:59:59.123+00:00", {}, {}),
-        ("calendar", "off", {}, {}),
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
@@ -496,7 +494,6 @@ VALVE_ATTRS = [{"supported_features": 0}, {"is_closed": False}]
     [
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
         ("button", {}, ["", ""], "unknown", [{}, {}]),
-        ("calendar", {}, ["on", "off"], "off", [{}, {}]),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
@@ -609,7 +606,6 @@ async def test_config_flow_preview(
     [
         ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
         ("button", {}, {}, ["", ""], "unknown", [{}, {}]),
-        ("calendar", {}, {}, ["on", "off"], "off", [{}, {}]),
         ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),

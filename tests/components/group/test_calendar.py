@@ -1,12 +1,13 @@
 """The tests for the group calendar platform."""
 
+from collections.abc import Sequence
 import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, config_entries
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
@@ -22,6 +23,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     MockPlatform,
     async_fire_time_changed,
     get_fixture_path,
@@ -31,45 +33,30 @@ from tests.typing import WebSocketGenerator
 
 GROUP_ENTITY_ID = "calendar.family"
 NOW = dt.datetime(2026, 10, 17, 12, 0, tzinfo=dt.UTC)
-
-WORK_ATTRIBUTES = {
-    "message": "Meeting",
-    "all_day": False,
-    "start_time": "2026-10-17 11:00:00",
-    "end_time": "2026-10-17 13:00:00",
-    "location": "Office",
-    "description": "",
-}
-HOME_ATTRIBUTES = {
-    "message": "Dinner",
-    "all_day": False,
-    "start_time": "2026-10-17 18:00:00",
-    "end_time": "2026-10-17 20:00:00",
-    "location": "",
-    "description": "With friends",
+FAMILY_GROUP = {
+    "platform": DOMAIN,
+    "entities": ["calendar.work", "calendar.home"],
+    "name": "Family",
+    "unique_id": "unique_identifier",
 }
 
-WORK_EVENTS = [
-    CalendarEvent(
-        start=NOW - dt.timedelta(hours=1),
-        end=NOW + dt.timedelta(hours=1),
-        summary="Meeting",
-        location="Office",
-    ),
-]
-HOME_EVENTS = [
-    CalendarEvent(
-        start=NOW.date(),
-        end=NOW.date() + dt.timedelta(days=1),
-        summary="Holiday",
-    ),
-    CalendarEvent(
-        start=NOW + dt.timedelta(hours=6),
-        end=NOW + dt.timedelta(hours=8),
-        summary="Dinner",
-        description="With friends",
-    ),
-]
+MEETING = CalendarEvent(
+    start=NOW - dt.timedelta(hours=1),
+    end=NOW + dt.timedelta(hours=1),
+    summary="Meeting",
+    location="Office",
+)
+HOLIDAY = CalendarEvent(
+    start=NOW.date(),
+    end=NOW.date() + dt.timedelta(days=1),
+    summary="Holiday",
+)
+DINNER = CalendarEvent(
+    start=NOW + dt.timedelta(hours=6),
+    end=NOW + dt.timedelta(hours=8),
+    summary="Dinner",
+    description="With friends",
+)
 
 
 class MockCalendarEntity(CalendarEntity):
@@ -112,146 +99,12 @@ async def set_time_zone(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> 
     freezer.move_to(NOW)
 
 
-async def _setup_group(hass: HomeAssistant, extra_config: list[ConfigType]) -> None:
-    """Set up a calendar group of calendar.work and calendar.home."""
-    await async_setup_component(
-        hass,
-        CALENDAR_DOMAIN,
-        {
-            CALENDAR_DOMAIN: [
-                *extra_config,
-                {
-                    "platform": DOMAIN,
-                    "entities": ["calendar.work", "calendar.home"],
-                    "name": "Family",
-                    "unique_id": "unique_identifier",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def test_state(hass: HomeAssistant) -> None:
-    """Test calendar group state follows the earliest member event."""
-    await _setup_group(hass, [])
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    hass.states.async_set("calendar.work", STATE_OFF)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes == {
-        ATTR_ENTITY_ID: ["calendar.work", "calendar.home"],
-        "friendly_name": "Family",
-    }
-
-    hass.states.async_set("calendar.home", STATE_OFF, HOME_ATTRIBUTES)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes["message"] == "Dinner"
-    assert state.attributes["description"] == "With friends"
-
-    hass.states.async_set("calendar.work", STATE_ON, WORK_ATTRIBUTES)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes == {
-        ATTR_ENTITY_ID: ["calendar.work", "calendar.home"],
-        "friendly_name": "Family",
-        "message": "Meeting",
-        "all_day": False,
-        "start_time": "2026-10-17 11:00:00",
-        "end_time": "2026-10-17 13:00:00",
-        "location": "Office",
-        "description": "",
-    }
-
-    hass.states.async_set("calendar.work", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes["message"] == "Dinner"
-
-    hass.states.async_set("calendar.home", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_all_day_event(hass: HomeAssistant) -> None:
-    """Test an all day member event is preferred when it started earlier."""
-    await _setup_group(hass, [])
-
-    hass.states.async_set("calendar.work", STATE_ON, WORK_ATTRIBUTES)
-    hass.states.async_set(
-        "calendar.home",
-        STATE_ON,
-        {
-            "message": "Holiday",
-            "all_day": True,
-            "start_time": "2026-10-17 00:00:00",
-            "end_time": "2026-10-18 00:00:00",
-            "location": "",
-            "description": "",
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes["message"] == "Holiday"
-    assert state.attributes["all_day"] is True
-    assert state.attributes["start_time"] == "2026-10-17 00:00:00"
-    assert state.attributes["end_time"] == "2026-10-18 00:00:00"
-
-
-async def test_event_ends(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    """Test the group moves to the next event when the current one ends."""
-    await _setup_group(hass, [])
-
-    hass.states.async_set("calendar.work", STATE_ON, WORK_ATTRIBUTES)
-    hass.states.async_set("calendar.home", STATE_OFF, HOME_ATTRIBUTES)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes["message"] == "Meeting"
-
-    freezer.move_to(NOW + dt.timedelta(hours=1, minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(GROUP_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes["message"] == "Dinner"
-
-
 @pytest.fixture
 def calendar_platform(hass: HomeAssistant) -> list[MockCalendarEntity]:
     """Register a calendar platform providing calendar.work and calendar.home."""
     entities = [
-        MockCalendarEntity("Work", list(WORK_EVENTS)),
-        MockCalendarEntity("Home", list(HOME_EVENTS)),
+        MockCalendarEntity("Work", [MEETING]),
+        MockCalendarEntity("Home", [HOLIDAY, DINNER]),
     ]
 
     async def async_setup_platform(
@@ -270,11 +123,203 @@ def calendar_platform(hass: HomeAssistant) -> list[MockCalendarEntity]:
     return entities
 
 
+async def _setup_groups(
+    hass: HomeAssistant, groups: Sequence[ConfigType] = (FAMILY_GROUP,)
+) -> None:
+    """Set up the test calendars and the given calendar groups."""
+    await async_setup_component(
+        hass,
+        CALENDAR_DOMAIN,
+        {CALENDAR_DOMAIN: [{"platform": "test"}, *groups]},
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def _update_member(
+    hass: HomeAssistant,
+    entity: MockCalendarEntity,
+    events: list[CalendarEvent],
+    available: bool = True,
+) -> None:
+    """Change the events and availability of a member calendar."""
+    entity._events = events
+    entity._attr_available = available
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+
+async def test_state(
+    hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
+) -> None:
+    """Test calendar group state follows the earliest member event."""
+    work, home = calendar_platform
+    work._attr_available = False
+    home._attr_available = False
+    await _setup_groups(hass)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await _update_member(hass, work, [])
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes == {
+        ATTR_ENTITY_ID: ["calendar.work", "calendar.home"],
+        "friendly_name": "Family",
+    }
+
+    await _update_member(hass, home, [DINNER])
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Dinner"
+    assert state.attributes["description"] == "With friends"
+
+    await _update_member(hass, work, [MEETING])
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes == {
+        ATTR_ENTITY_ID: ["calendar.work", "calendar.home"],
+        "friendly_name": "Family",
+        "message": "Meeting",
+        "all_day": False,
+        "start_time": "2026-10-17 11:00:00",
+        "end_time": "2026-10-17 13:00:00",
+        "location": "Office",
+        "description": "",
+    }
+
+    await _update_member(hass, work, [MEETING], available=False)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Dinner"
+
+    await _update_member(hass, home, [DINNER], available=False)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("calendar_platform")
+async def test_all_day_event(hass: HomeAssistant) -> None:
+    """Test an all day member event is preferred when it started earlier."""
+    await _setup_groups(hass)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Holiday"
+    assert state.attributes["all_day"] is True
+    assert state.attributes["start_time"] == "2026-10-17 00:00:00"
+    assert state.attributes["end_time"] == "2026-10-18 00:00:00"
+
+
+async def test_event_ends(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calendar_platform: list[MockCalendarEntity],
+) -> None:
+    """Test the group moves to the next event when the current one ends."""
+    calendar_platform[1]._events = [DINNER]
+    await _setup_groups(hass)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Meeting"
+
+    freezer.move_to(NOW + dt.timedelta(hours=1, minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Dinner"
+
+
+async def test_event_in_repeated_dst_hour(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calendar_platform: list[MockCalendarEntity],
+) -> None:
+    """Test a member event in the repeated hour at the end of DST keeps its offset."""
+    await hass.config.async_set_time_zone("America/New_York")
+    # 01:00 EST, after clocks went back from 02:00 EDT
+    freezer.move_to(dt.datetime(2026, 11, 1, 6, 0, tzinfo=dt.UTC))
+    work, home = calendar_platform
+    work._events = [
+        CalendarEvent(
+            start=dt.datetime(2026, 11, 1, 6, 30, tzinfo=dt.UTC),
+            end=dt.datetime(2026, 11, 1, 7, 0, tzinfo=dt.UTC),
+            summary="Night shift",
+        )
+    ]
+    home._events = []
+    await _setup_groups(hass)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Night shift"
+    assert state.attributes["start_time"] == "2026-11-01 01:30:00"
+    # The state attribute is ambiguous in local time, the group event is not
+    group = hass.data[CALENDAR_DOMAIN].get_entity(GROUP_ENTITY_ID)
+    assert group.event.start == dt.datetime(2026, 11, 1, 6, 30, tzinfo=dt.UTC)
+
+
+async def test_state_membership_cycle(
+    hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
+) -> None:
+    """Test a group including itself doesn't keep its own previous event."""
+    work, home = calendar_platform
+    home._events = []
+    await _setup_groups(
+        hass,
+        [
+            {
+                "platform": DOMAIN,
+                "name": "Family",
+                "entities": ["calendar.work", GROUP_ENTITY_ID],
+            }
+        ],
+    )
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Meeting"
+
+    await _update_member(hass, work, [])
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert "message" not in state.attributes
+
+    await _update_member(hass, work, [], available=False)
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_get_events(
     hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
 ) -> None:
     """Test the group returns the events of all members."""
-    await _setup_group(hass, [{"platform": "test"}])
+    await _setup_groups(hass)
 
     state = hass.states.get(GROUP_ENTITY_ID)
     assert state is not None
@@ -353,19 +398,7 @@ async def test_get_events_nested_groups(
     expected_summaries: list[str],
 ) -> None:
     """Test nested groups fetch each calendar once, even with membership cycles."""
-    await async_setup_component(
-        hass,
-        CALENDAR_DOMAIN,
-        {
-            CALENDAR_DOMAIN: [
-                {"platform": "test"},
-                *({"platform": DOMAIN, **group} for group in groups),
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+    await _setup_groups(hass, [{"platform": DOMAIN, **group} for group in groups])
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
@@ -415,7 +448,7 @@ async def test_subscribe_updates_on_member_report(
     calendar_platform: list[MockCalendarEntity],
 ) -> None:
     """Test subscribers are updated when a member refreshes without a state change."""
-    await _setup_group(hass, [{"platform": "test"}])
+    await _setup_groups(hass)
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -455,3 +488,106 @@ async def test_subscribe_updates_on_member_report(
         "Dinner",
         "Movie",
     ]
+
+
+@pytest.mark.usefixtures("calendar_platform")
+async def test_config_entry(hass: HomeAssistant) -> None:
+    """Test a calendar group set up from a config entry."""
+    await _setup_groups(hass, [])
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "entities": ["calendar.work", "calendar.home"],
+            "group_type": "calendar",
+            "hide_members": False,
+            "name": "Family",
+        },
+        title="Family",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_ENTITY_ID] == ["calendar.work", "calendar.home"]
+    assert state.attributes["message"] == "Holiday"
+
+
+@pytest.mark.usefixtures("calendar_platform")
+async def test_config_flow_preview(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the calendar group preview."""
+    await _setup_groups(hass, [])
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "calendar"}
+    )
+    assert result["preview"] == "group"
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "Family",
+                "entities": ["calendar.work", "calendar.home"],
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {
+            ATTR_ENTITY_ID: ["calendar.work", "calendar.home"],
+            "friendly_name": "Family",
+            "message": "Holiday",
+            "all_day": True,
+            "start_time": "2026-10-17 00:00:00",
+            "end_time": "2026-10-18 00:00:00",
+            "location": "",
+            "description": "",
+        },
+        "state": STATE_ON,
+    }
+
+
+async def test_config_flow_preview_calendar_not_loaded(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the preview is unavailable before the calendar integration is loaded."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "calendar"}
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "Family", "entities": ["calendar.work"]},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"friendly_name": "Family"},
+        "state": STATE_UNAVAILABLE,
+    }
