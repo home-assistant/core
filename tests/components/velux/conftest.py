@@ -78,6 +78,7 @@ def mock_window() -> AsyncMock:
     window.is_opening = False
     window.is_closing = False
     window.position = MagicMock(position_percent=30, closed=False, known=True)
+    window.get_position = MagicMock(side_effect=lambda: window.position)
     window.wink = AsyncMock()
     window.pyvlx = MagicMock()
     return window
@@ -115,8 +116,9 @@ def mock_blind() -> AsyncMock:
     blind.node_id = 3
     blind.name = "Test Blind"
     blind.serial_number = "4711"
-    # Standard cover position (used by current_cover_position)
+    # Standard cover position (returned by get_position while not moving)
     blind.position = MagicMock(position_percent=40, closed=False, known=True)
+    blind.get_position = MagicMock(side_effect=lambda: blind.position)
     blind.is_opening = False
     blind.is_closing = False
     # Orientation/tilt-related attributes and methods
@@ -193,6 +195,7 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.is_closing = False
     cover.rain_sensor = False
     cover.position = MagicMock(position_percent=30, closed=False, known=True)
+    cover.get_position = MagicMock(side_effect=lambda: cover.position)
     cover.position_upper_curtain = MagicMock(
         position_percent=30, closed=False, known=True
     )
