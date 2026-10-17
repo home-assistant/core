@@ -172,11 +172,11 @@ async def test_binary_sensors_same_key_different_device_id(
     )
 
     # Verify both entities exist and have correct states
-    state1 = hass.states.get("binary_sensor.sub_device_1_motion")
+    state1 = hass.states.get("binary_sensor.test_sub_device_1_motion")
     assert state1 is not None
     assert state1.state == STATE_ON
 
-    state2 = hass.states.get("binary_sensor.sub_device_2_motion")
+    state2 = hass.states.get("binary_sensor.test_sub_device_2_motion")
     assert state2 is not None
     assert state2.state == STATE_OFF
 
@@ -186,11 +186,11 @@ async def test_binary_sensors_same_key_different_device_id(
     )
     await hass.async_block_till_done()
 
-    state1 = hass.states.get("binary_sensor.sub_device_1_motion")
+    state1 = hass.states.get("binary_sensor.test_sub_device_1_motion")
     assert state1.state == STATE_OFF
 
     # Sub device 2 should remain unchanged
-    state2 = hass.states.get("binary_sensor.sub_device_2_motion")
+    state2 = hass.states.get("binary_sensor.test_sub_device_2_motion")
     assert state2.state == STATE_OFF
 
     # Update sub device 2
@@ -199,11 +199,11 @@ async def test_binary_sensors_same_key_different_device_id(
     )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("binary_sensor.sub_device_2_motion")
+    state2 = hass.states.get("binary_sensor.test_sub_device_2_motion")
     assert state2.state == STATE_ON
 
     # Sub device 1 should remain unchanged
-    state1 = hass.states.get("binary_sensor.sub_device_1_motion")
+    state1 = hass.states.get("binary_sensor.test_sub_device_1_motion")
     assert state1.state == STATE_OFF
 
 
@@ -257,7 +257,7 @@ async def test_binary_sensor_main_and_sub_device_same_key(
     assert main_state is not None
     assert main_state.state == STATE_ON
 
-    sub_state = hass.states.get("binary_sensor.sub_device_sub_sensor")
+    sub_state = hass.states.get("binary_sensor.test_sub_device_sub_sensor")
     assert sub_state is not None
     assert sub_state.state == STATE_OFF
 
@@ -271,5 +271,5 @@ async def test_binary_sensor_main_and_sub_device_same_key(
     assert main_state.state == STATE_OFF
 
     # Sub device sensor should remain unchanged
-    sub_state = hass.states.get("binary_sensor.sub_device_sub_sensor")
+    sub_state = hass.states.get("binary_sensor.test_sub_device_sub_sensor")
     assert sub_state.state == STATE_OFF

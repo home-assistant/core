@@ -175,6 +175,8 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    # Device registry id of the main device, the parent of the child devices
+    main_device_id: str | None = None
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
@@ -214,7 +216,6 @@ class RuntimeEntryData:
         field(default_factory=list)
     )
     assist_satellite_wake_words: dict[int, str] = field(default_factory=dict)
-    device_id_to_name: dict[int, str] = field(default_factory=dict)
     entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
         default_factory=dict
     )
