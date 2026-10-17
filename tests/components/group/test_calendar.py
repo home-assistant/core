@@ -461,6 +461,49 @@ async def test_get_events_nested_groups(
     ] == expected_summaries
 
 
+async def test_nested_group_report_refreshes_member_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calendar_platform: list[MockCalendarEntity],
+) -> None:
+    """Test a parent group picks up later event changes inside a nested group."""
+    home = calendar_platform[1]
+    home._events = [DINNER]
+    await _setup_groups(
+        hass,
+        [
+            {"platform": DOMAIN, "name": "Family", "entities": ["calendar.friends"]},
+            {
+                "platform": DOMAIN,
+                "name": "Friends",
+                "entities": ["calendar.work", "calendar.home"],
+            },
+        ],
+    )
+
+    state = hass.states.get(GROUP_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["message"] == "Meeting"
+
+    # The nested group's earliest event is still the meeting, so it only
+    # reports an unchanged state
+    await _update_member(
+        hass,
+        home,
+        [
+            CalendarEvent(
+                start=NOW + dt.timedelta(hours=9),
+                end=NOW + dt.timedelta(hours=10),
+                summary="Movie",
+            )
+        ],
+    )
+
+    freezer.move_to(NOW + dt.timedelta(hours=1, minutes=1))
+    group = hass.data[CALENDAR_DOMAIN].get_entity(GROUP_ENTITY_ID)
+    assert group.event.summary == "Movie"
+
+
 async def test_reload(hass: HomeAssistant) -> None:
     """Test reloading YAML calendar groups."""
     await async_setup_component(

@@ -129,7 +129,10 @@ class CalendarGroup(GroupEntity, CalendarEntity):
 
         @callback
         def async_member_reported(_: Event[EventStateReportedData]) -> None:
-            """Refresh event subscribers when a member rewrites an unchanged state."""
+            """Refresh member events when a member rewrites an unchanged state."""
+            # A nested group reports an unchanged state when only its later
+            # events change. Writing state here could loop through cycles.
+            self.async_update_group_state()
             if self._event_listener_debouncer:
                 self._event_listener_debouncer.async_schedule_call()
 
