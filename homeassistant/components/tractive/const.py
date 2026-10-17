@@ -12,7 +12,6 @@ ATTR_MINUTES_NIGHT_SLEEP = "minutes_night_sleep"
 ATTR_MINUTES_REST = "minutes_rest"
 ATTR_POWER_SAVING = "power_saving"
 ATTR_TRACKER_STATE = "tracker_state"
-ATTR_WEIGHT = "weight"
 
 # This client ID was issued by Tractive specifically for Home Assistant.
 # Please do not use it anywhere else.

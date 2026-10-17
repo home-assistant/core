@@ -29,7 +29,6 @@ from .const import (
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
     ATTR_TRACKER_STATE,
-    ATTR_WEIGHT,
 )
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
@@ -137,7 +136,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
-        key=ATTR_WEIGHT,
+        key="weight",
         native_unit_of_measurement=UnitOfMass.GRAMS,
         suggested_unit_of_measurement=UnitOfMass.KILOGRAMS,
         suggested_display_precision=1,
