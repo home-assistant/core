@@ -7,6 +7,7 @@ from pylitejet import LiteJet, LiteJetError
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
     entities = []
     for i in system.button_switches():
         name = await system.get_switch_name(i)
-        entities.append(LiteJetSwitch(config_entry.entry_id, system, i, name))
+        entities.append(LiteJetSwitch(hass, config_entry.entry_id, system, i, name))
 
     async_add_entities(entities, True)
 
@@ -41,7 +42,9 @@ class LiteJetSwitch(SwitchEntity):
     _attr_entity_registry_enabled_default = False
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry_id: str, system: LiteJet, i: int, name: str
+    ) -> None:
         """Initialize a LiteJet switch."""
         self._lj = system
         self._index = i
@@ -55,7 +58,9 @@ class LiteJetSwitch(SwitchEntity):
             identifiers={(DOMAIN, f"{entry_id}_keypad_{keypad_number}")},
             name=system.get_switch_keypad_name(i),
             manufacturer="Centralite",
-            via_device=(DOMAIN, f"{entry_id}_mcp"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, f"{entry_id}_mcp"), config_entry_id=entry_id
+            ),
         )
 
     @override

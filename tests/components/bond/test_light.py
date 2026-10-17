@@ -1,6 +1,7 @@
 """Tests for the Bond light device."""
 
 from datetime import timedelta
+from unittest.mock import call
 
 from bond_async import Action, DeviceType
 import pytest
@@ -17,6 +18,7 @@ from homeassistant.components.bond.services import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
@@ -77,6 +79,20 @@ def dimmable_ceiling_fan(name: str):
         "name": name,
         "type": DeviceType.CEILING_FAN,
         "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
+    }
+
+
+def dimmable_color_temp_ceiling_fan(name: str):
+    """Create a ceiling fan (that has built-in CCT light) with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": [
+            Action.TURN_LIGHT_ON,
+            Action.TURN_LIGHT_OFF,
+            Action.SET_BRIGHTNESS,
+            Action.SET_COLOR_TEMP,
+        ],
     }
 
 
@@ -799,6 +815,66 @@ async def test_turn_on_light_with_brightness(hass: HomeAssistant) -> None:
     )
 
 
+async def test_color_temp_support(hass: HomeAssistant) -> None:
+    """Tests that a dimmable CCT light should support the color temperature feature."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        dimmable_color_temp_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+        props={"min_color_temp_kelvin": 2700, "max_color_temp_kelvin": 5000},
+    )
+
+    state = hass.states.get("light.name_1")
+    assert state.state == "off"
+    assert state.attributes[ATTR_COLOR_MODE] is None
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    with patch_bond_device_state(
+        return_value={"light": 1, "brightness": 50, "color_temp": 3000}
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("light.name_1")
+    assert state.state == "on"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3000
+
+
+async def test_turn_on_light_with_color(hass: HomeAssistant) -> None:
+    """Tests turning on a dimmable CCT light delegates to API and parses brightness + color temp."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        dimmable_color_temp_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_set_color, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.name_1",
+                ATTR_BRIGHTNESS: 128,
+                ATTR_COLOR_TEMP_KELVIN: 4000,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_set_color.assert_has_calls(
+        calls=[
+            call("test-device-id", Action(Action.SET_BRIGHTNESS, 50)),
+            call("test-device-id", Action(Action.SET_COLOR_TEMP, 4000)),
+        ]
+    )
+
+
 async def test_turn_on_up_light(hass: HomeAssistant) -> None:
     """Tests that turn on command, on an up light, delegates to API."""
     await setup_platform(
@@ -1038,3 +1114,26 @@ async def test_parse_brightness(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get("light.name_1").attributes[ATTR_BRIGHTNESS] == 128
+
+
+async def test_parse_color_temp(hass: HomeAssistant) -> None:
+    """Tests that HA color temp converts to nearest 100K (max precision of Bond API)."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        dimmable_color_temp_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_set_color, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_COLOR_TEMP_KELVIN: 3250},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_set_color.assert_called_once_with(
+        "test-device-id", Action.set_color_temperature(3200)
+    )

@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -25,7 +26,7 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from . import RoonConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ENTITY_ID_CHANGED_SIGNAL
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +67,9 @@ async def async_setup_entry(
             )
 
     # start listening for players to be added or changed by the server component
-    async_dispatcher_connect(hass, "roon_media_player", async_update_media_player)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, "roon_media_player", async_update_media_player)
+    )
 
 
 class RoonDevice(MediaPlayerEntity):
@@ -122,7 +125,22 @@ class RoonDevice(MediaPlayerEntity):
                 self.async_update_callback,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, ENTITY_ID_CHANGED_SIGNAL, self.async_write_ha_state
+            )
+        )
         self._server.add_player_id(self.entity_id, self.name)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-register the player under the new entity_id."""
+        self._server.remove_player_id(old_entity_id)
+        self._server.add_player_id(self.entity_id, self.name)
+        super().async_entity_id_changed(old_entity_id)
+        # Every player's group members are derived from the server's player ids
+        async_dispatcher_send(self.hass, ENTITY_ID_CHANGED_SIGNAL)
 
     @callback
     def async_update_callback(self, player_data):
@@ -154,7 +172,9 @@ class RoonDevice(MediaPlayerEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass, (DOMAIN, self._entry_id), config_entry_id=self._entry_id
+            ),
         )
 
     def update_data(self, player_data=None):

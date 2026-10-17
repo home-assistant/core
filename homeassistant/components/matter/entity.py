@@ -19,6 +19,7 @@ from propcache.api import cached_property
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
@@ -94,6 +95,11 @@ class MatterEntity(Entity):
     _attr_should_poll = False
     _name_postfix: str | None = None
     _platform_translation_key: str | None = None
+    # Cooldown in seconds to debounce state writes on updates from the device.
+    # Platforms which derive their state from multiple attributes can set this
+    # to coalesce attribute updates which arrive as separate events.
+    _write_state_debounce_cooldown: float | None = None
+    _write_state_debouncer: Debouncer[None] | None = None
 
     def __init__(
         self,
@@ -106,7 +112,6 @@ class MatterEntity(Entity):
         self._endpoint = endpoint
         self._entity_info = entity_info
         self.entity_description = entity_info.entity_description
-        self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
         # The server info is set when the client connects to the server.
@@ -189,6 +194,15 @@ class MatterEntity(Entity):
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
 
+        if self._write_state_debounce_cooldown is not None:
+            self._write_state_debouncer = Debouncer(
+                self.hass,
+                LOGGER,
+                cooldown=self._write_state_debounce_cooldown,
+                immediate=False,
+                function=self.async_write_ha_state,
+            )
+
         # Subscribe to attribute updates.
         sub_paths: list[str] = []
         for attr_cls in self._entity_info.attributes_to_watch:
@@ -198,7 +212,7 @@ class MatterEntity(Entity):
                 continue
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
-            self._unsubscribes.append(
+            self.async_on_remove(
                 self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -207,7 +221,7 @@ class MatterEntity(Entity):
                 )
             )
         # subscribe to node (availability changes)
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_matter_event,
                 event_filter=EventType.NODE_UPDATED,
@@ -225,7 +239,7 @@ class MatterEntity(Entity):
             )
             if reachable_attr_path not in sub_paths:
                 sub_paths.append(reachable_attr_path)
-                self._unsubscribes.append(
+                self.async_on_remove(
                     self.matter_client.subscribe_events(
                         callback=self._on_matter_event,
                         event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -244,7 +258,7 @@ class MatterEntity(Entity):
             )
             if parent_reachable_attr_path not in sub_paths:
                 sub_paths.append(parent_reachable_attr_path)
-                self._unsubscribes.append(
+                self.async_on_remove(
                     self.matter_client.subscribe_events(
                         callback=self._on_matter_event,
                         event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -253,7 +267,7 @@ class MatterEntity(Entity):
                     )
                 )
         # subscribe to FeatureMap attribute (as that can dynamically change)
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_featuremap_update,
                 event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -305,6 +319,14 @@ class MatterEntity(Entity):
             return True
         return bool(reachable)
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle being removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_shutdown()
+            self._write_state_debouncer = None
+
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update from the device."""
@@ -312,22 +334,20 @@ class MatterEntity(Entity):
             self._endpoint.node.available and self._get_bridged_reachable()
         )
         self._update_from_device()
-        self.async_write_ha_state()
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_schedule_call()
+        else:
+            self.async_write_ha_state()
 
     @callback
-    def _on_featuremap_update(
-        self, event: EventType, data: tuple[int, str, int] | None
-    ) -> None:
+    def _on_featuremap_update(self, event: EventType, data: int | None) -> None:
         """Handle FeatureMap attribute updates."""
         if data is None:
             return
-        new_value = data[2]
         # handle edge case where a Feature is removed from a cluster
         if (
             self._entity_info.discovery_schema.featuremap_contains is not None
-            and not bool(
-                new_value & self._entity_info.discovery_schema.featuremap_contains
-            )
+            and not bool(data & self._entity_info.discovery_schema.featuremap_contains)
         ):
             # this entity is no longer supported by the device
             ent_reg = er.async_get(self.hass)

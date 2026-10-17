@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
@@ -26,8 +26,8 @@ class ListBaseIntentHandler(intent.IntentHandler):
     """Base class for toto intent handlers."""
 
     slot_schema = {
-        vol.Required("item"): intent.non_empty_string,
-        vol.Required("name"): intent.non_empty_string,
+        probatio.Required("item"): intent.non_empty_string,
+        probatio.Required("name"): intent.non_empty_string,
     }
     platforms = {DOMAIN}
 

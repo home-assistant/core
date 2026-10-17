@@ -87,7 +87,7 @@ class ServerStatusUpdateLMS(ServerStatusUpdate):
 
     @property
     @override
-    def release_summary(self) -> None | str:
+    def release_summary(self) -> str | None:
         """If install is supported give some info."""
         return (
             str(self.coordinator.data[UPDATE_RELEASE_SUMMARY])
@@ -117,7 +117,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
 
     @property
     @override
-    def release_summary(self) -> None | str:
+    def release_summary(self) -> str | None:
         """If install is supported give some info."""
         rs = self.coordinator.data[UPDATE_PLUGINS_RELEASE_SUMMARY]
         return (

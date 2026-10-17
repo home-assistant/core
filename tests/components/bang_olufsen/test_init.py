@@ -31,8 +31,8 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Check that the device has been registered properly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SERIAL_NUMBER), mock_config_entry.entry_id
     )
     assert device is not None
     # Device name is set from the config entry title (friendly name)

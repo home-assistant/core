@@ -152,10 +152,6 @@ class AuthManagerFlowManager(
             cast(Mapping[str, str], result["data"]),
         )
 
-        if flow.context.get("credential_only"):
-            result["result"] = credentials
-            return result
-
         # multi-factor module cannot enabled for new credential
         # which has not linked to a user yet
         if auth_provider.support_mfa and not credentials.is_new:
@@ -348,6 +344,8 @@ class AuthManager:
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
+        if user.is_owner:
+            raise ValueError("Unable to remove the owner")
         tasks = [
             self.async_remove_credentials(credentials)
             for credentials in user.credentials
@@ -355,6 +353,10 @@ class AuthManager:
 
         if tasks:
             await asyncio.gather(*tasks)
+
+        # Revoking runs the callbacks, which close connections using the tokens.
+        for refresh_token in list(user.refresh_tokens.values()):
+            self.async_remove_refresh_token(refresh_token)
 
         await self._store.async_remove_user(user)
 

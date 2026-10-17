@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics_redacts_identifiers
+  dict({
+    'device': dict({
+      'available': True,
+      'event_subscriptions_active': True,
+      'firmware_version': '4.8.523456',
+      'input_modes': list([
+        'Line In',
+      ]),
+      'ip_address': '**REDACTED**',
+      'manufacturer': 'Linkplay Tech',
+      'model_name': 'WiiM Pro',
+      'muted': False,
+      'name': '**REDACTED**',
+      'output_mode': 'speaker',
+      'output_modes': list([
+        'Speaker Out',
+      ]),
+      'play_mode': 'Network',
+      'presentation_url_available': True,
+      'supports_http_api': True,
+      'udn': '**REDACTED**',
+      'volume': 50,
+    }),
+    'multiroom': dict({
+      'leader_udn': '**REDACTED**',
+      'member_udns': '**REDACTED**',
+      'role': 'standalone',
+    }),
+  })
+# ---

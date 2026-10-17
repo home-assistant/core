@@ -86,7 +86,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Attribute.TEMPERATURE
         ].unit
         assert unit is not None
-        self._attr_temperature_unit = UNIT_MAP[unit]
+        self._attr_native_temperature_unit = UNIT_MAP[unit]
 
     @property
     @override
@@ -106,18 +106,22 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temperature = TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, UnitOfTemperature.FAHRENHEIT, self._attr_temperature_unit
+            DEFAULT_MIN_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self._attr_native_temperature_unit,
         )
-        return min(min_temperature, self.target_temperature_low)
+        return min(min_temperature, self.native_target_temperature_low)
 
     @property
     @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_temperature = TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, UnitOfTemperature.FAHRENHEIT, self._attr_temperature_unit
+            DEFAULT_MAX_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self._attr_native_temperature_unit,
         )
-        return max(max_temperature, self.target_temperature_high)
+        return max(max_temperature, self.native_target_temperature_high)
 
     @property
     @override
@@ -148,7 +152,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -156,7 +160,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
@@ -164,7 +168,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float:
+    def native_target_temperature_low(self) -> float:
         """Return the minimum temperature."""
         return self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MINIMUM_SETPOINT
@@ -172,7 +176,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float:
+    def native_target_temperature_high(self) -> float:
         """Return the maximum temperature."""
         return self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT

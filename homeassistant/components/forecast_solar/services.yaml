@@ -1,0 +1,24 @@
+get_forecast:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: forecast_solar
+    start:
+      required: false
+      selector:
+        datetime:
+    end:
+      required: false
+      selector:
+        datetime:
+    resolution:
+      required: false
+      default: "raw"
+      selector:
+        select:
+          options:
+            - "raw"
+            - "hourly"
+          translation_key: forecast_resolution

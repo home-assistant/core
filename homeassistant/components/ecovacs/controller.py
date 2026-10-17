@@ -1,34 +1,44 @@
 """Controller module."""
 
 import asyncio
-from collections.abc import Mapping
+from dataclasses import asdict
 from functools import partial
 import logging
 import ssl
-from typing import Any
 
 from deebot_client.api_client import ApiClient
 from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
-from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
+from deebot_client.exceptions import (
+    DeebotError,
+    DeviceVerificationRequiredError,
+    InvalidAuthenticationError,
+)
+from deebot_client.models import AccountCredentials
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
+    CONF_ACCOUNT_CREDENTIALS,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
 )
-from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,13 +46,15 @@ _LOGGER = logging.getLogger(__name__)
 class EcovacsController:
     """Ecovacs controller."""
 
-    def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize controller."""
         self._hass = hass
+        self._entry = entry
+        config = entry.data
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
         rest_url = config.get(CONF_OVERRIDE_REST_URL)
-        self._device_id = get_client_device_id(hass, rest_url is not None)
+        self._device_id = config[CONF_DEVICE_ID]
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 
@@ -55,6 +67,18 @@ class EcovacsController:
             ),
             config[CONF_USERNAME],
             md5(config[CONF_PASSWORD]),
+            # Renewing with the stored account credentials avoids the password
+            # login, which keeps asking some accounts for device verification
+            account_credentials=(
+                AccountCredentials(**account)
+                if (account := config.get(CONF_ACCOUNT_CREDENTIALS))
+                else None
+            ),
+        )
+        self._unsubscribe_account_credentials = (
+            self._authenticator.subscribe_account_credentials(
+                self._async_store_account_credentials
+            )
         )
         self._api_client = ApiClient(self._authenticator)
 
@@ -116,15 +140,27 @@ class EcovacsController:
                     device_config,
                 )
 
+        except DeviceVerificationRequiredError as ex:
+            raise ConfigEntryAuthFailed("Device verification required") from ex
         except InvalidAuthenticationError as ex:
-            raise ConfigEntryError("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except DeebotError as ex:
             raise ConfigEntryNotReady("Error during setup") from ex
 
         _LOGGER.debug("Controller initialize complete")
 
+    async def _async_store_account_credentials(
+        self, account: AccountCredentials
+    ) -> None:
+        """Store new account credentials in the config entry."""
+        self._hass.config_entries.async_update_entry(
+            self._entry,
+            data={**self._entry.data, CONF_ACCOUNT_CREDENTIALS: asdict(account)},
+        )
+
     async def teardown(self) -> None:
         """Disconnect controller."""
+        self._unsubscribe_account_credentials()
         for device in self._devices:
             await device.teardown()
         for legacy_device in self._legacy_devices:

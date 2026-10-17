@@ -1,5 +1,6 @@
 """The tests for Lutron Caséta device triggers."""
 
+from pylutron_caseta import BUTTON_STATUS_PRESSED
 import pytest
 from pytest_unordered import unordered
 
@@ -14,7 +15,9 @@ from homeassistant.components.lutron_caseta import (
 )
 from homeassistant.components.lutron_caseta.const import (
     ACTION_LONG_PRESS,
+    ACTION_PRESS,
     ACTION_RELEASE,
+    ATTR_BUTTON_NUMBER,
     ATTR_BUTTON_TYPE,
     ATTR_LEAP_BUTTON_NUMBER,
     BUTTON_STATUS_LONG_HOLD,
@@ -277,11 +280,11 @@ async def test_if_fires_on_button_event(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for press trigger firing."""
-    await _async_setup_lutron_with_picos(hass)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
 
     device = MOCK_BUTTON_DEVICES[0]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
 
@@ -330,11 +333,11 @@ async def test_if_fires_on_long_press_button_event(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for long_press trigger firing on a QSX bridge."""
-    await _async_setup_lutron_with_picos(hass, MockQSXBridge)
+    config_entry_id = await _async_setup_lutron_with_picos(hass, MockQSXBridge)
 
     device = MOCK_BUTTON_DEVICES[0]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
 
@@ -407,16 +410,45 @@ async def test_unknown_leap_event_type_maps_to_release_action(
     assert captured[0].data[ATTR_ACTION] == ACTION_RELEASE
 
 
+class MockUnknownButtonBridge(MockBridge):
+    """Mock bridge with a button number its keypad type doesn't list."""
+
+    def load_buttons(self):
+        """Load mock buttons with an unknown button number."""
+        buttons = super().load_buttons()
+        buttons["111"]["button_number"] = 26
+        return buttons
+
+
+async def test_unknown_leap_button_number_fires_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test a button number missing from the keypad mapping still fires an event."""
+    config_entry_id = await _async_setup_lutron_with_picos(
+        hass, MockUnknownButtonBridge
+    )
+    bridge = hass.config_entries.async_get_entry(config_entry_id).runtime_data.bridge
+    captured = async_capture_events(hass, LUTRON_CASETA_BUTTON_EVENT)
+
+    bridge.call_button_subscribers("111", BUTTON_STATUS_PRESSED)
+    await hass.async_block_till_done()
+
+    assert len(captured) == 1
+    assert captured[0].data[ATTR_LEAP_BUTTON_NUMBER] == 26
+    assert captured[0].data[ATTR_BUTTON_NUMBER] is None
+    assert captured[0].data[ATTR_ACTION] == ACTION_PRESS
+
+
 async def test_if_fires_on_button_event_without_lip(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for press trigger firing on a device that does not support lip."""
-    await _async_setup_lutron_with_picos(hass)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
     device = MOCK_BUTTON_DEVICES[1]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
     assert await async_setup_component(
@@ -602,8 +634,8 @@ async def test_if_fires_on_button_event_late_setup(
     await hass.async_block_till_done()
 
     device = MOCK_BUTTON_DEVICES[0]
-    dr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, device["serial"])}
+    dr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device["serial"]), config_entry_id
     )
     device_id = dr_device.id
 

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from python_picnic_api2.models import Eta
 
 from homeassistant.components.picnic.const import (
     DEFAULT_UPDATE_INTERVAL,
@@ -112,15 +113,11 @@ async def test_update_interval_with_malformed_eta(
 ) -> None:
     """Test that a malformed ETA falls back to the slot window."""
     delivery = mock_picnic_api.get_deliveries.return_value[0]
-    delivery["status"] = "CURRENT"
-    delivery["delivery_time"] = None
-    delivery["eta2"] = {"start": "malformed", "end": "malformed"}
-    delivery["slot"]["window_start"] = (
-        dt_util.utcnow() + timedelta(minutes=10)
-    ).isoformat()
-    delivery["slot"]["window_end"] = (
-        dt_util.utcnow() + timedelta(minutes=70)
-    ).isoformat()
+    delivery.status = "CURRENT"
+    delivery.raw["delivery_time"] = None
+    delivery.eta2 = Eta(start="malformed", end="malformed")
+    delivery.slot.window_start = (dt_util.utcnow() + timedelta(minutes=10)).isoformat()
+    delivery.slot.window_end = (dt_util.utcnow() + timedelta(minutes=70)).isoformat()
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -146,7 +143,7 @@ async def test_update_interval_relaxes_after_delivery(
     coordinator = mock_config_entry.runtime_data
     assert coordinator.update_interval == DELIVERY_UPDATE_INTERVAL
 
-    delivery["status"] = "COMPLETED"
+    delivery.status = "COMPLETED"
     freezer.tick(DELIVERY_UPDATE_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

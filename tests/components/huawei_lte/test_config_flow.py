@@ -63,7 +63,14 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data=None,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -80,12 +87,23 @@ async def test_urlize_plain_host(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert user_input[CONF_URL] == f"http://{host}/"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # The form comes back offering the URL the plain host was turned into
+    schema = result["data_schema"].schema
+    url_key = next(key for key in schema if key == CONF_URL)
+    assert url_key.default() == f"http://{host}/"
 
 
 async def test_already_configured(
@@ -113,7 +131,14 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data=FIXTURE_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FIXTURE_USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -142,18 +167,40 @@ async def test_connection_errors(
     """Test we show user form on various errors."""
     requests_mock.request(ANY, ANY, exc=exception)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=FIXTURE_USER_INPUT | data_patch,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FIXTURE_USER_INPUT | data_patch,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
+    _mock_login_requests(requests_mock).request(
+        ANY,
+        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
+        text="<response>OK</response>",
+    )
+    with (
+        patch("homeassistant.components.huawei_lte.async_setup"),
+        patch("homeassistant.components.huawei_lte.async_setup_entry"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FIXTURE_USER_INPUT | data_patch,
+        )
+        await hass.async_block_till_done()
 
-@pytest.fixture
-def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+def _mock_login_requests(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
     """Set up a requests_mock with base mocks for login tests."""
     https_url = urlunparse(
         urlparse(FIXTURE_USER_INPUT[CONF_URL])._replace(scheme="https")
@@ -174,6 +221,12 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
             text="<response>OK</response>",
         )
     return requests_mock
+
+
+@pytest.fixture
+def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
+    """Set up a requests_mock with base mocks for login tests."""
+    return _mock_login_requests(requests_mock)
 
 
 @pytest.mark.parametrize(
@@ -245,7 +298,11 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
     ],
 )
 async def test_login_error(
-    hass: HomeAssistant, login_requests_mock, request_outcome, fixture_override, errors
+    hass: HomeAssistant,
+    login_requests_mock: requests_mock.Mocker,
+    request_outcome: dict[str, Any],
+    fixture_override: dict[str, str],
+    errors: dict[str, str],
 ) -> None:
     """Test we show user form with appropriate error on response failure."""
     login_requests_mock.request(
@@ -256,12 +313,36 @@ async def test_login_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-        data={**FIXTURE_USER_INPUT, **fixture_override},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**FIXTURE_USER_INPUT, **fixture_override},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
+
+    login_requests_mock.request(
+        ANY,
+        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
+        text="<response>OK</response>",
+    )
+    with (
+        patch("homeassistant.components.huawei_lte.async_setup"),
+        patch("homeassistant.components.huawei_lte.async_setup_entry"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("scheme", ["http", "https"])
@@ -286,10 +367,18 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
-            data=user_input,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == user_input[CONF_URL]
     assert result["data"][CONF_USERNAME] == user_input[CONF_USERNAME]
@@ -297,7 +386,12 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
 
 
 @pytest.mark.parametrize(
-    ("requests_mock_request_kwargs", "upnp_data", "expected_result"),
+    (
+        "requests_mock_request_kwargs",
+        "upnp_data",
+        "expected_result",
+        "expected_unique_id",
+    ),
     [
         (
             {
@@ -314,6 +408,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "step_id": "user",
                 "errors": {},
             },
+            "00000000",
         ),
         (
             {
@@ -330,6 +425,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "step_id": "user",
                 "errors": {},
             },
+            "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
         ),
         (
             {
@@ -344,6 +440,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "type": FlowResultType.ABORT,
                 "reason": "unsupported_device",
             },
+            "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
         ),
     ],
 )
@@ -353,6 +450,7 @@ async def test_ssdp(
     requests_mock_request_kwargs,
     upnp_data,
     expected_result,
+    expected_unique_id: str,
 ) -> None:
     """Test SSDP discovery initiates config properly."""
     url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
@@ -405,6 +503,7 @@ async def test_ssdp(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.upnp[ATTR_UPNP_MODEL_NAME]
     assert result["result"].data[CONF_UPNP_UDN] == service_info.upnp[ATTR_UPNP_UDN]
+    assert result["result"].unique_id == expected_unique_id
 
 
 @pytest.mark.parametrize(

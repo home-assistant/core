@@ -201,6 +201,9 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+        if TYPE_CHECKING:
+            # Work area does not get created if it is None
+            assert self.work_area_attributes is not None
         self._attr_translation_placeholders = {
             "work_area": self.work_area_attributes.name
         }
@@ -215,9 +218,11 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the number."""
-        return self.entity_description.value_fn(self.work_area_attributes)
+        if (work_area := self.work_area_attributes) is None:
+            return None
+        return self.entity_description.value_fn(work_area)
 
     @handle_sending_exception(poll_after_sending=True)
     @override

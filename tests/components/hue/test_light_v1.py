@@ -191,6 +191,12 @@ async def setup_bridge(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_bridge_v1.config_entry = config_entry
     config_entry.runtime_data = mock_bridge_v1
+    # Register the bridge device so the light entities can resolve it as their
+    # via_device parent while they are being added.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(hue.DOMAIN, mock_bridge_v1.api.config.bridgeid)},
+    )
     await hass.config_entries.async_forward_entry_setups(config_entry, [Platform.LIGHT])
     # To flush out the service call to update the group
     await hass.async_block_till_done()

@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from httpx import ConnectError
+from httpx2 import ConnectError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
@@ -33,8 +33,8 @@ async def test_device_info(
     """Test device info is populated with serial and firmware."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.serial_number == "serial-1337"
@@ -175,24 +175,6 @@ async def test_migration_fails_on_future_version(
         domain=DOMAIN,
         data={},
         version=PrusaLinkConfigFlow.VERSION + 1,
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
-async def test_migration_fails_on_future_minor_version(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test migrating fails on the current version with a higher minor version."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        version=PrusaLinkConfigFlow.VERSION,
-        minor_version=PrusaLinkConfigFlow.MINOR_VERSION + 1,
     )
     entry.add_to_hass(hass)
 

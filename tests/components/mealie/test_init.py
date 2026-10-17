@@ -1,6 +1,6 @@
 """Tests for the Mealie integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
@@ -25,8 +25,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -118,6 +118,27 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_update_options(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reloading the config entry when options updated."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as async_schedule_reload:
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"parser": "brute"}
+        )
+
+    async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

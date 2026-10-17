@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
+from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
+import pytest
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.nam.const import DOMAIN
@@ -26,7 +28,8 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     assert state.state == "11.03"
 
 
-async def test_config_not_ready(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("exc", [ApiError("API Error"), ClientError, TimeoutError])
+async def test_config_not_ready(hass: HomeAssistant, exc: Exception) -> None:
     """Test for setup failure if the connection to the device fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -38,7 +41,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
-        side_effect=ApiError("API Error"),
+        side_effect=exc,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
