@@ -781,7 +781,7 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
         program_key = program_event.value if program_event else None
 
         if operation_state in PROGRAM_NOT_STARTED_OPERATION_STATES or (
-            program_event and not program_key and self._program_key
+            program_event and not program_key
         ):
             # The program run ended
             self._attr_native_value = None

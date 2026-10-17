@@ -1790,6 +1790,35 @@ async def test_program_start_time_unknown_for_program_started_before_setup(
             [
                 (
                     60,
+                    [_notify({EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 60})],
+                    "2021-01-09T12:01:00+00:00",
+                ),
+                # Calls the listeners of the active program and the elapsed time
+                (
+                    60,
+                    [_notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None})],
+                    STATE_UNKNOWN,
+                ),
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:04:00+00:00",
+                ),
+            ],
+            id="same_program_while_running_with_elapsed_program_time",
+        ),
+        pytest.param(
+            [
+                (
+                    60,
                     [_operation_state(BSH_OPERATION_STATE_FINISHED)],
                     "2021-01-09T12:01:00+00:00",
                 ),
