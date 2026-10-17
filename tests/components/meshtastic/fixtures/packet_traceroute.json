@@ -1,0 +1,19 @@
+{
+  "from": 2864434397,
+  "to": 781534648,
+  "fromId": "!aabbccdd",
+  "toId": "!2e9545b8",
+  "channel": 0,
+  "id": 987654323,
+  "rxTime": 1757300620,
+  "decoded": {
+    "portnum": "TRACEROUTE_APP",
+    "requestId": 111222334,
+    "traceroute": {
+      "route": [3735928559],
+      "snrTowards": [20, 12],
+      "routeBack": [3735928559],
+      "snrBack": [16, 8]
+    }
+  }
+}

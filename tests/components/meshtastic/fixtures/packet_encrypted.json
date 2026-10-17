@@ -1,0 +1,14 @@
+{
+  "from": 3735928559,
+  "to": 4294967295,
+  "fromId": "!deadbeef",
+  "toId": "^all",
+  "channel": 42,
+  "id": 305441747,
+  "rxTime": 1757300680,
+  "rxSnr": -8.0,
+  "rxRssi": -119,
+  "hopLimit": 1,
+  "hopStart": 3,
+  "encrypted": "3q2+7w=="
+}

@@ -1,0 +1,27 @@
+{
+  "from": 3735928559,
+  "to": 4294967295,
+  "fromId": "!deadbeef",
+  "toId": "^all",
+  "channel": 0,
+  "id": 305441745,
+  "rxTime": 1757300420,
+  "rxSnr": -2.5,
+  "rxRssi": -110,
+  "hopLimit": 2,
+  "hopStart": 3,
+  "viaMqtt": false,
+  "decoded": {
+    "portnum": "TELEMETRY_APP",
+    "telemetry": {
+      "time": 1757300419,
+      "environmentMetrics": {
+        "temperature": 21.5,
+        "relativeHumidity": 48.2,
+        "barometricPressure": 1013.25,
+        "gasResistance": 120.5,
+        "iaq": 42
+      }
+    }
+  }
+}
