@@ -52,6 +52,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "tank_level_raw": SensorEntityDescription(
+        key="tank_level_raw",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     "signal_strength": SensorEntityDescription(
         key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
