@@ -1352,3 +1352,203 @@ async def test_hassio_discovery_authentication_flow(
     assert result["result"]
     assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test the reconfigure flow updates the URL."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    new_url = "http://1.1.1.1:9090/mcp"
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: new_url},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_URL: new_url}
+    assert config_entry.title == TEST_API_NAME
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
+        (
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
+            "cannot_connect",
+        ),
+        (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_mcp_client_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test the reconfigure flow handles client errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+    mock_mcp_client.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://1.1.1.1:9090/mcp"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    # Reset and retry successfully.
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://1.1.1.1:9090/mcp"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_URL: "http://1.1.1.1:9090/mcp"}
+
+
+async def test_reconfigure_invalid_url(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test the reconfigure flow rejects an invalid URL."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "not a url"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: "invalid_url"}
+    url_marker = next(
+        key for key in result["data_schema"].schema if key.schema == CONF_URL
+    )
+    assert url_marker.description == {"suggested_value": "not a url"}
+
+
+async def test_reconfigure_missing_capabilities(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test the reconfigure flow aborts when the server lacks capabilities."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    response.capabilities.tools = None
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://1.1.1.1:9090/mcp"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_capabilities"
+
+
+async def test_reconfigure_duplicate_url(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test the reconfigure flow aborts when the new URL matches another entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1:9090/mcp"},
+        title="Other Server",
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://1.1.1.1:9090/mcp"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
