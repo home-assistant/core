@@ -956,7 +956,7 @@ energyflip-api-client==0.3.0
 energyid-webhooks==0.0.16
 
 # homeassistant.components.energyzero
-energyzero==5.1.0
+energyzero==5.1.1
 
 # homeassistant.components.enocean
 enocean-async==0.4.2
