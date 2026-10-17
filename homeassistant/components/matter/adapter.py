@@ -274,7 +274,10 @@ class MatterAdapter:
         # pre-create device registry entry
         self._create_device_registry(endpoint)
         # run platform discovery from device type instances
-        for entity_info in async_discover_entities(endpoint):
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        for entity_info in async_discover_entities(
+            endpoint, server_info.schema_version
+        ):
             discovery_key = (
                 f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
                 f"{entity_info.primary_attribute.cluster_id}_"
