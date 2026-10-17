@@ -2416,7 +2416,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.6.5
+pylitterbot==2025.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0
