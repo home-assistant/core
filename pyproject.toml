@@ -66,13 +66,13 @@ dependencies = [
   # Do not bump orjson until the very aggressive buffer resizing introduced in
   # 3.12.0, which causes memory use to balloon, has been adjusted or a workaround
   # is available.
-  "orjson==3.11.9",
+  "orjson==3.13.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==9.1.3",
   "PyYAML==6.0.3",
   "requests==2.34.2",
-  "securetar==2026.4.1",
+  "securetar==2026.10.0",
   "SQLAlchemy==2.0.54",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
@@ -81,7 +81,7 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.24",
+  "uv==0.13.0",
   "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
