@@ -53,7 +53,7 @@
       "message": "Invalid device targeted."
     },
     "set_datapoint_error": {
-      "message": "Failed to set new value {value} for datapoint {point} on device {entity}."
+      "message": "Failed to set new value {value} for datapoint {point} on device {device}."
     },
     "set_number_error": {
       "message": "Failed to set new value {value} for {point}/{entity}."

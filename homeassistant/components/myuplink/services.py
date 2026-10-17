@@ -70,7 +70,7 @@ async def async_set_datapoint(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="set_datapoint_error",
             translation_placeholders={
-                "entity": device_id,
+                "device": device_id,
                 "point": datapoint_id,
                 "value": value,
             },
