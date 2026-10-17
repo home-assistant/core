@@ -144,6 +144,10 @@ async def test_heatercooler_basic(hass: HomeAssistant, hk_driver: HomeDriver) ->
     assert acc.char_heat.properties[PROP_MIN_VALUE] == 10.0
     assert acc.char_heat.properties[PROP_MAX_VALUE] == 30.0
 
+    # Control Center toggles Swing Mode instead of Active when Name is missing
+    serv = acc.get_service(SERV_HEATER_COOLER)
+    assert serv.get_characteristic(CHAR_NAME).value == "Climate"
+
     # The mode and range attributes must trigger an accessory reload so the
     # characteristic set stays in sync with the device.
     assert set(acc._reload_on_change_attrs) >= {
@@ -189,10 +193,6 @@ async def test_heatercooler_with_fan_and_swing(
     assert hasattr(acc, "char_swing")
     assert acc.char_speed.value == 25  # FAN_LOW maps to 25% (index 0 of 4 speeds)
     assert acc.char_swing.value == 0  # off
-
-    # Control Center toggles Swing Mode instead of Active when Name is missing
-    serv = acc.get_service(SERV_HEATER_COOLER)
-    assert serv.get_characteristic(CHAR_NAME).value == "Climate"
 
 
 @pytest.mark.parametrize(
