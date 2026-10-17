@@ -1688,6 +1688,86 @@ async def test_create_topic_failed(
     }
 
 
+@pytest.mark.usefixtures("mock_subscriber_refresh")
+async def test_set_topic_iam_policy_failed_retry(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    aioclient_mock: AiohttpClientMocker,
+    cloud_project_id: str,
+    subscriptions: list[tuple[str, str]],
+    auth: FakeAuth,
+) -> None:
+    """Test retrying when create_topic succeeds but set_topic_iam_policy fails."""
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    aioclient_mock.get(
+        f"https://pubsub.googleapis.com/v1/projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics",
+        json={"topics": []},
+    )
+    aioclient_mock.put(
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics/home-assistant-{RAND_SUFFIX}",
+        json={},
+    )
+    aioclient_mock.post(
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics/home-assistant-{RAND_SUFFIX}:setIamPolicy",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic"
+
+    result = await oauth.async_configure(result, {"topic_name": "create_new_topic"})
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic"
+    assert result.get("errors") == {"base": "pubsub_api_error"}
+
+    # Re-register mock requests WITHOUT create_topic PUT so retry must reuse the
+    # already-created topic and only call setIamPolicy.
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    aioclient_mock.post(
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics/home-assistant-{RAND_SUFFIX}:setIamPolicy",
+        json={},
+    )
+    setup_mock_list_subscriptions_responses(
+        aioclient_mock,
+        cloud_project_id,
+        subscriptions,
+    )
+    setup_mock_create_subscription_responses(aioclient_mock, cloud_project_id)
+
+    result = await oauth.async_configure(result, {"topic_name": "create_new_topic"})
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic_confirm"
+    assert not result.get("errors")
+
+    result = await oauth.async_configure(result, {})
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_subscription"
+
+    result = await oauth.async_finish_setup(
+        result,
+        {"subscription_name": "create_new_subscription"},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    entry = oauth.get_config_entry()
+    assert (
+        entry.data["topic_name"]
+        == f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
+    )
+
+
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 @pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_list_subscriptions_failure(

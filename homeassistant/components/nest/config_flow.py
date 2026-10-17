@@ -111,6 +111,7 @@ class NestFlowHandler(
         self._admin_client: AdminClient | None = None
         self._eligible_topics: EligibleTopics | None = None
         self._eligible_subscriptions: EligibleSubscriptions | None = None
+        self._created_topic_name: str | None = None
 
     @property
     @override
@@ -275,10 +276,12 @@ class NestFlowHandler(
         if user_input is not None:
             topic_name = user_input[CONF_TOPIC_NAME]
             if topic_name == CREATE_NEW_TOPIC_KEY:
-                topic_name = _generate_topic_id(cloud_project_id)
-                _LOGGER.debug("Creating topic %s", topic_name)
                 try:
-                    await self._admin_client.create_topic(topic_name)
+                    if (topic_name := self._created_topic_name) is None:
+                        topic_name = _generate_topic_id(cloud_project_id)
+                        _LOGGER.debug("Creating topic %s", topic_name)
+                        await self._admin_client.create_topic(topic_name)
+                        self._created_topic_name = topic_name
                     await self._admin_client.set_topic_iam_policy(
                         topic_name, DEFAULT_TOPIC_IAM_POLICY
                     )
@@ -286,6 +289,7 @@ class NestFlowHandler(
                     _LOGGER.error("Error creating Pub/Sub topic: %s", err)
                     errors["base"] = "pubsub_api_error"
             if not errors:
+                self._created_topic_name = None
                 self._data[CONF_TOPIC_NAME] = topic_name
                 return await self.async_step_pubsub_topic_confirm()
 
