@@ -749,9 +749,12 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
     """Sensor for the start time of the current program run."""
 
     _attr_native_value: datetime | None = None
+    _operation_state: str | int | float | bool | None = None
     _program_key: str | int | float | bool | None = None
     # Whether the start of the next program run can be observed
     _awaiting_program_run = False
+    # When the next program run started running before its program was reported
+    _observed_run_start: datetime | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -773,8 +776,12 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
     @override
     def update_native_value(self) -> None:
         """Update the start time of the current program run."""
+        now = dt_util.utcnow()
         status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
         operation_state = status.value if status else None
+        is_running = operation_state == BSH_OPERATION_STATE_RUN
+        entered_run = is_running and self._operation_state != BSH_OPERATION_STATE_RUN
+        self._operation_state = operation_state
         program_event = self.appliance.events.get(
             EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
         )
@@ -787,6 +794,10 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
             self._attr_native_value = None
             self._program_key = None
             self._awaiting_program_run = True
+            if entered_run:
+                self._observed_run_start = now
+            elif not is_running:
+                self._observed_run_start = None
             return
         if operation_state not in PROGRAM_STARTED_OPERATION_STATES:
             # Keep the start time, for example while an action is required
@@ -801,7 +812,6 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
         if program_changed:
             start_time = None
 
-        now = dt_util.utcnow()
         elapsed_event = self.appliance.events.get(
             EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME
         )
@@ -814,13 +824,13 @@ class HomeConnectProgramStartTimeSensor(HomeConnectProgramSensor):
             ):
                 start_time = elapsed_start_time
 
-        is_running = operation_state == BSH_OPERATION_STATE_RUN
-        if start_time is None and (
-            program_changed or (is_running and self._awaiting_program_run)
-        ):
+        if start_time is None and is_running and self._awaiting_program_run:
+            start_time = self._observed_run_start or now
+        if start_time is None and program_changed:
             start_time = now
         if is_running:
             self._awaiting_program_run = False
+            self._observed_run_start = None
         self._attr_native_value = start_time
 
 
