@@ -184,6 +184,9 @@ class MatterCamera(MatterEntity, Camera):
             if not self._pending_offers:
                 self._buffered_events.clear()
 
+        # The camera may reuse the id of a session whose end was never seen.
+        self._forget_matter_session(matter_session_id)
+
         # The frontend may have closed the session while the offer was in flight,
         # in which case the Matter session is ended here instead.
         if self._sessions.get(session_id) is not session:
@@ -191,8 +194,6 @@ class MatterCamera(MatterEntity, Camera):
             return
 
         session.matter_session_id = matter_session_id
-        # The camera may reuse the id of a session whose end was never seen.
-        self._forget_matter_session(matter_session_id)
         self._matter_session_ids[matter_session_id] = session_id
 
         # Catch up on events and candidates that arrived while the offer was in

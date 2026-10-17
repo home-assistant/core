@@ -482,6 +482,45 @@ async def test_camera_webrtc_closed_during_offer(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
+@pytest.mark.usefixtures("matter_node")
+async def test_camera_webrtc_closed_offer_reused_id(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a closed offer's late result evicts the session holding its id."""
+    releases = [asyncio.Event(), asyncio.Event()]
+    pending = iter(releases)
+
+    async def blocked_offer(**kwargs: Any) -> CameraStartStreamResult:
+        await next(pending).wait()
+        return START_STREAM_RESULT
+
+    matter_client.camera_start_stream.side_effect = blocked_offer
+    client = await hass_ws_client(hass)
+    closed_subscription_id, _ = await _send_offer(client)
+    holder_subscription_id, _ = await _send_offer(client)
+    await _unsubscribe(client, closed_subscription_id)
+
+    releases[1].set()
+    await hass.async_block_till_done()
+
+    # The late result means the camera allocated the id again, so the session
+    # holding it is stale and is told, and the id is stopped once.
+    releases[0].set()
+    await hass.async_block_till_done()
+    response = await client.receive_json()
+    assert response["id"] == holder_subscription_id
+    assert response["event"] == ENDED_MESSAGE
+    assert matter_client.camera_stop_stream.call_count == 1
+
+    # The stale session no longer owns the id, so closing it stops nothing.
+    await _unsubscribe(client, holder_subscription_id)
+    await hass.async_block_till_done()
+    assert matter_client.camera_stop_stream.call_count == 1
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
 async def test_camera_webrtc_concurrent_offers(
     hass: HomeAssistant,
     matter_client: MagicMock,
