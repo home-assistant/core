@@ -454,6 +454,20 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key) if program_key else None
         )
 
+        if not hasattr(self, "_attr_options"):
+            self.set_options()
+        # If the current option is not in the options, maybe it is
+        # is the key from the available program endpoint
+        if (
+            self._attr_current_option is not None
+            and program_key is not None
+            and self._attr_current_option not in self._attr_options
+            and (
+                mapped_key := self.coordinator.data.program_keys_mapped.get(program_key)
+            )
+        ):
+            self._attr_current_option = PROGRAMS_TRANSLATION_KEYS_MAP.get(mapped_key)
+
     @override
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
