@@ -190,20 +190,9 @@ async def test_user_flow_shows_menu(hass: HomeAssistant) -> None:
     assert result["menu_options"] == ["pick_implementation", "uac"]
 
 
-@pytest.mark.parametrize(
-    "entry_data",
-    [
-        pytest.param({CONF_AUTH_TYPE: AUTH_TYPE_OAUTH}, id="oauth_entry"),
-        pytest.param({}, id="entry_without_auth_type"),
-    ],
-)
-@pytest.mark.usefixtures("setup_credentials")
-async def test_user_flow_skips_menu_with_oauth_entry(
-    hass: HomeAssistant, entry_data: dict[str, str]
-) -> None:
+@pytest.mark.usefixtures("setup_credentials", "mock_config_entry")
+async def test_user_flow_skips_menu_with_oauth_entry(hass: HomeAssistant) -> None:
     """Test the menu is skipped when OAuth2 is already configured."""
-    MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -251,28 +240,6 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
-
-
-@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
-async def test_pick_implementation_aborts_with_oauth_entry(
-    hass: HomeAssistant,
-) -> None:
-    """Test picking OAuth2 aborts when an OAuth2 entry appeared meanwhile."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.MENU
-
-    MockConfigEntry(
-        domain=DOMAIN, unique_id=DOMAIN, data={CONF_AUTH_TYPE: AUTH_TYPE_OAUTH}
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "pick_implementation"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")

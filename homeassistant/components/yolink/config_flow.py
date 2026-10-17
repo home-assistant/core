@@ -73,26 +73,13 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        if self._async_oauth_entry_exists():
-            # Only one OAuth2 entry is supported, so UAC is the only way left
-            # to add another home.
+        if DOMAIN in self._async_current_ids(include_ignore=False):
             return await self.async_step_uac()
 
         return self.async_show_menu(
             step_id="user",
             menu_options=["pick_implementation", "uac"],
         )
-
-    @override
-    async def async_step_pick_implementation(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle selection of an OAuth2 implementation."""
-        # Reauthenticating the existing OAuth2 entry must remain possible.
-        if self.source != SOURCE_REAUTH and self._async_oauth_entry_exists():
-            return self.async_abort(reason="already_configured")
-
-        return await super().async_step_pick_implementation(user_input)
 
     async def async_step_uac(
         self, user_input: dict[str, Any] | None = None
@@ -201,11 +188,3 @@ class OAuth2FlowHandler(
                 self._get_reauth_entry(), data_updates=data
             )
         return self.async_create_entry(title="YoLink", data=data)
-
-    def _async_oauth_entry_exists(self) -> bool:
-        """Return if an OAuth2 based entry is already configured."""
-        return any(
-            # Entries created before UAC support was added have no auth type.
-            entry.data.get(CONF_AUTH_TYPE, AUTH_TYPE_OAUTH) == AUTH_TYPE_OAUTH
-            for entry in self._async_current_entries()
-        )
