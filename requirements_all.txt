@@ -3068,7 +3068,7 @@ sendgrid==6.8.2
 # homeassistant.components.sense
 sense-energy==0.15.0
 
-# homeassistant.components.sensecap
+# homeassistant.components.sensecap_lorawan
 sensecap-lorawan==1.0.0
 
 # homeassistant.components.sensirion_ble

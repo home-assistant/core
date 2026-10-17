@@ -51,7 +51,7 @@ async def test_sensors(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     fixture = await async_load_json_object_fixture(
-        hass, f"{model.__name__.lower()}.json", "sensecap"
+        hass, f"{model.__name__.lower()}.json", "sensecap_lorawan"
     )
     for key in fixture["expected"]:
         assert hass.states.get(f"sensor.greenhouse_{key}").state == "unknown"
@@ -71,7 +71,7 @@ async def test_sensors(
         registered = entity_registry.async_get(entity_id)
         assert registered.unique_id.startswith(f"network:{descriptor.dev_eui}:")
     device = device_registry.async_get_device_by_identifier(
-        ("sensecap", f"network:{descriptor.dev_eui}"), config_entry.entry_id
+        ("sensecap_lorawan", f"network:{descriptor.dev_eui}"), config_entry.entry_id
     )
     assert device.name == "Greenhouse"
     assert device.manufacturer == "Seeed Studio"
@@ -123,7 +123,8 @@ async def test_new_devices(
     assert len(config_entry.runtime_data.coordinators) == 3
     assert (
         device_registry.async_get_device_by_identifier(
-            ("sensecap", f"network:{unsupported.dev_eui}"), config_entry.entry_id
+            ("sensecap_lorawan", f"network:{unsupported.dev_eui}"),
+            config_entry.entry_id,
         )
         is None
     )
@@ -132,7 +133,7 @@ async def test_new_devices(
     assert hass.states.get("sensor.outside_illuminance") is None
     assert (
         device_registry.async_get_device_by_identifier(
-            ("sensecap", f"network:{other.dev_eui}"), config_entry.entry_id
+            ("sensecap_lorawan", f"network:{other.dev_eui}"), config_entry.entry_id
         )
         is None
     )
@@ -277,7 +278,7 @@ async def test_model_battery(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     fixture = await async_load_json_object_fixture(
-        hass, f"{model.__name__.lower()}.json", "sensecap"
+        hass, f"{model.__name__.lower()}.json", "sensecap_lorawan"
     )
     payload = {
         1: "000700640005000000",

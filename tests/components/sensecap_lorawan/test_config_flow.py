@@ -65,19 +65,19 @@ async def test_setup(
     )
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": source}, data=data
+        "sensecap_lorawan", context={"source": source}, data=data
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     with patch(
-        "homeassistant.components.sensecap.async_setup_entry", return_value=True
+        "homeassistant.components.sensecap_lorawan.async_setup_entry", return_value=True
     ) as setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "SenseCAP"
     assert result["data"] == {}
-    assert result["result"].unique_id == "sensecap"
+    assert result["result"].unique_id == "sensecap_lorawan"
     setup.assert_called_once()
 
 
@@ -91,7 +91,7 @@ async def test_already_configured(
 ) -> None:
     """Only one SenseCAP entry is needed for all connections."""
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": source}, data=data
+        "sensecap_lorawan", context={"source": source}, data=data
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -103,12 +103,12 @@ async def test_duplicate_discovery(
     """Concurrent discoveries share one confirmation flow."""
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     await hass.config_entries.flow.async_init(
-        "sensecap",
+        "sensecap_lorawan",
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data=LoRaWANDiscoveryInfo(),
     )
     result = await hass.config_entries.flow.async_init(
-        "sensecap",
+        "sensecap_lorawan",
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data=LoRaWANDiscoveryInfo(),
     )
@@ -125,7 +125,7 @@ async def test_no_connections(
 ) -> None:
     """Explain that a LoRaWAN backend must be configured first."""
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": source}, data=data
+        "sensecap_lorawan", context={"source": source}, data=data
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_lorawan_connections"
@@ -140,7 +140,7 @@ async def test_empty_connection(
     mock_connection.devices.clear()
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": SOURCE_USER}
+        "sensecap_lorawan", context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_supported_devices"
@@ -171,7 +171,7 @@ async def test_unsupported_device(
     )
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": SOURCE_USER}
+        "sensecap_lorawan", context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_supported_devices"
@@ -183,7 +183,7 @@ async def test_connection_removed_before_confirmation(
     """Recheck connection availability before creating the entry."""
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": SOURCE_USER}
+        "sensecap_lorawan", context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert await hass.config_entries.async_unload(connection_entry.entry_id)
@@ -201,7 +201,7 @@ async def test_device_removed_before_confirmation(
     """A removed device cannot leave an empty integration configured."""
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     result = await hass.config_entries.flow.async_init(
-        "sensecap", context={"source": SOURCE_USER}
+        "sensecap_lorawan", context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     mock_connection.emit(
@@ -223,7 +223,7 @@ async def test_connection_unavailable(
         mock_connection, "async_subscribe", side_effect=ConnectionUnavailable
     ):
         result = await hass.config_entries.flow.async_init(
-            "sensecap", context={"source": SOURCE_USER}
+            "sensecap_lorawan", context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_lorawan_connections"
@@ -253,7 +253,7 @@ async def test_supported_device_on_another_connection(
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
-            "sensecap", context={"source": SOURCE_USER}
+            "sensecap_lorawan", context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"

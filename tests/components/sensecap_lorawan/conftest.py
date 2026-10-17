@@ -91,6 +91,8 @@ def connection_entry(
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create the single SenseCAP entry."""
-    entry = MockConfigEntry(domain="sensecap", unique_id="sensecap", title="SenseCAP")
+    entry = MockConfigEntry(
+        domain="sensecap_lorawan", unique_id="sensecap_lorawan", title="SenseCAP"
+    )
     entry.add_to_hass(hass)
     return entry
