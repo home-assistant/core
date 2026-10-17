@@ -3,14 +3,17 @@
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, Iterable, Mapping
+from collections.abc import Callable, Container, Coroutine, Hashable, Iterable, Mapping
 from contextlib import suppress
+from contextvars import ContextVar
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import wraps
+import inspect
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Generic, Required, TypedDict, TypeVar, cast, override
 
 import probatio
 
@@ -22,6 +25,8 @@ from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
+
+_current_step_id: ContextVar[str | None] = ContextVar("current_step_id", default=None)
 
 
 class FlowResultType(StrEnum):
@@ -617,6 +622,22 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ]
 
 
+def _track_step[**_P, _R](
+    step_id: str, func: Callable[_P, Coroutine[Any, Any, _R]]
+) -> Callable[_P, Coroutine[Any, Any, _R]]:
+    """Set the current step id while the step method runs."""
+
+    @wraps(func)
+    async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        token = _current_step_id.set(step_id)
+        try:
+            return await func(*args, **kwargs)
+        finally:
+            _current_step_id.reset(token)
+
+    return wrapper
+
+
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
@@ -646,6 +667,14 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
     deprecated_show_progress = False
+
+    @override
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Track the executing step so step_id can be omitted in results."""
+        super().__init_subclass__(**kwargs)
+        for name, func in list(vars(cls).items()):
+            if name.startswith("async_step_") and inspect.iscoroutinefunction(func):
+                setattr(cls, name, _track_step(name.removeprefix("async_step_"), func))
 
     @property
     def source(self) -> str | None:
@@ -724,7 +753,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
-        if step_id is not None:
+        if step_id is not None or (step_id := _current_step_id.get()) is not None:
             flow_result["step_id"] = step_id
         return flow_result
 
@@ -791,7 +820,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             url=url,
             description_placeholders=description_placeholders,
         )
-        if step_id is not None:
+        if step_id is not None or (step_id := _current_step_id.get()) is not None:
             flow_result["step_id"] = step_id
         return flow_result
 
@@ -841,7 +870,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
-        if step_id is not None:
+        if step_id is not None or (step_id := _current_step_id.get()) is not None:
             flow_result["step_id"] = step_id
         return flow_result
 
@@ -897,7 +926,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if sort:
             flow_result["sort"] = sort
-        if step_id is not None:
+        if step_id is not None or (step_id := _current_step_id.get()) is not None:
             flow_result["step_id"] = step_id
         return flow_result
 
