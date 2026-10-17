@@ -7,6 +7,7 @@ from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
     DisplayOrientation,
     PtcLevel,
 )
+from miio.integrations.airpurifier.zhimi.airpurifier_miot import LedBrightness
 import pytest
 
 from homeassistant.components.select import (
@@ -20,6 +21,8 @@ from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
     DOMAIN,
     MODEL_AIRFRESH_T2017,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -141,7 +144,55 @@ async def test_select_coordinator_update(hass: HomeAssistant, setup_test) -> Non
     assert state.state == "left"
 
 
-async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
+@pytest.mark.parametrize("model", [MODEL_AIRPURIFIER_4, MODEL_AIRPURIFIER_4_PRO])
+async def test_select_led_brightness_reversed_models(
+    hass: HomeAssistant, model: str
+) -> None:
+    """Test bright sends the reversed raw value on Air Purifier 4 models."""
+    mock_airpurifier = MagicMock()
+    mock_airpurifier.status().led_brightness = LedBrightness.Off
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.AirPurifierMiot",
+        return_value=mock_airpurifier,
+    ):
+        entity_id = await setup_component(hass, "test_airpurifier", model)
+    entity_id += "_led_brightness"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_OPTION: "bright", ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_airpurifier.set_property.assert_called_once_with("led_brightness", 2)
+    mock_airpurifier.set_led_brightness.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "bright"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_OPTION: "dim", ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_airpurifier.set_led_brightness.assert_called_once_with(LedBrightness.Dim)
+    mock_airpurifier.set_property.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "dim"
+
+
+async def setup_component(
+    hass: HomeAssistant, entity_name: str, model: str = MODEL_AIRFRESH_T2017
+) -> str:
     """Set up component."""
     entity_id = f"{SELECT_DOMAIN}.{entity_name}"
 
@@ -153,7 +204,7 @@ async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
             CONF_FLOW_TYPE: CONF_DEVICE,
             CONF_HOST: "0.0.0.0",
             CONF_TOKEN: "12345678901234567890123456789012",
-            CONF_MODEL: MODEL_AIRFRESH_T2017,
+            CONF_MODEL: model,
             CONF_MAC: TEST_MAC,
         },
     )
