@@ -5,9 +5,8 @@ from typing import override
 
 from rf_protocols import RadioFrequencyCommand
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import (
-    CALLBACK_TYPE,
     Context,
     Event,
     EventStateChangedData,
@@ -17,10 +16,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_entity_registry_updated_event,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import DATA_COMPONENT, DOMAIN
 
@@ -92,39 +88,18 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
 
     _attr_should_poll = False
     _rf_transmitter_entity_id_or_uuid: str
-    _rf_unsubscribes: list[CALLBACK_TYPE]
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to RF entity state and rename events."""
+        """Subscribe to RF entity state changes."""
         await super().async_added_to_hass()
 
-        self._rf_unsubscribes = []
-        self.async_on_remove(self._async_unsubscribe_rf)
-        self._async_track_rf_entity(
-            er.async_validate_entity_id(
-                er.async_get(self.hass), self._rf_transmitter_entity_id_or_uuid
-            )
+        entity_id = er.async_validate_entity_id(
+            er.async_get(self.hass), self._rf_transmitter_entity_id_or_uuid
         )
-
-    @callback
-    def _async_unsubscribe_rf(self) -> None:
-        """Tear down the current transmitter subscriptions."""
-        while self._rf_unsubscribes:
-            self._rf_unsubscribes.pop()()
-
-    @callback
-    def _async_track_rf_entity(self, entity_id: str) -> None:
-        """Track state and rename events for the resolved transmitter entity_id."""
-        self._async_unsubscribe_rf()
-        self._rf_unsubscribes.append(
+        self.async_on_remove(
             async_track_state_change_event(
                 self.hass, [entity_id], self._async_rf_state_changed
-            )
-        )
-        self._rf_unsubscribes.append(
-            async_track_entity_registry_updated_event(
-                self.hass, entity_id, self._async_rf_registry_updated
             )
         )
         rf_state = self.hass.states.get(entity_id)
@@ -140,19 +115,6 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
             command,
             context=self._context,
         )
-
-    @callback
-    def _async_rf_registry_updated(
-        self, event: Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Re-track the transmitter when it is renamed."""
-        data = event.data
-        if data["action"] != "update":
-            return
-        if ATTR_ENTITY_ID not in data["changes"]:
-            return
-        self._async_track_rf_entity(data[ATTR_ENTITY_ID])
-        self.async_write_ha_state()
 
     @callback
     def _async_rf_state_changed(self, event: Event[EventStateChangedData]) -> None:
