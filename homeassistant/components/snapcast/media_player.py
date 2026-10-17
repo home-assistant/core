@@ -49,27 +49,22 @@ async def async_setup_entry(
         # Get IDs of current clients on server
         snapcast_ids = {d.identifier for d in coordinator.server.clients}
 
-        # Update known IDs
+        # Keep entity identity stable across temporary client disconnects. Snapclients
+        # can disappear from Server.GetStatus while rebooting and later return with the
+        # same identifier. Removing the entity registry entry here makes Home Assistant
+        # create a new entity on reconnect and can move user customizations to the wrong
+        # physical client.
         ids_to_add = snapcast_ids - _known_client_ids
-        ids_to_remove = _known_client_ids - snapcast_ids
-
-        _known_client_ids.difference_update(ids_to_remove)
         _known_client_ids.update(ids_to_add)
 
-        # Exit early if no changes
-        if not (ids_to_add | ids_to_remove):
+        if not ids_to_add:
             return
 
         _LOGGER.debug(
             "New snapcast client: %s",
             str([coordinator.server.client(d).friendly_name for d in ids_to_add]),
         )
-        _LOGGER.debug(
-            "Remove snapcast client IDs: %s",
-            str([list(ids_to_remove)]),
-        )
 
-        # Add new entities
         async_add_entities(
             [
                 SnapcastClientDevice(
@@ -78,16 +73,6 @@ async def async_setup_entry(
                 for snapcast_id in ids_to_add
             ]
         )
-
-        # Remove stale entities
-        entity_registry = er.async_get(hass)
-        for snapcast_id in ids_to_remove:
-            if entity_id := entity_registry.async_get_entity_id(
-                MEDIA_PLAYER_DOMAIN,
-                DOMAIN,
-                SnapcastClientDevice.get_unique_id(coordinator.host_id, snapcast_id),
-            ):
-                entity_registry.async_remove(entity_id)
 
     # Create client entities and add listener to update clients on server update
     _update_clients()
@@ -106,7 +91,6 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     )
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    _device: Snapclient
 
     def __init__(
         self,
@@ -116,10 +100,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Initialize the base device."""
         super().__init__(coordinator)
 
-        self._device = device
-        self._attr_unique_id = self.get_unique_id(
-            coordinator.host_id, device.identifier
-        )
+        # The Snapcast client identifier is the entity's immutable identity. The
+        # python-snapcast server can replace its Snapclient object when a physical
+        # client reconnects, so never keep that mutable object as the identity.
+        self._client_id = device.identifier
+        self._fallback_name = device.friendly_name
+        self._bound_device: Snapclient | None = None
+        self._attr_unique_id = self.get_unique_id(coordinator.host_id, self._client_id)
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
@@ -127,37 +114,86 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return f"{CLIENT_PREFIX}{host}_{id}"
 
     @property
+    def _device(self) -> Snapclient | None:
+        """Return the current Snapclient object for this immutable client ID."""
+        try:
+            return self.coordinator.server.client(self._client_id)
+        except KeyError:
+            return None
+
+    def _require_device(self) -> Snapclient:
+        """Return the current client or raise when it is temporarily unavailable."""
+        if (device := self._device) is None:
+            raise ServiceValidationError(
+                f"Snapcast client '{self._client_id}' is not currently available."
+            )
+        return device
+
+    def _bind_device_callback(self) -> None:
+        """Bind callbacks to the current client object after reconnects."""
+        device = self._device
+        if device is self._bound_device:
+            return
+
+        if self._bound_device is not None:
+            self._bound_device.set_callback(None)
+
+        self._bound_device = device
+        if device is not None:
+            device.set_callback(self.schedule_update_ha_state)
+
+    @property
     def _current_group(self) -> Snapgroup | None:
         """Return the group the client is associated with."""
-        return self._device.group
+        if (device := self._device) is None:
+            return None
+        return device.group
 
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
-        self._device.set_callback(self.schedule_update_ha_state)
+        self._bind_device_callback()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Rebind to a replacement Snapclient object after a reconnect."""
+        self._bind_device_callback()
+        super()._handle_coordinator_update()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self._device.set_callback(None)
+        if self._bound_device is not None:
+            self._bound_device.set_callback(None)
+            self._bound_device = None
+        await super().async_will_remove_from_hass()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether this exact Snapcast client is available."""
+        return super().available and self._device is not None
 
     @property
     def identifier(self) -> str:
-        """Return the snapcast identifier."""
-        return self._device.identifier
+        """Return the immutable Snapcast identifier."""
+        return self._client_id
 
     @property
     @override
     def name(self) -> str:
         """Return the name of the device."""
-        return f"{self._device.friendly_name} {CLIENT_SUFFIX}"
+        if (device := self._device) is not None:
+            return f"{device.friendly_name} {CLIENT_SUFFIX}"
+        return f"{self._fallback_name} {CLIENT_SUFFIX}"
 
     @property
     @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
-        if self._device.connected:
+        if (device := self._device) is not None and device.connected:
             if (
                 self.is_volume_muted
                 or self._current_group is None
@@ -183,7 +219,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def latency(self) -> float | None:
         """Return current latency."""
-        return self._device.latency
+        if (device := self._device) is None:
+            return None
+        return device.latency
 
     @property
     @override
@@ -225,38 +263,42 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @override
     def is_volume_muted(self) -> bool:
         """Volume muted."""
-        return self._device.muted
+        if (device := self._device) is None:
+            return False
+        return device.muted
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
-        await self._device.set_muted(mute)
+        await self._require_device().set_muted(mute)
         self.async_write_ha_state()
 
     @property
     @override
-    def volume_level(self) -> float:
+    def volume_level(self) -> float | None:
         """Return the volume level."""
-        return self._device.volume / 100
+        if (device := self._device) is None:
+            return None
+        return device.volume / 100
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
-        await self._device.set_volume(round(volume * 100))
+        await self._require_device().set_volume(round(volume * 100))
         self.async_write_ha_state()
 
     async def async_snapshot(self) -> None:
         """Snapshot the group state."""
-        self._device.snapshot()
+        self._require_device().snapshot()
 
     async def async_restore(self) -> None:
         """Restore the group state."""
-        await self._device.restore()
+        await self._require_device().restore()
         self.async_write_ha_state()
 
     async def async_set_latency(self, latency) -> None:
         """Set the latency of the client."""
-        await self._device.set_latency(latency)
+        await self._require_device().set_latency(latency)
         self.async_write_ha_state()
 
     @property
@@ -340,7 +382,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 },
             )
 
-        await self._current_group.remove_client(self._device.identifier)
+        await self._current_group.remove_client(self._client_id)
         self.async_write_ha_state()
 
     @property
