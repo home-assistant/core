@@ -36,10 +36,12 @@ from .const import (
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_EXCLUSIVE,
     CONF_KEY_TYPES,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT,
     DEVINPUT_BY_ID,
@@ -108,6 +110,9 @@ CONFIG_SCHEMA = probatio.Schema(
                             ): probatio.All(
                                 probatio.EnsureList(), [probatio.In(KEY_VALUE)]
                             ),
+                            probatio.Optional(
+                                CONF_EXCLUSIVE, default=DEFAULT_EXCLUSIVE
+                            ): cv.boolean,
                             probatio.Optional(
                                 CONF_EMULATE_KEY_HOLD, default=DEFAULT_EMULATE_KEY_HOLD
                             ): cv.boolean,
@@ -799,6 +804,8 @@ class DeviceHandler:
         # this handler exists.
         options = entry.options
         self._key_values = {KEY_VALUE[key_type] for key_type in options[CONF_KEY_TYPES]}
+        # An entry created before the option existed has none, and grabs
+        self._exclusive: bool = options.get(CONF_EXCLUSIVE, DEFAULT_EXCLUSIVE)
         self._emulate_key_hold: bool = options[CONF_EMULATE_KEY_HOLD]
         self._emulate_key_hold_delay: float = options[CONF_EMULATE_KEY_HOLD_DELAY]
         self._emulate_key_hold_repeat: float = options[CONF_EMULATE_KEY_HOLD_REPEAT]
@@ -921,7 +928,8 @@ class DeviceHandler:
 
         Pass from_monitor_task=True when the monitor task itself is tearing
         down after a read failure. It cannot wait for its own completion, and
-        ungrabbing a device that just errored would only raise again.
+        ungrabbing a device that just errored would only raise again. A device
+        monitored non-exclusively was never grabbed, so it is not ungrabbed.
         """
         if (task := self._monitor_task) is None:
             return
@@ -937,7 +945,7 @@ class DeviceHandler:
         self._monitor_task = None
 
         try:
-            if not from_monitor_task:
+            if not from_monitor_task and self._exclusive:
                 with suppress(OSError):
                     await self.hass.async_add_executor_job(dev.ungrab)
         finally:
@@ -1002,16 +1010,24 @@ class DeviceHandler:
         from evdev import ecodes  # noqa: PLC0415
 
         try:
-            _LOGGER.debug("Start device monitoring")
-            try:
-                await self.hass.async_add_executor_job(dev.grab)
-            except OSError as err:
-                _LOGGER.warning(
-                    "Unable to grab %s, it may be in use by another program: %s",
-                    dev.name,
-                    err,
+            if self._exclusive:
+                _LOGGER.debug(
+                    "Start exclusive monitoring of %s (%s)", dev.name, dev.path
                 )
-                raise
+                try:
+                    await self.hass.async_add_executor_job(dev.grab)
+                except OSError as err:
+                    _LOGGER.warning(
+                        "Unable to grab %s, it may be in use by another program: %s",
+                        dev.name,
+                        err,
+                    )
+                    raise
+            else:
+                # Other programs keep receiving the events, as the user asked
+                _LOGGER.debug(
+                    "Start non-exclusive monitoring of %s (%s)", dev.name, dev.path
+                )
             async for event in dev.async_read_loop():
                 if event.type == ecodes.EV_KEY:
                     if event.value in self._key_values:
