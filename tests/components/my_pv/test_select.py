@@ -1,6 +1,6 @@
 """Test the my-PV select platform."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from my_pv.exceptions import (
     MyPVAuthenticationError,
@@ -20,11 +20,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
+
+PLATFORMS = [Platform.SELECT]
+
+pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -32,68 +37,46 @@ async def test_select(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful setup of the select platform."""
-
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
-        mock_config_entry.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry, PLATFORMS)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_unavailable_not_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if a select is unavailable when not connected."""
+    mock_my_pv_client.connected = False
 
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
-        mock_config_entry.add_to_hass(hass)
-
-        mock_my_pv_client.connected = False
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry, PLATFORMS)
 
     state = hass.states.get("select.my_pv_ac_elwa_2_boost_mode")
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_unavailable_setup_value_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if a select is unavailable when setup value is None."""
+    mock_my_pv_client.get_setup_value = Mock(return_value=None)
 
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
-        mock_config_entry.add_to_hass(hass)
-
-        mock_my_pv_client.get_setup_value = Mock(return_value=None)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry, PLATFORMS)
 
     state = hass.states.get("select.my_pv_ac_elwa_2_boost_mode")
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_select_option(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setting value."""
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
-        mock_config_entry.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry, PLATFORMS)
 
     state = hass.states.get("select.my_pv_ac_elwa_2_boost_mode")
     assert state.state == "0"
@@ -115,24 +98,17 @@ async def test_select_select_option(
     assert state.state == "1"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_select_option_returns_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for HomeAssistantError when set_setup_value returns false."""
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
-        mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry, PLATFORMS)
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_my_pv_client.set_setup_value.return_value = False
 
-    mock_my_pv_client.set_setup_value = AsyncMock(return_value=False)
-
-    with (
-        pytest.raises(HomeAssistantError),
-    ):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -156,7 +132,6 @@ async def test_select_select_option_returns_false(
         (MyPVTooManyRequestsError(), HomeAssistantError),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_select_option_raises_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -165,17 +140,11 @@ async def test_select_select_option_raises_error(
     expected_ha_error: type[HomeAssistantError],
 ) -> None:
     """Test for HomeAssistantError when set_setup_value raises error."""
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
-        mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry, PLATFORMS)
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_my_pv_client.set_setup_value.side_effect = error
 
-    mock_my_pv_client.set_setup_value = AsyncMock(side_effect=error)
-
-    with (
-        pytest.raises(expected_ha_error),
-    ):
+    with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

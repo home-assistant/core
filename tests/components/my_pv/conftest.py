@@ -90,10 +90,6 @@ def setup_values() -> dict[str, Any]:
     return SETUP_VALUE
 
 
-def _data_value_lookup(key):
-    return DATA_VALUE.get(key)
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the my-PV mocked config entry for local devices."""
@@ -129,10 +125,6 @@ def mock_my_pv_client(
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.my_pv.coordinator.MyPVDevice",
-            new=mock_client,
-        ) as mock_client,
-        patch(
             "homeassistant.components.my_pv.config_flow.MyPVLocalDevice",
             new=mock_client,
         ),
@@ -148,18 +140,21 @@ def mock_my_pv_client(
         client.firmware_version = "e0002200"
         client.connected = True
         client.is_on = True
+        client.turn_on = AsyncMock(return_value=True)
+        client.turn_off = AsyncMock(return_value=True)
+        client.supports_main_mode = Mock(return_value=True)
         client.current_temperature = 54.3
         client.target_temperature = 62.1
+        client.set_target_temperature = AsyncMock(return_value=True)
         client.get_setup_configurations = Mock(return_value=setup_configuration)
         client.get_setup_configuration = Mock(side_effect=setup_configuration.get)
         client.get_setup_value = Mock(side_effect=setup_values.get)
-        client.set_setup_value = AsyncMock()
+        client.set_setup_value = AsyncMock(return_value=True)
         client.get_command_configuration = Mock(side_effect=COMMAND_CONFIGURATION.get)
-        client.connected = True
-        client.is_on = True
         client.send_command = AsyncMock(return_value=True)
         client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
-        client.get_data_value = Mock(side_effect=_data_value_lookup)
         client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
+        client.fetch_data = AsyncMock(return_value=True)
+        client.get_data_value = Mock(side_effect=DATA_VALUE.get)
 
         yield client
