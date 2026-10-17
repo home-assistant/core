@@ -8,8 +8,10 @@ from ritualsgenie import Attribute, RitualsGenie, RitualsGenieHub
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import RitualsConfigEntry
 from .entity import DiffuserEntity, rituals_action
 
@@ -71,7 +73,11 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if not value.is_integer():
-            raise ValueError(f"Can't set value to {value}. Value must be an integer.")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="perfume_amount_not_whole",
+                translation_placeholders={"value": str(value)},
+            )
         await self.entity_description.set_value_fn(
             self.coordinator.client, self.hub.hash, int(value)
         )
