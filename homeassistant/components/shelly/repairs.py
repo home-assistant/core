@@ -24,6 +24,7 @@ from .const import (
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
     DOMAIN,
+    IR_RAW_RECEIVE_DISABLED_ISSUE_ID,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     RTSP_DISABLED_ISSUE_ID,
@@ -240,6 +241,46 @@ def async_manage_rtsp_disabled_issue(
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="rtsp_disabled",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_manage_ir_raw_receive_disabled_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the infrared RAW receive disabled issue."""
+    issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
+
+    if (
+        "ir" in device.status
+        and (ir_config := device.config.get("ir")) is not None
+        and not ir_config.get("raw_receive")
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="ir_raw_receive_disabled",
             translation_placeholders={
                 "device_name": device.name,
                 "ip_address": device.ip_address,
@@ -471,6 +512,47 @@ class EnableRtspFlow(RepairsFlow):
         return self.async_abort(reason="issue_ignored")
 
 
+class EnableIrRawReceiveFlow(RepairsFlow):
+    """Handler for Enable infrared RAW receive flow."""
+
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+        """Initialize."""
+        self._device = device
+        self.issue_id = issue_id
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step of a fix flow."""
+        try:
+            await self._device.ir_set_raw_receive(True)
+        except DeviceConnectionError, RpcCallError:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
@@ -506,5 +588,8 @@ async def async_create_fix_flow(
 
     if "rtsp_disabled" in issue_id:
         return EnableRtspFlow(device, issue_id)
+
+    if "ir_raw_receive_disabled" in issue_id:
+        return EnableIrRawReceiveFlow(device, issue_id)
 
     return ConfirmRepairFlow()
