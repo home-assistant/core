@@ -21,7 +21,7 @@ Documentation = "https://contributors.home-assistant.io"
 include = ["hassfest*"]
 
 [tool.setuptools.package-data]
-hassfest = ["_data/*.txt", "_data/build.json"]
+hassfest = ["_data/build.json"]
 
 [tool.pytest.ini_options]
 addopts = "-p no:respx"

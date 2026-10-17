@@ -21,8 +21,6 @@ def main() -> None:
     assert json.loads((data / "build.json").read_text())["version"] == version(
         "hassfest"
     )
-    assert (data / "requirements.txt").read_text()
-    assert (data / "requirements_all.txt").read_text()
     assert "EXAMPLE = True" in format_python_namespace({"EXAMPLE": True})
 
     with TemporaryDirectory() as directory:
