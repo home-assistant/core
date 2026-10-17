@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_entry
+from .conftest import create_rfx_test_entry, get_device_identifier
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
@@ -84,7 +84,8 @@ async def test_get_actions(
     mock_entry = await setup_entry(hass, {device.code: {}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        device.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, device.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -134,7 +135,8 @@ async def test_action(
     mock_entry = await setup_entry(hass, {device.code: {}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        device.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, device.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -164,6 +166,50 @@ async def test_action(
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
 
 
+async def test_get_actions_missing_identifier(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test we get no actions for a device without a rfxtrx identifier."""
+    mock_entry = await setup_entry(hass, {})
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={("dummy_only", "id")},
+    )
+
+    assert await device_action.async_get_actions(hass, device_entry.id) == []
+
+
+async def test_get_actions_missing_subentry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test we get no actions for a device pointing at a removed subentry."""
+    mock_entry = await setup_entry(hass, {})
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={(DOMAIN, "not_a_real_subentry_id")},
+    )
+
+    assert await device_action.async_get_actions(hass, device_entry.id) == []
+
+
+async def test_get_actions_invalid_event_code(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test we get no actions for a device whose subentry has an invalid event code."""
+    mock_entry = await setup_entry(hass, {"invalid": {}})
+    subentry = next(iter(mock_entry.subentries.values()))
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        config_subentry_id=subentry.subentry_id,
+        identifiers={(DOMAIN, subentry.subentry_id)},
+    )
+
+    assert await device_action.async_get_actions(hass, device_entry.id) == []
+
+
 async def test_invalid_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -175,7 +221,8 @@ async def test_invalid_action(
     mock_entry = await setup_entry(hass, {device.code: {}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        device.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, device.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
@@ -214,7 +261,8 @@ async def test_action_not_connected(
     mock_entry = await setup_entry(hass, {device.code: {}})
 
     device_entry = device_registry.async_get_device_by_identifier(
-        device.device_identifier, mock_entry.entry_id
+        get_device_identifier(mock_entry, device.device_identifier[1]),
+        mock_entry.entry_id,
     )
     assert device_entry
 
