@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This account is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "invalid_url": "Enter a valid server URL without embedded credentials",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "id": "Account ID",
+          "password": "Password",
+          "url": "Server URL"
+        },
+        "data_description": {
+          "id": "Your FMD account ID",
+          "password": "Your FMD account password",
+          "url": "The full URL to your FMD server including protocol"
+        },
+        "description": "Set up your FMD (Find My Device) server connection",
+        "title": "FMD Configuration"
+      }
+    }
+  },
+  "exceptions": {
+    "no_location_data": {
+      "message": "No location data available from the FMD server"
+    },
+    "setup_auth_failed": {
+      "message": "Authentication failed while setting up FMD: {error}"
+    },
+    "setup_not_ready": {
+      "message": "FMD API error during setup: {error}"
+    },
+    "update_auth_failed": {
+      "message": "Authentication failed while fetching location data: {error}"
+    },
+    "update_failed": {
+      "message": "Error fetching location data: {error}"
+    }
+  }
+}

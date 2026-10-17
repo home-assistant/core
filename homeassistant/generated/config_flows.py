@@ -253,6 +253,7 @@ FLOWS = {
         "flume",
         "fluss",
         "flux_led",
+        "fmd",
         "folder_watcher",
         "forecast_solar",
         "forked_daapd",
