@@ -176,7 +176,7 @@ async def test_service_get_travel_times_traffic_model_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Traffic model requires traffic-aware optimal routing",
+        check=lambda e: e.translation_key == "traffic_model_not_allowed",
     ):
         await hass.services.async_call(
             DOMAIN,
