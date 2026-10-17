@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "art_mode": {
+        "default": "mdi:image-frame"
+      }
+    }
+  }
+}
