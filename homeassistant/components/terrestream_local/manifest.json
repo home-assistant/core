@@ -1,0 +1,11 @@
+{
+  "domain": "terrestream_local",
+  "name": "Terrestream",
+  "codeowners": ["@Xynergi"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/terrestream_local",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["terrestream-local==0.1.1"]
+}

@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This sensor is already configured."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect. Check the address, Wi-Fi connection, and pairing window.",
+      "invalid_auth": "Pairing failed. Check the displayed code and try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "code": "Pairing code",
+          "host": "IP address or hostname"
+        },
+        "data_description": {
+          "code": "Enter all eight digits, including any leading zeros.",
+          "host": "The sensor must be reachable from Home Assistant over the local network. Do not include a port or URL."
+        },
+        "description": "On the sensor, open Setup \u2192 Home Assistant \u2192 Pair. Enter its local address and the eight-digit code shown on its display. The code expires after two minutes.",
+        "title": "Connect your Terrestream"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2": {
+        "name": "Carbon dioxide"
+      },
+      "computed_epa_aqi": {
+        "name": "Computed EPA particulate AQI"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "illuminance": {
+        "name": "Illuminance"
+      },
+      "nox_index": {
+        "name": "NOx index"
+      },
+      "pm1": {
+        "name": "PM1"
+      },
+      "pm10": {
+        "name": "PM10"
+      },
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "pm4": {
+        "name": "PM4"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "voc_index": {
+        "name": "VOC index"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "The sensor is unavailable. Check its network connection and allow any maintenance to finish."
+    },
+    "pairing_revoked": {
+      "message": "Pairing is no longer valid. In Home Assistant, remove this sensor's integration entry. On the sensor, open Setup → Home Assistant, disconnect the old pairing, then tap Pair. Add the integration again using the new code."
+    }
+  }
+}
