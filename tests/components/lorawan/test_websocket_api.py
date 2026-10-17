@@ -400,15 +400,18 @@ async def test_subscription_registry_changes(
     assert (await client.receive_json())["event"]["devices"][0]["device_id"] is None
 
 
-@pytest.mark.parametrize("domain", ["unrelated", "test_vendor"])
-async def test_subscription_ignores_unrelated_registry_devices(
+@pytest.mark.parametrize(
+    ("domain", "expected_snapshots"), [("unrelated", 0), ("test_vendor", 1)]
+)
+async def test_subscription_filters_registry_domains(
     hass: HomeAssistant,
     registered_backend: RegisterBackend,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     domain: str,
+    expected_snapshots: int,
 ) -> None:
-    """Unrelated registry changes do not rebuild snapshots."""
+    """Use the owning integration domain without inspecting device identifiers."""
     await registered_backend("network", [DESCRIPTOR])
     entry = MockConfigEntry(domain=domain)
     entry.add_to_hass(hass)
@@ -416,9 +419,11 @@ async def test_subscription_ignores_unrelated_registry_devices(
     await client.send_json({"id": 1, "type": "lorawan/devices/subscribe"})
     assert (await client.receive_json())["success"]
     await client.receive_json()
-    with patch("homeassistant.components.lorawan.websocket_api._snapshot") as snapshot:
+    with patch(
+        "homeassistant.components.lorawan.websocket_api._snapshot", wraps=_snapshot
+    ) as snapshot:
         device = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id, identifiers={(domain, "unrelated")}
+            config_entry_id=entry.entry_id, identifiers={("hardware", "unrelated")}
         )
         await hass.async_block_till_done()
         device_registry.async_update_device(device.id, name_by_user="Unrelated")
@@ -427,7 +432,7 @@ async def test_subscription_ignores_unrelated_registry_devices(
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done()
-        snapshot.assert_not_called()
+        assert snapshot.call_count == expected_snapshots
 
 
 @pytest.mark.parametrize("command", ["list", "subscribe"])

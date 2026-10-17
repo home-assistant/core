@@ -148,6 +148,7 @@ def websocket_subscribe_devices(
 
     device_registry = dr.async_get(hass)
     registry = hass.data[DATA_REGISTRY]
+    lorawan_domains = set(registry.integrations)
     linked_device_ids: set[str] = set()
 
     @callback
@@ -173,25 +174,15 @@ def websocket_subscribe_devices(
             return
         if (device := device_registry.async_get(device_id)) is None:
             return
-        if any(
-            domain in registry.integrations
-            and any(
-                identifier
-                == f"{state.descriptor.network_id}:{state.descriptor.dev_eui}"
-                and (state.descriptor.stack, state.descriptor.brand_id)
-                in registry.integrations[domain]
-                for registered in registry.connections.values()
-                for state in registered.devices.values()
-            )
-            for domain, identifier in device.identifiers
-        ):
+        entry = hass.config_entries.async_get_entry(device.config_entry_id)
+        if entry is not None and entry.domain in lorawan_domains:
             debouncer.async_schedule_call()
 
     @callback
     def entry_changed(_change: ConfigEntryChange, entry: ConfigEntry) -> None:
         if (
             entry.entry_id not in registry.connections
-            and entry.domain not in registry.integrations
+            and entry.domain not in lorawan_domains
         ):
             return
         debouncer.async_schedule_call()
