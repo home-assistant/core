@@ -1,7 +1,7 @@
 """Test repairs handling for Shelly."""
 
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from aioshelly.const import MODEL_CAMERA, MODEL_PLUG, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, NotInitialized, RpcCallError
@@ -896,14 +896,44 @@ async def test_rtsp_disabled_issue_exc(
     assert len(issue_registry.issues) == 1
 
 
-async def test_ir_raw_receive_disabled_issue(
+@pytest.mark.parametrize(
+    (
+        "side_effect",
+        "next_step_id",
+        "result_type",
+        "reason",
+        "call_count",
+        "issue_exists",
+    ),
+    [
+        (None, "confirm", "create_entry", None, 1, False),
+        (None, "ignore", "abort", "issue_ignored", 0, True),
+        (DeviceConnectionError, "confirm", "abort", "cannot_connect", 1, True),
+        (
+            RpcCallError(999, "Unknown error"),
+            "confirm",
+            "abort",
+            "cannot_connect",
+            1,
+            True,
+        ),
+    ],
+)
+async def test_ir_raw_receive_disabled_issue_fix_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_rpc_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    side_effect: Exception | type[Exception] | None,
+    next_step_id: str,
+    result_type: str,
+    reason: str | None,
+    call_count: int,
+    issue_exists: bool,
 ) -> None:
-    """Test repair issue when infrared RAW receive is disabled."""
+    """Test the infrared RAW receive disabled repair issue fix flow."""
+    mock_rpc_device.ir_set_raw_receive.side_effect = side_effect
     monkeypatch.setattr(mock_rpc_device, "firmware_version", IR_RAW_RECEIVE_FIRMWARE)
     monkeypatch.setitem(mock_rpc_device.config["ir"], "raw_receive", False)
 
@@ -922,14 +952,16 @@ async def test_ir_raw_receive_disabled_issue(
     assert result["type"] == "menu"
 
     result = await process_repair_fix_flow(
-        client, result["flow_id"], {"next_step_id": "confirm"}
+        client, result["flow_id"], {"next_step_id": next_step_id}
     )
-    assert result["type"] == "create_entry"
-    assert mock_rpc_device.ir_set_raw_receive.call_count == 1
-    assert mock_rpc_device.ir_set_raw_receive.call_args[0] == (True,)
+    assert result["type"] == result_type
+    assert result.get("reason") == reason
+    assert (
+        mock_rpc_device.ir_set_raw_receive.call_args_list == [call(True)] * call_count
+    )
 
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0
+    assert bool(issue_registry.async_get_issue(DOMAIN, issue_id)) is issue_exists
+    assert len(issue_registry.issues) == int(issue_exists)
 
 
 @pytest.mark.parametrize(
@@ -964,80 +996,3 @@ async def test_no_ir_raw_receive_disabled_issue(
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
-
-
-async def test_ir_raw_receive_disabled_issue_ignore(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_rpc_device: Mock,
-    issue_registry: ir.IssueRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test ignoring the infrared RAW receive disabled issue."""
-    monkeypatch.setattr(mock_rpc_device, "firmware_version", IR_RAW_RECEIVE_FIRMWARE)
-    monkeypatch.setitem(mock_rpc_device.config["ir"], "raw_receive", False)
-
-    issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
-    assert await async_setup_component(hass, "repairs", {})
-    await hass.async_block_till_done()
-    await init_integration(hass, 2)
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 1
-
-    client = await hass_client()
-    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
-
-    assert result["step_id"] == "init"
-    assert result["type"] == "menu"
-
-    result = await process_repair_fix_flow(
-        client, result["flow_id"], {"next_step_id": "ignore"}
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "issue_ignored"
-    assert mock_rpc_device.ir_set_raw_receive.call_count == 0
-
-    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
-    assert issue.dismissed_version
-
-
-@pytest.mark.parametrize(
-    "exception", [DeviceConnectionError, RpcCallError(999, "Unknown error")]
-)
-async def test_ir_raw_receive_disabled_issue_exc(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_rpc_device: Mock,
-    issue_registry: ir.IssueRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-    exception: Exception,
-) -> None:
-    """Test repair issue handling when ir_set_raw_receive ends with an exception."""
-    mock_rpc_device.ir_set_raw_receive.side_effect = exception
-    monkeypatch.setattr(mock_rpc_device, "firmware_version", IR_RAW_RECEIVE_FIRMWARE)
-    monkeypatch.setitem(mock_rpc_device.config["ir"], "raw_receive", False)
-
-    issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
-    assert await async_setup_component(hass, "repairs", {})
-    await hass.async_block_till_done()
-    await init_integration(hass, 2)
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 1
-
-    client = await hass_client()
-    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
-
-    assert result["step_id"] == "init"
-    assert result["type"] == "menu"
-
-    result = await process_repair_fix_flow(
-        client, result["flow_id"], {"next_step_id": "confirm"}
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-    assert mock_rpc_device.ir_set_raw_receive.call_count == 1
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 1
