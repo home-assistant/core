@@ -1,0 +1,34 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "No radio frequency transmitter supports 433.42 MHz OOK transmissions. Please add a compatible transmitter first.",
+      "no_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first."
+    },
+    "error": {
+      "invalid_address": "Address must be a hexadecimal value between 000001 and FFFFFF.",
+      "prog_failed": "Failed to send the PROG command. Check the transmitter and try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "address": "Remote address",
+          "transmitter": "Radio frequency transmitter"
+        },
+        "data_description": {
+          "address": "The 24-bit hexadecimal address of the Somfy RTS remote (e.g. 1A2B3C).",
+          "transmitter": "The radio frequency transmitter used to send Somfy RTS commands."
+        }
+      },
+      "prog": {
+        "description": "Optionally send the PROG command to pair this remote with your Somfy shutters. Check the box and submit to send PROG; leave unchecked and submit to finish setup.",
+        "data": {
+          "send_prog": "Send PROG"
+        },
+        "data_description": {
+          "send_prog": "Hold the PROG button on an already-paired remote until the shutter jogs, then check this box and submit to register this remote.\n\n⚠️ Important: Each shutter can only remember a limited number of remotes (typically 12 for motors). Once PROG is sent, a slot is used up — even if you do not finish this setup. The only way to free up slots with unknown remote addresses is to factory reset the shutter, which removes all paired remotes at once. Only send PROG when you are ready to complete the setup and save it."
+        }
+      }
+    }
+  }
+}
