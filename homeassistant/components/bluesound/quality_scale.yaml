@@ -1,0 +1,90 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not provide custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide integration-specific conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide integration-specific triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Media player and button actions do not translate library exceptions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not have an options flow.
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Recovery from errors in the background polling loops is not logged.
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: The integration connects to devices locally without authentication.
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each player has its own config entry.
+  entity-category:
+    status: exempt
+    comment: All entities control normal speaker operation and use the default category.
+  entity-device-class: todo
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: The integration does not define custom entity icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no known user-actionable repair conditions.
+  stale-devices:
+    status: exempt
+    comment: Each player has its own config entry, so removing it removes the device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: The unload callback does not use the typed config entry alias.
