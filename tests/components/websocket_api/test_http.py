@@ -54,6 +54,32 @@ async def test_pending_msg_overflow(
     assert msg.type is WSMsgType.CLOSE
 
 
+async def test_pending_msg_overflow_counts_batched_entity_changes(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """A batched message counts the changes it carries, not one for the message.
+
+    MAX_PENDING_MSG bounds the entity changes a client that has stopped reading can
+    leave queued. One subscribe_entities message now describes many changes, so
+    counting queue entries would let a stalled client hold that limit multiplied by
+    the size of a batch.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    # One message carrying ten changes, against a limit of five.
+    with patch("homeassistant.components.websocket_api.http.MAX_PENDING_MSG", 5):
+        for index in range(10):
+            hass.states.async_set(f"light.bulb_{index}", "on")
+        await hass.async_block_till_done()
+
+    msg = await websocket_client.receive()
+    assert msg.type is WSMsgType.CLOSE
+
+
 async def test_cleanup_on_cancellation(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
@@ -259,7 +285,7 @@ async def test_pending_msg_peak(
     msg = await websocket_client.receive()
     assert msg.type is WSMsgType.CLOSE
     assert "Client unable to keep up with pending messages" in caplog.text
-    assert "Stayed over 5 for 10 seconds" in caplog.text
+    assert "Stayed over 5 pending entity changes for 10 seconds" in caplog.text
     assert "overload" in caplog.text
 
 
@@ -330,15 +356,20 @@ async def test_pending_msg_peak_but_does_not_overflow(
 
     instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
-    # Kill writer task and fill queue past peak
+    # Kill writer task and fill queue past peak. The change accounting is kept
+    # alongside the queue, so it has to be filled the same way the handler would.
     for _ in range(5):
         instance._message_queue.append(None)
+        instance._message_changes.append(1)
+        instance._pending_changes += 1
 
     # Trigger the peak check
     instance._send_message({})
 
     # Clear the queue
     instance._message_queue.clear()
+    instance._message_changes.clear()
+    instance._pending_changes = 0
 
     # Trigger the peak clear
     instance._send_message({})
@@ -350,6 +381,80 @@ async def test_pending_msg_peak_but_does_not_overflow(
     msg = await websocket_client.receive()
     assert msg.type == WSMsgType.TEXT
 
+    assert "Client unable to keep up with pending messages" not in caplog.text
+
+
+async def _client_and_handler(
+    hass_ws_client: WebSocketGenerator,
+) -> tuple[MockHAClientWebSocket, http.WebSocketHandler]:
+    """Open a connection and return it along with the handler serving it."""
+    orig_handler = http.WebSocketHandler
+    setup_instance: http.WebSocketHandler | None = None
+
+    def instantiate_handler(*args):
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
+
+    with patch(
+        "homeassistant.components.websocket_api.http.WebSocketHandler",
+        instantiate_handler,
+    ):
+        client = await hass_ws_client()
+
+    return client, cast(http.WebSocketHandler, setup_instance)
+
+
+async def test_pending_msg_peak_counts_batched_entity_changes(
+    hass: HomeAssistant,
+    mock_low_peak,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A backlog of batched changes still starts the sustained peak safeguard.
+
+    PENDING_MSG_PEAK guards against a client that stays behind for
+    PENDING_MSG_PEAK_TIME seconds. One message can carry many changes, so counting
+    queue entries would leave a backlog well past the peak sitting there without the
+    safeguard ever starting.
+    """
+    websocket_client, instance = await _client_and_handler(hass_ws_client)
+
+    # Ten changes in two messages, against a peak of five.
+    for _ in range(2):
+        instance._send_message({"overload": "message"}, changes=5)
+
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=const.PENDING_MSG_PEAK_TIME + 1)
+    )
+
+    msg = await websocket_client.receive()
+    assert msg.type is WSMsgType.CLOSE
+    assert "Client unable to keep up with pending messages" in caplog.text
+    assert "Stayed over 5 pending entity changes for 10 seconds" in caplog.text
+
+
+async def test_pending_msg_peak_recovery_counts_batched_entity_changes(
+    hass: HomeAssistant,
+    mock_low_peak,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A batch past the peak that is read in time does not disconnect the client."""
+    websocket_client, instance = await _client_and_handler(hass_ws_client)
+
+    instance._send_message({"overload": "message"}, changes=10)
+
+    msg = await websocket_client.receive()
+    assert msg.type is WSMsgType.TEXT
+
+    # Drained before the check runs, so it finds nothing still pending.
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=const.PENDING_MSG_PEAK_TIME + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert instance._pending_changes == 0
     assert "Client unable to keep up with pending messages" not in caplog.text
 
 

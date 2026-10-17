@@ -1,8 +1,10 @@
 """Connection session."""
 
+import asyncio
+from collections import deque
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, Protocol, override
 
 from aiohttp import web
 import probatio
@@ -43,18 +45,37 @@ REDACT_KEYS = {
 
 type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
+type SendMessage = Callable[[bytes | str | dict[str, Any]], None]
+
+
+class QueueMessage(Protocol):
+    """Put one message on the queue waiting to be written to the client."""
+
+    def __call__(self, message: bytes | str | dict[str, Any], changes: int = 1) -> None:
+        """Queue the message.
+
+        changes is how many entity state changes it carries. MAX_PENDING_MSG bounds
+        entity changes rather than messages, and one message can now describe many, so
+        the queue counts this rather than its own length.
+        """
+
+
+type StateDiffBatchFlush = Callable[[QueueMessage], None]
 
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
+        "_raw_send_message",
+        "_state_diff_flush_handle",
         "binary_handlers",
         "can_coalesce",
         "handlers",
         "hass",
         "last_id",
         "logger",
+        "pending_state_diff_batches",
         "refresh_token_id",
         "remote",
         "send_message",
@@ -63,11 +84,16 @@ class ActiveConnection:
         "user",
     )
 
+    # Annotated because it is reassigned - to the batching sender in __init__, and to
+    # the closed-connection reporter in async_handle_close - and mypy would otherwise
+    # pin it to whichever bound method it saw first.
+    send_message: SendMessage
+
     def __init__(
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[bytes | str | dict[str, Any]], None],
+        send_message: QueueMessage,
         user: User,
         refresh_token: RefreshToken | None,
         remote: str | None,
@@ -75,7 +101,19 @@ class ActiveConnection:
         """Initialize an active connection."""
         self.logger = logger
         self.hass = hass
-        self.send_message = send_message
+        self._raw_send_message = send_message
+        self.pending_state_diff_batches: deque[StateDiffBatchFlush] = deque()
+        # The one drain scheduled for the end of the current iteration, kept so that a
+        # flush which empties the queue early does not leave the next change
+        # scheduling another behind it.
+        self._state_diff_flush_handle: asyncio.Handle | None = None
+        # Everything leaves through _async_send_message so that changes a subscription
+        # has collected but not yet sent go first. Those are flushed from the event
+        # loop, so without this a handler that changed state and then sent its result
+        # would have the result queued ahead of the change that caused it, and a
+        # subscription that captured the sender before any of this existed would
+        # overtake it too.
+        self.send_message = self._async_send_message
         self.user = user
         self.refresh_token_id = refresh_token.id if refresh_token else None
         self.remote = remote
@@ -93,6 +131,75 @@ class ActiveConnection:
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"
+
+    @callback
+    def _async_send_message(self, message: bytes | str | dict[str, Any]) -> None:
+        """Send a message, after anything this connection has already collected."""
+        if self.pending_state_diff_batches:
+            self.async_flush_state_diff_batches()
+        self._raw_send_message(message)
+
+    @callback
+    def _async_flush_state_diff_batches_soon(self) -> None:
+        """Run the drain scheduled for the end of this iteration."""
+        self._state_diff_flush_handle = None
+        self.async_flush_state_diff_batches()
+
+    @callback
+    def _async_schedule_state_diff_flush(self) -> None:
+        """Arrange one drain for the end of this iteration, if none is pending."""
+        if self._state_diff_flush_handle is None:
+            self._state_diff_flush_handle = self.hass.loop.call_soon(
+                self._async_flush_state_diff_batches_soon
+            )
+
+    @callback
+    def async_flush_state_diff_batches(self) -> None:
+        """Send what subscriptions have collected, in the order they collected it.
+
+        Batches send through the raw sender, so a flush cannot re-enter itself.
+        """
+        batches = self.pending_state_diff_batches
+        send_message = self._raw_send_message
+        try:
+            while batches:
+                batches.popleft()(send_message)
+        finally:
+            if batches:
+                # One batch raising must not stop the rest: the loop reports it, but
+                # the drain this ran from has already been taken, so without this what
+                # is left would sit unsent until some later message flushed it.
+                self._async_schedule_state_diff_flush()
+
+    @callback
+    def async_add_pending_state_diff_batch(self, flush: StateDiffBatchFlush) -> None:
+        """Note that a subscription has collected a change that is not yet sent.
+
+        The order everything is sent in is decided here rather than by each batch, so
+        that a batch forced to send early cannot overtake a change another
+        subscription collected before it.
+        """
+        self._async_schedule_state_diff_flush()
+        self.pending_state_diff_batches.append(flush)
+
+    @callback
+    def async_is_newest_state_diff_batch(self, flush: StateDiffBatchFlush) -> bool:
+        """Return whether nothing has been queued behind this batch.
+
+        A batch may only keep collecting while it is the newest. Queued once on its
+        first change, it would otherwise carry a later change in an earlier message
+        than a subscription that collected in between.
+        """
+        batches = self.pending_state_diff_batches
+        return bool(batches) and batches[-1] == flush
+
+    @callback
+    def async_discard_pending_state_diff_batch(
+        self, flush: StateDiffBatchFlush
+    ) -> None:
+        """Drop a batch whose subscription ended before it was sent."""
+        if flush in self.pending_state_diff_batches:
+            self.pending_state_diff_batches.remove(flush)
 
     def set_supported_features(self, features: dict[str, float]) -> None:
         """Set supported features."""
@@ -266,6 +373,11 @@ class ActiveConnection:
                     "Error unsubscribing from subscription: %s", unsub
                 )
         self.subscriptions.clear()
+        if self._state_diff_flush_handle is not None:
+            # Every subscription has just dropped what it collected, so the drain has
+            # nothing left to do and need not outlive the connection.
+            self._state_diff_flush_handle.cancel()
+            self._state_diff_flush_handle = None
         self.send_message = self._connect_closed_error
         current_request.set(None)
         current_connection.set(None)
