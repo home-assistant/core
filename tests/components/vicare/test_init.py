@@ -1046,3 +1046,102 @@ async def test_setup_loads_with_unpaid_package_gateway(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_backs_off_on_gateway_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator sequential backoff (300s, 600s, 900s) on GATEWAY_OFFLINE errors."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+    # 1st failure: GATEWAY_OFFLINE -> backoff 300s
+    service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    # Ordinary interval (60s) does not trigger fetch before 300s deadline
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    # Advance to 300s (remaining 240s) -> triggers fetch
+    freezer.tick(timedelta(seconds=240))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+
+    # 2nd failure: backoff is 600s
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+
+    # 3rd failure: backoff is 900s
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=600))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    # Recovery: gateway is back online before 900s retry
+    service.fetch_all_features.side_effect = None
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+    # Subsequent refresh happens at regular interval (60s)
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+    # A second offline episode restarts backoff at 300s
+    service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(seconds=240))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
