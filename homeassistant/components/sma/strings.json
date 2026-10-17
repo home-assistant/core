@@ -67,12 +67,46 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "inverter_enabled": {
+        "name": "Inverter enabled"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to SMA device"
     },
     "invalid_auth": {
       "message": "Invalid authentication for SMA device"
+    },
+    "modbus_action_failed": {
+      "message": "Modbus action failed for control {control} with value {value}"
+    },
+    "modbus_write_failed": {
+      "message": "Modbus write failed for control {control} with value {value}"
+    }
+  },
+  "options": {
+    "error": {
+      "modbus_cannot_connect": "Could not connect to Modbus on the SMA device. Check that the Modbus TCP server is enabled, and that the port and unit ID are correct.",
+      "modbus_no_sunspec": "Connected to Modbus, but the SMA device does not answer SunSpec on this unit ID. Check that SunSpec is enabled and the unit ID is correct."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "modbus": "Use Modbus",
+          "modbus_unit_id": "Unit ID",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "modbus": "Controls such as turning the inverter on or off need Modbus. To enable it, log in to the inverter's web interface with the Installer login, go to Device configuration > Modbus, and enable the Modbus TCP server and SunSpec.",
+          "modbus_unit_id": "The SMA unit ID of the inverter, usually 3",
+          "port": "The Modbus TCP port of the inverter, usually 502"
+        },
+        "title": "Modbus"
+      }
     }
   },
   "selector": {

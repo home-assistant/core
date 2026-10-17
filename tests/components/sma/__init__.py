@@ -2,11 +2,16 @@
 
 from pysma.helpers import DeviceInfo
 
-from homeassistant.components.sma.const import CONF_GROUP
+from homeassistant.components.sma.const import (
+    CONF_GROUP,
+    CONF_MODBUS,
+    CONF_MODBUS_UNIT_ID,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
@@ -22,6 +27,11 @@ MOCK_DEVICE = DeviceInfo(
     sw_version="1.0.0",
 )
 
+# SMA protocol tag ids for the "operating_status_general" sensor's raw_value,
+# mirroring homeassistant.components.sma.switch._OPERATING_STATUS_OFF_TAG.
+OPERATING_STATUS_OFF_TAG = 303
+OPERATING_STATUS_ACTIVATED_TAG = 569
+
 
 MOCK_USER_INPUT = {
     CONF_HOST: "1.1.1.1",
@@ -29,6 +39,12 @@ MOCK_USER_INPUT = {
     CONF_VERIFY_SSL: False,
     CONF_GROUP: "user",
     CONF_PASSWORD: "password",
+}
+
+MOCK_MODBUS_OPTIONS = {
+    CONF_MODBUS: True,
+    CONF_PORT: 502,
+    CONF_MODBUS_UNIT_ID: 3,
 }
 
 MOCK_USER_REAUTH = {
