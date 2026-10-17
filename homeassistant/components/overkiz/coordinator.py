@@ -170,7 +170,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def async_execution_started(self) -> None:
         """Show the in-progress state and poll fast until executions finish."""
         self.async_update_listeners()
-        if self.update_interval != UPDATE_INTERVAL_EXECUTION:
+        if not self.is_stateless and self.update_interval != UPDATE_INTERVAL_EXECUTION:
             self.update_interval = UPDATE_INTERVAL_EXECUTION
             self._schedule_refresh()
 
@@ -248,7 +248,8 @@ async def on_execution_registered(
     if event.exec_id not in coordinator.executions:
         coordinator.executions[event.exec_id] = []
 
-    coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
+    if not coordinator.is_stateless:
+        coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)

@@ -23,6 +23,7 @@ from homeassistant.components.overkiz.const import (
     DOMAIN,
     RATE_LIMIT_RETRY_AFTER,
     UPDATE_INTERVAL,
+    UPDATE_INTERVAL_ALL_ASSUMED_STATE,
     UPDATE_INTERVAL_EXECUTION,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -60,6 +61,11 @@ GARAGE = FixtureDevice(
     TAHOMA_V2_FIXTURE,
     "io://1234-1234-6233/1166863",
     "cover.living_room_main_garage_door",
+)
+RTS_SHUTTER = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730022",
+    "cover.palm_court_patio_shutter",
 )
 
 
@@ -199,6 +205,37 @@ async def test_commands_share_the_execution_poll(
     await hass.async_block_till_done()
 
     assert mock_client.fetch_events.await_count == 2
+
+
+async def test_stateless_hub_skips_the_execution_poll(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """RTS devices report no state, so commands don't speed up polling."""
+    await setup_overkiz_integration(fixture=RTS_SHUTTER.fixture)
+    mock_client.fetch_events.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: RTS_SHUTTER.entity_id},
+        blocking=True,
+    )
+    assert mock_client.execute_action_group.await_count == 1
+
+    freezer.tick(UPDATE_INTERVAL_EXECUTION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 0
+
+    freezer.tick(UPDATE_INTERVAL_ALL_ASSUMED_STATE - UPDATE_INTERVAL_EXECUTION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 1
 
 
 async def test_device_removed_deletes_device(
