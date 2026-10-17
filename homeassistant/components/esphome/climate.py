@@ -133,6 +133,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_translation_key = "climate"
     _feature_flags = ClimateFeature(0)
+    _missing_state_covers_entity = True
 
     @callback
     @override
