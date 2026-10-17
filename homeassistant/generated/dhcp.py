@@ -12,6 +12,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "FC0FE7*",
     },
     {
+        "domain": "adax",
+        "hostname": "adax-heater*",
+    },
+    {
+        "domain": "adax",
+        "hostname": "heater*",
+    },
+    {
         "domain": "aidot",
         "hostname": "aidot",
     },
