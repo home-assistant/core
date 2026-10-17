@@ -5,7 +5,7 @@ from typing import override
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
-from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -48,7 +48,52 @@ async def async_setup_entry(
         ].value
         is not None
     )
+    entities.extend(
+        SmartThingsAirConditionerVolumeNumberEntity(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if Capability.AUDIO_VOLUME in device.status[MAIN]
+        and all(
+            capability in device.status[MAIN]
+            for capability in (
+                Capability.AIR_CONDITIONER_MODE,
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+            )
+        )
+    )
     async_add_entities(entities)
+
+
+class SmartThingsAirConditionerVolumeNumberEntity(SmartThingsEntity, NumberEntity):
+    """Define the sound volume of a SmartThings air conditioner."""
+
+    _attr_translation_key = "audio_volume"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_mode = NumberMode.SLIDER
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Initialize the instance."""
+        super().__init__(client, device, {Capability.AUDIO_VOLUME})
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}"
+            f"_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}"
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the current volume."""
+        return self.get_attribute_value(Capability.AUDIO_VOLUME, Attribute.VOLUME)
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the volume."""
+        await self.execute_device_command(
+            Capability.AUDIO_VOLUME, Command.SET_VOLUME, int(value)
+        )
 
 
 class SmartThingsWasherRinseCyclesNumberEntity(SmartThingsEntity, NumberEntity):
