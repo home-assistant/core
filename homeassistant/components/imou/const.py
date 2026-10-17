@@ -17,8 +17,8 @@ def imou_device_identifier(device: ImouHaDevice) -> str:
 # API URL region mapping
 API_URLS: dict[str, str] = {
     "sg": "openapi-sg.easy4ip.com",
-    "eu": "openapi-or.easy4ip.com",
-    "na": "openapi-fk.easy4ip.com",
+    "eu": "openapi-fk.easy4ip.com",
+    "na": "openapi-or.easy4ip.com",
     "cn": "openapi.lechange.cn",
 }
 
