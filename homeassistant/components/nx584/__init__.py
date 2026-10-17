@@ -1,16 +1,179 @@
 """Support for NX584 alarm control panels."""
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+import asyncio
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+import logging
+from typing import Any, override
 
-from .const import DOMAIN
+from nx584 import client as nx584_client
+import requests
+from requests import PreparedRequest, Response
+from requests.adapters import HTTPAdapter
+from yarl import URL
+
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, Platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
+
+from .const import CONF_PLATFORMS, DEFAULT_NAME, DOMAIN, REQUEST_TIMEOUT
 from .services import async_setup_services
 
+_LOGGER = logging.getLogger(__name__)
+
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
+
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+
+DATA_IMPORT_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_import_lock")
+
+# Import abort reasons that have a repair issue in strings.json.
+IMPORT_ISSUE_REASONS = {"cannot_connect", "unknown"}
+
+
+@dataclass
+class NX584Data:
+    """Runtime data of an NX584 config entry."""
+
+    client: nx584_client.Client
+    # Fetched only for entries that set up the zone sensors.
+    zones: list[dict[str, Any]] = field(default_factory=list)
+    version: str = ""
+
+
+type NX584ConfigEntry = ConfigEntry[NX584Data]
+
+
+class _TimeoutAdapter(HTTPAdapter):
+    """Transport adapter that bounds every request of a client."""
+
+    def __init__(self, timeout: float) -> None:
+        """Initialize the adapter with the timeout of every request."""
+        super().__init__()
+        self._timeout = timeout
+
+    @override
+    def send(
+        self,
+        request: PreparedRequest,
+        stream: bool = False,
+        timeout: Any = None,
+        verify: bool | str = True,
+        cert: Any = None,
+        proxies: Mapping[str, str] | None = None,
+    ) -> Response:
+        """Send the request with the timeout of the adapter."""
+        return super().send(request, stream, self._timeout, verify, cert, proxies)
+
+
+def create_client(
+    host: str, port: int, timeout: float | None = None
+) -> nx584_client.Client:
+    """Create a client for the NX584 server whose requests time out."""
+    client = nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
+    # pynx584 sets no transport timeout, so a stalled server would block forever.
+    client._session.mount(  # noqa: SLF001
+        "http://", _TimeoutAdapter(timeout or REQUEST_TIMEOUT)
+    )
+    return client
+
+
+def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str]:
+    """Return the zones and the version of the server."""
+    return client.list_zones(), client.get_version()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NX584 component."""
     async_setup_services(hass)
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
+    """Set up NX584 from a config entry."""
+    platforms: list[Platform] = entry.data.get(CONF_PLATFORMS, PLATFORMS)
+    data = NX584Data(create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]))
+    try:
+        if Platform.BINARY_SENSOR in platforms:
+            data.zones, data.version = await hass.async_add_executor_job(
+                _fetch_zones, data.client
+            )
+        else:
+            await hass.async_add_executor_job(data.client.list_zones)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to the NX584 server at {entry.data[CONF_HOST]}"
+        ) from err
+
+    entry.runtime_data = data
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry.data.get(CONF_PLATFORMS, PLATFORMS)
+    )
+
+
+async def async_import_yaml(
+    hass: HomeAssistant, platform: Platform, import_data: dict[str, Any]
+) -> None:
+    """Import a YAML platform into the config entry of its server."""
+    # The alarm and binary sensor platforms of one server import one at a time,
+    # so the second one merges into the entry the first one created.
+    async with hass.data.setdefault(DATA_IMPORT_LOCK, asyncio.Lock()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_PLATFORM: platform, **import_data},
+        )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        if result["reason"] not in IMPORT_ISSUE_REASONS:
+            # The YAML stays in place, so the next start imports it again.
+            _LOGGER.debug(
+                "Import of the %s YAML configuration aborted: %s",
+                platform,
+                result["reason"],
+            )
+            return
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": DEFAULT_NAME,
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )
