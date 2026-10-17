@@ -9,9 +9,15 @@ from roborock.devices.traits.b01 import Q10PropertiesApi
 from roborock.devices.traits.b01.q10 import SoundVolumeTrait
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockZeoProtocol
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,8 +29,13 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
+    RoborockWashingMachineUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityB01Q10, RoborockEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +104,31 @@ Q10_NUMBER_DESCRIPTIONS: list[RoborockNumberDescriptionQ10] = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockNumberDescriptionA01(NumberEntityDescription):
+    """Class to describe a Roborock A01 number entity."""
+
+    data_protocol: RoborockZeoProtocol
+    """The protocol that the number entity will send to the API."""
+
+
+A01_NUMBER_DESCRIPTIONS: list[RoborockNumberDescriptionA01] = [
+    RoborockNumberDescriptionA01(
+        key="zeo_delay_start",
+        translation_key="zeo_delay_start",
+        data_protocol=RoborockZeoProtocol.COUNTDOWN,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=0,
+        native_max_value=1440,
+        native_step=30,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:timer-outline",
+    )
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -128,6 +164,12 @@ async def async_setup_entry(
                 )
                 for description in Q10_NUMBER_DESCRIPTIONS
                 if (q10_trait := description.trait(coordinator.api)) is not None
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockNumberEntityA01(coordinator, description)
+                for description in A01_NUMBER_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
             )
         async_add_entities(entities)
 
@@ -220,3 +262,46 @@ class RoborockNumberEntityQ10(RoborockCoordinatedEntityB01Q10, NumberEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
             ) from err
+
+
+class RoborockNumberEntityA01(RoborockCoordinatedEntityA01, NumberEntity):
+    """A class to set a numeric value on a Roborock A01 device."""
+
+    entity_description: RoborockNumberDescriptionA01
+    coordinator: RoborockWashingMachineUpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockWashingMachineUpdateCoordinator,
+        entity_description: RoborockNumberDescriptionA01,
+    ) -> None:
+        """Create an A01 number entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Get the current value from coordinator data."""
+        value = self.coordinator.data.get(self.entity_description.data_protocol)
+        if value is None:
+            return None
+        return float(value)
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set number value."""
+        try:
+            await self.coordinator.api.set_value(
+                self.entity_description.data_protocol,
+                int(value),
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err
+        await self.coordinator.async_request_refresh()
