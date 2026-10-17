@@ -1,0 +1,219 @@
+"""Tests for the aerosmart config-entry setup."""
+
+import asyncio
+from unittest.mock import patch
+
+from modbus_connection import ModbusConnectionError
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from .conftest import MockModbusApi
+
+from tests.common import MockConfigEntry
+
+
+async def test_setup_entry_translates_shared_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A shared Modbus link conflict becomes a translated setup error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.aerosmart.async_get_unit",
+        side_effect=HomeAssistantError("incompatible shared connection"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "connect_failed"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "error": "incompatible shared connection"
+    }
+
+
+async def test_setup_entry_keeps_retrying_after_background_connect_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+) -> None:
+    """A connect failure leaves entities unavailable for a scheduled retry.
+
+    The gateway between HA and the real device is a slow RS232-to-Modbus-TCP
+    bridge that occasionally times out on connect. The device library's timing
+    requirements must not permanently break the integration until
+    someone manually reloads it.
+    """
+    mock_modbus_unit_ventilation.fail_requests(
+        ModbusConnectionError("simulated read failure")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await mock_config_entry.runtime_data.async_wait_initial_refresh()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.readings.last_update_success is False
+    outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert outside_temp is not None
+    assert outside_temp.state == STATE_UNAVAILABLE
+
+
+async def test_setup_entry_does_not_wait_for_initial_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The slow serial poll runs as a config-entry background task."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def delayed_refresh(_runtime: object) -> None:
+        started.set()
+        await release.wait()
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.aerosmart._async_initial_refresh",
+        side_effect=delayed_refresh,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await started.wait()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert not mock_config_entry.runtime_data.initial_refresh_task.done()
+        outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+        assert outside_temp is not None
+        assert outside_temp.state == STATE_UNAVAILABLE
+
+        release.set()
+        await mock_config_entry.runtime_data.async_wait_initial_refresh()
+
+
+async def test_setup_entry_creates_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_api: MockModbusApi,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The entry loads and produces sensor entities."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await mock_config_entry.runtime_data.async_wait_initial_refresh()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_modbus_api.get_unit.call_count == 2
+
+    day_of_week = entity_registry.async_get("sensor.aerosmart_day_of_week")
+    assert day_of_week is not None
+    assert day_of_week.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get("sensor.aerosmart_day_of_week") is None
+
+    outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert outside_temp is not None
+    assert outside_temp.state == "0.123"
+
+    temporary_boiler_temperature = hass.states.get(
+        "sensor.aerosmart_temporary_boiler_temperature"
+    )
+    assert temporary_boiler_temperature is not None
+    assert temporary_boiler_temperature.state == "45"
+    assert temporary_boiler_temperature.attributes["unit_of_measurement"] == "°C"
+    assert (
+        temporary_boiler_temperature.attributes["device_class"]
+        == SensorDeviceClass.TEMPERATURE
+    )
+
+    heat_pump_status = hass.states.get("sensor.aerosmart_heat_pump_status")
+    assert heat_pump_status is not None
+    assert heat_pump_status.state == "off"
+    assert heat_pump_status.attributes["options"] == [
+        "restart_lockout",
+        "off",
+        "brine_pump_lead_time",
+        "fan_lead_time",
+        "opening_hot_gas_valve",
+        "opening_liquid_refrigerant_valve",
+        "starting_compressor",
+        "minimum_runtime",
+        "on",
+        "pumping_down_refrigerant",
+        "pumping_down_for_defrost",
+        "defrosting",
+        "draining_after_defrost",
+    ]
+
+
+async def test_unload_releases_shared_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Unloading lets Home Assistant release its shared connection holds."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await mock_config_entry.runtime_data.async_wait_initial_refresh()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_modbus_connection.connected is False
+
+
+async def test_migrates_legacy_shared_connection_entry(hass: HomeAssistant) -> None:
+    """Version 1 entries copy host and port from their former connection entry."""
+    legacy_connection = MockConfigEntry(
+        domain="modbus_connection",
+        data={CONF_HOST: "  GATEWAY.local  ", CONF_PORT: 8899},
+    )
+    legacy_connection.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain="aerosmart",
+        version=1,
+        data={
+            "connection_entry_id": legacy_connection.entry_id,
+            "unit_ventilation": 1,
+            "unit_heat_pump": 2,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_wait_initial_refresh()
+    assert entry.version == 2
+    assert entry.unique_id == "gateway.local:8899_1_2"
+    assert entry.data == {
+        CONF_HOST: "gateway.local",
+        CONF_PORT: 8899,
+        "unit_ventilation": 1,
+        "unit_heat_pump": 2,
+    }
+
+
+async def test_migration_fails_without_legacy_connection_reference(
+    hass: HomeAssistant,
+) -> None:
+    """A version 1 entry without its legacy reference cannot be migrated."""
+    entry = MockConfigEntry(
+        domain="aerosmart",
+        version=1,
+        data={
+            "unit_ventilation": 1,
+            "unit_heat_pump": 2,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

@@ -1,0 +1,299 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reconfigure_successful": "Re-configuration was successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the host, port, and both station addresses.",
+      "same_unit": "The ventilation and heat pump unit IDs must be different."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "unit_heat_pump": "Heat pump unit",
+          "unit_ventilation": "Ventilation unit"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Modbus TCP gateway.",
+          "port": "TCP port of the Modbus gateway (default 502).",
+          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default 2).",
+          "unit_ventilation": "The ventilation controller's Modbus station address (default 1)."
+        },
+        "description": "Change the Modbus TCP gateway or either station address."
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "unit_heat_pump": "Heat pump unit",
+          "unit_ventilation": "Ventilation unit"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Modbus TCP gateway.",
+          "port": "TCP port of the Modbus gateway (default 502).",
+          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default 2).",
+          "unit_ventilation": "The ventilation controller's Modbus station address (default 1)."
+        },
+        "description": "Enter the Modbus TCP gateway and the two station addresses used by the aerosmart installation."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "carbon_dioxide_co2": {
+        "name": "CO2"
+      },
+      "carbon_dioxide_co2_measurement": {
+        "name": "CO2 measurement"
+      },
+      "coarse_dust_filter_betriebsstunden_grobstaubfilter": {
+        "name": "Coarse dust filter operating hours"
+      },
+      "coarse_dust_filter_grobstaubfilter_betriebsart_filterueberwachung": {
+        "name": "Coarse dust filter monitoring mode"
+      },
+      "coarse_dust_filter_grobstaubfilter_max_foerdervolume": {
+        "name": "Coarse dust filter maximum conveyed volume"
+      },
+      "coarse_dust_filter_grobstaubfilter_standzeit": {
+        "name": "Coarse dust filter service life"
+      },
+      "cooling_aussenluft_temp_kuehlung_aus": {
+        "name": "Outdoor air temperature cooling off"
+      },
+      "cooling_aussenluft_temp_kuehlung_ein": {
+        "name": "Outdoor air temperature cooling on"
+      },
+      "fans_betriebsstunden_abluftventilator": {
+        "name": "Extract air fan operating hours"
+      },
+      "fans_betriebsstunden_zuluftventilator": {
+        "name": "Supply air fan operating hours"
+      },
+      "fans_drehzahl_abluftventilator": {
+        "name": "Extract air fan speed"
+      },
+      "fans_drehzahl_zuluftventilator": {
+        "name": "Supply air fan speed"
+      },
+      "fans_ist_ventilator_abluft": {
+        "name": "Extract air fan actual speed"
+      },
+      "fans_ist_ventilator_zuluft": {
+        "name": "Supply air fan actual speed"
+      },
+      "fans_max_permissible_exhaust_air_fan_speed": {
+        "name": "Maximum permissible extract air fan speed"
+      },
+      "fans_max_permissible_supply_air_fan_speed": {
+        "name": "Maximum permissible supply air fan speed"
+      },
+      "fine_dust_filter_betriebsstunden_feinstaubfilter": {
+        "name": "Fine dust filter operating hours"
+      },
+      "fine_dust_filter_feinstaubfilter_standzeit": {
+        "name": "Fine dust filter service life"
+      },
+      "general_date": {
+        "name": "Date"
+      },
+      "general_device_type": {
+        "name": "Device type"
+      },
+      "general_revisionstuer": {
+        "name": "Revision door"
+      },
+      "general_send_date_time": {
+        "name": "Send date and time"
+      },
+      "general_software_version": {
+        "name": "Software version"
+      },
+      "general_time": {
+        "name": "Time"
+      },
+      "general_wochentag": {
+        "name": "Day of week"
+      },
+      "heat_pump_waermepumpe": {
+        "name": "Heat pump"
+      },
+      "heat_pump_wp_betriebsstunden_kompressormotor": {
+        "name": "Compressor motor operating hours"
+      },
+      "heat_pump_wp_betriebsstunden_magnetventil_fluessiggas": {
+        "name": "Liquid refrigerant solenoid valve operating hours"
+      },
+      "heat_pump_wp_betriebsstunden_magnetventil_heissgas": {
+        "name": "Hot gas solenoid valve operating hours"
+      },
+      "heat_pump_wp_betriebsstunden_magnetventil_luftkondensator": {
+        "name": "Air condenser solenoid valve operating hours"
+      },
+      "heat_pump_wp_hochdruck": {
+        "name": "Heat pump high pressure"
+      },
+      "heat_pump_wp_niederdruck": {
+        "name": "Heat pump low pressure"
+      },
+      "heat_pump_wp_status": {
+        "name": "Heat pump status",
+        "state": {
+          "brine_pump_lead_time": "Brine pump lead time",
+          "defrosting": "Defrosting",
+          "draining_after_defrost": "Draining after defrost",
+          "fan_lead_time": "Fan lead time",
+          "minimum_runtime": "Minimum runtime",
+          "off": "Off",
+          "on": "On",
+          "opening_hot_gas_valve": "Opening hot gas valve",
+          "opening_liquid_refrigerant_valve": "Opening liquid refrigerant valve",
+          "pumping_down_for_defrost": "Pumping down for defrost",
+          "pumping_down_refrigerant": "Pumping down refrigerant",
+          "restart_lockout": "Restart lockout",
+          "starting_compressor": "Starting compressor"
+        }
+      },
+      "heat_pump_wp_status_restlaufzeit": {
+        "name": "Heat pump status remaining time"
+      },
+      "heat_pump_wp_verdamperregister": {
+        "name": "Evaporator coil temperature"
+      },
+      "heat_pump_wp_zentralgeraet_adresse": {
+        "name": "Heat pump central unit address"
+      },
+      "hot_water_heat_pump_ueberschreitung_boilertemp": {
+        "name": "Boiler temperature overshoot"
+      },
+      "hot_water_heat_pump_warmwasser_speicher_oben": {
+        "name": "Hot water tank upper temperature"
+      },
+      "hot_water_heat_pump_warmwasser_warmepumpe": {
+        "name": "Hot water heat pump temperature"
+      },
+      "hot_water_heat_pump_wp_betriebsstunden_elektroheizstab": {
+        "name": "Electric heating element operating hours"
+      },
+      "hot_water_heat_pump_wp_brauchwasser_temp_raumheizungssperre": {
+        "name": "Domestic hot water temperature space heating lockout"
+      },
+      "hot_water_heat_pump_wp_verzoegerung_brauchwasserheizung": {
+        "name": "Domestic hot water heating delay"
+      },
+      "hot_water_heat_pump_wp_vorruebergehende_boilertemperatur": {
+        "name": "Temporary boiler temperature"
+      },
+      "outside_temperature_aussenluft_temp_beschattung": {
+        "name": "Outdoor air temperature shading"
+      },
+      "outside_temperature_aussenluft_temp_frostschutz": {
+        "name": "Outdoor air temperature frost protection"
+      },
+      "outside_temperature_aussenluft_temp_frostschutz_aus": {
+        "name": "Outdoor air temperature frost protection off"
+      },
+      "outside_temperature_aussenluft_temp_frostschutz_ein": {
+        "name": "Outdoor air temperature frost protection on"
+      },
+      "outside_temperature_aussenluft_temp_reduktion_luftmenge_10_percent": {
+        "name": "Outdoor air temperature airflow reduction 10%"
+      },
+      "outside_temperature_aussenluft_temp_reduktion_luftmenge_20_percent": {
+        "name": "Outdoor air temperature airflow reduction 20%"
+      },
+      "outside_temperature_aussenluft_temp_schwelle_heizen_kuehlen": {
+        "name": "Outdoor air temperature heating and cooling threshold"
+      },
+      "outside_temperature_aussenluft_temp_sole_nach_aussenluftvorwaermung": {
+        "name": "Brine temperature after outdoor air preheating"
+      },
+      "outside_temperature_aussenluft_temp_sommerautomatik_aktivieren": {
+        "name": "Outdoor air temperature summer mode on"
+      },
+      "outside_temperature_aussenluft_temp_sommerautomatik_deaktivieren": {
+        "name": "Outdoor air temperature summer mode off"
+      },
+      "outside_temperature_betriebsstunden_sole_kreis_aussenluft": {
+        "name": "Outdoor air brine circuit operating hours"
+      },
+      "outside_temperature_temp_aussenluft": {
+        "name": "Outdoor air temperature"
+      },
+      "outside_temperature_vereisungsschutz": {
+        "name": "Freeze protection"
+      },
+      "room_temperature_raum_temp_beschattung": {
+        "name": "Room temperature shading"
+      },
+      "room_temperature_temp_raumluft": {
+        "name": "Room air temperature"
+      },
+      "summer_bypass_betriebsart_sommerautomatik": {
+        "name": "Summer mode"
+      },
+      "ventilation_absenkung_aktive_luefterstufe": {
+        "name": "Fan level reduction"
+      },
+      "ventilation_aktive_luefterstufe": {
+        "name": "Active fan level"
+      },
+      "ventilation_befoerderte_kubikmeter": {
+        "name": "Total conveyed air volume"
+      },
+      "ventilation_befoerderte_luftmenge_seit_filterwechsel": {
+        "name": "Conveyed air volume since filter change"
+      },
+      "ventilation_beschattungsfunktion": {
+        "name": "Shading function"
+      },
+      "ventilation_betriebsart": {
+        "name": "Operating mode"
+      },
+      "ventilation_betriebsstunden_beschattung": {
+        "name": "Shading operating hours"
+      },
+      "ventilation_betriebsstunden_frostschutzeinrichtung": {
+        "name": "Frost protection operating hours"
+      },
+      "ventilation_betriebsstunden_heizstufe1": {
+        "name": "Heating stage 1 operating hours"
+      },
+      "ventilation_betriebsstunden_heizstufe2": {
+        "name": "Heating stage 2 operating hours"
+      },
+      "ventilation_betriebsstunden_luefterstufe0": {
+        "name": "Fan level 0 operating hours"
+      },
+      "ventilation_betriebsstunden_luefterstufe1": {
+        "name": "Fan level 1 operating hours"
+      },
+      "ventilation_betriebsstunden_luefterstufe2": {
+        "name": "Fan level 2 operating hours"
+      },
+      "ventilation_betriebsstunden_luefterstufe3": {
+        "name": "Fan level 3 operating hours"
+      },
+      "ventilation_soll_volumenstrom_abluft": {
+        "name": "Target extract airflow"
+      },
+      "ventilation_soll_volumenstrom_zuluft": {
+        "name": "Target supply airflow"
+      },
+      "ventilation_volumenstrombalance_zuluftabluft": {
+        "name": "Supply and extract airflow balance"
+      }
+    }
+  },
+  "exceptions": {
+    "connect_failed": {
+      "message": "Failed to connect to aerosmart: {error}"
+    },
+    "update_failed": {
+      "message": "Error communicating with aerosmart: {error}"
+    }
+  }
+}

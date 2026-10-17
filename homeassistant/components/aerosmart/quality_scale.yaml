@@ -1,0 +1,101 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      The serial-to-Modbus-TCP bridge can take longer than Home Assistant's
+      setup budget to answer. Entities are created unavailable and the
+      coordinators retry in the background instead of blocking startup.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: A Modbus link has no authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Modbus links are not discoverable.
+  discovery-update-info:
+    status: exempt
+    comment: Modbus links are not discoverable.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration always represents exactly one fixed device.
+  entity-category:
+    status: done
+    comment: |
+      Controller identifiers, thresholds, operating-hour counters, and other
+      service information are diagnostic. Live temperatures, airflow, fan
+      speeds, and operating state remain regular sensors.
+  entity-device-class:
+    status: done
+    comment: |
+      Temperature and duration sensors use their matching device classes, and
+      the heat-pump status uses the enum device class with translated states.
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: done
+    comment: |
+      icons.json covers CO2, filters, fan states and speeds, heat-pump state,
+      and the active ventilation level where no device-class icon applies.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repairable issues are raised.
+  stale-devices:
+    status: exempt
+    comment: This integration always represents exactly one fixed device.
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration talks Modbus, not HTTP.
+  strict-typing: done
