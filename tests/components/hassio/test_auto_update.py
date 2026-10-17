@@ -30,11 +30,15 @@ from homeassistant.components.hassio.auto_update import (
 )
 from homeassistant.components.hassio.const import (
     DATA_AUTO_UPDATE,
+    EVENT_SUPERVISOR_EVENT,
     HASSIO_MAIN_UPDATE_INTERVAL,
+    MAIN_COORDINATOR,
 )
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -712,6 +716,22 @@ async def test_window_offset(
     assert _installed(supervisor_client) == ["2026.10.2"]
 
 
+def _core_update_job(done: bool) -> Job:
+    """Return a Supervisor job for updating Home Assistant Core."""
+    return Job(
+        name="home_assistant_core_update",
+        reference=None,
+        uuid=uuid4(),
+        progress=0,
+        stage=None,
+        done=done,
+        errors=[],
+        created=dt_util.utcnow(),
+        child_jobs=[],
+        extra=None,
+    )
+
+
 async def test_no_install_while_busy(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1019,3 +1039,103 @@ async def test_skipped_during_backup(
         await hass.async_block_till_done()
 
     supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_data_stale_after_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test nothing installs when Supervisor data went stale during the backup."""
+
+    async def backup_while_supervisor_fails(hass: HomeAssistant) -> None:
+        hass.data[MAIN_COORDINATOR].async_set_update_error(UpdateFailed("Boom"))
+
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=backup_while_supervisor_fails,
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_other_update_during_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test nothing installs when someone else started an update meanwhile."""
+    backup_done = asyncio.Event()
+
+    async def slow_backup(hass: HomeAssistant) -> None:
+        await backup_done.wait()
+
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=slow_backup,
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+        async_dispatcher_send(
+            hass,
+            EVENT_SUPERVISOR_EVENT,
+            {"event": "job", "data": _core_update_job(done=False).to_dict()},
+        )
+        backup_done.set()
+        await hass.async_block_till_done()
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_own_backup_job_after_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    jobs_info: AsyncMock,
+) -> None:
+    """Test our own backup still showing as running does not stop the update."""
+
+    async def backup_still_listed(hass: HomeAssistant) -> None:
+        async_dispatcher_send(
+            hass,
+            EVENT_SUPERVISOR_EVENT,
+            {
+                "event": "job",
+                "data": {
+                    **_core_update_job(done=False).to_dict(),
+                    "name": "backup_manager_partial_backup",
+                },
+            },
+        )
+
+    with patch(
+        "homeassistant.components.hassio.backup.backup_core_before_update",
+        side_effect=backup_still_listed,
+    ):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+            options={**ENABLED, "core_backup_before_update": True},
+        )
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
