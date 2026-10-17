@@ -2,11 +2,12 @@
 
 import datetime as dt
 from typing import Literal
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+from chatgpt_plan_auth.const import SUBSCRIPTION_INFERENCE_ERROR_HINTS
 from freezegun import freeze_time
 import httpx2
-from openai import AuthenticationError, RateLimitError
+from openai import AuthenticationError, InternalServerError, RateLimitError
 from openai.types.responses import (
     ResponseError,
     ResponseErrorEvent,
@@ -20,6 +21,8 @@ from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.openai_conversation.const import (
+    AUTH_METHOD_CHATGPT,
+    CONF_AUTH_METHOD,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_PRO_MODE,
@@ -38,8 +41,12 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    RECOMMENDED_CONVERSATION_OPTIONS,
 )
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import ToolInput, ToolResult
@@ -103,6 +110,16 @@ async def test_entity(
                 message=None,
             ),
             "Error talking to OpenAI",
+        ),
+        (
+            # OpenAI reports its own outages through 5xx, for example the
+            # Cloudflare 520 seen while this was written.
+            InternalServerError(
+                response=httpx2.Response(status_code=520, request=""),
+                body=None,
+                message=None,
+            ),
+            "OpenAI is temporarily unavailable (HTTP 520), please try again later",
         ),
     ],
 )
@@ -1003,3 +1020,134 @@ async def test_model_args(
     assert model_args.pop("safety_identifier") == result.conversation_id
     assert model_args.pop("prompt_cache_key") == subentry.subentry_id
     assert model_args == snapshot
+
+
+def _chatgpt_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a ChatGPT subscription config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ChatGPT subscription",
+        unique_id="chatgpt-user-1:oaiapp_test123",
+        version=2,
+        minor_version=7,
+        data={
+            CONF_AUTH_METHOD: AUTH_METHOD_CHATGPT,
+            CONF_CLIENT_ID: "oaiapp_test123",
+            CONF_ACCESS_TOKEN: "access-1",
+            "refresh_token": "refresh-1",
+            "expires_at": "2030-01-01T00:00:00+00:00",
+        },
+        subentries_data=[
+            ConfigSubentryData(
+                data=RECOMMENDED_CONVERSATION_OPTIONS,
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+async def _async_setup_chatgpt_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up a ChatGPT subscription entry with a mocked model catalog."""
+    entry = _chatgpt_entry(hass)
+    with patch(
+        "homeassistant.components.openai_conversation.async_get_subscription_models",
+        AsyncMock(return_value=["gpt-6.1-sol"]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    return entry
+
+
+def _openai_response(status_code: int) -> httpx2.Response:
+    """Create an error response for an OpenAI API error."""
+    return httpx2.Response(
+        status_code=status_code,
+        request=httpx2.Request("POST", "https://api.openai.com/v1/responses"),
+    )
+
+
+async def test_chatgpt_plan_usage_error(
+    hass: HomeAssistant, mock_create_stream: AsyncMock
+) -> None:
+    """Test a plan usage limit of a ChatGPT entry is reported as such."""
+    entry = await _async_setup_chatgpt_entry(hass)
+    mock_create_stream.return_value = [
+        RateLimitError(
+            message="limit",
+            response=_openai_response(429),
+            body={"code": "subscription_sharing_usage_limit_exceeded"},
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=entry.entry_id
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == (
+            SUBSCRIPTION_INFERENCE_ERROR_HINTS[
+                "subscription_sharing_usage_limit_exceeded"
+            ]
+        )
+    )
+
+
+async def test_chatgpt_plan_unknown_rate_limit(
+    hass: HomeAssistant, mock_create_stream: AsyncMock
+) -> None:
+    """Test an unrecognized plan 429 fails clearly instead of with a KeyError.
+
+    A plan request carries no service tier (`shape_request_for_subscription`
+    removes it), so the flex tier retry cannot apply and the error still has to
+    surface as a rate limit.
+    """
+    entry = await _async_setup_chatgpt_entry(hass)
+    mock_create_stream.return_value = [
+        RateLimitError(
+            message="limit",
+            response=_openai_response(429),
+            body={"code": "some_unknown_code"},
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=entry.entry_id
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Rate limited by the ChatGPT plan, please try again later"
+    )
+
+
+async def test_chatgpt_plan_signin_error(
+    hass: HomeAssistant, mock_create_stream: AsyncMock
+) -> None:
+    """Test a rejected plan sign in of a ChatGPT entry is reported as such."""
+    entry = await _async_setup_chatgpt_entry(hass)
+    mock_create_stream.return_value = [
+        AuthenticationError(
+            message="nope",
+            response=_openai_response(401),
+            body={"code": "not_a_subscription_code"},
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=entry.entry_id
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == (SUBSCRIPTION_INFERENCE_ERROR_HINTS["subscription_sharing_invalid_user"])
+    )
