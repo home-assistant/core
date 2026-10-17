@@ -49,8 +49,8 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.util.yaml import load_yaml_dict
-
-from tests.common import MockConfigEntry, mock_device_registry
+from pytest_homeassistant import _paths
+from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 
 
 async def target_entities(
@@ -1732,7 +1732,7 @@ def _get_yaml_fields(automation_key: str, yaml_type: str) -> dict[str, Any]:
     """Load a conditions.yaml or triggers.yaml and return the fields for a key."""
     domain, key = automation_key.split(".", 1)
     yaml_path = (
-        Path(__file__).parents[2]
+        Path(_paths.TESTS_DIR).parent
         / "homeassistant"
         / "components"
         / domain

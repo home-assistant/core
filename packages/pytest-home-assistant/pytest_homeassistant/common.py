@@ -120,6 +120,7 @@ from homeassistant.util.json import (
 from homeassistant.util.signal_type import SignalType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import _paths
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
@@ -194,7 +195,7 @@ def threadsafe_coroutine_factory(func):
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
+    return os.path.join(_paths.TESTS_DIR, "testing_config", *add_path)
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -573,11 +574,9 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
         integration, filename = filename.split("/", 1)
 
     if integration is None:
-        return pathlib.Path(__file__).parent.joinpath("fixtures", filename)
+        return _paths.TESTS_DIR.joinpath("fixtures", filename)
 
-    return pathlib.Path(__file__).parent.joinpath(
-        "components", integration, "fixtures", filename
-    )
+    return _paths.TESTS_DIR.joinpath("components", integration, "fixtures", filename)
 
 
 @lru_cache

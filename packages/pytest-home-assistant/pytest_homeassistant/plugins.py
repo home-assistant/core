@@ -130,7 +130,7 @@ if TYPE_CHECKING:
     from homeassistant.components import recorder
 
 
-pytest.register_assert_rewrite("tests.common")
+pytest.register_assert_rewrite("pytest_homeassistant.common")
 
 from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,

@@ -25,8 +25,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 __all__ = (
     "MockBleakClient",

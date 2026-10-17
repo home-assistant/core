@@ -41,9 +41,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],

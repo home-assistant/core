@@ -9,8 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.typing import ClientSessionGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 
 async def _get_diagnostics_for_config_entry(
