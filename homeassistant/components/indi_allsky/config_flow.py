@@ -1,5 +1,6 @@
 """Config flow for INDI Allsky integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -16,6 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -25,9 +27,10 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .util import get_ssl_context, normalize_host
+from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +55,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Validate that the user input allows us to connect to INDI Allsky."""
     client = IndiAllSkyClient(
         host=data[CONF_HOST],
@@ -90,6 +93,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for INDI Allsky."""
 
     VERSION = 1
+
+    _discovered_data: dict[str, Any]
 
     @override
     async def async_step_user(
@@ -130,12 +135,111 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        suggested_values = user_input or getattr(self, "_discovered_data", None)
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
+        )
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery of an INDI Allsky server."""
+        host = normalize_host(discovery_info.host)
+        if discovery_info.type == "_http._tcp.local.":
+            ssl = False
+        elif discovery_info.type == "_https._tcp.local.":
+            ssl = True
+        elif "ssl" in discovery_info.properties:
+            ssl = str(discovery_info.properties["ssl"]).lower() == "true"
+        else:
+            ssl = True
+
+        port = discovery_info.port or (443 if ssl else 80)
+        mac = discovery_info.properties.get("mac")
+
+        if mac:
+            formatted_mac = format_mac(mac)
+            current_entry = await self.async_set_unique_id(formatted_mac)
+            if current_entry is None:
+                for entry in self._async_current_entries(include_ignore=False):
+                    if (
+                        entry.unique_id is None
+                        and normalize_host(entry.data[CONF_HOST]) == host
+                        and entry.data[CONF_PORT] == port
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=formatted_mac
+                        )
+                        current_entry = entry
+                        break
+            current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+            if current_entry and current_entry.data.get(CONF_SSL, True) != ssl:
+                return self.async_abort(reason="already_configured")
+            updates: dict[str, Any] = {
+                CONF_PORT: port,
+                CONF_SSL: ssl,
+            }
+            if not (current_host and not is_ip_address(current_host)):
+                updates[CONF_HOST] = host
+            self._abort_if_unique_id_configured(updates=updates)
+        else:
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                }
+            )
+            await self._async_handle_discovery_without_unique_id()
+
+        self._discovered_data = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: ssl,
+            CONF_VERIFY_SSL: True,
+        }
+
+        try:
+            await validate_input(self.hass, self._discovered_data)
+        except CannotConnect, InvalidAuth, Unknown:
+            return self.async_abort(reason="cannot_connect")
+
+        server_name = discovery_info.name.split("._")[0]
+        self.context["title_placeholders"] = {"name": server_name}
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user confirmation of discovery."""
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: self._discovered_data[CONF_HOST],
+                    CONF_PORT: self._discovered_data[CONF_PORT],
+                }
+            )
+            port = self._discovered_data[CONF_PORT]
+            default_port = 443 if self._discovered_data[CONF_SSL] else 80
+            host_str = (
+                f"{self._discovered_data[CONF_HOST]}:{port}"
+                if port != default_port
+                else self._discovered_data[CONF_HOST]
+            )
+            return self.async_create_entry(
+                title=f"INDI Allsky ({host_str})",
+                data=self._discovered_data,
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=self.context.get("title_placeholders", {}),
         )
 
 
