@@ -1,5 +1,6 @@
 """Tests for the SNMP config flow."""
 
+from collections.abc import Iterator
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, patch
 
@@ -32,6 +33,18 @@ from homeassistant.helpers.selector import SelectSelector
 from . import mock_entry
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
+
+
+@pytest.fixture
+def mock_walk_empty() -> Iterator[None]:
+    """Make any base OID readable by returning a walk without rows."""
+
+    async def _walk(*args, **kwargs):
+        return
+        yield  # pylint: disable=unreachable
+
+    with patch("homeassistant.components.snmp.client.bulk_walk_cmd", side_effect=_walk):
+        yield
 
 
 async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
@@ -413,6 +426,7 @@ async def _async_start_subentry_flow(hass: HomeAssistant, entry: MockConfigEntry
     )
 
 
+@pytest.mark.usefixtures("mock_walk_empty")
 async def test_subentry_flow_user(hass: HomeAssistant) -> None:
     """Test adding a device tracker to an SNMP device."""
     entry = mock_entry(baseoid=None)
@@ -436,6 +450,7 @@ async def test_subentry_flow_user(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_walk_empty")
 async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
     """Test that the subentry flow rejects an OID pysnmp cannot resolve."""
     entry = mock_entry(baseoid=None)
@@ -459,6 +474,48 @@ async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
     assert entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
 
 
+@pytest.mark.usefixtures("mock_walk_empty")
+@pytest.mark.parametrize(
+    ("errindication", "expected_error"),
+    [
+        pytest.param(errind.wrongDigest, "invalid_auth", id="auth_error"),
+        pytest.param(PySnmpError("walk failed"), "cannot_connect", id="walk_error"),
+    ],
+)
+async def test_subentry_flow_unreadable_oid(
+    hass: HomeAssistant,
+    errindication: errind.ErrorIndication | PySnmpError,
+    expected_error: str,
+) -> None:
+    """Test that an OID the device cannot read is rejected."""
+    entry = mock_entry(baseoid=None)
+    entry.add_to_hass(hass)
+
+    async def mock_walk(*args, **kwargs):
+        yield errindication, None, None, []
+
+    result = await _async_start_subentry_flow(hass, entry)
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"baseoid": expected_error}
+
+    # Retry with a readable OID finishes the flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that a device can only have one device tracker."""
     entry = mock_entry()
@@ -469,6 +526,7 @@ async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_walk_empty")
 async def test_subentry_flow_reconfigure(hass: HomeAssistant) -> None:
     """Test changing the table of an existing device tracker."""
     entry = mock_entry()
@@ -1259,6 +1317,7 @@ async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) ->
     assert result["data"]["context_name"] == "other-context"
 
 
+@pytest.mark.usefixtures("mock_walk_empty")
 async def test_subentry_flow_reconfigure_invalid_oid(hass: HomeAssistant) -> None:
     """Test that reconfiguring to an OID pysnmp cannot resolve is rejected."""
     entry = mock_entry()

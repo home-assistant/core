@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
+    INVALID_CREDENTIAL_INDICATIONS,
 )
 from .util import async_create_transport_target, async_get_snmp_engine, create_auth_data
 
@@ -94,6 +95,8 @@ class SnmpClient:
         async for errindication, errstatus, errindex, res in walker:
             if errindication:
                 message = f"SNMPLIB error: {errindication}"
+                if errindication in INVALID_CREDENTIAL_INDICATIONS:
+                    raise ConfigEntryAuthFailed(message)
                 if isinstance(errindication, BaseException):
                     raise SnmpWalkError(message) from errindication
                 raise SnmpWalkError(message)

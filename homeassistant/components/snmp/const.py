@@ -3,6 +3,8 @@
 from datetime import timedelta
 from typing import Final
 
+from pysnmp.proto import errind
+
 DOMAIN = "snmp"
 
 CONF_ACCEPT_ERRORS = "accept_errors"
@@ -57,6 +59,34 @@ MAP_PRIV_PROTOCOLS = {
     "aes-cfb-192": "usmAesCfb192Protocol",
     "aes-cfb-256": "usmAesCfb256Protocol",
 }
+
+# Indications which mean the authentication or privacy keys are wrong, as
+# opposed to a transient network failure. The indication objects are unhashable.
+USM_WRONG_DIGEST_INDICATIONS: Final = (
+    errind.wrongDigest,
+    errind.decryptionError,
+)
+
+# Indications which mean the agent does not accept the user or the selected
+# security level and protocols.
+AUTH_ERROR_INDICATIONS: Final = (
+    errind.unknownCommunityName,
+    errind.unknownUserName,
+    errind.unknownSecurityName,
+    errind.unsupportedSecurityLevel,
+    errind.unsupportedSecurityModel,
+    errind.unsupportedAuthProtocol,
+    errind.unsupportedPrivProtocol,
+    errind.authenticationFailure,
+    errind.authenticationError,
+)
+
+# Any indication which means the credentials are not accepted, so reauthenticating
+# can fix it.
+INVALID_CREDENTIAL_INDICATIONS: Final = (
+    *USM_WRONG_DIGEST_INDICATIONS,
+    *AUTH_ERROR_INDICATIONS,
+)
 
 # MAC columns of IP-indexed tables, where the row index ends with the device
 # IPv4 address. Tables indexed by the MAC (e.g. bridge forwarding tables) use the

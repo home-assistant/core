@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 from pysnmp.hlapi.v3arch.asyncio.cmdgen import LCD
+from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
@@ -259,6 +260,39 @@ async def test_walk_auth_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=WrongValueError,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntry.async_start_reauth_if_available"
+        ) as reauth,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert reauth.called
+
+
+@pytest.mark.parametrize(
+    "errindication",
+    [
+        pytest.param(errind.wrongDigest, id="wrong_digest"),
+        pytest.param(errind.unknownUserName, id="unknown_user_name"),
+        pytest.param(errind.authenticationFailure, id="authentication_failure"),
+    ],
+)
+async def test_walk_auth_indication_triggers_reauth(
+    hass: HomeAssistant, errindication: errind.ErrorIndication
+) -> None:
+    """Test that an authentication indication during the walk triggers reauth."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    async def mock_walk(*args, **kwargs):
+        yield errindication, None, None, []
+
+    with (
+        patch(
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
+            side_effect=mock_walk,
         ),
         patch(
             "homeassistant.config_entries.ConfigEntry.async_start_reauth_if_available"

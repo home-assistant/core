@@ -22,6 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -31,7 +32,9 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from .client import SnmpClient, SnmpWalkError
 from .const import (
+    AUTH_ERROR_INDICATIONS,
     CONF_AUTH_KEY,
     CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
@@ -54,6 +57,7 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
     SUBENTRY_TYPE_DEVICE_TRACKER,
+    USM_WRONG_DIGEST_INDICATIONS,
 )
 from .util import (
     async_create_request_cmd_args,
@@ -156,22 +160,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     if err_indication:
         if err_indication in (errind.requestTimedOut, errind.emptyResponse):
             raise SnmpTimeout(str(err_indication))
-        if err_indication in (
-            errind.wrongDigest,
-            errind.decryptionError,
-        ):
+        if err_indication in USM_WRONG_DIGEST_INDICATIONS:
             raise UsmWrongDigests(str(err_indication))
-        if err_indication in (
-            errind.unknownCommunityName,
-            errind.unknownUserName,
-            errind.unknownSecurityName,
-            errind.unsupportedSecurityLevel,
-            errind.unsupportedSecurityModel,
-            errind.unsupportedAuthProtocol,
-            errind.unsupportedPrivProtocol,
-            errind.authenticationFailure,
-            errind.authenticationError,
-        ):
+        if err_indication in AUTH_ERROR_INDICATIONS:
             raise InvalidAuth(str(err_indication))
         raise CannotConnect(str(err_indication))
 
@@ -457,13 +448,14 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            if await async_validate_oid(self.hass, user_input[CONF_BASEOID]):
+            if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
+                errors[CONF_BASEOID] = error
+            else:
                 return self.async_create_entry(
                     title=DEVICE_TRACKER_SUBENTRY_TITLE,
                     data=user_input,
                     unique_id=SUBENTRY_TYPE_DEVICE_TRACKER,
                 )
-            errors[CONF_BASEOID] = "invalid_oid"
 
         return self.async_show_form(
             step_id="user",
@@ -479,11 +471,12 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            if await async_validate_oid(self.hass, user_input[CONF_BASEOID]):
+            if error := await self._async_validate_baseoid(user_input[CONF_BASEOID]):
+                errors[CONF_BASEOID] = error
+            else:
                 return self.async_update_and_abort(
                     self._get_entry(), subentry, data=user_input
                 )
-            errors[CONF_BASEOID] = "invalid_oid"
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -492,6 +485,24 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             ),
             errors=errors,
         )
+
+    async def _async_validate_baseoid(self, baseoid: str) -> str | None:
+        """Return an error key if the device cannot read the base OID.
+
+        The OID has to resolve in the MIB and the device has to serve it. An empty
+        table is valid, so a walk which yields no rows is accepted.
+        """
+        if not await async_validate_oid(self.hass, baseoid):
+            return "invalid_oid"
+        try:
+            client = await SnmpClient.async_create(self.hass, self._get_entry().data)
+            async for _ in client.async_walk(baseoid):
+                break
+        except ConfigEntryAuthFailed:
+            return "invalid_auth"
+        except PySnmpError, SnmpWalkError:
+            return "cannot_connect"
+        return None
 
 
 class CannotConnect(Exception):
