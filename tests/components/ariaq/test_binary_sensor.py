@@ -1,4 +1,4 @@
-"""Test Flow-it binary sensor platform."""
+"""Test AriaQ binary sensor platform."""
 
 from collections.abc import Generator
 from datetime import timedelta
@@ -26,14 +26,14 @@ WORRIES_ENTITY_ID = "binary_sensor.001122334455_general_issue"
 @pytest.fixture(autouse=True)
 def binary_sensor_only() -> Generator[None]:
     """Only setup binary sensor platform."""
-    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_setup(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -47,7 +47,7 @@ async def test_binary_sensor_setup(
 
 async def test_binary_sensor_warmup_disabled_by_default(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -64,17 +64,17 @@ async def test_binary_sensor_warmup_disabled_by_default(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_none_values(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test binary sensor state when values are None."""
-    mock_flow_it.return_value.state.data.alert.ice = None
-    mock_flow_it.return_value.state.data.alert.condensation = None
-    mock_flow_it.return_value.state.data.alert.service = None
-    mock_flow_it.return_value.state.data.alert.worries = None
-    mock_flow_it.return_value.state.data.alert.update_reboot = None
-    mock_flow_it.return_value.state.data.alert.warmup = None
-    mock_flow_it.return_value.state.data.mode.bypassOn = None
+    mock_ariaq.return_value.state.data.alert.ice = None
+    mock_ariaq.return_value.state.data.alert.condensation = None
+    mock_ariaq.return_value.state.data.alert.service = None
+    mock_ariaq.return_value.state.data.alert.worries = None
+    mock_ariaq.return_value.state.data.alert.update_reboot = None
+    mock_ariaq.return_value.state.data.alert.warmup = None
+    mock_ariaq.return_value.state.data.mode.bypassOn = None
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -110,7 +110,7 @@ async def test_binary_sensor_none_values(
 )
 async def test_binary_sensor_update(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     entity_id: str,
@@ -126,9 +126,9 @@ async def test_binary_sensor_update(
     assert state.state == STATE_OFF
 
     target = (
-        mock_flow_it.return_value.state.data.mode
+        mock_ariaq.return_value.state.data.mode
         if is_mode
-        else mock_flow_it.return_value.state.data.alert
+        else mock_ariaq.return_value.state.data.alert
     )
     setattr(target, field, True)
 

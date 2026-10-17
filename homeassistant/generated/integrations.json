@@ -532,6 +532,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ariaq": {
+      "name": "AriaQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "ariston": {
       "name": "Ariston",
       "integration_type": "virtual",
@@ -2233,12 +2239,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "flow_it": {
-      "name": "Flow-it",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "flume": {
       "name": "Flume",

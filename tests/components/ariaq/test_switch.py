@@ -1,4 +1,4 @@
-"""Test Flow-it switch platform."""
+"""Test AriaQ switch platform."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -24,13 +24,13 @@ AIR_EXHAUST_ENTITY_ID = "switch.001122334455_air_exhaust"
 
 async def test_switch_setup(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch platform setup and entity registry."""
-    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -48,7 +48,7 @@ async def test_switch_setup(
 )
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
     service: str,
@@ -65,7 +65,7 @@ async def test_switch_turn_on_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_flow_it.return_value.send_command.assert_awaited_once_with(
+    mock_ariaq.return_value.send_command.assert_awaited_once_with(
         "2",
         flow_in=expected_flow_in,
         flow_out=expected_flow_out,
@@ -82,7 +82,7 @@ async def test_switch_turn_on_off(
 )
 async def test_switch_exceptions(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_exception: type[Exception],
@@ -91,7 +91,7 @@ async def test_switch_exceptions(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_flow_it.return_value.send_command.side_effect = exception
+    mock_ariaq.return_value.send_command.side_effect = exception
 
     with pytest.raises(expected_exception):
         await hass.services.async_call(
