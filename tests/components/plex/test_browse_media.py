@@ -515,7 +515,7 @@ async def test_search_media(
 
     await websocket_client.send_json(
         {
-            "id": 20,
+            "id": 2,
             "type": "media_player/search_media",
             "entity_id": media_players[0],
             "search_query": "TV Show",
@@ -530,7 +530,7 @@ async def test_search_media(
 
     await websocket_client.send_json(
         {
-            "id": 2,
+            "id": 3,
             "type": "media_player/search_media",
             "entity_id": media_players[0],
             "search_query": "Movie 1",
@@ -543,7 +543,7 @@ async def test_search_media(
 
     await websocket_client.send_json(
         {
-            "id": 30,
+            "id": 4,
             "type": "media_player/search_media",
             "entity_id": media_players[0],
             "search_query": "Movie 1",
@@ -556,7 +556,7 @@ async def test_search_media(
 
     await websocket_client.send_json(
         {
-            "id": 3,
+            "id": 5,
             "type": "media_player/search_media",
             "entity_id": media_players[0],
             "search_query": "Movie 1",

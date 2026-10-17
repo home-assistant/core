@@ -117,9 +117,11 @@ async def test_search_service(
     mock_plex_server,
     requests_mock: requests_mock.Mocker,
     hubs_search,
+    playlists,
 ) -> None:
     """Test search service call."""
     url = mock_plex_server.url_in_use
+    requests_mock.get(f"{url}/playlists/500", text=playlists)
     requests_mock.get(f"{url}/hubs/search", text=hubs_search)
 
     # Test server-wide search across media types
@@ -149,7 +151,7 @@ async def test_search_service(
     assert movie_result["content_rating"] == "R"
     assert movie_result["duration"] == 9000000
     assert movie_result["originally_available_at"].startswith("2000-01-01")
-    assert movie_result["genres"] == []
+    assert movie_result["genres"] == ["Sci-Fi", "Action"]
 
     show_result = next(x for x in result["results"] if x["media_type"] == "show")
     assert show_result["title"] == "TV Show"
@@ -461,6 +463,37 @@ async def test_search_service_fuzzy(
     )
     assert result["results"] == []
 
+    # Fuzzy search is off by default
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+    # The integration option enables it for calls that don't override it
+    mock_plex_server.options[Platform.MEDIA_PLAYER][CONF_FUZZY_SEARCH] = True
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"][0]["title"] == "Movie 1"
+
+    # A call can switch it off again
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie", "fuzzy": False},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
 
 async def test_play_show_resumes_on_deck_episode(
     hass: HomeAssistant, mock_plex_server
@@ -529,37 +562,6 @@ async def test_on_deck_service(
         DOMAIN,
         SERVICE_ON_DECK,
         {"library_name": "TV Shows"},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"] == []
-
-    # Fuzzy search is off by default
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie"},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"] == []
-
-    # The integration option enables it for calls that don't override it
-    mock_plex_server.options[Platform.MEDIA_PLAYER][CONF_FUZZY_SEARCH] = True
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie"},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"][0]["title"] == "Movie 1"
-
-    # A call can switch it off again
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie", "fuzzy": False},
         blocking=True,
         return_response=True,
     )
