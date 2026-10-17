@@ -381,6 +381,7 @@ FLOWS = {
         "indevolt",
         "indi_allsky",
         "inels",
+        "inet",
         "influxdb",
         "inkbird",
         "insteon",
