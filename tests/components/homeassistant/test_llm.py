@@ -142,6 +142,18 @@ async def test_render_template_timeout(hass: HomeAssistant) -> None:
     )
 
 
+async def test_render_template_output_too_large(hass: HomeAssistant) -> None:
+    """Test the render template tool reports output that exceeds the maximum size."""
+    response = await _async_render_template(hass, {"template": "{{ 'a' * 16385 }}"})
+    assert response == llm.ToolResult(
+        data={
+            "error": "Template output of 16385 characters exceeded "
+            "the maximum of 16384 characters"
+        },
+        error=True,
+    )
+
+
 async def test_prompt_includes_context(hass: HomeAssistant) -> None:
     """Test the platform contributes the live-context and static-overview prompt."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")

@@ -44,6 +44,7 @@ CALENDAR_DOMAIN = "calendar"
 SCRIPT_DOMAIN = "script"
 
 TEMPLATE_RENDER_TIMEOUT = 3
+TEMPLATE_MAX_OUTPUT = 16 * 1024
 
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
@@ -393,6 +394,14 @@ class RenderTemplateTool(Tool):
             result = template.async_render(variables, parse_result=False, strict=True)
         except TemplateError as err:
             return ToolResult(data={"error": str(err)}, error=True)
+        if len(result) > TEMPLATE_MAX_OUTPUT:
+            return ToolResult(
+                data={
+                    "error": f"Template output of {len(result)} characters exceeded "
+                    f"the maximum of {TEMPLATE_MAX_OUTPUT} characters"
+                },
+                error=True,
+            )
         return ToolResult(data={"result": result})
 
 
