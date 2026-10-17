@@ -14,14 +14,12 @@ The package requires Python 3.14.2 or newer and pins the matching Home Assistant
 version. Upgrade the two together; helpers depend on Home Assistant's internal
 APIs and are not compatible with older releases.
 
-Until the package is published, install Home Assistant and the helpers from the
-same Core checkout into your custom integration's virtual environment:
+Install the package into your custom integration's virtual environment:
 
 ```shell
-uv pip install /path/to/core /path/to/core/packages/pytest-home-assistant
+uv pip install pytest-home-assistant
 ```
 
-Both are installed as packages; the checkout is not required when running tests.
 The plugin loads automatically. Do not install it together with
 `pytest-homeassistant-custom-component`, which supplies overlapping fixtures.
 
