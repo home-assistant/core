@@ -5,11 +5,17 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import OverkizState
+from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfEnergy,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -243,6 +249,54 @@ async def test_sensor_falsy_state_update(
     state = hass.states.get(device.entity_id)
     assert state
     assert state.state == expected
+
+
+async def test_sensor_dynamic_unit_with_zero_value(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the device-reported unit is used when the value is 0."""
+    await setup_overkiz_integration(fixture=COZYTOUCH_DHW.fixture)
+
+    state = hass.states.get(COZYTOUCH_DHW.entity_id)
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.WATT_HOUR
+
+    # The unit is resolved on every state write, so switching the device's
+    # reported unit after setup is picked up by the next event
+    device = next(
+        device
+        for device in mock_client.setup.devices
+        if device.device_url == COZYTOUCH_DHW.device_url
+    )
+    device.attributes[
+        OverkizAttribute.CORE_MEASURED_VALUE_TYPE
+    ].value = MeasuredValueType.ELECTRICAL_ENERGY_IN_KWH
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=COZYTOUCH_DHW.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_ELECTRIC_ENERGY_CONSUMPTION.value,
+                        "type": 1,
+                        "value": 0,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(COZYTOUCH_DHW.entity_id)
+    assert state
+    assert state.state == "0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
 
 
 async def test_sensor_unavailability(
