@@ -41,7 +41,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_IP_ADDRESS: IP, CONF_PASSWORD: ""},
+            {CONF_IP_ADDRESS: IP},
         )
         await hass.async_block_till_done()
 
@@ -53,36 +53,6 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
         CONF_PASSWORD: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_without_password(hass: HomeAssistant) -> None:
-    """Test we can create an entry without providing a password."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch(
-            "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.devolo_home_network.config_flow.Device",
-            new=MockDevice,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_IP_ADDRESS: IP},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["result"].unique_id == DISCOVERY_INFO.properties["SN"]
-    assert result2["data"] == {
-        CONF_IP_ADDRESS: IP,
-        CONF_PASSWORD: "",
-    }
 
 
 @pytest.mark.parametrize(
