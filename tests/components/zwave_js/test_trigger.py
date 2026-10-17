@@ -297,6 +297,96 @@ async def test_zwave_js_value_updated(
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
 
+async def test_zwave_js_value_updated_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the value_updated trigger reports the targeted endpoint child device id."""
+    trigger_type = f"{DOMAIN}.value_updated"
+    node = climate_heatit_z_trm3
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, node, 2), integration.entry_id
+    )
+    assert child_device
+
+    child_events = async_capture_events(hass, "child_device_trigger")
+    node_events = async_capture_events(hass, "node_device_trigger")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "options": {
+                            "device_id": child_device.id,
+                            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                            "property": "Air temperature",
+                            "endpoint": 2,
+                        },
+                    },
+                    "action": {
+                        "event": "child_device_trigger",
+                        "event_data": {"device_id": "{{ trigger.device_id }}"},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "options": {
+                            "device_id": node_device.id,
+                            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                            "property": "Air temperature",
+                            "endpoint": 2,
+                        },
+                    },
+                    "action": {
+                        "event": "node_device_trigger",
+                        "event_data": {"device_id": "{{ trigger.device_id }}"},
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Air temperature",
+                    "propertyName": "Air temperature",
+                    "newValue": 25.5,
+                    "prevValue": 20.0,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The child-targeted trigger reports the child device, while the node-targeted trigger
+    # reports the parent node device even though the value lives on the child endpoint.
+    assert len(child_events) == 1
+    assert child_events[0].data["device_id"] == child_device.id
+    assert len(node_events) == 1
+    assert node_events[0].data["device_id"] == node_device.id
+
+
 async def test_zwave_js_value_updated_bypass_dynamic_validation(
     hass: HomeAssistant, client, lock_schlage_be469, integration
 ) -> None:
