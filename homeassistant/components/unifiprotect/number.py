@@ -96,7 +96,6 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_public_enabled_fn=operator.attrgetter("is_mic_enabled"),
         ufp_public_value="mic_volume",
         ufp_set_method="set_mic_volume",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
         key="system_sounds_volume",
