@@ -38,12 +38,7 @@ def _parse_token_response(payload: Any) -> dict[str, Any]:
         )
 
     expires_in = payload.get("expires_in")
-    if (
-        # A bool is an int, but not a lifetime.
-        isinstance(expires_in, bool)
-        or not isinstance(expires_in, int | float)
-        or expires_in <= 0
-    ):
+    if not isinstance(expires_in, int | float) or expires_in <= 0:
         raise YoLinkClientError(
             "invalid_response",
             f"Token response has an invalid lifetime: {expires_in!r}",

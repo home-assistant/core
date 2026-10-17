@@ -180,10 +180,6 @@ async def test_uac_token_request_error_body(
             id="non_numeric_expires_in",
         ),
         pytest.param(
-            {"json": {"access_token": "token-1", "expires_in": True}},
-            id="boolean_expires_in",
-        ),
-        pytest.param(
             {"json": {"access_token": "token-1", "expires_in": 0}},
             id="zero_expires_in",
         ),

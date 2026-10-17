@@ -29,7 +29,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import api
 from .const import (
     ATTR_LORA_INFO,
-    AUTH_TYPE_OAUTH,
     AUTH_TYPE_UAC,
     CONF_AUTH_TYPE,
     CONF_HOME_ID,
@@ -121,8 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Set up yolink from a config entry."""
-    # Entries created before UAC support was added do not store an auth type.
-    if entry.data.get(CONF_AUTH_TYPE, AUTH_TYPE_OAUTH) == AUTH_TYPE_UAC:
+    if entry.data.get(CONF_AUTH_TYPE) == AUTH_TYPE_UAC:
         auth_mgr = api.UACAuth(
             aiohttp_client.async_get_clientsession(hass),
             entry.data[CONF_UAID],
