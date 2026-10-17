@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -212,6 +213,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.VOLUME_MUTE
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.TURN_ON
             | MediaPlayerEntityFeature.TURN_OFF
             | MediaPlayerEntityFeature.SELECT_SOURCE
         )
@@ -276,7 +278,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
     @property
     @override
     def state(self) -> MediaPlayerState:
-        """Return whether this room is on or idle."""
+        """Return whether this room is on or off."""
 
         if source_state := self._get_current_source_state():
             return source_state
@@ -284,7 +286,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         if self.coordinator.data[self._idx][CONTROL4_POWER_STATE]:
             return MediaPlayerState.ON
 
-        return MediaPlayerState.IDLE
+        return MediaPlayerState.OFF
 
     @property
     @override
@@ -349,20 +351,61 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
+    async def _async_post_source(self, source: _RoomSource) -> None:
+        """Post a source selection to the director, audio or video."""
+        if _SourceType.VIDEO not in source.source_type:
+            await self._create_api_object().set_audio_source(source.idx)
+        else:
+            await self._create_api_object().set_video_and_audio_source(source.idx)
+
     @override
     async def async_select_source(self, source: str) -> None:
         """Select a new source."""
         for avail_source in self._sources.values():
             if avail_source.name == source:
-                audio_only = _SourceType.VIDEO not in avail_source.source_type
-                if audio_only:
-                    await self._create_api_object().set_audio_source(avail_source.idx)
-                else:
-                    await self._create_api_object().set_video_and_audio_source(
-                        avail_source.idx
-                    )
+                await self._async_post_source(avail_source)
                 break
 
+        await self.coordinator.async_request_refresh()
+
+    def _pick_source_to_turn_on(self) -> _RoomSource | None:
+        """Pick the source to start an off room with.
+
+        Prefer whatever is already playing, then the room's current video source,
+        then any video source, and finally any source at all.
+        """
+        if source_id := self._get_current_playing_device_id():
+            if source := self._sources.get(source_id):
+                return source
+        if source_id := self._get_current_video_device_id():
+            if source := self._sources.get(source_id):
+                return source
+        return next(
+            (
+                source
+                for source in self._sources.values()
+                if _SourceType.VIDEO in source.source_type
+            ),
+            next(iter(self._sources.values()), None),
+        )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the room on.
+
+        Control4 has no "room on" command: a room is started by selecting a
+        source, which is what the Control4 app does when a source is chosen.
+        The picked source is posted by id rather than looked up by name, so
+        duplicate source names can never start the wrong device.
+        """
+        if (source := self._pick_source_to_turn_on()) is None:
+            # Rooms without sources do not get an entity, and _sources is
+            # never mutated afterwards, so this only fires if that invariant
+            # breaks.
+            raise HomeAssistantError(  # pragma: no cover
+                "No Control4 source is available to turn on this room"
+            )
+        await self._async_post_source(source)
         await self.coordinator.async_request_refresh()
 
     @override
