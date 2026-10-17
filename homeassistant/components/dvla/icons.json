@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "sensor": {
+      "additional_rate_of_tax_end_date": {
+        "default": "mdi:calendar-end"
+      },
+      "co2_emissions": {
+        "default": "mdi:molecule-co2"
+      },
+      "color": {
+        "default": "mdi:spray"
+      },
+      "date_of_last_v5c_issued": {
+        "default": "mdi:calendar"
+      },
+      "engine_capacity": {
+        "default": "mdi:engine"
+      },
+      "euro_status": {
+        "default": "mdi:currency-eur"
+      },
+      "fuel_type": {
+        "default": "mdi:gas-station"
+      },
+      "month_of_first_registration": {
+        "default": "mdi:calendar-month"
+      },
+      "mot_expiry_date": {
+        "default": "mdi:calendar-check"
+      },
+      "mot_status": {
+        "default": "mdi:car-wrench"
+      },
+      "real_driving_emissions": {
+        "default": "mdi:gas-station-outline"
+      },
+      "revenue_weight": {
+        "default": "mdi:weight-kilogram"
+      },
+      "tax_due_date": {
+        "default": "mdi:calendar-clock"
+      },
+      "tax_status": {
+        "default": "mdi:cash-clock"
+      },
+      "type_approval": {
+        "default": "mdi:car"
+      },
+      "wheelplan": {
+        "default": "mdi:tire"
+      },
+      "year_of_manufacture": {
+        "default": "mdi:calendar"
+      }
+    }
+  }
+}
