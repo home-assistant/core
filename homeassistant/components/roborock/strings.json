@@ -117,6 +117,9 @@
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
       },
+      "resolve_dock_error": {
+        "name": "Resolve error"
+      },
       "shutdown": {
         "name": "Shut down"
       },

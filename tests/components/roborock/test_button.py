@@ -1,12 +1,18 @@
 """Test Roborock Button platform."""
 
-from unittest.mock import Mock
+from functools import partial
+from unittest.mock import Mock, patch
 
 import pytest
 from roborock import RoborockException
-from roborock.data.v1 import RoborockDockTypeCode
+from roborock.data.v1 import (
+    RoborockDockErrorCode,
+    RoborockDockTypeCode,
+    RoborockErrorCode,
+)
 from roborock.device_features import RoborockDockFeatures
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
+from roborock.devices.traits.v1.device_features import DeviceFeaturesTrait
 from roborock.exceptions import RoborockTimeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,6 +26,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import FakeDevice
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+RESOLVE_DOCK_ERROR_ENTITY_ID = "button.roborock_s7_maxv_dock_resolve_error"
+DOCK_ERROR_SENSOR_ENTITY_ID = "sensor.roborock_s7_maxv_dock_dock_error"
 
 
 @pytest.fixture
@@ -54,11 +63,11 @@ def non_wash_n_fill_dock(fake_vacuum: FakeDevice) -> None:
     )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "non_wash_n_fill_dock")
 async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    non_wash_n_fill_dock: None,
+    entity_registry: er.EntityRegistry,
     setup_entry: MockConfigEntry,
 ) -> None:
     """Dock consumable buttons must not be created when dock type is not wash-n-fill."""
@@ -75,13 +84,14 @@ async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
         "button.roborock_s7_maxv_reset_main_brush_consumable",
     ):
         assert hass.states.get(entity_id) is not None
-    # No phantom dock device should be registered for the non-wash-n-fill vacuum.
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, "abc123_dock"), setup_entry.entry_id
-        )
-        is None
+    dock_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abc123_dock"), setup_entry.entry_id
     )
+    assert dock_device is not None
+    assert [
+        entry.entity_id
+        for entry in er.async_entries_for_device(entity_registry, dock_device.id)
+    ] == [RESOLVE_DOCK_ERROR_ENTITY_ID]
 
 
 @pytest.fixture(name="consumeables_trait", autouse=True)
@@ -459,3 +469,209 @@ async def test_dock_cleaning_brush_button_press(
         ConsumableAttribute.CLEANING_BRUSH_WORK_TIME
     )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("dock_type", "expected_supported"),
+    [
+        pytest.param(None, False, id="missing-dock"),
+        pytest.param(RoborockDockTypeCode.unknown, False, id="unknown-dock"),
+        pytest.param(RoborockDockTypeCode.o0_dock, False, id="no-dock"),
+        pytest.param(RoborockDockTypeCode.o1_dock, True, id="collect-only"),
+        pytest.param(RoborockDockTypeCode.o2_dock, True, id="wash-only"),
+        pytest.param(RoborockDockTypeCode.o3_dock, True, id="collect-and-wash"),
+        pytest.param(RoborockDockTypeCode.shell_3_dock, True, id="qrevo-master"),
+    ],
+)
+async def test_resolve_dock_error_button_support(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+    mock_roborock_entry: MockConfigEntry,
+    dock_type: RoborockDockTypeCode | None,
+    expected_supported: bool,
+) -> None:
+    """Test supported docks expose an enabled resolve error button."""
+    features = fake_vacuum.v1_properties.device_features
+    features.dock_features = RoborockDockFeatures.from_dock_type(dock_type)
+    features.is_field_supported.side_effect = partial(
+        DeviceFeaturesTrait.is_field_supported, features
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(RESOLVE_DOCK_ERROR_ENTITY_ID) is not None
+    ) is expected_supported
+    assert (
+        entity_registry.async_get(RESOLVE_DOCK_ERROR_ENTITY_ID) is not None
+    ) is expected_supported
+
+
+async def test_resolve_dock_error_button_removed_when_unsupported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Test a registered resolve error button is removed once the dock is gone."""
+    features = fake_vacuum.v1_properties.device_features
+    features.dock_features = RoborockDockFeatures.from_dock_type(
+        RoborockDockTypeCode.o0_dock
+    )
+    features.is_field_supported.side_effect = partial(
+        DeviceFeaturesTrait.is_field_supported, features
+    )
+    entity_registry.async_get_or_create(
+        domain=Platform.BUTTON,
+        platform=DOMAIN,
+        unique_id="resolve_dock_error_abc123",
+        config_entry=mock_roborock_entry,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "resolve_dock_error_abc123"
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "resolve_dock_error_abc123"
+        )
+        is None
+    )
+    assert hass.states.get(RESOLVE_DOCK_ERROR_ENTITY_ID) is None
+
+
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("bypass_api_client_fixture", "setup_entry")
+@pytest.mark.parametrize(
+    "dock_error",
+    [
+        pytest.param(RoborockDockErrorCode.water_empty, id="clean-water-empty"),
+        pytest.param(
+            RoborockDockErrorCode.waste_water_tank_full, id="dirty-water-full"
+        ),
+    ],
+)
+async def test_resolve_dock_error_button_press(
+    hass: HomeAssistant,
+    fake_vacuum: FakeDevice,
+    dock_error: RoborockDockErrorCode,
+) -> None:
+    """Test pressing the button resolves the current dock error."""
+    status = fake_vacuum.v1_properties.status
+    status.dock_error_status = dock_error
+    status.error_code = RoborockErrorCode.lidar_blocked
+
+    assert hass.states.get(RESOLVE_DOCK_ERROR_ENTITY_ID).state == "unknown"
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
+    )
+
+    status.resolve_error.assert_awaited_once_with(int(dock_error))
+    assert hass.states.get(RESOLVE_DOCK_ERROR_ENTITY_ID).state == (
+        "2023-10-30T08:50:00+00:00"
+    )
+
+
+@pytest.mark.usefixtures("bypass_api_client_fixture")
+@pytest.mark.parametrize(
+    "dock_error",
+    [
+        pytest.param(RoborockDockErrorCode.ok, id="no-dock-error"),
+        pytest.param(None, id="missing-dock-error"),
+    ],
+)
+async def test_resolve_dock_error_button_press_without_error(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    dock_error: RoborockDockErrorCode | None,
+) -> None:
+    """Test a missing dock error never falls back to a robot error."""
+    status = fake_vacuum.v1_properties.status
+    status.dock_error_status = dock_error
+    status.error_code = RoborockErrorCode.lidar_blocked
+
+    with patch.object(setup_entry.runtime_data.v1[0], "async_refresh") as refresh:
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            blocking=True,
+            target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
+        )
+
+    status.resolve_error.assert_not_called()
+    refresh.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("bypass_api_client_fixture")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(RoborockException, id="command-failure"),
+        pytest.param(RoborockTimeout, id="timeout"),
+    ],
+)
+async def test_resolve_dock_error_button_press_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    exception: type[RoborockException],
+) -> None:
+    """Test a failure while resolving the dock error raises an error."""
+    status = fake_vacuum.v1_properties.status
+    status.dock_error_status = RoborockDockErrorCode.water_empty
+    status.resolve_error.side_effect = exception
+
+    with (
+        patch.object(setup_entry.runtime_data.v1[0], "async_refresh") as refresh,
+        pytest.raises(HomeAssistantError, match="Error while calling RESOLVE_ERROR"),
+    ):
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            blocking=True,
+            target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
+        )
+
+    status.resolve_error.assert_awaited_once_with(38)
+    refresh.assert_not_awaited()
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON, Platform.SENSOR]])
+async def test_resolve_dock_error_button_refreshes_sensor(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test resolving an error publishes the new dock status immediately."""
+    status = fake_vacuum.v1_properties.status
+    status.refresh.side_effect = None
+    status.dock_error_status = RoborockDockErrorCode.water_empty
+    setup_entry.runtime_data.v1[0].async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(DOCK_ERROR_SENSOR_ENTITY_ID).state == "water_empty"
+
+    async def resolve_error(_error_code: int) -> None:
+        status.dock_error_status = RoborockDockErrorCode.ok
+
+    status.resolve_error.side_effect = resolve_error
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
+    )
+
+    status.resolve_error.assert_awaited_once_with(38)
+    assert hass.states.get(DOCK_ERROR_SENSOR_ENTITY_ID).state == "ok"

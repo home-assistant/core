@@ -38,6 +38,9 @@
       },
       "reset_side_brush_consumable": {
         "default": "mdi:brush"
+      },
+      "resolve_dock_error": {
+        "default": "mdi:alert-circle-check-outline"
       }
     },
     "image": {
