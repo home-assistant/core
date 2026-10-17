@@ -1076,6 +1076,11 @@ ZEROCONF = {
             "domain": "technove",
         },
     ],
+    "_tlight._tcp.local.": [
+        {
+            "domain": "trimlight",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
