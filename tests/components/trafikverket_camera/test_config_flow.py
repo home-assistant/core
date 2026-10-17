@@ -399,6 +399,121 @@ async def test_reconfigure_flow(
     }
 
 
+async def test_reconfigure_flow_same_camera(
+    hass: HomeAssistant, get_camera: CameraInfoModel
+) -> None:
+    """Test reconfigure keeps the entry's own camera with a new API key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new_api_key", CONF_LOCATION: "Test loc"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_API_KEY: "new_api_key", CONF_ID: "1234"}
+    assert entry.unique_id == "trafikverket_camera-1234"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant, get_camera2: CameraInfoModel
+) -> None:
+    """Test reconfigure aborts when another entry has the camera."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "5678"},
+        unique_id="trafikverket_camera-5678",
+        version=3,
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=[get_camera2],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567890", CONF_LOCATION: "Test loc"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_API_KEY: "1234567890", CONF_ID: "1234"}
+
+
+async def test_reconfigure_flow_multiple_cameras_already_configured(
+    hass: HomeAssistant,
+    get_cameras: list[CameraInfoModel],
+    get_camera2: CameraInfoModel,
+) -> None:
+    """Test reconfigure aborts when the selected camera has another entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "5678"},
+        unique_id="trafikverket_camera-5678",
+        version=3,
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=get_cameras,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567890", CONF_LOCATION: "Test loc"},
+        )
+    assert result["step_id"] == "multiple_cameras"
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=[get_camera2],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ID: "5678"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_API_KEY: "1234567890", CONF_ID: "1234"}
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error_key", "p_error"),
     [
