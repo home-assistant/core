@@ -1,5 +1,7 @@
 """Test script variables."""
 
+from collections.abc import Callable
+
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -103,11 +105,29 @@ async def test_template_vars_run_args_simple(hass: HomeAssistant) -> None:
     }
 
 
-async def test_template_vars_error(hass: HomeAssistant) -> None:
-    """Test template vars."""
+@pytest.mark.parametrize(
+    "render",
+    [
+        pytest.param(
+            lambda variables, hass: variables.async_render(hass, None), id="render"
+        ),
+        pytest.param(
+            lambda variables, _hass: variables.async_simple_render({}),
+            id="simple-render",
+        ),
+    ],
+)
+async def test_template_vars_error(
+    hass: HomeAssistant,
+    render: Callable[[ScriptVariables, HomeAssistant], object],
+) -> None:
+    """Test rendering errors identify the failing variable and preserve the cause."""
     var = cv.SCRIPT_VARIABLES_SCHEMA({"hello": "{{ canont.work }}"})
-    with pytest.raises(TemplateError):
-        var.async_render(hass, None)
+    with pytest.raises(TemplateError) as exc_info:
+        render(var, hass)
+
+    assert "hello" in str(exc_info.value)
+    assert isinstance(exc_info.value.__cause__, TemplateError)
 
 
 async def test_script_vars_exit_top_level() -> None:
