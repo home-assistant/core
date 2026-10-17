@@ -495,7 +495,7 @@ async def test_a01_switch_unknown_state(
     assert state is not None
     assert state.state == "off"
 
-    # Simulate the API returning data without the SOUND_SET key
+    # Simulate the API reporting state without the SOUND_SET key.
     washing_machine = next(
         device
         for device in fake_devices
@@ -503,16 +503,11 @@ async def test_a01_switch_unknown_state(
     )
     incomplete_data = {
         k: v
-        for k, v in washing_machine.zeo.query_values.return_value.items()
+        for k, v in washing_machine.zeo.values.items()
         if k != RoborockZeoProtocol.SOUND_SET
     }
-    washing_machine.zeo.query_values.return_value = incomplete_data
-
-    # Trigger a coordinator refresh
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=61),
-    )
+    washing_machine.zeo.values = incomplete_data
+    washing_machine.zeo.add_update_listener.call_args.args[0]()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

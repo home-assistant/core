@@ -560,15 +560,14 @@ async def test_cloud_api_repair_cleared_on_update(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
-async def test_zeo_device_fails_setup(
+async def test_zeo_device_uses_cached_state(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     device_registry: DeviceRegistry,
     entity_registry: EntityRegistry,
     fake_devices: list[FakeDevice],
 ) -> None:
-    """Simulate an error while setting up a zeo device."""
-    # We have a single zeo device in the test setup. Find it then set it to fail.
+    """Test Zeo setup uses synchronized state without querying the device."""
     zeo_device = next(
         (device for device in fake_devices if device.zeo is not None),
         None,
@@ -592,9 +591,10 @@ async def test_zeo_device_fails_setup(
         entity_registry, zeo_device_entry.id, include_disabled_entities=True
     )
     assert len(zeo_entities) > 0
-    state = hass.states.get(zeo_entities[0].entity_id)
+    state = hass.states.get("sensor.zeo_one_washing_left")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "253"
+    zeo_device.zeo.query_values.assert_not_awaited()
 
     # Other devices should have entities.
     all_entities = er.async_entries_for_config_entry(
