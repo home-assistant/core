@@ -11,6 +11,7 @@ from homeassistant.components.aquacell.const import (
     CONF_REFRESH_TOKEN,
     CONF_REFRESH_TOKEN_CREATION_TIME,
     DOMAIN,
+    UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from . import DSN, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -138,3 +139,45 @@ async def test_remove_device(
     response = await client.remove_device(old_device_entry.id)
     assert response["success"]
     assert device_registry.async_get(old_device_entry.id) is None
+
+
+async def test_stale_device_removed(
+    hass: HomeAssistant,
+    mock_aquacell_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices of softeners no longer returned by the API are removed."""
+    mock_config_entry.add_to_hass(hass)
+    old_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "OLD-DSN")},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(old_device_entry.id) is None
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DSN), mock_config_entry.entry_id
+    )
+
+
+async def test_devices_kept_when_no_softeners_returned(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_aquacell_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices are kept when the API returns no softeners."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_aquacell_api.get_all_softeners.return_value = []
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DSN), mock_config_entry.entry_id
+    )
