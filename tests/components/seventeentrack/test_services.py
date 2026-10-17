@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pyseventeentrack.errors import RequestError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -9,6 +10,7 @@ from homeassistant.components.seventeentrack import DOMAIN
 from homeassistant.components.seventeentrack.const import (
     SERVICE_ARCHIVE_PACKAGE,
     SERVICE_GET_PACKAGES,
+    SERVICE_SET_CARRIER,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -148,6 +150,69 @@ async def test_archive_package(
     mock_seventeentrack.return_value.profile.archive_package.assert_called_once_with(
         ARCHIVE_PACKAGE_NUMBER
     )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_second_carrier"),
+    [
+        pytest.param({"second_carrier": 19251}, 19251, id="with_second_carrier"),
+        pytest.param({}, None, id="keep_second_carrier"),
+    ],
+)
+async def test_set_carrier(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service_data: dict[str, int],
+    expected_second_carrier: int | None,
+) -> None:
+    """Ensure service sets the package carrier and refreshes the coordinator."""
+    await init_integration(hass, mock_config_entry)
+    mock_seventeentrack.return_value.profile.summary.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CARRIER,
+        {
+            CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
+            PACKAGE_TRACKING_NUMBER_KEY: ARCHIVE_PACKAGE_NUMBER,
+            "first_carrier": 190271,
+            **service_data,
+        },
+        blocking=True,
+    )
+    mock_seventeentrack.return_value.profile.set_carrier_by_tracking_number.assert_called_once_with(
+        ARCHIVE_PACKAGE_NUMBER, 190271, expected_second_carrier
+    )
+    mock_seventeentrack.return_value.profile.summary.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(RequestError("Non-zero status code"), id="request_error"),
+        pytest.param(ValueError("invalid carriers"), id="value_error"),
+    ],
+)
+async def test_set_carrier_error(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Ensure library errors are raised as HomeAssistantError."""
+    await init_integration(hass, mock_config_entry)
+    mock_seventeentrack.return_value.profile.set_carrier_by_tracking_number.side_effect = error
+    with pytest.raises(HomeAssistantError, match="Failed to set the carrier"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CARRIER,
+            {
+                CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
+                PACKAGE_TRACKING_NUMBER_KEY: ARCHIVE_PACKAGE_NUMBER,
+                "first_carrier": 190271,
+            },
+            blocking=True,
+        )
 
 
 async def test_packages_with_none_timestamp(
