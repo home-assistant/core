@@ -115,7 +115,6 @@ class OAuth2FlowHandler(
                         data_updates={
                             CONF_UAID: user_input[CONF_UAID],
                             CONF_SECRET_KEY: user_input[CONF_SECRET_KEY],
-                            CONF_HOME_ID: home_id,
                         },
                     )
 

@@ -387,13 +387,15 @@ async def test_oauth_flow_aborts_when_oauth_entry_exists(
 
 
 @pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
+    "setup_credentials",
+    "current_request_with_host",
+    "mock_setup_entry",
+    "mock_yolink_client",
 )
 async def test_oauth_flow_aborts_when_home_configured_by_uac(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_yolink_client: AsyncMock,
 ) -> None:
     """Test OAuth2 is refused for a home already added through UAC."""
     MockConfigEntry(
@@ -762,22 +764,12 @@ async def test_uac_flow_multiple_homes(
 
 @pytest.mark.usefixtures("mock_yolink_client")
 async def test_uac_reauthentication(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_uac_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test UAC reauthentication updates the credentials and reloads."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_HOME_ID,
-        title=TEST_HOME_NAME,
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: "old-uaid",
-            CONF_SECRET_KEY: "old-secret",
-        },
-    )
-    old_entry.add_to_hass(hass)
-
-    result = await old_entry.start_reauth_flow(hass)
+    result = await mock_uac_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -791,7 +783,7 @@ async def test_uac_reauthentication(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert old_entry.data == {
+    assert mock_uac_config_entry.data == {
         CONF_AUTH_TYPE: AUTH_TYPE_UAC,
         CONF_UAID: "new-uaid",
         CONF_SECRET_KEY: "new-secret",

@@ -5,7 +5,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_account": "The credentials provided are for a different YoLink home than the one configured. Use the UAC credentials for the home you want to re-authenticate, or remove this integration entry and add it again if you want to change homes."
+      "wrong_account": "The credentials must be for the same YoLink home."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
