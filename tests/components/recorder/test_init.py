@@ -1695,6 +1695,7 @@ async def test_database_corruption_while_running(
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
     await hass.async_block_till_done()
@@ -1735,6 +1736,12 @@ async def test_database_corruption_while_running(
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text
     assert "Connected to recorder database" in caplog.text
+    # The kept corrupt files are reported without waiting for a restart.
+    await hass.async_block_till_done()
+    assert any(
+        domain == DOMAIN and issue_id.startswith("corrupt_database_files_")
+        for domain, issue_id in issue_registry.issues
+    )
 
     # This state should go into the new database
     hass.states.async_set("test.two", "on", {})
