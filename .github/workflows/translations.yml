@@ -31,11 +31,6 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      - name: Install translation helpers
-        run: |
-          python3 -m pip install "$(grep '^uv==' requirements.txt)"
-          uv pip install --system --no-deps -e packages/hassfest --config-settings editable_mode=compat
-
       - name: Upload Translations
         env:
           LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]

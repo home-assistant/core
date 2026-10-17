@@ -7,7 +7,7 @@ import re
 import subprocess
 from typing import Any
 
-from hassfest.translation_data import (
+from script.hassfest.translation_data import (
     load_json_from_path as load_json_from_path,  # noqa: PLC0414
 )
 

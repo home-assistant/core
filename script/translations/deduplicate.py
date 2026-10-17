@@ -4,9 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from hassfest.translation_data import generate_upload_data
-
 from homeassistant.const import Platform
+from script.hassfest.translation_data import generate_upload_data
 
 from .util import flatten_translations, get_base_arg_parser, load_json_from_path
 

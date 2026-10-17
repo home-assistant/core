@@ -72,11 +72,6 @@ jobs:
               exit 1
           fi
 
-      - name: Install translation helpers
-        run: |
-          python3 -m pip install "$(grep '^uv==' requirements.txt)"
-          uv pip install --system --no-deps -e packages/hassfest --config-settings editable_mode=compat
-
       - name: Download Translations
         run: python3 -m script.translations download
         env:
