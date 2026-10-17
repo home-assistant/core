@@ -55,6 +55,35 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_without_password(hass: HomeAssistant) -> None:
+    """Test we can create an entry without providing a password."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.devolo_home_network.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.devolo_home_network.config_flow.Device",
+            new=MockDevice,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: IP},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_IP_ADDRESS: IP,
+        CONF_PASSWORD: "",
+    }
+
+
 @pytest.mark.parametrize(
     ("exception_type", "expected_error"),
     [
@@ -302,3 +331,33 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result3["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.data[CONF_PASSWORD] == "test-right-password"
+
+
+@pytest.mark.usefixtures("mock_device")
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_reauth_without_password(hass: HomeAssistant) -> None:
+    """Test that reauth succeeds without providing a password."""
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await entry.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.devolo_home_network.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.devolo_home_network.config_flow.Device",
+            new=MockDevice,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == ""
