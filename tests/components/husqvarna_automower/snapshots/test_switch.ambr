@@ -121,17 +121,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Back lawn',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Back lawn',
+    'original_name': None,
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'work_area_work_area',
+    'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_work_area',
     'unit_of_measurement': None,
   })
@@ -139,7 +139,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_back_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Back lawn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back lawn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_back_lawn',
@@ -221,17 +221,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Front lawn',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Front lawn',
+    'original_name': None,
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'work_area_work_area',
+    'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_work_area',
     'unit_of_measurement': None,
   })
@@ -239,7 +239,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_front_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Front lawn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front lawn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_front_lawn',
@@ -271,17 +271,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'My lawn',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'My lawn',
+    'original_name': None,
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'my_lawn_work_area',
+    'translation_key': 'work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_work_area',
     'unit_of_measurement': None,
   })
@@ -289,7 +289,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_my_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 My lawn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My lawn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_my_lawn',
