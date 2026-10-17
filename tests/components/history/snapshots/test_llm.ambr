@@ -11,6 +11,7 @@
             2026-10-12T04:00:00-07:00,1.5
   
           ''',
+          'period': 'hour',
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
@@ -24,10 +25,11 @@
             2026-10-12T04:00:00-07:00,23.6667,70,72
   
           ''',
+          'period': 'hour',
           'unit': '°C',
         }),
       }),
-      'period': 'hour',
+      'period': '5minute',
     }),
   })
 # ---
@@ -276,6 +278,35 @@
         }),
       }),
       'period': 'day',
+    }),
+  })
+# ---
+# name: test_hourly_fallback_per_entity
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+            2026-10-12T03:00:00-07:00,1.5
+            2026-10-12T04:00:00-07:00,1.5
+  
+          ''',
+          'period': 'hour',
+          'unit': 'kWh',
+        }),
+        'sensor.power': dict({
+          'csv': '''
+            start,mean,min,max
+            2026-10-12T04:30:00-07:00,100,90,110
+            2026-10-12T04:35:00-07:00,101,91,111
+            2026-10-12T04:40:00-07:00,102,92,112
+  
+          ''',
+          'unit': 'W',
+        }),
+      }),
+      'period': '5minute',
     }),
   })
 # ---

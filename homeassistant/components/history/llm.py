@@ -97,26 +97,38 @@ def _get_statistics(
         if meta["has_sum"]:
             types.append("change")
 
-    def query(query_period: _Period) -> dict[str, list[statistics.StatisticsRow]]:
+    def query(
+        query_period: _Period, statistic_ids: set[str]
+    ) -> dict[str, list[statistics.StatisticsRow]]:
         return statistics.statistics_during_period(
             hass,
             start_time,
             # The recorder moves the end time to the next period boundary, which
             # includes the period that starts at end_time.
             end_time - timedelta(microseconds=1),
-            set(entity_types),
+            statistic_ids,
             query_period,
             None,
             {stat_type for types in entity_types.values() for stat_type in types},
         )
 
     rows: dict[str, list[statistics.StatisticsRow]] = {}
+    hourly_ids: set[str] = set()
     if entity_types:
-        rows = query(period)
+        rows = query(period, set(entity_types))
         # Some statistics, such as imported ones, only have hourly rows.
-        if fall_back_to_hour and not any(rows.values()):
-            period = "hour"
-            rows = query(period)
+        if fall_back_to_hour and (
+            missing := {
+                entity_id for entity_id in entity_types if not rows.get(entity_id)
+            }
+        ):
+            hourly_rows = query("hour", missing)
+            hourly_ids = {
+                entity_id
+                for entity_id, entity_rows in hourly_rows.items()
+                if entity_rows
+            }
+            rows.update({entity_id: hourly_rows[entity_id] for entity_id in hourly_ids})
     result: dict[str, Any] = {}
     for entity_id in entity_ids:
         if (columns := entity_types.get(entity_id)) is None:
@@ -130,6 +142,8 @@ def _get_statistics(
         entry: dict[str, Any] = {}
         if unit:
             entry["unit"] = unit
+        if entity_id in hourly_ids:
+            entry["period"] = "hour"
         entry["csv"] = _to_csv(
             ["start", *columns],
             [
@@ -167,7 +181,8 @@ class GetHistoryTool(Tool):
         "numeric statistics (sensors with a state class) and are based on completed "
         "recording intervals, but daily, weekly, and monthly aggregates may be "
         "partial. Values are converted to the unit of the entity when possible. "
-        "'unit' gives the unit of the values."
+        "'unit' gives the unit of the values. A 'period' on an entity replaces "
+        "the period of the result for that entity."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False

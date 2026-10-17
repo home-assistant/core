@@ -9,6 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import history
 from homeassistant.components.history.llm import GetHistoryTool, async_get_tools
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
@@ -27,6 +29,7 @@ from tests.components.recorder.common import async_wait_recording_done
 ENTITY_ID = "sensor.temperature"
 ENERGY_ENTITY_ID = "sensor.energy"
 OTHER_ENTITY_ID = "sensor.humidity"
+POWER_ENTITY_ID = "sensor.power"
 
 
 @pytest.fixture
@@ -350,3 +353,51 @@ async def test_statistics_state_unit(
 
     assert result.error is False
     assert result.data["result"]["entities"] == {entity_id: expected}
+
+
+@pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
+async def test_hourly_fallback_per_entity(
+    hass: HomeAssistant, llm_context: llm.LLMContext, snapshot: SnapshotAssertion
+) -> None:
+    """Test only entities without 5minute rows fall back to hourly rows."""
+    first_start = dt_util.parse_datetime("2026-10-12 11:30:00+00:00")
+    assert first_start is not None
+    power_metadata: StatisticMetaData = {
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "has_sum": False,
+        "name": None,
+        "source": "recorder",
+        "statistic_id": POWER_ENTITY_ID,
+        "unit_class": "power",
+        "unit_of_measurement": "W",
+    }
+    get_instance(hass).async_import_statistics(
+        power_metadata,
+        [
+            StatisticData(
+                start=first_start + timedelta(minutes=5 * index),
+                mean=100 + index,
+                min=90 + index,
+                max=110 + index,
+            )
+            for index in range(3)
+        ],
+        StatisticsShortTerm,
+    )
+    await async_wait_recording_done(hass)
+
+    tool = GetHistoryTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_ids": [POWER_ENTITY_ID, ENERGY_ENTITY_ID],
+                "start_time": "2026-10-12T10:00:00Z",
+            },
+        ),
+        llm_context,
+    )
+
+    assert result.error is False
+    assert result.data == snapshot
