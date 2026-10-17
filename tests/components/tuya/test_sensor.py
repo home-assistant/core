@@ -1,5 +1,6 @@
 """Test Tuya sensor platform."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
@@ -225,6 +226,64 @@ async def test_delta_report_sensor(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(0.6)  # unchanged
+
+
+@pytest.mark.parametrize("mock_device_code", ["mjj_sbcafqr6tykxq4bm"])
+@pytest.mark.freeze_time("2024-01-01T12:00:00+00:00")
+async def test_countdown_end_sensor(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the remaining time is exposed as a stable end timestamp."""
+    entity_id = "sensor.towel_rack_countdown_end"
+    mock_device.status["countdown_left"] = 90
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2024-01-01T13:30:00+00:00"
+    last_reported = state.last_reported
+
+    # The device counts down, reported with some delay: the end time
+    # stays stable instead of drifting
+    freezer.tick(timedelta(seconds=80))
+    await notification_helper.async_send_device_update(
+        mock_device, {"countdown_left": 89}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2024-01-01T13:30:00+00:00"
+    assert state.last_reported == last_reported
+
+    # A new timer is set: the end time moves
+    freezer.tick(timedelta(seconds=40))
+    await notification_helper.async_send_device_update(
+        mock_device, {"countdown_left": 240}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2024-01-01T16:02:00+00:00"
+
+    # The timer is cancelled
+    await notification_helper.async_send_device_update(
+        mock_device, {"countdown_left": 0}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    # A new timer is started shortly after: the previous end time is not reused
+    freezer.tick(timedelta(seconds=30))
+    await notification_helper.async_send_device_update(
+        mock_device, {"countdown_left": 240}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2024-01-01T16:02:30+00:00"
 
 
 @pytest.mark.parametrize(
