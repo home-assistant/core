@@ -24,7 +24,7 @@ def system_button_id(
     """Return the entity_id of the system reset button."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
+    tcs: ControlSystem = evo.locations[0].gateways[0].systems[0]
 
     return entity_id(Platform.BUTTON, f"{tcs.id}_reset")
 
@@ -34,7 +34,7 @@ def dhw_button_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str])
     """Return the entity_id of the DHW reset button."""
 
     evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = evo.tcs.hotwater
+    dhw: HotWater | None = evo.locations[0].gateways[0].systems[0].hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 
@@ -48,9 +48,9 @@ def zone_button_id(
     """Return the entity_id of the first zone's reset button."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
+    tcs: ControlSystem = evo.locations[0].gateways[0].systems[0]
 
-    zone: Zone = evo.tcs.zones[0]
+    zone: Zone = tcs.zones[0]
 
     return entity_id(
         Platform.BUTTON,

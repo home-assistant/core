@@ -181,9 +181,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.temps = {}  # high-precision temps now considered stale
 
         else:
-            self.temps = await self.client_v1.location_by_id[
-                self.loc.id
-            ].get_temperatures(dont_update_status=True)
+            tcs = self.client_v1.location_by_id[self.loc.id].tcs
+            self.temps = (
+                await tcs.get_temperatures(dont_update_status=True) if tcs else {}
+            )
 
         self.logger.debug("Status (high-res temps) = %s", self.temps)
 
