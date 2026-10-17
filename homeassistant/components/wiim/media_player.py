@@ -46,7 +46,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, DOMAIN, LOGGER, WiimConfigEntry
+from .const import (
+    DATA_WIIM,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_DEVICE_GENERAL_UPDATED,
+    SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED,
+    WiimConfigEntry,
+)
 from .entity import WiimBaseEntity
 from .models import WiimData
 
@@ -493,18 +500,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
             return
 
-        async def _wrapped() -> None:
-            await self._device.ensure_subscriptions()
-            self._update_ha_state_from_sdk_cache()
-
-        if self._device.supports_http_api:
-            self._entry.async_create_background_task(
-                self.hass,
-                _wrapped(),
-                name=f"wiim_{self.entity_id}_general_update",
-            )
-        else:
-            self._update_ha_state_from_sdk_cache()
+        self._update_ha_state_from_sdk_cache()
 
     @callback
     def _handle_sdk_av_transport_event(
@@ -686,10 +682,22 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._update_ha_state_from_sdk_cache(
             write_state=False, update_supported_features=False
         )
-        self._device.general_event_callback = self._handle_sdk_general_device_update
         self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
-        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
         self._device.play_queue_event_callback = self._handle_sdk_refresh_event
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_DEVICE_GENERAL_UPDATED.format(self._device.udn),
+                self._handle_sdk_general_device_update,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED.format(self._device.udn),
+                self._handle_sdk_refresh_event,
+            )
+        )
         LOGGER.debug(
             "Entity %s registered callbacks with WiimDevice %s",
             self.entity_id,
@@ -700,9 +708,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
         # Unregister SDK callbacks
-        self._device.general_event_callback = None
         self._device.av_transport_event_callback = None
-        self._device.rendering_control_event_callback = None
         self._device.play_queue_event_callback = None
         LOGGER.debug(
             "Entity %s unregistered callbacks from WiimDevice %s",
