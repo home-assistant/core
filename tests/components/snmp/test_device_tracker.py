@@ -671,6 +671,7 @@ async def test_ip_extraction(
     mock_coordinator_entry: MockConfigEntry,
     oid_tuple: tuple,
     expected_ip: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test IP address extraction from OID suffix."""
     mac_bytes = binascii.unhexlify("001122334455")
@@ -691,6 +692,7 @@ async def test_ip_extraction(
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, mac_str
@@ -699,6 +701,7 @@ async def test_ip_extraction(
 
     state = hass.states.get(entity_id)
     assert state is not None
+    assert state.state == STATE_HOME
     assert state.attributes.get("ip") == expected_ip
 
 
@@ -706,6 +709,7 @@ async def test_ip_extraction_oid_too_short(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that IP is None when OID is too short."""
     mac_bytes = binascii.unhexlify("001122334455")
@@ -725,12 +729,14 @@ async def test_ip_extraction_oid_too_short(
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
 
     entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
+    assert state.state == STATE_HOME
     assert state.attributes.get("ip") is None
 
 
