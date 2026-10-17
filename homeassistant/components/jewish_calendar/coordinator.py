@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import datetime as dt
 import logging
+from typing import override
 
 from hdate import HDateInfo, Location, Zmanim
 from hdate.translator import Language, set_language
@@ -50,6 +51,7 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
         self.data = data
         set_language(data.language)
 
+    @override
     async def _async_update_data(self) -> JewishCalendarData:
         """Return HDate and Zmanim for today."""
         now = dt_util.now()

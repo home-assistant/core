@@ -1,7 +1,5 @@
 """Diagnostics support for WMS WebControl pro API integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant

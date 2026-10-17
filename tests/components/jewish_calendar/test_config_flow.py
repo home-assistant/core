@@ -96,7 +96,7 @@ async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
 async def test_options_reconfigure(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test that updating the options of the Jewish Calendar integration triggers a value update."""
+    """Test updating Jewish Calendar options triggers a value update."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

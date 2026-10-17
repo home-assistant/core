@@ -19,7 +19,7 @@ from . import init_integration
 async def test_humidifier_service_calls(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ) -> None:
-    """Test the setup of the climate entities when there are no additional options available."""
+    """Test humidity entity setup without additional options."""
     device.has_humidifier = True
     await init_integration(hass, config_entry)
     entity_id = f"humidifier.{device.name}_humidifier"
@@ -53,7 +53,7 @@ async def test_humidifier_service_calls(
 async def test_dehumidifier_service_calls(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ) -> None:
-    """Test the setup of the climate entities when there are no additional options available."""
+    """Test humidity entity setup without additional options."""
     device.has_dehumidifier = True
     await init_integration(hass, config_entry)
     entity_id = f"humidifier.{device.name}_dehumidifier"

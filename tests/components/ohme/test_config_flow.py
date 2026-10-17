@@ -1,6 +1,6 @@
 """Tests for the config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from ohme import ApiException, AuthException
 import pytest
@@ -14,9 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_config_flow_success(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test config flow."""
 
     # Initial form load
@@ -44,9 +43,9 @@ async def test_config_flow_success(
     ("test_exception", "expected_error"),
     [(AuthException, "invalid_auth"), (ApiException, "unknown")],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_fail(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     test_exception: Exception,
     expected_error: str,
@@ -195,9 +194,7 @@ async def test_reconfigure_form(hass: HomeAssistant, mock_client: MagicMock) -> 
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -234,9 +231,7 @@ async def test_reconfigure_fail(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM

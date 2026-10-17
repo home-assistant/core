@@ -1,7 +1,5 @@
 """Tests of the pump fan entity of the balboa integration."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from pybalboa import SpaControl

@@ -1,30 +1,30 @@
 """Matter ModeSelect Cluster Support."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
+from matter_server.common import custom_clusters
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 DOOR_LOCK_OPERATING_MODE_MAP = {
     clusters.DoorLock.Enums.OperatingModeEnum.kNormal: "normal",
     clusters.DoorLock.Enums.OperatingModeEnum.kVacation: "vacation",
     clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy: "privacy",
-    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "no_remote_lock_unlock",
+    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: (
+        "no_remote_lock_unlock"
+    ),
     clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
 }
 DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {
@@ -66,11 +66,11 @@ type SelectCluster = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter ModeSelect from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SELECT, async_add_entities)
 
 
@@ -86,7 +86,8 @@ class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
     device_to_ha: Callable[[int], str | None]
     ha_to_device: Callable[[str], int | None]
 
-    # list attribute: the attribute descriptor to get the list of values (= list of integers)
+    # list attribute: the attribute descriptor to get the list
+    # of values (= list of integers)
     list_attribute: type[ClusterAttributeDescriptor]
 
 
@@ -94,11 +95,15 @@ class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
-    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    # list attribute: the attribute descriptor to get the list
+    # of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
-    # command: a custom callback to create the command to send to the device
-    # the callback's argument will be the index of the selected list value
-    # if omitted the command will just be a write_attribute command to the primary attribute
+    # command: a custom callback to create the command to send
+    # to the device
+    # the callback's argument will be the index of the selected
+    # list value
+    # if omitted the command will just be a write_attribute
+    # command to the primary attribute
     command: Callable[[int], ClusterCommand] | None = None
 
 
@@ -107,6 +112,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
 
     entity_description: MatterSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         value_convert = self.entity_description.ha_to_device
@@ -117,6 +123,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: Nullable | int | None
@@ -128,11 +135,12 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
 
 
 class MatterMapSelectEntity(MatterAttributeSelectEntity):
-    """Representation of a Matter select entity where the options are defined in a State map."""
+    """Matter select entity where options are from a State map."""
 
     entity_description: MatterMapSelectEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # the options can dynamically change based on the state of the device
@@ -146,13 +154,15 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
             for value in available_values
             if (mapped_value := self.entity_description.device_to_ha(value))
         ]
-        # use base implementation from MatterAttributeSelectEntity to set the current option
+        # use base implementation from
+        # MatterAttributeSelectEntity to set the current option
         super()._update_from_device()
 
 
 class MatterModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a select entity from Matter (Mode) Cluster attribute(s)."""
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         cluster: SelectCluster = self._endpoint.get_cluster(
@@ -168,6 +178,7 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             break
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # NOTE: cluster can be ModeSelect or a variant of that,
@@ -183,12 +194,37 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             self._attr_name = desc
 
 
+class MatterChimeSelectEntity(MatterAttributeSelectEntity):
+    """Representation of a select entity for the Chime cluster's SelectedChime attribute."""
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected chime sound."""
+        cluster: clusters.Chime = self._endpoint.get_cluster(clusters.Chime)
+        for sound in cluster.installedChimeSounds:
+            if sound.name != option:
+                continue
+            await self.write_attribute(value=sound.chimeID)
+            break
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        cluster: clusters.Chime = self._endpoint.get_cluster(clusters.Chime)
+        chime_sounds = {
+            sound.chimeID: sound.name for sound in cluster.installedChimeSounds
+        }
+        self._attr_options = list(chime_sounds.values())
+        self._attr_current_option = chime_sounds.get(cluster.selectedChime)
+
+
 class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a Door Lock Operating Mode select entity.
 
     This entity dynamically filters available operating modes based on the device's
     `SupportedOperatingModes` bitmap attribute. In this bitmap, bit=0 indicates a
-    supported mode and bit=1 indicates unsupported (inverted from typical bitmap conventions).
+    supported mode and bit=1 indicates unsupported (inverted from typical conventions).
     If the bitmap is unavailable, only mandatory modes are included. The mapping from
     bitmap bits to operating mode values is defined by the Matter specification.
     """
@@ -196,6 +232,7 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
     entity_description: MatterMapSelectEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # Get the bitmap of supported operating modes
@@ -226,10 +263,11 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
 
 
 class MatterListSelectEntity(MatterEntity, SelectEntity):
-    """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
+    """Select entity from Matter list and selected item attributes."""
 
     entity_description: MatterListSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         option_id = self._attr_options.index(option)
@@ -249,6 +287,7 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         list_values_raw = self.get_matter_attribute_value(
@@ -563,14 +602,36 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
+            key="ChimeSelectedChime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="selected_chime",
+        ),
+        entity_class=MatterChimeSelectEntity,
+        required_attributes=(
+            clusters.Chime.Attributes.SelectedChime,
+            clusters.Chime.Attributes.InstalledChimeSounds,
+        ),
+        # don't discover this entry if the installed chime sounds list is empty
+        secondary_value_is_not=[],
+    ),
+    # Keep the legacy vendor-specific select entities until HA 2026.11.0,
+    # so existing users can migrate before we remove them in favor of the
+    # generic number slider.
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
             key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
-                0: "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
-                1: "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
-                2: "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
+                # CurrentSensitivityLevel=0 / highest
+                0: "10 mm",
+                # CurrentSensitivityLevel=1 / medium
+                1: "20 mm",
+                # CurrentSensitivityLevel=2 / lowest
+                2: "30 mm",
             }.get,
             ha_to_device={
                 "10 mm": 0,
@@ -584,12 +645,14 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4447,),
         product_id=(8194,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
             device_to_ha={
@@ -612,12 +675,14 @@ DISCOVERY_SCHEMAS = [
             8197,
             8195,
         ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
             device_to_ha={
@@ -637,6 +702,7 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4619,),
         product_id=(4097,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -653,5 +719,45 @@ DISCOVERY_SCHEMAS = [
             clusters.DoorLock.Attributes.OperatingMode,
             clusters.DoorLock.Attributes.SupportedOperatingModes,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoSwitchType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_type",
+            options=["switch", "button"],
+            device_to_ha={
+                0: "button",
+                1: "switch",
+            }.get,
+            ha_to_device={
+                "button": 0,
+                "switch": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.SwitchType,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoDirectlyConnected",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_connection_mode",
+            options=["directly_connected", "matter_only"],
+            device_to_ha={
+                True: "directly_connected",
+                False: "matter_only",
+            }.get,
+            ha_to_device={
+                "directly_connected": True,
+                "matter_only": False,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.DirectlyConnected,),
+        vendor_id=(5428,),
     ),
 ]

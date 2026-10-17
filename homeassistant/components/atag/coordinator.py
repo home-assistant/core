@@ -3,6 +3,7 @@
 from asyncio import timeout
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyatag import AtagException, AtagOne
 
@@ -37,6 +38,7 @@ class AtagDataUpdateCoordinator(DataUpdateCoordinator[None]):
             device=config_entry.unique_id,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data via library."""
         async with timeout(20):

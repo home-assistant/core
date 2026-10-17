@@ -30,7 +30,7 @@ async def test_mqtt_config_single_instance(
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
-    """When an MQTT message is received on the discovery topic, it triggers a config flow."""
+    """Test MQTT message on discovery topic triggers a config flow."""
     discovery_info = MqttServiceInfo(
         topic="inels/status/MAC_ADDRESS/gw",
         payload='{"CUType":"CU3-08M","Status":"Runfast","FW":"02.97.18"}',
@@ -53,6 +53,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
     mock_setup_entry.assert_called_once()
 
 
@@ -136,6 +137,7 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
     mock_setup_entry.assert_called_once()
 
 

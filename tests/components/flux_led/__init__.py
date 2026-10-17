@@ -1,11 +1,9 @@
 """Tests for the flux_led integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from contextlib import contextmanager
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led import DeviceType
@@ -70,7 +68,7 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     id=FLUX_MAC_ADDRESS,
     model_num=MODEL_NUM,
     version_num=0x04,
-    firmware_date=datetime.date(2021, 5, 5),
+    firmware_date=dt.date(2021, 5, 5),
     model_info=MODEL,
     model_description=MODEL_DESCRIPTION,
     remote_access_enabled=True,

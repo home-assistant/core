@@ -1,11 +1,9 @@
 """Config flow for Local To-do integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.util import slugify
@@ -14,9 +12,9 @@ from .const import CONF_STORAGE_KEY, CONF_TODO_LIST_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TODO_LIST_NAME): str,
+        probatio.Required(CONF_TODO_LIST_NAME): str,
     }
 )
 
@@ -26,6 +24,7 @@ class LocalTodoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -158,10 +158,10 @@ async def test_duplicate_entry(
         (PowerfoxAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_exceptions(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -187,11 +187,11 @@ async def test_user_flow_exceptions(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test re-authentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -218,11 +218,11 @@ async def test_step_reauth(
         (PowerfoxAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth_exceptions(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -254,11 +254,11 @@ async def test_step_reauth_exceptions(
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
@@ -286,11 +286,11 @@ async def test_reconfigure_flow(
         (PowerfoxAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_exceptions(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -324,11 +324,11 @@ async def test_reconfigure_flow_exceptions(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_unique_id_mismatch(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfiguration aborts on unique ID mismatch."""
 

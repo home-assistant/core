@@ -1,11 +1,12 @@
 """The Teslemetry integration models."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
+from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -36,7 +37,7 @@ class TeslemetryData:
 class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     poll: bool
@@ -45,16 +46,23 @@ class TeslemetryVehicleData:
     vin: str
     firmware: str
     device: DeviceInfo
+    # Set exactly when the vehicle has a Bluetooth subentry; ble_api is
+    # additionally None when the private key could not be loaded.
+    ble_address: str | None
+    ble_api: VehicleBluetooth | None
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 @dataclass
 class TeslemetryEnergyData:
-    """Data for a vehicle in the Teslemetry integration."""
+    """Data for an energy site in the Teslemetry integration."""
 
-    api: EnergySite
+    api: EnergySite | EnergySiteRouter
     live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
+    # Only sites with a battery/Powerwall can pair for local TEDAPI control.
+    can_local_control: bool
+    subentry_id: str | None

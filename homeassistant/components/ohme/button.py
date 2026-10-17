@@ -1,10 +1,8 @@
 """Platform for button."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, ChargerStatus, OhmeApiClient
 
@@ -58,6 +56,7 @@ class OhmeButton(OhmeEntity, ButtonEntity):
 
     entity_description: OhmeButtonDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

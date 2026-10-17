@@ -71,7 +71,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
-TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
+TV_ENTITY_ID = f"{MP_DOMAIN}.living_room_58_onn_roku_tv"
 
 
 async def test_setup(
@@ -660,7 +660,9 @@ async def test_services_play_media_local_source(
         {
             ATTR_ENTITY_ID: MAIN_ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+            ATTR_MEDIA_CONTENT_ID: (
+                "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+            ),
         },
         blocking=True,
     )
@@ -808,7 +810,8 @@ async def test_media_browse_internal(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("example.local", 8123),
     ):
         await client.send_json(
             {
@@ -953,7 +956,7 @@ async def test_media_browse_local_source(
     assert msg["result"]["title"] == "media"
     assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] == ""
-    assert len(msg["result"]["children"]) == 2
+    assert len(msg["result"]["children"]) == 3
 
     assert msg["result"]["children"][0]["title"] == "Epic Sax Guy 10 Hours.mp4"
     assert msg["result"]["children"][0]["media_class"] == MediaClass.VIDEO

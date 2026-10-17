@@ -2,12 +2,14 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage, EventType
 from google_nest_sdm.traits import TraitType
 
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -42,7 +44,7 @@ ENTITY_DESCRIPTIONS = [
         key=EVENT_DOORBELL_CHIME,
         translation_key="chime",
         device_class=EventDeviceClass.DOORBELL,
-        event_types=[EVENT_DOORBELL_CHIME],
+        event_types=[DoorbellEventType.RING],
         trait_types=[TraitType.DOORBELL_CHIME],
         api_event_types=[EventType.DOORBELL_CHIME],
     ),
@@ -80,7 +82,7 @@ async def async_setup_entry(
 
 
 class NestTraitEventEntity(EventEntity):
-    """Nest doorbell event entity."""
+    """Nest event entity for event entity descriptions."""
 
     entity_description: NestEventEntityDescription
     _attr_has_entity_name = True
@@ -113,6 +115,9 @@ class NestTraitEventEntity(EventEntity):
                 # This event is a duplicate message in the same thread
                 return
 
+            if event_type == EVENT_DOORBELL_CHIME:
+                event_type = DoorbellEventType.RING
+
             self._trigger_event(
                 event_type,
                 {"nest_event_id": nest_event_id},
@@ -120,6 +125,7 @@ class NestTraitEventEntity(EventEntity):
             self.async_write_ha_state()
             return
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to attach an event listener."""
         self.async_on_remove(self._device.add_event_callback(self._async_handle_event))

@@ -1,9 +1,6 @@
 """The slack integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-import logging
 
 from aiohttp.client_exceptions import ClientError
 from slack_sdk.errors import SlackApiError
@@ -12,7 +9,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -24,8 +21,6 @@ from .const import (
     DOMAIN,
     SLACK_DATA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
@@ -49,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> None:
     """Set up Slack from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
     slack = AsyncWebClient(
@@ -60,8 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> boo
         res = await slack.auth_test()
     except (SlackApiError, ClientError) as ex:
         if isinstance(ex, SlackApiError) and ex.response["error"] == "invalid_auth":
-            _LOGGER.error("Invalid API key")
-            return False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from ex
         raise ConfigEntryNotReady("Error while setting up integration") from ex
 
     entry.runtime_data = SlackData(
@@ -90,5 +87,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
-
-    return True

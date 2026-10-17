@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_1-entry]
+# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_1_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.device_1',
+    'entity_id': 'update.device_1_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Firmware',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,33 +36,33 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_1-state]
+# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_1_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': '/api/brands/integration/unifi/icon.png',
-      'friendly_name': 'Device 1',
-      'in_progress': False,
-      'installed_version': '4.0.42.10433',
-      'latest_version': '4.3.17.11279',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 5>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/unifi/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '4.0.42.10433',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '4.3.17.11279',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.device_1',
+    'entity_id': 'update.device_1_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_2-entry]
+# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_2_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.device_2',
+    'entity_id': 'update.device_2_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,12 +84,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Firmware',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -99,33 +99,33 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_2-state]
+# name: test_entity_and_device_data[site_payload0-device_payload0][update.device_2_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': '/api/brands/integration/unifi/icon.png',
-      'friendly_name': 'Device 2',
-      'in_progress': False,
-      'installed_version': '4.0.42.10433',
-      'latest_version': '4.0.42.10433',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 5>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/unifi/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 2 Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '4.0.42.10433',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '4.0.42.10433',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.device_2',
+    'entity_id': 'update.device_2_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_1-entry]
+# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_1_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -139,7 +139,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.device_1',
+    'entity_id': 'update.device_1_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -147,12 +147,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Firmware',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -162,33 +162,33 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_1-state]
+# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_1_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': '/api/brands/integration/unifi/icon.png',
-      'friendly_name': 'Device 1',
-      'in_progress': False,
-      'installed_version': '4.0.42.10433',
-      'latest_version': '4.3.17.11279',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 4>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/unifi/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '4.0.42.10433',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '4.3.17.11279',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 4>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.device_1',
+    'entity_id': 'update.device_1_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_2-entry]
+# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_2_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -202,7 +202,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.device_2',
+    'entity_id': 'update.device_2_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -210,12 +210,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Firmware',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -225,26 +225,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_2-state]
+# name: test_entity_and_device_data[site_payload1-device_payload0][update.device_2_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': '/api/brands/integration/unifi/icon.png',
-      'friendly_name': 'Device 2',
-      'in_progress': False,
-      'installed_version': '4.0.42.10433',
-      'latest_version': '4.0.42.10433',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 4>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/unifi/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 2 Firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '4.0.42.10433',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '4.0.42.10433',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 4>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.device_2',
+    'entity_id': 'update.device_2_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -5,8 +5,15 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
 
-from hass_nabucasa import Cloud, payments_api
-from hass_nabucasa.auth import CognitoAuth
+from hass_nabucasa import (
+    AutoLoginController,
+    Cloud,
+    CloudEventBus,
+    LoginEvent,
+    LogoutEvent,
+    payments_api,
+)
+from hass_nabucasa.auth import AlreadyLoggedIn, CognitoAuth
 from hass_nabucasa.cloudhooks import Cloudhooks
 from hass_nabucasa.const import DEFAULT_SERVERS, DEFAULT_VALUES, STATE_CONNECTED
 from hass_nabucasa.files import Files
@@ -14,6 +21,7 @@ from hass_nabucasa.google_report_state import GoogleReportState
 from hass_nabucasa.ice_servers import IceServers
 from hass_nabucasa.iot import CloudIoT
 from hass_nabucasa.remote import RemoteUI
+from hass_nabucasa.stt_v2 import SpeechToTextV2
 from hass_nabucasa.voice import Voice
 import jwt
 import pytest
@@ -30,6 +38,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
+
+ID_TOKEN_SIGNING_KEY = "cloud-test-id-token-signing-key-0"
 
 
 @pytest.fixture(autouse=True)
@@ -69,15 +79,20 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             latency_by_location={},
         )
         mock_cloud.auth = MagicMock(spec=CognitoAuth)
+        mock_cloud.events = CloudEventBus()
         mock_cloud.iot = MagicMock(
-            spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED
+            spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED, tries=0
+        )
+        mock_cloud.stt_v2 = MagicMock(
+            spec=SpeechToTextV2,
+            resolve_language=SpeechToTextV2.resolve_language,
         )
         mock_cloud.voice = MagicMock(spec=Voice)
         mock_cloud.files = MagicMock(spec=Files)
         mock_cloud.started = None
         mock_cloud.payments = MagicMock(
             spec=payments_api.PaymentsApi,
-            subscription_info=AsyncMock(),
+            subscription_info=AsyncMock(return_value={"provider": None}),
             migrate_paypal_agreement=AsyncMock(),
         )
         mock_cloud.ice_servers = MagicMock(
@@ -87,6 +102,30 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             ),
         )
         mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
+
+        def mock_register_and_auto_login(
+            email: str,
+            password: str,
+            *,
+            client_metadata: dict[str, str] | None = None,
+        ) -> AutoLoginController:
+            """Mock registering, handing back a freshly started controller.
+
+            A distinct controller per call, like the real Cloud, so a test can tell a
+            replaced registration from one that was left in place.
+            """
+            if mock_cloud.is_logged_in:
+                raise AlreadyLoggedIn(
+                    "Cannot register and auto-login while already logged in."
+                )
+            return AutoLoginController(
+                email=email.lower(),
+                cancel=MagicMock(),
+                attempt_now=MagicMock(),
+                resend=AsyncMock(),
+            )
+
+        mock_cloud.register_and_auto_login.side_effect = mock_register_and_auto_login
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any
@@ -160,6 +199,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             password: str,
             *,
             check_connection: bool = False,
+            auto: bool = False,
         ) -> None:
             """Mock login.
 
@@ -171,17 +211,32 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
                     "custom:sub-exp": "2018-01-03",
                     "cognito:username": "abcdefghjkl",
                 },
-                "test",
+                ID_TOKEN_SIGNING_KEY,
             )
             mock_cloud.access_token = "test_access_token"
             mock_cloud.refresh_token = "test_refresh_token"
             on_start_callback = mock_cloud.register_on_start.call_args[0][0]
             await on_start_callback()
+            await mock_cloud.events.publish(LoginEvent(auto=auto))
 
         mock_cloud.login.side_effect = mock_login
 
+        async def mock_login_verify_totp(
+            email: str,
+            code: str,
+            mfa_tokens: dict[str, Any],
+            *,
+            check_connection: bool = False,
+        ) -> None:
+            """Mock verifying a TOTP code, which logs in like a password does."""
+            await mock_login(email, "mock-password", check_connection=check_connection)
+
+        mock_cloud.login_verify_totp.side_effect = mock_login_verify_totp
+
         async def mock_logout() -> None:
             """Mock logout."""
+            # The real Cloud publishes LOGOUT before clearing state.
+            await mock_cloud.events.publish(LogoutEvent())
             mock_cloud.id_token = None
             mock_cloud.access_token = None
             mock_cloud.refresh_token = None
@@ -258,7 +313,7 @@ def mock_cloud_login(hass: HomeAssistant, mock_cloud_setup: None) -> Generator[N
             "custom:sub-exp": "2300-01-03",
             "cognito:username": "abcdefghjkl",
         },
-        "test",
+        ID_TOKEN_SIGNING_KEY,
     )
     with patch.object(hass.data[DATA_CLOUD].auth, "async_check_token"):
         yield
@@ -283,5 +338,5 @@ def mock_expired_cloud_login(hass: HomeAssistant, mock_cloud_setup: None) -> Non
             "custom:sub-exp": "2018-01-01",
             "cognito:username": "abcdefghjkl",
         },
-        "test",
+        ID_TOKEN_SIGNING_KEY,
     )

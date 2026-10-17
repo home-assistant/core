@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.webhook import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
@@ -16,7 +17,7 @@ from tests.typing import ClientSessionGenerator
 async def setup_http(hass: HomeAssistant) -> None:
     """Set up http."""
     assert await async_setup_component(hass, "http", {})
-    assert await async_setup_component(hass, "webhook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
 

@@ -1,11 +1,10 @@
 """The tests for the Landis+Gyr Heat Meter sensor platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import serial
 from syrupy.assertion import SnapshotAssertion
 from ultraheat_api.response import HeatMeterResponse
 
@@ -48,7 +47,7 @@ MOCK_RESPONSE_GJ = {
     "fault_hours_previous_year": 5,
     "yearly_set_day": "01-01",
     "monthly_set_day": "01",
-    "meter_date_time": dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
+    "meter_date_time": dt_util.as_utc(dt.datetime(2022, 5, 19, 19, 41, 17)),
     "measuring_range_m3ph": 1.5,
     "settings_and_firmware": "0 1 0 0000 CECV CECV 1 5.16 5.16 F 101008 040404 08 0",
     "flow_hours": 30242,
@@ -80,7 +79,7 @@ MOCK_RESPONSE_MWH = {
     "fault_hours_previous_year": 5,
     "yearly_set_day": "01-01",
     "monthly_set_day": "01",
-    "meter_date_time": dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
+    "meter_date_time": dt_util.as_utc(dt.datetime(2022, 5, 19, 19, 41, 17)),
     "measuring_range_m3ph": 1.5,
     "settings_and_firmware": "0 1 0 0000 CECV CECV 1 5.16 5.16 F 101008 040404 08 0",
     "flow_hours": 30242,
@@ -151,7 +150,7 @@ async def test_exception_on_polling(
     assert state.state == "123.0"
 
     # Now 'disable' the connection and wait for polling and see if it fails
-    mock_heat_meter().read.side_effect = serial.SerialException
+    mock_heat_meter().read.side_effect = TimeoutError
     freezer.tick(POLLING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

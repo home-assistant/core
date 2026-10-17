@@ -1,6 +1,6 @@
 """Test DSMR diagnostics."""
 
-import datetime
+import datetime as dt
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -33,6 +33,7 @@ async def test_diagnostics(
         "dsmr_version": "2.2",
         "serial_id": "1234",
         "serial_id_gas": "5678",
+        "encryption_key": "aabbccddeeff00112233445566778899",
     }
     entry_options = {
         "time_between_update": 0,
@@ -57,7 +58,7 @@ async def test_diagnostics(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m³"},
             ],
         ),

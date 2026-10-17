@@ -1,13 +1,11 @@
 """Config flow for Rollease Acmeda Automate Pulse Hub."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 import aiopulse
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID
@@ -24,6 +22,7 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.discovered_hubs: dict[str, aiopulse.Hub] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,9 +58,9 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ID): vol.In(
+                    probatio.Required(CONF_ID): probatio.In(
                         {hub.id: f"{hub.id} {hub.host}" for hub in hubs}
                     )
                 }

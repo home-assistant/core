@@ -1,7 +1,5 @@
 """Diagnostics support for Forecast.Solar integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -38,7 +36,9 @@ async def async_get_config_entry_diagnostics(
         },
         "data": {
             "energy_production_today": coordinator.data.energy_production_today,
-            "energy_production_today_remaining": coordinator.data.energy_production_today_remaining,
+            "energy_production_today_remaining": (
+                coordinator.data.energy_production_today_remaining
+            ),
             "energy_production_tomorrow": coordinator.data.energy_production_tomorrow,
             "energy_current_hour": coordinator.data.energy_current_hour,
             "power_production_now": coordinator.data.power_production_now,

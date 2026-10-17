@@ -1,8 +1,8 @@
 """Config flow to configure the GeoNet NZ Volcano integration."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -39,8 +39,8 @@ class GeonetnzVolcanoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema(
-            {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
+        data_schema = probatio.Schema(
+            {probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
         )
 
         return self.async_show_form(
@@ -51,6 +51,7 @@ class GeonetnzVolcanoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

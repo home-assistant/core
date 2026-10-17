@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import override
 
 from aioautomower.model import SingleMessageData
 
@@ -10,6 +11,7 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 ATTR_SEVERITY = "severity"
-ATTR_LATITUDE = "latitude"
-ATTR_LONGITUDE = "longitude"
 ATTR_DATE_TIME = "date_time"
 
 
@@ -98,13 +98,14 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return self.websocket_alive and self.mower_id in self.coordinator.data
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
-        """Handle a message event from the API and trigger the event entity if it matches the entity's mower ID."""
+        """Handle a message event from the API and trigger for matching mower ID."""
         if msg.id != self.mower_id:
             return
         message = msg.attributes.message
@@ -119,12 +120,14 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added to hass."""
         await super().async_added_to_hass()
         self.coordinator.api.register_single_message_callback(self._handle)
         self.coordinator.websocket_callbacks.append(self._handle_websocket_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister WebSocket callback when entity is removed."""
         self.coordinator.api.unregister_single_message_callback(self._handle)

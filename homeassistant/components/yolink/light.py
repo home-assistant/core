@@ -1,29 +1,25 @@
 """YoLink Dimmer."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_DIMMER
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Dimmer from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     entities = [
         YoLinkDimmerEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
@@ -41,7 +37,7 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
     ) -> None:
         """Init YoLink Dimmer entity."""
@@ -49,6 +45,7 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         self._attr_unique_id = f"{coordinator.device.device_id}"
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         if (dimmer_state := state.get("state")) is not None:
@@ -68,11 +65,13 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         self._attr_is_on = state == "open"
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         await self.toggle_light_state("open", brightness)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.toggle_light_state("close", None)

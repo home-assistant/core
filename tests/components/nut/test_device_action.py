@@ -41,7 +41,7 @@ async def test_get_all_actions_for_specified_user(
         list_vars={"ups.status": "OL"},
         list_commands_return_value=list_commands_return_value,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
     expected_actions = [
         {
             "domain": DOMAIN,
@@ -71,7 +71,7 @@ async def test_no_actions_for_anonymous_user(
         list_vars={"ups.status": "OL"},
         list_commands_return_value=list_commands_return_value,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
@@ -110,7 +110,7 @@ async def test_no_actions_device_invalid(
         list_vars={"ups.status": "OL"},
         list_commands_return_value=list_commands_return_value,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -131,7 +131,7 @@ async def test_list_commands_exception(
         hass, list_vars={"ups.status": "OL"}, list_commands_side_effect=NUTError
     )
 
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
@@ -152,7 +152,7 @@ async def test_unsupported_command(
         list_vars={"ups.status": "OL"},
         list_commands_return_value=list_commands_return_value,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
@@ -174,7 +174,7 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
         list_commands_return_value=list_commands_return_value,
         run_command=run_command,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
 
     assert await async_setup_component(
         hass,
@@ -232,7 +232,7 @@ async def test_run_command_exception(
         list_commands_return_value={command_name: None},
         run_command=run_command,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
 
     platform = await device_automation.async_get_device_automation_platform(
         hass, DOMAIN, DeviceAutomationType.ACTION
@@ -315,7 +315,7 @@ async def test_action_exception_device_invalid(
         list_vars={"ups.status": "OL"},
         list_commands_return_value=list_commands_return_value,
     )
-    device_entry = next(device for device in device_registry.devices.values())
+    device_entry = next(device for device in device_registry.devices)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

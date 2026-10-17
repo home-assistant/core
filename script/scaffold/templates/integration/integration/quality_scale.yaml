@@ -8,9 +8,11 @@ rules:
   config-flow: todo
   dependency-transparency: todo
   docs-actions: todo
+  docs-conditions: todo
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
+  docs-triggers: todo
   entity-event-setup: todo
   entity-unique-id: todo
   has-entity-name: todo

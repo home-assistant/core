@@ -22,7 +22,6 @@ from wyoming.info import (
     WakeProgram,
 )
 
-from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.core import HomeAssistant
 
@@ -63,6 +62,59 @@ TTS_INFO = Info(
                     attribution=TEST_ATTR,
                     languages=["en-US"],
                     speakers=[TtsVoiceSpeaker(name="Test Speaker")],
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ]
+)
+TTS_INFO_NEW_VOICE = Info(
+    tts=[
+        TtsProgram(
+            name="Test TTS",
+            description="Test TTS",
+            installed=True,
+            attribution=TEST_ATTR,
+            voices=[
+                TtsVoice(
+                    name="Test Voice",
+                    description="Test Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    speakers=[TtsVoiceSpeaker(name="Test Speaker")],
+                    version=None,
+                ),
+                TtsVoice(
+                    name="New Voice",
+                    description="New Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["de-DE"],
+                    speakers=None,
+                    version=None,
+                ),
+            ],
+            version=None,
+        )
+    ]
+)
+TTS_INFO_LANGUAGE_REPLACED = Info(
+    tts=[
+        TtsProgram(
+            name="Test TTS",
+            description="Test TTS",
+            installed=True,
+            attribution=TEST_ATTR,
+            voices=[
+                TtsVoice(
+                    name="New Voice",
+                    description="New Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["de-DE"],
+                    speakers=None,
                     version=None,
                 )
             ],
@@ -236,4 +288,6 @@ async def reload_satellite(
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_reload(config_entry_id)
 
-    return hass.data[DOMAIN][config_entry_id].device
+    entry = hass.config_entries.async_get_entry(config_entry_id)
+    assert entry is not None
+    return entry.runtime_data.device

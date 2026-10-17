@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -82,15 +82,18 @@ class PranaSwitch(PranaBaseEntity, SwitchEntity):
     entity_description: PranaSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return switch on/off state."""
         return self.entity_description.value_fn(self.coordinator)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api_client.set_switch(self.entity_description.key, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api_client.set_switch(self.entity_description.key, False)

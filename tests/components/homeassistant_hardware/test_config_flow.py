@@ -14,7 +14,7 @@ from ha_silabs_firmware_client import (
     FirmwareUpdateClient,
 )
 import pytest
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.homeassistant_hardware.const import (
@@ -30,6 +30,7 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
 )
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -65,7 +66,7 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     @staticmethod
     @callback
@@ -129,7 +130,7 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
 class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
     """Options flow for `test_firmware_domain`."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
@@ -336,9 +337,7 @@ def mock_firmware_info(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient",
             return_value=mock_update_client,
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware",
             side_effect=mock_flash_firmware,
@@ -357,7 +356,7 @@ async def consume_progress_flow(
         result = await hass.config_entries.flow.async_configure(flow_id)
         flow_id = result["flow_id"]
 
-        if result["type"] != FlowResultType.SHOW_PROGRESS:
+        if result["type"] is not FlowResultType.SHOW_PROGRESS:
             break
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1075,7 +1074,8 @@ async def test_config_flow_pick_firmware_shows_migrate_options_with_existing_zha
     assert init_result["type"] is FlowResultType.MENU
     assert init_result["step_id"] == "pick_firmware"
 
-    # Should show migrate option for Zigbee since ZHA exists (migrating from ZHA to Zigbee)
+    # Should show migrate option for Zigbee since ZHA exists (migrating from ZHA to
+    # Zigbee)
     menu_options = init_result["menu_options"]
     assert "pick_firmware_zigbee_migrate" in menu_options
     assert "pick_firmware_thread" in menu_options  # Normal option for Thread
@@ -1100,7 +1100,8 @@ async def test_config_flow_pick_firmware_shows_migrate_options_with_existing_otb
     assert init_result["type"] is FlowResultType.MENU
     assert init_result["step_id"] == "pick_firmware"
 
-    # Should show migrate option for Thread since OTBR exists (migrating from OTBR to Thread)
+    # Should show migrate option for Thread since OTBR exists (migrating from OTBR to
+    # Thread)
     menu_options = init_result["menu_options"]
     assert "pick_firmware_thread_migrate" in menu_options
     assert "pick_firmware_zigbee" in menu_options  # Normal option for Zigbee

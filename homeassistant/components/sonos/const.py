@@ -1,8 +1,6 @@
 """Const for Sonos."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.const import Platform
@@ -13,6 +11,7 @@ DOMAIN = "sonos"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
@@ -161,6 +160,7 @@ PLAYABLE_MEDIA_TYPES = [
 
 SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
+SONOS_CREATE_BUTTON = "sonos_create_button"
 SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
@@ -206,10 +206,13 @@ ATTR_DIALOG_LEVEL = "dialog_level"
 ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
 ATTR_QUEUE_POSITION = "queue_position"
 
-AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
+AVAILABILITY_CHECK_INTERVAL = dt.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
-BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
-DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
+BATTERY_SCAN_INTERVAL = dt.timedelta(minutes=15)
+SCAN_INTERVAL = dt.timedelta(seconds=10)
+DISCOVERY_INTERVAL = dt.timedelta(seconds=60)
 SUBSCRIPTION_TIMEOUT = 1200
 LONG_SERVICE_TIMEOUT = 30.0
+
+# Same as the Plex integration, which is only imported when used
+PLEX_URI_SCHEME = "plex://"

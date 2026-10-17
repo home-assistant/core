@@ -1,7 +1,5 @@
 """Diagnostics support for VeSync."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyvesync import VeSync
@@ -9,7 +7,7 @@ from pyvesync import VeSync
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN
 from .coordinator import VesyncConfigEntry
@@ -39,7 +37,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: VesyncConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: VesyncConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     manager: VeSync = config_entry.runtime_data.manager

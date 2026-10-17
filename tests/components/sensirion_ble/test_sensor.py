@@ -1,7 +1,5 @@
 """Test the Sensirion BLE sensors."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.sensirion_ble.const import DOMAIN

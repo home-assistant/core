@@ -5,9 +5,7 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 
-from homeassistant.components.repairs.issue_handler import (  # noqa: F401
-    async_process_repairs_platforms,
-)
+from homeassistant.components.repairs import DOMAIN
 from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,
@@ -23,7 +21,7 @@ async def get_repairs(
     hass_ws_client: WebSocketGenerator,
 ):
     """Return the repairs list of issues."""
-    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()

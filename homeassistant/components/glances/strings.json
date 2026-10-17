@@ -50,6 +50,9 @@
       "disk_free": {
         "name": "{sensor_label} disk free"
       },
+      "disk_size": {
+        "name": "{sensor_label} disk size"
+      },
       "disk_usage": {
         "name": "{sensor_label} disk usage"
       },

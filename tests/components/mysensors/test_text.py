@@ -1,7 +1,5 @@
 """Provide tests for mysensors text platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock, call
 
@@ -15,6 +13,7 @@ from homeassistant.components.text import (
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 
 async def test_text_node(
@@ -54,7 +53,7 @@ async def test_text_node(
 
     value = "12345678123456781234567812"
 
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             TEXT_DOMAIN,
             SERVICE_SET_VALUE,

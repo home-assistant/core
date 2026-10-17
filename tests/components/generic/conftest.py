@@ -1,7 +1,5 @@
 """Test fixtures for the generic component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock, Mock, patch

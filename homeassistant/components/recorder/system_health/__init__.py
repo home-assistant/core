@@ -1,9 +1,8 @@
 """Provide info to system health."""
 
-from __future__ import annotations
-
 from typing import Any
-from urllib.parse import urlparse
+
+from sqlalchemy.engine.url import make_url
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
@@ -60,7 +59,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     instance = get_instance(hass)
 
     recorder_runs_manager = instance.recorder_runs_manager
-    database_name = urlparse(instance.db_url).path.lstrip("/")
+    database_name = make_url(instance.db_url).database or ""
     db_engine_info = _async_get_db_engine_info(instance)
     db_stats: dict[str, Any] = {}
 

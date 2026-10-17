@@ -1,6 +1,6 @@
 """Support for EZVIZ sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -35,11 +35,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "Seconds_Last_Trigger": SensorEntityDescription(
         key="Seconds_Last_Trigger",
         translation_key="seconds_last_trigger",
-        entity_registry_enabled_default=False,
-    ),
-    "last_alarm_pic": SensorEntityDescription(
-        key="last_alarm_pic",
-        translation_key="last_alarm_pic",
         entity_registry_enabled_default=False,
     ),
     "supported_channels": SensorEntityDescription(
@@ -101,6 +96,7 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
         return self.data[self._sensor_name]

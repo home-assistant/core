@@ -1,7 +1,5 @@
 """Test system log component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable
 import logging
@@ -11,6 +9,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components import system_log
+from homeassistant.components.system_log.const import SERVICE_CLEAR, SERVICE_WRITE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -145,7 +144,7 @@ async def test_warning(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) 
 async def test_warning_good_format(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that warning with good format arguments are logged and retrieved correctly."""
+    """Test warning with good format arguments are logged correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     _LOGGER.warning("Warning message: %s", "test")
@@ -158,7 +157,7 @@ async def test_warning_good_format(
 async def test_warning_missing_format_args(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that warning with missing format arguments are logged and retrieved correctly."""
+    """Test warning with missing format args are logged correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     _LOGGER.warning("Warning message missing a format arg %s")
@@ -298,7 +297,7 @@ async def test_clear_logs(
     await hass.async_block_till_done()
     _LOGGER.error("Error message")
 
-    await hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
+    await hass.services.async_call(system_log.DOMAIN, SERVICE_CLEAR, {})
     await hass.async_block_till_done()
     # Assert done by get_error_log
     await get_error_log(hass_ws_client)
@@ -312,7 +311,7 @@ async def test_write_log(hass: HomeAssistant) -> None:
     logger = MagicMock()
     with patch("logging.getLogger", return_value=logger) as mock_logging:
         await hass.services.async_call(
-            system_log.DOMAIN, system_log.SERVICE_WRITE, {"message": "test_message"}
+            system_log.DOMAIN, SERVICE_WRITE, {"message": "test_message"}
         )
         await hass.async_block_till_done()
     mock_logging.assert_called_once_with("homeassistant.components.system_log.external")
@@ -327,7 +326,7 @@ async def test_write_choose_logger(hass: HomeAssistant) -> None:
     with patch("logging.getLogger") as mock_logging:
         await hass.services.async_call(
             system_log.DOMAIN,
-            system_log.SERVICE_WRITE,
+            SERVICE_WRITE,
             {"message": "test_message", "logger": "myLogger"},
         )
         await hass.async_block_till_done()
@@ -343,7 +342,7 @@ async def test_write_choose_level(hass: HomeAssistant) -> None:
     with patch("logging.getLogger", return_value=logger):
         await hass.services.async_call(
             system_log.DOMAIN,
-            system_log.SERVICE_WRITE,
+            SERVICE_WRITE,
             {"message": "test_message", "level": "debug"},
         )
         await hass.async_block_till_done()

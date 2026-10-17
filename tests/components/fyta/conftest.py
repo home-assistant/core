@@ -34,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_fyta_connector():
-    """Build a fixture for the Fyta API that connects successfully and returns one device."""
+    """Build a fixture for the Fyta API that connects and returns one device."""
 
     plants: dict[int, Plant] = {
         0: Plant.from_dict(load_json_object_fixture("plant_status1.json", DOMAIN)),
@@ -87,7 +87,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_getrandbits():
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

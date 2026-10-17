@@ -1,7 +1,5 @@
 """Provides device automations for Tasmota."""
 
-from __future__ import annotations
-
 from hatasmota.const import AUTOMATION_TYPE_TRIGGER
 from hatasmota.models import DiscoveryHashType
 from hatasmota.trigger import TasmotaTrigger

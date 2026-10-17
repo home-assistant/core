@@ -1,7 +1,5 @@
 """The SMA integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pysma import SMAWebConnect
@@ -29,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 type SMAConfigEntry = ConfigEntry[SMADataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> None:
     """Set up sma from a config entry."""
 
     protocol = "https" if entry.data[CONF_SSL] else "http"
@@ -45,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     )
 
     coordinator = SMADataUpdateCoordinator(hass, entry, sma)
+    entry.async_on_unload(coordinator.async_close_sma_session)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -58,15 +57,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_handle_shutdown)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s", entry.version)
@@ -79,5 +76,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     _LOGGER.debug("Migration successful")
-
-    return True

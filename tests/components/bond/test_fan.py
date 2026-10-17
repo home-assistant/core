@@ -1,7 +1,5 @@
 """Tests for the Bond fan device."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import call
 
@@ -102,7 +100,7 @@ async def test_entity_registry(
 
 
 async def test_non_standard_speed_list(hass: HomeAssistant) -> None:
-    """Tests that the device is registered with custom speed list if number of supported speeds differs form 3."""
+    """Tests device is registered with custom speed list if speeds differ from 3."""
     await setup_platform(
         hass,
         FAN_DOMAIN,
@@ -132,7 +130,7 @@ async def test_non_standard_speed_list(hass: HomeAssistant) -> None:
 
 
 async def test_fan_speed_with_no_max_speed(hass: HomeAssistant) -> None:
-    """Tests that fans without max speed (increase/decrease controls) map speed to HA standard."""
+    """Tests fans without max speed (increase/decrease) map speed to HA standard."""
     await setup_platform(
         hass,
         FAN_DOMAIN,
@@ -416,7 +414,7 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_fan_on(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports fan power is on."""
+    """Tests that update sets correct state when Bond API reports fan power is on."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"power": 1, "speed": 1}):
@@ -427,7 +425,7 @@ async def test_update_reports_fan_on(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_fan_off(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports fan power is off."""
+    """Tests that update sets correct state when Bond API reports fan power is off."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"power": 0, "speed": 1}):
@@ -438,7 +436,7 @@ async def test_update_reports_fan_off(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_direction_forward(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct direction when Bond API reports fan direction is forward."""
+    """Tests update sets correct direction when Bond API reports forward."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"direction": Direction.FORWARD}):
@@ -449,7 +447,7 @@ async def test_update_reports_direction_forward(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_direction_reverse(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct direction when Bond API reports fan direction is reverse."""
+    """Tests update sets correct direction when Bond API reports reverse."""
     await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"direction": Direction.REVERSE}):

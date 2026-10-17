@@ -1,7 +1,5 @@
 """Test the Saunum climate platform."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from freezegun.api import FrozenDateTimeFactory

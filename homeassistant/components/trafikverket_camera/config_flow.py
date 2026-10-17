@@ -1,10 +1,9 @@
 """Adds config flow for Trafikverket Camera integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pytrafikverket import (
     CameraInfoModel,
     InvalidAuthentication,
@@ -12,7 +11,6 @@ from pytrafikverket import (
     TrafikverketCamera,
     UnknownError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -86,9 +84,9 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
                 }
             ),
             errors=errors,
@@ -112,20 +110,13 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.cameras = cameras
                     self.api_key = api_key
                     return await self.async_step_multiple_cameras()
-                await self.async_set_unique_id(f"{DOMAIN}-{cameras[0].camera_id}")
-                self._abort_if_unique_id_configured()
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    unique_id=f"{DOMAIN}-{cameras[0].camera_id}",
-                    title=cameras[0].camera_name or "Trafikverket Camera",
-                    data={CONF_API_KEY: api_key, CONF_ID: cameras[0].camera_id},
-                )
+                return await self._async_update_reconfigure_entry(api_key, cameras[0])
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(),
-                    vol.Required(CONF_LOCATION): TextSelector(),
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
+                    probatio.Required(CONF_LOCATION): TextSelector(),
                 }
             ),
             {**reconfigure_entry.data, **(user_input or {})},
@@ -137,6 +128,24 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def _async_update_reconfigure_entry(
+        self, api_key: str, camera: CameraInfoModel
+    ) -> ConfigFlowResult:
+        """Update the reconfigured entry with the selected camera."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        unique_id = f"{DOMAIN}-{camera.camera_id}"
+        # The core check would also match the entry being reconfigured
+        if unique_id != reconfigure_entry.unique_id:
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+        return self.async_update_reload_and_abort(
+            reconfigure_entry,
+            unique_id=unique_id,
+            title=camera.camera_name or "Trafikverket Camera",
+            data={CONF_API_KEY: api_key, CONF_ID: camera.camera_id},
+        )
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -163,10 +172,10 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(),
-                    vol.Required(CONF_LOCATION): TextSelector(),
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
+                    probatio.Required(CONF_LOCATION): TextSelector(),
                 }
             ),
             errors=errors,
@@ -184,14 +193,8 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors and cameras:
                 if self.source == SOURCE_RECONFIGURE:
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(),
-                        unique_id=f"{DOMAIN}-{cameras[0].camera_id}",
-                        title=cameras[0].camera_name or "Trafikverket Camera",
-                        data={
-                            CONF_API_KEY: self.api_key,
-                            CONF_ID: cameras[0].camera_id,
-                        },
+                    return await self._async_update_reconfigure_entry(
+                        self.api_key, cameras[0]
                     )
                 await self.async_set_unique_id(f"{DOMAIN}-{cameras[0].camera_id}")
                 self._abort_if_unique_id_configured()
@@ -203,16 +206,20 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         camera_choices = [
             SelectOptionDict(
                 value=f"{camera_info.camera_id}",
-                label=f"{camera_info.camera_id} - {camera_info.camera_name} - {camera_info.location}",
+                label=(
+                    f"{camera_info.camera_id}"
+                    f" - {camera_info.camera_name}"
+                    f" - {camera_info.location}"
+                ),
             )
             for camera_info in self.cameras
         ]
 
         return self.async_show_form(
             step_id="multiple_cameras",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ID): SelectSelector(
+                    probatio.Required(CONF_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=camera_choices, mode=SelectSelectorMode.LIST
                         )

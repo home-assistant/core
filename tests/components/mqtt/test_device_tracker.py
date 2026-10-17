@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import device_tracker, mqtt
+from homeassistant.components import device_tracker
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ from tests.typing import (
 )
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         device_tracker.DOMAIN: {
             "name": "test",
             "state_topic": "test-topic",
@@ -265,38 +265,45 @@ async def test_cleanup_device_tracker(
     )
     await hass.async_block_till_done()
 
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
+    )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
+    entity_entry = entity_registry.async_get("device_tracker.mqtt")
     assert entity_entry is not None
 
-    state = hass.states.get("device_tracker.mqtt_unique")
+    state = hass.states.get("device_tracker.mqtt")
     assert state is not None
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
+    )
     assert device_entry is None
-    entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
+    entity_entry = entity_registry.async_get("device_tracker.mqtt")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("device_tracker.mqtt_unique")
+    state = hass.states.get("device_tracker.mqtt")
     assert state is None
     await hass.async_block_till_done()
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_tracker/bla/config", None, 0, True
+        "homeassistant/device_tracker/bla/config",
+        None,
+        0,
+        True,
+        message_expiry_interval=None,
     )
 
 
@@ -344,7 +351,8 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template(
         "{"
         '"name": "test", '
         '"state_topic": "test-topic", '
-        '"value_template": "{% if value is equalto \\"proxy_for_home\\" %}home{% else %}not_home{% endif %}" '
+        '"value_template": "{% if value is equalto \\"proxy_for_home\\"'
+        ' %}home{% else %}not_home{% endif %}" '
         "}",
     )
     await hass.async_block_till_done()
@@ -431,7 +439,8 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5, "source_type": "router"}',
+        '{"latitude":32.87336,"longitude": -117.22743,'
+        ' "gps_accuracy":1.5, "source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
@@ -482,7 +491,8 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude": "32.87336","longitude": "-117.22743", "gps_accuracy": "1.5", "source_type": "router"}',
+        '{"latitude": "32.87336","longitude": "-117.22743",'
+        ' "gps_accuracy": "1.5", "source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert "latitude" not in state.attributes
@@ -497,7 +507,8 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude": 32.871234,"longitude": -117.21234, "gps_accuracy": "invalid", "source_type": "router"}',
+        '{"latitude": 32.871234,"longitude": -117.21234,'
+        ' "gps_accuracy": "invalid", "source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
@@ -510,7 +521,8 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude": null,"longitude": "-117.22743", "gps_accuracy": 1, "source_type": "router"}',
+        '{"latitude": null,"longitude": "-117.22743",'
+        ' "gps_accuracy": 1, "source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert "latitude" not in state.attributes
@@ -521,7 +533,8 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude": 32.87336,"longitude": "unknown", "gps_accuracy": 1, "source_type": "router"}',
+        '{"latitude": 32.87336,"longitude": "unknown",'
+        ' "gps_accuracy": 1, "source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert "latitude" not in state.attributes
@@ -683,7 +696,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 device_tracker.DOMAIN: {"name": "jan", "state_topic": "/location/jan"}
             }
         }
@@ -766,6 +779,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

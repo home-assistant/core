@@ -1,12 +1,10 @@
 """Data update coordination for Rainforest RAVEn devices."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import asdict
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioraven.data import DeviceInfo as RAVEnDeviceInfo
 from aioraven.device import RAVEnConnectionError
@@ -105,11 +103,13 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
             )
         return None
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
         await self._cleanup_device()
         await super().async_shutdown()
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             device = await self._get_device()
@@ -138,7 +138,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
                 await device.open()
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
-        except:
+        except BaseException:
             await device.abort()
             raise
 

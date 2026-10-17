@@ -5,6 +5,7 @@ from ipaddress import IPv4Network, ip_address
 import logging
 import secrets
 import string
+from typing import override
 
 from aiohttp.web_response import Response
 from telegram import Bot, Update
@@ -16,7 +17,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 
-from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .bot import ALLOWED_UPDATES, BaseTelegramBot, TelegramBotConfigEntry
 from .const import CONF_TRUSTED_NETWORKS
 from .helpers import get_base_url
 
@@ -69,7 +70,7 @@ def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
 
 
 class PushBot(BaseTelegramBot):
-    """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
+    """Handles push/webhook logic, passes updates to `self.handle_update`."""
 
     def __init__(
         self,
@@ -82,7 +83,8 @@ class PushBot(BaseTelegramBot):
         self.bot = bot
         self.trusted_networks = _get_trusted_networks(config)
         self.secret_token = secret_token
-        # Dumb Application that just gets our updates to our handler callback (self.handle_update)
+        # Application that gets our updates to our handler
+        # callback (self.handle_update)
         self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config, bot)
@@ -92,6 +94,7 @@ class PushBot(BaseTelegramBot):
         )
         self.webhook_url = self.base_url + _get_webhook_url(bot)
 
+    @override
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_application()
@@ -104,6 +107,7 @@ class PushBot(BaseTelegramBot):
             try:
                 return await self.bot.set_webhook(
                     self.webhook_url,
+                    allowed_updates=ALLOWED_UPDATES,
                     api_kwargs={"secret_token": self.secret_token},
                     connect_timeout=5,
                 )

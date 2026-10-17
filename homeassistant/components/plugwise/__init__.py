@@ -1,7 +1,5 @@
 """Plugwise platform for Home Assistant Core."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import Platform
@@ -12,7 +10,7 @@ from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> None:
     """Set up Plugwise components from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
@@ -35,19 +33,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> None:
     """Unload the Plugwise components."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    Migrates old unique ID's from old binary_sensors and switches to the new unique ID's.
+    Migrates old unique ID's from old binary_sensors and
+    switches to the new unique ID's.
     """
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"

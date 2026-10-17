@@ -1,7 +1,5 @@
 """Test the Melnor time platform."""
 
-from __future__ import annotations
-
 from datetime import time, timedelta
 
 from homeassistant.core import HomeAssistant

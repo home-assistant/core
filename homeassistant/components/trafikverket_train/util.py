@@ -1,10 +1,9 @@
 """Utils for trafikverket_train."""
 
-from __future__ import annotations
-
 from datetime import date, timedelta
 
 from homeassistant.const import WEEKDAYS
+from homeassistant.util import dt as dt_util
 
 
 def next_weekday(fromdate: date, weekday: int) -> date:
@@ -17,7 +16,7 @@ def next_weekday(fromdate: date, weekday: int) -> date:
 
 def next_departuredate(departure: list[str]) -> date:
     """Calculate the next departuredate from an array input of short days."""
-    today_date = date.today()
+    today_date = dt_util.now().date()
     today_weekday = date.weekday(today_date)
     if WEEKDAYS[today_weekday] in departure:
         return today_date

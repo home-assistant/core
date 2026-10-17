@@ -1,7 +1,5 @@
 """Serialization functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import json
 import logging
 from struct import error as StructError, pack, unpack_from

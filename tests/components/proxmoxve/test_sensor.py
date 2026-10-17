@@ -5,11 +5,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import PVEVMUSER_PERMISSIONS, setup_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -23,6 +23,7 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
+@pytest.mark.freeze_time("2026-05-03T12:00:00+00:00")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -68,3 +69,54 @@ async def test_storage_missing_used_fraction(
 
     state = hass.states.get("sensor.storage_local_storage_usage_percentage")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_sensors_according_to_permissions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that sensors are not created when not allowed."""
+    mock_proxmox_client.access.permissions.get.return_value = PVEVMUSER_PERMISSIONS
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    assert "sensor.pve1_status" in {e.entity_id for e in entries}
+    assert "sensor.pve1_cpu" not in {e.entity_id for e in entries}
+
+
+async def test_sensors_for_offline_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that node sensors except status are unavailable."""
+    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.pve3_status")
+    assert state.state == "offline"
+
+    state = hass.states.get("sensor.pve3_disk_usage")
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.pve4_status")
+    assert state.state == "unknown"
+
+    state = hass.states.get("sensor.pve4_disk_usage")
+    assert state.state == STATE_UNAVAILABLE

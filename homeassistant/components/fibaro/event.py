@@ -1,6 +1,6 @@
 """Support for Fibaro event entities."""
 
-from __future__ import annotations
+from typing import override
 
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent
 from pyfibaro.fibaro_state_resolver import FibaroEvent
@@ -55,6 +55,7 @@ class FibaroEventEntity(FibaroEntity, EventEntity):
         self._attr_event_types = scene_event.key_event_types
         self._attr_unique_id = f"{fibaro_device.unique_id_str}.{key_id}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()

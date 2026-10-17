@@ -1,9 +1,7 @@
 """Test configuration and mocks for the google integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-import datetime
+import datetime as dt
 import http
 import time
 from typing import Any
@@ -176,16 +174,14 @@ def token_scopes() -> list[str]:
 
 
 @pytest.fixture
-def token_expiry() -> datetime.datetime:
+def token_expiry() -> dt.datetime:
     """Expiration time for credentials used in the test."""
     # OAuth library returns an offset-naive timestamp
-    return dt_util.utcnow().replace(tzinfo=None) + datetime.timedelta(hours=1)
+    return dt_util.utcnow().replace(tzinfo=None) + dt.timedelta(hours=1)
 
 
 @pytest.fixture
-def creds(
-    token_scopes: list[str], token_expiry: datetime.datetime
-) -> OAuth2Credentials:
+def creds(token_scopes: list[str], token_expiry: dt.datetime) -> OAuth2Credentials:
     """Fixture that defines creds used in the test."""
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",
@@ -361,6 +357,8 @@ def component_setup(
             ClientCredential("client-id", "client-secret"),
         )
         config_entry.add_to_hass(hass)
-        return await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        return result
 
     return _setup_func

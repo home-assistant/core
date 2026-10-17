@@ -1,0 +1,308 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 34850,
+      "animationType": 0,
+      "names": ["Eethoek", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 67442,
+      "animationType": 0,
+      "names": ["Keuken rechts", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 157754,
+      "animationType": 0,
+      "names": ["Keuken midden", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 226998,
+      "animationType": 0,
+      "names": ["Keuken links", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 278272,
+      "animationType": 0,
+      "names": ["Woonkamer", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 375144,
+      "animationType": 0,
+      "names": ["Alles", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 413716,
+      "animationType": 0,
+      "names": ["Keuken alle", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 47092,
+      "name": "Zonwering begane grond",
+      "destinations": [34850, 67442, 157754, 226998, 278272, 375144, 413716],
+      "scenes": []
+    },
+    {
+      "id": 87070,
+      "name": "Scenes Home assistant",
+      "destinations": [],
+      "scenes": [
+        663738, 757810, 819034, 863493, 951219, 1006709, 1083816, 1147920
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": 663738,
+      "names": ["Alle zonwering actief", "", "", ""]
+    },
+    {
+      "id": 757810,
+      "names": ["Alle zonwering inactief", "", "", ""]
+    },
+    {
+      "id": 819034,
+      "names": ["Eetkamer actief", "", "", ""]
+    },
+    {
+      "id": 863493,
+      "names": ["Eetkamer inactief", "", "", ""]
+    },
+    {
+      "id": 951219,
+      "names": ["Woonkamer actief", "", "", ""]
+    },
+    {
+      "id": 1006709,
+      "names": ["Woonkamer inactief", "", "", ""]
+    },
+    {
+      "id": 1083816,
+      "names": ["Keuken actief", "", "", ""]
+    },
+    {
+      "id": 1147920,
+      "names": ["Keuken inactief", "", "", ""]
+    }
+  ]
+}

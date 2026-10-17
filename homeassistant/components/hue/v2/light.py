@@ -1,9 +1,7 @@
 """Support for Hue lights."""
 
-from __future__ import annotations
-
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -72,7 +70,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
 
@@ -125,6 +123,7 @@ class HueLight(HueBaseEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if dimming := self.resource.dimming:
@@ -133,11 +132,13 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self.resource.on.on
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
@@ -154,7 +155,8 @@ class HueLight(HueBaseEntity, LightEntity):
     def color_temp_active(self) -> bool:
         """Return if the light is in Color Temperature mode."""
         color_temp = self.resource.color_temperature
-        if color_temp is None or color_temp.mirek is None:
+        # a zero mirek is not a valid color temperature either
+        if color_temp is None or not color_temp.mirek:
             return False
         # Official Hue lights return `mirek_valid` to indicate CT is active
         # while non-official lights do not.
@@ -163,6 +165,7 @@ class HueLight(HueBaseEntity, LightEntity):
         return self._color_temp_active
 
     @property
+    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color."""
         if color := self.resource.color:
@@ -170,40 +173,48 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        if color_temp := self.resource.color_temperature:
+        if (color_temp := self.resource.color_temperature) and color_temp.mirek:
             return color_util.color_temperature_mired_to_kelvin(color_temp.mirek)
         # return a fallback value to prevent issues with mired->kelvin conversions
         return FALLBACK_KELVIN
 
     @property
     def max_color_temp_mireds(self) -> int:
-        """Return the warmest color_temp in mireds (so highest number) that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_maximum
-        # return a fallback value if the light doesn't provide limits
+        """Return the warmest color_temp in mireds that this light supports."""
+        if (color_temp := self.resource.color_temperature) and (
+            mirek_max := color_temp.mirek_schema.mirek_maximum
+        ):
+            return mirek_max
+        # return a fallback value if the light doesn't provide valid limits
         return FALLBACK_MAX_MIREDS
 
     @property
     def min_color_temp_mireds(self) -> int:
-        """Return the coldest color_temp in mireds (so lowest number) that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_minimum
-        # return a fallback value if the light doesn't provide limits
+        """Return the coldest color_temp in mireds that this light supports."""
+        if (color_temp := self.resource.color_temperature) and (
+            mirek_min := color_temp.mirek_schema.mirek_minimum
+        ):
+            return mirek_min
+        # return a fallback value if the light doesn't provide valid limits
         return FALLBACK_MIN_MIREDS
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(self.min_color_temp_mireds)
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(self.max_color_temp_mireds)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the optional state attributes."""
         return {
@@ -212,6 +223,7 @@ class HueLight(HueBaseEntity, LightEntity):
         }
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         if effects := self.resource.effects:
@@ -222,6 +234,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 return timed_effects.status.value
         return EFFECT_OFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -283,10 +296,11 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash cannot be sent with other commands at the same time or result will be flaky
-            # Hue's default behavior is that a light returns to its previous state for short
-            # flash (identify) and the light is kept turned on for long flash (breathe effect)
-            # Why is this flash alert/effect hidden in the turn_on/off commands ?
+            # flash cannot be sent with other commands at the same
+            # time or result will be flaky. Hue's default behavior
+            # is that a light returns to its previous state for
+            # short flash (identify) and the light is kept turned
+            # on for long flash (breathe effect)
             return
 
         await self.bridge.async_request_call(
@@ -300,6 +314,7 @@ class HueLight(HueBaseEntity, LightEntity):
             effect=effect,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -309,9 +324,11 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash cannot be sent with other commands at the same time or result will be flaky
-            # Hue's default behavior is that a light returns to its previous state for short
-            # flash (identify) and the light is kept turned on for long flash (breathe effect)
+            # flash cannot be sent with other commands at the same
+            # time or result will be flaky. Hue's default behavior
+            # is that a light returns to its previous state for
+            # short flash (identify) and the light is kept turned
+            # on for long flash (breathe effect)
             return
 
         await self.bridge.async_request_call(

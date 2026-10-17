@@ -1,7 +1,5 @@
 """Describe ZHA logbook events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -38,7 +36,9 @@ def async_describe_events(
         event_subtype: str | None = None
 
         try:
-            device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
+            device = device_registry.async_get(
+                event.data[ATTR_DEVICE_ID], include_child_devices=False
+            )
             if device:
                 device_name = device.name_by_user or device.name or "Unknown device"
             zha_device = async_get_zha_device_proxy(

@@ -1,11 +1,10 @@
 """DataUpdateCoordinator for ntfy integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiontfy import Account as NtfyAccount, Ntfy, Version
 from aiontfy.exceptions import (
@@ -16,10 +15,13 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 from aiontfy.update import LatestRelease, UpdateChecker, UpdateCheckerError
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -57,10 +59,22 @@ class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
         self.ntfy = ntfy
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info of the ntfy account service device."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="ntfy LLC",
+            model="ntfy",
+            configuration_url=URL(self.config_entry.data[CONF_URL]) / "app",
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+        )
+
     @abstractmethod
     async def async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
         try:
@@ -90,6 +104,7 @@ class NtfyDataUpdateCoordinator(BaseDataUpdateCoordinator[NtfyAccount]):
 
     update_interval = timedelta(minutes=15)
 
+    @override
     async def async_update_data(self) -> NtfyAccount:
         """Fetch account data from ntfy."""
 
@@ -107,6 +122,7 @@ class NtfyVersionDataUpdateCoordinator(BaseDataUpdateCoordinator[Version | None]
 
     update_interval = timedelta(hours=3)
 
+    @override
     async def async_update_data(self) -> Version | None:
         """Fetch version data from ntfy."""
         try:
@@ -132,6 +148,7 @@ class NtfyLatestReleaseUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
         )
         self.update_checker = update_checker
 
+    @override
     async def _async_update_data(self) -> LatestRelease:
         """Fetch latest release data."""
 

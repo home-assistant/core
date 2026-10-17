@@ -1,7 +1,5 @@
 """Tests for the steamist component."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from discovery30303 import AIODiscovery30303
@@ -74,7 +72,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
+    """Test unique id is added if missing via directed discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS}, unique_id=None
     )
@@ -110,8 +108,8 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     assert config_entry.data[CONF_NAME] == DEVICE_NAME
     assert config_entry.title == DEVICE_NAME
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS), config_entry.entry_id
     )
     assert isinstance(device_entry, dr.DeviceEntry)
     assert device_entry.name == DEVICE_NAME

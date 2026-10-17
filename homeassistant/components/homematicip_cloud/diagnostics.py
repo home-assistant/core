@@ -1,7 +1,5 @@
 """Diagnostics support for HomematicIP Cloud."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
@@ -24,4 +22,7 @@ async def async_get_config_entry_diagnostics(
     anonymized = handle_config(json_state, anonymize=True)
     config = json.loads(anonymized)
 
-    return async_redact_data(config, TO_REDACT_CONFIG)
+    return {
+        "websocket": hap.websocket_diagnostics(),
+        "config": async_redact_data(config, TO_REDACT_CONFIG),
+    }

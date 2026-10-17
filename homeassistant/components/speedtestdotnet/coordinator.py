@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import speedtest
 
@@ -74,6 +74,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api.upload()
         return cast(dict[str, Any], self.api.results.dict())
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update Speedtest data."""
         try:

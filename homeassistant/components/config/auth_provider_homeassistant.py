@@ -1,20 +1,25 @@
 """Offer API to configure the Home Assistant auth provider."""
 
-from __future__ import annotations
-
+import asyncio
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.util.hass_dict import HassKey
+
+CREATE_LOCK: HassKey[asyncio.Lock] = HassKey(
+    "config_auth_provider_homeassistant_create_lock"
+)
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
+    hass.data[CREATE_LOCK] = asyncio.Lock()
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_change_password)
@@ -25,10 +30,10 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth_provider/homeassistant/create",
-        vol.Required("user_id"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        probatio.Required("type"): "config/auth_provider/homeassistant/create",
+        probatio.Required("user_id"): str,
+        probatio.Required("username"): str,
+        probatio.Required("password"): str,
     }
 )
 @websocket_api.require_admin
@@ -53,20 +58,39 @@ async def websocket_create(
         )
         return
 
-    await provider.async_add_auth(msg["username"], msg["password"])
+    if user.is_owner and not connection.user.is_owner:
+        raise Unauthorized(context=connection.context(msg))
 
-    credentials = await provider.async_get_or_create_credentials(
-        {"username": msg["username"]}
-    )
-    await hass.auth.async_link_user(user, credentials)
+    # Serialize the check with the link so concurrent requests can't both
+    # pass it and attach two passwords.
+    async with hass.data[CREATE_LOCK]:
+        # A second password would let an admin log in as the user without
+        # going through the owner-only admin_change_password command.
+        if any(
+            credential.auth_provider_type == provider.type
+            for credential in user.credentials
+        ):
+            connection.send_error(
+                msg["id"],
+                "credentials_exist",
+                "User already has credentials for this provider",
+            )
+            return
+
+        await provider.async_add_auth(msg["username"], msg["password"])
+
+        credentials = await provider.async_get_or_create_credentials(
+            {"username": msg["username"]}
+        )
+        await hass.auth.async_link_user(user, credentials)
 
     connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth_provider/homeassistant/delete",
-        vol.Required("username"): str,
+        probatio.Required("type"): "config/auth_provider/homeassistant/delete",
+        probatio.Required("username"): str,
     }
 )
 @websocket_api.require_admin
@@ -85,6 +109,15 @@ async def websocket_delete(
     # if not new, an existing credential exists.
     # Removing the credential will also remove the auth.
     if not credentials.is_new:
+        user = await hass.auth.async_get_user_by_credentials(credentials)
+        if user is not None and user.is_owner:
+            connection.send_error(
+                msg["id"],
+                "cannot_delete_owner_credentials",
+                "Unable to delete the credentials of the owner",
+            )
+            return
+
         await hass.auth.async_remove_credentials(credentials)
 
         connection.send_result(msg["id"])
@@ -97,9 +130,9 @@ async def websocket_delete(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth_provider/homeassistant/change_password",
-        vol.Required("current_password"): str,
-        vol.Required("new_password"): str,
+        probatio.Required("type"): "config/auth_provider/homeassistant/change_password",
+        probatio.Required("current_password"): str,
+        probatio.Required("new_password"): str,
     }
 )
 @websocket_api.async_response
@@ -141,11 +174,11 @@ async def websocket_change_password(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(
+        probatio.Required(
             "type"
         ): "config/auth_provider/homeassistant/admin_change_password",
-        vol.Required("user_id"): str,
-        vol.Required("password"): str,
+        probatio.Required("user_id"): str,
+        probatio.Required("password"): str,
     }
 )
 @websocket_api.require_admin
@@ -183,11 +216,11 @@ async def websocket_admin_change_password(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(
+        probatio.Required(
             "type"
         ): "config/auth_provider/homeassistant/admin_change_username",
-        vol.Required("user_id"): str,
-        vol.Required("username"): str,
+        probatio.Required("user_id"): str,
+        probatio.Required("username"): str,
     }
 )
 @websocket_api.require_admin

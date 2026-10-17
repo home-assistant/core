@@ -7,6 +7,7 @@ from nx584 import client as nx584_client
 import pytest
 import requests
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.nx584 import binary_sensor as nx584
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -104,7 +105,13 @@ async def _test_assert_graceful_fail(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Test the failing."""
-    assert not await async_setup_component(hass, "nx584", config)
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {BINARY_SENSOR_DOMAIN: {"platform": "nx584", **config}},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
 
 
 @pytest.mark.usefixtures("client")
@@ -122,6 +129,7 @@ async def test_nx584_sensor_setup_bad_config(
 ) -> None:
     """Test the setup with bad configuration."""
     await _test_assert_graceful_fail(hass, config)
+    assert not nx584_client.Client.called
 
 
 @pytest.mark.usefixtures("client")
@@ -203,6 +211,27 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
     watcher._process_zone_event({"zone": 1, "zone_state": False})
     assert not zone1["state"]
     assert mock_update.call_count == 1
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
+    """Test the processing of zone events updates bypass state."""
+    zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
+    zones = {1: nx584.NX584ZoneSensor(zone, "motion")}
+    watcher = nx584.NX584Watcher(None, zones)
+
+    watcher._process_zone_event(
+        {"zone": 1, "zone_state": False, "zone_flags": ["Bypass"]}
+    )
+
+    assert zone["bypassed"]
+    assert not zone["state"]
+
+    watcher._process_zone_event({"zone": 1, "zone_state": True, "zone_flags": []})
+
+    assert not zone["bypassed"]
+    assert zone["state"]
+    assert mock_update.call_count == 2
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")

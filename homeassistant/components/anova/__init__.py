@@ -1,7 +1,5 @@
 """The Anova integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -15,9 +13,10 @@ from anova_wifi import (
 
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
+from .const import DOMAIN
 from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
 PLATFORMS = [Platform.SENSOR]
@@ -25,7 +24,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> None:
     """Set up Anova from a config entry."""
     api = AnovaApi(
         aiohttp_client.async_get_clientsession(hass),
@@ -35,17 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     try:
         await api.authenticate()
     except InvalidLogin as err:
-        _LOGGER.error(
-            "Login was incorrect - please log back in through the config flow. %s", err
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_login",
+        ) from err
     assert api.jwt
     try:
         await api.create_websocket()
     except NoDevicesFound as err:
         # Can later setup successfully and spawn a repair.
         raise ConfigEntryNotReady(
-            "No devices were found on the websocket, perhaps you don't have any devices on this account?"
+            "No devices were found on the websocket, perhaps you"
+            " don't have any devices on this account?"
         ) from err
     except WebsocketFailure as err:
         raise ConfigEntryNotReady("Failed connecting to the websocket.") from err
@@ -61,24 +61,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     coordinators = [AnovaCoordinator(hass, entry, device) for device in devices]
     entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Disconnect from WS
-        await entry.runtime_data.api.disconnect_websocket()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Disconnect from WS
+    await entry.runtime_data.api.disconnect_websocket()
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1 and entry.minor_version == 1:
         new_data = {**entry.data}
@@ -90,5 +84,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> b
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True

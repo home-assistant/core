@@ -1,7 +1,5 @@
 """Helpers for AsusWRT integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 TRANSLATION_MAP = {

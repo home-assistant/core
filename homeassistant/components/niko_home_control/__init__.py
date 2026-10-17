@@ -1,7 +1,5 @@
 """The Niko home control integration."""
 
-from __future__ import annotations
-
 from nhc.controller import NHCController
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
-from .const import _LOGGER
+from .const import LOGGER
 
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
@@ -24,7 +22,7 @@ type NikoHomeControlConfigEntry = ConfigEntry[NHCController]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: NikoHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Set Niko Home Control from a config entry."""
     controller = NHCController(entry.data[CONF_HOST])
     try:
@@ -34,14 +32,13 @@ async def async_setup_entry(
 
     entry.runtime_data = controller
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: NikoHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating configuration from version %s.%s",
         config_entry.version,
         config_entry.minor_version,
@@ -61,16 +58,15 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migration to configuration version %s.%s successful",
         config_entry.version,
         config_entry.minor_version,
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NikoHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

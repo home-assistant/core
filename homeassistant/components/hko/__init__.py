@@ -1,7 +1,5 @@
 """The Hong Kong Observatory integration."""
 
-from __future__ import annotations
-
 from hko import LOCATIONS
 
 from homeassistant.const import CONF_LOCATION, Platform
@@ -14,7 +12,7 @@ from .coordinator import HKOConfigEntry, HKOUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HKOConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HKOConfigEntry) -> None:
     """Set up Hong Kong Observatory from a config entry."""
 
     location = entry.data[CONF_LOCATION]
@@ -30,9 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HKOConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HKOConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HKOConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

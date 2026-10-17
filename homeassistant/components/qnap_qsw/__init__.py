@@ -1,7 +1,5 @@
 """The QNAP QSW integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aioqsw.localapi import ConnectionOptions, QnapQswApi
@@ -28,7 +26,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> None:
     """Set up QNAP QSW from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_URL],
@@ -54,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QnapQswConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,6 +1,6 @@
 """The tests for the Recorder component."""
 
-import datetime
+import datetime as dt
 import importlib
 import sqlite3
 import sys
@@ -485,9 +485,9 @@ async def test_events_during_migration_are_queued(
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
 
         # Let migration finish
         instrument_migration.migration_stall.set()
@@ -527,9 +527,9 @@ async def test_events_during_migration_queue_exhausted(
         assert recorder.util.async_migration_in_progress(hass) is True
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
         await hass.async_block_till_done()
         hass.states.async_set("my.entity", "off", {})
 
@@ -808,7 +808,9 @@ def test_raise_if_exception_missing_str() -> None:
     """Test we raise an exception if strings are not present."""
     programming_exc = ProgrammingError("select * from;", Mock(), Mock())
     programming_exc.__cause__ = MockPyODBCProgrammingError(
-        "[42S11] [FreeTDS][SQL Server]The operation failed because an index or statistics with name 'ix_states_old_state_id' already exists on table 'states'. (1913) (SQLExecDirectW)"
+        "[42S11] [FreeTDS][SQL Server]The operation failed because an"
+        " index or statistics with name 'ix_states_old_state_id'"
+        " already exists on table 'states'. (1913) (SQLExecDirectW)"
     )
 
     migration.raise_if_exception_missing_str(

@@ -1,7 +1,5 @@
 """Helper functions for Samsung TV."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -21,7 +19,7 @@ def async_get_device_entry_by_device_id(
     Raises ValueError if device ID is invalid.
     """
     device_reg = dr.async_get(hass)
-    if (device := device_reg.async_get(device_id)) is None:
+    if (device := device_reg.async_get(device_id, include_child_devices=False)) is None:
         raise ValueError(f"Device {device_id} is not a valid {DOMAIN} device.")
 
     return device
@@ -54,11 +52,12 @@ def async_get_client_by_device_entry(
 
     Raises ValueError if client is not found.
     """
-    entry: SamsungTVConfigEntry | None
-    for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        if entry and entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-            return entry.runtime_data.bridge
+    config_entry: SamsungTVConfigEntry | None
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if config_entry is not None and config_entry.state is ConfigEntryState.LOADED:
+        return config_entry.runtime_data.bridge
 
     raise ValueError(
         f"Device {device.id} is not from an existing {DOMAIN} config entry"

@@ -1,11 +1,9 @@
 """The Sleep as Android integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 
 from aiohttp.web import Request, Response
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -19,12 +17,12 @@ PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
 
 type SleepAsAndroidConfigEntry = ConfigEntry
 
-WEBHOOK_SCHEMA = vol.Schema(
+WEBHOOK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_EVENT): str,
-        vol.Optional(ATTR_VALUE1): str,
-        vol.Optional(ATTR_VALUE2): str,
-        vol.Optional(ATTR_VALUE3): str,
+        probatio.Required(ATTR_EVENT): str,
+        probatio.Optional(ATTR_VALUE1): str,
+        probatio.Optional(ATTR_VALUE2): str,
+        probatio.Optional(ATTR_VALUE3): str,
     }
 )
 
@@ -36,7 +34,7 @@ async def handle_webhook(
 
     try:
         data = WEBHOOK_SCHEMA(await request.json())
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         return Response(
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
@@ -47,7 +45,7 @@ async def handle_webhook(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SleepAsAndroidConfigEntry
-) -> bool:
+) -> None:
     """Set up Sleep as Android from a config entry."""
 
     webhook.async_register(
@@ -55,12 +53,10 @@ async def async_setup_entry(
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SleepAsAndroidConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,0 +1,22 @@
+{
+  "traceId": "1234",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "deviceName": "Dimmable",
+    "name": "Dimmable",
+    "brightNess": "80",
+    "deviceStatus": "on",
+    "activeTime": 0,
+    "defaultDeviceImg": "https://image.vesync.com/defaultImages/ESL100_Series/icon_dimmable_bulb_80.png",
+    "timer": null,
+    "scheduleCount": 0,
+    "away": null,
+    "schedule": null,
+    "ownerShip": "1",
+    "deviceImg": "https://image.vesync.com/defaultImages/deviceDefaultImages/wifismartbulb_240.png",
+    "connectionStatus": "online"
+  }
+}

@@ -139,8 +139,8 @@ async def test_service_set_color_mode(
                 ATTR_CONFIG_ENTRY: "invalidconfigentry",
             },
             None,
-            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry "
-            "'invalidconfigentry' not found",
+            f"Integration {DOMAIN} config entry with ID invalidconfigentry "
+            "was not found",
         ),
         (
             {
@@ -148,8 +148,7 @@ async def test_service_set_color_mode(
                 ATTR_CONFIG_ENTRY: NON_SL_CONFIG_ENTRY_ID,
             },
             None,
-            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry "
-            "'test' is not a screenlogic config",
+            f"Config entry Mock Title does not belong to integration {DOMAIN}",
         ),
     ],
 )
@@ -233,8 +232,8 @@ async def test_service_start_super_chlorination(
                 ATTR_RUNTIME: 24,
             },
             None,
-            f"Failed to call service '{SERVICE_START_SUPER_CHLORINATION}'. "
-            "Config entry 'invalidconfigentry' not found",
+            f"Integration {DOMAIN} config entry with ID invalidconfigentry "
+            "was not found",
         ),
         (
             {
@@ -322,8 +321,8 @@ async def test_service_stop_super_chlorination(
                 ATTR_CONFIG_ENTRY: "invalidconfigentry",
             },
             None,
-            f"Failed to call service '{SERVICE_STOP_SUPER_CHLORINATION}'. "
-            "Config entry 'invalidconfigentry' not found",
+            f"Integration {DOMAIN} config entry with ID invalidconfigentry "
+            "was not found",
         ),
         (
             {
@@ -408,8 +407,8 @@ async def test_service_config_entry_not_loaded(
 
         with pytest.raises(
             ServiceValidationError,
-            match=f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. "
-            f"Config entry '{MOCK_CONFIG_ENTRY_ID}' not loaded",
+            match=f"Config entry {MOCK_ADAPTER_NAME} for integration {DOMAIN} "
+            "is not loaded",
         ):
             await hass.services.async_call(
                 DOMAIN,

@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import pyversasense as pyv
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -27,8 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "versasense"
 
 # Validation of the user's configuration
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_HOST): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -83,7 +84,11 @@ def _add_entity_info(peripheral, device, entity_dict) -> None:
             KEY_PARENT_MAC: device.mac,
         }
 
-        key = f"{entity_info[KEY_PARENT_MAC]}/{entity_info[KEY_IDENTIFIER]}/{entity_info[KEY_MEASUREMENT]}"
+        key = (
+            f"{entity_info[KEY_PARENT_MAC]}"
+            f"/{entity_info[KEY_IDENTIFIER]}"
+            f"/{entity_info[KEY_MEASUREMENT]}"
+        )
         entity_dict[key] = entity_info
 
     return entity_dict

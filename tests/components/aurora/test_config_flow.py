@@ -38,6 +38,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aurora visibility"
     assert result["data"] == DATA
+    assert result["result"].unique_id == "10.2_-10.0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -48,9 +49,9 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_aurora_client: AsyncMock,
     side_effect: Exception,
     error: str,
@@ -77,9 +78,9 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_option_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_aurora_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:

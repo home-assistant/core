@@ -1,7 +1,5 @@
 """The SolarEdge integration."""
 
-from __future__ import annotations
-
 import socket
 
 from aiohttp import ClientError
@@ -9,17 +7,18 @@ from aiosolaredge import SolarEdge
 
 from homeassistant.const import CONF_API_KEY, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_MODULES_COORDINATOR, LOGGER
+from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_MODULES_COORDINATOR, DOMAIN
 from .coordinator import SolarEdgeModulesCoordinator
 from .types import SolarEdgeConfigEntry, SolarEdgeData
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> None:
     """Set up SolarEdge from a config entry."""
     entry.runtime_data = SolarEdgeData()
     site_id = entry.data[CONF_SITE_ID]
@@ -32,18 +31,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         try:
             response = await api.get_details(site_id)
         except (TimeoutError, ClientError, socket.gaierror) as ex:
-            LOGGER.error("Could not retrieve details from SolarEdge API")
-            raise ConfigEntryNotReady from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_details",
+            ) from ex
 
         if "details" not in response:
-            LOGGER.error("Missing details data in SolarEdge response")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="missing_details",
+            )
 
         if response["details"].get("status", "").lower() != "active":
-            LOGGER.error("SolarEdge site is not active")
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="site_not_active",
+            )
 
         entry.runtime_data[DATA_API_CLIENT] = api
+
+        # Register the site device up front so per-battery devices can resolve it
+        # as their via_device when their entities are created.
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, site_id)},
+            manufacturer="SolarEdge",
+        )
+
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Setup for username/password (modules statistics)
@@ -52,12 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data[DATA_MODULES_COORDINATOR] = coordinator
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> None:
     """Unload SolarEdge config entry."""
     if DATA_API_CLIENT not in entry.runtime_data:
-        return True  # Nothing to unload
+        return  # Nothing to unload
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

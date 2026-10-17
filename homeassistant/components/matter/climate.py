@@ -1,10 +1,8 @@
 """Matter climate platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -26,13 +24,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 HUMIDITY_SCALING_FACTOR = 100
@@ -102,6 +99,8 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # support dry mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x0001, 0x013F),
+    (0x118C, 0x2022),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
     (0x1209, 0x8002),
@@ -133,6 +132,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8028),
     (0x1209, 0x8029),
     (0x138C, 0x0101),
+    (0x138C, 0x3601),
 }
 
 SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
@@ -141,6 +141,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # support fan-only mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x0001, 0x013F),
     (0x118C, 0x2022),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
@@ -174,6 +175,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8029),
     (0x131A, 0x1000),
     (0x138C, 0x0101),
+    (0x138C, 0x3601),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
@@ -194,11 +196,11 @@ class ThermostatRunningState(IntEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter climate platform from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
 
 
@@ -210,7 +212,7 @@ class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescr
 class MatterClimate(MatterEntity, ClimateEntity):
     """Representation of a Matter climate entity."""
 
-    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     _matter_presets: list[clusters.Thermostat.Structs.PresetStruct]
     _attr_preset_mode: str | None = None
@@ -221,13 +223,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the climate entity."""
-        # Initialize preset handle mapping as instance attribute before calling super().__init__()
-        # because MatterEntity.__init__() calls _update_from_device() which needs this attribute
+        # Initialize preset handle mapping as instance attribute
+        # before calling super().__init__() because
+        # MatterEntity.__init__() calls _update_from_device()
+        # which needs this attribute
         self._matter_presets = []
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -241,7 +246,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         if target_temperature is not None:
             # single setpoint control
-            if self.target_temperature != target_temperature:
+            if self.native_target_temperature != target_temperature:
                 if current_mode == HVACMode.COOL:
                     matter_attribute = (
                         clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
@@ -251,27 +256,28 @@ class MatterClimate(MatterEntity, ClimateEntity):
                         clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                     )
                 await self.write_attribute(
-                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=matter_attribute,
                 )
             return
 
         if target_temperature_low is not None:
             # multi setpoint control - low setpoint (heat)
-            if self.target_temperature_low != target_temperature_low:
+            if self.native_target_temperature_low != target_temperature_low:
                 await self.write_attribute(
-                    value=int(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
                 )
 
         if target_temperature_high is not None:
             # multi setpoint control - high setpoint (cool)
-            if self.target_temperature_high != target_temperature_high:
+            if self.native_target_temperature_high != target_temperature_high:
                 await self.write_attribute(
-                    value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         preset_handle = self._preset_handle_by_name[preset_mode]
@@ -300,6 +306,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -321,11 +328,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._update_from_device()
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
 
-        self._attr_current_temperature = self._get_temperature_in_degrees(
+        self._attr_native_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
         self._attr_current_humidity = (
@@ -365,7 +373,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.Presets)
             or []
         )
-        # Build preset mapping: use device-provided name if available, else generate unique name
+        # Build preset mapping: use device-provided name if
+        # available, else generate unique name
         self._preset_handle_by_name.clear()
         self._preset_name_by_handle.clear()
         if self._matter_presets:
@@ -415,8 +424,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _update_hvac_mode_and_action(self) -> None:
         """Update HVAC mode and action from device."""
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
-            # special case: the appliance has a dedicated Power switch on the OnOff cluster
-            # if the mains power is off - treat it as if the HVAC mode is off
+            # special case: the appliance has a dedicated Power
+            # switch on the OnOff cluster
+            # if the mains power is off - treat it as if the
+            # HVAC mode is off
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = None
         else:
@@ -474,23 +485,25 @@ class MatterClimate(MatterEntity, ClimateEntity):
             & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
         if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature = None
-            self._attr_target_temperature_high = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            self._attr_native_target_temperature = None
+            self._attr_native_target_temperature_high = (
+                self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
             )
-            self._attr_target_temperature_low = self._get_temperature_in_degrees(
+            self._attr_native_target_temperature_low = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
             )
         else:
-            self._attr_target_temperature_high = None
-            self._attr_target_temperature_low = None
+            self._attr_native_target_temperature_high = None
+            self._attr_native_target_temperature_low = None
             # update target_temperature
             if self._attr_hvac_mode == HVACMode.COOL:
-                self._attr_target_temperature = self._get_temperature_in_degrees(
+                self._attr_native_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                 )
             else:
-                self._attr_target_temperature = self._get_temperature_in_degrees(
+                self._attr_native_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
 

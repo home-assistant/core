@@ -1,6 +1,6 @@
 """The baf integration entities."""
 
-from __future__ import annotations
+from typing import override
 
 from aiobafi6 import Device
 
@@ -40,10 +40,12 @@ class BAFEntity(Entity):
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
         self._device.add_callback(self._async_update_from_device)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
         self._device.remove_callback(self._async_update_from_device)

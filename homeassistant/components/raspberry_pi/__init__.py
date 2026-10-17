@@ -1,33 +1,49 @@
 """The Raspberry Pi integration."""
 
-from __future__ import annotations
-
-from homeassistant.components.hassio import get_os_info
+from homeassistant.components.hassio import HassioNotReadyError, get_os_info
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.hassio import is_hassio
 
+from .const import DOMAIN
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+PLATFORMS = [Platform.UPDATE]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a Raspberry Pi config entry."""
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="not_hassio",
+        )
 
-    if (os_info := get_os_info(hass)) is None:
-        # The hassio integration has not yet fetched data from the supervisor
-        raise ConfigEntryNotReady
+    try:
+        os_info = get_os_info(hass)
+    except HassioNotReadyError as err:
+        raise ConfigEntryNotReady from err
 
     board: str | None
     if (board := os_info.get("board")) is None or not board.startswith("rpi"):
         # Not running on a Raspberry Pi, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_board",
+            translation_placeholders={"board": str(board)},
+        )
 
     await hass.config_entries.flow.async_init(
         "rpi_power", context={"source": "onboarding"}
     )
 
-    return True
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

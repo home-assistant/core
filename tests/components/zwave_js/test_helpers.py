@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.model.controller import ProvisioningEntry
 
@@ -51,6 +51,30 @@ async def test_async_get_nodes_from_area_id(
     assert not async_get_nodes_from_area_id(hass, area.id)
 
 
+async def test_async_get_nodes_from_area_id_skips_child_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test async_get_nodes_from_area_id skips child devices in the area."""
+    area = area_registry.async_create("test")
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "parent")},
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "child")},
+        parent_device_id=parent.id,
+    )
+    device_registry.async_update_child_device(child.id, area_id=area.id)
+
+    # A child device is not a Z-Wave JS node; it is skipped rather than raising.
+    assert not async_get_nodes_from_area_id(hass, area.id)
+
+
 async def test_get_value_state_schema_boolean_config_value(
     hass: HomeAssistant, client, aeon_smart_switch_6
 ) -> None:
@@ -58,7 +82,7 @@ async def test_get_value_state_schema_boolean_config_value(
     schema_validator = get_value_state_schema(
         aeon_smart_switch_6.values["102-112-0-255"]
     )
-    assert isinstance(schema_validator, vol.Coerce)
+    assert isinstance(schema_validator, probatio.Coerce)
     assert schema_validator.type is bool
 
 
@@ -99,7 +123,10 @@ async def test_async_get_provisioning_entry_from_device_id(
     )
     with pytest.raises(
         ValueError,
-        match=f"Device {non_zwave_device.id} is not from an existing zwave_js config entry",
+        match=(
+            f"Device {non_zwave_device.id} is not from an"
+            " existing zwave_js config entry"
+        ),
     ):
         await async_get_provisioning_entry_from_device_id(hass, non_zwave_device.id)
 

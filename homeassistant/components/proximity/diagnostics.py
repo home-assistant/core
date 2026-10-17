@@ -1,7 +1,5 @@
 """Diagnostics support for Proximity."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.device_tracker import ATTR_GPS, ATTR_IP, ATTR_MAC
@@ -9,12 +7,11 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant
 
@@ -23,8 +20,8 @@ from .coordinator import ProximityConfigEntry
 TO_REDACT = {
     ATTR_GPS,
     ATTR_IP,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    EntityStateAttribute.LATITUDE,
+    EntityStateAttribute.LONGITUDE,
     ATTR_MAC,
     ATTR_USER_ID,
     "context",

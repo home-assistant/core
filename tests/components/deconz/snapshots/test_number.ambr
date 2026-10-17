@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 65535,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,11 +44,11 @@
 # name: test_number_entities[sensor_payload0-expected0][number.presence_sensor_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Presence sensor Delay',
-      'max': 65535,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Delay',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.presence_sensor_delay',
@@ -65,10 +65,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 65535,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,11 +103,11 @@
 # name: test_number_entities[sensor_payload1-expected1][number.presence_sensor_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Presence sensor Duration',
-      'max': 65535,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.presence_sensor_duration',

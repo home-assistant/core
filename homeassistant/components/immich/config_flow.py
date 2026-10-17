@@ -1,16 +1,14 @@
 """Config flow for the Immich integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichUnauthorizedError
 from aioimmich.users.models import ImmichUser
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -40,15 +38,15 @@ class InvalidUrl(HomeAssistantError):
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
@@ -71,6 +69,7 @@ async def check_user_info(
     """Test connection and fetch own user info."""
     session = async_get_clientsession(hass, verify_ssl)
     immich = Immich(session, api_key, host, port, ssl)
+    await immich.async_setup()
     return await immich.users.async_get_my_user()
 
 
@@ -82,6 +81,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
     _current_data: Mapping[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -168,7 +168,9 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             description_placeholders={"name": self._name},
             errors=errors,
         )
@@ -223,12 +225,12 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=url): TextSelector(
+                    probatio.Required(CONF_URL, default=url): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
                 }
             ),
             errors=errors,

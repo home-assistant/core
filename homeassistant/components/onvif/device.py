@@ -1,7 +1,5 @@
 """ONVIF device abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import datetime as dt
@@ -43,6 +41,8 @@ from .const import (
 )
 from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+type ONVIFConfigEntry = ConfigEntry[ONVIFDevice]
 
 
 class ONVIFDevice:
@@ -165,7 +165,7 @@ class ONVIFDevice:
         # Bind the listener to the ONVIFDevice instance since
         # async_update_listener only creates a weak reference to the listener
         # and we need to make sure it doesn't get garbage collected since only
-        # the ONVIFDevice instance is stored in hass.data
+        # the ONVIFDevice instance is stored in config_entry.runtime_data
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(self._async_update_listener)
         )
@@ -218,8 +218,9 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-            # Some cameras don't support setting the timezone and will throw an IndexError
-            # if we try to set it. If we get an error, try again without the timezone.
+            # Some cameras don't support setting the timezone
+            # and will throw an IndexError if we try to set it.
+            # If we get an error, try again without the timezone.
             except IndexError, Fault:
                 if idx == timezone_max_idx:
                     raise
@@ -333,8 +334,9 @@ class ONVIFDevice:
         try:
             device_info = await device_mgmt.GetDeviceInformation()
         except (XMLParseError, XMLSyntaxError, TransportError) as ex:
-            # Some cameras have invalid UTF-8 in their device information (TransportError)
-            # and others have completely invalid XML (XMLParseError, XMLSyntaxError)
+            # Some cameras have invalid UTF-8 in their device
+            # information (TransportError) and others have
+            # completely invalid XML (XMLParseError, XMLSyntaxError)
             LOGGER.warning("%s: Failed to fetch device information: %s", self.name, ex)
         else:
             manufacturer = device_info.Manufacturer
@@ -342,13 +344,10 @@ class ONVIFDevice:
             firmware_version = device_info.FirmwareVersion
             serial_number = device_info.SerialNumber
 
-        # Grab the last MAC address for backwards compatibility
         mac = None
         try:
             network_interfaces = await device_mgmt.GetNetworkInterfaces()
-            for interface in network_interfaces:
-                if interface.Enabled:
-                    mac = interface.Info.HwAddress
+            mac = get_mac_address(network_interfaces)
         except Fault as fault:
             if "not implemented" not in fault.message:
                 raise
@@ -498,7 +497,12 @@ class ONVIFDevice:
         tilt=None,
         zoom=None,
     ):
-        """Perform a PTZ action on the camera."""
+        """Perform a PTZ action on the camera.
+
+        For ContinuousMove operations, calling this service with
+        continuous_duration = 0 disables the automatic Stop call; other move
+        modes do not auto-stop.
+        """
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
@@ -542,12 +546,17 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
-                req = ptz_service.create_type("Stop")
-                req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                if continuous_duration > 0:
+                    await asyncio.sleep(continuous_duration)
+                    req = ptz_service.create_type("Stop")
+                    req.ProfileToken = profile.token
+                    await ptz_service.Stop(
+                        {
+                            "ProfileToken": req.ProfileToken,
+                            "PanTilt": True,
+                            "Zoom": False,
+                        }
+                    )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.relative:
@@ -690,3 +699,16 @@ def get_device(
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
         no_cache=True,
     )
+
+
+def get_mac_address(network_interfaces: list[Any]) -> str | None:
+    """Get the MAC address of the last enabled network interface.
+
+    Existing entries and entities are keyed on the last one. Some cameras also
+    list a dummy interface first that has the same MAC address on every unit.
+    """
+    mac = None
+    for interface in network_interfaces:
+        if interface.Enabled:
+            mac = interface.Info.HwAddress
+    return mac

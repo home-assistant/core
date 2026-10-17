@@ -1,12 +1,10 @@
 """Support for Soma Smartshades."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
 from api.soma_api import SomaApi
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -17,16 +15,19 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, HOST, PORT
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
+CONFIG_SCHEMA = probatio.Schema(
+    probatio.All(
         cv.deprecated(DOMAIN),
         {
-            DOMAIN: vol.Schema(
-                {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
+            DOMAIN: probatio.Schema(
+                {
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_PORT): cv.string,
+                }
             )
         },
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -59,17 +60,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SomaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SomaConfigEntry) -> None:
     """Set up Soma from a config entry."""
-    api = await hass.async_add_executor_job(SomaApi, entry.data[HOST], entry.data[PORT])
-    devices = await hass.async_add_executor_job(api.list_devices)
+
+    def _setup_api() -> tuple[SomaApi, dict[str, Any]]:
+        api = SomaApi(entry.data[HOST], entry.data[PORT])
+        return api, api.list_devices()
+
+    api, devices = await hass.async_add_executor_job(_setup_api)
     entry.runtime_data = SomaData(api, devices["shades"])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SomaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SomaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

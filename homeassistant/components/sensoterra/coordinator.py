@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from typing import override
 
 from sensoterra.customerapi import (
     CustomerApi,
@@ -39,6 +40,7 @@ class SensoterraCoordinator(DataUpdateCoordinator[list[Probe]]):
         self.api = api
         self.add_devices_callback: Callable[[list[Probe]], None] | None = None
 
+    @override
     async def _async_update_data(self) -> list[Probe]:
         """Fetch data from Sensoterra Customer API endpoint."""
         try:

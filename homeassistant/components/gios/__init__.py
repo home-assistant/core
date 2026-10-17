@@ -1,7 +1,5 @@
 """The GIOS component."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> None:
     """Set up GIOS as config entry."""
     station_id: int = entry.data[CONF_STATION_ID]
     _LOGGER.debug("Using station_id: %d", station_id)
@@ -34,8 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool
     # We used to use int in device_entry identifiers, convert this to str.
     device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, station_id)
-    device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
-    if device_entry and entry.entry_id in device_entry.config_entries:
+    device_entry = device_registry.async_get_device_by_identifier(
+        old_ids,  # type: ignore[arg-type]
+        entry.entry_id,
+    )
+    if device_entry:
         new_ids = (DOMAIN, str(station_id))
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
 
@@ -59,9 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -5,8 +5,8 @@ import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import (
@@ -988,7 +988,9 @@ async def test_template_string(
                 "trigger": {
                     "platform": "numeric_state",
                     "entity_id": "test.entity",
-                    "value_template": "{{ state.attributes.test_attribute | multiply(10) }}",
+                    "value_template": (
+                        "{{ state.attributes.test_attribute | multiply(10) }}"
+                    ),
                     "below": below,
                 },
                 "action": {
@@ -1817,7 +1819,7 @@ async def test_if_fires_on_entities_change_overlap_for_template(
 
 async def test_below_above(hass: HomeAssistant) -> None:
     """Test above cannot be above below."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await numeric_state_trigger.async_validate_trigger_config(
             hass, {"platform": "numeric_state", "above": 1200, "below": 1000}
         )
@@ -1825,7 +1827,7 @@ async def test_below_above(hass: HomeAssistant) -> None:
 
 async def test_schema_unacceptable_entities(hass: HomeAssistant) -> None:
     """Test input_number, number & sensor only is accepted for above/below."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await numeric_state_trigger.async_validate_trigger_config(
             hass,
             {
@@ -1834,7 +1836,7 @@ async def test_schema_unacceptable_entities(hass: HomeAssistant) -> None:
                 "below": 1000,
             },
         )
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await numeric_state_trigger.async_validate_trigger_config(
             hass,
             {
@@ -1988,7 +1990,9 @@ async def test_template_variable(
                 "trigger": {
                     "platform": "numeric_state",
                     "entity_id": "test.entity",
-                    "value_template": "{{ state.attributes.test_attribute[2] * multiplier}}",
+                    "value_template": (
+                        "{{ state.attributes.test_attribute[2] * multiplier}}"
+                    ),
                     "below": 10,
                 },
                 "action": {"service": "test.automation"},

@@ -1,13 +1,11 @@
 """Config flow to configure the Lutron integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import HTTPError
 
+import probatio
 from pylutron import Lutron
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -29,6 +27,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,11 +67,13 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_USERNAME, default="lutron"): str,
-                    vol.Required(CONF_PASSWORD, default="integration"): str,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_USERNAME, default="lutron"): str,
+                    probatio.Required(
+                        probatio.Secret(CONF_PASSWORD), default="integration"
+                    ): str,
                 }
             ),
             errors=errors,
@@ -80,6 +81,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LutronConfigEntry,
     ) -> OptionsFlowHandler:
@@ -97,9 +99,9 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_DEFAULT_DIMMER_LEVEL,
                     default=self.config_entry.options.get(
                         CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL

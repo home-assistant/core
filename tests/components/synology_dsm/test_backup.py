@@ -1,8 +1,9 @@
 """Tests for the Synology DSM backup agent."""
 
+from collections.abc import AsyncIterator
 from io import StringIO
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -18,6 +19,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     Folder,
 )
+from homeassistant.components.synology_dsm.backup import async_get_backup_agents
 from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
@@ -35,7 +37,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -50,7 +52,8 @@ async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
             b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
             b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
             b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
-            b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
+            b'"homeassistant_version":"2025.2.0.dev0",'
+            b'"name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
         )
     if filename == f"{BASE_FILENAME}.tar":
         return MockStreamReaderChunked(b"backup data")
@@ -65,7 +68,8 @@ async def _mock_download_file_meta_ok_tar_missing(
             b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
             b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
             b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
-            b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
+            b'"homeassistant_version":"2025.2.0.dev0",'
+            b'"name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
         )
     if filename == f"{BASE_FILENAME}.tar":
         raise SynologyDSMAPIErrorException("api", "900", [{"code": 408}])
@@ -90,7 +94,10 @@ def mock_dsm_with_filestation():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -143,7 +150,10 @@ def mock_dsm_without_filestation():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
@@ -371,6 +381,7 @@ async def test_agents_list_backups_error(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
         },
@@ -466,7 +477,11 @@ async def test_agents_get_backup_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}, "backup": None}
+    assert response["result"] == {
+        "agent_error_translations": {},
+        "agent_errors": {},
+        "backup": None,
+    }
 
 
 async def test_agents_get_backup_error(
@@ -487,6 +502,7 @@ async def test_agents_get_backup_error(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
         },
@@ -509,7 +525,11 @@ async def test_agents_get_backup_defect_meta(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}, "backup": None}
+    assert response["result"] == {
+        "agent_error_translations": {},
+        "agent_errors": {},
+        "backup": None,
+    }
 
 
 async def test_agents_download(
@@ -597,6 +617,52 @@ async def test_agents_upload(
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
     assert mock.call_args_list[1].kwargs["filename"] == f"{base_filename}_meta.json"
     assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    setup_dsm_with_filestation: MagicMock,
+) -> None:
+    """Test that upload progress is reported as the backup stream is read."""
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"abc"
+        yield b"defgh"
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    backup = AgentBackup(
+        addons=[],
+        backup_id="test-backup",
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=False,
+        size=8,
+    )
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=backup,
+        on_progress=on_progress,
+    )
+
+    # The library reads the stream while sending it
+    source = setup_dsm_with_filestation.file.upload_file.call_args_list[0].kwargs[
+        "source"
+    ]
+    assert [chunk async for chunk in source] == [b"abc", b"defgh"]
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=3),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_upload_error(
@@ -704,7 +770,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 2
     assert mock.call_args_list[0].kwargs["filename"] == f"{BASE_FILENAME}.tar"
@@ -742,7 +808,7 @@ async def test_agents_delete_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 @pytest.mark.parametrize(
@@ -750,15 +816,18 @@ async def test_agents_delete_not_existing(
     [
         (
             SynologyDSMAPIErrorException("api", "100", "Unknown error"),
-            "{'api': 'api', 'code': '100', 'reason': 'Unknown', 'details': 'Unknown error'}",
+            "{'api': 'api', 'code': '100', 'reason': 'Unknown',"
+            " 'details': 'Unknown error'}",
         ),
         (
             SynologyDSMAPIErrorException("api", "900", [{"code": 407}]),
-            "{'api': 'api', 'code': '900', 'reason': 'Unknown', 'details': [{'code': 407}]",
+            "{'api': 'api', 'code': '900', 'reason': 'Unknown',"
+            " 'details': [{'code': 407}]",
         ),
         (
             SynologyDSMAPIErrorException("api", "900", [{"code": 417}]),
-            "{'api': 'api', 'code': '900', 'reason': 'Unknown', 'details': [{'code': 417}]",
+            "{'api': 'api', 'code': '900', 'reason': 'Unknown',"
+            " 'details': [{'code': 417}]",
         ),
     ],
 )
@@ -786,9 +855,10 @@ async def test_agents_delete_error(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             "synology_dsm.mocked_syno_dsm_entry": "Failed to delete backup"
-        }
+        },
     }
     assert f"Failed to delete backup: {expected_log}" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file

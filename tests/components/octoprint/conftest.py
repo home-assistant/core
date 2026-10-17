@@ -1,7 +1,5 @@
 """Tests for the OctoPrint integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import patch

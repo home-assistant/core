@@ -1,8 +1,6 @@
 """Support for Folder watcher event entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from watchdog.events import (
     EVENT_TYPE_CLOSED,
@@ -66,6 +64,7 @@ class FolderWatcherEventEntity(EventEntity):
         self._trigger_event(event, _extra)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

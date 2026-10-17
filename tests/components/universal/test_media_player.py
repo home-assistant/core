@@ -3,8 +3,8 @@
 from copy import copy
 from unittest.mock import Mock, patch
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_number, input_select, media_player, switch
@@ -455,6 +455,7 @@ async def test_name(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass, "media_player", {"media_player": CONFIG_CHILDREN_ONLY}
     )
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test") is not None
 
 

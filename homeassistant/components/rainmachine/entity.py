@@ -1,8 +1,7 @@
 """Support for RainMachine devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import callback
@@ -45,6 +44,7 @@ class RainMachineEntity(CoordinatorEntity[RainMachineDataUpdateCoordinator]):
         self.entity_description = description
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this controller."""
         return DeviceInfo(
@@ -56,17 +56,19 @@ class RainMachineEntity(CoordinatorEntity[RainMachineDataUpdateCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, self._data.controller.mac)},
             name=self._data.controller.name.capitalize(),
             manufacturer="RainMachine",
-            hw_version=self._version_coordinator.data["hwVer"],
+            hw_version=str(self._version_coordinator.data["hwVer"]),
             sw_version=f"{self._version_coordinator.data['swVer']} "
             f"(API: {self._version_coordinator.data['apiVer']})",
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         self.update_from_latest_data()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

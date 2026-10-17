@@ -1,7 +1,5 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
 
-from __future__ import annotations
-
 from pythonegardia.egardiadevice import EgardiaDevice
 
 from homeassistant.components.binary_sensor import (

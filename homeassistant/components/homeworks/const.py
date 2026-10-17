@@ -1,7 +1,5 @@
 """Constants for the Lutron Homeworks integration."""
 
-from __future__ import annotations
-
 DOMAIN = "homeworks"
 
 CONF_ADDR = "addr"

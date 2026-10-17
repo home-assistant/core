@@ -1,7 +1,5 @@
 """Base entity for the Bring! integration."""
 
-from __future__ import annotations
-
 from bring_api import BringList
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

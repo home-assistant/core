@@ -1,12 +1,10 @@
 """Bitcoin information service that uses blockchain.com."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
 from blockchain import exchangerates, statistics
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -129,10 +127,10 @@ OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DISPLAY_OPTIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(OPTION_KEYS)]
+        probatio.Required(CONF_DISPLAY_OPTIONS, default=[]): probatio.All(
+            probatio.EnsureList(), [probatio.In(OPTION_KEYS)]
         ),
-        vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
+        probatio.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
     }
 )
 

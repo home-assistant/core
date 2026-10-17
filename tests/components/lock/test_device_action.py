@@ -53,7 +53,7 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id, "attributes", {"supported_features": features_state}
         )
     expected_actions = []
     basic_action_types = ["lock", "unlock"]
@@ -185,9 +185,9 @@ async def test_action(
     )
     await hass.async_block_till_done()
 
-    lock_calls = async_mock_service(hass, "lock", "lock")
-    unlock_calls = async_mock_service(hass, "lock", "unlock")
-    open_calls = async_mock_service(hass, "lock", "open")
+    lock_calls = async_mock_service(hass, DOMAIN, "lock")
+    unlock_calls = async_mock_service(hass, DOMAIN, "unlock")
+    open_calls = async_mock_service(hass, DOMAIN, "open")
 
     hass.bus.async_fire("test_event_lock")
     await hass.async_block_till_done()
@@ -253,7 +253,7 @@ async def test_action_legacy(
     )
     await hass.async_block_till_done()
 
-    lock_calls = async_mock_service(hass, "lock", "lock")
+    lock_calls = async_mock_service(hass, DOMAIN, "lock")
 
     hass.bus.async_fire("test_event_lock")
     await hass.async_block_till_done()

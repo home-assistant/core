@@ -1,13 +1,12 @@
 """Flock platform for notify component."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import aiohttp
+import probatio
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -15,15 +14,18 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+DOMAIN = "flock"
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://api.flock.com/hooks/sendMessage/"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string}
+    {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string}
 )
 
 
@@ -48,6 +50,7 @@ class FlockNotificationService(BaseNotificationService):
         self._url = url
         self._session = session
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
         payload = {"text": message}
@@ -58,12 +61,19 @@ class FlockNotificationService(BaseNotificationService):
             async with asyncio.timeout(10):
                 response = await self._session.post(self._url, json=payload)
                 result = await response.json()
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+            ) from err
+        except aiohttp.ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from err
 
-            if response.status != HTTPStatus.OK or "error" in result:
-                _LOGGER.error(
-                    "Flock service returned HTTP status %d, response %s",
-                    response.status,
-                    result,
-                )
-        except TimeoutError:
-            _LOGGER.error("Timeout accessing Flock at %s", self._url)
+        if response.status != HTTPStatus.OK or "error" in result:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            )

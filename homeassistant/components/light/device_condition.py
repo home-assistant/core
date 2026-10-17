@@ -1,8 +1,6 @@
 """Provides device conditions for lights."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
@@ -15,7 +13,7 @@ from .const import DOMAIN
 # mypy: disallow-any-generics
 
 CONDITION_SCHEMA = toggle_entity.CONDITION_SCHEMA.extend(
-    {vol.Required(CONF_DOMAIN): DOMAIN}
+    {probatio.Required(CONF_DOMAIN): DOMAIN}
 )
 
 
@@ -36,6 +34,6 @@ async def async_get_conditions(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     return await toggle_entity.async_get_condition_capabilities(hass, config)

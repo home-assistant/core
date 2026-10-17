@@ -35,7 +35,7 @@ async def test_event(
     values: dict[str, MowerAttributes],
     automower_ws_ready: list[Callable[[], None]],
 ) -> None:
-    """Test that a new message arriving over the websocket creates and updates the sensor."""
+    """Test websocket message creates and updates the sensor."""
     callbacks: list[Callable[[SingleMessageData], None]] = []
 
     @callback
@@ -62,7 +62,7 @@ async def test_event(
     assert mock_automower_client.register_single_message_callback.called
 
     # Check initial state (event entity not available yet)
-    state = hass.states.get("event.test_mower_1_message")
+    state = hass.states.get("event.garden_test_mower_1_message")
     assert state is None
 
     # Simulate a new message for this mower and check entity creation
@@ -84,7 +84,7 @@ async def test_event(
         cb(message)
     await hass.async_block_till_done()
 
-    state = hass.states.get("event.test_mower_1_message")
+    state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
 
@@ -98,7 +98,7 @@ async def test_event(
         cb()
     await hass.async_block_till_done()
 
-    state = hass.states.get("event.test_mower_1_message")
+    state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
 
@@ -120,7 +120,7 @@ async def test_event(
     for cb in callbacks:
         cb(message)
     await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_1_message")
+    state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
 
@@ -144,10 +144,10 @@ async def test_event(
         cb(message)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get("event.test_mower_1_message")
+    entry = entity_registry.async_get("event.garden_test_mower_1_message")
     assert entry is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
-    state = hass.states.get("event.test_mower_2_message")
+    state = hass.states.get("event.garden_test_mower_2_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
 
@@ -158,10 +158,60 @@ async def test_event(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_2_message")
+    state = hass.states.get("event.garden_test_mower_2_message")
     assert state is None
-    entry = entity_registry.async_get("event.test_mower_2_message")
+    entry = entity_registry.async_get("event.garden_test_mower_2_message")
     assert entry is None
+
+
+@pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
+async def test_event_destination_blocked(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    automower_ws_ready: list[Callable[[], None]],
+) -> None:
+    """Newer error codes such as destination_blocked must trigger the message event."""
+    callbacks: list[Callable[[SingleMessageData], None]] = []
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[SingleMessageData], None],
+    ) -> None:
+        callbacks.append(cb)
+
+    mock_automower_client.register_single_message_callback.side_effect = (
+        fake_register_websocket_response
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    for cb in automower_ws_ready:
+        cb()
+    await hass.async_block_till_done()
+
+    message = SingleMessageData(
+        type="messages",
+        id=TEST_MOWER_ID,
+        attributes=SingleMessageAttributes(
+            message=Message(
+                time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                code="destination_blocked",
+                severity=Severity.ERROR,
+                latitude=49.0,
+                longitude=10.0,
+            )
+        ),
+    )
+
+    for cb in callbacks:
+        cb(message)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.garden_test_mower_1_message")
+    assert state is not None
+    assert state.attributes[ATTR_EVENT_TYPE] == "destination_blocked"
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))

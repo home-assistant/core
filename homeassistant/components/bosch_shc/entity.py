@@ -1,8 +1,9 @@
 """Bosch Smart Home Controller base entity."""
 
-from __future__ import annotations
+from functools import partial
+from typing import override
 
-from boschshcpy import SHCDevice, SHCIntrusionSystem
+from boschshcpy import SHCDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -17,9 +18,11 @@ async def async_remove_devices(
 ) -> None:
     """Get item that is removed from session."""
     dev_registry = dr.async_get(hass)
-    device = dev_registry.async_get_device(identifiers={(DOMAIN, entity.device_id)})
+    device = dev_registry.async_get_device_by_identifier(
+        (DOMAIN, entity.device_id), entry_id
+    )
     if device is not None:
-        dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
+        dev_registry.async_remove_device(device.id)
 
 
 class SHCBaseEntity(Entity):
@@ -28,13 +31,12 @@ class SHCBaseEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(
-        self, device: SHCDevice | SHCIntrusionSystem, parent_id: str, entry_id: str
-    ) -> None:
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize the generic SHC device."""
         self._device = device
         self._entry_id = entry_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
@@ -45,12 +47,8 @@ class SHCBaseEntity(Entity):
             else:
                 self.schedule_update_ha_state()
 
-        self._device.subscribe_callback(self.entity_id, on_state_changed)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from SHC events."""
-        await super().async_will_remove_from_hass()
-        self._device.unsubscribe_callback(self.entity_id)
+        self._device.subscribe_callback(self.unique_id, on_state_changed)
+        self.async_on_remove(partial(self._device.unsubscribe_callback, self.unique_id))
 
     @property
     def device_id(self) -> str:
@@ -61,18 +59,30 @@ class SHCBaseEntity(Entity):
 class SHCEntity(SHCBaseEntity):
     """Representation of a SHC device entity."""
 
-    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+    _device: SHCDevice
+
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
         """Initialize generic SHC device."""
         self._attr_unique_id = device.serial
-        self._attr_device_info = DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             manufacturer=device.manufacturer,
             model=device.device_model,
             name=device.name,
-            via_device=(DOMAIN, device.root_device_id),
         )
+        # boschshcpy may render the hub identifier (shc_info.unique_id) and a
+        # device's root_device_id differently, so the lookup can miss; link only
+        # when it resolves instead of raising out of setup.
+        if hub := dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, device.root_device_id), entry_id
+        ):
+            device_info.via_device_id = hub.id
+        self._attr_device_info = device_info
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
@@ -81,41 +91,11 @@ class SHCEntity(SHCBaseEntity):
             self.schedule_update_ha_state()
 
         for service in self._device.device_services:
-            service.subscribe_callback(self.entity_id, on_state_changed)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from SHC events."""
-        await super().async_will_remove_from_hass()
-        for service in self._device.device_services:
-            service.unsubscribe_callback(self.entity_id)
+            service.subscribe_callback(self.unique_id, on_state_changed)
+            self.async_on_remove(partial(service.unsubscribe_callback, self.unique_id))
 
     @property
+    @override
     def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.status == "AVAILABLE"
-
-
-class SHCDomainEntity(SHCBaseEntity):
-    """Representation of a SHC domain service entity."""
-
-    def __init__(
-        self, domain: SHCIntrusionSystem, parent_id: str, entry_id: str
-    ) -> None:
-        """Initialize the generic SHC device."""
-        self._attr_unique_id = domain.id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, domain.id)},
-            manufacturer=domain.manufacturer,
-            model=domain.device_model,
-            name=domain.name,
-            via_device=(
-                DOMAIN,
-                parent_id,
-            ),
-        )
-        super().__init__(device=domain, parent_id=parent_id, entry_id=entry_id)
-
-    @property
-    def available(self) -> bool:
-        """Return false if status is unavailable."""
-        return self._device.system_availability

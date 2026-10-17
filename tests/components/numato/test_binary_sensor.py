@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.numato import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -25,7 +26,7 @@ async def test_failing_setups_no_entities(
 ) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
     await hass.async_block_till_done()
     for entity_id in MOCKUP_ENTITY_IDS:
         assert entity_id not in hass.states.async_entity_ids()
@@ -38,7 +39,7 @@ async def test_setup_callbacks(hass: HomeAssistant, numato_fixture) -> None:
         NumatoModuleMock.NumatoDeviceMock, "add_event_detect"
     ) as mock_add_event_detect:
         numato_fixture.discover()
-        assert await async_setup_component(hass, "numato", NUMATO_CFG)
+        assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
         await hass.async_block_till_done()  # wait until services are registered
 
     mock_add_event_detect.assert_called()
@@ -56,7 +57,7 @@ async def test_hass_binary_sensor_notification(
     hass: HomeAssistant, numato_fixture
 ) -> None:
     """Test regular operations from within Home Assistant."""
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
     assert (
         hass.states.get("binary_sensor.numato_binary_sensor_mock_port2").state == "on"
@@ -100,11 +101,11 @@ async def test_binary_sensor_setup_no_notify(
         raise_notification_error,
     ):
         numato_fixture.discover()
-        assert await async_setup_component(hass, "numato", NUMATO_CFG)
+        assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
         await hass.async_block_till_done()  # wait until services are registered
 
     assert all(
-        f"updates on binary sensor numato_binary_sensor_mock_port{port} only in polling mode"
-        in caplog.text
+        f"updates on binary sensor numato_binary_sensor_mock_port{port}"
+        " only in polling mode" in caplog.text
         for port in NUMATO_CFG["numato"]["devices"][0]["binary_sensors"]["ports"]
     )

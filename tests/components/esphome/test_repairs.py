@@ -1,7 +1,5 @@
 """Test ESPHome repairs."""
 
-from __future__ import annotations
-
 import asyncio
 from unittest.mock import AsyncMock
 
@@ -24,7 +22,6 @@ from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
-    async_process_repairs_platforms,
     get_repairs,
     process_repair_fix_flow,
     start_repair_fix_flow,
@@ -75,7 +72,6 @@ async def test_device_conflict_manual(
     assert issues
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
@@ -143,13 +139,15 @@ async def test_device_conflict_migration(
 
     ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
-    assert ent_reg_entry.unique_id == "11:22:33:44:55:AA-binary_sensor-mybinary_sensor"
+    assert (
+        ent_reg_entry.unique_id == "11:22:33:44:55:AA/0/binary_sensor/my binary_sensor"
+    )
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     assert entries is not None
     for entry in entries:
-        assert entry.unique_id.startswith("11:22:33:44:55:AA-")
+        assert entry.unique_id.startswith("11:22:33:44:55:AA/")
     disconnect_done = hass.loop.create_future()
 
     async def async_disconnect(*args, **kwargs) -> None:
@@ -179,7 +177,6 @@ async def test_device_conflict_migration(
     assert issues
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
@@ -206,21 +203,62 @@ async def test_device_conflict_migration(
     assert mock_config_entry.unique_id == "11:22:33:44:55:ab"
     ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
-    assert ent_reg_entry.unique_id == "11:22:33:44:55:AB-binary_sensor-mybinary_sensor"
+    assert (
+        ent_reg_entry.unique_id == "11:22:33:44:55:AB/0/binary_sensor/my binary_sensor"
+    )
 
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     assert entries is not None
     for entry in entries:
-        assert entry.unique_id.startswith("11:22:33:44:55:AB-")
+        assert entry.unique_id.startswith("11:22:33:44:55:AB/")
 
-    dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab")}
+    dev_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab"), mock_config_entry.entry_id
     )
     assert dev_entry is not None
 
-    old_dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa"), mock_config_entry.entry_id
+        )
+        is None
     )
-    assert old_dev_entry is None
+
+
+async def test_device_conflict_issue_deleted_on_entry_removal(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the device conflict issue is linked to and removed with its entry."""
+    disconnect_done = hass.loop.create_future()
+
+    async def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
+    device_info = DeviceInfo(
+        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
+    mock_client.disconnect = AsyncMock()
+
+    issue_id = DEVICE_CONFLICT_ISSUE_FORMAT.format(mock_config_entry.entry_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

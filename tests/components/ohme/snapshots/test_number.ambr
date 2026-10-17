@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,12 +44,12 @@
 # name: test_numbers[number.ohme_home_pro_preconditioning_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Preconditioning duration',
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 5,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Preconditioning duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.ohme_home_pro_preconditioning_duration',
@@ -59,6 +59,66 @@
     'state': '15',
   })
 # ---
+# name: test_numbers[number.ohme_home_pro_state_of_charge_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.ohme_home_pro_state_of_charge_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State of charge input',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'State of charge input',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'state_of_charge_input',
+    'unique_id': 'chargerid_state_of_charge_input',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[number.ohme_home_pro_state_of_charge_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro State of charge input',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ohme_home_pro_state_of_charge_input',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
 # name: test_numbers[number.ohme_home_pro_target_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -66,10 +126,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -104,12 +164,12 @@
 # name: test_numbers[number.ohme_home_pro_target_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Target percentage',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Target percentage',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.ohme_home_pro_target_percentage',

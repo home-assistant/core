@@ -142,7 +142,6 @@ async def test_sensor_entity_unavailable_no_coordinator_data(
     assert temp_state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("mock_pooldose_client")
 async def test_sensor_unit_fallback_to_description(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

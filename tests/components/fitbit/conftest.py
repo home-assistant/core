@@ -1,7 +1,7 @@
 """Test fixtures for fitbit."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import time
 from typing import Any
@@ -125,7 +125,7 @@ def mock_imported_config_data(
     monitored_resources: list[str] | None,
     configured_unit_system: str | None,
 ) -> dict[str, Any]:
-    """Fixture for the fitbit sensor platform configuration data in configuration.yaml."""
+    """Fixture for the fitbit sensor platform config data."""
     config = {}
     if monitored_resources is not None:
         config["monitored_resources"] = monitored_resources
@@ -222,9 +222,7 @@ def mock_devices(
 
 def timeseries_response(resource: str, value: str) -> dict[str, Any]:
     """Create a timeseries response value."""
-    return {
-        resource: [{"dateTime": datetime.datetime.today().isoformat(), "value": value}]
-    }
+    return {resource: [{"dateTime": dt.datetime.today().isoformat(), "value": value}]}
 
 
 @pytest.fixture(name="register_timeseries")

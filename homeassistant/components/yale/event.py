@@ -1,10 +1,8 @@
 """Support for yale events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from yalexs.activity import Activity
 from yalexs.doorbell import DoorbellDetail
@@ -84,6 +82,7 @@ class YaleEventEntity(YaleDescriptionEntity, EventEntity):
     _last_activity: Activity | None = None
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Update from data."""
         self._attr_available = retrieve_online_state(self._data, self._detail)

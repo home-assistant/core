@@ -1,9 +1,7 @@
 """Switches for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -74,6 +72,7 @@ class PooldoseSwitch(PooldoseEntity, SwitchEntity):
         super().__init__(coordinator, serial_number, device_info, description, "switch")
         self._async_update_attrs()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -84,6 +83,7 @@ class PooldoseSwitch(PooldoseEntity, SwitchEntity):
         data = cast(dict, self.get_data())
         self._attr_is_on = cast(bool, data["value"])
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_perform_write(
@@ -93,6 +93,7 @@ class PooldoseSwitch(PooldoseEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_perform_write(

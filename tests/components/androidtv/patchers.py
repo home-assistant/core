@@ -47,7 +47,10 @@ class AdbDeviceTcpAsyncFake:
 
 
 class ClientAsyncFakeSuccess:
-    """A fake of the `ClientAsync` class when the connection and shell commands succeed."""
+    """A fake of the `ClientAsync` class.
+
+    Used when the connection and shell commands succeed.
+    """
 
     def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT) -> None:
         """Initialize a `ClientAsyncFakeSuccess` instance."""
@@ -68,7 +71,10 @@ class ClientAsyncFakeFail:
         self._devices = []
 
     async def device(self, serial) -> DeviceAsync | None:
-        """Mock the `ClientAsync.device` method when the device is not connected via ADB."""
+        """Mock the `ClientAsync.device` method.
+
+        Used when the device is not connected via ADB.
+        """
         self._devices = []
         return None
 
@@ -86,7 +92,7 @@ class DeviceAsyncFake:
 
 
 def patch_connect(success):
-    """Mock the `adb_shell.adb_device_async.AdbDeviceTcpAsync` and `ClientAsync` classes."""
+    """Mock the AdbDeviceTcpAsync and `ClientAsync` classes."""
 
     async def connect_success_python(self, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.connect` method when it succeeds."""
@@ -121,7 +127,10 @@ def patch_shell(response=None, error=False, mac_eth=False, exc=None):
     """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods."""
 
     async def shell_success(self, cmd, *args, **kwargs):
-        """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods when they are successful."""
+        """Mock the AdbDeviceTcpAsyncFake and DeviceAsyncFake shell methods.
+
+        Used when they are successful.
+        """
         self.shell_cmd = cmd
         if cmd == CMD_DEVICE_PROPERTIES:
             return PROPS_DEV_INFO

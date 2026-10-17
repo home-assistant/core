@@ -1,28 +1,4 @@
 {
-  "common": {
-    "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
-  },
-  "conditions": {
-    "is_home": {
-      "description": "Tests if one or more persons are home.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::person::common::condition_behavior_name%]"
-        }
-      },
-      "name": "Person is home"
-    },
-    "is_not_home": {
-      "description": "Tests if one or more persons are not home.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::person::common::condition_behavior_name%]"
-        }
-      },
-      "name": "Person is not home"
-    }
-  },
   "entity_component": {
     "_": {
       "name": "[%key:component::person::title%]",
@@ -49,19 +25,18 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
+  "exceptions": {
+    "invalid_picture": {
+      "message": "The picture must be an image uploaded to Home Assistant."
     },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
+    "no_person_linked": {
+      "message": "Your user is not linked to a person. Ask an administrator to link your user to a person first."
+    },
+    "person_not_editable": {
+      "message": "Your person is configured in YAML and cannot be changed from the UI."
+    },
+    "system_generated_user": {
+      "message": "System-generated users cannot change their profile."
     }
   },
   "services": {
@@ -70,25 +45,5 @@
       "name": "Reload persons"
     }
   },
-  "title": "Person",
-  "triggers": {
-    "entered_home": {
-      "description": "Triggers when one or more persons enter home.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::person::common::trigger_behavior_name%]"
-        }
-      },
-      "name": "Entered home"
-    },
-    "left_home": {
-      "description": "Triggers when one or more persons leave home.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::person::common::trigger_behavior_name%]"
-        }
-      },
-      "name": "Left home"
-    }
-  }
+  "title": "Person"
 }

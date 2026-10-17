@@ -4,7 +4,9 @@ from datetime import timedelta
 import logging
 from unittest.mock import patch
 
+from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
+from multidict import CIMultiDict
 import pytest
 
 from homeassistant.components.rest import DOMAIN
@@ -134,7 +136,10 @@ async def test_rest_data_with_incorrect_charset_in_header(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    log_text = "Response charset came back as utf-8 but could not be decoded, continue with configured encoding windows-1250."
+    log_text = (
+        "Response charset came back as utf-8 but could not be decoded,"
+        " continue with configured encoding windows-1250."
+    )
     assert log_text in caplog.text
 
     caplog.clear()
@@ -548,3 +553,51 @@ async def test_rest_data_boolean_params_converted_to_strings(
     assert url.query["boolFalse"] == "false"
     assert url.query["stringParam"] == "test"
     assert url.query["intParam"] == "123"
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [
+        pytest.param("Authorization", id="canonical_casing"),
+        pytest.param("authorization", id="lowercase"),
+    ],
+)
+async def test_rest_data_configured_authorization_header_wins(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    header_name: str,
+) -> None:
+    """Test a configured Authorization header replaces generated basic auth."""
+    aioclient_mock.get(
+        "http://example.com/api",
+        status=200,
+        json={"status": "ok"},
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "resource": "http://example.com/api",
+                "method": "GET",
+                "username": "user",
+                "password": "pass",
+                "headers": {header_name: "Bearer configured"},
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.status }}",
+                    }
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+
+    # The generated basic auth must not be sent as a second Authorization header
+    assert CIMultiDict(headers).getall(hdrs.AUTHORIZATION) == ["Bearer configured"]

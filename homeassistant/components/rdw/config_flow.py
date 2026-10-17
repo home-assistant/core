@@ -1,11 +1,9 @@
 """Config flow to configure the RDW integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from vehicle import RDW, RDWError, RDWUnknownLicensePlateError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,6 +16,7 @@ class RDWFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -47,9 +46,9 @@ class RDWFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_LICENSE_PLATE): str,
+                    probatio.Required(CONF_LICENSE_PLATE): str,
                 }
             ),
             errors=errors,

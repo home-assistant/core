@@ -1,11 +1,22 @@
 """Constants for the Renault component."""
 
+from typing import Final
+
 from homeassistant.const import Platform
 
 DOMAIN = "renault"
 
-CONF_LOCALE = "locale"
-CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
+
+class RenaultConfigurationKeys:
+    """Configuration keys."""
+
+    DEVICE_IDS: Final = "device_ids"
+    KAMEREON_ACCOUNT_ID: Final = "kamereon_account_id"
+    LOCALE: Final = "locale"
+    LOGIN_TOKEN: Final = "login_token"
+    PASSWORD: Final = "password"
+    USERNAME: Final = "username"
+
 
 # normal number of allowed calls per hour to the API
 # for a single car and the 7 coordinator, it is a scan every 7mn

@@ -7,11 +7,13 @@
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
+    for: &condition_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .brightness_threshold_entity: &brightness_threshold_entity
   - domain: input_number
@@ -24,7 +26,8 @@
 .brightness_threshold_number: &brightness_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 is_off: *condition_common
@@ -34,6 +37,7 @@ is_brightness:
   target: *condition_light_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

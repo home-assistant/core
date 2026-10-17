@@ -1,15 +1,18 @@
 """The tests for the Configurator component."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from typing import Any
 
 import pytest
 
 from homeassistant.components import configurator
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityStateAttribute
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -39,7 +42,7 @@ async def test_request_least_info(hass: HomeAssistant) -> None:
 async def test_request_all_info(hass: HomeAssistant) -> None:
     """Test request config with all possible info."""
     exp_attr = {
-        ATTR_FRIENDLY_NAME: "Test Request",
+        EntityStateAttribute.FRIENDLY_NAME: "Test Request",
         configurator.ATTR_DESCRIPTION: """config description
 
 [link name](link url)
@@ -47,7 +50,7 @@ async def test_request_all_info(hass: HomeAssistant) -> None:
 ![Description image](config image url)""",
         configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
         configurator.ATTR_FIELDS: [],
-        configurator.ATTR_ENTITY_PICTURE: "config entity picture",
+        EntityStateAttribute.ENTITY_PICTURE: "config entity picture",
         configurator.ATTR_CONFIGURE_ID: configurator.async_request_config(
             hass,
             name="Test Request",
@@ -130,3 +133,72 @@ async def test_request_done_fail_silently_on_bad_request_id(
 ) -> None:
     """Test that request_done fails silently with a bad request id."""
     configurator.async_request_done(hass, 2016)
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.configurator.services.configure."]
+)
+async def test_configure_service_requires_admin(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
+    """Test the configure service requires admin."""
+    request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            configurator.DOMAIN,
+            configurator.SERVICE_CONFIGURE,
+            {configurator.ATTR_CONFIGURE_ID: request_id},
+            context=Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )
+
+
+async def _async_request_config(
+    hass: HomeAssistant, name: str, callback: configurator.ConfiguratorCallback
+) -> str:
+    """Request config using the async API."""
+    return configurator.async_request_config(hass, name, callback)
+
+
+async def _sync_request_config(
+    hass: HomeAssistant, name: str, callback: configurator.ConfiguratorCallback
+) -> str:
+    """Request config using the sync API from an executor thread."""
+    return await hass.async_add_executor_job(
+        configurator.request_config, hass, name, callback
+    )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.configurator.services.configure."]
+)
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "request_config",
+    [_async_request_config, _sync_request_config],
+    ids=["async", "sync"],
+)
+async def test_request_config_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    request_config: Callable[
+        [HomeAssistant, str, configurator.ConfiguratorCallback],
+        Coroutine[Any, Any, str],
+    ],
+) -> None:
+    """Test that requesting a config warns about the deprecated integration."""
+    request_id = await request_config(hass, "Test Request", lambda _: None)
+
+    states = hass.states.async_all()
+    assert len(states) == 1
+    state = states[0]
+    assert state.state == configurator.STATE_CONFIGURE
+    assert state.attributes.get(configurator.ATTR_CONFIGURE_ID) == request_id
+
+    assert (
+        "Detected that custom integration 'my_integration' uses the deprecated "
+        "configurator integration" in caplog.text
+    )
+    assert "This will stop working in Home Assistant 2027.10" in caplog.text

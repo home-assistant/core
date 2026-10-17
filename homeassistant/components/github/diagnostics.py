@@ -1,7 +1,5 @@
 """Diagnostics support for the GitHub integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiogithubapi import GitHubAPI, GitHubException
@@ -21,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: GithubConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = {"options": {**config_entry.options}}
+    data: dict[str, Any] = {}
     client = GitHubAPI(
         token=config_entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
@@ -35,10 +33,10 @@ async def async_get_config_entry_diagnostics(
     else:
         data["rate_limit"] = rate_limit_response.data.as_dict
 
-    repositories = config_entry.runtime_data
+    repositories = config_entry.runtime_data.repositories
     data["repositories"] = {}
 
-    for repository, coordinator in repositories.items():
-        data["repositories"][repository] = coordinator.data
+    for coordinator in repositories.values():
+        data["repositories"][coordinator.data["full_name"]] = coordinator.data
 
     return data

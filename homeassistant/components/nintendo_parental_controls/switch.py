@@ -1,11 +1,9 @@
 """Switch platform for Nintendo Parental."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pynintendoparental.enum import RestrictionMode
 
@@ -81,14 +79,17 @@ class NintendoParentalControlsSwitchEntity(NintendoDevice, SwitchEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return entity state."""
         return self.entity_description.is_on(self._device)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.turn_on_fn(self._device)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.turn_off_fn(self._device)

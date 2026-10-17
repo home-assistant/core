@@ -1,7 +1,5 @@
 """Service handlers for Growatt Server integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, time
 from typing import TYPE_CHECKING, Any
 
@@ -28,7 +26,7 @@ def _get_coordinators(
     coordinators: dict[str, GrowattCoordinator] = {}
 
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             continue
 
         for coord in entry.runtime_data.devices.values():

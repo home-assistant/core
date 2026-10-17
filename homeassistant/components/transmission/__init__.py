@@ -1,7 +1,5 @@
 """Support for the Transmission BitTorrent client API."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 import re
@@ -25,7 +23,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -34,8 +36,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN, MIN_REQUIRED_TRANSMISSION_VERSION
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
+from .helpers import create_version
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Set up the Transmission Component."""
 
     @callback
@@ -80,7 +83,8 @@ async def async_setup_entry(
         if CONF_NAME not in config_entry.data:
             return None
         match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
+            f"{config_entry.data[CONF_HOST]}"
+            f"-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
@@ -96,6 +100,17 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed from err
     except (TransmissionConnectError, TransmissionError) as err:
         raise ConfigEntryNotReady from err
+
+    version = create_version(api.server_version)
+    if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "transmission_version": api.server_version,
+                "min_version": MIN_REQUIRED_TRANSMISSION_VERSION,
+            },
+        )
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)
@@ -118,19 +133,17 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Unload Transmission Entry from config_entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -153,8 +166,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True
 
 
 async def get_api(

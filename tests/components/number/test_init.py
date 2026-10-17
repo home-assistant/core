@@ -586,7 +586,7 @@ async def test_restore_number_save_state(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Trigger saving state
@@ -659,7 +659,7 @@ async def test_restore_number_restore_state(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert hass.states.get(entity0.entity_id)
@@ -751,7 +751,7 @@ async def test_custom_unit(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
@@ -821,7 +821,7 @@ async def test_custom_unit_change(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Default unit conversion according to unit system
@@ -866,7 +866,8 @@ async def test_translated_unit(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.number"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = common.MockNumberEntity(
@@ -881,7 +882,7 @@ async def test_translated_unit(
         setup_test_component_platform(hass, DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "number", {"number": {"platform": "test"}}
+            hass, DOMAIN, {"number": {"platform": "test"}}
         )
         await hass.async_block_till_done()
 
@@ -898,7 +899,8 @@ async def test_translated_unit_with_native_unit_raises(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.number"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = common.MockNumberEntity(
@@ -914,7 +916,7 @@ async def test_translated_unit_with_native_unit_raises(
         setup_test_component_platform(hass, DOMAIN, [entity0])
 
         assert await async_setup_component(
-            hass, "number", {"number": {"platform": "test"}}
+            hass, DOMAIN, {"number": {"platform": "test"}}
         )
         await hass.async_block_till_done()
         # Setup fails so entity_id is None
@@ -939,7 +941,7 @@ async def test_ambiguous_unit_of_measurement_compat(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Check compatible unit is applied
@@ -1091,3 +1093,83 @@ def test_device_class_units(hass: HomeAssistant) -> None:
     assert set(NUMBER_DEVICE_CLASS_UNITS) == set(
         NumberDeviceClass
     ) - NON_NUMERIC_DEVICE_CLASSES - {NumberDeviceClass.MONETARY}
+
+
+@pytest.mark.parametrize(
+    ("device_class", "native_unit", "expected_units"),
+    [
+        pytest.param(
+            NumberDeviceClass.TEMPERATURE,
+            "hPa",
+            "['K', '°C', '°F']",
+            id="unit_not_valid_for_device_class",
+        ),
+        pytest.param(
+            NumberDeviceClass.AQI,
+            "%",
+            "['no unit of measurement']",
+            id="unit_for_device_class_without_unit",
+        ),
+    ],
+)
+async def test_invalid_unit_for_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class: NumberDeviceClass,
+    native_unit: str,
+    expected_units: str,
+) -> None:
+    """Test a warning is logged once for a unit not valid for the device class."""
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_value=10,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    message = (
+        f"Entity {entity0.entity_id} ({type(entity0)}) is using native unit of "
+        f"measurement '{native_unit}' which is not a valid unit for the device "
+        f"class ('{device_class}') it is using; expected one of {expected_units}. "
+        "This will stop working in Home Assistant 2027.5"
+    )
+    assert message in caplog.text
+
+    # The warning is logged only once per entity
+    entity0.async_write_ha_state()
+    await hass.async_block_till_done()
+    assert caplog.text.count(message) == 1
+
+
+@pytest.mark.parametrize(
+    ("device_class", "native_unit"),
+    [
+        pytest.param(
+            NumberDeviceClass.TEMPERATURE, UnitOfTemperature.CELSIUS, id="valid_unit"
+        ),
+        pytest.param(NumberDeviceClass.AQI, None, id="no_unit"),
+        pytest.param(NumberDeviceClass.MONETARY, "EUR", id="no_unit_restriction"),
+        pytest.param(None, "hPa", id="no_device_class"),
+    ],
+)
+async def test_valid_unit_for_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class: NumberDeviceClass | None,
+    native_unit: str | None,
+) -> None:
+    """Test no warning is logged for a unit that fits the device class."""
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_value=10,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert "is not a valid unit for the device class" not in caplog.text

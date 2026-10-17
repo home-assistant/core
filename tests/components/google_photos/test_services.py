@@ -370,7 +370,8 @@ async def test_upload_to_new_album(
         "album_id": "album-media-id-2",
     }
 
-    # Upload an additional item to the same album and assert that no new album is created
+    # Upload an additional item to the same album and assert that no
+    # new album is created
     mock_api.create_album.reset_mock()
     mock_api.create_media_items.reset_mock()
     mock_api.create_media_items.return_value = CreateMediaItemsResult(
@@ -408,7 +409,7 @@ async def test_create_album_failed(
     config_entry: MockConfigEntry,
     mock_api: Mock,
 ) -> None:
-    """Test service call to upload content to a new album but creating the album fails."""
+    """Test upload to new album when creating the album fails."""
     assert hass.services.has_service(DOMAIN, "upload")
 
     mock_api.create_album.side_effect = GooglePhotosApiError()

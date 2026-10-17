@@ -12,7 +12,7 @@ from homeassistant.components.shelly.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -61,8 +61,8 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "invalid_device_id"
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_not_found"
     assert exc_info.value.translation_placeholders == {
         ATTR_DEVICE_ID: "invalid_device_id"
     }
@@ -149,9 +149,12 @@ async def test_config_entry_not_loaded(
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "entry_not_loaded"
-    assert exc_info.value.translation_placeholders == {"device": entry.title}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
+    assert exc_info.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": entry.title,
+    }
 
 
 async def test_service_get_kvs_value_sleeping_device(
@@ -200,31 +203,6 @@ async def test_service_set_kvs_value(
     mock_rpc_device.kvs_set.assert_called_once_with("test_key", "test_value")
 
 
-async def test_service_get_kvs_value_config_entry_not_found(
-    hass: HomeAssistant, mock_rpc_device: Mock, device_registry: dr.DeviceRegistry
-) -> None:
-    """Test device with no config entries."""
-    entry = await init_integration(hass, 2)
-
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-
-    # Remove all config entries from device
-    device_registry.devices[device.id].config_entries.clear()
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
-            blocking=True,
-            return_response=True,
-        )
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": device.id}
-
-
 async def test_service_get_kvs_value_device_not_initialized(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -269,14 +247,9 @@ async def test_service_get_kvs_value_wrong_domain(
     )
     other_entry.add_to_hass(hass)
 
-    # Add the other domain's config entry to the device
+    # Move the device to the other domain's config entry
     device_registry.async_update_device(
-        device.id, add_config_entry_id=other_entry.entry_id
-    )
-
-    # Remove the original Shelly config entry
-    device_registry.async_update_device(
-        device.id, remove_config_entry_id=entry.entry_id
+        device.id, new_config_entry_id=other_entry.entry_id
     )
 
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -288,6 +261,9 @@ async def test_service_get_kvs_value_wrong_domain(
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": device.id}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": device.name,
+        "domain": DOMAIN,
+    }

@@ -1,7 +1,5 @@
 """Constants for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -15,7 +13,10 @@ from homeassistant.components.media_player import (
 
 
 class BeoSource:
-    """Class used for associating device source ids with friendly names. May not include all sources."""
+    """Associate device source ids with friendly names.
+
+    May not include all sources.
+    """
 
     DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
     LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
@@ -251,7 +252,8 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 # Device events
 BEO_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
-# Dict used to translate native Bang & Olufsen event names to string.json compatible ones
+# Dict used to translate native Bang & Olufsen event names
+# to string.json compatible ones
 EVENT_TRANSLATION_MAP: dict[str, str] = {
     # Beoremote One
     "KeyPress": "key_press",

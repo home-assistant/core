@@ -1,7 +1,5 @@
 """Test Tuya diagnostics platform."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -68,8 +66,10 @@ async def test_device_diagnostics(
     """Test device diagnostics."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, mock_device.id)})
-    assert device, repr(device_registry.devices)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert device, repr(device_registry._devices)
 
     result = await get_diagnostics_for_device(
         hass, hass_client, mock_config_entry, device

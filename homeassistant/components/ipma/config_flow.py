@@ -1,12 +1,12 @@
 """Config flow to configure IPMA component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyipma import IPMAException
 from pyipma.api import IPMA_API
 from pyipma.location import Location
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -23,6 +23,7 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -49,10 +50,10 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
                     }
                 ),
                 {

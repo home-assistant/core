@@ -173,7 +173,7 @@ async def test_unique_id_migration_notification_binary_sensor(
     client,
     integration,
 ) -> None:
-    """Test unique ID is migrated from old format to new for a notification binary sensor."""
+    """Test unique ID migration for a notification binary sensor."""
     entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
@@ -322,7 +322,7 @@ async def test_skip_old_entity_migration_for_multiple(
     client,
     integration,
 ) -> None:
-    """Test that multiple entities of the same value but on a different endpoint get skipped."""
+    """Test same-value entities on different endpoints get skipped."""
     node = Node(client, copy.deepcopy(hank_binary_switch_state))
     driver = client.driver
     assert driver
@@ -387,7 +387,7 @@ async def test_old_entity_migration_notification_binary_sensor(
     client,
     integration,
 ) -> None:
-    """Test old entity on a different endpoint is migrated to a new one for a notification binary sensor."""
+    """Test old endpoint entity migrated for notification binary sensor."""
     node = Node(client, copy.deepcopy(multisensor_6_state))
     driver = client.driver
     assert driver

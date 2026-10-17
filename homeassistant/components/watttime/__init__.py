@@ -1,23 +1,20 @@
 """The WattTime integration."""
 
-from __future__ import annotations
-
 from aiowatttime import Client
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN, LOGGER
-from .coordinator import WattTimeCoordinator
+from .const import DOMAIN
+from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> None:
     """Set up WattTime from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -28,31 +25,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed("Invalid username/password") from err
     except WattTimeError as err:
-        LOGGER.error("Error while authenticating with WattTime: %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        ) from err
 
     coordinator = WattTimeCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, config_entry: WattTimeConfigEntry
+) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

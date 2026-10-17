@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from fressnapftracker import Tracker
 
@@ -61,6 +62,7 @@ class FressnapfTrackerSensor(FressnapfTrackerEntity, SensorEntity):
     entity_description: FressnapfTrackerSensorDescription
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the resources if it has been received yet."""
         return self.entity_description.value_fn(self.coordinator.data)

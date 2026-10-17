@@ -1,12 +1,9 @@
 """Tests for the Rituals Perfume Genie switch platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -14,14 +11,16 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import (
     init_integration,
     mock_config_entry,
+    mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
 
@@ -47,16 +46,16 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     """Test handling a coordinator update."""
     config_entry = mock_config_entry(unique_id="switch_handle_coordinator_update_test")
     diffuser = mock_diffuser_v1_battery_cartridge()
-    await init_integration(hass, config_entry, [diffuser])
+    client = await init_integration(hass, config_entry, [diffuser])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["lot123v1"]
+    coordinator = config_entry.runtime_data.hubs
     diffuser.is_on = False
 
     state = hass.states.get("switch.genie")
     assert state
     assert state.state == STATE_ON
 
-    call_count_before_update = diffuser.update_data.call_count
+    call_count_before_update = client.hubs.call_count
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -71,13 +70,31 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
     assert coordinator.last_update_success
-    assert diffuser.update_data.call_count == call_count_before_update + 1
+    assert client.hubs.call_count == call_count_before_update + 1
+
+
+async def test_device_info(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test the device info, with the model and firmware from Rituals."""
+    diffuser = mock_diffuser(hublot="lot123device", model="Genie 3.0", version="7.1")
+    config_entry = mock_config_entry(unique_id="id_123_device_info_test")
+    await init_integration(hass, config_entry, [diffuser])
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("rituals_perfume_genie", "lot123device"), config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.name == "Genie"
+    assert device_entry.model == "Genie 3.0"
+    assert device_entry.sw_version == "7.1"
 
 
 async def test_set_switch_state(hass: HomeAssistant) -> None:
     """Test changing the diffuser switch entity state."""
     config_entry = mock_config_entry(unique_id="id_123_switch_set_state_test")
-    await init_integration(hass, config_entry, [mock_diffuser_v1_battery_cartridge()])
+    diffuser = mock_diffuser_v1_battery_cartridge()
+    client = await init_integration(hass, config_entry, [diffuser])
 
     state = hass.states.get("switch.genie")
     assert state
@@ -93,6 +110,7 @@ async def test_set_switch_state(hass: HomeAssistant) -> None:
     state = hass.states.get("switch.genie")
     assert state
     assert state.state == STATE_OFF
+    client.turn_off.assert_awaited_once_with(diffuser.hub_hash)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -104,3 +122,58 @@ async def test_set_switch_state(hass: HomeAssistant) -> None:
     state = hass.states.get("switch.genie")
     assert state
     assert state.state == STATE_ON
+    client.turn_on.assert_awaited_once_with(diffuser.hub_hash)
+
+
+async def test_standby_led(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test turning the standby LED of a diffuser on and off."""
+    config_entry = mock_config_entry(unique_id="id_123_standby_led")
+    diffuser = mock_diffuser(hublot="lot123", standby_led=False)
+    client = await init_integration(hass, config_entry, [diffuser])
+
+    state = hass.states.get("switch.genie_standby_led")
+    assert state
+    assert state.state == STATE_OFF
+
+    entry = entity_registry.async_get("switch.genie_standby_led")
+    assert entry
+    assert entry.unique_id == "lot123-standby_led"
+    assert entry.entity_category is EntityCategory.CONFIG
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.genie_standby_led"},
+        blocking=True,
+    )
+
+    client.set_standby_led.assert_called_once_with(diffuser.hub_hash, enabled=True)
+    state = hass.states.get("switch.genie_standby_led")
+    assert state
+    assert state.state == STATE_ON
+
+    client.set_standby_led.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.genie_standby_led"},
+        blocking=True,
+    )
+
+    client.set_standby_led.assert_called_once_with(diffuser.hub_hash, enabled=False)
+    state = hass.states.get("switch.genie_standby_led")
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_standby_led_unsupported(hass: HomeAssistant) -> None:
+    """Test a diffuser without a standby LED setting gets no switch for it."""
+    config_entry = mock_config_entry(unique_id="id_123_standby_led_unsupported")
+    await init_integration(
+        hass, config_entry, [mock_diffuser(hublot="lot123", standby_led=None)]
+    )
+
+    assert hass.states.get("switch.genie") is not None
+    assert hass.states.get("switch.genie_standby_led") is None

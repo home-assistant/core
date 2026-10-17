@@ -1,7 +1,5 @@
 """Rainforest data."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -33,8 +31,7 @@ class InvalidAuth(RainforestError):
 
 
 async def async_get_type(hass, cloud_id, install_code, host):
-    """Try API call 'get_network_info' to see if target device is Eagle-100 or Eagle-200."""
-    # For EAGLE-200, fetch the hardware address of the first connected meter, too.
+    """Try API call 'get_network_info' to see if target is Eagle-100 or Eagle-200."""
     hub = aioeagle.EagleHub(
         aiohttp_client.async_get_clientsession(hass), cloud_id, install_code, host=host
     )
@@ -50,7 +47,8 @@ async def async_get_type(hass, cloud_id, install_code, host):
 
     if meters is not None:
         if meters:
-            # If there is at least one meter, use the first one with a connection status of "Connected"
+            # If there is at least one meter, use the first
+            # one with a connection status of "Connected"
             hardware_address = next(
                 (
                     m.hardware_address
@@ -60,7 +58,9 @@ async def async_get_type(hass, cloud_id, install_code, host):
                 None,
             )
         else:
-            # If there are no meters (empty list, since None was already checked for), set the hardware address to None
+            # If there are no meters (empty list, since None
+            # was already checked for), set the hardware
+            # address to None
             hardware_address = None
 
         return TYPE_EAGLE_200, hardware_address
@@ -70,7 +70,8 @@ async def async_get_type(hass, cloud_id, install_code, host):
     try:
         response = await hass.async_add_executor_job(reader.get_network_info)
     except ValueError as err:
-        # This could be invalid auth because it doesn't check 401 and tries to read JSON.
+        # This could be invalid auth because it doesn't check
+        # 401 and tries to read JSON.
         raise InvalidAuth from err
     except UPDATE_100_ERRORS as error:
         _LOGGER.error("Failed to connect during setup: %s", error)

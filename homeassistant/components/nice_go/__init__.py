@@ -1,7 +1,5 @@
 """The Nice G.O. integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -18,7 +16,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> None:
     """Set up Nice G.O. from a config entry."""
 
     coordinator = NiceGOUpdateCoordinator(hass, entry)
@@ -40,12 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.api.close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.api.close()

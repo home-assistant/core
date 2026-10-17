@@ -1,15 +1,12 @@
 """Diagnostics support for Rituals Perfume Genie."""
 
-from __future__ import annotations
-
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import RitualsDataUpdateCoordinator
+from .coordinator import RitualsConfigEntry
 
 TO_REDACT = {
     "hublot",
@@ -18,15 +15,25 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: RitualsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
-    return {
-        "diffusers": [
-            async_redact_data(coordinator.diffuser.data, TO_REDACT)
-            for coordinator in coordinators.values()
-        ]
-    }
+    runtime_data = entry.runtime_data
+    diffusers = []
+
+    for hublot, hub in runtime_data.hubs.data.items():
+        # A diffuser added after setup has no sensors coordinator until reload.
+        coordinator = runtime_data.sensors.get(hublot)
+        sensors = coordinator.data if coordinator else None
+
+        diffusers.append(
+            async_redact_data(
+                {
+                    "hub": hub.to_dict(),
+                    "sensors": asdict(sensors) if sensors else None,
+                },
+                TO_REDACT,
+            )
+        )
+
+    return {"diffusers": diffusers}

@@ -1,9 +1,7 @@
 """Support for Belkin WeMo lights."""
 
-from __future__ import annotations
-
 import functools as ft
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pywemo import Bridge, BridgeLight, Dimmer
 
@@ -92,21 +90,25 @@ class WemoLight(WemoEntity, LightEntity):
         self._model_name = type(self.light).__name__
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         return self.light.name
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the device is available."""
         return super().available and self.light.state.get("available", False)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the ID of this light."""
         return self.light.uniqueID
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
@@ -118,16 +120,19 @@ class WemoLight(WemoEntity, LightEntity):
         )
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self.light.state.get("level", 255)
 
     @property
+    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return self.light.state.get("color_xy")
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if not (mireds := self.light.state.get("temperature_mireds")):
@@ -135,6 +140,7 @@ class WemoLight(WemoEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(mireds)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if (
@@ -149,6 +155,7 @@ class WemoLight(WemoEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         modes: set[ColorMode] = set()
@@ -163,10 +170,12 @@ class WemoLight(WemoEntity, LightEntity):
         return modes
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.light.state.get("onoff", WEMO_OFF) != WEMO_OFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         xy_color = None
@@ -198,6 +207,7 @@ class WemoLight(WemoEntity, LightEntity):
 
         await self._async_wemo_call("turn on", _turn_on)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
@@ -214,11 +224,13 @@ class WemoDimmer(WemoBinaryStateEntity, LightEntity):
     wemo: Dimmer
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 1 and 100."""
         wemo_brightness: int = self.wemo.get_brightness()
         return int((wemo_brightness * 255) / 100)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         # Wemo dimmer switches use a range of [0, 100] to control
@@ -232,6 +244,7 @@ class WemoDimmer(WemoBinaryStateEntity, LightEntity):
         else:
             await self._async_wemo_call("turn on", self.wemo.on)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
         await self._async_wemo_call("turn off", self.wemo.off)

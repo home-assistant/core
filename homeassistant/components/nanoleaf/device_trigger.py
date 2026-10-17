@@ -1,8 +1,6 @@
 """Provides device triggers for Nanoleaf."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -28,9 +26,9 @@ TRIGGER_TYPES = TOUCH_GESTURE_TRIGGER_MAP.values()
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_DEVICE_ID): str,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 
@@ -40,7 +38,7 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for Nanoleaf devices."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
+    device_entry = device_registry.async_get(device_id, include_child_devices=False)
     if device_entry is None:
         raise DeviceNotFound(f"Device ID {device_id} is not valid")
     if device_entry.model not in TOUCH_MODELS:

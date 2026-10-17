@@ -1,10 +1,8 @@
 """Support for monitoring the qBittorrent API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -77,10 +75,12 @@ class QBittorrentSwitch(CoordinatorEntity[QBittorrentDataCoordinator], SwitchEnt
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.is_on_func(self.coordinator)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on this switch."""
         await self.hass.async_add_executor_job(
@@ -88,6 +88,7 @@ class QBittorrentSwitch(CoordinatorEntity[QBittorrentDataCoordinator], SwitchEnt
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off this switch."""
         await self.hass.async_add_executor_job(
@@ -95,6 +96,7 @@ class QBittorrentSwitch(CoordinatorEntity[QBittorrentDataCoordinator], SwitchEnt
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the device."""
         await self.hass.async_add_executor_job(

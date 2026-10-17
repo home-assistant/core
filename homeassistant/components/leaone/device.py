@@ -1,7 +1,5 @@
 """Support for Leaone devices."""
 
-from __future__ import annotations
-
 from leaone_ble import DeviceKey
 
 from homeassistant.components.bluetooth.passive_update_processor import (

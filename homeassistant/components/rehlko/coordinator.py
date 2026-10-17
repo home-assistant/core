@@ -1,11 +1,9 @@
 """The Rehlko coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiokem import AioKem, CommunicationError
 
@@ -60,6 +58,7 @@ class RehlkoUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL_MINUTES,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

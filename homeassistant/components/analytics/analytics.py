@@ -1,10 +1,9 @@
 """Analytics helper class for the analytics integration."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping
+import contextlib
 from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
 import random
@@ -29,9 +28,9 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_DOMAIN,
     BASE_PLATFORMS,
+    EntityStateAttribute,
     __version__ as HA_VERSION,
 )
 from homeassistant.core import (
@@ -299,20 +298,20 @@ class Analytics:
         if stored:
             self._data = AnalyticsData.from_dict(stored)
 
-        if (
-            self.supervisor
-            and (supervisor_info := hassio.get_supervisor_info(self._hass)) is not None
-        ):
-            if not self.onboarded:
-                # User have not configured analytics, get this setting from the supervisor
-                if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = True
-                elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = False
+        if self.supervisor and not self.onboarded:
+            # This may raise HassioNotReadyError if Supervisor was unreachable.
+            # The caller is responsible for handling this and triggering a retry.
+            supervisor_info = hassio.get_supervisor_info(self._hass)
+
+            # User have not configured analytics, get this setting from the supervisor
+            if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = True
+            elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = False
 
     async def _save(self) -> None:
         """Save data."""
@@ -346,9 +345,14 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            supervisor_info = hassio.get_supervisor_info(hass)
-            operating_system_info = hassio.get_os_info(hass) or {}
-            addons_info = hassio.get_addons_info(hass) or {}
+            # Try to pull Supervisor information, but don't fail if some or all
+            # of it is unavailable due to setup failures in the hassio integration.
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                supervisor_info = hassio.get_supervisor_info(hass)
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                operating_system_info = hassio.get_os_info(hass)
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                addons_info = hassio.get_addons_info(hass)
 
         system_info = await async_get_system_info(hass)
         integrations = []
@@ -421,7 +425,7 @@ class Analytics:
 
                 integrations.append(integration.domain)
 
-            if addons_info is not None:
+            if addons_info:
                 supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
                     *(supervisor_client.addons.addon_info(slug) for slug in addons_info)
@@ -604,7 +608,8 @@ class Analytics:
 
                 else:
                     LOGGER.warning(
-                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        "Unexpected status code %s when submitting"
+                        " snapshot analytics to %s",
                         response.status,
                         url,
                     )
@@ -729,6 +734,35 @@ DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
+def _device_payload(device_entry: dr.AnyDeviceEntry) -> dict[str, Any]:
+    """Return the analytics payload for a device or child device."""
+    if isinstance(device_entry, dr.ChildDeviceEntry):
+        # A child device carries no hardware or firmware metadata of its own;
+        # it is reported with its parent referenced as via_device.
+        return {
+            "entry_type": None,
+            "has_configuration_url": False,
+            "hw_version": None,
+            "manufacturer": None,
+            "model": None,
+            "model_id": None,
+            "sw_version": None,
+            "via_device": device_entry.parent_device_id,
+            "entities": [],
+        }
+    return {
+        "entry_type": device_entry.entry_type,
+        "has_configuration_url": device_entry.configuration_url is not None,
+        "hw_version": device_entry.hw_version,
+        "manufacturer": device_entry.manufacturer,
+        "model": device_entry.model,
+        "model_id": device_entry.model_id,
+        "sw_version": device_entry.sw_version,
+        "via_device": device_entry.via_device_id,
+        "entities": [],
+    }
+
+
 async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     """Return detailed information about entities and devices for a snapshot."""
     dev_reg = dr.async_get(hass)
@@ -740,18 +774,17 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     removed_devices: set[str] = set()
 
     # Get device list
-    for device_entry in dev_reg.devices.values():
-        if not device_entry.primary_config_entry:
-            continue
-
-        config_entry = hass.config_entries.async_get_entry(
-            device_entry.primary_config_entry
-        )
+    for device_entry in (*dev_reg.devices, *dev_reg.child_devices):
+        config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:
             continue
 
-        if device_entry.entry_type is dr.DeviceEntryType.SERVICE:
+        # Only full devices can be service devices; child devices never are.
+        if (
+            isinstance(device_entry, dr.DeviceEntry)
+            and device_entry.entry_type is dr.DeviceEntryType.SERVICE
+        ):
             removed_devices.add(device_entry.id)
             continue
 
@@ -806,7 +839,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             if not isinstance(integration_config, AnalyticsModifications):
                 LOGGER.error(  # type: ignore[unreachable]
-                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    "Calling async_modify_analytics for integration"
+                    " '%s' did not return an AnalyticsConfig",
                     integration_domain,
                 )
                 integration_configs[integration_domain] = AnalyticsModifications(
@@ -820,7 +854,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
-    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    # instead we refer to devices by
+    # (integration_domain, index_in_integration_device_list).
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
     # Fill out information about devices
@@ -847,23 +882,15 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 removed_devices.add(device_id)
                 continue
 
-            device_entry = dev_reg.devices[device_id]
+            resolved_device = dev_reg.async_get(device_id)
+            if resolved_device is None:
+                # The device was removed while we were awaiting above
+                removed_devices.add(device_id)
+                continue
 
             device_id_mapping[device_id] = (integration_domain, len(devices_info))
 
-            devices_info.append(
-                {
-                    "entry_type": device_entry.entry_type,
-                    "has_configuration_url": device_entry.configuration_url is not None,
-                    "hw_version": device_entry.hw_version,
-                    "manufacturer": device_entry.manufacturer,
-                    "model": device_entry.model,
-                    "model_id": device_entry.model_id,
-                    "sw_version": device_entry.sw_version,
-                    "via_device": device_entry.via_device_id,
-                    "entities": [],
-                }
-            )
+            devices_info.append(_device_payload(resolved_device))
 
     # Fill out via_device with new device ids
     for integration_info in integrations_info.values():
@@ -908,7 +935,9 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 # It is also not present, if entity is not in the state machine,
                 # which can happen for disabled entities.
                 "assumed_state": (
-                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    entity_state.attributes.get(
+                        EntityStateAttribute.ASSUMED_STATE, False
+                    )
                     if entity_state is not None
                     else None
                 ),

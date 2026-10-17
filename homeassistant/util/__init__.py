@@ -1,7 +1,5 @@
 """Helper methods for various modules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
@@ -102,7 +100,8 @@ def snakecase(text: str) -> str:
     """Convert a string to snake_case."""
     text = re.sub(r"[\s.-]", "_", text)
     if not text.isupper():
-        # Underscore before last uppercase of groups of 2+ uppercase ("HTTPResponse", "IPAddress")
+        # Underscore before last uppercase of groups of 2+
+        # uppercase ("HTTPResponse", "IPAddress")
         text = re.sub(
             r"[A-Z]{2,}(?=[A-Z][^A-Z])", lambda match: match.group(0) + "_", text
         )

@@ -1,17 +1,16 @@
 """Tests for the WiiM config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
+from wiim.models import WiimProbeResult
 
 from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
@@ -29,16 +28,7 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 )
 
 
-@pytest.fixture(autouse=True)
-async def setup_internal_url(hass: HomeAssistant) -> None:
-    """Make sure internal url configured."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://192.168.1.10:8123"},
-    )
-
-
-@pytest.mark.usefixtures("mock_probe_player", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_probe_player")
 async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -59,25 +49,6 @@ async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "uuid:test-udn-1234"
 
 
-async def test_user_flow_abort_when_homeassistant_url_missing(
-    hass: HomeAssistant,
-    mock_probe_player: AsyncMock,
-) -> None:
-    """Test the user flow aborts before probing when no URL is available."""
-    with patch(
-        "homeassistant.components.wiim.util.get_url",
-        side_effect=NoURLAvailableError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_homeassistant_url"
-    mock_probe_player.assert_not_called()
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_probe_player: AsyncMock
 ) -> None:
@@ -105,7 +76,6 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_probe(
     hass: HomeAssistant, mock_probe_player: AsyncMock
 ) -> None:
@@ -157,7 +127,7 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_probe_player", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_probe_player")
 async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test the zeroconf discovery flow."""
 
@@ -211,7 +181,6 @@ async def test_zeroconf_flow_no_probe(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -235,3 +204,99 @@ async def test_zeroconf_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"
+
+
+async def test_reconfigure_flow_updates_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_probe_player: AsyncMock,
+) -> None:
+    """Test reconfigure updates the host for the same WiiM device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_probe_player.return_value = WiimProbeResult(
+        host="192.168.1.111",
+        udn="uuid:test-udn-1234",
+        name="WiiM Pro",
+        location="http://192.168.1.111:49152/description.xml",
+        model="WiiM Pro",
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.111"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.111"
+    assert mock_config_entry.unique_id == "uuid:test-udn-1234"
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_probe_player: AsyncMock,
+) -> None:
+    """Test reconfigure keeps the form open when the new host cannot connect."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    mock_probe_player.side_effect = TimeoutError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.111"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
+
+    mock_probe_player.side_effect = None
+    mock_probe_player.return_value = WiimProbeResult(
+        host="192.168.1.111",
+        udn="uuid:test-udn-1234",
+        name="WiiM Pro",
+        location="http://192.168.1.111:49152/description.xml",
+        model="WiiM Pro",
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.111"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.111"
+
+
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_probe_player: AsyncMock,
+) -> None:
+    """Test reconfigure rejects a host that belongs to a different WiiM device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    mock_probe_player.return_value = WiimProbeResult(
+        host="192.168.1.111",
+        udn="uuid:different-device",
+        name="Other WiiM",
+        location="http://192.168.1.111:49152/description.xml",
+        model="WiiM Pro",
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.111"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"

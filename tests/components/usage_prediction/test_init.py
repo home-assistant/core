@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.usage_prediction import get_cached_common_control
+from homeassistant.components.usage_prediction import DOMAIN, get_cached_common_control
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 async def test_usage_prediction_caching(hass: HomeAssistant) -> None:
     """Test that usage prediction results are cached for 24 hours."""
 
-    assert await async_setup_component(hass, "usage_prediction", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     finish_event = asyncio.Event()
 

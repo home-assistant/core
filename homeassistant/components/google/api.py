@@ -1,10 +1,8 @@
 """Client library for talking to Google APIs."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 from gcal_sync.auth import AbstractAuth
@@ -46,13 +44,14 @@ class InvalidCredential(OAuthError):
 class GoogleHybridAuth(AuthImplementation):
     """OAuth implementation that supports both Web Auth (base class) and Device Auth."""
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
         if DEVICE_AUTH_CREDS not in external_data:
             # Assume the Web Auth flow was used, so use the default behavior
             return await super().async_resolve_external_data(external_data)
         creds: Credentials = external_data[DEVICE_AUTH_CREDS]
-        delta = creds.token_expiry.replace(tzinfo=datetime.UTC) - dt_util.utcnow()
+        delta = creds.token_expiry.replace(tzinfo=dt.UTC) - dt_util.utcnow()
         _LOGGER.debug(
             "Token expires at %s (in %s)", creds.token_expiry, delta.total_seconds()
         )
@@ -109,26 +108,24 @@ class DeviceFlow:
     def async_start_exchange(self) -> None:
         """Start the device auth exchange flow polling."""
         _LOGGER.debug("Starting exchange flow")
-        max_timeout = dt_util.utcnow() + datetime.timedelta(
-            seconds=EXCHANGE_TIMEOUT_SECONDS
-        )
+        max_timeout = dt_util.utcnow() + dt.timedelta(seconds=EXCHANGE_TIMEOUT_SECONDS)
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
         user_code_expiry = self._device_flow_info.user_code_expiry.replace(
-            tzinfo=datetime.UTC
+            tzinfo=dt.UTC
         )
         expiration_time = min(user_code_expiry, max_timeout)
 
         self._exchange_task_unsub = async_track_time_interval(
             self._hass,
             self._async_poll_attempt,
-            datetime.timedelta(seconds=self._device_flow_info.interval),
+            dt.timedelta(seconds=self._device_flow_info.interval),
         )
         self._timeout_unsub = async_track_point_in_utc_time(
             self._hass, self._async_timeout, expiration_time
         )
 
-    async def _async_poll_attempt(self, now: datetime.datetime) -> None:
+    async def _async_poll_attempt(self, now: dt.datetime) -> None:
         _LOGGER.debug("Attempting OAuth code exchange")
         try:
             self._creds = await self._hass.async_add_executor_job(self._exchange)
@@ -141,7 +138,7 @@ class DeviceFlow:
         return self._oauth_flow.step2_exchange(device_flow_info=self._device_flow_info)
 
     @callback
-    def _async_timeout(self, now: datetime.datetime) -> None:
+    def _async_timeout(self, now: dt.datetime) -> None:
         _LOGGER.debug("OAuth token exchange timeout")
         self._finish()
 
@@ -197,6 +194,7 @@ class ApiAuthImpl(AbstractAuth):
         super().__init__(websession)
         self._session = session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
@@ -220,6 +218,7 @@ class AccessTokenAuthImpl(AbstractAuth):
         super().__init__(websession)
         self._access_token = access_token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self._access_token

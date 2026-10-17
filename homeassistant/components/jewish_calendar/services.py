@@ -1,15 +1,15 @@
 """Services for Jewish Calendar."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import get_args
 
 from hdate import HebrewDate
 from hdate.omer import Nusach, Omer
 from hdate.translator import Language, set_language
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import CONF_LANGUAGE, SUN_EVENT_SUNSET
+from homeassistant.const import ATTR_DATE, CONF_LANGUAGE, SUN_EVENT_SUNSET
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,17 +23,17 @@ from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorCon
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_AFTER_SUNSET, ATTR_DATE, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
+from .const import ATTR_AFTER_SUNSET, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
 
 _LOGGER = logging.getLogger(__name__)
-OMER_SCHEMA = vol.Schema(
+OMER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AFTER_SUNSET, default=True): cv.boolean,
-        vol.Required(ATTR_NUSACH, default="sfarad"): vol.In(
+        probatio.Optional(ATTR_DATE): cv.date,
+        probatio.Optional(ATTR_AFTER_SUNSET, default=True): cv.boolean,
+        probatio.Required(ATTR_NUSACH, default="sfarad"): probatio.In(
             [nusach.name.lower() for nusach in Nusach]
         ),
-        vol.Optional(CONF_LANGUAGE, default="he"): LanguageSelector(
+        probatio.Optional(CONF_LANGUAGE, default="he"): LanguageSelector(
             LanguageSelectorConfig(languages=list(get_args(Language)))
         ),
     }
@@ -65,9 +65,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if ATTR_DATE in call.data
             else is_after_sunset(hass)
         )
-        hebrew_date = HebrewDate.from_gdate(
-            date + datetime.timedelta(days=int(after_sunset))
-        )
+        hebrew_date = HebrewDate.from_gdate(date + dt.timedelta(days=int(after_sunset)))
         nusach = Nusach[call.data[ATTR_NUSACH].upper()]
         set_language(call.data[CONF_LANGUAGE])
         omer = Omer(date=hebrew_date, nusach=nusach)

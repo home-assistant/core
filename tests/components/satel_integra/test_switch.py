@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_CODE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -26,7 +27,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
+from . import (
+    MOCK_CODE,
+    MOCK_ENTRY_ID,
+    get_monitor_callbacks,
+    setup_integration,
+    trigger_connection_status_update,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -59,8 +66,8 @@ async def test_switches(
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_switch_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_switch_1"), mock_config_entry_with_subentries.entry_id
     )
 
     assert device_entry == snapshot(name="device")
@@ -114,7 +121,8 @@ async def test_switch_callback(
     output_update_method({1: 0})
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
-    # The client library should always report all entries, but test that we set the status correctly if it doesn't
+    # The client library should always report all entries, but test
+    # that we set the status correctly if it doesn't
     output_update_method({2: 1})
     assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
@@ -210,3 +218,24 @@ async def test_switch_actions_require_code(
             {ATTR_ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    entity_id = "switch.switchable_output"
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await trigger_connection_status_update(hass, mock_satel, False)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await trigger_connection_status_update(hass, mock_satel, True)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
