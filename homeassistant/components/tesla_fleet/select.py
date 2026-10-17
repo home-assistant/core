@@ -167,6 +167,7 @@ class TeslaFleetWheelHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
     _attr_options = [
         OFF,
         LOW,
+        MEDIUM,
         HIGH,
     ]
 
