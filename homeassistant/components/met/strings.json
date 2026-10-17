@@ -11,8 +11,7 @@
         "data": {
           "elevation": "[%key:common::config_flow::data::elevation%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         },
         "description": "Meteorologisk institutt",
         "title": "[%key:common::config_flow::data::location%]"
@@ -33,8 +32,7 @@
         "data": {
           "elevation": "[%key:common::config_flow::data::elevation%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         },
         "title": "[%key:common::config_flow::data::location%]"
       }
