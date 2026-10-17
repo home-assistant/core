@@ -966,7 +966,6 @@ async def test_camera_image(
     matter_node: MatterNode,
 ) -> None:
     """Test snapshots."""
-    camera = get_camera_from_entity_id(hass, ENTITY_ID)
     matter_client.camera_snapshot.return_value = CameraSnapshotResult(
         data=b64encode(SNAPSHOT_IMAGE).decode(),
         codec="JPEG",
@@ -979,9 +978,8 @@ async def test_camera_image(
     assert image.content == SNAPSHOT_IMAGE
     assert image.content_type == "image/jpeg"
     assert matter_client.camera_snapshot.call_args == call(
-        node_id=matter_node.node_id, endpoint_id=1
+        node_id=matter_node.node_id, endpoint_id=1, codec="JPEG"
     )
-    assert camera.content_type == "image/jpeg"
 
     matter_client.camera_snapshot.side_effect = MatterError("boom")
     with pytest.raises(HomeAssistantError, match="boom"):

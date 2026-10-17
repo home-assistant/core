@@ -44,9 +44,6 @@ CAMERA_SCHEMA_VERSION = 14
 
 STREAM_USAGE_LIVE_VIEW = "LiveView"
 
-# Image codec names as reported by the Matter server.
-CONTENT_TYPES = {"JPEG": "image/jpeg", "HEIC": "image/heic"}
-
 
 @dataclass
 class _MatterWebRTCSession:
@@ -388,10 +385,11 @@ class MatterCamera(MatterEntity, Camera):
             result = await self.matter_client.camera_snapshot(
                 node_id=self._endpoint.node.node_id,
                 endpoint_id=self._endpoint.endpoint_id,
+                # Most browsers cannot show HEIC, and Home Assistant only scales JPEG.
+                codec="JPEG",
             )
         except (MatterError, MatterClientException) as err:
             raise HomeAssistantError(str(err) or type(err).__name__) from err
-        self.content_type = CONTENT_TYPES.get(result.codec.upper(), "image/jpeg")
         return b64decode(result.data)
 
 
