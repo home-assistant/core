@@ -190,7 +190,7 @@ async def test_sync_time_press(
     freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing the button sets the device date then time to HA local time."""
+    """Test pressing the button sets the device time then date to HA local time."""
     await hass.config.async_set_time_zone("America/Chicago")
     # 2026-10-14 23:46:35 in Chicago (CDT, UTC-5) is already 2026-10-15 in UTC
     freezer.move_to("2026-10-15 04:46:35+00:00")
@@ -203,7 +203,7 @@ async def test_sync_time_press(
     assert state is not None
 
     aioclient_mock.mock_calls.clear()
-    responses.extend([mock_response(SET_DATE_ACK), mock_response(SET_TIME_ACK)])
+    responses.extend([mock_response(SET_TIME_ACK), mock_response(SET_DATE_ACK)])
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -219,8 +219,8 @@ async def test_sync_time_press(
         ]["data"]
         for call in aioclient_mock.mock_calls
     ]
-    # SetCurrentDate (day 14, month 10, year 2026) then SetCurrentTime (23:46:35)
-    assert commands == ["130EA7EA", "11172E23"]
+    # SetCurrentTime (23:46:35) then SetCurrentDate (day 14, month 10, year 2026)
+    assert commands == ["11172E23", "130EA7EA"]
 
 
 @pytest.mark.parametrize("setup_config_entry", [None])

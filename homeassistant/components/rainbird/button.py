@@ -93,8 +93,8 @@ class RainbirdSyncTimeButton(
         """Set the controller date and time."""
         now = dt_util.now()
         try:
-            await self.coordinator.controller.set_current_date(now.date())
             await self.coordinator.controller.set_current_time(now.time())
+            await self.coordinator.controller.set_current_date(now.date())
         except RainbirdDeviceBusyException as err:
             raise HomeAssistantError(
                 "Rain Bird device is busy; Wait and try again"
