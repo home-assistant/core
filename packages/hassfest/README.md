@@ -4,8 +4,9 @@ Hassfest checks Home Assistant integration manifests, translations, services,
 discovery declarations, and other integration metadata.
 
 This package is under development and is not ready for external consumption or
-publication yet. The existing `home-assistant/actions/hassfest` action remains the
-supported way to check custom integrations.
+publication yet. The existing
+[home-assistant/actions/hassfest](https://github.com/home-assistant/actions/tree/master/hassfest)
+action remains the supported way to check custom integrations.
 
 ## Intended standalone usage
 
