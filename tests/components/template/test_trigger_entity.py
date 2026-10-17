@@ -348,6 +348,47 @@ async def test_entity_action_variables_override_trigger_variables(
     assert calls[1].data["brightness"] == 150
 
 
+@pytest.mark.parametrize(
+    "trigger_variables",
+    [
+        pytest.param({}, id="without_trigger_variables"),
+        pytest.param(
+            {"trigger": {"id": "trigger_variable"}}, id="with_trigger_variables"
+        ),
+    ],
+)
+async def test_variables_cannot_shadow_trigger_data(
+    hass: HomeAssistant, trigger_variables: dict
+) -> None:
+    """Test variables that collide with trigger data do not affect later variables."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": trigger_variables,
+                    "variables": {
+                        "trigger": {"id": "shadow"},
+                        "observed": "{{ trigger.id }}",
+                    },
+                    "triggers": {
+                        "trigger": "event",
+                        "event_type": "my_event",
+                        "id": "real",
+                    },
+                    "sensor": {"name": "test", "state": "{{ observed }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test").state == "real"
+
+
 async def test_trigger_variables_rendered_on_reload(hass: HomeAssistant) -> None:
     """Test trigger variables are rendered when the configuration is reloaded."""
 
