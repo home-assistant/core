@@ -1,11 +1,15 @@
 """The command_line component utils."""
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 import hashlib
+import json
 import re
 import shlex
 from typing import Any, Literal, overload
+
+from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -370,3 +374,27 @@ def shell_template_issue_ids(
                 continue
             issue_ids.add(build_shell_template_issue_id(platform, name))
     return issue_ids
+
+
+def parse_json_attributes(
+    value: str | None,
+    json_attributes: list[str],
+    json_attributes_path: str | None,
+) -> dict[str, Any]:
+    """Extract the configured attributes from a JSON command output."""
+    if not value:
+        LOGGER.warning("Empty reply found when expecting JSON data")
+        return {}
+    try:
+        json_dict = json.loads(value)
+        if json_attributes_path is not None:
+            json_dict = search(json_attributes_path, json_dict)
+    except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
+        LOGGER.warning("Unable to parse output as JSON: %s", value)
+        return {}
+    if isinstance(json_dict, list) and json_dict:
+        json_dict = json_dict[0]
+    if not isinstance(json_dict, Mapping):
+        LOGGER.warning("JSON result was not a dictionary")
+        return {}
+    return {k: json_dict[k] for k in json_attributes if k in json_dict}
