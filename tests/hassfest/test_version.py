@@ -2,14 +2,10 @@
 
 from pathlib import Path
 
+from hassfest.manifest import CUSTOM_INTEGRATION_MANIFEST_SCHEMA, validate_version
+from hassfest.model import Config, Integration
 import probatio
 import pytest
-
-from script.hassfest.manifest import (
-    CUSTOM_INTEGRATION_MANIFEST_SCHEMA,
-    validate_version,
-)
-from script.hassfest.model import Config, Integration
 
 
 @pytest.fixture

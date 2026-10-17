@@ -2,10 +2,9 @@
 
 from pathlib import Path
 
+from hassfest.model import Config, Integration
+from hassfest.usb import _uses_serial_port_selector
 import pytest
-
-from script.hassfest.model import Config, Integration
-from script.hassfest.usb import _uses_serial_port_selector
 
 
 @pytest.mark.parametrize(

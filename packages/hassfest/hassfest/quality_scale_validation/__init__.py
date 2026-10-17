@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from script.hassfest.model import Config, Integration
+from hassfest.model import Config, Integration
 
 
 class RuleValidationProtocol(Protocol):

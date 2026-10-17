@@ -1,6 +1,11 @@
 """Home Assistant scripts."""
 
 import contextlib
+from pathlib import Path
+import sys
+
+# Core scripts use the checkout's hassfest, even before package installation.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "packages/hassfest"))
 
 # Scripts such as hassfest (and the libraries they import) use voluptuous. Alias it
 # to probatio before anything imports it, the same as homeassistant/__init__.py does

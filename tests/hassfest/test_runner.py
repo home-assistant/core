@@ -7,11 +7,11 @@ import subprocess
 import sys
 from typing import Literal
 
+from hassfest.model import Config
+from hassfest.runner import run
 import pytest
 
-from script.hassfest import bluetooth
-from script.hassfest.model import Config
-from script.hassfest.runner import run
+from hassfest import bluetooth
 
 
 @pytest.mark.parametrize(
@@ -39,11 +39,11 @@ def test_custom_plugin_selection(
             "-c",
             "import sys; from script.hassfest.__main__ import main; "
             "result = main(); "
-            "assert 'script.hassfest.json' in sys.modules; "
+            "assert 'hassfest.json' in sys.modules; "
             "assert 'script.hassfest.metadata' not in sys.modules; "
             "assert 'script.hassfest.docker' not in sys.modules; "
-            "assert 'script.hassfest.requirements' not in sys.modules; "
-            "assert 'script.hassfest.translations' not in sys.modules; "
+            "assert 'hassfest.requirements' not in sys.modules; "
+            "assert 'hassfest.translations' not in sys.modules; "
             "sys.exit(result)",
             "--integration-path",
             str(integration_path),
@@ -71,7 +71,7 @@ def test_core_plugin_selection() -> None:
             "result = main(); "
             "assert 'script.hassfest.metadata' in sys.modules; "
             "assert 'script.hassfest.docker' not in sys.modules; "
-            "assert 'script.hassfest.translations' not in sys.modules; "
+            "assert 'hassfest.translations' not in sys.modules; "
             "sys.exit(result)",
             "--action",
             "validate",

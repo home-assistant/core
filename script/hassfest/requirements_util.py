@@ -1,32 +1,6 @@
-"""Shared requirement policies and package-name normalization."""
+"""Compatibility imports for directly executed Core requirement scripts."""
 
-import re
-
-# Requirements which can't be installed on all systems because they
-# rely on additional system packages. Requirements listed in
-# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt.
-EXCLUDED_REQUIREMENTS_ALL = {
-    "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "beewi-smartclim",  # depends on bluepy
-    "bluepy",
-    "evdev",
-}
-
-PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
-
-
-def _normalize_package_name(package_name: str) -> str:
-    """Normalize a package name."""
-    # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return package_name.lower().replace("_", "-").replace(".", "-")
-
-
-def normalize_package_name(requirement: str) -> str:
-    """Return a normalized package name from a requirement string."""
-    match = PACKAGE_REGEX.search(requirement)
-    if not match:
-        return ""
-
-    # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return _normalize_package_name(match.group(1))
+from hassfest.requirements_util import (
+    EXCLUDED_REQUIREMENTS_ALL as EXCLUDED_REQUIREMENTS_ALL,  # noqa: PLC0414
+    normalize_package_name as normalize_package_name,  # noqa: PLC0414
+)

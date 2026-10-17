@@ -4,13 +4,12 @@ import ast
 import json
 from pathlib import Path
 
+from hassfest.lorawan import generate_and_validate
+from hassfest.manifest import INTEGRATION_MANIFEST_SCHEMA
+from hassfest.model import Config, Integration
+from hassfest.quality_scale_validation import discovery
 import probatio
 import pytest
-
-from script.hassfest.lorawan import generate_and_validate
-from script.hassfest.manifest import INTEGRATION_MANIFEST_SCHEMA
-from script.hassfest.model import Config, Integration
-from script.hassfest.quality_scale_validation import discovery
 
 
 @pytest.mark.parametrize(

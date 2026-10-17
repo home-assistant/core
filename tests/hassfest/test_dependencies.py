@@ -2,14 +2,13 @@
 
 import ast
 
-import pytest
-
-from script.hassfest.dependencies import (
+from hassfest.dependencies import (
     CORE_INTEGRATIONS,
     ImportCollector,
     _validate_dependencies,
 )
-from script.hassfest.model import Config
+from hassfest.model import Config
+import pytest
 
 from . import get_integration
 

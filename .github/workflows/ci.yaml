@@ -777,6 +777,43 @@ jobs:
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
 
+  build-hassfest-package:
+    name: Build hassfest package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build hassfest source distribution and wheel
+        run: uv build packages/hassfest --out-dir dist/hassfest
+      - name: Build matching Home Assistant wheel
+        run: uv build --wheel --out-dir dist/homeassistant
+      - name: Install wheels in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/hassfest-venv"
+          uv pip install --python "${RUNNER_TEMP}/hassfest-venv/bin/python" \
+            dist/homeassistant/*.whl dist/hassfest/*.whl
+      - name: Check installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/hassfest-venv/bin/hassfest" --help
+          "${RUNNER_TEMP}/hassfest-venv/bin/python" \
+            "${GITHUB_WORKSPACE}/script/hassfest/check_package.py"
+
   build-pytest-package:
     name: Build pytest-home-assistant package
     runs-on: ubuntu-26.04

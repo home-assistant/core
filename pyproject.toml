@@ -118,7 +118,8 @@ init-hook = """\
 
     sys.path.extend([ \
         str(Path(next(find_default_config_files())).parent.joinpath('pylint/plugins')), \
-        str(Path(next(find_default_config_files())).parent.joinpath('packages/pytest-home-assistant'))\
+        str(Path(next(find_default_config_files())).parent.joinpath('packages/pytest-home-assistant')), \
+        str(Path(next(find_default_config_files())).parent.joinpath('packages/hassfest'))\
     ]) \
     """
 load-plugins = [
@@ -445,7 +446,7 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
-pythonpath = ["pylint/plugins", "packages/pytest-home-assistant"]
+pythonpath = ["pylint/plugins", "packages/pytest-home-assistant", "packages/hassfest"]
 # The respx plugin imports httpx before tests/__init__.py can alias it to
 # httpx2 (see homeassistant/__init__.py). Tests use respx directly instead.
 addopts = "-p no:respx"
