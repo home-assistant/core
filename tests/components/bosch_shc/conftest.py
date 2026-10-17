@@ -52,6 +52,7 @@ from boschshcpy.services_impl import (
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
     ValveTappetService,
@@ -332,6 +333,8 @@ def smart_plug_device(
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
     enter_duration_seconds: int | None = None,
+    state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
+    | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -350,6 +353,7 @@ def smart_plug_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.state_after_power_outage = state_after_power_outage
     return device
 
 
@@ -360,6 +364,8 @@ def smart_plug_compact_device(
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
     enter_duration_seconds: int | None = None,
+    state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
+    | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -377,6 +383,7 @@ def smart_plug_compact_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.state_after_power_outage = state_after_power_outage
     return device
 
 
