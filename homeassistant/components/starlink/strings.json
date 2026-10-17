@@ -62,8 +62,14 @@
       "elevation": {
         "name": "[%key:common::config_flow::data::elevation%]"
       },
+      "gps_satellites": {
+        "name": "GPS satellites"
+      },
       "last_restart": {
         "name": "Last restart"
+      },
+      "obstruction": {
+        "name": "Obstruction"
       },
       "ping": {
         "name": "Ping"
