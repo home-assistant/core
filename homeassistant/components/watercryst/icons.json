@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "event_category": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "event_id": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "last_water_tap_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "last_water_tap_volume": {
+        "default": "mdi:cup-water"
+      },
+      "ml_state": {
+        "default": "mdi:pipe-leak"
+      },
+      "mode_id": {
+        "default": "mdi:circle-double"
+      },
+      "pause_leakage_protection_until_utc": {
+        "default": "mdi:pause-circle-outline"
+      }
+    }
+  }
+}
