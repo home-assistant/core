@@ -1,0 +1,6 @@
+{
+  "1": "{\n\"ID\": \"1\",\n\"Product\": \"KC-P30-EC2404B2-E00-SL\",\n\"Serial\": \"12345678\",\n\"Firmware\":\"P30 v 3.10.53 (230713-211537)\",\n\"COM-module\": 1,\n\"Backend\": 0,\n\"timeQ\": 3,\n\"DIP-Sw1\": \"0x22\",\n\"DIP-Sw2\": \"0x00\",\n\"Sec\": 2619\n}\n",
+  "2": "{\n\"ID\": \"2\",\n\"State\": 3,\n\"Error1\": 0,\n\"Error2\": 0,\n\"Plug\": 7,\n\"AuthON\": 0,\n\"Authreq\": 0,\n\"Enable sys\": 1,\n\"Enable user\": 1,\n\"Max curr\": 16000,\n\"Max curr %\": 266,\n\"Curr HW\": 16000,\n\"Curr user\": 16000,\n\"Curr FS\": 16000,\n\"Tmo FS\": 120,\n\"Curr timer\": 16000,\n\"Tmo CT\": 0,\n\"Setenergy\": 0,\n\"Output\": 0,\n\"Input\": 0,\n\"X2 phaseSwitch source\": 0,\n\"X2 phaseSwitch\": 0,\n\"Serial\": \"12345678\",\n\"Sec\": 2620\n}\n",
+  "3": "{\n\"ID\": \"3\",\n\"U1\": 223,\n\"U2\": 227,\n\"U3\": 225,\n\"I1\": 15843,\n\"I2\": 15700,\n\"I3\": 15837,\n\"P\": 10655175,\n\"PF\": 997,\n\"E pres\": 14092,\n\"E total\": 48570632,\n\"Serial\": \"12345678\",\n\"Sec\": 2624\n}\n",
+  "100": "{\n\"ID\": \"100\",\n\"Session ID\": 176,\n\"Curr HW\": 16000,\n\"E start\": 48556540,\n\"E pres\": 14556,\n\"started[s]\": 1791575526,\n\"ended[s]\": 0,\n\"started\": \"2026-10-09 19:52:06.000\",\n\"ended\": \"0\",\n\"reason\": 5,\n\"timeQ\": 0,\n\"RFID tag\": \"0000000000000000\",\n\"RFID class\": \"00000000000000000000\",\n\"Serial\": \"12345678\",\n\"Sec\": 2639\n}\n"
+}
