@@ -31,7 +31,7 @@ from .const import (
 from .errors import MediaNotFound
 from .helpers import get_plex_servers
 from .media_browser import get_proxy_image_url
-from .media_search import fuzzy_search, search_media
+from .media_search import find_media, search_media
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
@@ -86,6 +86,7 @@ SEARCH_SCHEMA = probatio.All(
             probatio.Optional("year"): int,
             probatio.Optional("filters"): dict,
             probatio.Optional("include_on_deck", default=False): bool,
+            probatio.Optional("fuzzy"): bool,
         }
     ),
     probatio.AtLeastOne("query", "plex_key", "playlist_name", *SEARCH_FILTER_KEYS),
@@ -182,6 +183,7 @@ def search_plex_media(
     plex_key = data.pop("plex_key", None)
     playlist_name = data.pop("playlist_name", None)
     include_on_deck = data.pop("include_on_deck", False)
+    fuzzy = data.pop("fuzzy", None)
     filters = {**data.pop("filters", {}), **data}
 
     results: list[Any]
@@ -197,12 +199,13 @@ def search_plex_media(
         elif filters:
             raise HomeAssistantError("'library_name' is required to use filters")
         else:
-            results = fuzzy_search(plex_server, query, media_type)
+            results = find_media(plex_server, query, media_type, fuzzy=fuzzy)
     except NotFound, MediaNotFound:
         results = []
-        if query and library_name and not (plex_key or playlist_name):
+        fuzzy_enabled = plex_server.option_fuzzy_search if fuzzy is None else fuzzy
+        if fuzzy_enabled and query and library_name and not (plex_key or playlist_name):
             section = plex_server.library.section(library_name)
-            results = fuzzy_search(plex_server, query, media_type, section)
+            results = find_media(plex_server, query, media_type, section, fuzzy=True)
 
     infos: list[JsonValueType] = []
     for item in results:
@@ -291,6 +294,11 @@ SEARCH_RESULT_ATTRIBUTES = {
     "artist_name": "parentTitle",
 }
 
+SEARCH_RESULT_TYPE_ONLY = {
+    "artist_name": "album",
+    "episode_number": "episode",
+}
+
 SEARCH_RESULT_DATES = {
     "originally_available_at": "originallyAvailableAt",
     "added_at": "addedAt",
@@ -327,7 +335,10 @@ def _media_result_info(
         "server_name": plex_server.friendly_name,
     }
     for name, attribute in SEARCH_RESULT_ATTRIBUTES.items():
-        if name == "artist_name" and item.type != "album":
+        if (
+            name in SEARCH_RESULT_TYPE_ONLY
+            and item.type != SEARCH_RESULT_TYPE_ONLY[name]
+        ):
             continue
         info[name] = getattr(item, attribute, None)
     for name, attribute in SEARCH_RESULT_DATES.items():

@@ -180,6 +180,7 @@ def fuzzy_search(
     items: list[Any] = []
     if library_section is None:
         items = plex_server.search(query, mediatype=mediatype)
+        items = [x for x in items if hasattr(x, "title") and hasattr(x, "ratingKey")]
         items.sort(key=lambda x: title_score(normalized_query, x.title), reverse=True)
         if items and title_score(normalized_query, items[0].title) >= FUZZY_MIN_SCORE:
             return items
@@ -204,3 +205,24 @@ def fuzzy_search(
     fuzzy_items = [item for _, item in scored[:limit]]
     seen = {x.ratingKey for x in fuzzy_items}
     return fuzzy_items + [x for x in items if x.ratingKey not in seen]
+
+
+def find_media(
+    plex_server: PlexServer,
+    query: str,
+    mediatype: str | None = None,
+    library_section: LibrarySection | None = None,
+    fuzzy: bool | None = None,
+) -> list[Any]:
+    """Search Plex by title, using the fuzzy search when enabled.
+
+    When fuzzy is None the Plex integration option decides.
+    """
+    if fuzzy is None:
+        fuzzy = plex_server.option_fuzzy_search
+    if fuzzy:
+        return fuzzy_search(plex_server, query, mediatype, library_section)
+    if library_section is not None:
+        return list(library_section.search(title=query, libtype=mediatype))
+    items = plex_server.search(query, mediatype=mediatype)
+    return [x for x in items if hasattr(x, "title") and hasattr(x, "ratingKey")]

@@ -12,6 +12,7 @@ import requests_mock
 
 from homeassistant.components.plex import config_flow
 from homeassistant.components.plex.const import (
+    CONF_FUZZY_SEARCH,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -440,6 +441,7 @@ async def test_option_flow(hass: HomeAssistant, entry, mock_plex_server) -> None
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         Platform.MEDIA_PLAYER: {
+            CONF_FUZZY_SEARCH: False,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {
@@ -474,6 +476,7 @@ async def test_missing_option_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         Platform.MEDIA_PLAYER: {
+            CONF_FUZZY_SEARCH: False,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {

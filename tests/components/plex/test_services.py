@@ -14,6 +14,7 @@ import requests_mock
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.components.plex.const import (
+    CONF_FUZZY_SEARCH,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DOMAIN,
@@ -24,7 +25,7 @@ from homeassistant.components.plex.const import (
     SERVICE_SEARCH,
 )
 from homeassistant.components.plex.services import process_plex_payload
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -443,7 +444,7 @@ async def test_search_service_fuzzy(
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie"},
+        {"query": "Moovie 1", "media_type": "movie", "fuzzy": True},
         blocking=True,
         return_response=True,
     )
@@ -454,7 +455,7 @@ async def test_search_service_fuzzy(
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
-        {"query": "Completely unrelated words"},
+        {"query": "Completely unrelated words", "fuzzy": True},
         blocking=True,
         return_response=True,
     )
@@ -528,6 +529,37 @@ async def test_on_deck_service(
         DOMAIN,
         SERVICE_ON_DECK,
         {"library_name": "TV Shows"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+    # Fuzzy search is off by default
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+    # The integration option enables it for calls that don't override it
+    mock_plex_server.options[Platform.MEDIA_PLAYER][CONF_FUZZY_SEARCH] = True
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"][0]["title"] == "Movie 1"
+
+    # A call can switch it off again
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie", "fuzzy": False},
         blocking=True,
         return_response=True,
     )

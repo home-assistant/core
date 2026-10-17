@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
 from .const import DOMAIN
 from .errors import MediaNotFound
 from .helpers import get_plex_server, get_plex_servers, pretty_title
-from .media_search import fuzzy_search
+from .media_search import find_media
 
 
 class UnknownMediaType(BrowseError):
@@ -329,7 +329,7 @@ def search_media_payloads(
 
     items = []
     for mediatype in mediatypes:
-        items.extend(fuzzy_search(plex_server, query.search_query, mediatype))
+        items.extend(find_media(plex_server, query.search_query, mediatype))
 
     items = [x for x in items if x.type in SEARCH_TYPE_ORDER]
     items.sort(key=lambda x: SEARCH_TYPE_ORDER.index(x.type))

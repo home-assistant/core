@@ -21,6 +21,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_FUZZY_SEARCH,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -575,6 +576,11 @@ class PlexServer:
     def option_ignore_new_shared_users(self):
         """Return ignore_new_shared_users option."""
         return self.options[MP_DOMAIN].get(CONF_IGNORE_NEW_SHARED_USERS, False)
+
+    @property
+    def option_fuzzy_search(self) -> bool:
+        """Return fuzzy_search option."""
+        return self.options[MP_DOMAIN].get(CONF_FUZZY_SEARCH, False)
 
     @property
     def option_use_episode_art(self):
