@@ -11,7 +11,7 @@ from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
     init_integration,
@@ -253,3 +253,61 @@ async def test_hubs_failure_sensors_unavailable(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+
+async def test_model_fetched_once(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the model of each diffuser is fetched only once."""
+    config_entry = mock_config_entry(unique_id="id_123_model_once")
+    client = await init_integration(
+        hass,
+        config_entry,
+        [
+            mock_diffuser_v1_battery_cartridge(),
+            mock_diffuser_v2_no_battery_no_cartridge(),
+        ],
+    )
+    assert client.hublot.call_count == 2
+
+    await _tick(hass, freezer, timedelta(minutes=5))
+    await _tick(hass, freezer, timedelta(minutes=5))
+
+    assert client.hublot.call_count == 2
+
+
+async def test_model_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a failing model lookup keeps the known model, and is retried."""
+    config_entry = mock_config_entry(unique_id="id_123_model_failure")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "lot123")},
+        model="The Perfume Genie 2.0",
+    )
+    client = mock_client([mock_diffuser("lot123", model="Genie 3.0")])
+    hardware = client.hublot.side_effect
+    client.hublot.side_effect = RitualsGenieConnectionError
+
+    with patch(
+        "homeassistant.components.rituals_perfume_genie.RitualsGenie",
+        return_value=client,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get(device.id)
+    assert device
+    assert device.model == "The Perfume Genie 2.0"
+
+    client.hublot.side_effect = hardware
+    await _tick(hass, freezer, timedelta(minutes=5))
+
+    device = device_registry.async_get(device.id)
+    assert device
+    assert device.model == "Genie 3.0"

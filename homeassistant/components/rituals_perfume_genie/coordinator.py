@@ -10,6 +10,7 @@ from ritualsgenie import (
     RitualsGenieAuthenticationError,
     RitualsGenieError,
     RitualsGenieHub,
+    RitualsGenieHublot,
     RitualsGenieRateLimitError,
     RitualsGenieSensors,
     Sensor,
@@ -19,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -69,6 +71,7 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
+        self.hardware: dict[str, RitualsGenieHublot] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -89,6 +92,8 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
             # token too, or every setup retry would log in again.
             self._async_store_token()
 
+        await self._async_update_hardware(hubs)
+
         return {hub.hublot: hub for hub in hubs}
 
     @callback
@@ -106,6 +111,36 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
         self.hass.config_entries.async_update_entry(
             self.config_entry, data={**self.config_entry.data, CONF_TOKEN: token}
         )
+
+    async def _async_update_hardware(self, hubs: list[RitualsGenieHub]) -> None:
+        """Fetch the hardware details of diffusers we don't know yet.
+
+        Only this tells which model a diffuser is. That never changes, so it
+        is fetched once per diffuser. Not worth failing the update over: the
+        next update tries again.
+        """
+        device_registry = dr.async_get(self.hass)
+
+        for hub in hubs:
+            if hub.hublot in self.hardware:
+                continue
+
+            try:
+                hardware = await self.client.hublot(hub.hublot)
+            except RitualsGenieError as err:
+                _LOGGER.debug("Could not fetch the model of %s: %s", hub.hublot, err)
+                continue
+
+            self.hardware[hub.hublot] = hardware
+
+            # A diffuser that is already known gets its model right away.
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, hub.hublot), self.config_entry.entry_id
+            )
+            if device and hardware.device_version:
+                device_registry.async_update_device(
+                    device.id, model=hardware.device_version
+                )
 
 
 class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None]):
