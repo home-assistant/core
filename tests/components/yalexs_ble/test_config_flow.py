@@ -1,6 +1,7 @@
 """Test the Yale Access Bluetooth config flow."""
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
@@ -12,6 +13,7 @@ from homeassistant.components.yalexs_ble.const import (
     CONF_ALWAYS_CONNECTED,
     CONF_KEY,
     CONF_LOCAL_NAME,
+    CONF_MASTER_CODE_NAME,
     CONF_SLOT,
     DOMAIN,
 )
@@ -1250,7 +1252,35 @@ async def test_user_step_with_cached_config(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("user_input", "initial_options", "expected"),
+    [
+        pytest.param(
+            {CONF_ALWAYS_CONNECTED: True},
+            {},
+            {CONF_ALWAYS_CONNECTED: True, CONF_MASTER_CODE_NAME: ""},
+            id="always_connected_only",
+        ),
+        pytest.param(
+            {CONF_ALWAYS_CONNECTED: False, CONF_MASTER_CODE_NAME: "Admin"},
+            {},
+            {CONF_ALWAYS_CONNECTED: False, CONF_MASTER_CODE_NAME: "Admin"},
+            id="set_name",
+        ),
+        pytest.param(
+            {CONF_ALWAYS_CONNECTED: False},
+            {CONF_MASTER_CODE_NAME: "Admin"},
+            {CONF_ALWAYS_CONNECTED: False, CONF_MASTER_CODE_NAME: ""},
+            id="clear_name",
+        ),
+    ],
+)
+async def test_options(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    initial_options: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
     """Test options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1261,6 +1291,7 @@ async def test_options(hass: HomeAssistant) -> None:
             CONF_SLOT: 66,
         },
         unique_id=YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        options=initial_options,
     )
     entry.add_to_hass(hass)
 
@@ -1283,13 +1314,10 @@ async def test_options(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_ALWAYS_CONNECTED: True,
-            },
+            result["flow_id"], user_input
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == {CONF_ALWAYS_CONNECTED: True}
+    assert entry.options == expected
     assert len(mock_setup_entry.mock_calls) == 1

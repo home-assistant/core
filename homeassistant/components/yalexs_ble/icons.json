@@ -7,5 +7,16 @@
         }
       }
     }
+  },
+  "services": {
+    "clear_lock_credential": {
+      "service": "mdi:key-remove"
+    },
+    "get_lock_credential_status": {
+      "service": "mdi:key-chain"
+    },
+    "set_lock_credential": {
+      "service": "mdi:key-plus"
+    }
   }
 }
