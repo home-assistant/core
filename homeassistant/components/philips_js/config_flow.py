@@ -11,6 +11,7 @@ from haphilipsjs import (
     PairingFailure,
     PhilipsTV,
 )
+from haphilipsjs.menu import is_menu_supported_on_system
 import probatio
 
 from homeassistant.config_entries import (
@@ -18,6 +19,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -28,15 +30,25 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import selector
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import LOGGER
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_MENU_NODES,
+    CONF_SYSTEM,
+    CONST_APP_ID,
+    CONST_APP_NAME,
+    DOMAIN,
+)
+from .coordinator import PhilipsTVConfigEntry, get_menu_store
+from .helpers import get_menu_nodes
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -49,15 +61,6 @@ USER_SCHEMA = probatio.Schema(
         ): probatio.In(["1", "5", "6"]),
     }
 )
-
-OPTIONS_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
-    }
-)
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
-}
 
 
 class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -243,6 +246,65 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an option flow."""
+
+    config_entry: PhilipsTVConfigEntry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        options = self.config_entry.options
+        if user_input is not None:
+            # The menu settings are only offered when the menu is known
+            menu_node_ids = options.get(CONF_MENU_NODES, [])
+            if CONF_MENU_NODES in user_input:
+                menu_node_ids = [
+                    int(node_id) for node_id in user_input[CONF_MENU_NODES]
+                ]
+            return self.async_create_entry(
+                data={
+                    CONF_ALLOW_NOTIFY: user_input[CONF_ALLOW_NOTIFY],
+                    CONF_MENU_NODES: menu_node_ids,
+                }
+            )
+
+        schema: dict[Any, Any] = {
+            probatio.Required(
+                CONF_ALLOW_NOTIFY,
+                default=options.get(CONF_ALLOW_NOTIFY, False),
+            ): BooleanSelector(),
+        }
+
+        # The entry may not be loaded, so read the menu stored by the coordinator
+        if is_menu_supported_on_system(self.config_entry.data[CONF_SYSTEM]) and (
+            menu := await get_menu_store(
+                self.hass, self.config_entry.entry_id
+            ).async_load()
+        ):
+            menu_nodes = get_menu_nodes(menu)
+            # Previously selected nodes may no longer be provided by the TV
+            menu_nodes_default = [
+                str(node_id)
+                for node_id in options.get(CONF_MENU_NODES, [])
+                if node_id in menu_nodes
+            ]
+            schema[probatio.Required(CONF_MENU_NODES, default=menu_nodes_default)] = (
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=str(node_id), label=data["name"])
+                            for node_id, data in menu_nodes.items()
+                        ],
+                        multiple=True,
+                    )
+                )
+            )
+
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(schema))
