@@ -285,9 +285,16 @@ async def async_setup_entry(
             and (
                 description.mutually_exclusive is None
                 or not device.has_action(description.mutually_exclusive)
+                or (
+                    description.key == Action.TOGGLE_POWER
+                    and data.hub.is_bridge
+                    and not device.trust_state
+                )
             )
         ]
-        if device_entities and device.has_action(STOP_BUTTON.key):
+        if device.has_action(STOP_BUTTON.key) and any(
+            entity.entity_registry_enabled_default for entity in device_entities
+        ):
             # Most devices have the stop action available, but
             # we only add the stop action button if we add actions
             # since its not so useful if there are no actions to stop
@@ -313,6 +320,9 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         """Init Bond button."""
         self.entity_description = description
         super().__init__(data, device, description.name, description.key.lower())
+        if description.key == Action.TOGGLE_POWER and device.has_action(Action.TURN_ON):
+            # Raw toggling is opt-in when absolute power controls also exist.
+            self._attr_entity_registry_enabled_default = False
 
     @override
     async def async_press(self) -> None:
