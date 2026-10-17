@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Linksys router.",
+          "password": "The admin password for your Linksys router.",
+          "username": "The admin username for your Linksys router."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated, and Home Assistant could not reach your existing host `{host}` to import it automatically.\n\nCheck that `{host}` is reachable, then set up the integration through the UI (your existing host will need to be re-entered), and remove the `{domain}` entry from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration could not be imported"
+    },
+    "deprecated_yaml_import_issue_credentials_required": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated, and Home Assistant could not automatically continue using your existing host `{host}` without credentials.\n\nSet up the integration through the UI to provide your credentials (your existing host will need to be re-entered), then remove the `{domain}` entry from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration requires credentials"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated, and an unexpected error occurred while Home Assistant tried to import your existing host `{host}` automatically.\n\nSet up the integration through the UI (your existing host will need to be re-entered), then remove the `{domain}` entry from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration could not be imported"
+    }
+  }
+}
