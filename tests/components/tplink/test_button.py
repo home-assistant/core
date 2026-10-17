@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from kasa import Feature, Module
+from kasa import AuthenticationError, Feature, KasaException, Module, TimeoutError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -11,14 +11,17 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.tplink.button import BUTTON_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     CONF_HOST,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -313,17 +316,117 @@ async def test_ptz_preset_button_press(
     camera.modules[Module.PanTilt].goto_preset.assert_called_once_with("1")
 
 
-async def test_ptz_preset_button_removed_preset(
+@pytest.mark.parametrize(
+    ("exception_type", "msg", "reauth_expected"),
+    [
+        pytest.param(
+            AuthenticationError,
+            "Device authentication error async_press: test error",
+            True,
+            id="authentication",
+        ),
+        pytest.param(
+            TimeoutError,
+            "Timeout communicating with the device async_press: test error",
+            False,
+            id="timeout",
+        ),
+        pytest.param(
+            KasaException,
+            "Unable to communicate with the device async_press: test error",
+            False,
+            id="other",
+        ),
+    ],
+)
+async def test_ptz_preset_button_press_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    exception_type: type[Exception],
+    msg: str,
+    reauth_expected: bool,
 ) -> None:
-    """Test the button is unavailable when the preset is removed on the camera."""
+    """Test errors from the camera are raised as HomeAssistantError."""
+    camera = _mocked_device(alias="my_device", modules=[Module.PanTilt])
+    camera.modules[Module.PanTilt].goto_preset.side_effect = exception_type(
+        "test error"
+    )
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, camera)
+
+    with pytest.raises(HomeAssistantError, match=msg):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: PTZ_PRESET_ENTITY_ID},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert (
+        any(
+            flow["handler"] == DOMAIN
+            for flow in mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+        )
+        == reauth_expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("is_on", "presets", "entity_id", "expected_state", "expected_name"),
+    [
+        pytest.param(
+            True,
+            {"Door": "1", "Garden": "2", "Window": "3"},
+            "button.my_device_go_to_preset_window",
+            STATE_UNKNOWN,
+            "my_device Go to preset Window",
+            id="added",
+        ),
+        pytest.param(
+            True,
+            {"Front door": "1", "Garden": "2"},
+            PTZ_PRESET_ENTITY_ID,
+            STATE_UNKNOWN,
+            "my_device Go to preset Front door",
+            id="renamed",
+        ),
+        pytest.param(
+            True,
+            {"Garden": "2"},
+            PTZ_PRESET_ENTITY_ID,
+            STATE_UNAVAILABLE,
+            "my_device Go to preset Door",
+            id="removed",
+        ),
+        pytest.param(
+            False,
+            {"Door": "1", "Garden": "2"},
+            PTZ_PRESET_ENTITY_ID,
+            STATE_UNAVAILABLE,
+            "my_device Go to preset Door",
+            id="camera_off",
+        ),
+    ],
+)
+async def test_ptz_preset_buttons_follow_camera(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    is_on: bool,
+    presets: dict[str, str],
+    entity_id: str,
+    expected_state: str,
+    expected_name: str,
+) -> None:
+    """Test PTZ preset buttons follow changes made on the camera after setup."""
     camera = _mocked_device(alias="my_device", modules=[Module.PanTilt])
     await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, camera)
-    assert hass.states.get(PTZ_PRESET_ENTITY_ID).state == STATE_UNKNOWN
 
-    camera.modules[Module.PanTilt].presets = {"Garden": "2"}
+    camera.is_on = is_on
+    camera.modules[Module.PanTilt].presets = presets
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    assert hass.states.get(PTZ_PRESET_ENTITY_ID).state == STATE_UNAVAILABLE
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_name
