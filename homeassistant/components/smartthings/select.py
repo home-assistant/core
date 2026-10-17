@@ -43,6 +43,10 @@ CLEANING_TYPE_TO_HA = {
     "mopAfterVacuum": "mop_after_vacuum",
 }
 
+DRYER_DRYING_TIME_TO_HA = {
+    "0": "none",
+}
+
 WASHER_SOIL_LEVEL_TO_HA = {
     "none": "none",
     "heavy": "heavy",
@@ -243,6 +247,25 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_LEVEL,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+    ),
+    Capability.CUSTOM_DRYER_DRY_LEVEL: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_DRYER_DRY_LEVEL,
+        translation_key="dry_level",
+        requires_remote_control_status=True,
+        options_attribute=Attribute.SUPPORTED_DRYER_DRY_LEVEL,
+        status_attribute=Attribute.DRYER_DRY_LEVEL,
+        command=Command.SET_DRYER_DRY_LEVEL,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_DRYER_DRYING_TIME: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_DRYER_DRYING_TIME,
+        translation_key="drying_time",
+        requires_remote_control_status=True,
+        options_attribute=Attribute.SUPPORTED_DRYING_TIME,
+        status_attribute=Attribute.DRYING_TIME,
+        command=Command.SET_DRYING_TIME,
+        options_map=DRYER_DRYING_TIME_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
     Capability.CUSTOM_WASHER_SPIN_LEVEL: SmartThingsSelectDescription(
         key=Capability.CUSTOM_WASHER_SPIN_LEVEL,

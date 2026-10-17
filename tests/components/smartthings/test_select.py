@@ -129,6 +129,94 @@ async def test_select_option_map(
     )
 
 
+@pytest.mark.parametrize(
+    (
+        "device_fixture",
+        "device_id",
+        "entity_id",
+        "option",
+        "capability",
+        "command",
+        "argument",
+    ),
+    [
+        pytest.param(
+            "da_wm_wd_000001_1",
+            "3a6c4e05-811d-5041-e956-3d04c424cbcd",
+            "select.seca_roupa_dry_level",
+            "3",
+            Capability.CUSTOM_DRYER_DRY_LEVEL,
+            Command.SET_DRYER_DRY_LEVEL,
+            "3",
+            id="numbered_dry_level",
+        ),
+        pytest.param(
+            "da_wm_wd_000001",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+            "select.theater_dryer_dry_level",
+            "very",
+            Capability.CUSTOM_DRYER_DRY_LEVEL,
+            Command.SET_DRYER_DRY_LEVEL,
+            "very",
+            id="named_dry_level",
+        ),
+        pytest.param(
+            "da_wm_wd_000001",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+            "select.theater_dryer_drying_time",
+            "30",
+            Capability.SAMSUNG_CE_DRYER_DRYING_TIME,
+            Command.SET_DRYING_TIME,
+            "30",
+            id="drying_time",
+        ),
+        pytest.param(
+            "da_wm_wd_000001",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+            "select.theater_dryer_drying_time",
+            "none",
+            Capability.SAMSUNG_CE_DRYER_DRYING_TIME,
+            Command.SET_DRYING_TIME,
+            "0",
+            id="no_drying_time",
+        ),
+    ],
+)
+async def test_select_dryer_option(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_id: str,
+    entity_id: str,
+    option: str,
+    capability: Capability,
+    command: Command,
+    argument: str,
+) -> None:
+    """Test selecting a dryer dry level or drying time."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        device_id,
+        capability,
+        command,
+        MAIN,
+        argument=argument,
+    )
+
+
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
 async def test_select_option_without_remote_control(
     hass: HomeAssistant,
