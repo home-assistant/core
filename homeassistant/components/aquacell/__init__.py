@@ -3,6 +3,7 @@
 from aioaquacell import AquacellApi
 from aioaquacell.const import Brand
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -41,6 +42,8 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: AquacellConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Allow removing a softener that is no longer returned by the API."""
+    if entry.state is not ConfigEntryState.LOADED:
+        return False
     return not any(
         identifier[0] == DOMAIN and identifier[1] in entry.runtime_data.data
         for identifier in device_entry.identifiers

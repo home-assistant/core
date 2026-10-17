@@ -206,3 +206,26 @@ async def test_devices_kept_while_running(
         (DOMAIN, DSN), mock_config_entry.entry_id
     )
 
+
+async def test_remove_device_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_aquacell_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test device removal is rejected when the config entry is not loaded."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+
+    old_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "OLD-DSN")},
+    )
+    response = await client.remove_device(old_device_entry.id)
+
+    assert response["error"]["code"] == "home_assistant_error"
+    assert device_registry.async_get(old_device_entry.id)
