@@ -47,7 +47,7 @@
   },
   "options": {
     "error": {
-      "traffic_model_not_allowed": "Traffic model requires traffic-aware optimal routing"
+      "traffic_model_not_allowed": "Traffic model requires traffic-aware optimal as travel routing preference"
     },
     "step": {
       "init": {
