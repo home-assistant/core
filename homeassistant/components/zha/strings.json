@@ -477,6 +477,77 @@
         "name": "[%key:component::cover::entity_component::shade::name%]"
       }
     },
+    "event": {
+      "aurora_button": {
+        "name": "Button",
+        "state_attributes": {
+          "control_id": {
+            "name": "Control ID"
+          },
+          "duration_seconds": {
+            "name": "Press duration (s)"
+          },
+          "event_type": {
+            "state": {
+              "hold": "Held",
+              "long_press_end": "Released after long press",
+              "long_press_start": "Long press started",
+              "press_end": "Released",
+              "press_start": "Pressed"
+            }
+          },
+          "sequence": {
+            "name": "Sequence"
+          }
+        }
+      },
+      "aurora_dial": {
+        "name": "Dial",
+        "state_attributes": {
+          "control_id": {
+            "name": "Control ID"
+          },
+          "delta_counts": {
+            "name": "Rotation (native counts)"
+          },
+          "delta_degrees": {
+            "name": "Rotation (°)"
+          },
+          "direction": {
+            "name": "Direction",
+            "state": {
+              "clockwise": "Clockwise",
+              "counterclockwise": "Counterclockwise"
+            }
+          },
+          "event_type": {
+            "state": {
+              "rotation": "Rotated",
+              "rotation_unavailable": "Rotation amount unavailable"
+            }
+          },
+          "phase": {
+            "name": "Device phase",
+            "state": {
+              "repeat": "Repeat",
+              "start": "Start"
+            }
+          },
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "ambiguous_counter_wrap": "Ambiguous counter rollover",
+              "missing_baseline": "No preceding counter",
+              "sequence_gap": "Missing or out-of-order report",
+              "unsupported_payload": "Unsupported report"
+            }
+          },
+          "sequence": {
+            "name": "Sequence"
+          }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]",
