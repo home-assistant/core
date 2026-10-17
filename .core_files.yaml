@@ -152,10 +152,10 @@ tests: &tests
   - tests/components/recorder/**
   - tests/components/repairs/**
   - tests/components/sensor/**
-  - tests/hassfest/**
   - tests/helpers/**
   - tests/mock/**
   - tests/pylint/**
+  - tests/script/hassfest/**
   - tests/scripts/**
   - tests/test_util/**
   - tests/testing_config/**

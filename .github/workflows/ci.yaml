@@ -420,6 +420,10 @@ jobs:
           python-cache-key: ${{ needs.info.outputs.python_cache_key }}
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+      - name: Test hassfest package
+        run: |
+          . venv/bin/activate
+          pytest -c packages/hassfest/pyproject.toml packages/hassfest/tests
       - name: Run hassfest
         run: |
           . venv/bin/activate

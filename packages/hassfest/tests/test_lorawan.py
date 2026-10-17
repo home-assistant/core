@@ -25,10 +25,10 @@ import pytest
         [["tts"]],
     ],
 )
-def test_invalid_vendor_ids(vendors: list[object]) -> None:
+def test_invalid_vendor_ids(config: Config, vendors: list[object]) -> None:
     """Discovery identities must be unique stack and native brand pairs."""
     manifest = json.loads(
-        Path("homeassistant/components/lorawan/manifest.json").read_text(
+        (config.core_integrations_path / "lorawan/manifest.json").read_text(
             encoding="utf-8"
         )
     )
@@ -37,10 +37,10 @@ def test_invalid_vendor_ids(vendors: list[object]) -> None:
         INTEGRATION_MANIFEST_SCHEMA(manifest)
 
 
-def test_stack_specific_vendor_ids() -> None:
+def test_stack_specific_vendor_ids(config: Config) -> None:
     """Native numeric and string brand IDs survive manifest validation."""
     manifest = json.loads(
-        Path("homeassistant/components/lorawan/manifest.json").read_text(
+        (config.core_integrations_path / "lorawan/manifest.json").read_text(
             encoding="utf-8"
         )
     )

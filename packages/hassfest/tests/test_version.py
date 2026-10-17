@@ -14,7 +14,7 @@ def integration():
     integration = Integration(
         Path(),
         _config=Config(
-            root=Path(".").absolute(),
+            root=Path().absolute(),
             specific_integrations=None,
             action="validate",
             requirements=True,
