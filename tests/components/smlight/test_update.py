@@ -20,7 +20,13 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -95,6 +101,59 @@ async def test_update_setup(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_empty_firmware_catalog_is_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """A valid empty catalog completes the update coordinator refresh."""
+    mock_smlight_client.get_firmware_version.side_effect = None
+    mock_smlight_client.get_firmware_version.return_value = []
+
+    entry = await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+    assert entry.runtime_data.firmware.last_update_success is True
+    assert entry.runtime_data.firmware.update_interval == SCAN_FIRMWARE_INTERVAL
+
+
+async def test_unsupported_radio_slot_keeps_supported_radio_index(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Skipping an unsupported slot preserves the supported radio index."""
+    info = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        radios=[
+            Radio(zb_type=-1, chip_index=0),
+            Radio(zb_type=0, chip_index=1, zb_version="20240314"),
+        ],
+    )
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = info
+
+    entry = await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.mock_title_zigbee_firmware")
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240314"
+    entity = entity_registry.async_get(state.entity_id)
+    assert entity is not None
+    assert entity.unique_id == "aa:bb:cc:dd:ee:ff-zigbee_update_1"
+    assert entry.runtime_data.firmware.data.zb_firmware[0] is None
+    assert entry.runtime_data.firmware.data.zb_firmware[1] is not None
+    assert all(
+        call.kwargs.get("idx") != 0
+        for call in mock_smlight_client.get_firmware_version.await_args_list
+        if call.kwargs.get("mode") == "zigbee"
+    )
 
 
 @patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
