@@ -60,6 +60,12 @@
   "exceptions": {
     "address_lookup_failed": {
       "message": "Unable to look up the address of Minecraft server {host}"
+    },
+    "init_failed": {
+      "message": "An error occurred while initializing the Minecraft server: {error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while updating the Minecraft server data: {error}"
     }
   }
 }
