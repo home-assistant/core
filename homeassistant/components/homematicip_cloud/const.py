@@ -21,6 +21,8 @@ PLATFORMS = [
     Platform.WEATHER,
 ]
 
+SIGNAL_ARMING_BLOCKED = f"{DOMAIN}_arming_blocked_{{}}"
+
 CONF_ACCESSPOINT = "accesspoint"
 CONF_AUTHTOKEN = "authtoken"
 
