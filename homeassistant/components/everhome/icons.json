@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "energy_counter_in": {
+        "default": "mdi:meter-electric"
+      },
+      "energy_counter_in_t1": {
+        "default": "mdi:meter-electric"
+      },
+      "energy_counter_in_t2": {
+        "default": "mdi:meter-electric"
+      },
+      "energy_counter_out": {
+        "default": "mdi:meter-electric"
+      },
+      "power": {
+        "default": "mdi:flash"
+      },
+      "power_avg": {
+        "default": "mdi:flash"
+      },
+      "power_phase": {
+        "default": "mdi:flash"
+      }
+    }
+  }
+}

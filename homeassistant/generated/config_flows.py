@@ -230,6 +230,7 @@ FLOWS = {
         "essent",
         "eufylife_ble",
         "eurotronic_cometblue",
+        "everhome",
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
