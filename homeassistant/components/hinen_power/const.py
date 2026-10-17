@@ -1,0 +1,50 @@
+"""Constants for the Hinen Power integration."""
+
+import logging
+
+DOMAIN = "hinen_power"
+MANUFACTURER = "hinen"
+
+COORDINATOR = "coordinator"
+AUTH = "auth"
+HOST = "host"
+
+LOGGER = logging.getLogger(__package__)
+
+ATTR_REGION_CODE = "region_code"
+ATTR_CLIENT_SECRET = "clientSecret"
+ATTR_STATUS = "status"
+ATTR_ALERT_STATUS = "alert_status"
+ATTR_DEVICE_NAME = "device_name"
+
+REGION_CODE = "regionCode"
+CLIENT_SECRET = "clientSecret"
+LOAD_FIRST_STOP_SOC = "load_first_stop_soc"
+CHARGE_STOP_SOC = "charge_stop_soc"
+GRID_FIRST_STOP_SOC = "grid_first_stop_soc"
+WORK_MODE_SETTING = "work_mode_setting"
+CHARGE_POWER_SET = "charge_power_set"
+DISCHARGE_POWER_SET = "discharge_power_set"
+CD_PERIOD_TIMES2 = "cd_period_times2"
+CUMULATIVE_CONSUMPTION = "cumulative_consumption"
+CUMULATIVE_PRODUCTION_ACTIVE = "cumulative_production_active"
+CUMULATIVE_GRID_FEED_IN = "cumulative_grid_feed_in"
+TOTAL_CHARGING_ENERGY = "total_charging_energy"
+TOTAL_DISCHARGING_ENERGY = "total_discharging_energy"
+
+PROPERTIES = {
+    LOAD_FIRST_STOP_SOC: "LoadFirstStopSOC",
+    CHARGE_STOP_SOC: "ChargeStopSOC",
+    GRID_FIRST_STOP_SOC: "GridFirstStopSOC",
+    CD_PERIOD_TIMES2: "CDPeriodTimes2",
+    WORK_MODE_SETTING: "WorkModeSetting",
+    CUMULATIVE_CONSUMPTION: "CumulativeConsumption",
+    CUMULATIVE_PRODUCTION_ACTIVE: "CumulativeProductionActive",
+    CUMULATIVE_GRID_FEED_IN: "CumulativeGridFeedIn",
+    TOTAL_CHARGING_ENERGY: "TotalChargingEnergy",
+    TOTAL_DISCHARGING_ENERGY: "TotalDischargingEnergy",
+}
+
+ATTR_AUTH_LANGUAGE = "page_language"
+ATTR_REDIRECTION_URL = "redirection_url"
+SUPPORTED_LANGUAGES = [("en_US", "English"), ("zh_CN", "简体中文")]
