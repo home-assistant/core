@@ -10,6 +10,7 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_IMEI, CONF_OTP, CONF_PHONE_NUMBER, DOMAIN
 
@@ -29,6 +30,19 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._imei: str | None = None
         self._token: str | None = None
         self._api: ElectraAPI | None = None
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery by DHCP."""
+        # This integration creates one config entry per Electra account and the
+        # account's devices are only known through the cloud API. A device found
+        # on the local network therefore only tells us that no account has been
+        # set up yet: it cannot tell which account the device belongs to.
+        if self._async_current_entries(include_ignore=False):
+            return self.async_abort(reason="already_configured")
+        return await self.async_step_user()
 
     @override
     async def async_step_user(
