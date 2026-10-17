@@ -242,7 +242,7 @@ def icon_schema(
     return schema
 
 
-def _integration_category_keys(categories: dict[str, Any]) -> set[str]:
+def integration_category_keys(categories: dict[str, Any]) -> set[str]:
     """Return the category and subcategory keys, like `energy.meters_monitoring`."""
     keys = set()
     for category, details in categories.items():
@@ -262,11 +262,11 @@ def validate_integration_category_icons(
     # Invalid strings are reported by the json and translations plugins.
     try:
         strings = orjson.loads((integration.path / "strings.json").read_text())
-        categories = _integration_category_keys(strings.get("integration_category", {}))
+        categories = integration_category_keys(strings.get("integration_category", {}))
     except ValueError, AttributeError, TypeError:
         return
 
-    category_icons = _integration_category_keys(icons.get("integration_category", {}))
+    category_icons = integration_category_keys(icons.get("integration_category", {}))
 
     for key in sorted(categories - category_icons):
         integration.add_error("icons", f"Integration category `{key}` has no icon")
