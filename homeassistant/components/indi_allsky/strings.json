@@ -112,6 +112,12 @@
     }
   },
   "exceptions": {
+    "config_entry_not_found": {
+      "message": "The INDI Allsky configuration entry could not be found or is not loaded."
+    },
+    "incomplete_media_identifier": {
+      "message": "The media identifier is invalid or incomplete."
+    },
     "update_failed": {
       "message": "Error communicating with INDI Allsky API"
     }
