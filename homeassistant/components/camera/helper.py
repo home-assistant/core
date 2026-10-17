@@ -18,10 +18,18 @@ def get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
         raise HomeAssistantError("Camera integration not set up")
 
     if (camera := component.get_entity(entity_id)) is None:
-        raise HomeAssistantError("Camera not found")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="camera_not_found",
+            translation_placeholders={"entity_id": entity_id},
+        )
 
     if not camera.is_on:
-        raise HomeAssistantError("Camera is off")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="camera_off",
+            translation_placeholders={"entity_id": entity_id},
+        )
 
     return camera
 
