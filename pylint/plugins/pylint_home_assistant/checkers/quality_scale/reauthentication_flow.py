@@ -6,7 +6,7 @@
 The config flow must implement ``async_step_reauth`` so that users can
 re-authenticate when credentials expire or become invalid.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/reauthentication-flow/
+https://contributors.home-assistant.io/core/quality-scale/reauthentication-flow/
 """
 
 from astroid import nodes
@@ -26,8 +26,8 @@ class ReauthenticationFlowChecker(BaseChecker):
     msgs = {
         "W7410": (
             "Integration config flow should implement `async_step_reauth` "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/reauthentication-flow)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/reauthentication-flow/)",
             "home-assistant-missing-reauthentication-flow",
             "Used when an integration's config_flow.py does not implement "
             "async_step_reauth. This method is needed so users can "

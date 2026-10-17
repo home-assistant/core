@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> None:
     """Establish connection with MELCloud."""
     try:
         async with asyncio.timeout(10):
@@ -93,9 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

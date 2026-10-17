@@ -6,7 +6,7 @@
 The integration's ``__init__.py`` must implement ``async_unload_entry``
 so that config entries can be properly unloaded and resources cleaned up.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-entry-unloading/
+https://contributors.home-assistant.io/core/quality-scale/config-entry-unloading/
 """
 
 from astroid import nodes
@@ -26,8 +26,8 @@ class ConfigEntryUnloadingChecker(BaseChecker):
     msgs = {
         "W7413": (
             "Integration should implement `async_unload_entry` "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/config-entry-unloading)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/config-entry-unloading/)",
             "home-assistant-missing-config-entry-unloading",
             "Used when an integration's __init__.py does not implement "
             "async_unload_entry. This function is needed so config entries "

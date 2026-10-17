@@ -13,6 +13,7 @@ from aiohasupervisor.models import (
     AddonsStats,
     AddonState,
     CIFSMountResponse,
+    DiskMountResponse,
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
@@ -34,7 +35,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
+from homeassistant.const import ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -410,7 +411,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                 ISSUE_KEY_ADDON_PWNED,
             }:
                 placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
-                    f"/hassio/addon/{issue.reference}"
+                    f"/config/app/{issue.reference}"
                 )
                 addons_list = get_addons_list(self.hass) or []
                 placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
@@ -835,7 +836,7 @@ class HassioMainData:
     core: HomeAssistantInfo
     supervisor: SupervisorInfo
     host: HostInfo
-    mounts: dict[str, CIFSMountResponse | NFSMountResponse]
+    mounts: dict[str, CIFSMountResponse | DiskMountResponse | NFSMountResponse]
     os: OSInfo | None
     panels: dict[str, IngressPanel]
 
@@ -1122,10 +1123,10 @@ def async_register_addons_in_dev_reg(
             sw_version=addon.version,
             name=addon.name,
             entry_type=dr.DeviceEntryType.SERVICE,
-            configuration_url=f"homeassistant://hassio/addon/{addon.slug}",
+            configuration_url=f"homeassistant://config/app/{addon.slug}",
         )
         if manufacturer := addon_data.repository or addon.url:
-            params[ATTR_MANUFACTURER] = manufacturer
+            params.manufacturer = manufacturer
         dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
 
@@ -1133,7 +1134,7 @@ def async_register_addons_in_dev_reg(
 def async_register_mounts_in_dev_reg(
     entry_id: str,
     dev_reg: dr.DeviceRegistry,
-    mounts: list[CIFSMountResponse | NFSMountResponse],
+    mounts: list[CIFSMountResponse | DiskMountResponse | NFSMountResponse],
 ) -> None:
     """Register mounts in the device registry."""
     for mount in mounts:

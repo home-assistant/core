@@ -2,22 +2,20 @@
 
 from typing import Any, override
 
-from neopool_modbus import async_probe_serial
-from neopool_modbus.exceptions import (
-    NeoPoolConnectionError,
-    NeoPoolModbusError,
-    NeoPoolTimeoutError,
-)
+from neopool_modbus import async_probe_serial_unit
+from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
 import probatio
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_MODBUS_FRAMER,
@@ -34,18 +32,20 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import NeoPoolConfigEntry
+from .helpers import build_modbus_params
 
 
-async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | None]:
+async def _async_probe(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> tuple[str | None, str | None]:
     """Probe a device using user-supplied connection parameters."""
+    params = build_modbus_params(user_input)
     try:
-        serial = await async_probe_serial(
-            user_input[CONF_HOST],
-            port=user_input[CONF_PORT],
-            unit_id=user_input[CONF_UNIT_ID],
-            framer=user_input[CONF_MODBUS_FRAMER],
-        )
-    except NeoPoolConnectionError, NeoPoolTimeoutError:
+        async with async_get_temporary_unit(
+            hass, params, user_input[CONF_UNIT_ID]
+        ) as unit:
+            serial = await async_probe_serial_unit(unit)
+    except HomeAssistantError, NeoPoolTimeoutError:
         return None, "cannot_connect"
     except NeoPoolModbusError:
         return None, "cannot_read_modbus"
@@ -88,7 +88,7 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         errors: dict[str, str] = {}
         if user_input is not None:
-            serial, error_key = await _async_probe(user_input)
+            serial, error_key = await _async_probe(self.hass, user_input)
             if error_key:
                 errors[CONF_HOST] = error_key
             else:
@@ -133,7 +133,7 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             merged = {**current, **user_input}
-            serial, error_key = await _async_probe(merged)
+            serial, error_key = await _async_probe(self.hass, merged)
             if error_key:
                 errors[CONF_HOST] = error_key
             else:

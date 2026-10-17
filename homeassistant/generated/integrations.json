@@ -1324,6 +1324,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "debug_console": {
+      "name": "Debug console",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
     "debugpy": {
       "name": "Remote Python Debugger",
       "integration_type": "service",
@@ -2309,6 +2315,11 @@
     "frankever": {
       "name": "FrankEver",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "free_mobile": {
@@ -2778,6 +2789,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "grandstream_home": {
+      "name": "Grandstream Home",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "graphite": {
       "name": "Graphite",
       "integration_type": "hub",
@@ -2888,6 +2905,12 @@
       "name": "Harvey",
       "integration_type": "virtual",
       "supported_by": "aquacell"
+    },
+    "hase_iq": {
+      "name": "Hase iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "hassio": {
       "name": "Home Assistant Supervisor",
@@ -4033,6 +4056,11 @@
     "linkedgo": {
       "name": "LinkedGo",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "linkplay": {
@@ -4182,6 +4210,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "lorawan": {
+      "name": "LoRaWAN",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "local_push"
+    },
     "luftdaten": {
       "name": "Sensor.Community",
       "integration_type": "device",
@@ -4271,6 +4305,12 @@
           "config_flow": true,
           "iot_class": "assumed_state",
           "name": "Marantz Infrared"
+        },
+        "marantz_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Marantz RS-232"
         }
       }
     },
@@ -4309,13 +4349,13 @@
       "supported_by": "whirlpool"
     },
     "mcp": {
-      "name": "Model Context Protocol",
+      "name": "Model Context Protocol Client",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "mcp_server": {
-      "name": "Model Context Protocol Server",
+      "name": "Model Context Protocol",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push",
@@ -4828,6 +4868,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "nature_remo": {
+      "name": "Nature Remo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",
@@ -4848,6 +4894,11 @@
     "neo": {
       "name": "Neo",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "neopool": {
@@ -5170,6 +5221,11 @@
     "ogemray": {
       "name": "Ogemray",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "ogeneral": {
@@ -6608,6 +6664,11 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
+          "categories": [
+            "plugs_switches",
+            "lighting.bulbs_lamps",
+            "energy.meters_monitoring"
+          ],
           "name": "Shelly"
         }
       },
@@ -6826,6 +6887,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "smartyplants": {
+      "name": "SmartyPlants",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "smhi": {
       "name": "SMHI",
@@ -8389,6 +8456,12 @@
           "config_flow": false,
           "iot_class": "assumed_state",
           "name": "Xiaomi TV"
+        },
+        "xiaomi_weather": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Xiaomi Weather"
         },
         "xiaomi": {
           "integration_type": "hub",

@@ -28,7 +28,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/home-assistant/core"
-Documentation = "https://developers.home-assistant.io"
+Documentation = "https://contributors.home-assistant.io"
 Repository = "https://github.com/home-assistant/core"
 "Bug Tracker" = "https://github.com/home-assistant/core/issues"
 

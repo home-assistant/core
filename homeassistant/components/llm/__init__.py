@@ -144,7 +144,7 @@ class AssistAPI(API):
         super().__init__(
             hass=hass,
             id=LLM_API_ASSIST,
-            name="Assist",
+            name="Device control",
         )
 
     @override
