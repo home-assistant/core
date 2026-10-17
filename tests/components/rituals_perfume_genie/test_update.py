@@ -117,15 +117,26 @@ async def test_no_firmware_info(
     assert state.attributes[ATTR_LATEST_VERSION] is None
 
 
+@pytest.mark.parametrize(
+    ("firmware_id", "newest_firmware_id"),
+    [(127, 130), (None, None)],
+    ids=["firmware_ids", "versions_only"],
+)
 async def test_install(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
+    firmware_id: int | None,
+    newest_firmware_id: int | None,
 ) -> None:
     """Test installing firmware, until the diffuser runs it."""
     config_entry = mock_config_entry(unique_id="id_123_update_install")
     diffuser = mock_diffuser(
-        "lot123", version="5.4", newest_version="5.5", newest_firmware_id=130
+        "lot123",
+        version="5.4",
+        firmware_id=firmware_id,
+        newest_version="5.5",
+        newest_firmware_id=newest_firmware_id,
     )
     client = await init_integration(hass, config_entry, [diffuser])
 
@@ -138,6 +149,13 @@ async def test_install(
     assert state
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
+    # While installing, another install isn't started.
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    client.update_firmware.assert_called_once()
+
     # Still the old firmware: still installing.
     await _tick(hass, freezer, timedelta(minutes=5))
     state = hass.states.get(ENTITY_ID)
@@ -145,7 +163,7 @@ async def test_install(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     diffuser.version = "5.5"
-    diffuser.firmware_id = 130
+    diffuser.firmware_id = newest_firmware_id
     await _tick(hass, freezer, timedelta(minutes=5))
 
     state = hass.states.get(ENTITY_ID)

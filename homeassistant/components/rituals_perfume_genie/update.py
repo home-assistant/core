@@ -56,8 +56,7 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    # The firmware ID the diffuser has to report for an install to be done.
-    _installing_id: int | None = None
+    _installing: bool = False
     _installing_timeout: CALLBACK_TYPE | None = None
 
     @override
@@ -93,7 +92,7 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
     @override
     def in_progress(self) -> bool:
         """Return if an install is still going on."""
-        return self._installing_id is not None
+        return self._installing
 
     @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
@@ -123,8 +122,7 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        firmware = self._firmware
-        self._installing_id = firmware.newest_id if firmware else None
+        self._installing = True
         self._installing_timeout = async_call_later(
             self.hass, INSTALL_TIMEOUT, self._installing_timed_out
         )
@@ -136,12 +134,14 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
         if self.available:
             self._sync_device_firmware()
 
-            firmware = self._firmware
+            # Done once the diffuser runs the newest firmware.
+            installed = self.installed_version
+            latest = self.latest_version
             if (
-                self._installing_id is not None
-                and firmware is not None
-                and firmware.current_id is not None
-                and firmware.current_id >= self._installing_id
+                self._installing
+                and installed is not None
+                and latest is not None
+                and not self.version_is_newer(latest, installed)
             ):
                 self._installing_finished()
 
@@ -167,7 +167,7 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
     @callback
     def _installing_finished(self) -> None:
         """Stop reporting an install, however it ended."""
-        self._installing_id = None
+        self._installing = False
         if self._installing_timeout is not None:
             self._installing_timeout()
             self._installing_timeout = None
