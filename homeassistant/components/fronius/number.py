@@ -3,7 +3,11 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -36,6 +40,9 @@ class FroniusNumberEntityDescription(FroniusEntityDescription, NumberEntityDescr
     enable_field: str | None = None
 
 
+# The battery rates are signed: a negative one turns the direction around, so
+# a discharge limit of -100% forces charging at full power - the registers as
+# other controllers write them. A box, as the sign is easy to miss on a slider.
 MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     FroniusNumberEntityDescription(
         key="ac_power_limit",
@@ -54,9 +61,10 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="charge_limit",
         enable_field="charge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0,
+        native_min_value=-100,
         native_max_value=100,
         native_step=1,
+        mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusNumberEntityDescription(
@@ -65,9 +73,10 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="discharge_limit",
         enable_field="discharge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0,
+        native_min_value=-100,
         native_max_value=100,
         native_step=1,
+        mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusNumberEntityDescription(
