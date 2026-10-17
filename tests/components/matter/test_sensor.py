@@ -696,6 +696,18 @@ async def test_evse_sensor(
     assert state
     assert state.state == "63.0"
 
+    # ElectricalPowerMeasurementPowerFactor
+    state = hass.states.get("sensor.evse_power_factor")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    set_node_attribute(matter_node, 1, 144, 17, 6600)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_power_factor")
+    assert state
+    assert state.state == "0.66"
+
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_water_heater(
