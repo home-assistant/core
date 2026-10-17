@@ -34,6 +34,11 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
     """Describe devices using current config entries and device registry names."""
     registry = hass.data[DATA_REGISTRY]
     device_registry = dr.async_get(hass)
+    vendor_entries_by_brand: dict[tuple[str, int | str | None], list[ConfigEntry]] = {}
+    for domain, matchers in registry.integrations.items():
+        domain_entries = hass.config_entries.async_entries(domain, include_ignore=False)
+        for matcher in matchers:
+            vendor_entries_by_brand.setdefault(matcher, []).extend(domain_entries)
     devices = []
     connections = []
     for entry_id, registered in registry.connections.items():
@@ -48,22 +53,13 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         connections.append(connection)
         for state in registered.devices.values():
             descriptor = state.descriptor
-            domains = [
-                domain
-                for domain, matchers in registry.integrations.items()
-                if (descriptor.stack, descriptor.brand_id) in matchers
-            ]
-            vendor_entries = [
-                vendor_entry
-                for domain in domains
-                for vendor_entry in hass.config_entries.async_entries(
-                    domain, include_ignore=False
-                )
-            ]
+            vendor_entries = vendor_entries_by_brand.get(
+                (descriptor.stack, descriptor.brand_id)
+            )
             device = next(
                 (
                     device
-                    for vendor_entry in vendor_entries
+                    for vendor_entry in vendor_entries or ()
                     if (
                         device := device_registry.async_get_device_by_identifier(
                             (
@@ -81,7 +77,7 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
                 support = "supported"
             elif descriptor.brand_id is None or not descriptor.model_id:
                 support = "missing_identity"
-            elif domains and not vendor_entries:
+            elif vendor_entries == []:
                 support = "integration_not_configured"
             else:
                 support = "unsupported_model"
