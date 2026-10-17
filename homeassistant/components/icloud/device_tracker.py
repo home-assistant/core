@@ -1,6 +1,6 @@
 """Support for tracking for iCloud devices."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -63,6 +63,10 @@ class IcloudTrackerEntity(TrackerEntity):
         """Set up the iCloud tracker entity."""
         self._account = account
         self._device = device
+        # The poll replaces the device's location from the executor, while a
+        # state write reads it piece by piece. The entity works from a copy
+        # that only the event loop changes.
+        self._location = device.location
         self._unsub_dispatcher: CALLBACK_TYPE | None = None
         self._attr_unique_id = device.unique_id
 
@@ -70,25 +74,25 @@ class IcloudTrackerEntity(TrackerEntity):
     @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
-        if TYPE_CHECKING:
-            assert self._device.location is not None
-        return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
+        if self._location is None:
+            return 0
+        return self._location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
     @override
-    def latitude(self) -> float:
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if TYPE_CHECKING:
-            assert self._device.location is not None
-        return self._device.location[DEVICE_LOCATION_LATITUDE]
+        if self._location is None:
+            return None
+        return self._location[DEVICE_LOCATION_LATITUDE]
 
     @property
     @override
-    def longitude(self) -> float:
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if TYPE_CHECKING:
-            assert self._device.location is not None
-        return self._device.location[DEVICE_LOCATION_LONGITUDE]
+        if self._location is None:
+            return None
+        return self._location[DEVICE_LOCATION_LONGITUDE]
 
     @property
     @override
@@ -118,8 +122,14 @@ class IcloudTrackerEntity(TrackerEntity):
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self._account.signal_device_update, self.async_write_ha_state
+            self.hass, self._account.signal_device_update, self._handle_device_update
         )
+
+    @callback
+    def _handle_device_update(self) -> None:
+        """Take the device's current location and write the state."""
+        self._location = self._device.location
+        self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
