@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "mqtt_not_configured": "The Home Assistant MQTT integration is not set up.",
+      "mqtt_not_connected": "The Home Assistant MQTT integration is not connected to a broker."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_mac": "Invalid MAC address.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "mac": "MAC address"
+        },
+        "data_description": {
+          "mac": "The MAC address of the thermostat."
+        },
+        "description": "The thermostat must be set up to use the same MQTT broker as the Home Assistant MQTT integration."
+      }
+    }
+  }
+}
