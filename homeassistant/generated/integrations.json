@@ -1324,6 +1324,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "debug_console": {
+      "name": "Debug console",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
     "debugpy": {
       "name": "Remote Python Debugger",
       "integration_type": "service",
@@ -4851,6 +4857,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "nature_remo": {
+      "name": "Nature Remo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "neato": {
       "name": "Neato Botvac",

@@ -132,7 +132,7 @@ async def test_set_temperature(
         pytest.param(
             TCC_ENTITY_ID,
             TCC_MAC_ID,
-            {"heat_setpoint": 68, "cool_setpoint": 77, "mode": HVACMode.HEAT},
+            {"heat_setpoint": 68, "cool_setpoint": 77, "mode": "Heat"},
             id="tcc",
         ),
     ],
@@ -268,8 +268,8 @@ async def test_set_hvac_mode_tcc_heat_cool_from_off(
 
     mock_sleep.assert_awaited_once_with(3)
     assert mock_lyric.update_thermostat.await_args_list == [
-        call(ANY, ANY, mode=HVACMode.HEAT, auto_changeover_active=False),
-        call(ANY, ANY, mode=HVACMode.HEAT, auto_changeover_active=True),
+        call(ANY, ANY, mode="Heat", auto_changeover_active=False),
+        call(ANY, ANY, mode="Heat", auto_changeover_active=True),
     ]
 
 

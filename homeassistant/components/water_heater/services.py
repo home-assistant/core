@@ -21,7 +21,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import WaterHeaterEntity
+    from .entity import WaterHeaterEntity
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
