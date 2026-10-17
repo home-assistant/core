@@ -1,5 +1,7 @@
 """Class to hold all cover accessories."""
 
+from datetime import datetime
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -31,13 +33,14 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HassJobType,
     State,
     callback,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -88,6 +91,10 @@ DOOR_TARGET_HASS_TO_HK = {
 }
 
 MOVING_STATES = {CoverState.OPENING, CoverState.CLOSING}
+
+# The Home app writes the target position about once a second while the
+# slider is dragged, so only the last write is sent to the cover.
+POSITION_DEBOUNCE_TIME = 1.5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -296,6 +303,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
         assert state
+        self._move_timer: CALLBACK_TYPE | None = None
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
@@ -326,8 +334,29 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     def move_cover(self, value: int) -> None:
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
+        if self._move_timer:
+            self._move_timer()
+        self._move_timer = async_call_later(
+            self.hass,
+            POSITION_DEBOUNCE_TIME,
+            partial(self._async_send_position, value),
+        )
+
+    @callback
+    def _async_send_position(self, value: int, _now: datetime) -> None:
+        """Send the last position written by HomeKit to the cover."""
+        self._move_timer = None
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
         self.async_call_service(COVER_DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
+
+    @callback
+    @override
+    def async_stop(self) -> None:
+        """Cancel a pending position write when the accessory is stopped."""
+        if self._move_timer:
+            self._move_timer()
+            self._move_timer = None
+        super().async_stop()
 
     @callback
     def _async_update_target_position_while_moving(
