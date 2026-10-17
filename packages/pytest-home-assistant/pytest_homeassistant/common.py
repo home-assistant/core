@@ -195,7 +195,9 @@ def threadsafe_coroutine_factory(func):
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(_paths.CONFIG_DIR or _paths.BUNDLED_CONFIG_DIR, *add_path)
+    return os.path.join(
+        _paths.CONFIG_DIR or _paths.TESTS_DIR / "testing_config", *add_path
+    )
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):

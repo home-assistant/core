@@ -74,10 +74,11 @@ test directory exists; otherwise an integration argument still resolves to
 relative to pytest's project root, so invoking pytest from another directory
 also works. Snapshots are stored next to the consuming test in `snapshots/`.
 
-Each test gets an empty temporary Home Assistant configuration directory. To use
-a prepared configuration, set `ha_test_config_dir` relative to the project root,
-or override the `hass_config_dir` fixture. The `hass_tmp_config_dir` fixture copies
-that prepared configuration into a temporary directory when configured.
+The `hass` fixture uses the shared `tests/testing_config` path by default, without
+creating or copying a directory. Set `ha_test_config_dir` relative to the project
+root to use another path. For tests that need an isolated writable directory,
+override `hass_config_dir` to return `hass_tmp_config_dir`. That fixture copies the
+shared configuration if it exists, or provides an empty temporary directory.
 
 ## What's included
 

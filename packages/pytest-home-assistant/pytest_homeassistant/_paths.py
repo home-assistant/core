@@ -6,7 +6,6 @@ import pytest
 
 TESTS_DIR = Path.cwd() / "tests"
 CONFIG_DIR: Path | None = None
-BUNDLED_CONFIG_DIR = Path(__file__).parent / "testing_config"
 
 
 def configure(config: pytest.Config) -> None:

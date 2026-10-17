@@ -682,9 +682,10 @@ def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
         # Use temporary config directory for this test/module.
         return hass_tmp_config_dir
     """
-    if _paths.CONFIG_DIR is not None:
+    config_dir = get_test_config_dir()
+    if _paths.CONFIG_DIR is not None or pathlib.Path(config_dir).is_dir():
         copytree(
-            get_test_config_dir(),
+            config_dir,
             tmp_path,
             symlinks=True,
             dirs_exist_ok=True,
@@ -693,14 +694,12 @@ def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
 
 
 @pytest.fixture
-def hass_config_dir(request: pytest.FixtureRequest) -> str:
+def hass_config_dir() -> str:
     """Fixture to provide a test config directory.
 
     Override this fixture to provide a custom config directory,
     for example with pre-populated config files.
     """
-    if _paths.CONFIG_DIR is None:
-        return request.getfixturevalue("hass_tmp_config_dir")
     return get_test_config_dir()
 
 

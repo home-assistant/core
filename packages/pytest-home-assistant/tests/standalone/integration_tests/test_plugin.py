@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
+from pytest_homeassistant import _paths
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_load_json_object_fixture,
@@ -43,10 +44,34 @@ def test_fixture_loader() -> None:
     assert load_json_object_fixture("sample.json") == {"state": "ready"}
 
 
-def test_temporary_configuration(hass_config_dir: str, tmp_path: Path) -> None:
-    """Each test gets writable configuration outside the installed package."""
-    assert Path(hass_config_dir) == tmp_path
-    (Path(hass_config_dir) / "configuration.yaml").write_text("default_config:\n")
+def test_shared_configuration(
+    hass: HomeAssistant, pytestconfig: pytest.Config, request: pytest.FixtureRequest
+) -> None:
+    """Default configuration uses a shared path without creating a directory."""
+    config_dir = pytestconfig.rootpath / "integration_tests" / "testing_config"
+    assert Path(hass.config.config_dir) == config_dir
+    assert not config_dir.exists()
+    assert "tmp_path" not in request.fixturenames
+
+
+def test_temporary_configuration(hass_tmp_config_dir: str, tmp_path: Path) -> None:
+    """Tests can opt into writable configuration outside the installed package."""
+    assert Path(hass_tmp_config_dir) == tmp_path
+    (Path(hass_tmp_config_dir) / "configuration.yaml").write_text("default_config:\n")
+
+
+def test_temporary_configuration_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest
+) -> None:
+    """Opting into a temporary directory copies a configured source."""
+    config_dir = tmp_path / "source"
+    config_dir.mkdir()
+    (config_dir / "configuration.yaml").write_text("default_config:\n")
+    monkeypatch.setattr(_paths, "CONFIG_DIR", config_dir)
+
+    destination = Path(request.getfixturevalue("hass_tmp_config_dir"))
+    assert destination == tmp_path
+    assert (destination / "configuration.yaml").read_text() == "default_config:\n"
 
 
 def test_registry_snapshot(
