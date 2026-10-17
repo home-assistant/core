@@ -286,6 +286,49 @@ async def test_border_agent_id_not_supported(
     assert config_entry.reason == "The OTBR does not support Border Agent ID"
 
 
+@pytest.mark.usefixtures("multiprotocol_addon_manager_mock")
+async def test_setup_waits_for_the_dataset_lock(
+    hass: HomeAssistant, get_active_dataset_tlvs: AsyncMock
+) -> None:
+    """Setup reads the router and stores its dataset under the dataset lock.
+
+    A migration decides what a network is known as from the store; a router
+    on that network being set up in between would have its dataset stored
+    after the migration passed its checks against the old picture.
+    """
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+    ) as mock_add:
+        async with otbr.util.async_get_dataset_lock(hass):
+            task = hass.async_create_task(
+                hass.config_entries.async_setup(config_entry.entry_id)
+            )
+            for _ in range(5):
+                await asyncio.sleep(0)
+            assert not task.done()
+            get_active_dataset_tlvs.assert_not_awaited()
+            mock_add.assert_not_called()
+
+        assert await task
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    mock_add.assert_called_once_with(
+        otbr.DOMAIN,
+        DATASET_CH16.hex(),
+        TEST_BORDER_AGENT_ID.hex(),
+        TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+
+
 async def test_config_entry_update(hass: HomeAssistant) -> None:
     """Test update config entry settings."""
     config_entry = MockConfigEntry(
