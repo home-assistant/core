@@ -16,8 +16,9 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -241,3 +242,110 @@ async def test_remove_config_entry_device_rejects_child_device(
         == "Failed to remove device entry, rejected by integration"
     )
     assert device_registry.async_get(child_device.id)
+
+
+ADOPTED_MAC = "00:00:00:00:01:01"
+PENDING_MAC = "00:00:00:00:01:02"
+
+PENDING_DEVICE = {
+    "adopted": False,
+    "board_rev": 3,
+    "device_id": "mock-id-pending",
+    "ip": "10.0.1.2",
+    "mac": PENDING_MAC,
+    "model": "US16P150",
+    "next_interval": 20,
+    "port_table": [
+        {
+            "media": "GE",
+            "name": "Port 1",
+            "port_idx": 1,
+            "poe_enable": True,
+            "poe_mode": "auto",
+            "port_poe": True,
+            "up": True,
+        }
+    ],
+    "state": 2,
+    "type": "usw",
+    "version": "4.0.42.10433",
+}
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "adopted": True,
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": ADOPTED_MAC,
+                "model": "US16P150",
+                "name": "Device 1",
+                "next_interval": 20,
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            },
+            PENDING_DEVICE,
+        ]
+    ],
+)
+async def test_device_pending_adoption(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Verify devices only get entities while adopted by the controller."""
+    config_entry = await config_entry_factory()
+
+    def device_entry(mac: str) -> dr.DeviceEntry | None:
+        return device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+        )
+
+    def update_entity_id(mac: str) -> str | None:
+        return entity_registry.async_get_entity_id(
+            Platform.UPDATE, DOMAIN, f"device_update-{mac}"
+        )
+
+    def poe_entity_id(mac: str) -> str | None:
+        return entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"poe-{mac}_1"
+        )
+
+    # Only the adopted device gets a device entry and entities
+    assert device_entry(ADOPTED_MAC)
+    assert update_entity_id(ADOPTED_MAC)
+    assert not device_entry(PENDING_MAC)
+    assert not update_entity_id(PENDING_MAC)
+    assert not poe_entity_id(PENDING_MAC)
+
+    # Adopting the device creates its entities, including those of its ports
+    mock_websocket_message(
+        message=MessageKey.DEVICE,
+        data={**PENDING_DEVICE, "adopted": True, "name": "Device 2", "state": 1},
+    )
+    await hass.async_block_till_done()
+
+    assert (pending_device_entry := device_entry(PENDING_MAC))
+    assert update_entity_id(PENDING_MAC)
+    assert poe_entity_id(PENDING_MAC)
+
+    # Forgetting the device in the controller removes its loaded entities again
+    mock_websocket_message(message=MessageKey.DEVICE, data=PENDING_DEVICE)
+    await hass.async_block_till_done()
+
+    assert not update_entity_id(PENDING_MAC)
+
+    # The device entry of a device that is not adopted can be removed from the UI
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(pending_device_entry.id)
+    assert response["success"]
+    assert not device_entry(PENDING_MAC)
