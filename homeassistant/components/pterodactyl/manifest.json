@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["py-dactyl==2.0.4"]
+  "requirements": ["py-dactyl==2.1.3"]
 }
