@@ -1,6 +1,6 @@
 {
   "domain": "thethingsnetwork",
-  "name": "The Things Network",
+  "name": "The Things Network (Cloud Storage)",
   "codeowners": ["@angelnu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/thethingsnetwork",
