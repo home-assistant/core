@@ -1,18 +1,10 @@
 # pytest-home-assistant
 
-Pytest fixtures and helpers for testing Home Assistant integrations. This package
-contains the shared testing tools used by Home Assistant Core, with the goal of
-making those same tools available to third-party integration authors.
-
-Use these tools to create a Home Assistant instance for a test, mock configuration
-entries and external services, simulate events, and check integration behavior.
-The Python import namespace is `pytest_homeassistant`.
+Pytest fixtures and helpers for testing Home Assistant integrations. Create a
+Home Assistant instance, mock configuration entries and external services,
+simulate events, and check integration behavior.
 
 ## Installation and compatibility
-
-Published releases pin the matching Home Assistant version. Upgrade the two
-together; helpers depend on Home Assistant's internal APIs and are not compatible
-with older releases.
 
 Install the package into your custom integration's virtual environment:
 
@@ -20,6 +12,7 @@ Install the package into your custom integration's virtual environment:
 uv pip install pytest-home-assistant
 ```
 
+The package installs the matching Home Assistant version. Upgrade them together.
 The plugin loads automatically. Do not install it together with
 `pytest-homeassistant-custom-component`, which supplies overlapping fixtures.
 
@@ -30,7 +23,7 @@ by the consuming project. SQLite recorder tests work with the base installation;
 MySQL/PostgreSQL tests additionally need their database driver and
 `sqlalchemy-utils`.
 
-## Custom integrations
+## Writing tests
 
 Add this pytest configuration to your project's `pyproject.toml`:
 
@@ -56,23 +49,32 @@ def _enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Allow loading this project's custom integrations."""
 ```
 
-Import helpers from `pytest_homeassistant`, for example:
+Tests request fixtures such as `hass` by name and import helpers from
+`pytest_homeassistant`. For example, `tests/test_config_entry.py` can create a
+configuration entry without setting up the integration:
 
 ```python
-from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import MockConfigEntry
+
+
+async def test_config_entry(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain="my_integration", data={"host": "example.local"})
+    entry.add_to_hass(hass)
+
+    assert hass.config_entries.async_get_entry(entry.entry_id) is entry
 ```
 
-When migrating from `pytest-homeassistant-custom-component`, replace imports of
-`pytest_homeassistant_custom_component` with `pytest_homeassistant`. Existing
-`hass`, `enable_custom_integrations`, registry, HTTP, recorder, and snapshot
-fixtures keep their names.
+Run your tests with `pytest`.
 
-Fixture loaders read `tests/fixtures` by default. A Core-style
-`tests/components/<domain>/fixtures` directory is used when that integration's
-test directory exists; otherwise an integration argument still resolves to
-`tests/fixtures`. Set `ha_test_root` to use another test directory. Paths are
-relative to pytest's project root, so invoking pytest from another directory
-also works. Snapshots are stored next to the consuming test in `snapshots/`.
+## Test data and configuration
+
+Load test data with helpers such as `load_fixture` and `load_json_object_fixture`
+from `pytest_homeassistant.common`. They read `tests/fixtures` by default. When
+given an integration name, they use `tests/components/<domain>/fixtures` if that
+integration's test directory exists, otherwise `tests/fixtures`. Set `ha_test_root`
+to use another test directory. Paths are relative to pytest's project root.
+Snapshots are stored next to the consuming test in `snapshots/`.
 
 The `hass` fixture uses the shared `tests/testing_config` path by default, without
 creating or copying a directory. Set `ha_test_config_dir` relative to the project
@@ -97,47 +99,12 @@ shared configuration if it exists, or provides an empty temporary directory.
 | `pytest_homeassistant.syrupy` | Snapshot extensions for Home Assistant objects. |
 | `pytest_homeassistant.typing` | Type aliases for shared test fixtures. |
 
-The package also includes the JSON, time, and recorder patches used by Core's test
-environment, plus support for detecting uncaught exceptions.
+## Migrating from pytest-homeassistant-custom-component
 
-## Using helpers in Core tests
-
-Set up a Core development checkout with `script/setup`, then run tests from the
-repository root. Core configures the package's import path and loads its shared
-fixtures and hooks through `tests/conftest.py`.
-
-For example, a test can create a configuration entry without setting up the
-integration:
-
-```python
-from homeassistant.core import HomeAssistant
-
-from pytest_homeassistant.common import MockConfigEntry
-
-
-async def test_config_entry(hass: HomeAssistant) -> None:
-    entry = MockConfigEntry(domain="my_integration", data={"host": "example.local"})
-    entry.add_to_hass(hass)
-
-    assert hass.config_entries.async_get_entry(entry.entry_id) is entry
-```
-
-Existing imports such as `from tests.common import MockConfigEntry` continue to
-work: the original Core test modules re-export the same helpers. Core configures its test and configuration paths explicitly, so fixture loaders
-still read from the Core test tree.
-
-## Building
-
-Build both distributions from the Core repository root:
-
-```shell
-uv build packages/pytest-home-assistant
-```
-
-Core's CI installs the built wheel and Home Assistant in a clean environment,
-then runs the standalone custom-integration tests outside the checkout. The
-package version and Home Assistant dependency version are set when publishing.
-Other dependency pins are synchronized with Core by `script.gen_requirements_all`.
+Replace the old package dependency with `pytest-home-assistant` and change imports
+of `pytest_homeassistant_custom_component` to `pytest_homeassistant`. Existing
+`hass`, `enable_custom_integrations`, registry, HTTP, recorder, and snapshot
+fixtures keep their names.
 
 ## License
 
