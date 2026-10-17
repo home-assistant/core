@@ -24,6 +24,12 @@
     "switch": {
       "fan": {
         "default": "mdi:fan"
+      },
+      "standby_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "off": "mdi:led-off"
+        }
       }
     }
   }
