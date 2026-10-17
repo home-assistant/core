@@ -83,4 +83,4 @@ rules:
   inject-websession:
     status: exempt
     comment: This integration does not make any HTTP requests.
-  strict-typing: todo
+  strict-typing: done
