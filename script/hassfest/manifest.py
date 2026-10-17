@@ -396,11 +396,12 @@ def load_known_categories(config: Config) -> set[str] | None:
     Read from the source strings, so a new category can be used before
     integration_categories.json is regenerated.
     """
-    # Invalid strings are reported by the json and translations plugins
+    # Invalid strings are reported by the json and translations plugins, and the
+    # strings are missing when validating integrations outside a core checkout
     try:
         strings = json.loads((config.root / HOMEASSISTANT_STRINGS_PATH).read_text())
         return integration_category_keys(strings.get("integration_category", {}))
-    except ValueError, AttributeError, TypeError:
+    except OSError, ValueError, AttributeError, TypeError:
         return None
 
 
