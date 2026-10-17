@@ -449,6 +449,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[4alb3gcicwdxrs3zgj]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '4alb3gcicwdxrs3zgj',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'EVOL - Beer & Wine JC-115',
+    'model_id': 'z3srxdwcicg3bla4',
+    'name': 'EVOL - Beer & Wine JC-115',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[4bxfp3kgncpcgx5uycjzs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
