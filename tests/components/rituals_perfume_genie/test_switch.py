@@ -75,8 +75,8 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
 async def test_device_info(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test the device info, with the firmware as version."""
-    diffuser = mock_diffuser(hublot="lot123device", version="5.4")
+    """Test the device info, with the model and firmware from Rituals."""
+    diffuser = mock_diffuser(hublot="lot123device", model="Genie 3.0", version="7.1")
     config_entry = mock_config_entry(unique_id="id_123_device_info_test")
     await init_integration(hass, config_entry, [diffuser])
 
@@ -85,7 +85,8 @@ async def test_device_info(
     )
     assert device_entry
     assert device_entry.name == "Genie"
-    assert device_entry.sw_version == "5.4"
+    assert device_entry.model == "Genie 3.0"
+    assert device_entry.sw_version == "7.1"
 
 
 async def test_set_switch_state(hass: HomeAssistant) -> None:

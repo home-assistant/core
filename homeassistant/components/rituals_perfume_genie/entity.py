@@ -2,7 +2,7 @@
 
 from typing import override
 
-from ritualsgenie import RitualsGenieHub, Sensor
+from ritualsgenie import RitualsGenieHub, RitualsGenieHublot, Sensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -12,21 +12,26 @@ from .const import DOMAIN
 from .coordinator import RitualsHubsCoordinator, RitualsSensorsCoordinator
 
 MANUFACTURER = "Rituals Cosmetics"
-MODEL = "The Perfume Genie"
-MODEL2 = "The Perfume Genie 2.0"
 
 
-def _device_info(hub: RitualsGenieHub) -> DeviceInfo:
+def _device_info(
+    hub: RitualsGenieHub, hardware: RitualsGenieHublot | None
+) -> DeviceInfo:
     """Return the device info of a diffuser."""
     firmware = hub.firmware.current if hub.firmware else None
 
-    return DeviceInfo(
+    device_info = DeviceInfo(
         identifiers={(DOMAIN, hub.hublot)},
         manufacturer=MANUFACTURER,
-        model=MODEL if hub.has_battery else MODEL2,
         name=hub.name,
         sw_version=str(firmware) if firmware else None,
     )
+
+    # Left out when unknown, so a model stored before isn't wiped.
+    if hardware and hardware.device_version:
+        device_info["model"] = hardware.device_version
+
+    return device_info
 
 
 def _hub_available(hubs: RitualsHubsCoordinator, hublot: str) -> bool:
@@ -57,7 +62,9 @@ class DiffuserEntity(CoordinatorEntity[RitualsHubsCoordinator]):
         self.hublot = hublot
 
         self._attr_unique_id = f"{hublot}-{description.key}"
-        self._attr_device_info = _device_info(coordinator.data[hublot])
+        self._attr_device_info = _device_info(
+            coordinator.data[hublot], coordinator.hardware.get(hublot)
+        )
 
     @property
     def hub(self) -> RitualsGenieHub:
@@ -87,9 +94,11 @@ class DiffuserSensorsEntity(CoordinatorEntity[RitualsSensorsCoordinator]):
         super().__init__(coordinator, context=sensor)
         self.entity_description = description
 
-        hub = coordinator.hubs.data[coordinator.hublot]
+        hubs = coordinator.hubs
         self._attr_unique_id = f"{coordinator.hublot}-{description.key}"
-        self._attr_device_info = _device_info(hub)
+        self._attr_device_info = _device_info(
+            hubs.data[coordinator.hublot], hubs.hardware.get(coordinator.hublot)
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

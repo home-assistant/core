@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, create_autospec, patch
 from ritualsgenie import (
     RitualsGenie,
     RitualsGenieHub,
+    RitualsGenieHublot,
     RitualsGenieSensor,
     RitualsGenieSensors,
     Sensor,
@@ -60,6 +61,7 @@ class MockDiffuser:
     has_battery: bool = True
     has_cartridge: bool = True
     is_on: bool = True
+    model: str = "Genie 2.0"
     name: str = "Genie"
     perfume: str = "Ritual of Sakura"
     perfume_amount: int = 2
@@ -108,6 +110,12 @@ class MockDiffuser:
                     else None
                 ),
             }
+        )
+
+    def hardware(self) -> RitualsGenieHublot:
+        """Return the hardware details, as the API would send them."""
+        return RitualsGenieHublot.from_dict(
+            {"deviceVersion": self.model, "hubHash": self.hub_hash}
         )
 
     def sensors(self, only: Iterable[Sensor] | None = None) -> RitualsGenieSensors:
@@ -186,6 +194,10 @@ def mock_client(diffusers: list[MockDiffuser]) -> AsyncMock:
     client.token = "mock-token"
     client.hubs.side_effect = lambda: [diffuser.hub() for diffuser in diffusers]
     client.hub.side_effect = lambda hub_hash: by_hash[hub_hash].hub()
+    # Looked up on every call, as a test may add a diffuser to the account.
+    client.hublot.side_effect = lambda hublot: next(
+        diffuser for diffuser in diffusers if diffuser.hublot == hublot
+    ).hardware()
     client.sensors.side_effect = lambda hub, only=None: by_hash[hub.hash].sensors(only)
     client.sensor.side_effect = lambda hub_hash, sensor: by_hash[hub_hash].sensor(
         sensor
