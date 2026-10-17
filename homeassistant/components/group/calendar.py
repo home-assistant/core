@@ -92,6 +92,17 @@ def async_create_preview_calendar(
     )
 
 
+def _event_sort_key(event: CalendarEvent) -> tuple[dt.datetime, dt.datetime]:
+    """Order events chronologically.
+
+    Uses UTC, as comparing local times ignores the DST fold.
+    """
+    return (
+        dt_util.as_utc(event.start_datetime_local),
+        dt_util.as_utc(event.end_datetime_local),
+    )
+
+
 class CalendarGroup(GroupEntity, CalendarEntity):
     """Representation of a calendar group."""
 
@@ -132,10 +143,14 @@ class CalendarGroup(GroupEntity, CalendarEntity):
     @override
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event of all members."""
-        now = dt_util.now()
+        now = dt_util.utcnow()
         return min(
-            (event for event in self._member_events if event.end_datetime_local > now),
-            key=lambda event: (event.start_datetime_local, event.end_datetime_local),
+            (
+                event
+                for event in self._member_events
+                if dt_util.as_utc(event.end_datetime_local) > now
+            ),
+            key=_event_sort_key,
             default=None,
         )
 
@@ -154,10 +169,7 @@ class CalendarGroup(GroupEntity, CalendarEntity):
             )
         )
         events = [event for events in member_events for event in events]
-        return sorted(
-            events,
-            key=lambda event: (event.start_datetime_local, event.end_datetime_local),
-        )
+        return sorted(events, key=_event_sort_key)
 
     @callback
     def _async_calendars(self) -> list[CalendarEntity]:

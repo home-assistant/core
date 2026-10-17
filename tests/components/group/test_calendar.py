@@ -279,6 +279,51 @@ async def test_event_in_repeated_dst_hour(
     assert group.event.start == dt.datetime(2026, 11, 1, 6, 30, tzinfo=dt.UTC)
 
 
+async def test_events_ordered_across_repeated_dst_hour(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calendar_platform: list[MockCalendarEntity],
+) -> None:
+    """Test events in both passes of the repeated DST hour are ordered by instant."""
+    await hass.config.async_set_time_zone("America/New_York")
+    # 01:30 EDT, the first pass through the repeated hour
+    freezer.move_to(dt.datetime(2026, 11, 1, 5, 30, tzinfo=dt.UTC))
+    work, home = calendar_platform
+    # 01:00 EDT to 01:15 EST
+    work._events = [
+        CalendarEvent(
+            start=dt.datetime(2026, 11, 1, 5, 0, tzinfo=dt.UTC),
+            end=dt.datetime(2026, 11, 1, 6, 15, tzinfo=dt.UTC),
+            summary="Shift",
+        )
+    ]
+    home._events = [
+        # 01:10 EST to 01:40 EST
+        CalendarEvent(
+            start=dt.datetime(2026, 11, 1, 6, 10, tzinfo=dt.UTC),
+            end=dt.datetime(2026, 11, 1, 6, 40, tzinfo=dt.UTC),
+            summary="Late call",
+        ),
+        # 01:45 EDT to 01:50 EDT
+        CalendarEvent(
+            start=dt.datetime(2026, 11, 1, 5, 45, tzinfo=dt.UTC),
+            end=dt.datetime(2026, 11, 1, 5, 50, tzinfo=dt.UTC),
+            summary="Early call",
+        ),
+    ]
+    await _setup_groups(hass)
+
+    group = hass.data[CALENDAR_DOMAIN].get_entity(GROUP_ENTITY_ID)
+    assert group.event.summary == "Shift"
+
+    events = await group.async_get_events(
+        hass,
+        dt_util.start_of_local_day(),
+        dt_util.start_of_local_day() + dt.timedelta(days=1),
+    )
+    assert [event.summary for event in events] == ["Shift", "Early call", "Late call"]
+
+
 async def test_state_membership_cycle(
     hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
 ) -> None:
