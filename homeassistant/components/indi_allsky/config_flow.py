@@ -165,6 +165,18 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if mac:
             formatted_mac = format_mac(mac)
             current_entry = await self.async_set_unique_id(formatted_mac)
+            if current_entry is None:
+                for entry in self._async_current_entries(include_ignore=False):
+                    if (
+                        entry.unique_id is None
+                        and normalize_host(entry.data[CONF_HOST]) == host
+                        and entry.data[CONF_PORT] == port
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=formatted_mac
+                        )
+                        current_entry = entry
+                        break
             current_host = current_entry.data.get(CONF_HOST) if current_entry else None
             updates: dict[str, Any] = {
                 CONF_PORT: port,
@@ -191,10 +203,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, self._discovered_data)
-        except CannotConnect, InvalidAuth:
-            return await self.async_step_user()
-        except Unknown:
-            return self.async_abort(reason="unknown")
+        except CannotConnect, InvalidAuth, Unknown:
+            return self.async_abort(reason="cannot_connect")
 
         server_name = discovery_info.name.split("._")[0]
         self.context["title_placeholders"] = {"name": server_name}

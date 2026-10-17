@@ -360,12 +360,11 @@ async def test_zeroconf_discovery(
     }
 
 
-async def test_zeroconf_cannot_connect_fallback_to_user_form(
+async def test_zeroconf_cannot_connect(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_indi_allsky_client: AsyncMock,
 ) -> None:
-    """Test Zeroconf discovery falls back to user step when connection fails."""
+    """Test Zeroconf discovery aborts if server connection check fails."""
     mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyConnectionError(
         "Cannot connect"
     )
@@ -386,30 +385,26 @@ async def test_zeroconf_cannot_connect_fallback_to_user_form(
         data=discovery_info,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
-    mock_indi_allsky_client.fetch_image.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+
+async def test_zeroconf_adopts_existing_unlinked_manual_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test Zeroconf assigns unique_id to an existing manual entry matching host and port."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="INDI Allsky (192.168.1.50)",
+        data={
             CONF_HOST: "192.168.1.50",
             CONF_PORT: 443,
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
     )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "INDI Allsky (192.168.1.50)"
-
-
-async def test_zeroconf_unknown_error_aborts(
-    hass: HomeAssistant,
-    mock_indi_allsky_client: AsyncMock,
-) -> None:
-    """Test Zeroconf discovery aborts on unknown error."""
-    mock_indi_allsky_client.fetch_image.side_effect = RuntimeError("Fatal crash")
+    entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
         ip_address="192.168.1.50",
@@ -428,7 +423,8 @@ async def test_zeroconf_unknown_error_aborts(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 async def test_zeroconf_already_configured_with_mac_updates_info(
