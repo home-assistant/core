@@ -78,6 +78,7 @@ async def test_form_without_password(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == DISCOVERY_INFO.properties["SN"]
     assert result2["data"] == {
         CONF_IP_ADDRESS: IP,
         CONF_PASSWORD: "",
