@@ -17,6 +17,7 @@ from tests.typing import ClientSessionGenerator
     [
         LEDIrDeviceType.GENERIC_10_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_21_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
         LEDIrDeviceType.GENERIC_44_KEY,

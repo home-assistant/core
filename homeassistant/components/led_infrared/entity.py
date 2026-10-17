@@ -4,6 +4,7 @@ from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
     Generic10KeyCode,
     Generic13KeyCode,
+    Generic21KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
     Generic44KeyCode,
@@ -18,6 +19,7 @@ from .const import DOMAIN, LEDIrDeviceType
 CODES: dict[LEDIrDeviceType, type[BaseGenericLEDCode]] = {
     LEDIrDeviceType.GENERIC_10_KEY: Generic10KeyCode,
     LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
+    LEDIrDeviceType.GENERIC_21_KEY: Generic21KeyCode,
     LEDIrDeviceType.GENERIC_24_KEY: Generic24KeyCode,
     LEDIrDeviceType.GENERIC_40_KEY: Generic40KeyCode,
     LEDIrDeviceType.GENERIC_44_KEY: Generic44KeyCode,
