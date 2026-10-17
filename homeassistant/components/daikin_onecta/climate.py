@@ -334,19 +334,18 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_hvac_mode(self) -> HVACMode | None:
         """Return current HVAC mode."""
-        mode = "off"
-        operationmode = self._operation_mode()
         cc = self._climate_control()
-        if cc is not None:
-            onoff = cc.on_off_mode
-            if onoff is not None:
-                if onoff.value == "off":
-                    return HVACMode.OFF
-                if onoff.value != "on":
-                    return None
-            if operationmode is not None:
-                mode = operationmode.value
-        return DAIKIN_HVAC_TO_HA.get(mode)
+        if cc is None:
+            return None
+        if (onoff := cc.on_off_mode) is not None:
+            if onoff.value == "off":
+                return HVACMode.OFF
+            if onoff.value != "on":
+                return None
+        operation_mode = cc.operation_mode
+        if operation_mode is None or operation_mode.value is None:
+            return None
+        return DAIKIN_HVAC_TO_HA.get(operation_mode.value)
 
     def _get_hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
@@ -454,13 +453,21 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         if fan_operation is None or fan_operation.fan_speed is None:
             return None
         fan_speed = fan_operation.fan_speed
-        mode = fan_speed.current_mode.value
+        mode = cast("str | None", fan_speed.current_mode.value)
+        if mode is None:
+            return None
         if (
             mode == FANMODE_FIXED
             and fan_speed.modes
             and FANMODE_FIXED in fan_speed.modes
         ):
-            mode = str(fan_speed.modes[FANMODE_FIXED].value)
+            if (
+                fixed_speed := cast(
+                    "str | int | None", fan_speed.modes[FANMODE_FIXED].value
+                )
+            ) is None:
+                return None
+            mode = str(fixed_speed)
         return mode
 
     def _get_fan_modes(self) -> list[str]:
@@ -577,7 +584,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_swing_mode_for_direction(
         self, direction: Literal["vertical", "horizontal"]
-    ) -> str:
+    ) -> str | None:
         """Return current swing mode for an axis."""
         fan_operation = self._fan_operation()
         if fan_operation is None or fan_operation.fan_direction is None:
@@ -587,14 +594,16 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         )
         if axis is None:
             return ""
-        mode = axis.current_mode.value.lower()
+        if (value := cast("str | None", axis.current_mode.value)) is None:
+            return None
+        mode = value.lower()
         return _DAIKIN_SWING_TO_HA.get(mode, mode)
 
-    def _get_swing_mode(self) -> str:
+    def _get_swing_mode(self) -> str | None:
         """Return the vertical swing mode."""
         return self._get_swing_mode_for_direction("vertical")
 
-    def _get_swing_horizontal_mode(self) -> str:
+    def _get_swing_horizontal_mode(self) -> str | None:
         """Return the horizontal swing mode."""
         return self._get_swing_mode_for_direction("horizontal")
 
