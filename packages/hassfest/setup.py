@@ -65,13 +65,6 @@ setup(
     python_requires=metadata["requires-python"],
     install_requires=[
         f"homeassistant=={metadata['version']}",
-        "awesomeversion",
-        "orjson",
-        "packaging",
-        "pipdeptree",
-        "probatio",
         "ruff",
-        "tqdm",
-        "uv",
     ],
 )

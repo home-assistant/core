@@ -815,7 +815,6 @@ jobs:
       - name: Check installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          "${RUNNER_TEMP}/hassfest-venv/bin/hassfest" --help
           "${RUNNER_TEMP}/hassfest-venv/bin/python" \
             "${GITHUB_WORKSPACE}/packages/hassfest/tests/check_package.py"
 

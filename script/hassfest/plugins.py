@@ -4,12 +4,33 @@ from importlib import import_module
 from types import ModuleType
 
 from hassfest.model import Config
-from hassfest.plugins import INTEGRATION_PLUGINS as PACKAGE_PLUGINS
 
-INTEGRATION_PLUGINS = list(PACKAGE_PLUGINS)
-INTEGRATION_PLUGINS.insert(
-    INTEGRATION_PLUGINS.index("integration_type"), "integration_info"
-)
+INTEGRATION_PLUGINS = [
+    "application_credentials",
+    "bluetooth",
+    "codeowners",
+    "conditions",
+    "config_schema",
+    "dependencies",
+    "dhcp",
+    "icons",
+    "integration_info",
+    "integration_type",
+    "json",
+    "labs",
+    "lorawan",
+    "manifest",
+    "mqtt",
+    "quality_scale",
+    "requirements",
+    "services",
+    "ssdp",
+    "translations",
+    "triggers",
+    "usb",
+    "zeroconf",
+    "config_flow",  # Must run after translations.
+]
 
 CORE_PLUGINS = [
     "core_files",
@@ -24,8 +45,7 @@ CORE_PLUGINS = [
 
 ALL_PLUGIN_NAMES = [*INTEGRATION_PLUGINS, *CORE_PLUGINS]
 LOCAL_PLUGINS = {
-    name: f"{__package__}.{name}"
-    for name in (*CORE_PLUGINS, "codeowners", "integration_info")
+    name: f"{__package__}.{name}" for name in ALL_PLUGIN_NAMES if name != "json"
 }
 
 

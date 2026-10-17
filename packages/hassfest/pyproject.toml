@@ -13,9 +13,6 @@ authors = [
   { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
 ]
 
-[project.scripts]
-hassfest = "hassfest.__main__:main"
-
 [project.urls]
 Repository = "https://github.com/home-assistant/core"
 Documentation = "https://contributors.home-assistant.io"

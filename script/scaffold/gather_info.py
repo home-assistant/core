@@ -2,10 +2,10 @@
 
 import json
 
-from hassfest.manifest import SUPPORTED_IOT_CLASSES
 from hassfest.model import IntegrationType
 
 from homeassistant.util import slugify
+from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
 
 from .const import COMPONENT_DIR
 from .error import ExitApp

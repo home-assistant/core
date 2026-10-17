@@ -36,8 +36,8 @@ def test_custom_plugin_selection(
             "assert 'hassfest.json' in sys.modules; "
             "assert 'script.hassfest.metadata' not in sys.modules; "
             "assert 'script.hassfest.docker' not in sys.modules; "
-            "assert 'hassfest.requirements' not in sys.modules; "
-            "assert 'hassfest.translations' not in sys.modules; "
+            "assert 'script.hassfest.requirements' not in sys.modules; "
+            "assert 'script.hassfest.translations' not in sys.modules; "
             "sys.exit(result)",
             "--integration-path",
             str(integration_path),
@@ -65,7 +65,7 @@ def test_core_plugin_selection() -> None:
             "result = main(); "
             "assert 'script.hassfest.metadata' in sys.modules; "
             "assert 'script.hassfest.docker' not in sys.modules; "
-            "assert 'hassfest.translations' not in sys.modules; "
+            "assert 'script.hassfest.translations' not in sys.modules; "
             "sys.exit(result)",
             "--action",
             "validate",

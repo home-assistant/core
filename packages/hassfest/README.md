@@ -8,31 +8,14 @@ publication yet. The existing
 [home-assistant/actions/hassfest](https://github.com/home-assistant/actions/tree/master/hassfest)
 action remains the supported way to check custom integrations.
 
-## Intended standalone usage
-
-```sh
-pip install hassfest
-hassfest --integration-path /path/to/custom_components/my_integration
-```
-
-`python -m hassfest` provides the same command. Repeat `--integration-path` to
-check multiple integrations. `--plugins` and `--skip-plugins` select checks;
-`--requirements` enables the existing dependency installation and inspection
-checks. Standalone runs require an integration path and cannot generate Core
-files. There is no automatic integration discovery in this command; the existing
-Docker entry point retains its discovery behavior.
+The package currently contains the shared runner, models, utilities, and JSON and
+code-owner validators. Validators that mix shared checks with Core policies or
+file generation remain in Core until those responsibilities are separated.
+There is no standalone command yet.
 
 Each build uses Core's version and requires exactly that Home Assistant version.
-Installing Hassfest therefore installs Home Assistant and its dependencies.
 Development builds require the matching Home Assistant development build, which
 may not be published on PyPI.
-
-The distribution includes snapshots of Core's `requirements.txt` and
-`requirements_all.txt`. Other reference data, including package constraints,
-built-in integrations, and integration category strings, comes from the installed
-Home Assistant package. An explicit `--core-path` uses that checkout's reference
-data and requirements instead. It does not replace the imported Home Assistant
-code; use a matching Python environment when supplying a checkout.
 
 ## Building
 

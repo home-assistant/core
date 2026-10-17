@@ -1,27 +1,17 @@
-"""Fixtures for hassfest tests."""
+"""Fixtures for the shared hassfest package."""
 
 from pathlib import Path
-from unittest.mock import patch
 
-from hassfest.model import Config, Integration
+from hassfest.model import Config
 import pytest
 
-import homeassistant
-
 
 @pytest.fixture
-def config() -> Config:
-    """Fixture for hassfest Config."""
+def config(tmp_path: Path) -> Config:
+    """Return configuration for a temporary integration tree."""
     return Config(
-        root=Path(homeassistant.__file__).parent.parent,
+        root=tmp_path,
         specific_integrations=None,
         action="validate",
-        requirements=True,
+        requirements=False,
     )
-
-
-@pytest.fixture
-def mock_core_integration():
-    """Mock Integration to be a core one."""
-    with patch.object(Integration, "core", return_value=True):
-        yield
