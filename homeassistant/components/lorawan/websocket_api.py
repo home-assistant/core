@@ -56,23 +56,17 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
             vendor_entries = vendor_entries_by_brand.get(
                 (descriptor.stack, descriptor.brand_id)
             )
-            device = next(
-                (
-                    device
-                    for vendor_entry in vendor_entries or ()
-                    if (
-                        device := device_registry.async_get_device_by_identifier(
-                            (
-                                vendor_entry.domain,
-                                f"{descriptor.network_id}:{descriptor.dev_eui}",
-                            ),
-                            vendor_entry.entry_id,
-                        )
-                    )
-                    is not None
-                ),
-                None,
-            )
+            device = None
+            for vendor_entry in vendor_entries or ():
+                device = device_registry.async_get_device_by_identifier(
+                    (
+                        vendor_entry.domain,
+                        f"{descriptor.network_id}:{descriptor.dev_eui}",
+                    ),
+                    vendor_entry.entry_id,
+                )
+                if device is not None:
+                    break
             if device is not None:
                 support = "supported"
             elif descriptor.brand_id is None or not descriptor.model_id:
@@ -148,7 +142,7 @@ def websocket_subscribe_devices(
 
     device_registry = dr.async_get(hass)
     registry = hass.data[DATA_REGISTRY]
-    lorawan_domains = set(registry.integrations)
+    lorawan_domains = registry.integrations.keys()
     linked_device_ids: set[str] = set()
 
     @callback
@@ -180,12 +174,8 @@ def websocket_subscribe_devices(
 
     @callback
     def entry_changed(_change: ConfigEntryChange, entry: ConfigEntry) -> None:
-        if (
-            entry.entry_id not in registry.connections
-            and entry.domain not in lorawan_domains
-        ):
-            return
-        debouncer.async_schedule_call()
+        if entry.entry_id in registry.connections or entry.domain in lorawan_domains:
+            debouncer.async_schedule_call()
 
     unsubscribe_entries = async_dispatcher_connect(
         hass, SIGNAL_CONFIG_ENTRY_CHANGED, entry_changed
