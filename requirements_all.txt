@@ -776,6 +776,9 @@ chefiq-ble==1.0.1
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
 
+# homeassistant.components.chirpstack
+chirpstack-api==4.19.0
+
 # homeassistant.components.cielo_home
 cielo-connect-api==1.0.6
 
