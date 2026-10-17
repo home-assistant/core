@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.setup import async_setup_component
 
 from . import BASE_CONFIG, async_setup_auth
 
@@ -635,3 +636,98 @@ async def test_well_known_auth_info_allows_cors(
 
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
+
+
+@pytest.mark.parametrize(
+    ("http_config", "headers"),
+    [
+        pytest.param({}, {"Host": "[2001:db8::1]"}, id="direct"),
+        pytest.param(
+            {"use_x_forwarded_for": True, "trusted_proxies": ["127.0.0.1"]},
+            {
+                "X-Forwarded-For": "2001:db8::10",
+                "X-Forwarded-Host": "[2001:db8::1]",
+                "X-Forwarded-Proto": "http",
+            },
+            id="trusted-proxy",
+        ),
+    ],
+)
+async def test_login_client_id_matches_request_origin(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    http_config: dict[str, Any],
+    headers: dict[str, str],
+) -> None:
+    """Test logging in with a public IP client_id that matches the request origin."""
+    assert await async_setup_component(hass, "http", {"http": http_config})
+    client = await async_setup_auth(hass, aiohttp_client)
+    client_id = "http://[2001:db8::1]/"
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": client_id,
+            "handler": ["insecure_example", None],
+            "redirect_uri": "http://[2001:db8::1]/?auth_callback=1",
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": client_id,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    assert step["type"] == "create_entry"
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": client_id,
+            "grant_type": "authorization_code",
+            "code": step["result"],
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    tokens = await resp.json()
+    assert "access_token" in tokens
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": client_id,
+            "grant_type": "refresh_token",
+            "refresh_token": tokens["refresh_token"],
+        },
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+
+
+async def test_login_client_id_does_not_match_request_origin(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a public IP client_id is rejected when the request origin differs."""
+    client = await async_setup_auth(hass, aiohttp_client)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": "http://[2001:db8::1]/",
+            "handler": ["insecure_example", None],
+            "redirect_uri": "http://[2001:db8::1]/?auth_callback=1",
+        },
+        headers={"Host": "[2001:db8::2]"},
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["message"] == "Invalid client id"

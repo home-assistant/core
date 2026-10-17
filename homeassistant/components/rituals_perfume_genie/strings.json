@@ -25,6 +25,15 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "cartridge": {
+        "name": "Cartridge",
+        "state": {
+          "off": "Not inserted",
+          "on": "Inserted"
+        }
+      }
+    },
     "number": {
       "perfume_amount": {
         "name": "Perfume amount"
@@ -45,6 +54,16 @@
       "wifi_percentage": {
         "name": "Wi-Fi signal"
       }
+    },
+    "switch": {
+      "standby_led": {
+        "name": "Standby LED"
+      }
+    }
+  },
+  "exceptions": {
+    "firmware_update_failed": {
+      "message": "Rituals could not start the firmware update: {error}"
     }
   }
 }
