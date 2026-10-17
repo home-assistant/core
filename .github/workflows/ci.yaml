@@ -342,9 +342,10 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
-          args: hadolint ${{ matrix.file }}
+          dockerfile: ${{ matrix.file }}
+          no-color: true
 
   base:
     name: Prepare dependencies
