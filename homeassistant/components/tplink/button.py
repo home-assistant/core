@@ -112,26 +112,48 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
     known_child_device_ids: set[str] = set()
-    known_preset_ids: set[str] = set()
+    known_preset_ids: dict[str, set[str]] = {}
     first_check = True
 
-    def _check_ptz_presets() -> None:
-        if (pan_tilt := device.modules.get(Module.PanTilt)) is None:
-            return
+    def _ptz_preset_entities(
+        dev: Device, parent: Device | None
+    ) -> list[TPLinkPtzPresetButtonEntity]:
+        if (pan_tilt := dev.modules.get(Module.PanTilt)) is None:
+            return []
+        known = known_preset_ids.setdefault(dev.device_id, set())
         new_presets = {
             preset_id: name
             for name, preset_id in pan_tilt.presets.items()
-            if preset_id not in known_preset_ids
+            if preset_id not in known
         }
         if not new_presets:
-            return
-        known_preset_ids.update(new_presets)
-        async_add_entities(
+            return []
+        known.update(new_presets)
+        coordinator = (
+            parent_coordinator
+            if parent is None
+            else parent_coordinator.get_child_coordinator(dev, BUTTON_DOMAIN)
+        )
+        return [
             TPLinkPtzPresetButtonEntity(
-                device, parent_coordinator, preset_id=preset_id, preset_name=name
+                dev,
+                coordinator,
+                preset_id=preset_id,
+                preset_name=name,
+                parent=parent,
             )
             for preset_id, name in new_presets.items()
-        )
+        ]
+
+    def _check_ptz_presets() -> None:
+        # A removed child gets its preset buttons again when it is paired again
+        for removed_child_id in parent_coordinator.removed_child_device_ids:
+            known_preset_ids.pop(removed_child_id, None)
+        entities = _ptz_preset_entities(device, None)
+        for child in device.children:
+            entities.extend(_ptz_preset_entities(child, device))
+        if entities:
+            async_add_entities(entities)
 
     def _check_device() -> None:
         entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
@@ -181,11 +203,12 @@ class TPLinkPtzPresetButtonEntity(CoordinatedTPLinkEntity, ButtonEntity):
         *,
         preset_id: str,
         preset_name: str,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the PTZ preset button."""
         self._preset_id = preset_id
         self._pan_tilt = device.modules[Module.PanTilt]
-        super().__init__(device, coordinator, PTZ_PRESET_DESCRIPTION)
+        super().__init__(device, coordinator, PTZ_PRESET_DESCRIPTION, parent=parent)
         self._attr_translation_placeholders = {"preset_name": preset_name}
 
     @override
