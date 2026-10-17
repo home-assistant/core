@@ -1016,6 +1016,30 @@ async def test_service_handler_failure_reported_for_failed_entity(
     assert [target.id for target in result.failed_results] == ["switch.bedroom"]
 
 
+async def test_service_handler_cancelled_call_propagates(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled service call cancels the intent instead of succeeding."""
+    hass.states.async_set("light.kitchen", "off")
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Cancel the service call."""
+        raise asyncio.CancelledError
+
+    hass.services.async_register("light", "turn_on", mock_service)
+    intent.async_register(
+        hass, intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"name": {"value": "kitchen"}},
+        )
+
+
 async def test_service_handler_matched_states_uses_updated_state(
     hass: HomeAssistant,
 ) -> None:

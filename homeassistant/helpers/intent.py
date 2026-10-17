@@ -1215,6 +1215,9 @@ class DynamicServiceIntentHandler(IntentHandler):
                 _LOGGER.error(
                     "Service call failed for %s", state.entity_id, exc_info=result
                 )
+            elif isinstance(result, BaseException):
+                # Cancellation is not a failed call, so it must stop the intent
+                raise result
             else:
                 success_results.append(target)
 
