@@ -179,6 +179,41 @@ async def test_update_entity_reads_before_returning(
 
 
 @pytest.mark.parametrize(
+    ("update_audyssey", "audyssey_reads"),
+    [
+        pytest.param(True, 1, id="update_audyssey_on"),
+        pytest.param(False, 0, id="update_audyssey_off"),
+    ],
+)
+async def test_update_entity_reads_audyssey_only_with_the_option(
+    hass: HomeAssistant,
+    client: MagicMock,
+    update_audyssey: bool,
+    audyssey_reads: int,
+) -> None:
+    """Test update_entity reads Audyssey when "Update Audyssey settings" is on.
+
+    With polling disabled it is the only refresh the option can apply to.
+    """
+    await setup_denonavr(
+        hass,
+        options={CONF_UPDATE_AUDYSSEY: update_audyssey},
+        pref_disable_polling=True,
+    )
+    assert await async_setup_component(hass, "homeassistant", {})
+    reads = client.async_update_audyssey.await_count
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert client.async_update_audyssey.await_count - reads == audyssey_reads
+
+
+@pytest.mark.parametrize(
     "exception",
     [
         pytest.param(
@@ -597,7 +632,7 @@ async def test_unavailable_coordinator_reads_before_recovering(
 
 
 async def test_a_polling_audyssey_coordinator_keeps_its_own_verdict(
-    hass: HomeAssistant, client: MagicMock
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """A polling Audyssey coordinator is not handed a status failure.
 
@@ -605,17 +640,20 @@ async def test_a_polling_audyssey_coordinator_keeps_its_own_verdict(
     refusing is no reason to hide data the receiver just answered for.
     """
     entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
-    assert await async_setup_component(hass, "homeassistant", {})
-    client.async_update.side_effect = AvrNetworkError("Network error", "test")
-
-    # Reads status alone: a poll tick also runs Audyssey's own read, which
-    # could restore what a wrong hand-over took.
     await hass.services.async_call(
-        "homeassistant",
-        SERVICE_UPDATE_ENTITY,
+        media_player.DOMAIN,
+        SERVICE_VOLUME_UP,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    client.async_update.side_effect = AvrNetworkError("Network error", "test")
+
+    # The status read the command queued runs alone: a poll tick or
+    # update_entity also runs Audyssey's own read, which could restore what a
+    # wrong hand-over took.
+    freezer.tick(timedelta(seconds=ACTION_REFRESH_DEBOUNCE_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.runtime_data.coordinator.last_update_success is False
     assert entry.runtime_data.audyssey_coordinator.last_update_success is True
@@ -833,7 +871,7 @@ async def test_set_dynamic_eq_always_refreshes_audyssey(
 ) -> None:
     """Refreshes Audyssey after this action regardless of the option.
 
-    "Update Audyssey settings" only governs the recurring poll - this
+    "Update Audyssey settings" governs polls and update_entity - this
     action just changed Audyssey-scoped data directly, and the
     dynamic_eq attribute it feeds has to reflect that either way.
     """

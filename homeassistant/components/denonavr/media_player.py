@@ -45,6 +45,8 @@ from .const import (
     ATTR_DYNAMIC_EQ,
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
+    CONF_UPDATE_AUDYSSEY,
+    DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
     TELNET_EVENTS,
 )
@@ -222,6 +224,9 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         """Initialize the device."""
         super().__init__(coordinator)
         self._audyssey_coordinator = audyssey_coordinator
+        self._update_audyssey = config_entry.options.get(
+            CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+        )
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
@@ -282,11 +287,14 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         """Refresh now, so update_entity returns after the read.
 
         Skipped while Telnet is healthy. Reads every zone once per targeted
-        entity: unlike the Audyssey query, status reads are fast.
+        entity, and Audyssey too when "Update Audyssey settings" asks for it
+        on every update.
         """
         if not self.enabled:
             return
         await self.coordinator.async_refresh()
+        if self._update_audyssey:
+            await self._audyssey_coordinator.async_refresh()
 
     @property
     @override
@@ -542,8 +550,8 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             mark_unavailable(self._audyssey_coordinator)
             raise
 
-        # The option governs the recurring poll alone. Safe inside the
-        # decorator's lock: async_request_refresh() only schedules. It skips
-        # while Telnet is healthy: the PS echo confirms this zone, and the
-        # other zones' copies wait for their next read.
+        # The option governs polls and update_entity, not this confirmation.
+        # Safe inside the decorator's lock: async_request_refresh() only
+        # schedules. It skips while Telnet is healthy: the PS echo confirms
+        # this zone, and the other zones' copies wait for their next read.
         await self._audyssey_coordinator.async_request_refresh()

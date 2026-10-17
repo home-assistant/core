@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         lock,
         name="audyssey",
         # Opt-in because the fetch can take ~10s. It governs the recurring
-        # poll alone: entities still confirm their own actions on demand.
+        # poll and update_entity: entities still confirm their own actions.
         update_interval=update_interval if update_audyssey else None,
         refresh_fn=async_refresh_audyssey,
     )
