@@ -1,10 +1,12 @@
 """Tests for weatherflow_cloud __init__ setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from websockets.exceptions import ConnectionClosedError
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
+from websockets.protocol import State as WebSocketState
 
+from homeassistant.components import weatherflow_cloud
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import client_context
@@ -28,6 +30,29 @@ async def test_websocket_connect_called_once(
 
 
 @pytest.mark.usefixtures("mock_rest_api")
+async def test_stale_shared_websocket_is_replaced(
+    hass: HomeAssistant,
+    mock_websocket_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that setup replaces the closed shared websocket after a reload."""
+    weatherflow_cloud.WeatherFlowWebsocketAPI._shared_websocket = Mock(
+        state=WebSocketState.CLOSED
+    )
+
+    async def _assert_stale_websocket_cleared(*args: object) -> None:
+        assert weatherflow_cloud.WeatherFlowWebsocketAPI._shared_websocket is None
+
+    mock_websocket_api.connect.side_effect = _assert_stale_websocket_cleared
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_rest_api")
 async def test_entry_unload(
     hass: HomeAssistant,
     mock_websocket_api: AsyncMock,
@@ -42,7 +67,27 @@ async def test_entry_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_websocket_api.stop_all_listeners.assert_awaited_once()
+    mock_websocket_api.stop_all_listeners.assert_not_awaited()
+    mock_websocket_api.close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_rest_api")
+async def test_entry_unload_with_closed_websocket(
+    hass: HomeAssistant,
+    mock_websocket_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading an entry whose websocket is already closed."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_websocket_api.close.side_effect = ConnectionClosedOK(None, None)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_websocket_api.stop_all_listeners.assert_not_awaited()
     mock_websocket_api.close.assert_awaited_once()
 
 
@@ -60,7 +105,7 @@ async def test_setup_failure_cleans_up_websocket(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_websocket_api.stop_all_listeners.assert_awaited_once()
+    mock_websocket_api.stop_all_listeners.assert_not_awaited()
     mock_websocket_api.close.assert_awaited_once()
 
 
