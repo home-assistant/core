@@ -34,20 +34,6 @@ Home Assistant package. An explicit `--core-path` uses that checkout's reference
 data and requirements instead. It does not replace the imported Home Assistant
 code; use a matching Python environment when supplying a checkout.
 
-## Working in Core
-
-Continue to run `python -m script.hassfest` from the Core repository. That entry
-point selects the packaged integration validators alongside Core's local plugins,
-uses current checkout data, and preserves the existing validate/generate behavior.
-The script bootstrap and test configuration expose the package source directly.
-No package installation or requirements snapshot is needed for Core development.
-
-The runner accepts an ordered sequence of modules with `validate(integrations,
-config)` and optional `generate(integrations, config)` functions. Core controls
-which local modules it supplies. There is no installed-plugin discovery mechanism.
-Some integration validators retain their Core generation functions to keep this
-extraction focused; the standalone CLI never runs generation.
-
 ## Building
 
 From the Core checkout:
