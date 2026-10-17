@@ -4,7 +4,6 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from pydantic import ValidationError
 import pytest
 from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from yolink.endpoint import Endpoints
@@ -39,33 +38,42 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-
-def _validation_error() -> ValidationError:
-    """Return the error the library raises for a malformed API response."""
-    with pytest.raises(ValidationError) as err:
-        BRDP.model_validate_json("[]")
-    return err.value
-
-
-# Everything that leaves the home of an accepted account unknown, as the mock
-# configuration of the API call the lookup makes: a request that fails with
-# anything other than a refused token, and a response that names no home.
-UNKNOWN_HOME_LOOKUPS = [
+HOME_LOOKUP_FAILURES = [
     pytest.param(
-        {"side_effect": YoLinkClientError("-1003", "Request failed")}, id="client_error"
+        {"side_effect": YoLinkAuthFailError("000103", "Client is not exist")},
+        "oauth_unauthorized",
+        id="auth_failed",
     ),
-    pytest.param({"side_effect": TimeoutError()}, id="timeout"),
-    pytest.param({"side_effect": _validation_error()}, id="validation_error"),
+    pytest.param(
+        {"side_effect": YoLinkClientError("-1003", "Request failed")},
+        "cannot_connect",
+        id="client_error",
+    ),
+    pytest.param({"side_effect": TimeoutError()}, "cannot_connect", id="timeout"),
     pytest.param(
         {"side_effect": AttributeError("'NoneType' object has no attribute 'get'")},
-        id="bug",
+        "unknown",
+        id="unexpected_error",
     ),
-    pytest.param({"return_value": BRDP(code="000000")}, id="response_without_data"),
+    pytest.param(
+        {"return_value": BRDP(code="000000")},
+        "cannot_connect",
+        id="response_without_data",
+    ),
     pytest.param(
         {"return_value": BRDP(code="000000", data={"name": TEST_HOME_NAME})},
+        "cannot_connect",
         id="response_without_id",
     ),
 ]
+
+
+OAUTH_TOKEN = {
+    "refresh_token": "mock-refresh-token",
+    "access_token": "mock-access-token",
+    "type": "Bearer",
+    "expires_in": 60,
+}
 
 
 async def _async_start_uac_flow(hass: HomeAssistant) -> str:
@@ -83,40 +91,40 @@ async def _async_start_uac_flow(hass: HomeAssistant) -> str:
     return result["flow_id"]
 
 
-async def _async_complete_oauth_flow(
+async def _async_finish_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    flow_id: str,
 ) -> ConfigFlowResult:
-    """Run the OAuth2 flow from the menu through the token exchange."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "pick_implementation"}
-    )
-
+    """Follow the authorization callback of a flow and exchange the code."""
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": result["flow_id"],
+            "flow_id": flow_id,
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
     client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
+    aioclient_mock.post(OAUTH2_TOKEN, json=OAUTH_TOKEN)
 
-    return await hass.config_entries.flow.async_configure(result["flow_id"])
+    return await hass.config_entries.flow.async_configure(flow_id)
+
+
+async def _async_pick_oauth(hass: HomeAssistant) -> str:
+    """Start a user flow, pick OAuth2 from the menu and return the flow id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "pick_implementation"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    return result["flow_id"]
 
 
 def _mock_oauth_entry(
@@ -139,6 +147,18 @@ def _mock_oauth_entry(
     return entry
 
 
+async def _async_complete_oauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> ConfigFlowResult:
+    """Run the OAuth2 flow from the menu through the token exchange."""
+    flow_id = await _async_pick_oauth(hass)
+    return await _async_finish_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, flow_id
+    )
+
+
 async def _async_complete_oauth_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -153,27 +173,9 @@ async def _async_complete_oauth_reauth_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
+    return await _async_finish_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
     )
-    client = await hass_client_no_auth()
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    return await hass.config_entries.flow.async_configure(result["flow_id"])
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -333,15 +335,7 @@ async def test_full_oauth_flow(
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
+    aioclient_mock.post(OAUTH2_TOKEN, json=OAUTH_TOKEN)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -353,12 +347,7 @@ async def test_full_oauth_flow(
     assert result["data"][CONF_HOME_ID] == TEST_HOME_ID
 
     result["data"]["token"].pop("expires_at")
-    assert result["data"]["token"] == {
-        "refresh_token": "mock-refresh-token",
-        "access_token": "mock-access-token",
-        "type": "Bearer",
-        "expires_in": 60,
-    }
+    assert result["data"]["token"] == OAUTH_TOKEN
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -388,70 +377,46 @@ async def test_oauth_flow_uses_resolved_token_for_home_lookup(
     )
 
 
-@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
+@pytest.mark.parametrize(("home_lookup", "reason"), HOME_LOOKUP_FAILURES)
 @pytest.mark.usefixtures(
     "setup_credentials", "current_request_with_host", "mock_setup_entry"
 )
-async def test_oauth_flow_creates_entry_when_home_is_unknown(
+async def test_oauth_flow_aborts_when_home_lookup_fails(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
     home_lookup: dict[str, Any],
+    reason: str,
 ) -> None:
-    """Test a home that stays unknown does not block the first entry."""
-    mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
-
-    result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
-    assert CONF_HOME_ID not in result["data"]
-
-
-@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
-@pytest.mark.usefixtures(
-    "setup_credentials",
-    "current_request_with_host",
-    "mock_setup_entry",
-    "mock_uac_config_entry",
-)
-async def test_oauth_flow_aborts_when_home_is_unknown_and_entry_exists(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_yolink_client: AsyncMock,
-    home_lookup: dict[str, Any],
-) -> None:
-    """Test OAuth2 is refused while the home cannot be checked for duplicates."""
+    """Test an account whose home cannot be determined does not become an entry."""
     mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
 
     result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert result["reason"] == reason
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
-)
-async def test_oauth_flow_aborts_when_token_is_rejected(
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+async def test_oauth_flow_aborts_when_oauth_entry_exists(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
 ) -> None:
-    """Test an account the API refuses does not become an entry."""
-    mock_yolink_client.return_value.execute.side_effect = YoLinkAuthFailError(
-        "000103", "Client is not exist"
+    """Test OAuth2 is refused when an OAuth2 entry appeared during the flow."""
+    flow_id = await _async_pick_oauth(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN).add_to_hass(hass)
+
+    result = await _async_finish_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, flow_id
     )
 
-    result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_unauthorized"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert result["reason"] == "already_configured"
+    mock_yolink_client.return_value.execute.assert_not_awaited()
 
 
 @pytest.mark.usefixtures(
@@ -579,74 +544,23 @@ async def test_oauth_reauthentication_aborts_when_home_configured(
     assert old_entry.data["token"]["access_token"] == "outdated-access-token"
 
 
+@pytest.mark.parametrize(("home_lookup", "reason"), HOME_LOOKUP_FAILURES)
 @pytest.mark.usefixtures(
     "setup_credentials", "current_request_with_host", "mock_setup_entry"
 )
-async def test_oauth_reauthentication_aborts_when_token_is_rejected(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_yolink_client: AsyncMock,
-) -> None:
-    """Test an account the API refuses does not update the entry."""
-    old_entry = _mock_oauth_entry(hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH})
-    mock_yolink_client.return_value.execute.side_effect = YoLinkAuthFailError(
-        "000103", "Client is not exist"
-    )
-
-    result = await _async_complete_oauth_reauth_flow(
-        hass, hass_client_no_auth, aioclient_mock, old_entry
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_unauthorized"
-    assert old_entry.data["token"]["access_token"] == "outdated-access-token"
-
-
-@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
-)
-async def test_oauth_reauthentication_drops_stale_home_id(
+async def test_oauth_reauthentication_aborts_when_home_lookup_fails(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
     home_lookup: dict[str, Any],
+    reason: str,
 ) -> None:
-    """Test a home that stays unknown forgets the home of the previous account."""
-    old_entry = _mock_oauth_entry(
-        hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: TEST_HOME_ID}
-    )
-    mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
-
-    result = await _async_complete_oauth_reauth_flow(
-        hass, hass_client_no_auth, aioclient_mock, old_entry
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    # Setup records the home of the new account on the next load.
-    assert CONF_HOME_ID not in old_entry.data
-    assert old_entry.data["token"]["access_token"] == "mock-access-token"
-
-
-@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_uac_config_entry"
-)
-async def test_oauth_reauthentication_aborts_when_home_is_unknown(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_yolink_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    home_lookup: dict[str, Any],
-) -> None:
-    """Test reauthentication is refused while another entry may own the home."""
+    """Test an account whose home cannot be determined does not update the entry."""
     old_entry = _mock_oauth_entry(
         hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: "home_99999"}
     )
+    data_before = dict(old_entry.data)
     mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
 
     result = await _async_complete_oauth_reauth_flow(
@@ -654,10 +568,8 @@ async def test_oauth_reauthentication_aborts_when_home_is_unknown(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-    assert old_entry.data[CONF_HOME_ID] == "home_99999"
-    assert old_entry.data["token"]["access_token"] == "outdated-access-token"
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert result["reason"] == reason
+    assert old_entry.data == data_before
 
 
 async def test_uac_flow(
@@ -755,10 +667,9 @@ async def test_uac_flow_errors(
     [
         pytest.param(
             BRDP(code="000000", data={"name": TEST_HOME_NAME}),
-            "unknown",
+            "cannot_connect",
             id="response_without_id",
         ),
-        # A response without a payload is classified like a failed request.
         pytest.param(BRDP(code="000000"), "cannot_connect", id="response_without_data"),
     ],
 )
