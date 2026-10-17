@@ -219,6 +219,34 @@
     }),
   })
 # ---
+# name: test_get_statistics[period_day_exclusive_end]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+            2026-10-10T00:00:00-07:00,36
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': 'No statistics are recorded for this entity.',
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+            2026-10-10T00:00:00-07:00,10.1667,18,43
+  
+          ''',
+          'unit': '°C',
+        }),
+      }),
+      'period': 'day',
+    }),
+  })
+# ---
 # name: test_parameters_openapi
   dict({
     'additionalProperties': False,

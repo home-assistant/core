@@ -244,6 +244,14 @@ async def test_call_through_api(
         pytest.param(
             {"start_time": "2026-10-11T00:00:00", "period": "day"}, id="period_day"
         ),
+        pytest.param(
+            {
+                "start_time": "2026-10-10T00:00:00",
+                "end_time": "2026-10-11T00:00:00",
+                "period": "day",
+            },
+            id="period_day_exclusive_end",
+        ),
     ],
 )
 async def test_get_statistics(

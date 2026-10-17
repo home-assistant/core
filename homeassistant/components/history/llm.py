@@ -99,7 +99,9 @@ def _get_statistics(
         statistics.statistics_during_period(
             hass,
             start_time,
-            end_time,
+            # The recorder moves the end time to the next period boundary, which
+            # includes the period that starts at end_time.
+            end_time - timedelta(microseconds=1),
             set(entity_types),
             period,
             None,
