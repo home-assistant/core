@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tractive.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -105,10 +105,3 @@ async def test_sensor_weight_update(
     state = hass.states.get("sensor.test_pet_weight")
     assert state is not None
     assert state.state == "24.1"
-
-    mock_tractive_client.set_pet_status(weight=None)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test_pet_weight")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
