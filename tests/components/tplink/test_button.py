@@ -1,6 +1,8 @@
 """Tests for tplink button platform."""
 
-from kasa import Feature
+from datetime import timedelta
+
+from kasa import Feature, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -8,13 +10,20 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.tplink.button import BUTTON_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.util import dt as dt_util
 
 from . import (
     _mocked_device,
@@ -28,7 +37,9 @@ from . import (
 )
 from .const import DEVICE_ID, MAC_ADDRESS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+PTZ_PRESET_ENTITY_ID = "button.my_device_go_to_preset_door"
 
 
 @pytest.fixture
@@ -101,7 +112,9 @@ async def test_states(
     """Test button states."""
     features = {description.key for description in BUTTON_DESCRIPTIONS}
     features.update(EXCLUDED_FEATURES)
-    device = _mocked_device(alias="my_device", features=features)
+    device = _mocked_device(
+        alias="my_device", features=features, modules=[Module.PanTilt]
+    )
 
     await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, device)
     await snapshot_platform(
@@ -276,3 +289,41 @@ async def test_button_exists_with_deprecation(
     assert (
         issue_registry.async_get_issue(DOMAIN, issue_id) is not None
     ) == entity_has_automations
+
+
+async def test_ptz_preset_button_press(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing a PTZ preset button moves the camera to that preset."""
+    camera = _mocked_device(alias="my_device", modules=[Module.PanTilt])
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, camera)
+
+    entity = entity_registry.async_get(PTZ_PRESET_ENTITY_ID)
+    assert entity
+    assert entity.unique_id == f"{DEVICE_ID}_ptz_preset_1"
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: PTZ_PRESET_ENTITY_ID},
+        blocking=True,
+    )
+    camera.modules[Module.PanTilt].goto_preset.assert_called_once_with("1")
+
+
+async def test_ptz_preset_button_removed_preset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the button is unavailable when the preset is removed on the camera."""
+    camera = _mocked_device(alias="my_device", modules=[Module.PanTilt])
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, camera)
+    assert hass.states.get(PTZ_PRESET_ENTITY_ID).state == STATE_UNKNOWN
+
+    camera.modules[Module.PanTilt].presets = {"Garden": "2"}
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PTZ_PRESET_ENTITY_ID).state == STATE_UNAVAILABLE
