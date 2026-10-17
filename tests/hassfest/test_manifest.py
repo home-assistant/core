@@ -223,6 +223,11 @@ def test_load_known_categories_invalid_strings(
     assert manifest.load_known_categories(replace(config, root=tmp_path)) is None
 
 
+def test_load_known_categories_outside_core(config: Config, tmp_path: Path) -> None:
+    """Test validating outside a core checkout skips the category check."""
+    assert manifest.load_known_categories(replace(config, root=tmp_path)) is None
+
+
 @pytest.mark.usefixtures("mock_core_integration")
 def test_categories_skipped_without_known_categories(config: Config) -> None:
     """Test categories aren't checked when the known categories can't be loaded."""
