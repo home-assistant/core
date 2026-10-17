@@ -48,10 +48,10 @@ _AUTO_PERIOD_MAX_SPAN: list[tuple[timedelta, _Period]] = [
 _NO_STATISTICS = "No statistics are recorded for this entity."
 
 
-def _auto_period(span: timedelta) -> _Period:
+def _auto_period(span: timedelta, short_term_available: bool) -> _Period:
     """Return a statistics period that gives a compact result for the span."""
     for max_span, period in _AUTO_PERIOD_MAX_SPAN:
-        if span <= max_span:
+        if span <= max_span and (period != "5minute" or short_term_available):
             return period
     return "month"
 
@@ -65,7 +65,7 @@ def _format_time(timestamp: float) -> str:
 
 def _format_number(value: float | None) -> str:
     """Format a statistics value compactly."""
-    return "" if value is None else str(round(value, 3))
+    return "" if value is None else f"{value:.6g}"
 
 
 def _to_csv(header: list[str], rows: list[list[str]]) -> str:
@@ -155,8 +155,9 @@ class GetHistoryTool(Tool):
         "about past values or how a value evolved over time. Each row aggregates "
         "one period, such as the mean, min and max of a temperature or the change "
         "of an energy meter. Statistics are only available for entities with "
-        "numeric statistics (sensors with a state class) and only cover completed "
-        "periods. Values are converted to the unit of the entity when possible. "
+        "numeric statistics (sensors with a state class) and are based on completed "
+        "recording intervals, but daily, weekly, and monthly aggregates may be "
+        "partial. Values are converted to the unit of the entity when possible. "
         "'unit' gives the unit of the values."
     )
     annotations = ToolAnnotations(
@@ -221,7 +222,12 @@ class GetHistoryTool(Tool):
             )
 
         span = end_time - start_time
-        period: _Period = args.get("period") or _auto_period(span)
+        period: _Period = args.get("period") or _auto_period(
+            span,
+            # The recorder purges short-term statistics after keep_days.
+            start_time
+            >= dt_util.utcnow() - timedelta(days=get_instance(hass).keep_days),
+        )
         if span / _PERIOD_LENGTH[period] > _MAX_ROWS:
             return ToolResult(
                 data={

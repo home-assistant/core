@@ -228,6 +228,13 @@ async def test_call_through_api(
         pytest.param({"start_time": "2026-10-09T12:00:00Z"}, id="auto_period_day"),
         pytest.param(
             {
+                "start_time": "2026-09-01T10:00:00Z",
+                "end_time": "2026-09-01T11:00:00Z",
+            },
+            id="auto_period_no_short_term",
+        ),
+        pytest.param(
+            {
                 "start_time": "2026-10-12T01:00:00",
                 "end_time": "2026-10-12T03:00:00",
                 "period": "hour",
@@ -272,7 +279,7 @@ async def test_get_statistics(
             "°F",
             {
                 "unit": "°F",
-                "csv": "start,mean,min,max\n2026-10-12T04:00:00-07:00,74.6,158.0,161.6\n",
+                "csv": "start,mean,min,max\n2026-10-12T04:00:00-07:00,74.6,158,161.6\n",
             },
             id="converted",
         ),
@@ -281,9 +288,18 @@ async def test_get_statistics(
             "Wh",
             {
                 "unit": "Wh",
-                "csv": "start,change\n2026-10-12T04:00:00-07:00,1500.0\n",
+                "csv": "start,change\n2026-10-12T04:00:00-07:00,1500\n",
             },
             id="converted_sum",
+        ),
+        pytest.param(
+            ENERGY_ENTITY_ID,
+            "GWh",
+            {
+                "unit": "GWh",
+                "csv": "start,change\n2026-10-12T04:00:00-07:00,1.5e-06\n",
+            },
+            id="converted_small_value",
         ),
         pytest.param(
             ENERGY_ENTITY_ID,
