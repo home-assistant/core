@@ -1,6 +1,7 @@
 {
   "domain": "airos",
   "name": "Ubiquiti airOS",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@CoMPaTech"],
   "config_flow": true,
   "dhcp": [{ "registered_devices": true }],

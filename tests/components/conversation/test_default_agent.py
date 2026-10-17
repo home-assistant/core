@@ -19,6 +19,7 @@ from homeassistant.components.conversation import (
     DOMAIN,
     async_get_agent,
     default_agent,
+    gazetteer,
     get_agent_manager,
 )
 from homeassistant.components.conversation.chat_log import (
@@ -3543,7 +3544,7 @@ async def test_handle_intents_with_response_errors(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_code", "return_response"),
+    ("side_effect", "error_code", "return_response", "chat_log_roles"),
     [
         (
             intent.MatchFailedError(
@@ -3552,13 +3553,20 @@ async def test_handle_intents_with_response_errors(
             ),
             intent.IntentResponseErrorCode.NO_VALID_TARGETS,
             False,
+            ["system", "user"],
         ),
         (
             intent.IntentHandleError(),
             intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
             True,
+            ["system", "user", "assistant", "tool_result"],
         ),
-        (intent.IntentUnexpectedError(), intent.IntentResponseErrorCode.UNKNOWN, True),
+        (
+            intent.IntentUnexpectedError(),
+            intent.IntentResponseErrorCode.UNKNOWN,
+            True,
+            ["system", "user", "assistant", "tool_result"],
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_components")
@@ -3569,8 +3577,9 @@ async def test_handle_failed_intents(
     side_effect: intent.IntentError,
     error_code: intent.IntentResponseErrorCode,
     return_response: bool,
+    chat_log_roles: list[str],
 ) -> None:
-    """Test that error results from intent handler are saved to chat_log."""
+    """Test that only error results that are returned are saved to chat_log."""
     assert await async_setup_component(hass, "climate", {})
     area_registry.async_create("living room")
 
@@ -3595,8 +3604,7 @@ async def test_handle_failed_intents(
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(user_input, chat_log)
-        assert len(chat_log.content) == 4  # System + user + tool call + tool results
-        assert chat_log.content[-1].role == "tool_result"
+        assert [content.role for content in chat_log.content] == chat_log_roles
 
     assert len(mock_handle.mock_calls) == 1
 
@@ -3953,3 +3961,97 @@ async def test_intent_cache_is_per_device(
         assert [state.entity_id for state in result.response.matched_states] == [
             thermostats[area_name]
         ]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_builds_what_recognition_needs(hass: HomeAssistant) -> None:
+    """Test recognition reuses everything prepare built."""
+    hass.states.async_set(
+        "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "Kitchen light"}
+    )
+    get_agent_manager(hass).register_trigger(
+        ["it is party time"], AsyncMock(return_value="Party")
+    )
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    with (
+        patch.object(
+            agent, "_load_intents", wraps=agent._load_intents
+        ) as mock_load_intents,
+        patch.object(
+            agent, "_get_entity_name_tuples", wraps=agent._get_entity_name_tuples
+        ) as mock_entity_names,
+        patch.object(
+            agent, "_rebuild_trigger_intents", wraps=agent._rebuild_trigger_intents
+        ) as mock_rebuild_triggers,
+        patch.object(
+            gazetteer, "async_build_home", wraps=gazetteer.async_build_home
+        ) as mock_build_home,
+        patch.object(
+            gazetteer.GazetteerFallback,
+            "async_interpret",
+            autospec=True,
+            side_effect=gazetteer.GazetteerFallback.async_interpret,
+        ) as mock_interpret,
+    ):
+        await agent.async_prepare("en")
+
+        mock_load_intents.assert_called_once_with("en")
+        # Once for the exposed names, once for the unexposed names
+        assert mock_entity_names.call_count == 2
+        mock_rebuild_triggers.assert_called_once()
+        mock_build_home.assert_called_once()
+
+        mock_load_intents.reset_mock()
+        mock_entity_names.reset_mock()
+        mock_rebuild_triggers.reset_mock()
+        mock_build_home.reset_mock()
+
+        await agent.async_prepare("en")
+        # Fails hassil, so it reaches the unexposed names and the gazetteer
+        result = await conversation.async_converse(
+            hass, "turn on the kichen light", None, Context(), "en"
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    mock_interpret.assert_called_once()
+    mock_load_intents.assert_not_called()
+    mock_entity_names.assert_not_called()
+    mock_rebuild_triggers.assert_not_called()
+    mock_build_home.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_strict_intents_only(hass: HomeAssistant) -> None:
+    """Test a strict prepare skips what only the fallbacks use."""
+    hass.states.async_set(
+        "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "Kitchen light"}
+    )
+    get_agent_manager(hass).register_trigger(
+        ["it is party time"], AsyncMock(return_value="Party")
+    )
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    with (
+        patch.object(
+            agent, "_load_intents", wraps=agent._load_intents
+        ) as mock_load_intents,
+        patch.object(
+            agent, "_get_entity_name_tuples", wraps=agent._get_entity_name_tuples
+        ) as mock_entity_names,
+        patch.object(
+            agent, "_rebuild_trigger_intents", wraps=agent._rebuild_trigger_intents
+        ) as mock_rebuild_triggers,
+        patch.object(
+            gazetteer, "async_build_home", wraps=gazetteer.async_build_home
+        ) as mock_build_home,
+    ):
+        await conversation.async_prepare_intents(hass, "en")
+
+    mock_load_intents.assert_called_once_with("en")
+    # Only the exposed names, which strict recognition matches against
+    mock_entity_names.assert_called_once_with(exposed=True)
+    mock_rebuild_triggers.assert_called_once()
+    mock_build_home.assert_not_called()
