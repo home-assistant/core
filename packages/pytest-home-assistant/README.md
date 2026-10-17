@@ -12,7 +12,7 @@ The Python import namespace is `pytest_homeassistant`.
 
 The package requires Python 3.14.2 or newer and pins the matching Home Assistant
 version. Upgrade the two together; helpers depend on Home Assistant's internal
-APIs and are not compatible with arbitrary older releases.
+APIs and are not compatible with older releases.
 
 Until the package is published, install Home Assistant and the helpers from the
 same Core checkout into your custom integration's virtual environment:
