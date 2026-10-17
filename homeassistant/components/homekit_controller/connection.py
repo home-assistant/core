@@ -404,6 +404,10 @@ class HKDevice:
         await self.async_load_platforms()
         self.add_entities()
 
+    def accessory_identifier(self, accessory: Accessory) -> tuple[str, str]:
+        """Return the device registry identifier of an accessory."""
+        return (IDENTIFIER_ACCESSORY_ID, f"{self.unique_id}:aid:{accessory.aid}")
+
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
         identifiers = {
@@ -427,12 +431,7 @@ class HKDevice:
             }
 
         return DeviceInfo(
-            identifiers={
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            },
+            identifiers={self.accessory_identifier(accessory)},
             connections=connections,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
@@ -674,7 +673,7 @@ class HKDevice:
             device_info = self.device_info_for_accessory(accessory)
 
             if accessory.aid != 1 and bridge_device_id is not None:
-                device_info["via_device_id"] = bridge_device_id
+                device_info.via_device_id = bridge_device_id
 
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,

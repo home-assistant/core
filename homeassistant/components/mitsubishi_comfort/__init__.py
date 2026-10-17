@@ -60,7 +60,7 @@ def _make_device(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
-) -> bool:
+) -> None:
     """Set up Mitsubishi Comfort from a config entry."""
     session = async_get_clientsession(hass)
     account = MitsubishiCloudAccount(
@@ -73,10 +73,10 @@ async def async_setup_entry(
     # is throttled to empty, leaving devices unconfigurable.
     cached_credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
 
-    # The issue is not persistent and unload deletes it: if the cloud is
-    # unreachable below, addressless devices would retry with no fix flow
-    # offered. Reconcile from the stored data now; the fresh device list
-    # refines it further down.
+    # The issue is not persistent: if the cloud is unreachable below after a
+    # restart, addressless devices would retry with no fix flow offered.
+    # Reconcile from the stored data now; the fresh device list refines it
+    # further down.
     async_reconcile_missing_address_issue(hass, entry)
 
     try:
@@ -193,30 +193,14 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
-) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Only after a successful unload: a failed unload leaves the entry
-        # active, so its addressless devices still need the repair.
-        ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
-        await asyncio.gather(
-            *(c.device.close() for c in entry.runtime_data.values()),
-            return_exceptions=True,
-        )
-    return unload_ok
-
-
-async def async_remove_entry(
-    hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> None:
-    """Remove a config entry's leftovers.
-
-    Removal never calls async_unload_entry for an entry that failed setup, so
-    the repair issue such a setup left behind is deleted here.
-    """
-    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await asyncio.gather(
+        *(c.device.close() for c in entry.runtime_data.values()),
+        return_exceptions=True,
+    )

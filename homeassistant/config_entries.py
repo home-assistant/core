@@ -58,6 +58,12 @@ from .helpers import (
     storage,
 )
 from .helpers.debounce import Debouncer
+from .helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.discovery_flow import DiscoveryKey
 from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
@@ -242,15 +248,13 @@ class ConfigEntryDisabler(StrEnum):
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
-# Deprecated: Connection classes
-# These aren't used anymore since 2021.6.0
-# Mainly here not to break custom integrations.
-CONN_CLASS_CLOUD_PUSH = "cloud_push"
-CONN_CLASS_CLOUD_POLL = "cloud_poll"
-CONN_CLASS_LOCAL_PUSH = "local_push"
-CONN_CLASS_LOCAL_POLL = "local_poll"
-CONN_CLASS_ASSUMED = "assumed"
-CONN_CLASS_UNKNOWN = "unknown"
+# Connection classes aren't used anymore since 2021.6.0
+_DEPRECATED_CONN_CLASS_CLOUD_PUSH = DeprecatedConstant("cloud_push", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_CLOUD_POLL = DeprecatedConstant("cloud_poll", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_LOCAL_PUSH = DeprecatedConstant("local_push", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_LOCAL_POLL = DeprecatedConstant("local_poll", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_ASSUMED = DeprecatedConstant("assumed", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_UNKNOWN = DeprecatedConstant("unknown", None, "2027.5.0")
 
 
 class ConfigError(HomeAssistantError):
@@ -1489,6 +1493,7 @@ class ConfigEntry[_DataT = Any]:
             hass,
             HOMEASSISTANT_DOMAIN,
             issue_id,
+            config_entry_id=self.entry_id,
             data={"flow_id": result["flow_id"]},
             is_fixable=False,
             issue_domain=self.domain,
@@ -1924,7 +1929,7 @@ class ConfigEntriesFlowManager(
             # reconfigure to allow the user to change settings.
             # In case of non user visible flows, the integration should optionally
             # update the existing entry before aborting.
-            # see https://developers.home-assistant.io/blog/2025/03/01/config-flow-unique-id/
+            # see https://contributors.home-assistant.io/blog/2025/03/01/config-flow-unique-id/
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
@@ -2433,6 +2438,7 @@ class ConfigEntries:
 
         dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
+        ir.async_get(self.hass).async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
@@ -2560,6 +2566,7 @@ class ConfigEntries:
                     self.hass,
                     HOMEASSISTANT_DOMAIN,
                     issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     is_persistent=True,
                     severity=ir.IssueSeverity.WARNING,
@@ -2709,6 +2716,9 @@ class ConfigEntries:
 
         entry.disabled_by = disabled_by
         self._async_schedule_save()
+        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
+
+        ir.async_get(self.hass).async_config_entry_disabled_by_changed(entry_id)
 
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
@@ -2797,6 +2807,7 @@ class ConfigEntries:
 
         self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
+        removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
@@ -2848,6 +2859,7 @@ class ConfigEntries:
 
         if subentries is not UNDEFINED:
             if entry.subentries != subentries:
+                removed_subentry_ids = entry.subentries.keys() - subentries.keys()
                 changed = True
                 _setter(entry, "subentries", MappingProxyType(subentries))
 
@@ -2855,6 +2867,15 @@ class ConfigEntries:
             return False
 
         _setter(entry, "modified_at", utcnow())
+
+        if removed_subentry_ids:
+            dev_reg = dr.async_get(self.hass)
+            ent_reg = er.async_get(self.hass)
+            for subentry_id in removed_subentry_ids:
+                dev_reg.async_clear_config_subentry(
+                    entry.entry_id, subentry_id, entry.domain
+                )
+                ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
 
         self._async_save_and_notify(entry)
         return True
@@ -2892,13 +2913,7 @@ class ConfigEntries:
         except KeyError as err:
             raise UnknownSubEntry from err
 
-        result = self._async_update_entry(entry, subentries=subentries)
-        dev_reg = dr.async_get(self.hass)
-        ent_reg = er.async_get(self.hass)
-
-        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id, entry.domain)
-        ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
-        return result
+        return self._async_update_entry(entry, subentries=subentries)
 
     @callback
     def async_update_subentry(
@@ -3071,6 +3086,16 @@ class ConfigEntries:
                 )
             )
         )
+
+    async def async_unload_platforms_or_raise(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
+        """Forward the unloading of an entry to platforms, raising on failure."""
+        if not await self.async_unload_platforms(entry, platforms):
+            raise ConfigEntryError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="unload_platforms_failed",
+            )
 
     async def async_forward_entry_unload(
         self, entry: ConfigEntry, domain: Platform | str
@@ -4457,3 +4482,11 @@ def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None
     ):
         if "flow_id" in progress_flow:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+
+# These can be removed if no deprecated constants are in this module anymore
+__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = functools.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

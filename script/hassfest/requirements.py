@@ -128,7 +128,7 @@ FORBIDDEN_PACKAGES = {
     "dataclasses-json": "be removed (it can break in Python 3.15)",
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
-    # See https://developers.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
+    # See https://contributors.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
     "pyserial-asyncio": "be replaced by serialx",
     # Only needed for tests
     "pytest": "not be a runtime dependency",

@@ -3336,7 +3336,7 @@ async def test_async_run_job_deprecated(
     hass.async_run_job(_test)
     assert (
         "Detected code that calls `async_run_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3352,7 +3352,7 @@ async def test_async_add_job_deprecated(
     hass.async_add_job(_test)
     assert (
         "Detected code that calls `async_add_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3369,7 +3369,7 @@ async def test_async_add_hass_job_deprecated(
     assert (
         "Detected code that calls `async_add_hass_job`,"
         " which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+        "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
         " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
@@ -3602,7 +3602,7 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
             "Detected code that calls test from a thread other than the event loop, "
             "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
-            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            "https://contributors.home-assistant.io/core/internals/thread-safety/#test"
             ". Please report this issue",
         ),
     ):

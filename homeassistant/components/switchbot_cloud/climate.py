@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     PRECISION_TENTHS,
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .const import (
@@ -80,7 +79,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreEntity):
+class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, RestoreClimate):
     """Representation of a SwitchBot air conditioner.
 
     As it is an IR device, we don't know the actual state.
@@ -133,24 +132,11 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
             ClimateEntityStateAttribute.FAN_MODE, self._attr_fan_mode
         )
         if (
-            temperature := last_state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
-            )
+            climate_data := await self.async_get_last_climate_data(validate_range=True)
+        ) is not None and (
+            temperature := climate_data.native_target_temperature
         ) is not None:
-            # Legacy states lack the unit; they were saved in the system unit
-            temperature = round(
-                TemperatureConverter.convert(
-                    temperature,
-                    last_state.attributes.get(
-                        ClimateEntityStateAttribute.TEMPERATURE_UNIT,
-                        self.hass.config.units.temperature_unit,
-                    ),
-                    self.native_temperature_unit,
-                )
-            )
-            # A state written before that conversion was made can hold anything
-            if self.min_temp <= temperature <= self.max_temp:
-                self._attr_native_target_temperature = temperature
+            self._attr_native_target_temperature = round(temperature)
 
     def _get_mode(self, hvac_mode: HVACMode) -> int:
         """Return the SwitchBot mode for the command.

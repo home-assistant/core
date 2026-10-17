@@ -22,21 +22,23 @@ from homeassistant.components.timer import (
     CONF_RESTORE,
     DEFAULT_DURATION,
     DOMAIN,
+    SERVICE_CANCEL,
+    SERVICE_CHANGE,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
+    Timer,
+)
+from homeassistant.components.timer.const import (
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_CHANGED,
     EVENT_TIMER_FINISHED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
-    SERVICE_CANCEL,
-    SERVICE_CHANGE,
-    SERVICE_FINISH,
-    SERVICE_PAUSE,
-    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
-    Timer,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -1376,7 +1378,7 @@ async def test_restore_active_resume(
 
     # In patch make sure we ignore microseconds
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow",
+        "homeassistant.components.timer.entity.dt_util.utcnow",
         return_value=simulated_utc_now.replace(microsecond=999),
     ):
         await entity.async_added_to_hass()
@@ -1434,7 +1436,8 @@ async def test_restore_active_finished_outside_grace(
     entity.entity_id = "timer.test"
 
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow", return_value=simulated_utc_now
+        "homeassistant.components.timer.entity.dt_util.utcnow",
+        return_value=simulated_utc_now,
     ):
         await entity.async_added_to_hass()
         await hass.async_block_till_done()

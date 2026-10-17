@@ -282,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Set up an iOS entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -291,8 +291,6 @@ async def async_setup_entry(
         iOSPushConfigView(hass.data[IOS_DATA][CONF_USER][CONF_PUSH])
     )
     hass.http.register_view(iOSConfigView(hass.data[IOS_DATA][CONF_USER]))
-
-    return True
 
 
 class iOSPushConfigView(HomeAssistantView):

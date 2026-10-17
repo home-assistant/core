@@ -1,6 +1,7 @@
 """Test Voice Assistant init."""
 
-from collections.abc import Generator
+import array
+from collections.abc import AsyncGenerator, AsyncIterable, Generator
 import itertools as it
 from pathlib import Path
 import tempfile
@@ -18,6 +19,7 @@ from homeassistant.components.assist_pipeline.const import (
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
     DOMAIN,
+    SAMPLES_PER_CHUNK,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -91,6 +93,103 @@ async def test_pipeline_from_audio_stream_auto(
     assert len(mock_stt_provider_entity.received) == 2
     assert mock_stt_provider_entity.received[0].startswith(b"part1")
     assert mock_stt_provider_entity.received[1].startswith(b"part2")
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_pipeline_from_audio_stream_volume_multiplier(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+) -> None:
+    """Test the volume multiplier is applied when no other processing is used."""
+    samples = [100, -100, 20000, -20000] * (SAMPLES_PER_CHUNK // 4)
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        yield array.array("h", samples).tobytes()
+        yield b""
+
+    await assist_pipeline.async_pipeline_from_audio_stream(
+        hass,
+        context=Context(),
+        event_callback=lambda event: None,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        audio_settings=assist_pipeline.AudioSettings(
+            is_vad_enabled=False, volume_multiplier=2.0
+        ),
+        end_stage=assist_pipeline.PipelineStage.STT,
+    )
+
+    # Doubled, and clipped to the 16-bit range
+    assert mock_stt_provider_entity.received == [
+        array.array(
+            "h", [200, -200, 32767, -32768] * (SAMPLES_PER_CHUNK // 4)
+        ).tobytes()
+    ]
+
+
+async def test_pipeline_from_audio_stream_partial_only_stt_entity(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    init_components,
+) -> None:
+    """Test the pipeline uses the final result of an STT entity that only streams partials."""
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def audio_data():
+        yield make_10ms_chunk(b"part1")
+        yield b""
+
+    async def process_with_progress(
+        metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[stt.PartialSpeechResult | stt.SpeechResult]:
+        async for data in stream:
+            mock_stt_provider_entity.received.append(data)
+        yield stt.PartialSpeechResult("partial transcript")
+        yield stt.SpeechResult("final transcript", stt.SpeechResultState.SUCCESS)
+
+    with (
+        patch.object(
+            mock_stt_provider_entity,
+            "async_process_audio_stream",
+            side_effect=NotImplementedError,
+        ),
+        patch.object(
+            mock_stt_provider_entity,
+            "async_process_audio_stream_with_progress",
+            process_with_progress,
+        ),
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    stt_end = next(
+        event
+        for event in events
+        if event.type == assist_pipeline.PipelineEventType.STT_END
+    )
+    assert stt_end.data == {"stt_output": {"text": "final transcript"}}
+    assert len(mock_stt_provider_entity.received) == 1
+    assert mock_stt_provider_entity.received[0].startswith(b"part1")
 
 
 async def test_pipeline_from_audio_stream_legacy(

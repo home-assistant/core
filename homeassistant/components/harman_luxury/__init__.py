@@ -13,7 +13,7 @@ _PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HarmanLuxuryConfigEntry
-) -> bool:
+) -> None:
     """Set up Harman Luxury from a config entry."""
     client = HarmanLuxuryClient(entry.data[CONF_HOST], async_get_clientsession(hass))
     coordinator = HarmanLuxuryCoordinator(hass, entry, client)
@@ -21,11 +21,10 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HarmanLuxuryConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

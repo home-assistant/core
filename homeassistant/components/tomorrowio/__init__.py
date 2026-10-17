@@ -186,7 +186,7 @@ def _async_move_registry_rows(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -> None:
     """Set up Tomorrow.io API from a config entry."""
     session = async_get_clientsession(hass)
     # we will not use the class's lat and long so we can pass in garbage
@@ -202,8 +202,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: TomorrowioConfigEntry
@@ -212,6 +210,6 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

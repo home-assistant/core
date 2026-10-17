@@ -7,6 +7,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.mcp_server.const import (
     CONF_ALL_LLM_APIS,
+    CONF_READ_ONLY,
     CONF_REQUIRE_ADMIN,
     DOMAIN,
 )
@@ -35,11 +36,12 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "All LLM APIs"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["minor_version"] == 3
+    assert result["minor_version"] == 4
     assert result["data"] == {
         CONF_ALL_LLM_APIS: True,
         CONF_LLM_HASS_API: [],
         CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: False,
     }
 
 
@@ -58,6 +60,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -66,6 +69,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
             CONF_ALL_LLM_APIS: False,
             CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
             CONF_REQUIRE_ADMIN: True,
+            CONF_READ_ONLY: True,
         },
     )
     await hass.async_block_till_done()
@@ -75,6 +79,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
         CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: True,
     }
     assert config_entry.title == "Device control, Test"
 
@@ -93,6 +98,7 @@ async def test_options_flow_legacy_single_api(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -106,6 +112,7 @@ async def test_options_flow_legacy_single_api(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
 
@@ -129,6 +136,7 @@ async def test_options_flow_keeps_custom_title(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [TEST_LLM_API_ID],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
     assert config_entry.title == "My MCP server"
 
@@ -161,6 +169,7 @@ async def test_options_flow_errors(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
 
@@ -180,6 +189,7 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -212,13 +222,15 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
                 CONF_ALL_LLM_APIS: False,
                 CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
                 CONF_REQUIRE_ADMIN: False,
+                CONF_READ_ONLY: False,
             },
-            {CONF_ALL_LLM_APIS: True, CONF_REQUIRE_ADMIN: True},
+            {CONF_ALL_LLM_APIS: True, CONF_REQUIRE_ADMIN: True, CONF_READ_ONLY: False},
             {},
             {
                 CONF_ALL_LLM_APIS: True,
                 CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
                 CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
             },
             "All LLM APIs",
             id="select_all",
@@ -227,17 +239,19 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
             True,
             [],
             "All LLM APIs",
-            {CONF_ALL_LLM_APIS: True, CONF_REQUIRE_ADMIN: False},
+            {CONF_ALL_LLM_APIS: True, CONF_REQUIRE_ADMIN: False, CONF_READ_ONLY: False},
             {
                 CONF_ALL_LLM_APIS: False,
                 CONF_LLM_HASS_API: [],
                 CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
             },
             {CONF_LLM_HASS_API: [TEST_LLM_API_ID]},
             {
                 CONF_ALL_LLM_APIS: False,
                 CONF_LLM_HASS_API: [TEST_LLM_API_ID],
                 CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
             },
             "Test",
             id="select_individual",

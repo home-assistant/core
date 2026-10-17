@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 import math
@@ -584,7 +584,7 @@ async def test_event_listener(
             "battery_level": f"99{PERCENTAGE}",
             "temperature": "20c",
             "last_seen": "Last seen 23 minutes ago",
-            "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
+            "updated_at": dt.datetime(2017, 1, 1, 0, 0),
             "multi_periods": "0.120.240.2023873",
         }
         body = [

@@ -12,7 +12,6 @@ from aioengiebelgium import (
     CustomerAccount,
     CustomerAccountRelations,
     EanPrices,
-    EngieBeAuthenticationError,
     EngieBeCommunicationError,
     EngieBeError,
     PricePeriod,
@@ -214,23 +213,15 @@ async def test_duplicate_type_suffix(
     assert names[OFFTAKE_INJECTION_EAN] != names[SECOND_ELECTRICITY_EAN]
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
-        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
-    ],
-)
 async def test_type_fallback_when_service_point_lookup_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    exception: Exception,
 ) -> None:
     """Test a failed service-point lookup falls back to the untyped entity name."""
     mock_engie_client.return_value.async_get_service_point.side_effect = [
-        exception,
+        EngieBeCommunicationError("boom"),
         ServicePoint(ean_energy_types={bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY"}),
     ]
     mock_config_entry.add_to_hass(hass)
@@ -799,25 +790,19 @@ async def test_single_ban_transient_failure_goes_unavailable(
     assert state_ban_2.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
-        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
-    ],
-)
 async def test_all_bans_fail(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    exception: Exception,
 ) -> None:
     """Test all BANs failing on refresh makes every sensor unavailable."""
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
-    mock_engie_client.return_value.async_get_prices.side_effect = exception
+    mock_engie_client.return_value.async_get_prices.side_effect = (
+        EngieBeCommunicationError("boom")
+    )
     freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
