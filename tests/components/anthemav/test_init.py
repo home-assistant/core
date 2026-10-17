@@ -1,19 +1,20 @@
 """Test the Anthem A/V Receivers config flow."""
 
 from collections.abc import Callable
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 from anthemav.device_error import DeviceError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.anthemav.const import DOMAIN
+from homeassistant.components.anthemav.const import DOMAIN, POLL_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import CONF_MODEL, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -93,3 +94,80 @@ async def test_anthemav_dispatcher_signal(
 
     states = hass.states.get("media_player.anthem_av")
     assert states.state == STATE_ON
+
+
+async def _setup_with_model(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, model: str
+) -> None:
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_MODEL: model}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_poll_x10_zones(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test MRX x10 zones are polled, with volume and mute only when powered on."""
+    mock_config_entry.add_to_hass(hass)
+    # The receiver reports its model with a trailing space.
+    await _setup_with_model(hass, mock_config_entry, "MRX 310 ")
+    zone_1, zone_2 = mock_anthemav.protocol.zones.values()
+    zone_1.power = True
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert zone_1.query.call_args_list == [call("POW"), call("VOL"), call("MUT")]
+    assert zone_2.query.call_args_list == [call("POW")]
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    zone_1.query.reset_mock()
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Polling stops once the entry is unloaded.
+    zone_1.query.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_poll_x10_skipped_when_disconnected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test polling is skipped while the connection is down."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_with_model(hass, mock_config_entry, "MRX 310 ")
+    mock_anthemav.protocol.transport = None
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for zone in mock_anthemav.protocol.zones.values():
+        zone.query.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_no_poll_for_push_models(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_anthemav: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test models that push their state are not polled."""
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for zone in mock_anthemav.protocol.zones.values():
+        zone.query.assert_not_called()
