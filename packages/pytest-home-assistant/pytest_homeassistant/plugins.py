@@ -111,6 +111,7 @@ from homeassistant.util import dt as dt_util, location as location_util
 from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
+from . import _paths
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
@@ -168,12 +169,22 @@ if expected_sqlite := os.environ.get("EXPECTED_SQLITE_VERSION"):
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
+    parser.addini("ha_test_root", "Directory containing test fixtures", default="tests")
+    parser.addini(
+        "ha_test_config_dir", "Directory containing the test HA configuration"
+    )
     parser.addoption("--dburl", action="store", default="sqlite://")
     parser.addoption("--drop-existing-db", action="store_const", const=True)
 
 
+def pytest_load_initial_conftests(early_config: pytest.Config) -> None:
+    """Make fixture loaders available while importing the project's conftest."""
+    _paths.configure(early_config)
+
+
 def pytest_configure(config: pytest.Config) -> None:
-    """Register marker for tests that log exceptions."""
+    """Configure test paths and register markers."""
+    _paths.configure(config)
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
@@ -671,22 +682,25 @@ def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
         # Use temporary config directory for this test/module.
         return hass_tmp_config_dir
     """
-    copytree(
-        get_test_config_dir(),
-        tmp_path,
-        symlinks=True,
-        dirs_exist_ok=True,
-    )
+    if _paths.CONFIG_DIR is not None:
+        copytree(
+            get_test_config_dir(),
+            tmp_path,
+            symlinks=True,
+            dirs_exist_ok=True,
+        )
     return str(tmp_path)
 
 
 @pytest.fixture
-def hass_config_dir() -> str:
+def hass_config_dir(request: pytest.FixtureRequest) -> str:
     """Fixture to provide a test config directory.
 
     Override this fixture to provide a custom config directory,
     for example with pre-populated config files.
     """
+    if _paths.CONFIG_DIR is None:
+        return request.getfixturevalue("hass_tmp_config_dir")
     return get_test_config_dir()
 
 
