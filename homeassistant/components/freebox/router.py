@@ -86,6 +86,24 @@ def is_invalid_token_error(error: Exception) -> bool:
     )
 
 
+def is_home_unsupported_error(error: HttpRequestError) -> bool:
+    """Return whether the Freebox Home API reports an unavailable endpoint."""
+    match = re.search(r"\(APIResponse: (.+)\)$", str(error))
+    if not match:
+        return False
+
+    try:
+        response = json.loads(match.group(1))
+    except ValueError, TypeError:
+        return False
+
+    return (
+        isinstance(response, dict)
+        and response.get("error_code") == "invalid_request"
+        and re.search(r"\b404\b", str(response.get("msg", ""))) is not None
+    )
+
+
 async def async_forget_registration(hass: HomeAssistant, host: str) -> None:
     """Remove a stored application token for a host, if any.
 
@@ -297,9 +315,12 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except HttpRequestError:
+        except HttpRequestError as err:
             self.home_granted = False
-            _LOGGER.warning("Home access is not granted")
+            if is_home_unsupported_error(err):
+                _LOGGER.debug("Freebox Home API endpoint is unavailable: %s", err)
+            else:
+                _LOGGER.warning("Freebox Home API request failed: %s", err)
             return
 
         new_device = False
