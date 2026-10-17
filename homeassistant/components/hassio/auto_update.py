@@ -522,20 +522,28 @@ class AutoUpdateManager:
         return start + spread * self._window_offset
 
     @callback
-    def _async_is_busy(self) -> bool:
-        """Return if an update or backup is running, or the state is unknown."""
-        # Imported here like update_helper does, to keep backup out of startup
-        from homeassistant.components.backup import (  # noqa: PLC0415
-            DATA_MANAGER,
-            IdleEvent,
-        )
-
+    def _async_is_unsafe(self) -> bool:
+        """Return if the data is stale or another Core update is running."""
         jobs_coordinator = self._hass.data[JOBS_COORDINATOR]
         if (
             not self._coordinator.last_update_success
             or not jobs_coordinator.last_update_success
         ):
             return True
+
+        return any(
+            job.done is False and job.name == _BUSY_JOB_NAME
+            for job in jobs_coordinator.current_jobs
+        )
+
+    @callback
+    def _async_is_backing_up(self) -> bool:
+        """Return if a backup is running."""
+        # Imported here like update_helper does, to keep backup out of startup
+        from homeassistant.components.backup import (  # noqa: PLC0415
+            DATA_MANAGER,
+            IdleEvent,
+        )
 
         # Supervisor's backup job ends before Core uploads to the backup agents
         if (backup_manager := self._hass.data.get(DATA_MANAGER)) is not None and (
@@ -546,8 +554,8 @@ class AutoUpdateManager:
         return any(
             job.done is False
             and job.name is not None
-            and (job.name == _BUSY_JOB_NAME or job.name.startswith(_BUSY_JOB_PREFIX))
-            for job in jobs_coordinator.current_jobs
+            and job.name.startswith(_BUSY_JOB_PREFIX)
+            for job in self._hass.data[JOBS_COORDINATOR].current_jobs
         )
 
     @callback
@@ -584,7 +592,11 @@ class AutoUpdateManager:
         if window == self._attempted_window or self._pending is not None:
             return
 
-        if (version := self._async_due_version(now)) is None or self._async_is_busy():
+        if (
+            (version := self._async_due_version(now)) is None
+            or self._async_is_unsafe()
+            or self._async_is_backing_up()
+        ):
             return
 
         # Stored before the update starts; Home Assistant restarts during it
@@ -602,12 +614,17 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
-                # A backup takes a while: the window may have closed, or the
-                # version been skipped or pulled. Not busy again; that was us.
-                if self._async_due_version(dt_util.now()) != version:
+                # A backup takes a while: the window may have closed, the
+                # version been skipped or pulled, the data gone stale, or
+                # someone else started an update. Not the backup check again;
+                # that backup was ours and may not show as finished yet.
+                if (
+                    self._async_due_version(dt_util.now()) != version
+                    or self._async_is_unsafe()
+                ):
                     _LOGGER.info(
                         "Not installing Home Assistant %s automatically, "
-                        "it is no longer due",
+                        "it is no longer due or safe to install",
                         version,
                     )
                     return
