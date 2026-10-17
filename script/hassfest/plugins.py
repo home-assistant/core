@@ -4,7 +4,6 @@ from importlib import import_module
 from types import ModuleType
 
 from hassfest.model import Config
-
 from hassfest.plugins import INTEGRATION_PLUGINS as PACKAGE_PLUGINS
 
 INTEGRATION_PLUGINS = list(PACKAGE_PLUGINS)

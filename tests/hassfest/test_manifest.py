@@ -5,10 +5,9 @@ import json
 from pathlib import Path
 from typing import Any
 
+from hassfest import manifest
 from hassfest.model import Config, Integration
 import pytest
-
-from hassfest import manifest
 
 KNOWN_CATEGORIES = {
     "energy",

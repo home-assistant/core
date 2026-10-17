@@ -1,9 +1,8 @@
 """Tests for hassfest integration_type."""
 
+from hassfest import integration_type
 from hassfest.model import Config, Integration
 import pytest
-
-from hassfest import integration_type
 
 from . import get_integration
 

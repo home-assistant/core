@@ -3,12 +3,12 @@
 from pathlib import Path
 import sys
 
+from hassfest import cli
 from hassfest.model import Integration
 from hassfest.plugins import INTEGRATION_PLUGINS
 from hassfest.requirements import validate_custom_requirements
 import pytest
 
-from hassfest import cli
 import homeassistant
 
 

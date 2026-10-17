@@ -8,6 +8,7 @@ import re
 
 from hassfest import ast_parse_module
 from hassfest.model import Config, Integration
+
 from homeassistant.const import Platform
 
 _ANNOTATION_MATCH = re.compile(r"^[A-Za-z][A-Za-z0-9]+ConfigEntry$")

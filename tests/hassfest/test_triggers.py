@@ -5,10 +5,10 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest import triggers
 from hassfest.model import Config
 import pytest
 
-from hassfest import triggers
 from homeassistant.util.yaml.loader import parse_yaml
 
 from . import get_integration

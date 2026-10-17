@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from hassfest.model import Brand, Config, Integration
-
 from hassfest import config_flow
+from hassfest.model import Brand, Config, Integration
 
 
 def _integration(config: Config, domain: str, **manifest: Any) -> Integration:

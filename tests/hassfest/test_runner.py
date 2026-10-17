@@ -7,11 +7,10 @@ import subprocess
 import sys
 from typing import Literal
 
+from hassfest import bluetooth
 from hassfest.model import Config
 from hassfest.runner import run
 import pytest
-
-from hassfest import bluetooth
 
 
 @pytest.mark.parametrize(
