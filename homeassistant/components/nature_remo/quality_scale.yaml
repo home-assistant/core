@@ -71,7 +71,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: >-
+      The only setting is the personal access token, which does not expire;
+      a rejected token is replaced through the reauthentication flow.
   repair-issues:
     status: exempt
     comment: No repairable issues are raised by this integration.
