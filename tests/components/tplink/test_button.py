@@ -2,7 +2,14 @@
 
 from datetime import timedelta
 
-from kasa import AuthenticationError, Feature, KasaException, Module, TimeoutError
+from kasa import (
+    AuthenticationError,
+    Device,
+    Feature,
+    KasaException,
+    Module,
+    TimeoutError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -42,6 +49,8 @@ from . import (
 from .const import DEVICE_ID, MAC_ADDRESS
 
 PTZ_PRESET_ENTITY_ID = "button.my_device_go_to_preset_door"
+FRONT_CAMERA_DOOR_ENTITY_ID = "button.front_camera_go_to_preset_door"
+BACK_CAMERA_DOOR_ENTITY_ID = "button.back_camera_go_to_preset_door"
 
 
 @pytest.fixture
@@ -89,6 +98,24 @@ def create_deprecated_child_button_entities(
 
     create_entry("my_device", "stop_alarm")
     create_entry("my_device", "test_alarm")
+
+
+@pytest.fixture
+def mocked_hub_with_cameras() -> Device:
+    """Return mocked hub with two PTZ cameras that use the same preset ids."""
+    cameras = [
+        _mocked_device(
+            alias=alias,
+            device_id=device_id,
+            modules=[Module.PanTilt],
+            device_type=Device.Type.Camera,
+        )
+        for alias, device_id in (
+            ("Front camera", "FRONTCAMERAID"),
+            ("Back camera", "BACKCAMERAID"),
+        )
+    ]
+    return _mocked_device(alias="hub", children=cameras, device_type=Device.Type.Hub)
 
 
 @pytest.fixture
@@ -430,3 +457,64 @@ async def test_ptz_preset_buttons_follow_camera(
     assert state
     assert state.state == expected_state
     assert state.attributes[ATTR_FRIENDLY_NAME] == expected_name
+
+
+async def test_ptz_preset_buttons_on_hub_cameras(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mocked_hub_with_cameras: Device,
+) -> None:
+    """Test hub cameras get their own preset buttons, also for presets added later."""
+    hub = mocked_hub_with_cameras
+    front_camera, back_camera = hub.children
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, hub)
+
+    front_entity = entity_registry.async_get(FRONT_CAMERA_DOOR_ENTITY_ID)
+    assert front_entity
+    assert front_entity.unique_id == "FRONTCAMERAID_ptz_preset_1"
+    back_entity = entity_registry.async_get(BACK_CAMERA_DOOR_ENTITY_ID)
+    assert back_entity
+    assert back_entity.unique_id == "BACKCAMERAID_ptz_preset_1"
+    back_device = device_registry.async_get(back_entity.device_id)
+    assert back_device
+    assert back_device.name == "Back camera"
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: BACK_CAMERA_DOOR_ENTITY_ID},
+        blocking=True,
+    )
+    back_camera.modules[Module.PanTilt].goto_preset.assert_called_once_with("1")
+    front_camera.modules[Module.PanTilt].goto_preset.assert_not_called()
+
+    back_camera.modules[Module.PanTilt].presets = {"Door": "1", "Window": "3"}
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("button.back_camera_go_to_preset_window")
+    assert not hass.states.get("button.front_camera_go_to_preset_window")
+
+
+async def test_ptz_preset_buttons_hub_camera_paired_again(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_hub_with_cameras: Device,
+) -> None:
+    """Test preset buttons come back when a camera is paired to the hub again."""
+    hub = mocked_hub_with_cameras
+    cameras = hub.children
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, hub)
+    assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
+
+    hub.children = []
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    assert not hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
+
+    hub.children = cameras
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+    assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
