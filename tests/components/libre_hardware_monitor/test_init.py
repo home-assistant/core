@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import init_integration
+from . import init_integration, setup_integration
 from .conftest import VALID_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -84,7 +84,7 @@ async def test_migration_to_unique_ids(
         == entity_object_id
     )
 
-    await init_integration(hass, legacy_config_entry_v1)
+    await setup_integration(hass, legacy_config_entry_v1)
 
     # Verify state after migration
     device_entries_after = dr.async_entries_for_config_entry(
@@ -154,7 +154,7 @@ async def test_migration_to_sensor_device_classes(
         unit_of_measurement=LEGACY_THROUGHPUT_UNIT,
     )
 
-    await init_integration(hass, legacy_config_entry)
+    await setup_integration(hass, legacy_config_entry)
 
     entity_entry = entity_registry.async_get(f"sensor.{object_id}")
     assert entity_entry.unit_of_measurement == UnitOfDataRate.KIBIBYTES_PER_SECOND
@@ -273,7 +273,7 @@ async def test_migration_to_binary_data_size_units(
         unit_of_measurement=legacy_unit,
     )
 
-    await init_integration(hass, legacy_config_entry)
+    await setup_integration(hass, legacy_config_entry)
 
     entity_entry = entity_registry.async_get(f"sensor.{object_id}")
     assert entity_entry.unit_of_measurement == expected_unit

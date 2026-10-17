@@ -1,9 +1,10 @@
 """Support for LibreHardwareMonitor Sensor Platform."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from librehardwaremonitor_api.model import DeviceId, LibreHardwareMonitorSensorData
+from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
 from librehardwaremonitor_api.sensor_type import SensorType
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,6 +30,10 @@ PARALLEL_UPDATES = 0
 
 STATE_MIN_VALUE = "min_value"
 STATE_MAX_VALUE = "max_value"
+
+# Remove sensors which are missing for this amount of successful consecutive updates
+# 1 minute at the default interval of 10 seconds
+MISSING_SENSOR_REMOVAL_UPDATES = 6
 
 DEVICE_CLASSES: dict[SensorType, SensorDeviceClass] = {
     SensorType.VOLTAGE: SensorDeviceClass.VOLTAGE,
@@ -55,29 +61,112 @@ async def async_setup_entry(
 ) -> None:
     """Set up the LibreHardwareMonitor platform."""
     lhm_coordinator = config_entry.runtime_data
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    unique_id_prefix = f"{config_entry.entry_id}_"
 
-    known_devices: set[DeviceId] = set()
+    added_sensor_ids: set[str] = set()
+    missing_from_updates: dict[str, int] = {}
 
-    def _check_device() -> None:
-        current_devices = set(lhm_coordinator.data.main_device_ids_and_names)
-        new_devices = current_devices - known_devices
-        if new_devices:
-            _LOGGER.debug("New Device(s) detected, adding: %s", new_devices)
-            known_devices.update(new_devices)
-            new_devices_sensor_data = [
-                sensor_data
-                for sensor_data in lhm_coordinator.data.sensor_data.values()
-                if sensor_data.device_id in new_devices
-            ]
+    @callback
+    def _async_remove_sensor(sensor_id: str, entity_id: str) -> None:
+        missing_from_updates.pop(sensor_id, None)
+        added_sensor_ids.discard(sensor_id)
+        entity_registry.async_remove(entity_id)
+
+    @callback
+    def _async_remove_replaced_sensor(
+        sensor_data: Mapping[str, LibreHardwareMonitorSensorData],
+        new_sensor: LibreHardwareMonitorSensorData,
+    ) -> None:
+        """Remove a sensor that is replaced by a new sensor id to preserve the entity id.
+
+        LHM updates can change sensor ids, e.g. when a sensor moves to another
+        index. The replaced sensor has the same name on the same device and is no
+        longer reported by LHM.
+        """
+        if not (
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, f"{unique_id_prefix}{new_sensor.device_id}"),
+                config_entry.entry_id,
+            )
+        ):
+            return
+
+        for registry_entry in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        ):
+            replaced_sensor_id = registry_entry.unique_id.removeprefix(unique_id_prefix)
+            if (
+                registry_entry.original_name != new_sensor.name
+                or replaced_sensor_id in sensor_data
+            ):
+                continue
+
+            _LOGGER.debug(
+                "Sensor %s replaces %s, removing it",
+                new_sensor.sensor_id,
+                replaced_sensor_id,
+            )
+            _async_remove_sensor(replaced_sensor_id, registry_entry.entity_id)
+
+    @callback
+    def _async_handle_sensor_changes() -> None:
+        if not lhm_coordinator.last_update_success:
+            return
+
+        sensor_data = lhm_coordinator.data.sensor_data
+
+        if new_sensor_ids := [
+            sensor_id for sensor_id in sensor_data if sensor_id not in added_sensor_ids
+        ]:
+            for sensor_id in new_sensor_ids:
+                _LOGGER.debug("New sensor detected, adding: %s", sensor_id)
+                _async_remove_replaced_sensor(sensor_data, sensor_data[sensor_id])
+            added_sensor_ids.update(new_sensor_ids)
             async_add_entities(
                 LibreHardwareMonitorSensor(
-                    lhm_coordinator, config_entry.entry_id, sensor_data
+                    lhm_coordinator, config_entry.entry_id, sensor_data[sensor_id]
                 )
-                for sensor_data in new_devices_sensor_data
+                for sensor_id in new_sensor_ids
             )
 
-    _check_device()
-    config_entry.async_on_unload(lhm_coordinator.async_add_listener(_check_device))
+        # Check if we have a registered entity that is no longer reported by LHM
+        registry_entries = {
+            entry.unique_id.removeprefix(unique_id_prefix): entry
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+        }
+        for sensor_id, registry_entry in registry_entries.items():
+            if sensor_id in sensor_data:
+                missing_from_updates.pop(sensor_id, None)
+                continue
+
+            missing_from_updates[sensor_id] = missing_from_updates.get(sensor_id, 0) + 1
+            if missing_from_updates[sensor_id] < MISSING_SENSOR_REMOVAL_UPDATES:
+                continue
+
+            _LOGGER.debug("Sensor %s no longer available, removing", sensor_id)
+            _async_remove_sensor(sensor_id, registry_entry.entity_id)
+
+        # Check if we have a registered device that no longer holds any sensors
+        # and if so, remove it
+        for device in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            if er.async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            ):
+                continue
+
+            _LOGGER.warning("Device %s no longer available, removing", device.name)
+            device_registry.async_remove_device(device.id)
+
+    _async_handle_sensor_changes()
+    config_entry.async_on_unload(
+        lhm_coordinator.async_add_listener(_async_handle_sensor_changes)
+    )
 
 
 class LibreHardwareMonitorSensor(
