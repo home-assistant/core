@@ -12,6 +12,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "lg_tv_rs232",
     "marantz_rs232",
     "monoprice",
+    "neopool",
     "russound_rio",
     "samsung_exlink",
     "sofar",
