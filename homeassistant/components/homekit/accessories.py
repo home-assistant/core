@@ -7,7 +7,15 @@ from uuid import UUID
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.characteristic import Characteristic
-from pyhap.const import CATEGORY_OTHER
+from pyhap.const import (
+    CATEGORY_OTHER,
+    HAP_REPR_AID,
+    HAP_REPR_CHARS,
+    HAP_REPR_STATUS,
+    HAP_REPR_VALUE,
+    HAP_SERVER_STATUS,
+    STANDALONE_AID,
+)
 from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
@@ -952,6 +960,31 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
             self.state.pincode,
             self.accessory.xhm_uri(),
         )
+
+    def get_characteristics(
+        self, char_ids: list[str]
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Override super function to report standalone accessories as unavailable.
+
+        pyhap hardcodes the standalone (root) accessory as always available in
+        get_characteristics, so an accessory-mode entity never surfaces as "No
+        Response" in HomeKit when its state becomes unavailable. Rewrite the root
+        accessory's characteristics to a communication failure in that case,
+        matching how bridged (non-root) accessories already behave. This is a
+        no-op in bridge mode since the root there is a HomeBridge, which is
+        always available.
+        """
+        result = cast(
+            dict[str, list[dict[str, Any]]], super().get_characteristics(char_ids)
+        )
+        if not self.accessory.available:
+            for char in result[HAP_REPR_CHARS]:
+                if char[HAP_REPR_AID] == STANDALONE_AID:
+                    char.pop(HAP_REPR_VALUE, None)
+                    char[HAP_REPR_STATUS] = (
+                        HAP_SERVER_STATUS.SERVICE_COMMUNICATION_FAILURE
+                    )
+        return result
 
 
 class HomeIIDManager(IIDManager):  # type: ignore[misc]
