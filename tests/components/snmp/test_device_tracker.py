@@ -16,7 +16,7 @@ from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
-    _async_legacy_tracked_macs,
+    _async_legacy_tracked_dev_ids,
     async_setup_scanner,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -61,6 +61,14 @@ def _known_devices(*macs: str) -> dict[str, str]:
             {mac: {"name": mac, "mac": mac, "track": True} for mac in macs}
         )
     }
+
+
+def _known_devices_named(dev_id: str, mac: str) -> dict[str, str]:
+    """Return a patched known_devices.yaml that names a tracked device.
+
+    The key is the dev_id the legacy tracker turns into the entity id.
+    """
+    return {YAML_DEVICES: dump({dev_id: {"name": dev_id, "mac": mac, "track": True}})}
 
 
 async def _async_advance_poll(
@@ -168,6 +176,68 @@ async def test_yaml_migration_keeps_entity_enabled(
 
     # The entity must be live, not merely enabled in the registry
     assert hass.states.get(LEGACY_ENTITY_ID) is not None
+
+
+@pytest.mark.usefixtures("mock_walk")
+async def test_yaml_migration_keeps_named_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Migrate a named YAML device while keeping its custom entity id.
+
+    known_devices.yaml keys become the legacy entity ids, so a device the user
+    named must keep device_tracker.<dev_id> instead of getting the MAC form.
+    """
+    config = {
+        DEVICE_TRACKER_DOMAIN: {
+            CONF_PLATFORM: "snmp",
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
+            "community": "public",
+        }
+    }
+
+    with patch_yaml_files(_known_devices_named("andrea_phone", MAC)):
+        assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, config)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == SOURCE_IMPORT
+
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+        == "device_tracker.andrea_phone"
+    )
+
+
+@pytest.mark.usefixtures("mock_walk")
+async def test_yaml_migration_named_entity_id_collision_is_reported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Report a named device whose custom entity id was claimed by another entity."""
+    entry = mock_entry(source=SOURCE_IMPORT)
+    entry.add_to_hass(hass)
+
+    hass.states.async_set("device_tracker.andrea_phone", STATE_HOME)
+
+    with patch_yaml_files(_known_devices_named("andrea_phone", MAC)):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    assert entity_id is not None
+    assert entity_id != "device_tracker.andrea_phone"
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"entity_id_changed_{MAC}")
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "mac": MAC,
+        "entity_id": "device_tracker.andrea_phone",
+        "new_entity_id": entity_id,
+    }
 
 
 @pytest.mark.usefixtures("mock_walk")
@@ -839,19 +909,21 @@ async def test_walk_end_of_mib(
     assert entity_id_2 is None
 
 
-async def test_legacy_tracked_macs_skips_unusable_macs(hass: HomeAssistant) -> None:
+async def test_legacy_tracked_dev_ids_skips_unusable_macs(
+    hass: HomeAssistant,
+) -> None:
     """Test that tracked devices without a usable MAC are left out."""
     devices = [
-        Mock(track=True, mac=None),
-        Mock(track=True, mac="not-a-mac"),
-        Mock(track=False, mac="00:11:22:33:44:55"),
-        Mock(track=True, mac="00:11:22:33:44:66"),
+        Mock(track=True, mac=None, dev_id="no_mac"),
+        Mock(track=True, mac="not-a-mac", dev_id="bad_mac"),
+        Mock(track=False, mac="00:11:22:33:44:55", dev_id="not_tracked"),
+        Mock(track=True, mac="00:11:22:33:44:66", dev_id="tracked"),
     ]
 
     with patch(
         "homeassistant.components.snmp.device_tracker.async_load_config",
         return_value=devices,
     ):
-        macs = await _async_legacy_tracked_macs(hass)
+        dev_ids = await _async_legacy_tracked_dev_ids(hass)
 
-    assert macs == {"00:11:22:33:44:66"}
+    assert dev_ids == {"00:11:22:33:44:66": "tracked"}

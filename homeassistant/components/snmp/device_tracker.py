@@ -64,18 +64,20 @@ def _legacy_tracked_mac(mac: str | None) -> str | None:
     return normalize_mac(raw)
 
 
-async def _async_legacy_tracked_macs(hass: HomeAssistant) -> set[str]:
-    """Return the MACs the legacy YAML configuration was tracking.
+async def _async_legacy_tracked_dev_ids(hass: HomeAssistant) -> dict[str, str]:
+    """Return the entity ids of the trackers in known_devices.yaml, keyed by MAC.
 
-    The legacy integration registers no entities and adds the states of the
-    devices it tracks only after this entry has been set up, so known_devices.yaml
-    is the only record of which devices the user had enabled before the migration.
+    The legacy tracker keys its entities by a ``dev_id`` the user may have chosen,
+    so the MAC alone is not enough to rebuild ``device_tracker.<dev_id>``. The
+    legacy integration registers no entities and adds the states of the devices it
+    tracks only after this entry has been set up, so known_devices.yaml is the only
+    record of both the entity ids and which devices were enabled before migration.
     """
     devices = await async_load_config(
         hass.config.path(YAML_DEVICES), hass, DEFAULT_CONSIDER_HOME
     )
     return {
-        normalized
+        normalized: device.dev_id
         for device in devices
         if device.track and (normalized := _legacy_tracked_mac(device.mac))
     }
@@ -141,17 +143,18 @@ async def async_setup_entry(
     """Set up the device trackers of the entry's subentries."""
     ent_reg = er.async_get(hass)
 
-    # Only the devices the legacy YAML configuration was tracking are enabled, so an
-    # upgrade does not disable the presence automations of the user. Anything else,
-    # including a device seen for the first time after the migration, keeps the
-    # disabled by default behaviour of the other router integrations.
-    legacy_macs: set[str] = set()
+    # On migration the legacy entity ids are reused, so an upgrade does not break
+    # the automations of the user, and only the devices the legacy YAML
+    # configuration was tracking are enabled. Anything else, including a device
+    # seen for the first time after the migration, keeps the disabled by default
+    # behaviour of the other router integrations.
+    legacy_dev_ids: dict[str, str] = {}
     if entry.source == SOURCE_IMPORT:
-        legacy_macs = await _async_legacy_tracked_macs(hass)
+        legacy_dev_ids = await _async_legacy_tracked_dev_ids(hass)
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
         _async_setup_subentry(
-            entry, subentry.subentry_id, ent_reg, legacy_macs, async_add_entities
+            entry, subentry.subentry_id, ent_reg, legacy_dev_ids, async_add_entities
         )
 
 
@@ -160,7 +163,7 @@ def _async_setup_subentry(
     entry: SnmpConfigEntry,
     subentry_id: str,
     ent_reg: er.EntityRegistry,
-    legacy_macs: set[str],
+    legacy_dev_ids: dict[str, str],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the tracker entities of a single subentry."""
@@ -180,7 +183,9 @@ def _async_setup_subentry(
     if initial_macs:
         async_add_entities(
             (
-                SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
+                SnmpTrackerEntity(
+                    coordinator, mac, legacy_dev_id=legacy_dev_ids.get(mac)
+                )
                 for mac in initial_macs
             ),
             config_subentry_id=subentry_id,
@@ -200,7 +205,9 @@ def _async_setup_subentry(
                 continue
             tracked_macs.add(mac)
             new_entities.append(
-                SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
+                SnmpTrackerEntity(
+                    coordinator, mac, legacy_dev_id=legacy_dev_ids.get(mac)
+                )
             )
 
         if new_entities:
@@ -218,31 +225,35 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
         coordinator: SnmpDeviceTrackerCoordinator,
         mac: str,
         *,
-        was_tracked: bool = False,
+        legacy_dev_id: str | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac
         self._attr_name = mac
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
-        self._was_tracked = was_tracked
+        self._legacy_dev_id = legacy_dev_id
+        if legacy_dev_id is not None:
+            # Reuse the entity id the legacy YAML tracker used for this device, so
+            # an upgrade keeps the automations referring to it working.
+            self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{legacy_dev_id}"
 
     @override
     async def async_added_to_hass(self) -> None:
         """Handle the entity being added to hass."""
         await super().async_added_to_hass()
 
-        if not self._was_tracked:
+        if self._legacy_dev_id is None:
             return
 
-        # The migration keeps the entity id of the legacy tracker, so the user has
-        # to be told when another entity claimed it in the meantime.
+        # The migration reuses the entity id of the legacy tracker, so the user
+        # has to be told when another entity claimed it in the meantime.
         mac = self._attr_mac_address
         entity_id = self.entity_id
         assert mac is not None
         assert entity_id is not None
 
-        legacy_entity_id = f"{DEVICE_TRACKER_DOMAIN}.{mac.replace(':', '_')}"
+        legacy_entity_id = f"{DEVICE_TRACKER_DOMAIN}.{self._legacy_dev_id}"
         issue_id = f"entity_id_changed_{mac}"
 
         if entity_id == legacy_entity_id:
@@ -294,6 +305,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
         automations of the user. Any other device uses the ScannerEntity behaviour:
         enabled only when a device with the same MAC is already known.
         """
-        if self._was_tracked:
+        if self._legacy_dev_id is not None:
             return True
         return super().entity_registry_enabled_default
