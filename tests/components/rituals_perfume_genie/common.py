@@ -64,7 +64,11 @@ class MockDiffuser:
     perfume: str = "Ritual of Sakura"
     perfume_amount: int = 2
     room_size_square_meter: int = 60
-    version: str = "4.0"
+    version: str | None = "4.0"
+    firmware_id: int | None = 127
+    has_firmware_info: bool = True
+    newest_version: str | None = None
+    newest_firmware_id: int | None = None
     wifi_percentage: int = 75
     battery_percentage: int = field(default=100, init=False)
 
@@ -93,12 +97,16 @@ class MockDiffuser:
                     "versionc": True,
                     "wific": True,
                 },
-                "firmwareInfo": {
-                    "currentFirmware": self.version,
-                    "currentFirmwareId": 127,
-                    "newestFirmware": self.version,
-                    "newestFirmwareId": 127,
-                },
+                "firmwareInfo": (
+                    {
+                        "currentFirmware": self.version,
+                        "currentFirmwareId": self.firmware_id,
+                        "newestFirmware": self.newest_version or self.version,
+                        "newestFirmwareId": self.newest_firmware_id or self.firmware_id,
+                    }
+                    if self.has_firmware_info
+                    else None
+                ),
             }
         )
 
