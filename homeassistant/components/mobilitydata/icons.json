@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "next_departure": {
+        "default": "mdi:bus-clock"
+      },
+      "second_departure": {
+        "default": "mdi:bus-clock"
+      },
+      "third_departure": {
+        "default": "mdi:bus-clock"
+      }
+    }
+  }
+}
