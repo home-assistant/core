@@ -106,6 +106,8 @@ if TYPE_CHECKING:
 
     from . import StoreResultType
 
+MAX_URL_LENGTH = 2048
+
 
 @callback
 def async_setup(hass: HomeAssistant, store_result: StoreResultType) -> None:
@@ -151,7 +153,7 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "code_challenge_methods_supported": ["S256"],
             "response_types_supported": ["code"],
             "service_documentation": (
-                "https://developers.home-assistant.io/docs/auth_api"
+                "https://contributors.home-assistant.io/core/internals/auth-api/"
             ),
         }
 
@@ -183,7 +185,7 @@ class WellKnownProtectedResourceView(HomeAssistantView):
                 "resource": url_prefix,
                 "authorization_servers": [url_prefix],
                 "resource_documentation": (
-                    "https://developers.home-assistant.io/docs/auth_api"
+                    "https://contributors.home-assistant.io/core/internals/auth-api/"
                 ),
             }
         )
@@ -315,6 +317,8 @@ class LoginFlowBaseView(HomeAssistantView):
             context["redirect_uri"],
             allow_loopback_port_change=bool(context.get("code_challenge"))
             and context.get("code_challenge_method") == "S256",
+            request_scheme=request.scheme,
+            request_netloc=request.host,
         ):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
@@ -358,13 +362,17 @@ class LoginFlowIndexView(LoginFlowBaseView):
     @RequestDataValidator(
         probatio.Schema(
             {
-                probatio.Required("client_id"): str,
+                probatio.Required("client_id"): probatio.All(
+                    str, probatio.Length(max=MAX_URL_LENGTH)
+                ),
                 probatio.Required("handler"): probatio.All(
                     [probatio.Any(str, None)],
                     probatio.Length(2, 2),
                     probatio.Coerce(tuple),
                 ),
-                probatio.Required("redirect_uri"): str,
+                probatio.Required("redirect_uri"): probatio.All(
+                    str, probatio.Length(max=MAX_URL_LENGTH)
+                ),
                 # S256 challenges are always 43 unpadded base64url characters.
                 probatio.Optional("code_challenge"): probatio.Match(
                     r"^[A-Za-z0-9_-]{43}\Z"
@@ -383,7 +391,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
         client_id: str = data["client_id"]
         redirect_uri: str = data["redirect_uri"]
 
-        if not indieauth.verify_client_id(client_id):
+        if not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         if data.get("response_type", "code") != "code":
@@ -452,7 +462,9 @@ class LoginFlowResourceView(LoginFlowBaseView):
         """Handle progressing a login flow request."""
         client_id: str = data.pop("client_id")
 
-        if not indieauth.verify_client_id(client_id):
+        if not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         try:

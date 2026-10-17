@@ -1,6 +1,6 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -14,9 +14,9 @@ from homeassistant.util import dt as dt_util
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
-_LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
-_LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
-_LIVE_INTERVAL = datetime.timedelta(seconds=45)
+_LAST_VISITOR_INTERVAL = dt.timedelta(minutes=2)
+_LAST_MOTION_INTERVAL = dt.timedelta(seconds=30)
+_LIVE_INTERVAL = dt.timedelta(seconds=45)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
@@ -63,7 +63,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         door_bird_data: DoorBirdData,
         url: str,
         camera_id: str,
-        interval: datetime.timedelta,
+        interval: dt.timedelta,
         stream_url: str | None = None,
     ) -> None:
         """Initialize the camera on a DoorBird device."""
@@ -75,7 +75,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         if self._stream_url:
             self._attr_supported_features = CameraEntityFeature.STREAM
         self._interval = interval
-        self._last_update = datetime.datetime.min
+        self._last_update = dt.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
 
     @override

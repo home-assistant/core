@@ -49,7 +49,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
         super().__init__(device_url, coordinator)
 
         if self._attr_device_info:
-            self._attr_device_info["manufacturer"] = "EvoHome"
+            self._attr_device_info.manufacturer = "EvoHome"
 
     @property
     @override
