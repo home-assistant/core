@@ -30,7 +30,6 @@ class OneWireEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        self._last_update_success = True
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._device_file = device_file
@@ -61,12 +60,12 @@ class OneWireEntity(Entity):
         try:
             state = await self._owproxy.read(self._device_file)
         except OWServerError as exc:
-            if self._last_update_success:
+            if self._attr_available:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)
-                self._last_update_success = False
+                self._attr_available = False
             self._state = None
         else:
-            if not self._last_update_success:
-                self._last_update_success = True
+            if not self._attr_available:
+                self._attr_available = True
                 _LOGGER.debug("Fetching %s data recovered", self.name)
             self._state = state.decode("ascii").strip()

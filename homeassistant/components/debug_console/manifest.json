@@ -1,0 +1,10 @@
+{
+  "domain": "debug_console",
+  "name": "Debug console",
+  "codeowners": ["@frenck"],
+  "dependencies": ["websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/debug_console",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}

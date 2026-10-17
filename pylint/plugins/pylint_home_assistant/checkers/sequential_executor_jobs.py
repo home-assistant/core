@@ -4,7 +4,7 @@ Multiple sequential ``await hass.async_add_executor_job()`` calls should
 be grouped into a single executor job to avoid unnecessary context switches
 back to the event loop between blocking calls.
 
-https://developers.home-assistant.io/docs/asyncio_working_with_async/#calling-sync-functions-from-async
+https://contributors.home-assistant.io/core/internals/asyncio/#move-blocking-work-to-the-executor
 """
 
 from astroid import nodes
