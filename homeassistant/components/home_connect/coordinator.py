@@ -40,9 +40,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     API_DEFAULT_RETRY_AFTER,
     APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_INACTIVE,
     BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_READY,
     DOMAIN,
     FAVORITE_PROGRAMS,
+    PROGRAM_PROGRESS_EVENT_KEYS,
 )
 from .utils import get_dict_from_home_connect_error
 
@@ -70,6 +73,9 @@ class HomeConnectApplianceData:
         """Update data with data from other instance."""
         self.commands.clear()
         self.commands.update(other.commands)
+        for event_key in PROGRAM_PROGRESS_EVENT_KEYS:
+            if event_key not in other.events:
+                self.events.pop(event_key, None)
         self.events.update(other.events)
         self.info.connected = other.info.connected
         self.options.clear()
@@ -278,6 +284,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
     async def event_listener(self, event_message: EventMessage) -> None:
         """Match event with listener for event type."""
+        # Clear before storing the items, as the message can
+        # already contain the progress of the new program run.
+        if self._ends_program_run(event_message):
+            self._clear_program_progress_events()
 
         match event_message.type:
             case EventType.STATUS:
@@ -383,6 +393,39 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for event in event_message.data.items:
             for listener in self._get_listeners_for_event_key(event.key):
                 listener()
+
+    def _ends_program_run(self, event_message: EventMessage) -> bool:
+        """Return whether the message ends or replaces the current program run."""
+        match event_message.type:
+            case EventType.STATUS:
+                return any(
+                    event.key == EventKey.BSH_COMMON_STATUS_OPERATION_STATE
+                    and event.value
+                    in (BSH_OPERATION_STATE_INACTIVE, BSH_OPERATION_STATE_READY)
+                    for event in event_message.data.items
+                )
+            case EventType.NOTIFY:
+                previous_event = self.data.events.get(
+                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                )
+                if previous_event is None or not previous_event.value:
+                    # The progress was cleared when the previous program ended.
+                    return False
+                return any(
+                    event.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                    and event.value != previous_event.value
+                    for event in event_message.data.items
+                )
+        return False
+
+    @callback
+    def _clear_program_progress_events(self) -> None:
+        """Remove the progress events of the previous program run."""
+        events = self.data.events
+        for event_key in PROGRAM_PROGRESS_EVENT_KEYS:
+            if events.pop(event_key, None) is not None:
+                for listener in self._get_listeners_for_event_key(event_key):
+                    listener()
 
     @callback
     def call_all_event_listeners(self) -> None:
