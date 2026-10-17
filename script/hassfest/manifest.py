@@ -18,9 +18,9 @@ from probatio.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
-from script.util import sort_manifest as util_sort_manifest
 
 from .icons import integration_category_keys
+from .manifest_util import sort_manifest as util_sort_manifest
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
