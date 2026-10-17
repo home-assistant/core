@@ -6312,7 +6312,13 @@ async def test_stop_action_subscript(
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    await script_obj.async_run(context=Context())
+    raises = (
+        pytest.raises(script._AbortScript, match="In the name of love")
+        if error
+        else does_not_raise()
+    )
+    with raises:
+        await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
     assert f"{logmsg} script sequence: In the name of love" in caplog.text
@@ -6450,7 +6456,8 @@ async def test_stop_action_with_error(
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    await script_obj.async_run(context=Context())
+    with pytest.raises(script._AbortScript, match="Epic one..."):
+        await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
     assert "Test Name: Error script sequence: Epic one..." in caplog.text
@@ -6469,6 +6476,50 @@ async def test_stop_action_with_error(
         },
         expected_script_execution="aborted",
     )
+
+
+async def test_called_script_stop_error_aborts_parent(
+    hass: HomeAssistant,
+) -> None:
+    """Test a called script stop error prevents following parent actions."""
+    child_script = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "stop": "Child failed",
+                    "error": True,
+                }
+            ]
+        ),
+        "Child Script",
+        "test_domain",
+    )
+
+    async def async_call_child(service_call: ServiceCall) -> None:
+        await child_script.async_run(context=service_call.context)
+
+    hass.services.async_register("test", "call_child", async_call_child)
+
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    parent_script = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {"action": "test.call_child"},
+                {"event": event},
+            ]
+        ),
+        "Parent Script",
+        "test_domain",
+    )
+
+    with pytest.raises(script._AbortScript, match="Child failed"):
+        await parent_script.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
 
 
 async def test_continue_on_error(hass: HomeAssistant) -> None:
