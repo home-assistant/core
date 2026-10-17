@@ -44,10 +44,15 @@ async def test_set_mist_level(
 ) -> None:
     """Test set_mist_level usage."""
 
-    with patch(
-        "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_mist_level",
-        return_value=True,
-    ) as method_mock:
+    with (
+        patch(
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_mist_level",
+            return_value=True,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -56,6 +61,7 @@ async def test_set_mist_level(
         )
     await hass.async_block_till_done()
     method_mock.assert_called_once()
+    mark_mock.assert_called_once()
 
 
 async def test_mist_level(

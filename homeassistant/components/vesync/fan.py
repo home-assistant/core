@@ -257,7 +257,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                         + self.device.last_response.message
                     )
                 raise HomeAssistantError("Failed to turn off fan, no response found.")
-            self.async_write_ha_state()
+            self.coordinator.async_mark_command(self.device)
             return
 
         # If the fan is off, turn it on first
@@ -269,6 +269,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                         + self.device.last_response.message
                     )
                 raise HomeAssistantError("Failed to turn on fan, no response found.")
+            self.coordinator.async_mark_command(self.device)
 
         # Switch to manual mode if not already set
         if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
@@ -281,6 +282,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                 raise HomeAssistantError(
                     "Failed to set manual mode, no response found."
                 )
+            self.coordinator.async_mark_command(self.device)
 
         # Calculate the speed level and set it
         if not await self.device.set_fan_speed(
@@ -293,7 +295,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                 )
             raise HomeAssistantError("Failed to set fan speed, no response found.")
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -305,7 +307,11 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             )
 
         if not self.device.is_on:
-            await self.device.turn_on()
+            if not await self.device.turn_on():
+                if self.device.last_response:
+                    raise HomeAssistantError(self.device.last_response.message)
+                raise HomeAssistantError("Failed to turn on fan, no response found.")
+            self.coordinator.async_mark_command(self.device)
 
         vs_mode = self._ha_to_vs_mode_map.get(preset_mode)
         success = False
@@ -329,7 +335,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to set preset mode, no response found.")
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_on(
@@ -348,7 +354,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                 if self.device.last_response:
                     raise HomeAssistantError(self.device.last_response.message)
                 raise HomeAssistantError("Failed to turn on fan, no response found.")
-            self.async_write_ha_state()
+            self.coordinator.async_mark_command(self.device)
         else:
             await self.async_set_percentage(percentage)
 
@@ -360,7 +366,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to turn off fan, no response found.")
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -374,13 +380,14 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             device = cast(VeSyncFanBase, self.device)
             vertical_ok = await device.toggle_vertical_oscillation(oscillating)
             horizontal_ok = await device.toggle_horizontal_oscillation(oscillating)
+            if vertical_ok or horizontal_ok:
+                self.coordinator.async_mark_command(self.device)
             if not vertical_ok or not horizontal_ok:
                 if self.device.last_response:
                     raise HomeAssistantError(self.device.last_response.message)
                 raise HomeAssistantError(
                     "Failed to set oscillation, no response found."
                 )
-            self.async_write_ha_state()
             return
         if not hasattr(self.device, "toggle_oscillation"):
             raise HomeAssistantError("Oscillation not supported by this device.")
@@ -389,4 +396,4 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to set oscillation, no response found.")
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
