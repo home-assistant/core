@@ -1,7 +1,10 @@
 """Tests for HomematicIP Cloud sensor."""
 
+from unittest.mock import patch
+
 from homematicip.base.enums import ValveState, WindowState
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -34,6 +37,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfLength,
     UnitOfPower,
     UnitOfRatio,
@@ -46,6 +50,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
+
+from tests.common import snapshot_platform
 
 
 async def test_hmip_accesspoint_status(
@@ -923,6 +929,31 @@ async def test_hmip_water_valve_current_water_flow(
         == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
     )
     assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_hmip_water_supply_stop_water_flow(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the water flow of a water supply stop."""
+    entity_id = "sensor.wasserstopp_water_flow"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Wasserstopp"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(hass, hmip_device, "waterFlow", 11.55)
+    assert hass.states.get(entity_id).state == "11.55"
 
 
 async def test_hmip_water_valve_water_volume(
