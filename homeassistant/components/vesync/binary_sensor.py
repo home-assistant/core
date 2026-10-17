@@ -13,11 +13,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import rgetattr
+from .common import is_purifier, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -50,6 +51,23 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         exists_fn=(
             lambda device: rgetattr(device, "state.water_tank_lifted") is not None
+        ),
+    ),
+    VeSyncBinarySensorEntityDescription(
+        key="light_detection_status",
+        translation_key="dark_room",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on=(
+            lambda device: (
+                device.state.light_detection_switch == "on"
+                and device.state.light_detection_status == "on"
+            )
+        ),
+        exists_fn=(
+            lambda device: (
+                is_purifier(device)
+                and rgetattr(device, "supports_light_detection") is True
+            )
         ),
     ),
 )
