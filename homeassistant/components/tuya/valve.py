@@ -38,25 +38,18 @@ VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
         ),
+        *(
+            TuyaValveEntityDescription(
+                key=DPCode(f"switch_{channel}"),
+                translation_key="valve",
+                device_class=ValveDeviceClass.WATER,
+                channel_index=channel,
+                channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
+            )
+            for channel in range(1, 13)
+        ),
     ),
 }
-
-
-def _make_channel_condition(key_str: str):
-    """Return a callable that checks if a channel DP is present in the device."""
-    try:
-        dp_member = DPCode(key_str)
-    except ValueError:
-        dp_member = None
-
-    def _condition(device: CustomerDevice) -> bool:
-        if key_str in device.status_range:
-            return True
-        if dp_member is not None and dp_member in device.status_range:
-            return True
-        return False
-
-    return _condition
 
 
 async def async_setup_entry(
@@ -74,29 +67,6 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := VALVES.get(device.category):
-                dynamic_descriptions: list[TuyaValveEntityDescription] = []
-                for status_key in device.status_range:
-                    if isinstance(status_key, str) and status_key.startswith("switch_"):
-                        try:
-                            channel_index = int(status_key.split("_", 1)[1])
-                        except ValueError:
-                            continue
-                        dynamic_descriptions.append(
-                            TuyaValveEntityDescription(
-                                key=status_key,
-                                translation_key="valve",
-                                device_class=ValveDeviceClass.WATER,
-                                channel_index=channel_index,
-                                channel_condition=_make_channel_condition(status_key),
-                            )
-                        )
-
-                if dynamic_descriptions:
-                    dynamic_descriptions.sort(key=lambda d: d.channel_index or 0)
-                    descriptions_to_use = (*descriptions, *dynamic_descriptions)
-                else:
-                    descriptions_to_use = descriptions
-
                 parent_device_id = dr.async_get_device_id_by_identifier(
                     hass, (DOMAIN, device.id), config_entry_id=entry.entry_id
                 )
@@ -110,7 +80,7 @@ async def async_setup_entry(
                             device, parent_device_id, description
                         ),
                     )
-                    for description in descriptions_to_use
+                    for description in descriptions
                     if (definition := get_default_definition(device, description.key))
                 )
 
