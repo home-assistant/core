@@ -1,6 +1,7 @@
 """Controller module."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import asdict
 from functools import partial
 import logging
@@ -10,6 +11,7 @@ from deebot_client.api_client import ApiClient
 from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
+from deebot_client.events import FirmwareEvent, NetworkInfoEvent
 from deebot_client.exceptions import (
     DeebotError,
     DeviceVerificationRequiredError,
@@ -30,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
@@ -38,6 +40,7 @@ from .const import (
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +56,7 @@ class EcovacsController:
         config = entry.data
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
+        self._unsubscribe_device_events: list[Callable[[], None]] = []
         rest_url = config.get(CONF_OVERRIDE_REST_URL)
         self._device_id = config[CONF_DEVICE_ID]
         country = config[CONF_COUNTRY]
@@ -114,6 +118,7 @@ class EcovacsController:
                     async def _init(device: Device) -> None:
                         """Initialize MQTT device."""
                         await device.initialize(mqtt)
+                        self._subscribe_device_info_events(device)
                         self._devices.append(device)
 
                     for device in mqtt_devices:
@@ -158,9 +163,39 @@ class EcovacsController:
             data={**self._entry.data, CONF_ACCOUNT_CREDENTIALS: asdict(account)},
         )
 
+    def _subscribe_device_info_events(self, device: Device) -> None:
+        """Update the device registry when the firmware or MAC is reported."""
+        identifier = (DOMAIN, device.device_info["did"])
+        device_registry = dr.async_get(self._hass)
+
+        def device_entry() -> dr.DeviceEntry | None:
+            return device_registry.async_get_device_by_identifier(
+                identifier, self._entry.entry_id
+            )
+
+        async def on_firmware(event: FirmwareEvent) -> None:
+            if entry := device_entry():
+                device_registry.async_update_device(entry.id, sw_version=event.version)
+
+        async def on_network(event: NetworkInfoEvent) -> None:
+            if event.mac and (entry := device_entry()):
+                device_registry.async_update_device(
+                    entry.id,
+                    new_connections={(dr.CONNECTION_NETWORK_MAC, event.mac)},
+                )
+
+        self._unsubscribe_device_events.extend(
+            (
+                device.events.subscribe(FirmwareEvent, on_firmware),
+                device.events.subscribe(NetworkInfoEvent, on_network),
+            )
+        )
+
     async def teardown(self) -> None:
         """Disconnect controller."""
         self._unsubscribe_account_credentials()
+        for unsubscribe in self._unsubscribe_device_events:
+            unsubscribe()
         for device in self._devices:
             await device.teardown()
         for legacy_device in self._legacy_devices:
