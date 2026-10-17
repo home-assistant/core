@@ -10,7 +10,7 @@ from .runner import run
 def main() -> int:
     """Run standalone hassfest."""
     try:
-        config = get_config(INTEGRATION_PLUGINS, standalone=True)
+        config = get_config(INTEGRATION_PLUGINS)
     except RuntimeError as err:
         print(err)
         return 1

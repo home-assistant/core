@@ -27,7 +27,7 @@ def validate_plugins(plugin_names: str, *, available: list[str]) -> list[str]:
     return plugins
 
 
-def get_config(available: list[str], *, standalone: bool = False) -> Config:
+def get_config(available: list[str], *, standalone: bool = True) -> Config:
     """Return config."""
     parser = argparse.ArgumentParser(description="Hassfest")
     parser.add_argument(

@@ -30,7 +30,7 @@ def test_standalone_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
     (tmp_path / "requirements_all.txt").write_text("")
     monkeypatch.setattr(sys, "argv", ["hassfest", "--integration-path", str(tmp_path)])
 
-    config = cli.get_config(INTEGRATION_PLUGINS, standalone=True)
+    config = cli.get_config(INTEGRATION_PLUGINS)
 
     assert config.root == installed
     assert config.requirements_path == data
@@ -60,7 +60,7 @@ def test_explicit_core_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
         ],
     )
 
-    config = cli.get_config(INTEGRATION_PLUGINS, standalone=True)
+    config = cli.get_config(INTEGRATION_PLUGINS)
 
     assert config.root == tmp_path
     assert config.requirements_path is None
@@ -76,7 +76,7 @@ def test_standalone_requires_target(monkeypatch: pytest.MonkeyPatch) -> None:
     """Standalone invocation cannot implicitly scan or generate installed Core."""
     monkeypatch.setattr(sys, "argv", ["hassfest"])
     with pytest.raises(SystemExit, match="2"):
-        cli.get_config(INTEGRATION_PLUGINS, standalone=True)
+        cli.get_config(INTEGRATION_PLUGINS)
 
 
 @pytest.mark.parametrize("filename", ["requirements.txt", "requirements_all.txt"])
@@ -90,7 +90,7 @@ def test_incomplete_bundle(
     monkeypatch.setattr(cli, "__file__", str(tmp_path / "cli.py"))
     monkeypatch.setattr(sys, "argv", ["hassfest", "--integration-path", str(tmp_path)])
     with pytest.raises(RuntimeError, match="Bundled requirements are missing"):
-        cli.get_config(INTEGRATION_PLUGINS, standalone=True)
+        cli.get_config(INTEGRATION_PLUGINS)
 
 
 def test_standalone_cannot_generate(
@@ -113,4 +113,4 @@ def test_standalone_cannot_generate(
         ],
     )
     with pytest.raises(RuntimeError, match="Generate is not allowed"):
-        cli.get_config(INTEGRATION_PLUGINS, standalone=True)
+        cli.get_config(INTEGRATION_PLUGINS)
