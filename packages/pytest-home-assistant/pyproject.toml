@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytest-home-assistant"
-version = "2026.11.0.dev0"
+version = "0.0.0"
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
 description = "Pytest fixtures and test helpers for Home Assistant."
@@ -14,8 +14,9 @@ authors = [
   { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
 ]
 
+# Dependency pins are synchronized by script.gen_requirements_all.
 dependencies = [
-  "homeassistant==2026.11.0.dev0",
+  "homeassistant",
   "aiohasupervisor==0.7.0",
   "bleak-retry-connector==4.7.1",
   "freezegun==1.5.5",
