@@ -100,22 +100,22 @@ async def test_get_device_capabilities(
             {
                 "name": "uart0",
                 "port_type": "TTL",
-                "url": str(build_url(device.entry.entry_id, "uart0")),
+                "url": str(build_url(device.entry.entry_id, port_name="uart0")),
             },
             {
                 "name": "amp",
                 "port_type": "RS232",
-                "url": str(build_url(device.entry.entry_id, "amp")),
+                "url": str(build_url(device.entry.entry_id, port_name="amp")),
             },
             {
                 "name": "bus",
                 "port_type": "RS485",
-                "url": str(build_url(device.entry.entry_id, "bus")),
+                "url": str(build_url(device.entry.entry_id, port_name="bus")),
             },
             {
                 "name": "unknown",
                 "port_type": None,
-                "url": str(build_url(device.entry.entry_id, "unknown")),
+                "url": str(build_url(device.entry.entry_id, port_name="unknown")),
             },
         ],
     }

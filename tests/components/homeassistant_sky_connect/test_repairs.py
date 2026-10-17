@@ -83,7 +83,7 @@ async def test_multi_pan_migration_repair_flow(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
