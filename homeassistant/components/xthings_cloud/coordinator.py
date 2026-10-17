@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for Xthings Cloud."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, override
 
 from ha_xthings_cloud import (
@@ -16,10 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_REFRESH_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
+
+WEBSOCKET_LOCK_STATE_MAX_AGE = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 
 class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -43,6 +46,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.websocket: XthingsCloudWebSocket | None = None
+        self._websocket_lock_states: dict[str, tuple[int | bool, datetime]] = {}
 
     async def _async_ensure_token_valid(self) -> None:
         """Ensure the token is valid, refresh if expired.
@@ -80,7 +84,20 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
-        return {device["id"]: device for device in devices}
+        data = {device["id"]: device for device in devices}
+        now = dt_util.utcnow()
+        for device_id, (is_locked, updated_at) in list(
+            self._websocket_lock_states.items()
+        ):
+            if (
+                device_id not in data
+                or data[device_id]["type"] != "lock"
+                or now - updated_at > WEBSOCKET_LOCK_STATE_MAX_AGE
+            ):
+                self._websocket_lock_states.pop(device_id)
+                continue
+            data[device_id].setdefault("status", {})["is_locked"] = is_locked
+        return data
 
     async def async_start_websocket(self) -> None:
         """Start WebSocket connection."""
@@ -111,6 +128,17 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "WebSocket received status for unknown device: %s", device_uuid
             )
             return
+        if self.data[device_uuid]["type"] == "lock":
+            lock_state = status.get("is_locked")
+            if not isinstance(lock_state, (bool, int)):
+                lock_state = status.get("locked")
+            if isinstance(lock_state, (bool, int)):
+                if isinstance(lock_state, bool):
+                    status["is_locked"] = lock_state
+                self._websocket_lock_states[device_uuid] = (
+                    lock_state,
+                    dt_util.utcnow(),
+                )
         device_data = self.data[device_uuid]
         device_data.setdefault("status", {}).update(status)
         LOGGER.debug("WebSocket updated device status: %s", device_uuid)
