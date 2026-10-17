@@ -136,6 +136,7 @@ class DiffuserSensorsEntity(CoordinatorEntity[RitualsSensorsCoordinator]):
         self.async_on_remove(
             self.coordinator.hubs.async_add_listener(self._handle_coordinator_update)
         )
+        self.coordinator.async_entity_added()
 
     @property
     @override

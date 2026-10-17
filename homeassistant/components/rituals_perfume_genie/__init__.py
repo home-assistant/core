@@ -85,12 +85,8 @@ def async_update_diffusers(hass: HomeAssistant, entry: RitualsConfigEntry) -> No
     hubs = runtime_data.hubs.data
 
     for hublot in hubs.keys() - runtime_data.sensors.keys():
-        coordinator = RitualsSensorsCoordinator(
+        runtime_data.sensors[hublot] = RitualsSensorsCoordinator(
             hass, entry, runtime_data.hubs, hublot, added=True
-        )
-        runtime_data.sensors[hublot] = coordinator
-        entry.async_create_background_task(
-            hass, coordinator.async_refresh(), f"{DOMAIN} {hublot} sensors"
         )
 
     for hublot in runtime_data.sensors.keys() - hubs.keys():

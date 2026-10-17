@@ -43,7 +43,12 @@ async def test_diagnostics_diffuser_added(
     diffusers.append(mock_diffuser(hublot="lot456"))
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
+
+    # The first update of its sensors waits a moment for all its entities.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

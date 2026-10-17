@@ -195,7 +195,8 @@ async def test_diffuser_added_to_account(
 
     diffusers.append(mock_diffuser_v2_no_battery_no_cartridge())
     await _tick(hass, freezer, timedelta(minutes=5))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # The first update of its sensors waits a moment for all its entities.
+    await _tick(hass, freezer, timedelta(seconds=1))
 
     state = hass.states.get("switch.genie_v2")
     assert state
@@ -205,10 +206,7 @@ async def test_diffuser_added_to_account(
     state = hass.states.get("binary_sensor.genie_v2_cartridge")
     assert state
     assert state.state == STATE_OFF
-    assert client.sensors.call_args.kwargs["only"] == {
-        Sensor.BATTERY,
-        Sensor.PERFUME,
-    }
+    assert client.sensors.call_args.kwargs["only"] == {Sensor.PERFUME}
 
     # Nothing changes for the diffuser that was already there.
     state = hass.states.get("switch.genie")
@@ -217,12 +215,25 @@ async def test_diffuser_added_to_account(
 
 
 async def test_diffuser_returns_to_account(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a diffuser that returns to the account gets its entities back."""
     config_entry = mock_config_entry(unique_id="id_123_diffuser_returns")
+    config_entry.add_to_hass(hass)
+
+    # Enabled by the user while it was on the account: it comes back enabled.
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "lot123-wifi_percentage",
+        config_entry=config_entry,
+        suggested_object_id="genie_wi_fi_signal",
+    )
+
     diffusers = [mock_diffuser("lot123")]
-    await init_integration(hass, config_entry, diffusers)
+    client = await init_integration(hass, config_entry, diffusers)
 
     diffusers.clear()
     await _tick(hass, freezer, timedelta(minutes=5))
@@ -230,7 +241,8 @@ async def test_diffuser_returns_to_account(
 
     diffusers.append(mock_diffuser("lot123"))
     await _tick(hass, freezer, timedelta(minutes=5))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # The first update of its sensors waits a moment for all its entities.
+    await _tick(hass, freezer, timedelta(seconds=1))
 
     state = hass.states.get("switch.genie")
     assert state
@@ -239,6 +251,12 @@ async def test_diffuser_returns_to_account(
     state = hass.states.get("sensor.genie_perfume")
     assert state
     assert state.state == "Ritual of Sakura"
+
+    # The first update fetched what the returned entities need.
+    state = hass.states.get("sensor.genie_wi_fi_signal")
+    assert state
+    assert state.state == "75"
+    assert Sensor.WIFI in client.sensors.call_args.kwargs["only"]
 
 
 async def test_stale_device_removed_on_setup(
