@@ -208,6 +208,21 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @override
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the event entity is added to hass."""
+        await super().async_internal_added_to_hass()
+
+        if (
+            (state := await self.async_get_last_state())
+            and state.state is not None
+            and (event_data := await self.async_get_last_event_data())
+        ):
+            self.__last_event_triggered = dt_util.parse_datetime(state.state)
+            self.__last_event_type = event_data.last_event_type
+            self.__last_event_attributes = event_data.last_event_attributes
+
+    @final
+    @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
@@ -234,21 +249,6 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
                 )
 
         super()._async_write_ha_state()
-
-    @final
-    @override
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the event entity is added to hass."""
-        await super().async_internal_added_to_hass()
-
-        if (
-            (state := await self.async_get_last_state())
-            and state.state is not None
-            and (event_data := await self.async_get_last_event_data())
-        ):
-            self.__last_event_triggered = dt_util.parse_datetime(state.state)
-            self.__last_event_type = event_data.last_event_type
-            self.__last_event_attributes = event_data.last_event_attributes
 
     @property
     @override
