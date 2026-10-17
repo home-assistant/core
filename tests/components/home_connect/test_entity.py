@@ -36,7 +36,6 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -70,7 +69,7 @@ def platforms() -> list[Platform]:
         "appliance",
         "option_entity_id",
         "options_state_stage_1",
-        "options_availability_stage_2",
+        "options_present_stage_2",
         "option_without_default",
         "option_without_constraints",
     ),
@@ -105,7 +104,7 @@ async def test_program_options_retrieval(
     appliance: HomeAppliance,
     option_entity_id: dict[OptionKey, str],
     options_state_stage_1: list[tuple[str, bool | None]],
-    options_availability_stage_2: list[bool],
+    options_present_stage_2: list[bool],
     option_without_default: tuple[OptionKey, str],
     option_without_constraints: tuple[OptionKey, str],
 ) -> None:
@@ -183,7 +182,7 @@ async def test_program_options_retrieval(
                     )
                     for option_key, available in zip(
                         option_entity_id.keys(),
-                        options_availability_stage_2,
+                        options_present_stage_2,
                         strict=True,
                     )
                     if available
@@ -223,14 +222,12 @@ async def test_program_options_retrieval(
     )
     await hass.async_block_till_done()
 
-    # Verify default values
-    # Every time the program is updated, the available options should use the default
-    # value if existing
+    # Options absent from the current program have no known value.
     for entity_id, available in zip(
-        option_entity_id.values(), options_availability_stage_2, strict=True
+        option_entity_id.values(), options_present_stage_2, strict=True
     ):
         assert hass.states.is_state(
-            entity_id, STATE_OFF if available else STATE_UNAVAILABLE
+            entity_id, STATE_OFF if available else STATE_UNKNOWN
         )
     for _, entity_id in (option_without_default, option_without_constraints):
         assert hass.states.is_state(entity_id, STATE_UNKNOWN)
