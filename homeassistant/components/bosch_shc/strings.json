@@ -101,6 +101,17 @@
           "setpoint": "Set temperature"
         }
       },
+      "heater_type": {
+        "name": "Heater type",
+        "state": {
+          "convector_active": "Active convector (with fan)",
+          "convector_passive": "Passive convector (without fan)",
+          "floor_heating": "Underfloor heating",
+          "floor_heating_low_energy": "Underfloor heating low energy",
+          "radiator": "Radiator",
+          "volt_free_heating": "Central heating"
+        }
+      },
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {
@@ -123,6 +134,13 @@
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "valve_type": {
+        "name": "Valve type",
+        "state": {
+          "normally_close": "Normally closed",
+          "normally_open": "Normally open"
         }
       },
       "vibration_sensitivity": {
