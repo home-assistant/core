@@ -193,6 +193,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> No
 
         # Fetch device metadata
         device = await bsblan.device()
+        if device.is_pps_bus:
+            circuits = list(DEFAULT_HEATING_CIRCUITS)
         info = await bsblan.info()
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
@@ -252,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> No
             static_per_circuit[circuit] = None
 
     # Create coordinators with the already-initialized client
-    fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan, circuits)
+    fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan, circuits, device)
     slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan, circuits)
     entry.async_on_unload(slow_coordinator.async_add_listener(lambda: None))
 

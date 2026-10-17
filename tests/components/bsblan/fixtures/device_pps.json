@@ -1,0 +1,16 @@
+{
+  "name": "BSB-LAN PPS",
+  "version": "1.0.38-20200730234859",
+  "freeram": 85479,
+  "uptime": 969402857,
+  "MAC": "00:80:41:19:69:91",
+  "freespace": 0,
+  "bus": "PPS",
+  "buswritable": 1,
+  "busaddr": 0,
+  "busdest": 0,
+  "monitor": 0,
+  "verbose": 1,
+  "protectedGPIO": [],
+  "averages": []
+}
