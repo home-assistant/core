@@ -48,6 +48,7 @@ class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
     native_value: Callable[[OverkizStateType], StateType] | None = None
+    zero_is_valid: bool = False
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
@@ -448,6 +449,13 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["dead", "low_battery", "maintenance_required", "no_defect"],
     ),
+    # Atlantic heat pumps and heaters report 0 when there is no fault
+    OverkizSensorDescription(
+        key=OverkizState.CORE_ERROR_CODE,
+        name="Error code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        zero_is_valid=True,
+    ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
         key=OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
@@ -596,7 +604,11 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             # This is probably incorrect and should be fixed in a follow up PR.
             # To ensure measurement sensors do not get an `unknown` state on
             # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
+            or (
+                self.state_class != SensorStateClass.MEASUREMENT
+                and not state.value
+                and not (self.entity_description.zero_is_valid and state.value == 0)
+            )
         ):
             return None
 
