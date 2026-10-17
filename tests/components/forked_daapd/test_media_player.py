@@ -1,5 +1,6 @@
 """The media player tests for the forked_daapd media player platform."""
 
+import asyncio
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -65,6 +66,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_ON,
     STATE_PAUSED,
+    STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
@@ -382,6 +384,43 @@ def test_master_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_MEDIA_ALBUM_ARTIST] == "The xx"
     assert state.attributes[ATTR_MEDIA_TRACK] == 1
     assert not state.attributes[ATTR_MEDIA_SHUFFLE]
+
+
+@pytest.mark.parametrize(
+    "queue_count",
+    [pytest.param(0, id="empty"), pytest.param(1, id="inconsistent-count")],
+)
+async def test_empty_queue_updates(
+    hass: HomeAssistant,
+    mock_api_object: Mock,
+    get_request_return_values: dict[str, Any],
+    queue_count: int,
+) -> None:
+    """Test empty queue responses complete and subsequent updates still work."""
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    get_request_return_values["queue"] = {
+        "version": 10859,
+        "count": queue_count,
+        "items": [],
+    }
+    async with asyncio.timeout(5):
+        await updater_update(["queue", "player"])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == STATE_PAUSED
+    assert state.attributes[ATTR_MEDIA_TITLE] == ""
+
+    get_request_return_values["queue"] = SAMPLE_QUEUE
+    get_request_return_values["player"] = SAMPLE_PLAYER_PLAYING
+    async with asyncio.timeout(5):
+        await updater_update(["queue", "player"])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == STATE_PLAYING
+    assert state.attributes[ATTR_MEDIA_TITLE] == "No album"
+    assert state.attributes[ATTR_MEDIA_ARTIST] == "Some artist"
 
 
 async def test_no_update_when_get_request_returns_none(
