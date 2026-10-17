@@ -3059,7 +3059,7 @@ satel-integra==1.5.0
 screenlogicpy==0.10.2
 
 # homeassistant.components.backup
-securetar==2026.4.1
+securetar==2026.10.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
