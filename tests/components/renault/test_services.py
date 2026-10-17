@@ -2,8 +2,11 @@
 
 from collections.abc import Generator
 from datetime import datetime
+import json
+from typing import Any, cast
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
@@ -20,7 +23,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import async_load_fixture
+from tests.common import async_load_fixture, async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -183,6 +186,126 @@ async def test_service_charge_start_with_date(
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (when,)
+
+
+async def test_service_get_charge_schedule(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that service returns charge schedules."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        RenaultServiceArgument.VEHICLE.value: get_device_id(hass),
+    }
+
+    freezer.move_to("2025-08-23 00:00:00+00:00")
+    with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
+                await async_load_fixture(hass, "charging_settings.json", DOMAIN)
+            ),
+        ) as mock_action,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            RenaultService.CHARGE_GET_SCHEDULES,
+            service_data=data,
+            blocking=True,
+            return_response=True,
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert response == snapshot
+
+
+async def test_service_get_charge_schedule_empty(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service returns empty charge schedules."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        RenaultServiceArgument.VEHICLE.value: get_device_id(hass),
+    }
+
+    with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
+                await async_load_fixture(hass, "charging_settings_always.json", DOMAIN)
+            ),
+        ) as mock_action,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            RenaultService.CHARGE_GET_SCHEDULES,
+            service_data=data,
+            blocking=True,
+            return_response=True,
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert response == {
+        "schedule_count": 0,
+        "active_schedule_count": 0,
+        "schedules": [],
+    }
+
+
+async def test_service_get_charge_schedule_formats_local_time(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that service returns local charge schedule times."""
+    await hass.config.async_set_time_zone("Europe/Paris")
+    freezer.move_to("2025-03-30 23:30:00+00:00")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = cast(
+        dict[str, Any],
+        await async_load_json_object_fixture(hass, "charging_settings.json", DOMAIN),
+    )
+    payload["data"]["attributes"]["schedules"][0]["monday"]["startTime"] = None
+    payload["data"]["attributes"]["schedules"][1]["monday"] = {
+        "startTime": "T00:00Z",
+        "duration": 16,
+    }
+    payload["data"]["attributes"]["schedules"][1]["sunday"]["duration"] = 17
+    data = {
+        RenaultServiceArgument.VEHICLE.value: get_device_id(hass),
+    }
+
+    with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(json.dumps(payload)),
+        ) as mock_action,
+    ):
+        response = cast(
+            dict[str, Any],
+            await hass.services.async_call(
+                DOMAIN,
+                RenaultService.CHARGE_GET_SCHEDULES,
+                service_data=data,
+                blocking=True,
+                return_response=True,
+            ),
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert response["schedules"][0]["monday"][0]["start_time"] is None
+    assert response["schedules"][1]["monday"] == [
+        {"start_time": "01:30", "duration": 17},
+        {"start_time": "02:00", "duration": 16},
+    ]
 
 
 async def test_service_set_charge_schedule(
