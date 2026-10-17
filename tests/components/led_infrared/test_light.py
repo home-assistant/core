@@ -7,6 +7,7 @@ from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
     Generic10KeyCode,
     Generic13KeyCode,
+    Generic21KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
     Generic44KeyCode,
@@ -52,6 +53,7 @@ def light_only() -> Generator[None]:
     [
         LEDIrDeviceType.GENERIC_10_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_21_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
         LEDIrDeviceType.GENERIC_44_KEY,
@@ -537,6 +539,75 @@ _LIGHT_ACTIONS: dict[
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "light_cyan"},
             [Generic44KeyCode.ON, Generic44KeyCode.LIGHT_CYAN],
+        ),
+    ],
+    LEDIrDeviceType.GENERIC_21_KEY: [
+        (SERVICE_TURN_ON, {}, [Generic21KeyCode.ON]),
+        (SERVICE_TURN_OFF, {}, [Generic21KeyCode.OFF]),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "auto"},
+            [Generic21KeyCode.ON, Generic21KeyCode.AUTO],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "red"},
+            [Generic21KeyCode.ON, Generic21KeyCode.RED],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "green"},
+            [Generic21KeyCode.ON, Generic21KeyCode.GREEN],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "blue"},
+            [Generic21KeyCode.ON, Generic21KeyCode.BLUE],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "light_yellow"},
+            [Generic21KeyCode.ON, Generic21KeyCode.LIGHT_YELLOW],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "moccasin"},
+            [Generic21KeyCode.ON, Generic21KeyCode.MOCCASIN],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "yellow"},
+            [Generic21KeyCode.ON, Generic21KeyCode.YELLOW],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "orange"},
+            [Generic21KeyCode.ON, Generic21KeyCode.ORANGE],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "ghost_white"},
+            [Generic21KeyCode.ON, Generic21KeyCode.GHOST_WHITE],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "sky_blue"},
+            [Generic21KeyCode.ON, Generic21KeyCode.SKY_BLUE],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "pink"},
+            [Generic21KeyCode.ON, Generic21KeyCode.PINK],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "light_green"},
+            [Generic21KeyCode.ON, Generic21KeyCode.LIGHT_GREEN],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "floral_white"},
+            [Generic21KeyCode.ON, Generic21KeyCode.FLORAL_WHITE],
         ),
     ],
 }
