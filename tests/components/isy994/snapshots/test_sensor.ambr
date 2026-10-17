@@ -295,6 +295,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
@@ -305,7 +308,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00_22 22 22 3',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
 # name: test_sensor_snapshots[sensor.flow_rate_gph-state]
@@ -314,14 +317,14 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPH',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gph',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '300',
+    'state': '1135.6235352',
   })
 # ---
 # name: test_sensor_snapshots[sensor.flow_rate_gph_flow_rate_gph_device_communication_errors-entry]
@@ -403,6 +406,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
@@ -413,7 +419,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00_22 22 22 2',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensor_snapshots[sensor.flow_rate_gpm-state]
@@ -422,14 +428,14 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPM',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gpm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '18.92705892',
   })
 # ---
 # name: test_sensor_snapshots[sensor.flow_rate_gpm_flow_rate_gpm_device_communication_errors-entry]
