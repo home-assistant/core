@@ -57,6 +57,7 @@
       "manufacturer_id": 12884
     }
   ],
+  "categories": ["sensors.temperature_humidity", "appliances_cleaning.cooking"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

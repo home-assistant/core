@@ -1,6 +1,7 @@
 {
   "domain": "litterrobot",
   "name": "Whisker",
+  "categories": ["pets"],
   "codeowners": ["@natekspencer", "@tkdrob"],
   "config_flow": true,
   "dhcp": [

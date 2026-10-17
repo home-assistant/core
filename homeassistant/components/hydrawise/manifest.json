@@ -1,6 +1,7 @@
 {
   "domain": "hydrawise",
   "name": "Hunter Hydrawise",
+  "categories": ["garden_plants"],
   "codeowners": ["@dknowles2", "@thomaskistler", "@ptcryan", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hydrawise",

@@ -1,6 +1,7 @@
 {
   "domain": "route_b_smart_meter",
   "name": "Smart Meter B Route",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
   "dependencies": ["usb"],

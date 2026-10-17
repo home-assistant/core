@@ -1,6 +1,7 @@
 {
   "domain": "broadlink",
   "name": "Broadlink",
+  "categories": ["buttons_remotes", "plugs_switches"],
   "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am", "@DAB-LABS"],
   "config_flow": true,
   "dhcp": [

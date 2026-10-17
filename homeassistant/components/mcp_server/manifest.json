@@ -1,6 +1,7 @@
 {
   "domain": "mcp_server",
   "name": "Model Context Protocol",
+  "categories": ["ai_voice.ai_models", "other_ecosystems"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["http", "conversation"],
