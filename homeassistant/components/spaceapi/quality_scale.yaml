@@ -10,8 +10,8 @@ rules:
   common-modules:
     status: exempt
     comment: This integration has no entities and no coordinator.
-  config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency:
     status: exempt
     comment: This integration has no dependencies.
@@ -80,7 +80,7 @@ rules:
     comment: This integration does not provide any automation
   docs-known-limitations:
     status: done
-    comment: Only SpaceAPI v13 is supported.
+    comment: SpaceAPI v13 and v15 are supported. SpaceAPI v15 is implemented by supporting the minimum required fields.
   docs-supported-devices:
     status: exempt
     comment: This integration is a service and has no devices.
