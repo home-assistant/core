@@ -9,7 +9,13 @@ from unittest.mock import MagicMock, patch
 from haphilipsjs import GeneralFailure, PhilipsTV
 import pytest
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
+    ATTR_HS_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
 from homeassistant.components.philips_js.const import UNREACHABLE_GRACE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -407,3 +413,116 @@ async def test_turn_off_rejected_command_raises(
         )
 
     assert mock_tv.setAmbilightMode.call_count == 3
+
+
+@pytest.fixture
+async def standby_tv(
+    hass: HomeAssistant, mock_tv: PhilipsTV, clock: FakeClock, setup_light: None
+) -> PhilipsTV:
+    """Put the TV into StandbyKeep with the stale state it reports there."""
+    mock_tv.powerstate = "StandbyKeep"
+    mock_tv.ambilight_current_configuration = {}
+    mock_tv.ambilight_cached = {
+        "layer1": {"left": {"0": {"r": 0, "g": 0, "b": 0}}},
+    }
+    await _poll(hass, clock, 30)
+    assert (state := hass.states.get(LIGHT_ENTITY_ID))
+    assert state.state == STATE_OFF
+    return mock_tv
+
+
+async def test_standby_turn_on_uses_expert_config(
+    hass: HomeAssistant, standby_tv: PhilipsTV
+) -> None:
+    """Test turn_on in standby sends the expert color configuration."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID, ATTR_HS_COLOR: (120, 100)},
+        blocking=True,
+    )
+
+    standby_tv.setAmbilightCached.assert_not_called()
+    standby_tv.setAmbilightMode.assert_not_called()
+    standby_tv.setAmbilightCurrentConfiguration.assert_awaited_once_with(
+        {
+            "styleName": "FOLLOW_COLOR",
+            "isExpert": True,
+            "speed": 2,
+            "colorSettings": {
+                "algorithm": "MANUAL_HUE",
+                "color": {"hue": 85, "saturation": 255, "brightness": 255},
+                "colorDelta": {"hue": 0, "saturation": 0, "brightness": 0},
+            },
+        }
+    )
+
+
+async def test_standby_turn_on_black_cache_uses_full_brightness(
+    hass: HomeAssistant, standby_tv: PhilipsTV
+) -> None:
+    """Test a plain turn_on does not send black when the cache is black."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
+        blocking=True,
+    )
+
+    config = standby_tv.setAmbilightCurrentConfiguration.await_args.args[0]
+    assert config["colorSettings"]["color"] == {
+        "hue": 0,
+        "saturation": 0,
+        "brightness": 255,
+    }
+
+
+async def test_standby_turn_on_state_is_kept(
+    hass: HomeAssistant, standby_tv: PhilipsTV, clock: FakeClock
+) -> None:
+    """Test the state set by turn_on survives stale reads while in standby."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID, ATTR_HS_COLOR: (120, 100)},
+        blocking=True,
+    )
+    # The coordinator refresh still reads an empty configuration and black cache.
+    await _poll(hass, clock, 30)
+
+    assert (state := hass.states.get(LIGHT_ENTITY_ID))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    assert state.attributes[ATTR_HS_COLOR] == (120, 100)
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+
+    # The next toggle turns the light off again.
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
+        blocking=True,
+    )
+    standby_tv.setAmbilightMode.assert_awaited_with("internal")
+    await _poll(hass, clock, 30)
+
+    assert (state := hass.states.get(LIGHT_ENTITY_ID))
+    assert state.state == STATE_OFF
+
+
+async def test_standby_state_dropped_when_tv_is_on(
+    hass: HomeAssistant, standby_tv: PhilipsTV, clock: FakeClock
+) -> None:
+    """Test the kept state is dropped once the TV is fully on."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID, ATTR_HS_COLOR: (120, 100)},
+        blocking=True,
+    )
+
+    standby_tv.powerstate = "On"
+    await _poll(hass, clock, 30)
+
+    assert (state := hass.states.get(LIGHT_ENTITY_ID))
+    assert state.attributes.get(ATTR_HS_COLOR) != (120, 100)

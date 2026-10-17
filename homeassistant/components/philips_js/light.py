@@ -158,6 +158,10 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self._brightness = None
         self._cache_keys = None
         self._last_selected_effect: AmbilightEffect | None = None
+        # What turn_on set while the TV is in standby, see _update_from_coordinator
+        self._standby_state: tuple[AmbilightEffect, tuple[float, float], int] | None = (
+            None
+        )
         super().__init__(coordinator)
 
         self._attr_unique_id = coordinator.unique_id
@@ -214,7 +218,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     def color_mode(self) -> ColorMode:
         """Return the current color mode."""
         current = self._tv.ambilight_current_configuration
-        if current and current["isExpert"]:
+        if self._standby_state or (current and current["isExpert"]):
             return ColorMode.HS
 
         if self._tv.ambilight_mode in ["manual", "expert"]:
@@ -235,6 +239,13 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     def _update_from_coordinator(self):
         current = self._tv.ambilight_current_configuration
         color = None
+
+        # Drop the standby state once the TV is fully on or gone
+        if self._standby_state and (
+            not self.coordinator.tv_on or self._tv.powerstate in ("On", None)
+        ):
+            self._standby_state = None
+            self._cache_keys = None
 
         if (cache_keys := _get_cache_keys(self._tv)) != self._cache_keys:
             self._cache_keys = cache_keys
@@ -264,6 +275,15 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         else:
             self._attr_hs_color = None
             self._attr_brightness = None
+
+        # Right after the TV is switched off (powerstate StandbyKeep) its GET
+        # endpoints are stale and report an empty configuration while the
+        # ambilight is lit. Keep what turn_on set until turn_off.
+        if self._standby_state:
+            effect, hs_color, brightness = self._standby_state
+            self._attr_effect = str(effect)
+            self._attr_hs_color = hs_color
+            self._attr_brightness = brightness
 
     @callback
     @override
@@ -381,7 +401,13 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
             else:
                 effect.style = "manual"
 
-        if brightness is None:
+        # In standby the TV acknowledges the manual mode but the ambilight
+        # stays dark. The expert color configuration lights it.
+        if effect.mode == EFFECT_MODE and self._tv.powerstate not in ("On", None):
+            effect = AmbilightEffect(EFFECT_EXPERT, "FOLLOW_COLOR", "MANUAL_HUE")
+
+        # A black cache reports brightness 0
+        if not brightness:
             brightness = 255
 
         if hs_color is None:
@@ -394,12 +420,16 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         elif effect.mode == EFFECT_EXPERT:
             await self._set_ambilight_expert_config(effect, hs_color, brightness)
 
+        if self._tv.powerstate not in ("On", None):
+            self._standby_state = (effect, hs_color, brightness)
         self._update_from_coordinator()
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn of ambilight."""
+        self._standby_state = None
+        self._cache_keys = None
         # A TV that is not reachable has no ambilight running.
         if not self.coordinator.tv_on:
             return
