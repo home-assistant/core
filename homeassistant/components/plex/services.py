@@ -19,7 +19,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import result_as_boolean
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     DOMAIN,
@@ -124,10 +123,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     async def async_search_service(service_call: ServiceCall) -> ServiceResponse:
-        return await hass.async_add_executor_job(search_plex_media, hass, service_call)
+        response = await hass.async_add_executor_job(
+            search_plex_media, hass, service_call
+        )
+        _sign_thumbnails(hass, response)
+        return response
 
     async def async_on_deck_service(service_call: ServiceCall) -> ServiceResponse:
-        return await hass.async_add_executor_job(get_on_deck_media, hass, service_call)
+        response = await hass.async_add_executor_job(
+            get_on_deck_media, hass, service_call
+        )
+        _sign_thumbnails(hass, response)
+        return response
 
     hass.services.async_register(
         DOMAIN,
@@ -167,9 +174,7 @@ def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     library.update()
 
 
-def search_plex_media(
-    hass: HomeAssistant, service_call: ServiceCall
-) -> ServiceResponse:
+def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[str, Any]:
     """Look up Plex media, accepting the same criteria as play_media."""
     data = dict(service_call.data)
     plex_server = get_plex_server(hass, data.pop("server_name", None))
@@ -203,26 +208,24 @@ def search_plex_media(
     except NotFound, MediaNotFound:
         results = []
         fuzzy_enabled = plex_server.option_fuzzy_search if fuzzy is None else fuzzy
-        if fuzzy_enabled and query and library_name and not (plex_key or playlist_name):
+        if fuzzy_enabled and query and library_name and filters == {"title": query}:
             section = plex_server.library.section(library_name)
             results = find_media(plex_server, query, media_type, section, fuzzy=True)
 
-    infos: list[JsonValueType] = []
+    infos: list[dict[str, Any]] = []
     for item in results:
-        info = _media_result_info(hass, item, plex_server)
+        info = _media_result_info(item, plex_server)
         if include_on_deck and item.type == "show":
             episode = item.onDeck()
             info["on_deck"] = (
-                _media_result_info(hass, episode, plex_server) if episode else None
+                _media_result_info(episode, plex_server) if episode else None
             )
         infos.append(info)
 
     return {"results": infos}
 
 
-def get_on_deck_media(
-    hass: HomeAssistant, service_call: ServiceCall
-) -> ServiceResponse:
+def get_on_deck_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[str, Any]:
     """Return unfinished and next up media from the Continue Watching hub."""
     data = service_call.data
     plex_server = get_plex_server(hass, data.get("server_name"))
@@ -238,8 +241,7 @@ def get_on_deck_media(
 
     return {
         "results": [
-            _media_result_info(hass, item, plex_server)
-            for item in items[: data["limit"]]
+            _media_result_info(item, plex_server) for item in items[: data["limit"]]
         ]
     }
 
@@ -258,12 +260,11 @@ def _search_library(
         raise HomeAssistantError(
             f"Library '{library_name}' not found in {library_names}"
         ) from err
+    search_options: dict[str, Any] = {**filters, "allow_multiple": True}
+    if media_type:
+        search_options["libtype"] = media_type
     results = search_media(
-        media_type or "",
-        library_section,
-        allow_multiple=True,
-        libtype=media_type,
-        **filters,
+        search_options.get("libtype", ""), library_section, **search_options
     )
     return results if isinstance(results, list) else [results]
 
@@ -280,23 +281,36 @@ SEARCH_RESULT_ATTRIBUTES = {
     "view_count": "viewCount",
     "library_id": "librarySectionID",
     "library_name": "librarySectionTitle",
-    "episode_count": "leafCount",
-    "watched_episode_count": "viewedLeafCount",
-    "season_count": "childCount",
-    "show_title": "grandparentTitle",
-    "show_rating_key": "grandparentRatingKey",
-    "show_guid": "grandparentGuid",
-    "season_title": "parentTitle",
-    "season_rating_key": "parentRatingKey",
-    "season_guid": "parentGuid",
-    "season_number": "parentIndex",
-    "episode_number": "index",
-    "artist_name": "parentTitle",
 }
 
-SEARCH_RESULT_TYPE_ONLY = {
-    "artist_name": "album",
-    "episode_number": "episode",
+SEARCH_RESULT_TYPE_ATTRIBUTES = {
+    "show": {
+        "episode_count": "leafCount",
+        "watched_episode_count": "viewedLeafCount",
+        "season_count": "childCount",
+    },
+    "season": {
+        "show_title": "parentTitle",
+        "show_rating_key": "parentRatingKey",
+        "show_guid": "parentGuid",
+        "season_number": "index",
+    },
+    "episode": {
+        "show_title": "grandparentTitle",
+        "show_rating_key": "grandparentRatingKey",
+        "show_guid": "grandparentGuid",
+        "season_title": "parentTitle",
+        "season_rating_key": "parentRatingKey",
+        "season_guid": "parentGuid",
+        "season_number": "parentIndex",
+        "episode_number": "index",
+    },
+    "album": {"artist_name": "parentTitle"},
+    "track": {
+        "artist_name": "grandparentTitle",
+        "album_title": "parentTitle",
+        "track_number": "index",
+    },
 }
 
 SEARCH_RESULT_DATES = {
@@ -306,23 +320,29 @@ SEARCH_RESULT_DATES = {
 }
 
 
-def _proxy_thumb_url(
-    hass: HomeAssistant, item: Any, plex_server: PlexServer
-) -> str | None:
-    """Return a signed Home Assistant thumbnail URL that doesn't expose the Plex token."""
+def _proxy_thumb_url(item: Any, plex_server: PlexServer) -> str | None:
+    """Return the Home Assistant proxy path of a thumbnail, without the Plex token."""
     if not (thumb_url := getattr(item, "thumbUrl", None)):
         return None
     plex_server.thumbnail_cache.setdefault(str(item.ratingKey), thumb_url)
-    return async_sign_path(
-        hass,
-        get_proxy_image_url(plex_server.machine_identifier, item.ratingKey),
-        THUMBNAIL_URL_EXPIRATION,
-    )
+    return get_proxy_image_url(plex_server.machine_identifier, item.ratingKey)
 
 
-def _media_result_info(
-    hass: HomeAssistant, item: Any, plex_server: PlexServer
-) -> dict[str, Any]:
+@callback
+def _sign_thumbnails(hass: HomeAssistant, response: dict[str, Any]) -> None:
+    """Sign the thumbnail paths of a response.
+
+    Signing initializes a shared secret, so it runs on the event loop.
+    """
+    for info in response["results"]:
+        for entry in (info, info.get("on_deck")):
+            if entry and (path := entry.get("thumb_url")):
+                entry["thumb_url"] = async_sign_path(
+                    hass, path, THUMBNAIL_URL_EXPIRATION
+                )
+
+
+def _media_result_info(item: Any, plex_server: PlexServer) -> dict[str, Any]:
     """Return info for a Plex media item, usable in automations (e.g. deep links)."""
     info: dict[str, Any] = {
         "title": item.title,
@@ -330,16 +350,15 @@ def _media_result_info(
         "guid": item.guid,
         "rating_key": item.ratingKey,
         "key": item.key,
-        "thumb_url": _proxy_thumb_url(hass, item, plex_server),
+        "thumb_url": _proxy_thumb_url(item, plex_server),
         "server_id": plex_server.machine_identifier,
         "server_name": plex_server.friendly_name,
     }
-    for name, attribute in SEARCH_RESULT_ATTRIBUTES.items():
-        if (
-            name in SEARCH_RESULT_TYPE_ONLY
-            and item.type != SEARCH_RESULT_TYPE_ONLY[name]
-        ):
-            continue
+    attributes = {
+        **SEARCH_RESULT_ATTRIBUTES,
+        **SEARCH_RESULT_TYPE_ATTRIBUTES.get(item.type, {}),
+    }
+    for name, attribute in attributes.items():
         info[name] = getattr(item, attribute, None)
     for name, attribute in SEARCH_RESULT_DATES.items():
         value = getattr(item, attribute, None)
@@ -482,7 +501,10 @@ def process_plex_payload(
     if isinstance(resume, str):
         resume = result_as_boolean(resume)
     if resume and getattr(media, "type", None) == "show":
-        media = media.onDeck() or media
+        if (on_deck := media.onDeck()) is not None:
+            media = on_deck
+        else:
+            content["resume"] = False
 
     if supports_playqueues and (isinstance(media, list) or shuffle or continuous):
         playqueue = plex_server.create_playqueue(

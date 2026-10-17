@@ -24,7 +24,10 @@ from homeassistant.components.plex.const import (
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SEARCH,
 )
-from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.components.plex.services import (
+    _media_result_info,
+    process_plex_payload,
+)
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -518,6 +521,7 @@ async def test_play_show_resumes_on_deck_episode(
             hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
         )
     assert isinstance(result.media, plexapi.video.Show)
+    assert result.offset == 0
 
 
 async def test_on_deck_service(
@@ -566,3 +570,75 @@ async def test_on_deck_service(
         return_response=True,
     )
     assert result["results"] == []
+
+
+async def test_search_service_library_filters(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test library filters can include search options and keep their constraints."""
+    # A libtype in the filters must not clash with the media type
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"library_name": "Movies", "filters": {"libtype": "movie"}},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(result["results"]) == 5
+
+    # Fuzzy matching is not used as a fallback when other filters apply
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=[],
+        __qualname__="search",
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                "library_name": "Movies",
+                "query": "Moovie 1",
+                "year": 1984,
+                "fuzzy": True,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert result["results"] == []
+
+
+async def test_media_result_info_hierarchy(mock_plex_server) -> None:
+    """Test the parent fields describe the right objects for each media type."""
+    season = SimpleNamespace(
+        title="Season 2",
+        type="season",
+        guid="plex://season/1",
+        ratingKey=21,
+        key="/library/metadata/21",
+        parentTitle="TV Show",
+        parentRatingKey=20,
+        parentGuid="plex://show/1",
+        index=2,
+    )
+    info = _media_result_info(season, mock_plex_server)
+    assert info["show_title"] == "TV Show"
+    assert info["show_rating_key"] == 20
+    assert info["show_guid"] == "plex://show/1"
+    assert info["season_number"] == 2
+    assert "season_title" not in info
+
+    track = SimpleNamespace(
+        title="Track 3",
+        type="track",
+        guid="plex://track/1",
+        ratingKey=33,
+        key="/library/metadata/33",
+        parentTitle="Album",
+        grandparentTitle="Artist",
+        index=3,
+    )
+    info = _media_result_info(track, mock_plex_server)
+    assert info["artist_name"] == "Artist"
+    assert info["album_title"] == "Album"
+    assert info["track_number"] == 3
+    assert "show_title" not in info

@@ -119,8 +119,9 @@ IGNORED_LEADING_WORDS = {"the", "a", "an"}
 
 def normalize_title(text: str) -> str:
     """Normalize a title for comparison, ignoring case, accents and punctuation."""
-    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
-    words = re.sub(r"[^a-z0-9]+", " ", text.lower()).split()
+    decomposed = unicodedata.normalize("NFKD", text)
+    stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
+    words = re.sub(r"[\W_]+", " ", stripped.casefold()).split()
     if len(words) > 1 and words[0] in IGNORED_LEADING_WORDS:
         words = words[1:]
     return " ".join(words)
