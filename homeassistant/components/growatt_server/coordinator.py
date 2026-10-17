@@ -43,6 +43,10 @@ _MAX_POWER_READING_AGE = dt.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
 
+# Growatt reports an unset setting as the string "null" or as an empty string,
+# not by omitting the key.
+NULL_SENTINELS = (None, "null", "")
+
 
 def _latest_power_value(
     power_overview: dict[str, Any], now: dt.datetime
@@ -643,6 +647,102 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "enabled": enabled,
         }
 
+    async def _fetch_classic_mix_settings(self, required_keys: list[str]) -> dict:
+        """Fetch classic Mix settings (getMixSetParams) for the AC read services."""
+        try:
+            response = await self.hass.async_add_executor_job(
+                self.api.get_mix_inverter_settings, self.device_id
+            )
+        except (RequestException, json.JSONDecodeError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mix_settings_read_failed",
+            ) from err
+        # Unlike its siblings, this endpoint returns the raw envelope unvalidated,
+        # so any level of it can be a non-object on a failure payload.
+        obj = response.get("obj") if isinstance(response, dict) else None
+        settings = obj.get("mixBean") if isinstance(obj, dict) else None
+        if not isinstance(settings, dict) or not settings:
+            _LOGGER.debug(
+                "No mixBean in settings response for %s: %r", self.device_id, response
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mix_settings_empty",
+            )
+        # Every write is a read-merge-write, so a field missing here would be
+        # written back as a 0/100/disabled default over whatever the device
+        # currently holds. Reject the payload instead of silently losing it.
+        if missing := [k for k in required_keys if settings.get(k) in NULL_SENTINELS]:
+            _LOGGER.debug(
+                "Incomplete mixBean for %s, missing %s: %r",
+                self.device_id,
+                missing,
+                settings,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mix_settings_incomplete",
+            )
+        return settings
+
+    @staticmethod
+    def _ac_period_keys(time_type: str) -> list[str]:
+        """List the per-period settings keys for a charge/discharge schedule."""
+        return [
+            f"forced{time_type}{field}{i}"
+            for i in range(1, 4)
+            for field in ("TimeStart", "TimeStop", "StopSwitch")
+        ]
+
+    def _parse_ac_time_periods(self, settings: dict, time_type: str) -> list[dict]:
+        """Parse AC charge/discharge time periods from classic Mix settings data."""
+        return [
+            {
+                "period_id": i,
+                "start_time": self._parse_ac_time(
+                    settings[f"forced{time_type}TimeStart{i}"]
+                ),
+                "end_time": self._parse_ac_time(
+                    settings[f"forced{time_type}TimeStop{i}"]
+                ),
+                "enabled": self._parse_ac_int(
+                    settings[f"forced{time_type}StopSwitch{i}"]
+                )
+                == 1,
+            }
+            for i in range(1, 4)
+        ]
+
+    @staticmethod
+    def _invalid_mix_settings() -> HomeAssistantError:
+        """Build the error raised when a Mix settings value cannot be parsed."""
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="mix_settings_invalid",
+        )
+
+    def _parse_ac_time(self, time_raw: Any) -> str:
+        """Parse a classic Mix schedule time, rejecting values that do not parse.
+
+        _format_time maps anything unparsable to 00:00, which a read-merge-write
+        would then write over the device's real period.
+        """
+        try:
+            hour, minute = (int(part) for part in str(time_raw).split(":"))
+        except ValueError as err:
+            raise self._invalid_mix_settings() from err
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise self._invalid_mix_settings()
+        return f"{hour:02d}:{minute:02d}"
+
+    def _parse_ac_int(self, raw: Any) -> int:
+        """Parse an integer classic Mix setting, rejecting values that do not parse."""
+        try:
+            return int(raw)
+        except (TypeError, ValueError) as err:
+            raise self._invalid_mix_settings() from err
+
     def _format_time(self, time_raw: str) -> str:
         """Format time string to HH:MM format."""
         try:
@@ -654,6 +754,21 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             return f"{hour:02d}:{minute:02d}"
 
+    @staticmethod
+    def _encode_periods(periods: list[dict]) -> list[str]:
+        """Flatten schedule periods into classic mixSet positional params."""
+        return [
+            value
+            for period in periods
+            for value in (
+                str(period["start_time"].hour),
+                str(period["start_time"].minute),
+                str(period["end_time"].hour),
+                str(period["end_time"].minute),
+                "1" if period["enabled"] else "0",
+            )
+        ]
+
     async def update_ac_charge_times(
         self,
         charge_power: int,
@@ -661,35 +776,62 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         mains_enabled: bool,
         periods: list[dict],
     ) -> None:
-        """Update AC charge time periods for SPH device.
+        """Update AC charge time periods for SPH/Mix device.
 
         Args:
             charge_power: Charge power limit (0-100 %)
             charge_stop_soc: Stop charging at this SOC level (0-100 %)
             mains_enabled: Whether AC (mains) charging is enabled
-            periods: List of up to 3 dicts with keys start_time, end_time, enabled
+            periods: List of 3 dicts with keys start_time, end_time, enabled
         """
-        if self.api_version != "v1":
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="token_auth_required",
-            )
-
-        try:
-            await self.hass.async_add_executor_job(
-                self.api.sph_write_ac_charge_times,
-                self.device_id,
-                charge_power,
-                charge_stop_soc,
-                mains_enabled,
-                periods,
-            )
-        except growattServer.GrowattV1ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        if self.api_version == "v1":
+            try:
+                await self.hass.async_add_executor_job(
+                    self.api.sph_write_ac_charge_times,
+                    self.device_id,
+                    charge_power,
+                    charge_stop_soc,
+                    mains_enabled,
+                    periods,
+                )
+            except growattServer.GrowattV1ApiError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+        else:
+            # Classic (username/password) auth — same underlying mixSet endpoint,
+            # addressed via positional params instead of the V1 named payload.
+            params = [
+                str(charge_power),
+                str(charge_stop_soc),
+                "1" if mains_enabled else "0",
+                *self._encode_periods(periods),
+            ]
+            try:
+                result = await self.hass.async_add_executor_job(
+                    self.api.update_mix_inverter_setting,
+                    self.device_id,
+                    "mix_ac_charge_time_period",
+                    params,
+                )
+            except (
+                growattServer.GrowattError,
+                RequestException,
+                json.JSONDecodeError,
+            ) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            if not isinstance(result, dict) or result.get("success") is not True:
+                _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="mix_write_rejected",
+                )
 
         if self.data:
             self.data["chargePowerCommand"] = charge_power
@@ -702,9 +844,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.data[f"forcedChargeTimeStop{i}"] = period["end_time"].strftime(
                     "%H:%M"
                 )
-                self.data[f"forcedChargeStopSwitch{i}"] = (
-                    1 if period.get("enabled", False) else 0
-                )
+                self.data[f"forcedChargeStopSwitch{i}"] = 1 if period["enabled"] else 0
             self.async_set_updated_data(self.data)
 
     async def update_ac_discharge_times(
@@ -713,33 +853,58 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         discharge_stop_soc: int,
         periods: list[dict],
     ) -> None:
-        """Update AC discharge time periods for SPH device.
+        """Update AC discharge time periods for SPH/Mix device.
 
         Args:
             discharge_power: Discharge power limit (0-100 %)
             discharge_stop_soc: Stop discharging at this SOC level (0-100 %)
-            periods: List of up to 3 dicts with keys start_time, end_time, enabled
+            periods: List of 3 dicts with keys start_time, end_time, enabled
         """
-        if self.api_version != "v1":
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="token_auth_required",
-            )
-
-        try:
-            await self.hass.async_add_executor_job(
-                self.api.sph_write_ac_discharge_times,
-                self.device_id,
-                discharge_power,
-                discharge_stop_soc,
-                periods,
-            )
-        except growattServer.GrowattV1ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        if self.api_version == "v1":
+            try:
+                await self.hass.async_add_executor_job(
+                    self.api.sph_write_ac_discharge_times,
+                    self.device_id,
+                    discharge_power,
+                    discharge_stop_soc,
+                    periods,
+                )
+            except growattServer.GrowattV1ApiError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+        else:
+            # Same mixSet endpoint as charge; discharge has no mains-enable param.
+            params = [
+                str(discharge_power),
+                str(discharge_stop_soc),
+                *self._encode_periods(periods),
+            ]
+            try:
+                result = await self.hass.async_add_executor_job(
+                    self.api.update_mix_inverter_setting,
+                    self.device_id,
+                    "mix_ac_discharge_time_period",
+                    params,
+                )
+            except (
+                growattServer.GrowattError,
+                RequestException,
+                json.JSONDecodeError,
+            ) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            if not isinstance(result, dict) or result.get("success") is not True:
+                _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="mix_write_rejected",
+                )
 
         if self.data:
             self.data["disChargePowerCommand"] = discharge_power
@@ -752,36 +917,60 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "%H:%M"
                 )
                 self.data[f"forcedDischargeStopSwitch{i}"] = (
-                    1 if period.get("enabled", False) else 0
+                    1 if period["enabled"] else 0
                 )
             self.async_set_updated_data(self.data)
 
     async def read_ac_charge_times(self) -> dict:
-        """Read AC charge time settings from SPH device cache."""
-        if self.api_version != "v1":
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="token_auth_required",
+        """Read AC charge time settings for SPH/Mix device."""
+        if self.api_version == "v1":
+            if not self.data:
+                await self.async_refresh()
+            return self.api.sph_read_ac_charge_times(
+                self.device_id, settings_data=self.data
             )
 
-        if not self.data:
-            await self.async_refresh()
-
-        return self.api.sph_read_ac_charge_times(
-            self.device_id, settings_data=self.data
+        # getMixSetParams returns wchargeSOCLowLimit1/wchargeSOCLowLimit2 rather
+        # than a single value; "2" is the one the app displays as the AC
+        # charge schedule's stop SOC (verified against real hardware).
+        settings = await self._fetch_classic_mix_settings(
+            [
+                "chargePowerCommand",
+                "wchargeSOCLowLimit2",
+                "acChargeEnable",
+                *self._ac_period_keys("Charge"),
+            ]
         )
+        return {
+            "charge_power": self._parse_ac_int(settings["chargePowerCommand"]),
+            "charge_stop_soc": self._parse_ac_int(settings["wchargeSOCLowLimit2"]),
+            "mains_enabled": self._parse_ac_int(settings["acChargeEnable"]) == 1,
+            "periods": self._parse_ac_time_periods(settings, "Charge"),
+        }
 
     async def read_ac_discharge_times(self) -> dict:
-        """Read AC discharge time settings from SPH device cache."""
-        if self.api_version != "v1":
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="token_auth_required",
+        """Read AC discharge time settings for SPH/Mix device."""
+        if self.api_version == "v1":
+            if not self.data:
+                await self.async_refresh()
+            return self.api.sph_read_ac_discharge_times(
+                self.device_id, settings_data=self.data
             )
 
-        if not self.data:
-            await self.async_refresh()
-
-        return self.api.sph_read_ac_discharge_times(
-            self.device_id, settings_data=self.data
+        # See the charge_stop_soc comment above — "2" is the variant the
+        # app displays as the AC discharge schedule's stop SOC (not the
+        # off-grid offGridDischargeSOC field).
+        settings = await self._fetch_classic_mix_settings(
+            [
+                "disChargePowerCommand",
+                "wdisChargeSOCLowLimit2",
+                *self._ac_period_keys("Discharge"),
+            ]
         )
+        return {
+            "discharge_power": self._parse_ac_int(settings["disChargePowerCommand"]),
+            "discharge_stop_soc": self._parse_ac_int(
+                settings["wdisChargeSOCLowLimit2"]
+            ),
+            "periods": self._parse_ac_time_periods(settings, "Discharge"),
+        }
