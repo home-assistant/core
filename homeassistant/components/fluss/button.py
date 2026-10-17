@@ -36,8 +36,10 @@ class FlussButton(FlussEntity, ButtonEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True only when the device is online."""
-        return super().available and self.device["internetConnected"]
+        """Return True unless the device is known to be offline."""
+        # Unknown connectivity (a failed status fetch) leaves the button usable:
+        # it is a write-only control and a failed press reports its own error.
+        return super().available and self.device.get("internetConnected", True)
 
     @override
     async def async_press(self) -> None:

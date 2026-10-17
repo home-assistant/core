@@ -56,8 +56,10 @@ class FlussCover(FlussEntity, CoverEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True only when the device is online."""
-        return super().available and self.device["internetConnected"]
+        """Return True only when the device is known to be online."""
+        # Unknown connectivity keeps the cover unavailable: without status it
+        # cannot report a position.
+        return super().available and self.device.get("internetConnected", False)
 
     @property
     @override
