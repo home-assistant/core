@@ -143,14 +143,21 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Extend source map and source list."""
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
+        listed = {item["title"].lower() for item in sources if item.get("title")}
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
             if not title or not uri:
                 continue
             self.source_map[uri] = {**item, "type": source_type}
-            if add_to_list and title not in self.source_list:
-                self.source_list.append(title)
+            if add_to_list:
+                if title not in self.source_list:
+                    self.source_list.append(title)
+                # Extra entry so the reported source keeps its generic name.
+                label = item.get("label")
+                if label and label.lower() not in listed:
+                    listed.add(label.lower())
+                    self.source_list.append(label)
 
     @override
     async def _async_update_data(self) -> None:
@@ -294,6 +301,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if query.startswith(("extInput:", "tv:", "com.sony.dtv.")):
             return await self.async_source_start(query, source_type)
         coarse_uri = None
+        label_uri = None
         is_numeric_search = source_type == SourceType.CHANNEL and query.isnumeric()
         for uri, item in self.source_map.items():
             if item["type"] == source_type:
@@ -305,8 +313,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     title: str = item["title"]
                     if query.lower() == title.lower():
                         return await self.async_source_start(uri, source_type)
+                    # A generic name always wins so a duplicate label can't hijack it.
+                    if (label := item.get("label")) and query.lower() == label.lower():
+                        label_uri = label_uri or uri
                     if query.lower() in title.lower():
                         coarse_uri = uri
+        if label_uri:
+            return await self.async_source_start(label_uri, source_type)
         if coarse_uri:
             return await self.async_source_start(coarse_uri, source_type)
         raise ValueError(f"Not found {source_type}: {query}")
