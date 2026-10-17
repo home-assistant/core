@@ -121,10 +121,11 @@ jobs:
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
           HASH_GEN_REQUIREMENTS: ${{ hashFiles('script/gen_requirements_all.py') }}
+          HASH_EDITABLE_PACKAGES: ${{ hashFiles('pyproject.toml', 'packages/hassfest/pyproject.toml', 'packages/hassfest/setup.py', '.github/actions/restore-or-build-venv/action.yml') }}
         run: |
           # Include HA_SHORT_VERSION to force the immediate creation
           # of a new uv cache entry after a version bump.
-          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
+          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}-${HASH_EDITABLE_PACKAGES}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: core
