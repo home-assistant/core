@@ -44,6 +44,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 minutes_day_sleep=100,
                 minutes_night_sleep=300,
                 minutes_rest=122,
+                weight=23700,
             )
         },
     )
