@@ -18,7 +18,7 @@ The checker also follows calls to functions defined in the same module,
 so service registrations inside helper functions called from
 ``async_setup_entry`` are caught too.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup/
+https://contributors.home-assistant.io/core/quality-scale/action-setup/
 """
 
 from astroid import nodes
@@ -100,8 +100,8 @@ class ServiceRegistrationChecker(BaseChecker):
     msgs = {
         "W7414": (
             "Service registered in `async_setup_entry` instead of `async_setup` "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/action-setup)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/action-setup/)",
             "home-assistant-service-registered-in-setup-entry",
             "Used when a service is registered inside async_setup_entry "
             "or a function called from it. Services should be registered "

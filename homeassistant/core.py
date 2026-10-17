@@ -652,7 +652,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -708,7 +708,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+            "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.5",
@@ -982,7 +982,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",

@@ -1330,6 +1330,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "debug_console": {
+      "name": "Debug console",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
     "debugpy": {
       "name": "Remote Python Debugger",
       "integration_type": "service",
@@ -2315,6 +2321,11 @@
     "frankever": {
       "name": "FrankEver",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "free_mobile": {
@@ -4051,6 +4062,11 @@
     "linkedgo": {
       "name": "LinkedGo",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "linkplay": {
@@ -4884,6 +4900,11 @@
     "neo": {
       "name": "Neo",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "neopool": {
@@ -5206,6 +5227,11 @@
     "ogemray": {
       "name": "Ogemray",
       "integration_type": "virtual",
+      "categories": [
+        "plugs_switches",
+        "lighting.bulbs_lamps",
+        "energy.meters_monitoring"
+      ],
       "supported_by": "shelly"
     },
     "ogeneral": {
@@ -6644,6 +6670,11 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
+          "categories": [
+            "plugs_switches",
+            "lighting.bulbs_lamps",
+            "energy.meters_monitoring"
+          ],
           "name": "Shelly"
         }
       },
