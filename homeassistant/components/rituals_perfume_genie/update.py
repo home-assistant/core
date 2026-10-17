@@ -48,6 +48,23 @@ async def async_setup_entry(
     )
 
 
+def _version(firmware: RitualsGenieFirmware, current: bool) -> str | None:
+    """Return a firmware version, with its ID when Rituals numbers both.
+
+    Two builds can carry the same version. Only with the ID in there they
+    tell apart, otherwise an update between them would look like none.
+    """
+    version = firmware.current if current else firmware.newest
+    if version is None:
+        return None
+
+    if firmware.current_id is None or firmware.newest_id is None:
+        return str(version)
+
+    firmware_id = firmware.current_id if current else firmware.newest_id
+    return f"{version} ({firmware_id})"
+
+
 class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
     """Representation of the firmware of a diffuser."""
 
@@ -74,19 +91,19 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
     @override
     def installed_version(self) -> str | None:
         """Return the firmware the diffuser runs."""
-        if (firmware := self._firmware) is None or firmware.current is None:
+        if (firmware := self._firmware) is None:
             return None
 
-        return str(firmware.current)
+        return _version(firmware, current=True)
 
     @property
     @override
     def latest_version(self) -> str | None:
         """Return the newest firmware Rituals has for the diffuser."""
-        if (firmware := self._firmware) is None or firmware.newest is None:
+        if (firmware := self._firmware) is None:
             return None
 
-        return str(firmware.newest)
+        return _version(firmware, current=False)
 
     @property
     @override
@@ -134,14 +151,13 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
         if self.available:
             self._sync_device_firmware()
 
-            # Done once the diffuser runs the newest firmware.
-            installed = self.installed_version
-            latest = self.latest_version
+            # Done once the diffuser runs the newest firmware. Unknown
+            # versions don't count as done: they might be on their way.
             if (
                 self._installing
-                and installed is not None
-                and latest is not None
-                and not self.version_is_newer(latest, installed)
+                and self.installed_version is not None
+                and self.latest_version is not None
+                and not self.has_update
             ):
                 self._installing_finished()
 
@@ -154,9 +170,11 @@ class RitualsUpdateEntity(DiffuserEntity, UpdateEntity):
         The device info is only read when the entity is added, so without
         this the device page keeps the firmware it had at setup.
         """
-        if (version := self.installed_version) is None:
+        if (firmware := self._firmware) is None or firmware.current is None:
             return
 
+        # Without the ID, the same as the device info has it.
+        version = str(firmware.current)
         registry = dr.async_get(self.hass)
         device = registry.async_get_device_by_identifier(
             (DOMAIN, self.hublot), self.coordinator.config_entry.entry_id

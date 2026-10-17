@@ -64,7 +64,7 @@ class MockDiffuser:
     perfume: str = "Ritual of Sakura"
     perfume_amount: int = 2
     room_size_square_meter: int = 60
-    version: str = "4.0"
+    version: str | None = "4.0"
     firmware_id: int | None = 127
     has_firmware_info: bool = True
     newest_version: str | None = None

@@ -1,6 +1,7 @@
 """Tests for the Rituals Perfume Genie update platform."""
 
 from datetime import timedelta
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -51,8 +52,8 @@ async def test_up_to_date(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "5.4"
-    assert state.attributes[ATTR_LATEST_VERSION] == "5.4"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "5.4 (127)"
+    assert state.attributes[ATTR_LATEST_VERSION] == "5.4 (127)"
 
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry
@@ -79,7 +80,33 @@ async def test_update_available_by_firmware_id(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_LATEST_VERSION] == "5.4-rc4"
+    assert state.attributes[ATTR_LATEST_VERSION] == "5.4-rc4 (130)"
+
+
+async def test_update_same_version_other_build(hass: HomeAssistant) -> None:
+    """Test a newer build with the same version can be installed."""
+    config_entry = mock_config_entry(unique_id="id_123_update_same_version")
+    client = await init_integration(
+        hass,
+        config_entry,
+        [
+            mock_diffuser(
+                "lot123", version="5.4", newest_version="5.4", newest_firmware_id=130
+            )
+        ],
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "5.4 (127)"
+    assert state.attributes[ATTR_LATEST_VERSION] == "5.4 (130)"
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    client.update_firmware.assert_called_once()
 
 
 async def test_update_available_by_version(hass: HomeAssistant) -> None:
@@ -100,14 +127,17 @@ async def test_update_available_by_version(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    "firmware",
+    [{"has_firmware_info": False}, {"version": None}],
+    ids=["no_firmware_info", "no_versions"],
+)
 async def test_no_firmware_info(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, firmware: dict[str, Any]
 ) -> None:
     """Test a diffuser that doesn't report its firmware."""
     config_entry = mock_config_entry(unique_id="id_123_update_no_firmware")
-    await init_integration(
-        hass, config_entry, [mock_diffuser("lot123", has_firmware_info=False)]
-    )
+    await init_integration(hass, config_entry, [mock_diffuser("lot123", **firmware)])
     await _tick(hass, freezer, timedelta(minutes=5))
 
     state = hass.states.get(ENTITY_ID)
@@ -118,8 +148,8 @@ async def test_no_firmware_info(
 
 
 @pytest.mark.parametrize(
-    ("firmware_id", "newest_firmware_id"),
-    [(127, 130), (None, None)],
+    ("firmware_id", "newest_firmware_id", "installed"),
+    [(127, 130, "5.5 (130)"), (None, None, "5.5")],
     ids=["firmware_ids", "versions_only"],
 )
 async def test_install(
@@ -128,6 +158,7 @@ async def test_install(
     device_registry: dr.DeviceRegistry,
     firmware_id: int | None,
     newest_firmware_id: int | None,
+    installed: str,
 ) -> None:
     """Test installing firmware, until the diffuser runs it."""
     config_entry = mock_config_entry(unique_id="id_123_update_install")
@@ -170,7 +201,7 @@ async def test_install(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "5.5"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == installed
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "lot123"), config_entry.entry_id
@@ -204,6 +235,35 @@ async def test_install_timeout(
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
+
+
+async def test_install_incomparable_versions(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an install keeps going when versions can't be compared."""
+    config_entry = mock_config_entry(unique_id="id_123_update_incomparable")
+    await init_integration(
+        hass,
+        config_entry,
+        [
+            mock_diffuser(
+                "lot123", version="5.4", newest_version="build-x", firmware_id=None
+            )
+        ],
+    )
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    await _tick(hass, freezer, timedelta(minutes=5))
+
+    assert "AwesomeVersionCompareException" not in caplog.text
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is True
 
 
 async def test_install_failed(hass: HomeAssistant) -> None:
