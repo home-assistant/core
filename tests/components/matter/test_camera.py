@@ -685,10 +685,12 @@ async def test_camera_webrtc_claimed_answer_not_replayed(
 
 
 @pytest.mark.parametrize(
-    ("end_events", "expected_message", "stop_calls"),
+    ("end_events", "new_answers", "expected_message", "stop_calls"),
     [
-        pytest.param([], {"type": "answer", "answer": "second"}, 2, id="closed"),
-        pytest.param(["end"], ENDED_MESSAGE, 0, id="ended"),
+        pytest.param(
+            (), ("second",), {"type": "answer", "answer": "second"}, 2, id="closed"
+        ),
+        pytest.param(("end",), (), ENDED_MESSAGE, 0, id="ended"),
     ],
 )
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
@@ -697,7 +699,8 @@ async def test_camera_webrtc_delivered_events_not_replayed(
     matter_client: MagicMock,
     matter_node: MatterNode,
     hass_ws_client: WebSocketGenerator,
-    end_events: list[str],
+    end_events: tuple[str, ...],
+    new_answers: tuple[str, ...],
     expected_message: dict[str, Any],
     stop_calls: int,
 ) -> None:
@@ -714,8 +717,8 @@ async def test_camera_webrtc_delivered_events_not_replayed(
     matter_client.camera_start_stream.side_effect = blocked_offer
     second_subscription_id, _ = await _send_offer(client)
 
-    # The first session is answered, and maybe ended by the camera, while the
-    # second offer is in flight.
+    # The first session is answered while the second offer is in flight, and
+    # the id may then be ended.
     for event_type in ("answer", *end_events):
         await trigger_subscription_callback(
             hass,
@@ -732,12 +735,13 @@ async def test_camera_webrtc_delivered_events_not_replayed(
     # not get the first session's answer.
     release.set()
     await hass.async_block_till_done()
-    await trigger_subscription_callback(
-        hass,
-        matter_client,
-        event=EventType.WEBRTC_CALLBACK,
-        data=_webrtc_callback_data(matter_node, "answer", {"sdp": "second"}),
-    )
+    for sdp in new_answers:
+        await trigger_subscription_callback(
+            hass,
+            matter_client,
+            event=EventType.WEBRTC_CALLBACK,
+            data=_webrtc_callback_data(matter_node, "answer", {"sdp": sdp}),
+        )
     response = await client.receive_json()
     assert response["id"] == second_subscription_id
     assert response["event"] == expected_message
