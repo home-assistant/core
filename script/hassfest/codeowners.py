@@ -29,6 +29,7 @@ requirements_test.txt @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
+/packages/pytest-home-assistant/ @home-assistant/core
 /pylint/ @home-assistant/core
 /script/ @home-assistant/core
 
