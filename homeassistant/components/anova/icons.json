@@ -19,6 +19,14 @@
       "water_temperature": {
         "default": "mdi:thermometer"
       }
+    },
+    "switch": {
+      "cook": {
+        "default": "mdi:pot-steam-outline",
+        "state": {
+          "on": "mdi:pot-steam"
+        }
+      }
     }
   }
 }
