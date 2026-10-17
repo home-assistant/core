@@ -1,4 +1,55 @@
 # serializer version: 1
+# name: test_all_entities[sensor.air_conditioner_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_conditioner_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': '8765432109876543210-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air conditioner Active program',
+      'raw_value': <ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO: 'HeatingVentilationAirConditioning.AirConditioner.Program.Auto'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_conditioner_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto',
+  })
+# ---
 # name: test_all_entities[sensor.air_conditioner_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -184,6 +235,108 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.air_conditioner_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': '8765432109876543210-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.air_conditioner_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air conditioner Selected program',
+      'raw_value': <ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO: 'HeatingVentilationAirConditioning.AirConditioner.Program.Auto'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_conditioner_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto',
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Active program',
+      'raw_value': <ProgramKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_ESPRESSO: 'ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Espresso',
   })
 # ---
 # name: test_all_entities[sensor.coffeemaker_bean_container_empty-entry]
@@ -1602,6 +1755,57 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities[sensor.coffeemaker_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffeemaker_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'BOSCH-HCS06COM1-D70390681C2C-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.coffeemaker_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoffeeMaker Selected program',
+      'raw_value': <ProgramKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_ESPRESSO: 'ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffeemaker_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Espresso',
+  })
+# ---
 # name: test_all_entities[sensor.coffeemaker_water_tank_empty-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1973,6 +2177,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Active program',
+      'raw_value': <ProgramKey.DISHCARE_DISHWASHER_AUTO_1: 'Dishcare.Dishwasher.Program.Auto1'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto 1',
   })
 # ---
 # name: test_all_entities[sensor.dishwasher_door-entry]
@@ -2833,6 +3088,57 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[sensor.dishwasher_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Selected program',
+      'raw_value': <ProgramKey.DISHCARE_DISHWASHER_AUTO_1: 'Dishcare.Dishwasher.Program.Auto1'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto 1',
+  })
+# ---
 # name: test_all_entities[sensor.dishwasher_smart_filter_cleaning_reminder-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3029,6 +3335,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Active program',
+      'raw_value': <ProgramKey.LAUNDRY_CARE_DRYER_COTTON: 'LaundryCare.Dryer.Program.Cotton'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cotton',
   })
 # ---
 # name: test_all_entities[sensor.dryer_door-entry]
@@ -3391,6 +3748,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.dryer_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'BOSCH-HCS04DYR1-831694AE3C5A-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dryer_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Selected program',
+      'raw_value': <ProgramKey.LAUNDRY_CARE_DRYER_COTTON: 'LaundryCare.Dryer.Program.Cotton'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cotton',
   })
 # ---
 # name: test_all_entities[sensor.freezer_door-entry]
@@ -4359,6 +4767,57 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[sensor.hood_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Active program',
+      'raw_value': <ProgramKey.COOKING_COMMON_HOOD_AUTOMATIC: 'Cooking.Common.Program.Hood.Automatic'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Automatic',
+  })
+# ---
 # name: test_all_entities[sensor.hood_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4845,6 +5304,107 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities[sensor.hood_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Selected program',
+      'raw_value': <ProgramKey.COOKING_COMMON_HOOD_AUTOMATIC: 'Cooking.Common.Program.Hood.Automatic'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Automatic',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': '541513213246313789-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Active program',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.microwave_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5205,6 +5765,107 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.microwave_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.microwave_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': '541513213246313789-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.microwave_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Selected program',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.microwave_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.oven_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Active program',
+      'raw_value': <ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR: 'Cooking.Oven.Program.HeatingMode.HotAir'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Hot Air',
   })
 # ---
 # name: test_all_entities[sensor.oven_alarm_clock_elapsed-entry]
@@ -5693,6 +6354,57 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[sensor.oven_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.oven_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.oven_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Selected program',
+      'raw_value': <ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR: 'Cooking.Oven.Program.HeatingMode.HotAir'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Hot Air',
+  })
+# ---
 # name: test_all_entities[sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5889,6 +6601,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.washer_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Active program',
+      'raw_value': <ProgramKey.LAUNDRY_CARE_WASHER_COTTON: 'LaundryCare.Washer.Program.Cotton'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cotton',
   })
 # ---
 # name: test_all_entities[sensor.washer_door-entry]
@@ -6315,6 +7078,108 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities[sensor.washer_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'SIEMENS-HCS03WCH1-7BC6383CF794-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washer_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Selected program',
+      'raw_value': <ProgramKey.LAUNDRY_CARE_WASHER_COTTON: 'LaundryCare.Washer.Program.Cotton'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cotton',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_active_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_active_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_program',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Root.ActiveProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_active_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Active program',
+      'raw_value': <ProgramKey.LAUNDRY_CARE_WASHER_DRYER_MIX: 'LaundryCare.WasherDryer.Program.Mix'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_active_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix',
+  })
+# ---
 # name: test_all_entities[sensor.washerdryer_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6737,5 +7602,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_selected_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washerdryer_selected_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected program',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected program',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_program',
+    'unique_id': 'BOSCH-HCS000000-D00000000001-BSH.Common.Root.SelectedProgram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.washerdryer_selected_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WasherDryer Selected program',
+      'raw_value': <ProgramKey.LAUNDRY_CARE_WASHER_DRYER_MIX: 'LaundryCare.WasherDryer.Program.Mix'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washerdryer_selected_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix',
   })
 # ---
