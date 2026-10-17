@@ -250,7 +250,7 @@ async def test_devices_in_dr(
     [
         ("yna5x1", 27),
         ("5xu9h3", 25),
-        ("twunby", 40),
+        ("twunby", 50),
         ("123", 3),
     ],
 )
