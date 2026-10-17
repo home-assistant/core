@@ -1,0 +1,14 @@
+{
+  "status": "approved",
+  "accessToken": "mock-access-token",
+  "accessTokenExpiresAt": "2026-08-12T12:10:00Z",
+  "refreshToken": "mock-refresh-token",
+  "refreshTokenExpiresAt": "2026-11-10T12:00:00Z",
+  "device": {
+    "id": "7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3001",
+    "name": "Home Assistant",
+    "platform": "linux",
+    "relationId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+    "relationType": "spaces.Space"
+  }
+}

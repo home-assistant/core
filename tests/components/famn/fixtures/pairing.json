@@ -1,0 +1,7 @@
+{
+  "pairingId": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5001",
+  "userCode": "ABCD-EFGH",
+  "verificationUrl": "https://famn.app/link?p=2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5001",
+  "qrUrl": "https://famn.app/link?p=2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5001&s=mock-pairing-secret",
+  "expiresAt": "2026-08-12T12:05:00Z"
+}
