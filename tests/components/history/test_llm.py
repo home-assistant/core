@@ -224,7 +224,14 @@ async def test_call_through_api(
     "tool_args",
     [
         pytest.param({}, id="defaults"),
-        pytest.param({"start_time": "2026-10-12T09:00:00Z"}, id="auto_period_5minute"),
+        pytest.param(
+            {"start_time": "2026-10-12T09:00:00Z"},
+            id="auto_period_5minute_falls_back_to_hour",
+        ),
+        pytest.param(
+            {"start_time": "2026-10-12T09:00:00Z", "period": "5minute"},
+            id="period_5minute_no_fallback",
+        ),
         pytest.param({"start_time": "2026-10-09T12:00:00Z"}, id="auto_period_day"),
         pytest.param(
             {

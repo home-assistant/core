@@ -83,7 +83,8 @@ def _get_statistics(
     end_time: datetime,
     entity_ids: list[str],
     period: _Period,
-) -> dict[str, Any]:
+    fall_back_to_hour: bool,
+) -> JsonObjectType:
     """Fetch and format the long-term statistics in the recorder executor."""
     metadata = statistics.get_metadata(hass, statistic_ids=set(entity_ids))
     entity_types: dict[str, list[_StatisticType]] = {}
@@ -95,21 +96,27 @@ def _get_statistics(
             types.append("mean")
         if meta["has_sum"]:
             types.append("change")
-    rows = (
-        statistics.statistics_during_period(
+
+    def query(query_period: _Period) -> dict[str, list[statistics.StatisticsRow]]:
+        return statistics.statistics_during_period(
             hass,
             start_time,
             # The recorder moves the end time to the next period boundary, which
             # includes the period that starts at end_time.
             end_time - timedelta(microseconds=1),
             set(entity_types),
-            period,
+            query_period,
             None,
             {stat_type for types in entity_types.values() for stat_type in types},
         )
-        if entity_types
-        else {}
-    )
+
+    rows: dict[str, list[statistics.StatisticsRow]] = {}
+    if entity_types:
+        rows = query(period)
+        # Some statistics, such as imported ones, only have hourly rows.
+        if fall_back_to_hour and not any(rows.values()):
+            period = "hour"
+            rows = query(period)
     result: dict[str, Any] = {}
     for entity_id in entity_ids:
         if (columns := entity_types.get(entity_id)) is None:
@@ -134,7 +141,7 @@ def _get_statistics(
             ],
         )
         result[entity_id] = entry
-    return result
+    return {"period": period, "entities": result}
 
 
 def _parse_time(value: str) -> datetime | None:
@@ -224,6 +231,7 @@ class GetHistoryTool(Tool):
             )
 
         span = end_time - start_time
+        auto_period = "period" not in args
         period: _Period = args.get("period") or _auto_period(
             span,
             # The recorder purges short-term statistics after keep_days.
@@ -241,17 +249,15 @@ class GetHistoryTool(Tool):
                 error=True,
             )
 
-        result: JsonObjectType = {
-            "period": period,
-            "entities": await get_instance(hass).async_add_executor_job(
-                _get_statistics,
-                hass,
-                start_time,
-                end_time,
-                args["entity_ids"],
-                period,
-            ),
-        }
+        result = await get_instance(hass).async_add_executor_job(
+            _get_statistics,
+            hass,
+            start_time,
+            end_time,
+            args["entity_ids"],
+            period,
+            auto_period and period == "5minute",
+        )
         return ToolResult(data={"result": result})
 
 

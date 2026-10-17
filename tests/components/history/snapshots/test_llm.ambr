@@ -1,11 +1,14 @@
 # serializer version: 1
-# name: test_get_statistics[auto_period_5minute]
+# name: test_get_statistics[auto_period_5minute_falls_back_to_hour]
   dict({
     'result': dict({
       'entities': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
+            2026-10-12T02:00:00-07:00,1.5
+            2026-10-12T03:00:00-07:00,1.5
+            2026-10-12T04:00:00-07:00,1.5
   
           ''',
           'unit': 'kWh',
@@ -16,12 +19,15 @@
         'sensor.temperature': dict({
           'csv': '''
             start,mean,min,max
+            2026-10-12T02:00:00-07:00,23,68,70
+            2026-10-12T03:00:00-07:00,23.3333,69,71
+            2026-10-12T04:00:00-07:00,23.6667,70,72
   
           ''',
           'unit': '°C',
         }),
       }),
-      'period': '5minute',
+      'period': 'hour',
     }),
   })
 # ---
@@ -186,6 +192,32 @@
         }),
       }),
       'period': 'hour',
+    }),
+  })
+# ---
+# name: test_get_statistics[period_5minute_no_fallback]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': 'No statistics are recorded for this entity.',
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+  
+          ''',
+          'unit': '°C',
+        }),
+      }),
+      'period': '5minute',
     }),
   })
 # ---
