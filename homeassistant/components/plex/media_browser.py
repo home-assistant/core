@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
 from .const import DOMAIN
 from .errors import MediaNotFound
 from .helpers import get_plex_server, get_plex_servers, pretty_title
-from .media_search import find_media
+from .media_search import find_media, normalize_title, title_score
 
 
 class UnknownMediaType(BrowseError):
@@ -314,7 +314,7 @@ def build_item_payload(
 def search_media_payloads(
     plex_server, is_internal: bool, query: SearchMediaQuery
 ) -> list[BrowseMedia]:
-    """Search the Plex server and return playable results, most relevant types first."""
+    """Search the Plex server and return playable results, best title match first."""
     server_id = plex_server.machine_identifier
 
     mediatypes: list[str | None] = [
@@ -332,7 +332,13 @@ def search_media_payloads(
         items.extend(find_media(plex_server, query.search_query, mediatype))
 
     items = [x for x in items if x.type in SEARCH_TYPE_ORDER]
-    items.sort(key=lambda x: SEARCH_TYPE_ORDER.index(x.type))
+    normalized_query = normalize_title(query.search_query)
+    items.sort(
+        key=lambda x: (
+            -title_score(normalized_query, x.title),
+            SEARCH_TYPE_ORDER.index(x.type),
+        )
+    )
 
     return [
         build_item_payload(

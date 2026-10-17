@@ -515,6 +515,21 @@ async def test_search_media(
 
     await websocket_client.send_json(
         {
+            "id": 20,
+            "type": "media_player/search_media",
+            "entity_id": media_players[0],
+            "search_query": "TV Show",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert [x["title"] for x in msg["result"]["result"]] == [
+        "TV Show",
+        "Movie 1 (2000)",
+    ]
+
+    await websocket_client.send_json(
+        {
             "id": 2,
             "type": "media_player/search_media",
             "entity_id": media_players[0],
