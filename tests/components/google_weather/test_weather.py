@@ -4,11 +4,21 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from google_weather_api import GoogleWeatherApiError, WeatherCondition
+from google_weather_api import (
+    GoogleWeatherApiError,
+    PrecipitationSegment,
+    WeatherCondition,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.google_weather.weather import _CONDITION_MAP
+from homeassistant.components.google_weather.const import DOMAIN
+from homeassistant.components.google_weather.services import SERVICE_GET_MINUTE_FORECAST
+from homeassistant.components.google_weather.weather import (
+    _CONDITION_MAP,
+    _PRECIPITATION_INTENSITY_MAP,
+    _PRECIPITATION_TYPE_MAP,
+)
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -22,6 +32,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -147,6 +158,14 @@ def test_all_conditions_mapped() -> None:
         assert condition_type in _CONDITION_MAP
 
 
+def test_all_precipitation_segment_values_mapped() -> None:
+    """Ensure every precipitation type and intensity has a response value."""
+    for precipitation_type in PrecipitationSegment.DominantPrecipitationType:
+        assert precipitation_type in _PRECIPITATION_TYPE_MAP
+    for intensity in PrecipitationSegment.PrecipitationIntensity:
+        assert intensity in _PRECIPITATION_INTENSITY_MAP
+
+
 @pytest.mark.parametrize(("forecast_type"), ["daily", "hourly", "twice_daily"])
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -215,3 +234,46 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+async def test_minute_forecast_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast service."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    mock_google_weather_api.async_get_minute_forecast.assert_awaited_once_with(
+        latitude=10.1, longitude=20.1
+    )
+    assert response == snapshot
+
+
+async def test_minute_forecast_service_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast service when the API raises an error."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    mock_google_weather_api.async_get_minute_forecast.side_effect = (
+        GoogleWeatherApiError("boom")
+    )
+    with pytest.raises(HomeAssistantError, match="Error fetching minute forecast"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_MINUTE_FORECAST,
+            {ATTR_ENTITY_ID: "weather.home"},
+            blocking=True,
+            return_response=True,
+        )
