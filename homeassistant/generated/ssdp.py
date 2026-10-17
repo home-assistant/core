@@ -216,6 +216,16 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
         },
     ],
+    "libresync": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "LibreWireless",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "modelDescription": "LibreSyncDMR",
+        },
+    ],
     "lyngdorf": [
         {
             "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
