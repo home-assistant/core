@@ -5,6 +5,7 @@ from http import HTTPStatus
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -110,6 +111,84 @@ async def test_program_next_run(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(PGM_A_NEXT_RUN).state == "2023-01-24T10:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("platforms", "setup_config_entry"), [([Platform.SENSOR, Platform.SWITCH], None)]
+)
+async def test_zone_run_time(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    responses: list[AiohttpClientMockResponse],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test zone run time sensors from an earlier schedule load are added back."""
+    zone_1, zone_6 = (
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            DOMAIN,
+            f"4c:a1:61:00:11:22-{zone}-program-0-run-time",
+            config_entry=config_entry,
+        ).entity_id
+        for zone in (1, 6)
+    )
+    responses.extend(mock_response(response) for response in SCHEDULE_RESPONSES)
+
+    # The enabled sensors load the schedule, with all other entities disabled.
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(zone_1)
+    assert state
+    assert state.state == "25"
+    assert state.attributes["unit_of_measurement"] == "min"
+
+    # PGM A does not water zone 6.
+    assert hass.states.get(zone_6).state == "0"
+
+    # A disabled sensor is added for each other zone PGM A waters.
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "4c:a1:61:00:11:22-2-program-0-run-time"
+    )
+    assert entity_id == "sensor.rain_bird_sprinkler_2_pgm_a_run_time"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    ("platforms", "setup_config_entry"),
+    [([Platform.CALENDAR, Platform.SENSOR, Platform.SWITCH], None)],
+)
+async def test_zone_run_time_from_calendar(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    responses: list[AiohttpClientMockResponse],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test zone run time sensors are added when the calendar loads the schedule."""
+    responses.extend(mock_response(response) for response in SCHEDULE_RESPONSES)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # PGM A waters zones 1 to 5, the other programs have no zones.
+    run_time_entries = sorted(
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entity_entry.unique_id.endswith("-run-time")
+    )
+    assert run_time_entries == [
+        f"sensor.rain_bird_sprinkler_{zone}_pgm_a_run_time" for zone in range(1, 6)
+    ]
+    assert all(
+        entity_registry.async_get(entity_id).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+        for entity_id in run_time_entries
+    )
 
 
 @pytest.mark.parametrize(
