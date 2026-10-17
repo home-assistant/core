@@ -63,7 +63,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .frame import report_non_thread_safe_operation, report_usage
+from .frame import ReportBehavior, report_non_thread_safe_operation, report_usage
 from .group import Group
 from .singleton import singleton
 from .typing import UNDEFINED, StateType, UndefinedType
@@ -1764,9 +1764,23 @@ class Entity(
             return
 
         old_entity_id = old.entity_id
-        if _entity_class_requires_readd(type(self)):
+        if _entity_class_requires_readd(entity_class := type(self)):
             # Backwards compatibility for custom integrations not yet migrated to
             # async_entity_id_changed, can be removed in Home Assistant Core 2027.11.
+            # There is no custom integration frame in the stack of a registry update.
+            report_usage(
+                f"has entity class {entity_class.__module__}."
+                f"{entity_class.__qualname__} which runs its own code when its "
+                "entities are added or removed, but does not implement "
+                "async_entity_id_changed. If anything the entity sets up depends on "
+                "its entity_id, update it in async_entity_id_changed; otherwise "
+                "implement async_entity_id_changed as a no-op, which is all most "
+                "entities need. Until then, entities of this class are removed and "
+                "re-added when their entity_id is changed",
+                breaks_in_ha_version="2027.11.0",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self.platform.platform_name,
+            )
             await self._async_readd_on_entity_id_change(old_entity_id, registry_entry)
             return
 
