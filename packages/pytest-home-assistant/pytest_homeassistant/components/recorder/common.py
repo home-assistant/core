@@ -134,13 +134,8 @@ async def async_wait_recording_done(hass: HomeAssistant) -> None:
 async def async_wait_purge_done(
     hass: HomeAssistant, max_number: int | None = None
 ) -> None:
-    """Wait for max number of purge events.
-
-    Because a purge may insert another PurgeTask into
-    the queue after the WaitTask finishes, we need up to
-    a maximum number of WaitTasks that we will put into the
-    queue.
-    """
+    """Wait for recorder purging to finish."""
+    # Purging can queue more work after a wait task, so multiple waits may be needed.
     if not max_number:
         max_number = DEFAULT_PURGE_TASKS
     for _ in range(max_number + 1):
@@ -166,10 +161,7 @@ def corrupt_db_file(test_db_file):
 
 
 def create_engine_test(*args, **kwargs):
-    """Test version of create_engine that initializes with old schema.
-
-    This simulates an existing db with the old schema.
-    """
+    """Create a database engine with a historical schema."""
     engine = create_engine(*args, **kwargs)
     db_schema_0.Base.metadata.create_all(engine)
     return engine
@@ -289,10 +281,7 @@ async def async_record_states(
 def record_states(
     hass: HomeAssistant,
 ) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
-    """Record some test states.
-
-    We inject a bunch of state updates temperature sensors.
-    """
+    """Record test states."""
     mp = "media_player.test"
     sns1 = "sensor.test1"
     sns2 = "sensor.test2"
@@ -424,10 +413,7 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
 def create_engine_test_for_schema_version_postfix(
     *args, schema_version_postfix: str, **kwargs
 ):
-    """Test version of create_engine that initializes with old schema.
-
-    This simulates an existing db with the old schema.
-    """
+    """Create a database engine with a historical schema."""
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
@@ -589,11 +575,8 @@ def db_state_attributes_to_native(state_attrs: StateAttributes) -> dict[str, Any
 async def async_drop_index(
     recorder: Recorder, table: str, index: str, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Drop an index from the database.
-
-    migration._drop_index does not return or raise, so we verify the result
-    by checking the log for success or failure messages.
-    """
+    """Drop a database index."""
+    # The migration helper reports success or failure through logs.
 
     finish_msg = f"Finished dropping index `{index}` from table `{table}`"
     fail_msg = f"Failed to drop index `{index}` from table `{table}`"

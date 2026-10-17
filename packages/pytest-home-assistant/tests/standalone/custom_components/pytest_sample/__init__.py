@@ -1,4 +1,4 @@
-"""A custom integration used to test the installed pytest package."""
+"""Sample test integration."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

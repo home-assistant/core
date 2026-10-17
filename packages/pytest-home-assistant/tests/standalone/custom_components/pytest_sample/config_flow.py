@@ -1,4 +1,4 @@
-"""Configuration flow for the standalone test integration."""
+"""Sample integration configuration flow."""
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 

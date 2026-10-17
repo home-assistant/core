@@ -1,4 +1,4 @@
-"""Set up some common test helper things."""
+"""Pytest fixtures and hooks."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
@@ -178,7 +178,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def pytest_load_initial_conftests(early_config: pytest.Config) -> None:
-    """Make fixture loaders available while importing the project's conftest."""
+    """Initialize test paths."""
     _paths.configure(early_config)
 
 
@@ -196,7 +196,7 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_xdist_setupnodes(
     config: pytest.Config, specs: Sequence[execnet.XSpec]
 ) -> None:
-    """Log the number of xdist workers, also when running with -qq."""
+    """Report test worker configuration."""
     if reporter := config.pluginmanager.get_plugin("terminalreporter"):
         reporter.write_line(f"xdist workers: {len(specs)}")
 
@@ -207,36 +207,14 @@ class HASocketBlockedError(pytest_socket.SocketBlockedError):
     instances: list[Self] = []
 
     def __init__(self, *_args, **_kwargs) -> None:
-        """Initialize HASocketBlockedError and increment instance count."""
+        """Initialize the blocked socket error."""
         super().__init__(*_args, **_kwargs)
         self.__class__.instances.append(self)
 
 
 def pytest_runtest_setup() -> None:
-    """Prepare pytest_socket and freezegun.
-
-    pytest_socket:
-    - Throw if tests attempt to open sockets.
-
-    - allow_unix_socket is set to True because it's needed by asyncio.
-      Important: socket_allow_hosts must be called before disable_socket, otherwise all
-      destinations will be allowed.
-
-    - Replace pytest_socket.SocketBlockedError with a variant which counts the number
-      of times it was raised.
-
-    freezegun:
-    - Modified to include
-      https://github.com/spulec/freezegun/pull/424
-      and improve class str.
-
-    - Modified to not force lazily imported module attributes to be resolved
-      when scanning the loaded modules for time related objects.
-
-    - Modified to tolerate a thread reading the time while another thread
-      stops freeze_time, which otherwise raises IndexError, see
-      https://github.com/spulec/freezegun/issues/345.
-    """
+    """Prepare the test environment."""
+    # Set allowed hosts before disabling sockets; Unix sockets are needed by asyncio.
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
@@ -326,39 +304,21 @@ def caplog_fixture(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture
 
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection() -> None:
-    """Run garbage collection at known locations.
-
-    This is to mimic the behavior of pytest-aiohttp, and is
-    required to avoid warnings during garbage collection from
-    spilling over into next test case. We run it per module which
-    handles the most common cases and let each module override
-    to run per test case if needed.
-    """
+    """Collect unused test resources."""
+    # Collect at module boundaries so resource warnings stay with the tests that caused them.
     gc.collect()
     gc.freeze()
 
 
 @pytest.fixture(autouse=True)
 def expected_lingering_tasks() -> bool:
-    """Temporary ability to bypass test failures.
-
-    Parametrize to True to bypass the pytest failure.
-    @pytest.mark.parametrize("expected_lingering_tasks", [True])
-
-    This should be removed when all lingering tasks have been cleaned up.
-    """
+    """Control whether lingering tasks are allowed."""
     return False
 
 
 @pytest.fixture(autouse=True)
 def expected_lingering_timers() -> bool:
-    """Temporary ability to bypass test failures.
-
-    Parametrize to True to bypass the pytest failure.
-    @pytest.mark.parametrize("expected_lingering_timers", [True])
-
-    This should be removed when all lingering timers have been cleaned up.
-    """
+    """Control whether lingering timers are allowed."""
     current_test = os.getenv("PYTEST_CURRENT_TEST")
     if (
         current_test
@@ -372,13 +332,7 @@ def expected_lingering_timers() -> bool:
 
 @pytest.fixture
 def wait_for_stop_scripts_after_shutdown() -> bool:
-    """Add ability to bypass _schedule_stop_scripts_after_shutdown.
-
-    _schedule_stop_scripts_after_shutdown leaves a lingering timer.
-
-    Parametrize to True to bypass the pytest failure.
-    @pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
-    """
+    """Control whether script shutdown timers are enabled."""
     return False
 
 
@@ -386,7 +340,7 @@ def wait_for_stop_scripts_after_shutdown() -> bool:
 def skip_stop_scripts(
     wait_for_stop_scripts_after_shutdown: bool,
 ) -> Generator[None]:
-    """Add ability to bypass _schedule_stop_scripts_after_shutdown."""
+    """Control script shutdown scheduling."""
     if wait_for_stop_scripts_after_shutdown:
         yield
         return
@@ -399,7 +353,7 @@ def skip_stop_scripts(
 
 @contextmanager
 def long_repr_strings() -> Generator[None]:
-    """Increase reprlib maxstring and maxother to 300."""
+    """Allow longer object representations."""
     arepr = reprlib.aRepr
     original_maxstring = arepr.maxstring
     original_maxother = arepr.maxother
@@ -414,13 +368,13 @@ def long_repr_strings() -> Generator[None]:
 
 @pytest.fixture(autouse=True)
 async def configure_event_loop() -> None:
-    """Configure the loop the way Home Assistant configures its own."""
+    """Configure the test event loop."""
     runner.configure_event_loop(asyncio.get_running_loop())
 
 
 @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
 async def configure_session_event_loop() -> None:
-    """Configure the session loop, which session scoped fixtures run on."""
+    """Configure the session event loop."""
     runner.configure_event_loop(asyncio.get_running_loop())
 
 
@@ -435,14 +389,8 @@ def verify_cleanup(
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
-    """Verify that the test has cleaned up resources correctly.
-
-    This fixture requires the event loop to be stopped.
-    It therefore cannot be an async fixture.
-
-    Use @pytest_asyncio.fixture to make sure the correct event loop is set
-    regardless before calling the fixture.
-    """
+    """Verify test resource cleanup."""
+    # Cleanup requires a stopped event loop, so this fixture must remain synchronous.
     event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
@@ -604,23 +552,14 @@ class CoalescingClient(TestClient):
 
 @pytest.fixture
 def aiohttp_client_cls() -> type[CoalescingClient]:
-    """Override the test class for aiohttp."""
+    """Provide the HTTP test client class."""
     return CoalescingClient
 
 
 @pytest.fixture
 def aiohttp_client() -> Generator[ClientSessionGenerator]:
-    """Override the default aiohttp_client since 3.x does not support it.
-
-    The aiohttp_client_cls is not supported in 3.x.
-
-    Remove this when upgrading to 4.x as aiohttp_client_cls
-    will do the same thing
-
-    aiohttp_client(app, **kwargs)
-    aiohttp_client(server, **kwargs)
-    aiohttp_client(raw_server, **kwargs)
-    """
+    """Provide an HTTP test client factory."""
+    # aiohttp 3.x does not support aiohttp_client_cls; remove this override with 4.x.
     loop = asyncio.get_event_loop()
     clients = []
 
@@ -666,22 +605,13 @@ def aiohttp_client() -> Generator[ClientSessionGenerator]:
 
 @pytest.fixture
 def hass_fixture_setup() -> list[bool]:
-    """Fixture which is truthy if the hass fixture has been setup."""
+    """Track Home Assistant fixture initialization."""
     return []
 
 
 @pytest.fixture
 def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
-    """Fixture to provide a temporary config directory.
-
-    Use this fixture in a fixture overriding hass_config_dir to provide
-    a temporary config directory which does not need to be cleaned up:
-
-    @pytest.fixture
-    def hass_config_dir(hass_tmp_config_dir: str) -> str:
-        # Use temporary config directory for this test/module.
-        return hass_tmp_config_dir
-    """
+    """Provide a temporary test configuration directory."""
     config_dir = get_test_config_dir()
     if _paths.CONFIG_DIR is not None or pathlib.Path(config_dir).is_dir():
         copytree(
@@ -695,11 +625,7 @@ def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
 
 @pytest.fixture
 def hass_config_dir() -> str:
-    """Fixture to provide a test config directory.
-
-    Override this fixture to provide a custom config directory,
-    for example with pre-populated config files.
-    """
+    """Provide the test configuration directory."""
     return get_test_config_dir()
 
 
@@ -919,11 +845,7 @@ async def hass_read_only_access_token(
 async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return the Home Assistant Supervisor user.
-
-    The user is published the same way the hassio integration does, so
-    commands restricted to the Supervisor accept it.
-    """
+    """Return the Home Assistant Supervisor user."""
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
     user = MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
@@ -981,7 +903,7 @@ def hass_client_no_auth(
     """Return an unauthenticated HTTP client."""
 
     async def client() -> TestClient:
-        """Return an authenticated client."""
+        """Return an unauthenticated client."""
         return await aiohttp_client(hass.http.app)
 
     return client
@@ -1025,7 +947,7 @@ def hass_ws_client(
         access_token: str | None = hass_access_token,
         supervisor_unix_socket: bool = False,
     ) -> MockHAClientWebSocket:
-        """Create a client, skipping token auth for Supervisor Unix sockets."""
+        """Create a WebSocket test client."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
@@ -1415,11 +1337,7 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session.
-
-    Note: To avoid issues with tests that mock integrations, translations for
-    mocked integrations are cleaned up by the evict_faked_translations fixture.
-    """
+    """Cache integration translations."""
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1434,7 +1352,7 @@ def translations_once() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="module")
 def evict_faked_translations(translations_once) -> Generator[_patch]:
-    """Clear translations for mocked integrations from the cache after each module."""
+    """Clear cached translations for mocked integrations."""
     real_component_strings = translation_helper._async_get_component_strings
 
     def _async_get_cached_translations(
@@ -1563,7 +1481,7 @@ def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock]:
 
 @pytest.fixture
 def enable_custom_integrations(hass: HomeAssistant) -> None:
-    """Enable custom integrations defined in the test dir."""
+    """Enable custom integration loading."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
 
@@ -1865,7 +1783,7 @@ async def async_test_recorder(
         exception_filter: Callable[[Exception], bool] | None = None,
         read_only: bool = False,
     ) -> Generator[Session]:
-        """Wrap session_scope to bark if we create nested sessions."""
+        """Detect nested recorder sessions."""
         if thread_session.has_session:
             raise RuntimeError(
                 f"Thread '{threading.current_thread().name}' already has an "
@@ -2195,11 +2113,7 @@ def integration_frame_path() -> str:
 
 @pytest.fixture
 def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
-    """Mock where we are calling code from.
-
-    Defaults to calling from `hue` core integration, and can be parametrized
-    with `integration_frame_path`.
-    """
+    """Mock the integration call context."""
     correct_filename = f"/home/paulus/{integration_frame_path}/light.py"
     correct_module_name = f"{integration_frame_path.replace('/', '.')}.light"
     correct_frame = Mock(
@@ -2353,11 +2267,7 @@ _real_dhcp_service_info_init = DhcpServiceInfo.__init__
 
 
 def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
-    """Override __init__ for DhcpServiceInfo.
-
-    Ensure that the macaddress is always in lowercase and
-    without colons to match DHCP service.
-    """
+    """Normalize DHCP discovery data."""
     _real_dhcp_service_info_init(self, *args, **kwargs)
     if self.macaddress != self.macaddress.lower().replace(":", ""):
         raise ValueError("macaddress is not correctly formatted")
@@ -2368,11 +2278,7 @@ DhcpServiceInfo.__init__ = _dhcp_service_info_init
 
 @pytest.fixture(autouse=True)
 def disable_http_server() -> Generator[None]:
-    """Disable automatic start of HTTP server during tests.
-
-    This prevents the HTTP server from binding sockets and starting in tests
-    that setup integrations which depend on the HTTP component.
-    """
+    """Disable automatic HTTP server startup."""
     with (
         patch("homeassistant.components.http.HomeAssistantHTTP.async_bind"),
         patch("homeassistant.components.http.HomeAssistantHTTP.start"),

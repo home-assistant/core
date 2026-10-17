@@ -1,4 +1,4 @@
-"""Common test objects."""
+"""MQTT test helpers."""
 
 from collections.abc import Iterable
 from contextlib import suppress
@@ -2575,7 +2575,7 @@ async def help_test_entity_disabled_by_default(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test device registry remove."""
+    """Test default entity enablement."""
     await mqtt_mock_entry()
     # Add device settings to config
     config = copy.deepcopy(config[DOMAIN][domain])
@@ -2622,7 +2622,7 @@ async def help_test_entity_category(
     domain: str,
     config: ConfigType,
 ) -> None:
-    """Test device registry remove."""
+    """Test entity categories."""
     await mqtt_mock_entry()
     # Add device settings to config
     config = copy.deepcopy(config[DOMAIN][domain])

@@ -1,4 +1,4 @@
-"""Test the helper method for writing tests."""
+"""Shared test helpers."""
 
 import asyncio
 from collections.abc import (
@@ -140,7 +140,7 @@ CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
 
 class QualityScaleStatus(StrEnum):
-    """Source of core configuration."""
+    """Integration quality scale status."""
 
     DONE = "done"
     EXEMPT = "exempt"
@@ -201,20 +201,14 @@ def get_test_config_dir(*add_path):
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
-    """Fake store that does not write or load. Used for testing."""
+    """Mock storage without persistence."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
-        """Save the data.
-
-        This function is mocked out in tests.
-        """
+        """Mock saving stored data."""
 
     @callback
     def async_save_delay(self, *args: Any, **kwargs: Any) -> None:
-        """Save data with an optional delay.
-
-        This function is mocked out in tests.
-        """
+        """Mock scheduling a storage write."""
 
 
 @asynccontextmanager
@@ -224,7 +218,7 @@ async def async_test_home_assistant(
     config_dir: str | None = None,
     initial_state: CoreState = CoreState.running,
 ) -> AsyncGenerator[HomeAssistant]:
-    """Return a Home Assistant object pointing at test config dir."""
+    """Create a Home Assistant test instance."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
@@ -1468,7 +1462,7 @@ class MockEntity(entity.Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Return the ste of the polling."""
+        """Return whether the entity should be polled."""
         return self._handle("should_poll")
 
     @property
@@ -1510,10 +1504,10 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
         data = {}
 
     class MockStoreIO(storage._FileStoreIO):
-        """Store serialized envelopes in the fixture's shared dictionary."""
+        """In-memory storage for tests."""
 
         async def async_load(self) -> JsonValueType:
-            """Read a copy without consuming pending writes or filesystem caches."""
+            """Load stored data."""
             if self._key not in data:
                 return {}
             envelope = data[self._key]
@@ -1524,14 +1518,14 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
 
         @callback
         def async_invalidate_cache(self) -> None:
-            """The fixture dictionary is authoritative and has no preload cache."""
+            """Mock invalidating the storage cache."""
 
         async def async_write(self, mode: str, json_data: str | bytes) -> None:
-            """Decode the envelope serialized by Store."""
+            """Write stored data."""
             data[self._key] = json_loads(json_data)
 
         async def async_remove(self) -> None:
-            """Remove the envelope after Store cleans up its scheduled writes."""
+            """Remove stored data."""
             data.pop(self._key, None)
 
     original_prepare_save_json = storage.json_helper.prepare_save_json
@@ -1539,7 +1533,7 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
     def checked_prepare_save_json(
         value: list | dict, *, encoder: type[json.JSONEncoder] | None = None
     ) -> tuple[str, str | bytes]:
-        """Reject mocks before delegating to production serialization."""
+        """Validate data for serialization."""
         raise_contains_mocks(value)
         return original_prepare_save_json(value, encoder=encoder)
 

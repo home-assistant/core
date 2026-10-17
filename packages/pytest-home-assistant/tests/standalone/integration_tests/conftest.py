@@ -1,4 +1,4 @@
-"""Load fixtures while collecting a consuming project's conftest."""
+"""Package test configuration."""
 
 from pytest_homeassistant.common import load_json_object_fixture
 

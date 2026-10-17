@@ -1,4 +1,4 @@
-"""Tests for the Diagnostics integration."""
+"""Diagnostics test helpers."""
 
 from http import HTTPStatus
 from typing import cast

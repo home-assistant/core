@@ -14,10 +14,7 @@ real_session_scope = recorder_helper.session_scope
 
 @contextmanager
 def _session_scope_wrapper(*args, **kwargs):
-    """Make session_scope patchable.
-
-    This function will be imported by recorder modules.
-    """
+    """Provide a patchable recorder session scope."""
     with real_session_scope(*args, **kwargs) as ses:
         yield ses
 

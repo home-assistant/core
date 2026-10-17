@@ -1,4 +1,4 @@
-"""Common test tools for the Radio Frequency integration."""
+"""Radio frequency test helpers."""
 
 from typing import NamedTuple, override
 

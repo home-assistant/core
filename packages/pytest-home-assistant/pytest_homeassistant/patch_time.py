@@ -10,10 +10,8 @@ import freezegun
 
 
 def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
-    """Convert datetime to FakeDatetime.
-
-    Modified to include https://github.com/spulec/freezegun/pull/424.
-    """
+    """Convert a datetime for frozen time."""
+    # Preserve fold until freezegun supports it: https://github.com/spulec/freezegun/pull/424.
     return freezegun.api.FakeDatetime(  # type: ignore[attr-defined]
         datetime.year,
         datetime.month,
@@ -28,35 +26,21 @@ def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type
 
 
 def ha_get_module_attributes(module: types.ModuleType) -> list[tuple[str, Any]]:
-    """Return the attributes of a module.
-
-    Modified to only look at attributes which are already set, instead of every
-    name dir() offers. Packages with a lazy __getattr__, such as scipy or
-    elevenlabs, import their whole tree when each name is read, which takes
-    seconds and is charged to whichever test freezes time next.
-    """
+    """Return module attributes."""
+    # Reading the namespace avoids triggering lazy imports.
     return list(getattr(module, "__dict__", {}).items())
 
 
 def ha_get_module_attributes_hash(module: types.ModuleType) -> str:
-    """Return a hash of the module attributes.
-
-    Modified to hash the same namespace ha_get_module_attributes reads, so that
-    a module which grows an attribute after it was first scanned is scanned
-    again. dir() does not report such a change for lazy modules.
-    """
+    """Return a hash of module attributes."""
+    # Use the same namespace as the attribute scan so added attributes invalidate the cache.
     return f"{id(module)}-{hash(frozenset(getattr(module, '__dict__', {})))}"
 
 
 def ha_should_use_real_time() -> bool:
-    """Return whether time patched by freezegun should return the real time.
-
-    Modified to read the ignore list atomically: freeze_time stop() in another
-    thread pops the freezegun stacks mid-check, and the upstream implementation
-    then raises IndexError, which for example makes the recorder thread drop
-    the event it is processing when a log timestamp hits the race.
-    See https://github.com/spulec/freezegun/issues/345.
-    """
+    """Return whether to use real time."""
+    # Stopping frozen time on another thread can empty the stacks.
+    # See https://github.com/spulec/freezegun/issues/345.
     if not freezegun.api.call_stack_inspection_limit:
         return False
 
@@ -86,12 +70,7 @@ def ha_should_use_real_time() -> bool:
 
 
 def ha_get_current_time() -> dt.datetime:
-    """Return the frozen time as a naive UTC datetime.
-
-    Modified to fall back to the real time when freeze_time stop() in another
-    thread pops the factory stack mid-call, instead of raising IndexError.
-    See https://github.com/spulec/freezegun/issues/345.
-    """
+    """Return the current test time."""
     try:
         return freezegun.api.freeze_factories[-1]()
     except IndexError:
@@ -100,12 +79,7 @@ def ha_get_current_time() -> dt.datetime:
 
 
 def _ha_tz_offset() -> dt.timedelta:
-    """Return the frozen tz offset.
-
-    Modified to fall back to no offset when freeze_time stop() in another
-    thread pops the offset stack mid-call, instead of raising IndexError.
-    See https://github.com/spulec/freezegun/issues/345.
-    """
+    """Return the test timezone offset."""
     try:
         return freezegun.api.tz_offsets[-1]
     except IndexError:
@@ -114,7 +88,7 @@ def _ha_tz_offset() -> dt.timedelta:
 
 
 class HAFakeDateMeta(freezegun.api.FakeDateMeta):
-    """Modified to override the string representation."""
+    """Metaclass for test dates."""
 
     def __str__(cls) -> str:  # noqa: N805 (ruff doesn't know this is a metaclass)
         """Return the string representation of the class."""
@@ -122,7 +96,7 @@ class HAFakeDateMeta(freezegun.api.FakeDateMeta):
 
 
 class HAFakeDate(freezegun.api.FakeDate, metaclass=HAFakeDateMeta):  # type: ignore[name-defined]
-    """Modified to improve class str and tolerate a concurrent unfreeze."""
+    """Date implementation for tests."""
 
     @classmethod
     def _tz_offset(cls) -> dt.timedelta:
@@ -131,7 +105,7 @@ class HAFakeDate(freezegun.api.FakeDate, metaclass=HAFakeDateMeta):  # type: ign
 
 
 class HAFakeDatetimeMeta(freezegun.api.FakeDatetimeMeta):
-    """Modified to override the string representation."""
+    """Metaclass for test datetimes."""
 
     def __str__(cls) -> str:  # noqa: N805 (ruff doesn't know this is a metaclass)
         """Return the string representation of the class."""
@@ -139,11 +113,7 @@ class HAFakeDatetimeMeta(freezegun.api.FakeDatetimeMeta):
 
 
 class HAFakeDatetime(freezegun.api.FakeDatetime, metaclass=HAFakeDatetimeMeta):  # type: ignore[name-defined]
-    """Modified to include basic fold support and improve class str.
-
-    Fold support submitted to upstream in https://github.com/spulec/freezegun/pull/424.
-    Also modified to tolerate a concurrent unfreeze.
-    """
+    """Datetime implementation for tests."""
 
     @classmethod
     def _tz_offset(cls) -> dt.timedelta:

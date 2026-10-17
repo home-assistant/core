@@ -1,4 +1,4 @@
-"""List of tests that have uncaught exceptions today. Will be shrunk over time."""
+"""Exceptions to test error reporting."""
 
 IGNORE_UNCAUGHT_EXCEPTIONS = [
     (

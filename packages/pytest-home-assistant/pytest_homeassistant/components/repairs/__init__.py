@@ -1,4 +1,4 @@
-"""Tests for the repairs integration."""
+"""Repairs test helpers."""
 
 from http import HTTPStatus
 from typing import Any

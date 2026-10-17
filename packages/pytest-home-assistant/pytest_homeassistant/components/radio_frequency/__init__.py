@@ -1,3 +1,3 @@
-"""Tests for the Radio Frequency integration."""
+"""Radio frequency test helpers."""
 
 ENTITY_ID = "radio_frequency.test_rf_transmitter"
