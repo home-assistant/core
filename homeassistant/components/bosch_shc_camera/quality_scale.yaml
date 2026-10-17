@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: This integration does not poll yet.
+  brands: done
+  common-modules:
+    status: exempt
+    comment: This integration does not have a coordinator or entities yet.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not have any custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any custom conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any custom triggers.
+  entity-event-setup:
+    status: exempt
+    comment: This integration does not have entities yet.
+  entity-unique-id:
+    status: exempt
+    comment: This integration does not have entities yet.
+  has-entity-name:
+    status: exempt
+    comment: This integration does not have entities yet.
+  runtime-data:
+    status: exempt
+    comment: This integration does not store runtime data yet.
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: This integration does not communicate with the service during setup yet.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not have custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters:
+    status: exempt
+    comment: This integration only asks for an account login.
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: This integration does not raise any repairable issues.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
