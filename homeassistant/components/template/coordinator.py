@@ -151,19 +151,22 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     def _render_run_variables(self, run_variables: TemplateVarsType) -> dict[str, Any]:
         """Render run variables after the trigger, before checking conditions."""
         run_variables = run_variables or {}
+        variables = {**self._rendered_trigger_variables, **run_variables}
         if not self._run_variables:
-            return {**self._rendered_trigger_variables, **run_variables}
-        # async_render skips keys already present, drop trigger variables that
-        # the variables section overrides so they are rendered.
-        overrides = self._run_variables.as_dict()
-        trigger_variables = {
-            key: value
-            for key, value in self._rendered_trigger_variables.items()
-            if key not in overrides
-        }
-        return self._run_variables.async_render(
-            self.hass, {**trigger_variables, **run_variables}
-        )
+            return variables
+        # Trigger variables can be overridden but trigger data can't, so drop
+        # variables that collide with trigger data before rendering.
+        section = self._run_variables
+        if not run_variables.keys().isdisjoint(section.as_dict()):
+            section = ScriptVariables(
+                {
+                    key: value
+                    for key, value in section.as_dict().items()
+                    if key not in run_variables
+                }
+            )
+        variables.update(section.async_simple_render(variables))
+        return variables
 
     async def _handle_triggered_with_script(
         self, run_variables: TemplateVarsType, context: Context | None = None

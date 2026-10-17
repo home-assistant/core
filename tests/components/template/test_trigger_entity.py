@@ -389,6 +389,50 @@ async def test_variables_cannot_shadow_trigger_data(
     assert hass.states.get("sensor.test").state == "real"
 
 
+@pytest.mark.parametrize(
+    ("variables", "expected"),
+    [
+        pytest.param(
+            {"base": "{{ base + 1 }}", "observed": "{{ base }}"},
+            "11",
+            id="override_references_trigger_variable",
+        ),
+        pytest.param(
+            {"observed": "{{ base }}", "base": 20},
+            "10",
+            id="earlier_variable_references_overridden_trigger_variable",
+        ),
+    ],
+)
+async def test_variables_reference_trigger_variables(
+    hass: HomeAssistant,
+    variables: dict,
+    expected: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test variables can reference trigger variables they override."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": {"base": 10},
+                    "variables": variables,
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "sensor": {"name": "test", "state": "{{ observed }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test").state == expected
+    assert "TemplateError" not in caplog.text
+
+
 async def test_trigger_variables_rendered_on_reload(hass: HomeAssistant) -> None:
     """Test trigger variables are rendered when the configuration is reloaded."""
 
