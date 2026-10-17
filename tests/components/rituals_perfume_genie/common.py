@@ -58,6 +58,8 @@ class MockDiffuser:
     available: bool = True
     charging: bool = True
     fill: str | None = "90-100%"
+    # A use counter on the cartridge: 200 per percent used, so this is 95%.
+    fill_raw: str = "1000"
     has_battery: bool = True
     has_cartridge: bool = True
     is_on: bool = True
@@ -148,7 +150,7 @@ class MockDiffuser:
     def sensor(self, sensor: Sensor) -> RitualsGenieSensor:
         """Return a single sensor reading, as the API would send it."""
         if sensor is Sensor.FILL:
-            return RitualsGenieSensor(title=self.fill, raw="1000")
+            return RitualsGenieSensor(title=self.fill, raw=self.fill_raw)
 
         return RitualsGenieSensor(
             title=self.perfume, raw="048616d0" if self.has_cartridge else "0"
