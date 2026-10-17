@@ -21,7 +21,7 @@ from homeassistant.components.gree_infrared.const import (
     MODEL_YAP1F,
 )
 from homeassistant.components.gree_infrared.state import COALESCE_DELAY_SEC
-from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -33,6 +33,13 @@ from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 _CLIMATE = "climate.gree_ac"
+_STORED_CLIMATE_DATA = {
+    "native_current_temperature": None,
+    "native_target_temperature": 24.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS.value,
+}
 
 
 @pytest.fixture
@@ -396,6 +403,7 @@ async def test_timer_deadline_restored_as_remaining_duration(
             (
                 State(_CLIMATE, HVACMode.OFF, {"temperature": 24, "fan_mode": "auto"}),
                 {
+                    **_STORED_CLIMATE_DATA,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "timer_hours": 2.0,
                     "timer_deadline": (
@@ -443,6 +451,7 @@ async def test_new_fields_restore_after_restart(
                     },
                 ),
                 {
+                    **_STORED_CLIMATE_DATA,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "turbo": False,
                     "light": True,

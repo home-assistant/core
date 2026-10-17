@@ -572,7 +572,9 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             )
         else:
             self._attr_hvac_mode = (
-                self._last_active_hvac_mode if self._timer_expiry_power else HVACMode.OFF
+                self._last_active_hvac_mode
+                if self._timer_expiry_power
+                else HVACMode.OFF
             )
 
     def _reconcile_overdue_timer_locked(self) -> None:
@@ -1065,7 +1067,7 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         self._attr_hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
         # The received frame supersedes anything staged but unsent.
-        self._state._clear_coalesced()
+        self._state.clear_coalesced()
         self._received_fahrenheit_temperature = (
             command.temperature if command.fahrenheit else None
         )

@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_MODEL,
     STATE_UNAVAILABLE,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -45,6 +46,13 @@ from tests.components.infrared.common import (
 )
 
 _CLIMATE = "climate.gree_ac"
+_STORED_CLIMATE_DATA = {
+    "native_current_temperature": None,
+    "native_target_temperature": 24.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS.value,
+}
 
 
 def _option_entity_id(hass: HomeAssistant, key: str) -> str:
@@ -376,6 +384,7 @@ async def test_restore_switches_without_transmission(
             (
                 State(_CLIMATE, HVACMode.OFF, {ATTR_TEMPERATURE: 24}),
                 {
+                    **_STORED_CLIMATE_DATA,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "turbo": True,
                     "light": False,
@@ -425,6 +434,7 @@ async def test_restore_switches_when_previously_active(
             (
                 State(_CLIMATE, HVACMode.COOL, {ATTR_TEMPERATURE: 24}),
                 {
+                    **_STORED_CLIMATE_DATA,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "turbo": True,
                     "light": False,
@@ -482,6 +492,7 @@ async def test_switches_restore_when_added_before_climate(
             (
                 State(_CLIMATE, HVACMode.OFF, {ATTR_TEMPERATURE: 24}),
                 {
+                    **_STORED_CLIMATE_DATA,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "turbo": True,
                     "light": False,

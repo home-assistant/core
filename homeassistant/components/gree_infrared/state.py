@@ -94,14 +94,14 @@ class GreeAcState:
             )
             return
         if hass.is_stopping:
-            self._clear_coalesced()
+            self.clear_coalesced()
             return
         try:
             self._coalesce_task = hass.async_create_task(
                 flush(), "gree_infrared_coalesced_send"
             )
         except RuntimeError:
-            self._clear_coalesced()
+            self.clear_coalesced()
 
     async def async_unload_coalesced_flush(
         self, flush: Callable[[], Coroutine[Any, Any, None]]
@@ -121,9 +121,10 @@ class GreeAcState:
             await asyncio.wait((task,))
         elif self.coalesce_dirty:
             await flush()
-        self._clear_coalesced()
+        self.clear_coalesced()
 
-    def _clear_coalesced(self) -> None:
+    @callback
+    def clear_coalesced(self) -> None:
         """Drop coalescing bookkeeping and cancel any pending flush."""
         if self._coalesce_handle is not None:
             self._coalesce_handle.cancel()

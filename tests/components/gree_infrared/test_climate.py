@@ -1188,6 +1188,7 @@ async def test_failed_off_send_does_not_reverse_timer_expiry(
 
     assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.OFF
 
+
 @pytest.mark.usefixtures("init_integration")
 async def test_timer_deadline_matches_quantized_duration_after_state_send(
     hass: HomeAssistant,
@@ -1254,6 +1255,8 @@ async def test_expired_restored_timer_starts_off(
             (
                 State(_CLIMATE_ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 24.0}),
                 {
+                    **_STORED_CLIMATE_DATA,
+                    "native_target_temperature": 24.0,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "timer_hours": 0.5,
                     "timer_deadline": "2024-01-01T11:30:00+00:00",
@@ -1297,6 +1300,8 @@ async def test_expired_restored_timer_applies_power_without_send(
             (
                 State(_CLIMATE_ENTITY_ID, restored_hvac_mode, {ATTR_TEMPERATURE: 24.0}),
                 {
+                    **_STORED_CLIMATE_DATA,
+                    "native_target_temperature": 24.0,
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "timer_hours": 0.5,
                     "timer_deadline": "2024-01-01T11:30:00+00:00",
