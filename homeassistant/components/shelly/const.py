@@ -252,6 +252,7 @@ DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
 IR_RAW_RECEIVE_DISABLED_ISSUE_ID = "ir_raw_receive_disabled_{unique}"
+IR_RAW_RECEIVE_MIN_FIRMWARE = 20260903
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 

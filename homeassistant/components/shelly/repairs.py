@@ -3,7 +3,12 @@
 from typing import TYPE_CHECKING, override
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
+from aioshelly.const import (
+    FIRMWARE_PATTERN,
+    MODEL_OUT_PLUG_S_G3,
+    MODEL_PLUG_S_G3,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
@@ -25,6 +30,7 @@ from .const import (
     DEPRECATED_FIRMWARES,
     DOMAIN,
     IR_RAW_RECEIVE_DISABLED_ISSUE_ID,
+    IR_RAW_RECEIVE_MIN_FIRMWARE,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     RTSP_DISABLED_ISSUE_ID,
@@ -268,8 +274,12 @@ def async_manage_ir_raw_receive_disabled_issue(
     if not device.initialized:
         return
 
+    firmware = FIRMWARE_PATTERN.search(device.firmware_version)
+
     if (
-        "ir" in device.status
+        firmware is not None
+        and int(firmware[0]) >= IR_RAW_RECEIVE_MIN_FIRMWARE
+        and "ir" in device.status
         and (ir_config := device.config.get("ir")) is not None
         and not ir_config.get("raw_receive")
     ):

@@ -31,6 +31,8 @@ from . import MOCK_MAC, init_integration, mock_block_device_push_update_failure
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
+IR_RAW_RECEIVE_FIRMWARE = "20260903-114309/g0b4c0d1"
+
 
 async def test_ble_scanner_unsupported_firmware_issue(
     hass: HomeAssistant,
@@ -902,6 +904,7 @@ async def test_ir_raw_receive_disabled_issue(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test repair issue when infrared RAW receive is disabled."""
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", IR_RAW_RECEIVE_FIRMWARE)
     monkeypatch.setitem(mock_rpc_device.config["ir"], "raw_receive", False)
 
     issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
@@ -930,8 +933,13 @@ async def test_ir_raw_receive_disabled_issue(
 
 
 @pytest.mark.parametrize(
-    ("ir_config", "ir_status"),
-    [({"ir": {"raw_receive": True}}, {"ir": {}}), ({}, {})],
+    ("ir_config", "ir_status", "firmware_version"),
+    [
+        ({"ir": {"raw_receive": True}}, {"ir": {}}, IR_RAW_RECEIVE_FIRMWARE),
+        ({}, {}, IR_RAW_RECEIVE_FIRMWARE),
+        ({"ir": {"raw_receive": False}}, {"ir": {}}, "20260902-114309/g0b4c0d1"),
+        ({"ir": {"raw_receive": False}}, {"ir": {}}, "some fw string"),
+    ],
 )
 async def test_no_ir_raw_receive_disabled_issue(
     hass: HomeAssistant,
@@ -940,10 +948,16 @@ async def test_no_ir_raw_receive_disabled_issue(
     monkeypatch: pytest.MonkeyPatch,
     ir_config: dict[str, dict[str, bool]],
     ir_status: dict[str, dict[str, Any]],
+    firmware_version: str,
 ) -> None:
-    """Test no repair issue when RAW receive is enabled or there is no IR component."""
+    """Test no repair issue.
+
+    RAW receive is enabled, there is no IR component or the firmware does not
+    support RAW receive.
+    """
     monkeypatch.setattr(mock_rpc_device, "config", ir_config)
     monkeypatch.setattr(mock_rpc_device, "status", ir_status)
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", firmware_version)
 
     issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
     await init_integration(hass, 2)
@@ -960,6 +974,7 @@ async def test_ir_raw_receive_disabled_issue_ignore(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test ignoring the infrared RAW receive disabled issue."""
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", IR_RAW_RECEIVE_FIRMWARE)
     monkeypatch.setitem(mock_rpc_device.config["ir"], "raw_receive", False)
 
     issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
@@ -1000,6 +1015,7 @@ async def test_ir_raw_receive_disabled_issue_exc(
 ) -> None:
     """Test repair issue handling when ir_set_raw_receive ends with an exception."""
     mock_rpc_device.ir_set_raw_receive.side_effect = exception
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", IR_RAW_RECEIVE_FIRMWARE)
     monkeypatch.setitem(mock_rpc_device.config["ir"], "raw_receive", False)
 
     issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
