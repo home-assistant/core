@@ -39,6 +39,7 @@ from .conftest import (
     assert_action,
     assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
@@ -63,8 +64,6 @@ TEST_MEDIA_PLAYER = TemplatePlatformSetup(
     "test_template_media_player",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID),
 )
-
-BOTH_STYLES = [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 
 STATE_TEMPLATE = "{{ states('sensor.test_state') }}"
 SOURCE_LIST = {"source_list": "{{ ['TV', 'Radio'] }}"}
@@ -98,7 +97,9 @@ async def _async_call_media_player(hass: HomeAssistant, service: str) -> None:
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("rendered", "expected"),
     [
@@ -126,7 +127,9 @@ async def test_state_template(
     assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, expected)
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_deprecated_standby_state_logs_error(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -138,7 +141,9 @@ async def test_deprecated_standby_state_logs_error(
     assert "Received invalid media_player state: standby" in caplog.text
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("option", "extra_config", "value", "expected"),
     [
@@ -159,13 +164,26 @@ async def test_deprecated_standby_state_logs_error(
         pytest.param("media_track", {}, 3, 3, id="media_track"),
         pytest.param("volume_level", {}, 0.5, 0.5, id="volume_level"),
         pytest.param("volume_level", {}, 1.5, None, id="volume_level_too_high"),
+        pytest.param("volume_level", {}, -0.1, None, id="volume_level_too_low"),
+        pytest.param("volume_level", {}, "loud", None, id="volume_level_invalid"),
+        pytest.param("media_duration", {}, -1, None, id="media_duration_negative"),
+        pytest.param("media_duration", {}, "long", None, id="media_duration_invalid"),
+        pytest.param("media_position", {}, -1, None, id="media_position_negative"),
+        pytest.param("media_position", {}, "half", None, id="media_position_invalid"),
+        pytest.param("media_track", {}, -1, None, id="media_track_negative"),
+        pytest.param("media_track", {}, "first", None, id="media_track_invalid"),
         pytest.param("is_volume_muted", {}, True, True, id="is_volume_muted"),
+        pytest.param("is_volume_muted", {}, "maybe", None, id="muted_invalid"),
         pytest.param("shuffle", {}, False, False, id="shuffle"),
+        pytest.param("shuffle", {}, "maybe", None, id="shuffle_invalid"),
         pytest.param("repeat", {}, "one", "one", id="repeat"),
         pytest.param("repeat", {}, "never", None, id="repeat_invalid"),
         pytest.param("source", SOURCE_LIST, "TV", "TV", id="source"),
         pytest.param("source", SOURCE_LIST, "DVD", None, id="source_not_in_list"),
         pytest.param("sound_mode", SOUND_MODE_LIST, "Movie", "Movie", id="sound_mode"),
+        pytest.param(
+            "sound_mode", SOUND_MODE_LIST, "Disco", None, id="sound_mode_not_in_list"
+        ),
     ],
 )
 async def test_attribute_templates(
@@ -190,7 +208,24 @@ async def test_attribute_templates(
     assert state.attributes.get(option) == expected
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("option", ["media_title", "volume_level"])
+async def test_attribute_template_error(
+    hass: HomeAssistant, style: ConfigurationStyle, option: str
+) -> None:
+    """Test an attribute template error clears the attribute only."""
+    await setup_entity(
+        hass, TEST_MEDIA_PLAYER, style, 1, {option: "{{ x - 1 }}"}, STATE_TEMPLATE
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing")
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "playing", {option: None})
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("option", "action", "values"),
     [
@@ -223,7 +258,9 @@ async def test_list_templates(
     assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "on", {option: values})
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_media_position_updated_at(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -267,7 +304,9 @@ async def test_media_position_updated_at(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_media_position_updated_at_state_change(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -295,7 +334,9 @@ async def test_media_position_updated_at_state_change(
 
 
 @pytest.mark.usefixtures("calls")
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_media_position_updated_at_optimistic_play(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -336,7 +377,9 @@ async def test_media_position_updated_at_optimistic_play(
 
 
 @pytest.mark.usefixtures("calls")
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("elapsed", "attributes", "expected_position"),
     [
@@ -396,13 +439,23 @@ async def test_media_position_optimistic_play_pause_play(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
-async def test_media_position_fresh_sample_on_pause(
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "sampled_position",
+    [
+        pytest.param(50, id="fresh_sample"),
+        pytest.param(30, id="unchanged_sample"),
+    ],
+)
+async def test_media_position_sample_on_pause(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     freezer: FrozenDateTimeFactory,
+    sampled_position: int,
 ) -> None:
-    """Test a position sampled with the pause is not advanced again."""
+    """Test pausing keeps the elapsed playback whether or not a new sample arrives."""
     await setup_entity(
         hass,
         TEST_MEDIA_PLAYER,
@@ -414,7 +467,9 @@ async def test_media_position_fresh_sample_on_pause(
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing", {"media_position": 30})
 
     freezer.tick(20)
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, "paused", {"media_position": 50})
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "paused", {"media_position": sampled_position}
+    )
     assert_state_and_attributes(
         hass,
         TEST_MEDIA_PLAYER,
@@ -423,7 +478,9 @@ async def test_media_position_fresh_sample_on_pause(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_entity_picture(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test the media image is proxied and the picture is used as a fallback."""
     await setup_entity(
@@ -453,7 +510,9 @@ async def test_entity_picture(hass: HomeAssistant, style: ConfigurationStyle) ->
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_media_image_relative_url(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -491,7 +550,9 @@ async def test_media_image_relative_url(
     assert aioclient_mock.call_count == 1
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("config", "expected_features"),
     [
@@ -527,7 +588,9 @@ async def test_supported_features(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("action", "extra_config", "service", "service_data", "expected_variables"),
     [
@@ -663,7 +726,9 @@ async def test_actions(
     assert_action(TEST_MEDIA_PLAYER, calls, 1, action, **expected_variables)
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("service", "expected_volume"),
     [
@@ -702,7 +767,9 @@ async def test_volume_step_falls_back_to_volume_set(
     assert calls[-1].data["volume_level"] == pytest.approx(expected_volume)
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
@@ -737,7 +804,9 @@ async def test_optimistic_state(
     assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, expected_state)
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_state_template_is_not_optimistic(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -760,7 +829,9 @@ async def test_state_template_is_not_optimistic(
     assert "assumed_state" not in state.attributes
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("action", "extra_config", "service", "service_data", "attribute", "expected"),
     [
@@ -854,7 +925,105 @@ async def test_optimistic_attributes(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "template_config", "service", "service_data", "attribute", "expected"),
+    [
+        pytest.param(
+            "volume_set",
+            {"volume_level": "{{ 0.5 }}"},
+            "volume_set",
+            {"volume_level": 0.3},
+            "volume_level",
+            0.5,
+            id="volume_level",
+        ),
+        pytest.param(
+            "volume_mute",
+            {"is_volume_muted": "{{ False }}"},
+            "volume_mute",
+            {"is_volume_muted": True},
+            "is_volume_muted",
+            False,
+            id="is_volume_muted",
+        ),
+        pytest.param(
+            "shuffle_set",
+            {"shuffle": "{{ False }}"},
+            "shuffle_set",
+            {"shuffle": True},
+            "shuffle",
+            False,
+            id="shuffle",
+        ),
+        pytest.param(
+            "repeat_set",
+            {"repeat": "{{ 'off' }}"},
+            "repeat_set",
+            {"repeat": "one"},
+            "repeat",
+            "off",
+            id="repeat",
+        ),
+        pytest.param(
+            "select_source",
+            {"source": "{{ 'TV' }}", **SOURCE_LIST},
+            "select_source",
+            {"source": "Radio"},
+            "source",
+            "TV",
+            id="source",
+        ),
+        pytest.param(
+            "select_sound_mode",
+            {"sound_mode": "{{ 'Movie' }}", **SOUND_MODE_LIST},
+            "select_sound_mode",
+            {"sound_mode": "Music"},
+            "sound_mode",
+            "Movie",
+            id="sound_mode",
+        ),
+    ],
+)
+async def test_templated_attributes_are_not_optimistic(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+    action: str,
+    template_config: ConfigType,
+    service: str,
+    service_data: ConfigType,
+    attribute: str,
+    expected: Any,
+) -> None:
+    """Test attributes follow their template instead of the action."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {**make_test_action(action), **template_config},
+        STATE_TEMPLATE,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing")
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER.entity_id, **service_data},
+        blocking=True,
+    )
+    assert_action(TEST_MEDIA_PLAYER, calls, 1, action)
+    assert_state_and_attributes(
+        hass, TEST_MEDIA_PLAYER, "playing", {attribute: expected}
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     "config",
     [
@@ -876,7 +1045,9 @@ async def test_option_requires_option(
     assert hass.states.async_all(media_player.DOMAIN) == []
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("option", "list_option", "value"),
     [
@@ -919,7 +1090,9 @@ async def test_selection_revalidated_on_list_change(
     assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "on", {option: None})
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_availability_template(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
@@ -939,7 +1112,25 @@ async def test_availability_template(
     assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, MediaPlayerState.PLAYING)
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an invalid availability template keeps the media player available."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        ConfigurationStyle.MODERN,
+        1,
+        {"availability": "{{ x - 12 }}"},
+        "{{ 'playing' }}",
+    )
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, MediaPlayerState.PLAYING)
+    assert "UndefinedError: 'x' is undefined" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_device_class(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test the device class."""
     await setup_entity(
@@ -949,7 +1140,9 @@ async def test_device_class(hass: HomeAssistant, style: ConfigurationStyle) -> N
     assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "on", {"device_class": "tv"})
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     ("saved_state", "saved_extra_data", "initial_state", "initial_attributes"),
     [
@@ -1053,7 +1246,9 @@ async def test_restore_state(
 
 
 @pytest.mark.usefixtures("calls")
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_restore_state_is_saved(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
@@ -1167,7 +1362,9 @@ async def test_restore_media_metadata_trigger(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("calls")
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_restore_media_metadata_is_saved(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -1205,13 +1402,17 @@ async def test_restore_media_metadata_is_saved(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_unique_id(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test unique_id option only creates one media player per id."""
     await setup_and_test_unique_id(hass, TEST_MEDIA_PLAYER, style, ON_OFF_ACTIONS)
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_nested_unique_id(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -1223,7 +1424,9 @@ async def test_nested_unique_id(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize("action", ["turn_on", "media_play", "volume_set"])
 async def test_invalid_yaml_actions_do_not_create_entities(
     hass: HomeAssistant,
@@ -1237,7 +1440,30 @@ async def test_invalid_yaml_actions_do_not_create_entities(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        pytest.param("turn_on", {}, id="turn_on"),
+        pytest.param("media_play", {}, id="media_play"),
+        pytest.param("volume_set", {}, id="volume_set"),
+        pytest.param("select_source", SOURCE_LIST, id="select_source"),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_MEDIA_PLAYER, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_extra_template_attributes(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
@@ -1247,7 +1473,9 @@ async def test_extra_template_attributes(
     )
 
 
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_attributes_template(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -1266,7 +1494,9 @@ async def test_attributes_template(
         "device_class",
     ],
 )
-@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_blocked_template_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -1287,6 +1517,42 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        *chain(MediaPlayerEntityCapabilityAttribute, MediaPlayerEntityStateAttribute),
+        "device_class",
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum | str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {
+            "state": "{{ 'on' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = (
+        f"Unsupported attribute(s) found for {TEST_MEDIA_PLAYER.entity_id}: {attribute}"
+    )
+    assert error in caplog.text
 
 
 async def test_setup_config_entry(

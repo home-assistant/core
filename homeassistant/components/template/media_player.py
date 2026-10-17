@@ -328,6 +328,7 @@ class AbstractTemplateMediaPlayer(
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._rendered_media_position: int | None = None
 
         self.setup_state_template(
             "_attr_state",
@@ -465,12 +466,15 @@ class AbstractTemplateMediaPlayer(
     @callback
     def _update_media_position(self, position: int | None) -> None:
         """Update the position and the time it was last valid."""
-        if position is None:
-            self._attr_media_position_updated_at = None
-        # Trigger entities re-render unchanged values, which must not reset the clock.
-        elif position != self._attr_media_position:
-            self._attr_media_position_updated_at = dt_util.utcnow()
+        # Trigger entities re-render unchanged samples, which must not undo the
+        # position kept by a state transition or reset the clock.
+        if position == self._rendered_media_position:
+            return
+        self._rendered_media_position = position
         self._attr_media_position = position
+        self._attr_media_position_updated_at = (
+            None if position is None else dt_util.utcnow()
+        )
 
     @property
     def _media_image_picture(self) -> str | None:
