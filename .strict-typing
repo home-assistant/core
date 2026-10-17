@@ -272,6 +272,7 @@ homeassistant.components.hardware.*
 homeassistant.components.harman_luxury.*
 homeassistant.components.hase_iq.*
 homeassistant.components.hdfury.*
+homeassistant.components.helty_cloud.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
