@@ -4,7 +4,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast, override
 
-from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
+from pyoverkiz.enums import (
+    OverkizAttribute,
+    OverkizCommandParam,
+    OverkizState,
+    UIWidget,
+)
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
@@ -49,6 +54,17 @@ class OverkizSensorDescription(SensorEntityDescription):
 
     native_value: Callable[[OverkizStateType], StateType] | None = None
 
+
+PASS_APC_PROFILE_TO_HA: dict[str, str] = {
+    OverkizCommandParam.ABSENCE: "absence",
+    OverkizCommandParam.COMFORT: "comfort",
+    OverkizCommandParam.DEROGATION: "derogation",
+    OverkizCommandParam.ECO: "eco",
+    OverkizCommandParam.EXTERNAL_SETPOINT: "external_setpoint",
+    OverkizCommandParam.FROSTPROTECTION: "frost_protection",
+    OverkizCommandParam.MANU: "manual",
+    OverkizCommandParam.STOP: "stop",
+}
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
@@ -532,6 +548,23 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # HeatingSystem/AtlanticPassAPCHeatingAndCoolingZone
+    OverkizSensorDescription(
+        key=OverkizState.IO_PASS_APC_HEATING_PROFILE,
+        name="Heating profile",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PASS_APC_PROFILE_TO_HA.values()),
+        translation_key="pass_apc_heating_profile",
+        native_value=lambda value: PASS_APC_PROFILE_TO_HA.get(cast(str, value)),
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.IO_PASS_APC_COOLING_PROFILE,
+        name="Cooling profile",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PASS_APC_PROFILE_TO_HA.values()),
+        translation_key="pass_apc_cooling_profile",
+        native_value=lambda value: PASS_APC_PROFILE_TO_HA.get(cast(str, value)),
     ),
 ]
 
