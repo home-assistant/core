@@ -39,6 +39,7 @@ pytest==9.0.3
 requests==2.34.2
 requests-mock==1.12.1
 respx==0.23.1
+rust-just==1.58.0
 syrupy==6.1.1
 tqdm==4.70.1
 types-aiofiles==25.1.0.20260518
