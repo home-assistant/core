@@ -34,8 +34,9 @@ def mock_config_entry(
     return MockConfigEntry(
         domain=DOMAIN,
         title="Novy Cooker Hood",
-        data={CONF_TRANSMITTER: entity_entry.id, CONF_CODE: 1},
+        data={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID, CONF_CODE: 1},
         unique_id=f"{entity_entry.id}_1",
+        minor_version=2,
     )
 
 

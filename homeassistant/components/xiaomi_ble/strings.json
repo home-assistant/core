@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "api_error": "Error while communicating with Mi API: {error_detail}",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
       "api_device_not_found": "The device was not found in your Mi account.",

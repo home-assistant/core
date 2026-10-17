@@ -94,5 +94,13 @@
         "name": "Status"
       }
     }
+  },
+  "exceptions": {
+    "migration_cannot_connect": {
+      "message": "Could not connect to the API to migrate the camera at {location}"
+    },
+    "migration_no_camera_id": {
+      "message": "Could not migrate the camera at {location} because it has no ID"
+    }
   }
 }

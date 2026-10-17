@@ -146,7 +146,7 @@ async def test_select_option_without_remote_control(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when remote control is enabled",
+        match="Can only be changed when remote control is enabled",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -246,7 +246,7 @@ async def test_select_dishwasher_washing_course_with_wrong_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -309,7 +309,7 @@ async def test_select_dishwasher_washing_option_with_wrong_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,

@@ -1,6 +1,7 @@
 """Support for Freebox cameras."""
 
 from typing import Any, override
+from urllib.parse import quote
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -62,6 +63,23 @@ def add_entities(
         async_add_entities(new_tracked, True)
 
 
+def _quote_credentials(url: str) -> str:
+    """Quote the credentials in a stream URL.
+
+    The Freebox generates the camera password, which can contain characters like
+    a slash that break parsing the URL if they are not percent-encoded.
+    """
+    scheme, separator, rest = url.partition("://")
+    credentials, at_sign, location = rest.rpartition("@")
+    if not separator or not at_sign:
+        return url
+
+    user, colon, password = credentials.partition(":")
+    return (
+        f"{scheme}://{quote(user, safe='')}{colon}{quote(password, safe='')}@{location}"
+    )
+
+
 class FreeboxCamera(FreeboxHomeEntity, Camera):
     """Representation of a Freebox camera."""
 
@@ -87,7 +105,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
     @override
     async def stream_source(self) -> str:
         """Return the stream source."""
-        return self._input.split(" ")[-1]
+        return _quote_credentials(self._input.split(" ")[-1])
 
     @override
     async def async_camera_image(

@@ -63,6 +63,7 @@ async def test_sensor_state(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_updates_from_client(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -109,6 +110,14 @@ async def test_sensor_updates_from_client(
     assert state.state == "idle"
     assert (state := hass.states.get("sensor.garage_current_state")) is not None
     assert state.state == "ready_to_charge"
+
+    publish_besen_state(
+        mock_besen_client,
+        charger_state(charge=ChargeStatus(charging_status="Scheduled")),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(CHARGING_STATUS_ENTITY_ID) == snapshot
 
 
 async def test_sensor_unknown_value(
@@ -246,6 +255,30 @@ async def test_diagnostic_sensors_disabled_by_default(
         assert hass.states.get(entry.entity_id) is None
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.garage_session_current_limit",
+        "sensor.garage_scheduled_start",
+        "sensor.garage_charging_time_limit",
+    ],
+)
+async def test_optional_session_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    entity_id: str,
+) -> None:
+    """Test rarely used session sensors are disabled by default."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert (entry := entity_registry.async_get(entity_id)) is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
+
+
 @pytest.mark.parametrize(("phases", "expected"), [(1, False), (3, True)])
 async def test_three_phase_sensor_filtering(
     hass: HomeAssistant,
@@ -288,5 +321,5 @@ def test_enum_sensor_options_cover_known_library_states() -> None:
         f"Unknown {index}" for index in range(7)
     }
     assert set(CURRENT_STATES) == set(CURRENT_STATE) - {
-        f"Unknown {index}" for index in range(1, 11)
+        f"Unknown {index}" for index in range(11)
     }

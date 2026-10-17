@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.people.models import PeopleResponse
 

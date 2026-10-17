@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str,
     }
 )
 

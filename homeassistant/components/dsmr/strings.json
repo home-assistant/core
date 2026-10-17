@@ -105,9 +105,6 @@
       "electricity_used_tariff_4": {
         "name": "Energy consumption (tarif 4)"
       },
-      "frequency": {
-        "name": "Frequency"
-      },
       "fuse_threshold_l1": {
         "name": "Fuse threshold on L1"
       },
