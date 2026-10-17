@@ -87,22 +87,21 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
     """
 
     _attr_should_poll = False
-    _rf_transmitter_entity_id_or_uuid: str
+    _rf_transmitter_entity_id: str
 
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to RF entity state changes."""
         await super().async_added_to_hass()
 
-        entity_id = er.async_validate_entity_id(
-            er.async_get(self.hass), self._rf_transmitter_entity_id_or_uuid
-        )
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, [entity_id], self._async_rf_state_changed
+                self.hass,
+                [self._rf_transmitter_entity_id],
+                self._async_rf_state_changed,
             )
         )
-        rf_state = self.hass.states.get(entity_id)
+        rf_state = self.hass.states.get(self._rf_transmitter_entity_id)
         self._attr_available = (
             rf_state is not None and rf_state.state != STATE_UNAVAILABLE
         )
@@ -111,7 +110,7 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
         """Send an RF command through the RF transmitter entity."""
         await async_send_command(
             self.hass,
-            self._rf_transmitter_entity_id_or_uuid,
+            self._rf_transmitter_entity_id,
             command,
             context=self._context,
         )
