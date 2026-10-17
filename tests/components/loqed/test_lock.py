@@ -1,6 +1,8 @@
 """Tests the lock platform of the Loqed integration."""
 
+import aiohttp
 from loqedAPI import loqed
+import pytest
 
 from homeassistant.components.lock import LockState
 from homeassistant.const import (
@@ -11,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -96,3 +99,33 @@ async def test_lock_transition_to_open(
     )
     await hass.async_block_till_done()
     lock.open.assert_called()
+
+
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [
+        (SERVICE_LOCK, "lock"),
+        (SERVICE_UNLOCK, "unlock"),
+        (SERVICE_OPEN, "open"),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [TimeoutError, aiohttp.ClientError],
+)
+async def test_lock_action_raises_on_communication_failure(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    service: str,
+    mock_method: str,
+    exception: type[Exception],
+) -> None:
+    """Test lock actions raise HomeAssistantError on bridge communication failure."""
+    entity_id = "lock.home"
+    getattr(lock, mock_method).side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "lock", service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )

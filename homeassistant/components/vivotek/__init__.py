@@ -51,7 +51,7 @@ async def async_build_and_test_cam_client(
     return cam_client
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VivotekConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VivotekConfigEntry) -> None:
     """Set up the Vivotek component from a config entry."""
 
     try:
@@ -62,9 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VivotekConfigEntry) -> b
     entry.runtime_data = cam_client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VivotekConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VivotekConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

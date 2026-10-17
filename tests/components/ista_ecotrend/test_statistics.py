@@ -1,6 +1,6 @@
 """Tests for the ista EcoTrend Statistics import."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -45,7 +45,7 @@ async def test_statistics_import(
         stats = await hass.async_add_executor_job(
             statistics_during_period,
             hass,
-            datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+            dt.datetime.fromtimestamp(0, tz=dt.UTC),
             None,
             {statistic_id},
             "month",
@@ -60,11 +60,11 @@ async def test_statistics_import(
     # appended to the statistics
     mock_ista.get_consumption_data = extend_statistics
 
-    freezer.tick(datetime.timedelta(days=1))
+    freezer.tick(dt.timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
-    freezer.tick(datetime.timedelta(days=1))
+    freezer.tick(dt.timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
@@ -74,7 +74,7 @@ async def test_statistics_import(
         stats = await hass.async_add_executor_job(
             statistics_during_period,
             hass,
-            datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+            dt.datetime.fromtimestamp(0, tz=dt.UTC),
             None,
             {statistic_id},
             "month",
@@ -102,7 +102,7 @@ async def test_remove(
     assert await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+        dt.datetime.fromtimestamp(0, tz=dt.UTC),
         None,
         {"ista_ecotrend:bahnhofsstr_1a_heating"},
         "month",
@@ -119,7 +119,7 @@ async def test_remove(
     assert await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+        dt.datetime.fromtimestamp(0, tz=dt.UTC),
         None,
         {"ista_ecotrend:bahnhofsstr_1a_heating"},
         "month",
@@ -135,7 +135,7 @@ async def test_remove(
     assert not await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+        dt.datetime.fromtimestamp(0, tz=dt.UTC),
         None,
         {"ista_ecotrend:bahnhofsstr_1a_heating"},
         "month",

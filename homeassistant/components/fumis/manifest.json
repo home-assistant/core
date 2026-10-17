@@ -1,6 +1,7 @@
 {
   "domain": "fumis",
   "name": "Fumis",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dhcp": [

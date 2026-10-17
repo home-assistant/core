@@ -1,7 +1,7 @@
 """Tests for rainbird calendar platform."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 import urllib
@@ -167,12 +167,12 @@ async def test_get_events(hass: HomeAssistant, get_events: GetEventsFn) -> None:
     ("freeze_time", "expected_state", "setup_config_entry"),
     [
         (
-            datetime.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
+            dt.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
             "off",
             None,
         ),
         (
-            datetime.datetime(2023, 1, 23, 4, 30, tzinfo=ZoneInfo("America/Regina")),
+            dt.datetime(2023, 1, 23, 4, 30, tzinfo=ZoneInfo("America/Regina")),
             "on",
             None,
         ),
@@ -182,7 +182,7 @@ async def test_event_state(
     hass: HomeAssistant,
     get_events: GetEventsFn,
     freezer: FrozenDateTimeFactory,
-    freeze_time: datetime.datetime,
+    freeze_time: dt.datetime,
     expected_state: str,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,

@@ -1,5 +1,6 @@
 """Test websocket API."""
 
+import errno
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, patch
@@ -8,7 +9,7 @@ import pytest
 import yaml
 
 from homeassistant.components.blueprint import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import UndefinedSubstitution, parse_yaml
 
@@ -378,26 +379,45 @@ async def test_save_existing_file_override(
     }
 
 
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
 async def test_save_file_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    error: int,
+    translation_key: str,
 ) -> None:
     """Test saving blueprints with OS error."""
-    with patch("pathlib.Path.write_text", side_effect=OSError):
+    with patch("pathlib.Path.write_text", side_effect=OSError(error, "Error")):
         client = await hass_ws_client(hass)
         await client.send_json_auto_id(
             {
                 "type": "blueprint/save",
                 "path": "test_save",
-                "yaml": "raw_data",
+                "yaml": 'blueprint: {name: "name", domain: "automation"}',
                 "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             }
         )
 
         msg = await client.receive_json()
 
-        assert not msg["success"]
+    assert not msg["success"]
+    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["translation_domain"] == HOMEASSISTANT_DOMAIN
+    assert msg["error"]["translation_key"] == translation_key
+    assert msg["error"]["translation_placeholders"] == {
+        "path": hass.config.path("blueprints/automation/test_save.yaml")
+    }
 
 
 async def test_save_invalid_blueprint(

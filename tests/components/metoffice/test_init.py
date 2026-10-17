@@ -1,6 +1,6 @@
 """Tests for metoffice init."""
 
-import datetime
+import datetime as dt
 import json
 
 import pytest
@@ -20,7 +20,7 @@ from tests.common import (
 )
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_reauth_on_auth_error(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
@@ -60,7 +60,7 @@ async def test_reauth_on_auth_error(
         status_code=401,
     )
 
-    future_time = utcnow() + datetime.timedelta(minutes=40)
+    future_time = utcnow() + dt.timedelta(minutes=40)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done(wait_background_tasks=True)
 

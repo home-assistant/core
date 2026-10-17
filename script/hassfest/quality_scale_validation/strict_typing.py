@@ -1,6 +1,6 @@
 """Enforce that the integration has strict typing enabled.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/strict-typing/
+https://contributors.home-assistant.io/core/quality-scale/strict-typing/
 """
 
 from functools import lru_cache

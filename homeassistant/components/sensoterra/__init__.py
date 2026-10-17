@@ -10,7 +10,7 @@ from .coordinator import SensoterraConfigEntry, SensoterraCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -> None:
     """Set up Sensoterra platform based on a configuration entry."""
 
     # Create a coordinator and add an API instance to it. Store the coordinator
@@ -25,9 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -> None:
     """Unload the configuration entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

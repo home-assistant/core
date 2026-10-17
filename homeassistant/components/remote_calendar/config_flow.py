@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
-from httpx import HTTPError, InvalidURL, TimeoutException
+from httpx2 import HTTPError, InvalidURL, TimeoutException
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

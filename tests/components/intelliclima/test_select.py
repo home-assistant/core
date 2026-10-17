@@ -88,7 +88,7 @@ async def test_select_option_keeps_current_speed(
     )
     # Device starts with speed_set=FanSpeed.medium (from single_eco_device in conftest),
     # mode is not off and not auto, so current speed is preserved.
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", expected_mode, FanSpeed.medium
     )
 
@@ -109,7 +109,7 @@ async def test_select_option_when_off_defaults_speed_to_sleep(
         {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "forward"},
         blocking=True,
     )
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", FanMode.inward, FanSpeed.sleep
     )
 
@@ -121,7 +121,7 @@ async def test_select_option_in_auto_mode_defaults_speed_to_sleep(
 ) -> None:
     """Test selecting option in auto preset defaults to sleep speed."""
     eco = list(single_eco_device.ecocomfort2_devices.values())[0]
-    eco.speed_set = FanSpeed.auto_get
+    eco.speed_set = FanSpeed.auto
     eco.mode_set = FanMode.sensor
 
     await hass.services.async_call(
@@ -130,7 +130,7 @@ async def test_select_option_in_auto_mode_defaults_speed_to_sleep(
         {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "reverse"},
         blocking=True,
     )
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", FanMode.outward, FanSpeed.sleep
     )
 
@@ -148,7 +148,7 @@ async def test_select_option_does_not_call_turn_off(
         {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
         blocking=True,
     )
-    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
 
 
 async def test_select_option_triggers_coordinator_refresh(

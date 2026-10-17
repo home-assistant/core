@@ -1,7 +1,7 @@
 """Test the Flow-it config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 import pytest
@@ -238,3 +238,84 @@ async def test_user_flow_with_http(
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
     assert result["result"].unique_id == "001122334455"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication flow."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "Flow-it Device",
+        "username": "api",
+        "host": "http://1.1.1.1",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"password": "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        "host": "http://1.1.1.1",
+        "username": "api",
+        "password": "new-password",
+    }
+    mock_flow_it.assert_called_with(
+        "http://1.1.1.1", "new-password", "api", session=ANY
+    )
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(FlowItAuthError, "invalid_auth", id="invalid_auth"),
+        pytest.param(FlowItConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_flow_exceptions(
+    hass: HomeAssistant,
+    mock_flow_it: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test reauthentication flow handles errors and recovers."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_flow_it.return_value.get_info.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"password": "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_flow_it.return_value.get_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"password": "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["password"] == "new-password"
+
+
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication aborts when a different device responds."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_flow_it.return_value.state.name = "665544332211"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"password": "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data["password"] == "test-password"

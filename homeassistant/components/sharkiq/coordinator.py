@@ -98,6 +98,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
             LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
             raise ConfigEntryAuthFailed from err
         except Exception as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.exception("Unexpected error updating SharkIQ.  Attempting re-auth")
             raise UpdateFailed(err) from err
 

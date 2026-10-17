@@ -66,9 +66,11 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: Authentication failures are handled by reauthentication. There are no other known repair conditions.
   stale-devices:
     status: exempt
     comment: The API exposes one household event feed, not a list of devices.

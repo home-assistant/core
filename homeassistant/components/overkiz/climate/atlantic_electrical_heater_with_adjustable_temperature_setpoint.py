@@ -82,7 +82,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -165,7 +165,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature."""
         # core:TargetTemperatureState stays pinned to comfort in auto mode.
         state_name = (
@@ -179,7 +179,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(

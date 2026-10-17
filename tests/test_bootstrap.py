@@ -72,6 +72,11 @@ def disable_block_async_io(disable_block_async_io):
     """Disable the loop protection from block_async_io after each test."""
 
 
+@pytest.fixture(autouse=True)
+def disable_block_shared_serial(disable_block_shared_serial: None) -> None:
+    """Restore pyserial after each test."""
+
+
 @pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
@@ -762,7 +767,7 @@ def mock_enable_logging() -> Generator[AsyncMock]:
 def mock_process_ha_config_upgrade() -> Generator[Mock]:
     """Mock enable logging."""
     with patch(
-        "homeassistant.config.process_ha_config_upgrade"
+        "homeassistant.config.process_ha_config_upgrade", return_value=None
     ) as process_ha_config_upgrade:
         yield process_ha_config_upgrade
 
@@ -819,11 +824,33 @@ async def test_setup_hass(
     )
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+    assert config_util.DATA_PREVIOUS_VERSION not in hass.data
 
     # debug in RuntimeConfig should set it it in hass.config
     assert hass.config.debug is True
 
     assert hass == async_get_hass()
+
+
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures(
+    "mock_hass_config", "mock_enable_logging", "mock_ensure_config_exists"
+)
+async def test_setup_hass_keeps_previous_version(
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test the version that ran before an update is kept for the trigger."""
+    mock_process_ha_config_upgrade.return_value = "2026.9.4"
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass.data[config_util.DATA_PREVIOUS_VERSION] == "2026.9.4"
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
@@ -1050,6 +1077,15 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 
 
 @pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.parametrize(
+    "storage_key",
+    [
+        # Loading the entity registry waits for the device registry
+        "core.device_registry",
+        # Loading restore state waits for the entity registry
+        "core.entity_registry",
+    ],
+)
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_storage_version_too_new_triggers_recovery_mode(
     hass_storage: dict[str, Any],
@@ -1057,12 +1093,13 @@ async def test_storage_version_too_new_triggers_recovery_mode(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
+    storage_key: str,
 ) -> None:
     """Test that a storage file with a newer major version triggers recovery mode."""
-    hass_storage["core.entity_registry"] = {
+    hass_storage[storage_key] = {
         "version": 99,
         "minor_version": 1,
-        "key": "core.entity_registry",
+        "key": storage_key,
         "data": {},
     }
 
@@ -1082,7 +1119,7 @@ async def test_storage_version_too_new_triggers_recovery_mode(
     assert hass.config.recovery_mode is True
     assert "recovery_mode" in hass.config.components
     assert (
-        "Storage file core.entity_registry was created"
+        f"Storage file {storage_key} was created"
         " by a newer version of Home Assistant" in caplog.text
     )
 
