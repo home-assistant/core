@@ -61,6 +61,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result2["title"] == "test@email.com"
     assert result2["data"] == {"api_token": "123"}
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "1234"
 
 
 @pytest.mark.parametrize(

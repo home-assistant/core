@@ -7,7 +7,7 @@ The integration must have a ``diagnostics.py`` module that implements at
 least one of ``async_get_config_entry_diagnostics`` or
 ``async_get_device_diagnostics``.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/diagnostics/
+https://contributors.home-assistant.io/core/quality-scale/diagnostics/
 """
 
 from astroid import nodes
@@ -36,8 +36,8 @@ class DiagnosticsChecker(BaseChecker):
             "Integration diagnostics module should implement "
             "`async_get_config_entry_diagnostics` or "
             "`async_get_device_diagnostics` "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/diagnostics)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/diagnostics/)",
             "home-assistant-missing-diagnostics",
             "Used when an integration's diagnostics.py does not implement "
             "at least one of async_get_config_entry_diagnostics or "

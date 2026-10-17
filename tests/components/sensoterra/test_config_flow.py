@@ -42,6 +42,7 @@ async def test_full_flow(
         CONF_TOKEN: API_TOKEN,
         CONF_EMAIL: API_EMAIL,
     }
+    assert result["result"].unique_id == "39"
 
     assert len(mock_customer_api_client.mock_calls) == 1
 

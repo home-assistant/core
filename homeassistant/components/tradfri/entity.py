@@ -3,10 +3,10 @@
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, cast, override
+from typing import Any, override
 
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.command import Command
-from pytradfri.const import ATTR_DEVICE_FIRMWARE_VERSION
 from pytradfri.device import Device
 from pytradfri.error import RequestError
 
@@ -20,7 +20,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 def handle_error(
-    func: Callable[[Command | list[Command]], Any],
+    func: APIRequestProtocol,
 ) -> Callable[[Command | list[Command]], Coroutine[Any, Any, None]]:
     """Handle tradfri api call error."""
 
@@ -44,7 +44,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
         gateway_id: str,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
     ) -> None:
         """Initialize a device."""
         super().__init__(device_coordinator)
@@ -62,7 +62,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
             manufacturer=info.manufacturer,
             model=info.model_number,
             name=self._device.name,
-            sw_version=info.raw.get(ATTR_DEVICE_FIRMWARE_VERSION),
+            sw_version=info.firmware_version,
             via_device_id=dr.async_get_device_id_by_identifier(
                 device_coordinator.hass,
                 (DOMAIN, gateway_id),
@@ -90,4 +90,4 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return cast(bool, self._device.reachable) and super().available
+        return self._device.reachable and super().available

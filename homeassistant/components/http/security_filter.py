@@ -14,21 +14,23 @@ from homeassistant.core import callback
 _LOGGER = logging.getLogger(__name__)
 
 # fmt: off
+# `.*` between literals would make the engine rescan once per start position.
+# The atomic scans and line anchors keep this linear in the request line length.
 FILTERS: Final = re.compile(
     r"(?:"
 
     # Common exploits
     r"proc/self/environ"
-    r"|(<|%3C).*script.*(>|%3E)"
+    r"|(?m:^(?>[^\n]*?(?:<|%3C))(?>[^\n]*?script)(?>[^\n]*?(?:>|%3E)))"
 
     # File Injections
     r"|(\.\.//?)+"  # ../../anywhere
     r"|[a-zA-Z0-9_]=/([a-z0-9_.]//?)+"  # .html?v=/.//test
 
     # SQL Injections
-    r"|union.*select.*\("
-    r"|union.*all.*select.*"
-    r"|concat.*\("
+    r"|(?m:^(?>[^\n]*?union)(?>[^\n]*?select)(?>[^\n]*?\())"
+    r"|(?m:^(?>[^\n]*?union)(?>[^\n]*?all)(?>[^\n]*?select))"
+    r"|(?m:^(?>[^\n]*?concat)(?>[^\n]*?\())"
 
     r")",
     flags=re.IGNORECASE,

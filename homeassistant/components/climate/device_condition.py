@@ -24,7 +24,8 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 CONDITION_TYPES = {"is_hvac_mode", "is_preset_mode"}
 
@@ -44,7 +45,9 @@ PRESET_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-CONDITION_SCHEMA = probatio.Any(HVAC_MODE_CONDITION, PRESET_MODE_CONDITION)
+CONDITION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE, [HVAC_MODE_CONDITION, PRESET_MODE_CONDITION]
+)
 
 
 async def async_get_conditions(

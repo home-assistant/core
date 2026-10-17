@@ -20,8 +20,8 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, AlarmControlPanelState
-from .const import AlarmControlPanelEntityFeature
+from . import AlarmControlPanelState
+from .const import DOMAIN, AlarmControlPanelEntityFeature
 
 BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
 TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {

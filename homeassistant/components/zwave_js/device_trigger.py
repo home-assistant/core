@@ -56,7 +56,6 @@ from .device_automation_helpers import (
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
-    check_type_schema_map,
     copy_available_params,
     get_value_state_schema,
     get_zwave_value_from_config,
@@ -197,16 +196,9 @@ TYPE_SCHEMA_MAP = {
     NODE_STATUS: NODE_STATUS_SCHEMA,
 }
 
-
-TRIGGER_TYPE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_TYPE): probatio.In(TYPE_SCHEMA_MAP)},
-    extra=probatio.ALLOW_EXTRA,
-)
-
 TRIGGER_SCHEMA = probatio.All(
     remove_keys_with_empty_values,
-    TRIGGER_TYPE_SCHEMA,
-    check_type_schema_map(TYPE_SCHEMA_MAP),
+    probatio.TaggedUnion(CONF_TYPE, TYPE_SCHEMA_MAP),
 )
 
 

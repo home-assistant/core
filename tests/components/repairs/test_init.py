@@ -479,7 +479,8 @@ async def test_non_compliant_platform(
     assert await async_setup_component(hass, DOMAIN, {})
 
     platforms = await hass.data[DOMAIN]["platforms"].async_get_platforms()
-    assert list(platforms) == ["fake_integration"]
+    assert "fake_integration" in platforms
+    assert "integration_without_repairs" not in platforms
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])

@@ -1,12 +1,16 @@
 """Tests for Renault setup process."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
 from renault_api.exceptions import NotAuthenticatedException
-from renault_api.gigya.exceptions import GigyaException, InvalidCredentialsException
+from renault_api.gigya.exceptions import (
+    GigyaException,
+    InvalidCredentialsException,
+    PendingTwoFactorAuthenticationException,
+)
 from renault_api.renault_session import RenaultSession
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,10 +22,16 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_ACCOUNT_ID, MOCK_LOGIN_TOKEN
+from .const import (
+    FORBIDDEN_EXCEPTION,
+    MOCK_ACCOUNT_ID,
+    MOCK_DEVICE_IDS,
+    MOCK_LOGIN_TOKEN,
+    OTHER_ACCOUNT_ID,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -102,13 +112,61 @@ async def test_setup_entry_password_login(
     )
 
 
-async def test_setup_entry_bad_password(
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_setup_entry_password_login_device_ids(
     hass: HomeAssistant, legacy_config_entry: MockConfigEntry
 ) -> None:
-    """Test reauth is triggered when the stored password is invalid."""
+    """Test the remembered device ids are restored before a password login."""
+    hass.config_entries.async_update_entry(
+        legacy_config_entry,
+        data={
+            **legacy_config_entry.data,
+            RenaultConfigurationKeys.DEVICE_IDS: MOCK_DEVICE_IDS,
+        },
+    )
+    device_ids: list[dict[str, str]] = []
+
+    def _record_device_ids(
+        session: RenaultSession, login_id: str, password: str
+    ) -> None:
+        device_ids.append(session.device_ids)
+        _mock_login(session, login_id, password)
+
     with patch(
         "renault_api.renault_session.RenaultSession.login",
-        side_effect=InvalidCredentialsException(403042, "invalid loginID or password"),
+        autospec=True,
+        side_effect=_record_device_ids,
+    ):
+        await hass.config_entries.async_setup(legacy_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert device_ids == [MOCK_DEVICE_IDS]
+    assert legacy_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            InvalidCredentialsException(403042, "invalid loginID or password"),
+            id="invalid_credentials",
+        ),
+        pytest.param(
+            PendingTwoFactorAuthenticationException(
+                403101, "Pending Two-Factor Authentication", "reg-token"
+            ),
+            id="two_factor_auth",
+        ),
+    ],
+)
+async def test_setup_entry_bad_password(
+    hass: HomeAssistant, legacy_config_entry: MockConfigEntry, side_effect: Exception
+) -> None:
+    """Test reauth is triggered when the password login fails."""
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(legacy_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -197,17 +255,99 @@ async def test_setup_entry_kamereon_exception(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_api_accounts")
+@pytest.mark.parametrize(
+    ("account_ids", "expected_issues"),
+    [
+        pytest.param([MOCK_ACCOUNT_ID], set(), id="account_listed"),
+        pytest.param(
+            [OTHER_ACCOUNT_ID],
+            {(DOMAIN, "account_not_found_123456")},
+            id="account_not_listed",
+        ),
+    ],
+)
+async def test_setup_entry_forbidden(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    expected_issues: set[tuple[str, str]],
+) -> None:
+    """Test a forbidden Kamereon account fails setup without retrying."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert set(issue_registry.issues) == expected_issues
+
+
+@pytest.mark.usefixtures(
+    "patch_renault_account", "patch_get_api_accounts", "patch_get_vehicles"
+)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("account_ids", [[OTHER_ACCOUNT_ID]])
+async def test_account_not_found_issue_deleted_on_setup(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is deleted once the account loads again."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_api_accounts")
+@pytest.mark.parametrize("account_ids", [[OTHER_ACCOUNT_ID]])
+async def test_account_not_found_issue_deleted_on_removal(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is deleted when the config entry is removed."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, "account_not_found_123456")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 @pytest.mark.parametrize("vehicle_type", ["missing_details"], indirect=True)
 async def test_setup_entry_missing_vehicle_details(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, mock_get_vehicle_details: AsyncMock
 ) -> None:
     """Test ConfigEntryNotReady when vehicleDetails is missing."""
     # In this case we are testing the condition where renault_hub fails to retrieve
-    # vehicle details (see #99127).
+    # vehicle details (see #99127), even when requested separately.
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Requested for each vehicle without details in the vehicle list.
+    assert mock_get_vehicle_details.await_count == 2
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 

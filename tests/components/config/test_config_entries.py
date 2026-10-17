@@ -836,9 +836,7 @@ async def test_get_progress_index(
         form_user = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        form_reconfigure = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
-        )
+        form_reconfigure = await entry.start_reconfigure_flow(hass)
 
     for form in (form_hassio, form_user, form_reconfigure):
         assert form["type"] is data_entry_flow.FlowResultType.FORM
@@ -1296,10 +1294,10 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
         assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
+    bad_entry = MockConfigEntry(domain="test2", title="Test 2")
+    bad_entry.add_to_hass(hass)
     with mock_config_flow("test2", BadFlow):
-        forms["bad"] = await hass.config_entries.flow.async_init(
-            "test2", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
-        )
+        forms["bad"] = await bad_entry.start_reauth_flow(hass)
     assert forms["bad"]["type"] is data_entry_flow.FlowResultType.FORM
     assert forms["bad"]["step_id"] == "account"
 
@@ -3344,6 +3342,142 @@ async def test_subscribe_entries_ws_filtered(
             "type": "added",
         }
     ]
+
+
+@pytest.mark.parametrize(
+    (
+        "initial_disabled_by",
+        "new_disabled_by",
+        "initial_state",
+        "loaded_components",
+        "expected_events",
+        "require_restart",
+    ),
+    [
+        pytest.param(
+            None,
+            "user",
+            core_ce.ConfigEntryState.LOADED,
+            {"comp"},
+            [
+                ("user", "loaded"),
+                ("user", "unload_in_progress"),
+                ("user", "not_loaded"),
+            ],
+            False,
+            id="disable_loaded",
+        ),
+        pytest.param(
+            None,
+            "user",
+            core_ce.ConfigEntryState.NOT_LOADED,
+            {"comp"},
+            [("user", "not_loaded")],
+            False,
+            id="disable_not_loaded",
+        ),
+        pytest.param(
+            None,
+            "user",
+            core_ce.ConfigEntryState.MIGRATION_ERROR,
+            {"comp"},
+            [("user", "migration_error")],
+            True,
+            id="disable_not_recoverable",
+        ),
+        pytest.param(
+            core_ce.ConfigEntryDisabler.USER,
+            None,
+            core_ce.ConfigEntryState.NOT_LOADED,
+            {"comp"},
+            [
+                (None, "not_loaded"),
+                (None, "setup_in_progress"),
+                (None, "loaded"),
+            ],
+            False,
+            id="enable",
+        ),
+        pytest.param(
+            core_ce.ConfigEntryDisabler.USER,
+            None,
+            core_ce.ConfigEntryState.FAILED_UNLOAD,
+            {"comp"},
+            [(None, "failed_unload")],
+            True,
+            id="enable_not_recoverable",
+        ),
+        pytest.param(
+            core_ce.ConfigEntryDisabler.USER,
+            None,
+            core_ce.ConfigEntryState.NOT_LOADED,
+            set(),
+            [(None, "not_loaded")],
+            True,
+            id="enable_component_setup_fails",
+        ),
+    ],
+)
+async def test_subscribe_entries_ws_disabled_by_changed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    initial_disabled_by: core_ce.ConfigEntryDisabler | None,
+    new_disabled_by: str | None,
+    initial_state: core_ce.ConfigEntryState,
+    loaded_components: set[str],
+    expected_events: list[tuple[str | None, str]],
+    require_restart: bool,
+) -> None:
+    """Test subscribers are notified when a config entry is disabled or enabled."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    # The component setup only runs when the component is not already loaded
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=False),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.update(loaded_components)
+    entry = MockConfigEntry(
+        domain="comp", disabled_by=initial_disabled_by, state=initial_state
+    )
+    entry.add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "config_entries/subscribe"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    subscription_id = response["id"]
+    response = await ws_client.receive_json()
+    assert response["event"] == [{"type": None, "entry": ANY}]
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json_auto_id(
+            {
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": new_disabled_by,
+            }
+        )
+        events = [await ws_client.receive_json() for _ in expected_events]
+    assert [
+        (
+            message["id"],
+            event["type"],
+            event["entry"]["disabled_by"],
+            event["entry"]["state"],
+        )
+        for message in events
+        for event in message["event"]
+    ] == [(subscription_id, "updated", *expected) for expected in expected_events]
+    # The disable result is only sent after all change events
+    response = await ws_client.receive_json()
+    assert response["id"] == subscription_id + 1
+    assert response["result"] == {"require_restart": require_restart}
 
 
 async def test_flow_with_multiple_schema_errors(

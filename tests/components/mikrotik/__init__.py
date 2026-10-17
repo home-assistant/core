@@ -1,5 +1,6 @@
 """Tests for the Mikrotik integration."""
 
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -67,6 +68,25 @@ def _build_command_responses(
     }
 
 
+def build_mock_command(responses: dict[str, Any]) -> Callable[..., Any]:
+    """Build a ``MikrotikData.command`` replacement from a command/response map.
+
+    Any command missing from ``responses`` returns an empty dict, matching the
+    hub returning no rows for that service.
+    """
+
+    def mock_command(
+        self,
+        cmd: str,
+        params: dict[str, Any] | None = None,
+        suppress_errors: bool = False,
+        during_setup: bool = False,
+    ) -> Any:
+        return responses.get(cmd, {})
+
+    return mock_command
+
+
 async def setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -76,16 +96,11 @@ async def setup_integration(
     """Set up the component with mocked Mikrotik command responses."""
     config_entry.add_to_hass(hass)
 
-    def mock_command(
-        self,
-        cmd: str,
-        params: dict[str, Any] | None = None,
-        suppress_errors: bool = False,
-        during_setup: bool = False,
-    ) -> Any:
-        return command_responses.get(cmd, {})
-
-    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command):
+    with patch.object(
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        new=build_mock_command(command_responses),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

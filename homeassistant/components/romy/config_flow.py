@@ -80,7 +80,7 @@ class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="password",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): probatio.All(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): probatio.All(
                         cv.string, probatio.Length(8)
                     )
                 },

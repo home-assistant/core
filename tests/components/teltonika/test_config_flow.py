@@ -178,6 +178,7 @@ async def test_host_url_construction(
     # Verify the result is a created entry with normalized host
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data[CONF_HOST] == expected_host
+    assert result["result"].unique_id == "1234567890"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -382,6 +383,7 @@ async def test_dhcp_confirm_error_with_recovery(
     assert result["result"].unique_id == "DISCOVERED123"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_validate_credentials_false(
     hass: HomeAssistant, mock_teltasync_client: MagicMock
 ) -> None:
@@ -409,6 +411,18 @@ async def test_validate_credentials_false(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_teltasync_client.validate_credentials.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

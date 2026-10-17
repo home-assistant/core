@@ -182,6 +182,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
         "zoom": {"min": 0, "max": 100},
         "focus": {"min": 0, "max": 100},
     }
+    host_mock.whiteled_event_on_time_range.return_value = (30, 900)
+    host_mock.whiteled_event_flash_time_range.return_value = (10, 30)
     host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
     host_mock.checked_api_versions = {"GetEvents": 1}
     host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}

@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_DRIVER): probatio.In(CONF_DRIVER_TYPES),
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
     }
 )

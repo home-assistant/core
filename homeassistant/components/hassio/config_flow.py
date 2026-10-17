@@ -2,15 +2,11 @@
 
 from typing import Any
 
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import HASSIO_USER_NAME
 
-from .const import (
-    DATA_HASSIO_SUPERVISOR_USER,
-    DEFAULT_UPDATE_OPTIONS,
-    DOMAIN,
-    ENTRY_DATA_USER,
-)
+from .const import DEFAULT_UPDATE_OPTIONS, DOMAIN, ENTRY_DATA_USER
 
 
 class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -23,7 +19,7 @@ class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         data: dict[str, Any] = {}
-        if (user := self.hass.data.get(DATA_HASSIO_SUPERVISOR_USER)) is not None:
+        if (user := self.hass.data.get(DATA_SUPERVISOR_USER)) is not None:
             data[ENTRY_DATA_USER] = user.id
 
         return self.async_create_entry(

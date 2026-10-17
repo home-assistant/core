@@ -7,9 +7,13 @@ import telegram
 from telegram import Bot
 from telegram.error import InvalidToken, TelegramError
 
-from homeassistant.const import CONF_PLATFORM, Platform
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -41,6 +45,7 @@ from .const import (
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
 )
+from .log_filter import async_redact_token, async_unredact_token
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TelegramBotConfigEntry
-) -> bool:
+) -> None:
     """Migrate Telegram Bot config entry."""
 
     version = config_entry.version
@@ -140,8 +145,6 @@ async def async_migrate_entry(
             )
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
-    return True
-
 
 def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.DeviceInfo:
     """Return device info for the shared bot device."""
@@ -155,16 +158,27 @@ def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.Dev
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Create the Telegram bot from config entry."""
+    # Registered before the bot is built: the library logs the token as soon as
+    # it constructs the API URLs.
+    async_redact_token(entry.data[CONF_API_KEY])
+
     bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
     try:
         await bot.get_me()
     except InvalidToken as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
     except TelegramError as err:
-        raise ConfigEntryNotReady from err
+        # Do not let the message through: the Telegram API URL embeds the bot
+        # token, and library errors quote that URL.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     p_type: str = entry.data[CONF_PLATFORM]
 
@@ -172,10 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     module = cast(BotPlatformModule, MODULES[p_type])
     try:
         receiver_service = await module.async_setup_bot_platform(hass, bot, entry)
-    except Exception:
-        _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+    except Exception as err:
         await bot.shutdown()
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="platform_setup_failed",
+        ) from err
 
     notify_service = TelegramNotificationService(
         hass, receiver_service, bot, entry, entry.options[ATTR_PARSER]
@@ -191,8 +207,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    return True
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
@@ -210,10 +224,12 @@ async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) ->
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramBotConfigEntry
-) -> bool:
+) -> None:
     """Unload Telegram app."""
+    async_unredact_token(entry.data[CONF_API_KEY])
+
     # broadcast platform has no app
     if entry.runtime_data.app:
         await entry.runtime_data.app.shutdown()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
