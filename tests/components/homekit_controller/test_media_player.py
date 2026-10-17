@@ -24,7 +24,8 @@ from .common import setup_test_component
 def create_tv_service(accessory: Accessory) -> Service:
     """Define tv characteristics.
 
-    The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
+    The TV is not currently documented publicly - this is based on observing really TV's
+    that have HomeKit support.
     """
     tv_service = accessory.add_service(ServicesTypes.TELEVISION)
 

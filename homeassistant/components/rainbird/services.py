@@ -1,8 +1,6 @@
 """Rain Bird Irrigation system services."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -14,7 +12,7 @@ from .const import ATTR_DURATION, DOMAIN
 SERVICE_START_IRRIGATION = "start_irrigation"
 
 SERVICE_SCHEMA_IRRIGATION: VolDictType = {
-    vol.Required(ATTR_DURATION): cv.positive_float,
+    probatio.Required(ATTR_DURATION): cv.positive_float,
 }
 
 

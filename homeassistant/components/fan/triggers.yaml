@@ -5,14 +5,15 @@
   fields:
     behavior:
       required: true
-      default: any
+      default: each
       selector:
-        select:
-          options:
-            - first
-            - last
-            - any
-          translation_key: trigger_behavior
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 turned_on: *trigger_common
 turned_off: *trigger_common

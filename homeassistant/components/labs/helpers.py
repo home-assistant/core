@@ -1,7 +1,5 @@
 """Helper functions for the Home Assistant Labs integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any
 

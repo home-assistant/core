@@ -1,7 +1,5 @@
 """Support for Ambient Weather Station Service."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioambient import Websocket
@@ -55,7 +53,7 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AmbientStationConfigEntry
-) -> bool:
+) -> None:
     """Set up the Ambient PWS as config entry."""
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
@@ -71,7 +69,6 @@ async def async_setup_entry(
     try:
         await ambient.ws_connect()
     except WebsocketError as err:
-        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = ambient
@@ -85,21 +82,16 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AmbientStationConfigEntry
-) -> bool:
+) -> None:
     """Unload an Ambient PWS config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.async_create_task(entry.runtime_data.ws_disconnect(), eager_start=True)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    hass.async_create_task(entry.runtime_data.ws_disconnect(), eager_start=True)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     version = entry.version
 
@@ -108,7 +100,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
         dev_reg = dr.async_get(hass)
-        dev_reg.async_clear_config_entry(entry.entry_id)
+        dev_reg.async_clear_config_entry(entry.entry_id, entry.domain)
 
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(entry.entry_id)
@@ -117,8 +109,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, version=version)
 
     LOGGER.info("Migration to version %s successful", version)
-
-    return True
 
 
 class AmbientStation:

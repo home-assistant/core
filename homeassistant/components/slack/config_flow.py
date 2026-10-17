@@ -1,12 +1,12 @@
 """Config flow for Slack integration."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import logging
+from typing import Any, override
 
+import probatio
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncSlackResponse, AsyncWebClient
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_NAME, CONF_USERNAME
@@ -16,12 +16,17 @@ from .const import CONF_DEFAULT_CHANNEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_DEFAULT_CHANNEL): str,
-        vol.Optional(CONF_ICON): str,
-        vol.Optional(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_DEFAULT_CHANNEL): str,
+        probatio.Optional(CONF_ICON): str,
+        probatio.Optional(CONF_USERNAME): str,
+    }
+)
+REAUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -29,6 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Slack."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -52,6 +58,35 @@ class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=CONFIG_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        errors = {}
+
+        if user_input is not None:
+            error, info = await self._async_try_connect(user_input[CONF_API_KEY])
+            if error is not None:
+                errors["base"] = error
+            elif info is not None:
+                await self.async_set_unique_id(info["team_id"].lower())
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
         )
 

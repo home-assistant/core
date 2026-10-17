@@ -1,25 +1,18 @@
 """Tests for the OpenAI integration."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, mock_open, patch
+from unittest.mock import AsyncMock, patch
 
-import httpx
-from openai import (
-    APIConnectionError,
-    AuthenticationError,
-    BadRequestError,
-    RateLimitError,
-)
-from openai.types.image import Image
-from openai.types.images_response import ImagesResponse
-from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
+import attr
+import httpx2
+from openai import APIConnectionError, AuthenticationError, BadRequestError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
-    CONF_STORE_RESPONSES,
+    CONF_REASONING_SUMMARY,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
@@ -31,14 +24,12 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_TTS_OPTIONS,
 )
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     ConfigEntryDisabler,
     ConfigEntryState,
     ConfigSubentryData,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -48,221 +39,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("service_data", "expected_args"),
-    [
-        (
-            {"prompt": "Picture of a dog"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
-            },
-        ),
-        (
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1792",
-                "quality": "hd",
-                "style": "vivid",
-            },
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1792",
-                "quality": "hd",
-                "style": "vivid",
-            },
-        ),
-        (
-            {
-                "prompt": "Picture of a dog",
-                "size": "1792x1024",
-                "quality": "standard",
-                "style": "natural",
-            },
-            {
-                "prompt": "Picture of a dog",
-                "size": "1792x1024",
-                "quality": "standard",
-                "style": "natural",
-            },
-        ),
-    ],
-)
-async def test_generate_image_service(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    service_data,
-    expected_args,
-) -> None:
-    """Test generate image service."""
-    service_data["config_entry"] = mock_config_entry.entry_id
-    expected_args["model"] = "dall-e-3"
-    expected_args["response_format"] = "url"
-    expected_args["n"] = 1
-
-    with patch(
-        "openai.resources.images.AsyncImages.generate",
-        new_callable=AsyncMock,
-        return_value=ImagesResponse(
-            created=1700000000,
-            data=[
-                Image(
-                    b64_json=None,
-                    revised_prompt="A clear and detailed picture of an ordinary canine",
-                    url="A",
-                )
-            ],
-        ),
-    ) as mock_create:
-        response = await hass.services.async_call(
-            "openai_conversation",
-            "generate_image",
-            service_data,
-            blocking=True,
-            return_response=True,
-        )
-
-    assert response == {
-        "url": "A",
-        "revised_prompt": "A clear and detailed picture of an ordinary canine",
-    }
-    assert len(mock_create.mock_calls) == 1
-    assert mock_create.mock_calls[0][2] == expected_args
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_image_service_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test generate image service handles errors."""
-    with (
-        patch(
-            "openai.resources.images.AsyncImages.generate",
-            new_callable=AsyncMock,
-            side_effect=RateLimitError(
-                response=httpx.Response(
-                    status_code=500, request=httpx.Request(method="GET", url="")
-                ),
-                body=None,
-                message="Reason",
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Error generating image: Reason"),
-    ):
-        await hass.services.async_call(
-            "openai_conversation",
-            "generate_image",
-            {
-                "config_entry": mock_config_entry.entry_id,
-                "prompt": "Image of an epic fail",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    with (
-        patch(
-            "openai.resources.images.AsyncImages.generate",
-            new_callable=AsyncMock,
-            return_value=ImagesResponse(
-                created=1700000000,
-                data=[
-                    Image(
-                        b64_json=None,
-                        revised_prompt=None,
-                        url=None,
-                    )
-                ],
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="No image returned"),
-    ):
-        await hass.services.async_call(
-            "openai_conversation",
-            "generate_image",
-            {
-                "config_entry": mock_config_entry.entry_id,
-                "prompt": "Image of an epic fail",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_with_image_not_allowed_path(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test generate content service with an image in a not allowed path."""
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(
-            HomeAssistantError,
-            match=(
-                "Cannot read `doorbell_snapshot.jpg`, no access to path; "
-                "`allowlist_external_dirs` may need to be adjusted in "
-                "`configuration.yaml`"
-            ),
-        ),
-    ):
-        await hass.services.async_call(
-            "openai_conversation",
-            "generate_content",
-            {
-                "config_entry": mock_config_entry.entry_id,
-                "prompt": "Describe this image from my doorbell camera",
-                "filenames": "doorbell_snapshot.jpg",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.parametrize(
-    ("service_name", "error"),
-    [
-        ("generate_image", "Invalid config entry provided. Got invalid_entry"),
-        ("generate_content", "Invalid config entry provided. Got invalid_entry"),
-    ],
-)
-async def test_invalid_config_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    service_name: str,
-    error: str,
-) -> None:
-    """Assert exception when invalid config entry is provided."""
-    service_data = {
-        "prompt": "Picture of a dog",
-        "config_entry": "invalid_entry",
-    }
-    with pytest.raises(ServiceValidationError, match=error):
-        await hass.services.async_call(
-            "openai_conversation",
-            service_name,
-            service_data,
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.parametrize(
     ("side_effect", "error"),
     [
         (
-            APIConnectionError(request=httpx.Request(method="GET", url="test")),
+            APIConnectionError(request=httpx2.Request(method="GET", url="test")),
             "Connection error",
         ),
         (
             BadRequestError(
-                response=httpx.Response(
-                    status_code=500, request=httpx.Request(method="GET", url="test")
+                response=httpx2.Response(
+                    status_code=500, request=httpx2.Request(method="GET", url="test")
                 ),
                 body=None,
                 message="",
@@ -275,15 +61,16 @@ async def test_init_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    side_effect,
-    error,
+    side_effect: APIConnectionError | BadRequestError,
+    error: str,
 ) -> None:
     """Test initialization errors."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -296,340 +83,18 @@ async def test_init_auth_error(
     """Test auth error during init errors."""
     with patch(
         "openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=AuthenticationError(
-            response=httpx.Response(
-                status_code=500, request=httpx.Request(method="GET", url="test")
+            response=httpx2.Response(
+                status_code=500, request=httpx2.Request(method="GET", url="test")
             ),
             body=None,
             message="",
         ),
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-@pytest.mark.parametrize("store_responses", [False, True])
-@pytest.mark.parametrize(
-    ("service_data", "expected_args", "number_of_files"),
-    [
-        (
-            {"prompt": "Picture of a dog", "filenames": []},
-            {
-                "input": [
-                    {
-                        "content": [
-                            {
-                                "type": "input_text",
-                                "text": "Picture of a dog",
-                            },
-                        ],
-                    },
-                ],
-            },
-            0,
-        ),
-        (
-            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.pdf"]},
-            {
-                "input": [
-                    {
-                        "content": [
-                            {
-                                "type": "input_text",
-                                "text": "Picture of a dog",
-                            },
-                            {
-                                "type": "input_file",
-                                "file_data": "data:application/pdf;base64,BASE64IMAGE1",
-                                "filename": "/a/b/c.pdf",
-                            },
-                        ],
-                    },
-                ],
-            },
-            1,
-        ),
-        (
-            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
-            {
-                "input": [
-                    {
-                        "content": [
-                            {
-                                "type": "input_text",
-                                "text": "Picture of a dog",
-                            },
-                            {
-                                "type": "input_image",
-                                "image_url": "data:image/jpeg;base64,BASE64IMAGE1",
-                                "detail": "auto",
-                            },
-                        ],
-                    },
-                ],
-            },
-            1,
-        ),
-        (
-            {
-                "prompt": "Picture of a dog",
-                "filenames": ["/a/b/c.jpg", "d/e/f.jpg"],
-            },
-            {
-                "input": [
-                    {
-                        "content": [
-                            {
-                                "type": "input_text",
-                                "text": "Picture of a dog",
-                            },
-                            {
-                                "type": "input_image",
-                                "image_url": "data:image/jpeg;base64,BASE64IMAGE1",
-                                "detail": "auto",
-                            },
-                            {
-                                "type": "input_image",
-                                "image_url": "data:image/jpeg;base64,BASE64IMAGE2",
-                                "detail": "auto",
-                            },
-                        ],
-                    },
-                ],
-            },
-            2,
-        ),
-    ],
-)
-async def test_generate_content_service(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    store_responses: bool,
-    service_data,
-    expected_args,
-    number_of_files,
-) -> None:
-    """Test generate content service."""
-    conversation_subentry = next(
-        sub
-        for sub in mock_config_entry.subentries.values()
-        if sub.subentry_type == "conversation"
-    )
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        conversation_subentry,
-        data={**conversation_subentry.data, CONF_STORE_RESPONSES: store_responses},
-    )
-    await hass.async_block_till_done()
-
-    service_data["config_entry"] = mock_config_entry.entry_id
-    expected_args["model"] = "gpt-4o-mini"
-    expected_args["max_output_tokens"] = 3000
-    expected_args["top_p"] = 1.0
-    expected_args["temperature"] = 1.0
-    expected_args["user"] = None
-    expected_args["store"] = store_responses
-    expected_args["input"][0]["type"] = "message"
-    expected_args["input"][0]["role"] = "user"
-
-    with (
-        patch(
-            "openai.resources.responses.AsyncResponses.create",
-            new_callable=AsyncMock,
-        ) as mock_create,
-        patch(
-            "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
-        ) as mock_b64encode,
-        patch("pathlib.Path.read_bytes", Mock(return_value=b"ABC")) as mock_file,
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-    ):
-        mock_create.return_value = Response(
-            object="response",
-            id="resp_A",
-            created_at=1700000000,
-            model="gpt-4o-mini",
-            parallel_tool_calls=True,
-            tool_choice="auto",
-            tools=[],
-            output=[
-                ResponseOutputMessage(
-                    type="message",
-                    id="msg_A",
-                    content=[
-                        ResponseOutputText(
-                            type="output_text",
-                            text="This is the response",
-                            annotations=[],
-                        )
-                    ],
-                    role="assistant",
-                    status="completed",
-                )
-            ],
-        )
-
-        response = await hass.services.async_call(
-            "openai_conversation",
-            "generate_content",
-            service_data,
-            blocking=True,
-            return_response=True,
-        )
-        assert response == {"text": "This is the response"}
-        assert len(mock_create.mock_calls) == 1
-        assert mock_create.mock_calls[0][2] == expected_args
-        assert mock_b64encode.call_count == number_of_files
-        assert mock_file.call_count == number_of_files
-
-
-@pytest.mark.parametrize(
-    (
-        "service_data",
-        "error",
-        "exists_side_effect",
-        "is_allowed_side_effect",
-    ),
-    [
-        (
-            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
-            "`/a/b/c.jpg` does not exist",
-            [False],
-            [True],
-        ),
-        (
-            {
-                "prompt": "Picture of a dog",
-                "filenames": ["/a/b/c.jpg", "d/e/f.png"],
-            },
-            "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
-            [True, True],
-            [True, False],
-        ),
-        (
-            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
-            "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
-            [True],
-            [True],
-        ),
-    ],
-)
-async def test_generate_content_service_invalid(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    service_data,
-    error,
-    exists_side_effect,
-    is_allowed_side_effect,
-) -> None:
-    """Test generate content service."""
-    service_data["config_entry"] = mock_config_entry.entry_id
-
-    with (
-        patch(
-            "openai.resources.responses.AsyncResponses.create",
-            new_callable=AsyncMock,
-        ) as mock_create,
-        patch("base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]),
-        patch("builtins.open", mock_open(read_data="ABC")),
-        patch("pathlib.Path.exists", side_effect=exists_side_effect),
-        patch.object(
-            hass.config, "is_allowed_path", side_effect=is_allowed_side_effect
-        ),
-    ):
-        with pytest.raises(HomeAssistantError, match=error):
-            await hass.services.async_call(
-                "openai_conversation",
-                "generate_content",
-                service_data,
-                blocking=True,
-                return_response=True,
-            )
-        assert len(mock_create.mock_calls) == 0
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test generate content service handles errors."""
-    with (
-        patch(
-            "openai.resources.responses.AsyncResponses.create",
-            side_effect=RateLimitError(
-                response=httpx.Response(
-                    status_code=417, request=httpx.Request(method="GET", url="")
-                ),
-                body=None,
-                message="Reason",
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Error generating content: Reason"),
-    ):
-        await hass.services.async_call(
-            "openai_conversation",
-            "generate_content",
-            {
-                "config_entry": mock_config_entry.entry_id,
-                "prompt": "Image of an epic fail",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.parametrize(
-    ("service_name", "patch_path"),
-    [
-        ("generate_image", "openai.resources.images.AsyncImages.generate"),
-        ("generate_content", "openai.resources.responses.AsyncResponses.create"),
-    ],
-)
-@pytest.mark.usefixtures("mock_init_component")
-async def test_service_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    service_name: str,
-    patch_path: str,
-) -> None:
-    """Test generate content service handles errors."""
-    with (
-        patch(
-            patch_path,
-            side_effect=AuthenticationError(
-                response=httpx.Response(
-                    status_code=401, request=httpx.Request(method="GET", url="")
-                ),
-                body=None,
-                message="Reason",
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Authentication error"),
-    ):
-        await hass.services.async_call(
-            "openai_conversation",
-            service_name,
-            {
-                "config_entry": mock_config_entry.entry_id,
-                "prompt": "Image of an epic fail",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    await hass.async_block_till_done()
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-
-    flow = flows[0]
-    assert flow["step_id"] == "reauth_confirm"
-    assert flow["handler"] == DOMAIN
-    assert "context" in flow
-    assert flow["context"]["source"] == SOURCE_REAUTH
-    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_migration_from_v1(
@@ -680,7 +145,7 @@ async def test_migration_from_v1(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 6
+    assert mock_config_entry.minor_version == 7
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -731,20 +196,18 @@ async def test_migration_from_v1(
     assert migrated_entity.unique_id == subentry.subentry_id
 
     # Check device migration
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        migrated_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        migrated_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
-    assert migrated_device.config_entries == {mock_config_entry.entry_id}
-    assert migrated_device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert migrated_device.config_entry_id == mock_config_entry.entry_id
+    assert migrated_device.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v1_with_multiple_keys(
@@ -825,7 +288,7 @@ async def test_migration_from_v1_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 6
+        assert entry.minor_version == 7
         assert not entry.options
         assert len(entry.subentries) == 4
 
@@ -843,12 +306,12 @@ async def test_migration_from_v1_with_multiple_keys(
         # Use conversation subentry for device assertions
         subentry = conversation_subentry
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v1_with_same_keys(
@@ -930,11 +393,11 @@ async def test_migration_from_v1_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert (
         len(entry.subentries) == 5
-    )  # Two conversation subentries + one AI task subentry + one STT subentry + one TTS subentry
+    )  # 2 conversation + 1 AI task + 1 STT + 1 TTS subentry
 
     # Check both conversation subentries exist with correct data
     conversation_subentries = [
@@ -964,14 +427,12 @@ async def test_migration_from_v1_with_same_keys(
         assert subentry.data == options
 
         # Check devices were migrated correctly
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {mock_config_entry.entry_id}
-        assert dev.config_entries_subentries == {
-            mock_config_entry.entry_id: {subentry.subentry_id}
-        }
+        assert dev.config_entry_id == mock_config_entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -1142,7 +603,7 @@ async def test_migration_from_v1_disabled(
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
     assert entry.minor_version == (
-        4 if merged_config_entry_disabled_by is not None else 6
+        4 if merged_config_entry_disabled_by is not None else 7
     )
     assert not entry.options
     assert entry.title == "OpenAI Conversation"
@@ -1175,6 +636,7 @@ async def test_migration_from_v1_disabled(
         for subentry in entry.subentries.values()
         if subentry.subentry_type == "tts"
     ]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if entry.minor_version == 4:
         assert len(stt_subentries) == 0
         assert len(tts_subentries) == 0
@@ -1186,10 +648,10 @@ async def test_migration_from_v1_disabled(
         assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
         assert tts_subentries[0].title == DEFAULT_TTS_NAME
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
 
@@ -1202,18 +664,15 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
@@ -1222,12 +681,7 @@ async def test_migration_from_v2_1(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1.
-
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
-    """
+    """Test migration from version 2.1."""
     # Create a v2.1 config entry with 2 subentries, devices and entities
     options = {
         "recommended": True,
@@ -1270,10 +724,6 @@ async def test_migration_from_v2_1(
         model="ChatGPT",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    device_1 = device_registry.async_update_device(
-        device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
-    )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -1315,7 +765,7 @@ async def test_migration_from_v2_1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 5  # 2 conversation + 1 AI task + 1 STT + 1 TTS
@@ -1355,20 +805,18 @@ async def test_migration_from_v2_1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -1376,20 +824,18 @@ async def test_migration_from_v2_1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -1408,15 +854,18 @@ async def test_devices(
     )
     assert len(devices) == 4  # One for conversation, AI task, STT, and TTS
 
-    # Use the first device for snapshot comparison
-    device = devices[0]
-    assert device == snapshot(exclude=props("identifiers"))
-    # Verify the device has identifiers matching one of the subentries
-    expected_identifiers = [
-        {(DOMAIN, subentry.subentry_id)}
+    # Find the conversation subentry device specifically, since device ordering
+    # from concurrent platform setup is non-deterministic.
+    conversation_subentry = next(
+        subentry
         for subentry in mock_config_entry.subentries.values()
-    ]
-    assert device.identifiers in expected_identifiers
+        if subentry.subentry_type == "conversation"
+    )
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, conversation_subentry.subentry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device == snapshot(exclude=props("identifiers"))
 
 
 async def test_migration_from_v2_2(
@@ -1463,7 +912,7 @@ async def test_migration_from_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 4
@@ -1508,7 +957,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            6,
+            7,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -1518,7 +967,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            6,
+            7,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -1528,7 +977,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            6,
+            7,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -1538,7 +987,7 @@ async def test_migration_from_v2_2(
             None,
             None,
             True,
-            6,
+            7,
             None,
             None,
             None,
@@ -1623,13 +1072,19 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="OpenAI",
         model="ChatGPT",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -1730,7 +1185,7 @@ async def test_migration_from_v2_4(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 4
@@ -1833,7 +1288,7 @@ async def test_migration_from_v2_5(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 6
+    assert entry.minor_version == 7
     assert not entry.options
     assert entry.title == "ChatGPT"
     assert len(entry.subentries) == 4
@@ -1878,3 +1333,124 @@ async def test_migration_from_v2_5(
     stt_subentry = stt_subentries[0]
     assert stt_subentry.data == {}
     assert stt_subentry.title == "OpenAI STT"
+
+
+async def test_migration_from_v2_6(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from version 2.6.
+
+    Ensures reasoning_summary "short" is renamed to "concise" for gpt-5 models,
+    and that "concise" (whether from "short" or already stored) is reset to "auto"
+    for o* models where it is unsupported. Other values and unrelated subentries
+    are unchanged.
+    """
+    conversation_options_short_o = {
+        "chat_model": "o4-mini",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    conversation_options_auto = {
+        "chat_model": "gpt-5-mini",
+        CONF_REASONING_SUMMARY: "auto",
+    }
+    ai_task_options_short_o = {
+        "chat_model": "o3",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    tts_options = {
+        "chat_model": "gpt-4o-mini-tts",
+    }
+    conversation_options_short_gpt5 = {
+        "chat_model": "gpt-5",
+        CONF_REASONING_SUMMARY: "short",
+    }
+    conversation_options_concise_o = {
+        "chat_model": "o3",
+        CONF_REASONING_SUMMARY: "concise",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "1234"},
+        entry_id="mock_entry_id",
+        version=2,
+        minor_version=6,
+        subentries_data=[
+            ConfigSubentryData(
+                data=conversation_options_short_o,
+                subentry_id="mock_id_1",
+                subentry_type="conversation",
+                title="ChatGPT short o",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_auto,
+                subentry_id="mock_id_2",
+                subentry_type="conversation",
+                title="ChatGPT auto",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=ai_task_options_short_o,
+                subentry_id="mock_id_3",
+                subentry_type="ai_task_data",
+                title="OpenAI AI Task",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=tts_options,
+                subentry_id="mock_id_4",
+                subentry_type="tts",
+                title="OpenAI TTS",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_short_gpt5,
+                subentry_id="mock_id_5",
+                subentry_type="conversation",
+                title="ChatGPT short gpt5",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=conversation_options_concise_o,
+                subentry_id="mock_id_6",
+                subentry_type="conversation",
+                title="ChatGPT concise o",
+                unique_id=None,
+            ),
+        ],
+        title="ChatGPT",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 7
+
+    subentries_by_id = entry.subentries
+
+    # "short" on an o* model: short→concise→auto (concise unsupported on o*)
+    assert subentries_by_id["mock_id_1"].data[CONF_REASONING_SUMMARY] == "auto"
+
+    # "auto" on a gpt-5 model: unchanged
+    assert subentries_by_id["mock_id_2"].data[CONF_REASONING_SUMMARY] == "auto"
+
+    # "short" on an o* ai_task_data subentry: short→concise→auto
+    assert subentries_by_id["mock_id_3"].data[CONF_REASONING_SUMMARY] == "auto"
+
+    # TTS subentry is unaffected
+    assert subentries_by_id["mock_id_4"].data == tts_options
+
+    # "short" on a gpt-5 model: short→concise (concise is valid for gpt-5)
+    assert subentries_by_id["mock_id_5"].data[CONF_REASONING_SUMMARY] == "concise"
+
+    # "concise" already stored on an o* model: concise→auto
+    assert subentries_by_id["mock_id_6"].data[CONF_REASONING_SUMMARY] == "auto"

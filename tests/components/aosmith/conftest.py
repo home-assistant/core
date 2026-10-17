@@ -148,7 +148,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def get_devices_fixture_heat_pump() -> bool:
-    """Return whether the device in the get_devices fixture should be a heat pump water heater."""
+    """Return whether the device in the get_devices fixture should be a heat pump."""
     return True
 
 

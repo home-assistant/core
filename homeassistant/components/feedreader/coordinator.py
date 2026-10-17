@@ -1,13 +1,11 @@
 """Data update coordinator for RSS/Atom feeds."""
 
-from __future__ import annotations
-
 from calendar import timegm
 from datetime import datetime
 import html
 from logging import getLogger
 from time import gmtime, struct_time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from urllib.error import URLError
 
 import feedparser
@@ -20,7 +18,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MAX_ENTRIES, DEFAULT_SCAN_INTERVAL, DOMAIN, EVENT_FEEDREADER
+from .const import (
+    CONF_MAX_ENTRIES,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    EVENT_FEEDREADER,
+    USER_AGENT,
+)
 
 DELAY_SAVE = 30
 STORAGE_VERSION = 1
@@ -76,6 +80,7 @@ class FeedReaderCoordinator(
                 self.url,
                 etag=None if not self._feed else self._feed.get("etag"),
                 modified=None if not self._feed else self._feed.get("modified"),
+                agent=USER_AGENT,
             )
 
         feed = await self.hass.async_add_executor_job(_parse_feed)
@@ -116,6 +121,7 @@ class FeedReaderCoordinator(
         self.feed_version = feedparser.api.SUPPORTED_VERSIONS.get(feed["version"])
         self._feed = feed
 
+    @override
     async def _async_update_data(self) -> list[feedparser.FeedParserDict] | None:
         """Update the feed and publish new entries to the event bus."""
         assert self._feed is not None
@@ -139,14 +145,14 @@ class FeedReaderCoordinator(
             assert isinstance(self._feed.entries, list)
 
         self._filter_entries()
-        self._publish_new_entries()
+        new_entries = self._publish_new_entries()
 
         _LOGGER.debug("Fetch from feed %s completed", self.url)
 
         if self._last_entry_timestamp:
             self._storage.async_put_timestamp(self._feed_id, self._last_entry_timestamp)
 
-        return self._feed.entries
+        return new_entries
 
     @callback
     def _filter_entries(self) -> None:
@@ -165,29 +171,32 @@ class FeedReaderCoordinator(
         """Update last_entry_timestamp and fire entry."""
         # Check if the entry has a updated or published date.
         # Start from a updated date because generally `updated` > `published`.
-        if time_stamp := entry.get("updated_parsed") or entry.get("published_parsed"):
-            self._last_entry_timestamp = time_stamp
-        else:
+        time_stamp = entry.get("updated_parsed") or entry.get("published_parsed")
+        if time_stamp is None:
             _LOGGER.debug(
                 "No updated_parsed or published_parsed info available for entry %s",
                 entry,
             )
+        elif time_stamp and time_stamp > self._last_entry_timestamp:
+            self._last_entry_timestamp = time_stamp
+
         entry["feed_url"] = self.url
         self.hass.bus.async_fire(self._event_type, entry)
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
     @callback
-    def _publish_new_entries(self) -> None:
-        """Publish new entries to the event bus."""
+    def _publish_new_entries(self) -> list[feedparser.FeedParserDict]:
+        """Publish new entries to the event bus and return new entries."""
         assert self._feed is not None
-        new_entry_count = 0
+        new_entries: list[feedparser.FeedParserDict] = []
         firstrun = False
         self._last_entry_timestamp = self._storage.get_timestamp(self._feed_id)
         if not self._last_entry_timestamp:
             firstrun = True
             # Set last entry timestamp as epoch time if not available
             self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
-        # locally cache self._last_entry_timestamp so that entries published at identical times can be processed
+        # locally cache self._last_entry_timestamp so that
+        # entries published at identical times can be processed
         last_entry_timestamp = self._last_entry_timestamp
         for entry in self._feed.entries:
             if firstrun or (
@@ -198,13 +207,14 @@ class FeedReaderCoordinator(
                 and time_stamp > last_entry_timestamp
             ):
                 self._update_and_fire_entry(entry)
-                new_entry_count += 1
+                new_entries.append(entry)
             else:
                 _LOGGER.debug("Already processed entry %s", entry.get("link"))
-        if new_entry_count == 0:
+        if not new_entries:
             self._log_no_entries()
         else:
-            _LOGGER.debug("%d entries published in feed %s", new_entry_count, self.url)
+            _LOGGER.debug("%d entries published in feed %s", len(new_entries), self.url)
+        return new_entries
 
 
 class StoredData:

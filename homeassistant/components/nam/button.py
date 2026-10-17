@@ -1,8 +1,7 @@
 """Support for the Nettigo Air Monitor service."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
@@ -62,11 +61,12 @@ class NAMButton(CoordinatorEntity[NAMDataUpdateCoordinator], ButtonEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Triggers the restart."""
         try:
             await self.coordinator.nam.async_restart()
-        except (ApiError, ClientError) as err:
+        except (ApiError, ClientError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_action_error",

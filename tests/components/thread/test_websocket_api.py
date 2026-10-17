@@ -11,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     DATASET_1,
+    DATASET_1_LARGER_TIMESTAMP,
     DATASET_2,
     DATASET_3,
     ROUTER_DISCOVERY_GOOGLE_1,
@@ -34,13 +35,39 @@ async def test_add_dataset(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] is None
+    assert msg["result"] == {"result": "stored"}
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     dataset = next(iter(store.datasets.values()))
     assert dataset.source == "test"
     assert dataset.tlv == DATASET_1
+
+
+async def test_add_dataset_discarded(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a dataset the store discards is reported as discarded, not stored.
+
+    The command still succeeds -- existing callers treat any error as a
+    failed transfer -- but the payload says the dataset was discarded.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 1, "type": "thread/add_dataset_tlv", "source": "test", "tlv": DATASET_1}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"result": "discarded"}
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert next(iter(store.datasets.values())).tlv == DATASET_1_LARGER_TIMESTAMP
 
 
 async def test_add_invalid_dataset(
@@ -237,7 +264,7 @@ async def test_set_preferred_border_agent(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] is None
+    assert msg["result"] == {"result": "stored"}
 
     await client.send_json_auto_id({"type": "thread/list_datasets"})
     msg = await client.receive_json()

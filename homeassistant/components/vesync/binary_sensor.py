@@ -1,10 +1,9 @@
 """Binary Sensor for VeSync."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
@@ -113,6 +112,7 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on(self.device)

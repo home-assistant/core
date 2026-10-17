@@ -1,15 +1,13 @@
 """Support for Amcrest IP camera binary sensors."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from amcrest import AmcrestError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -127,7 +125,7 @@ def check_binary_sensors(value: list[str]) -> list[str]:
     """Validate binary sensor configurations."""
     for exclusive_options in _EXCLUSIVE_OPTIONS:
         if len(set(value) & exclusive_options) > 1:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"must contain at most one of {', '.join(exclusive_options)}."
             )
     return value
@@ -175,6 +173,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._attr_should_poll = entity_description.should_poll
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.entity_description.key == _ONLINE_KEY or self._api.available
@@ -194,7 +193,8 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         if self._api.available:
             # Send a command to the camera to test if we can still communicate with it.
-            # Override of Http.async_command() in __init__.py will set self._api.available
+            # Override of Http.async_command() in __init__.py will
+            # set self._api.available
             # accordingly.
             with suppress(AmcrestError):
                 await self._api.async_current_time
@@ -249,6 +249,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._attr_is_on = state
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to signals."""
         if self.entity_description.key == _ONLINE_KEY:

@@ -39,7 +39,7 @@
 # name: test_all_entities[binary_sensor.water_monitor_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Monitor Away mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Monitor Away mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_monitor_away_mode',

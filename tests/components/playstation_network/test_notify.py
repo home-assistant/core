@@ -1,14 +1,19 @@
 """Tests for the PlayStation Network notify platform."""
 
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
     PSNAWPForbiddenError,
     PSNAWPNotFoundError,
     PSNAWPServerError,
 )
+from psnawp_api.models import User
+from psnawp_api.models.group.group import Group
+from psnawp_api.models.trophies import TrophySet, TrophySummary
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -24,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -165,3 +170,102 @@ async def test_notify_skip_forbidden(
     assert issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
     )
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_notify_dynamic_dm_entity_creation_and_removal(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test direct messagen otifiers are created and removed dynamically."""
+    mock_psnawpapi.me.return_value.get_groups.return_value = []
+
+    fren1 = mock_psnawpapi.user.return_value.friends_list.return_value[0]
+    fren2 = MagicMock(spec=User, account_id="fren2-psn-id", online_id="AnotherFren")
+    fren2.get_presence.return_value = fren1.get_presence.return_value
+    fren2.trophy_summary.return_value = TrophySummary(
+        "fren2-psn-id", 420, 20, 5, TrophySet(4782, 1245, 437, 96)
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert len(entity_entries) == 1
+
+    mock_psnawpapi.user.return_value.friends_list.return_value = [fren1, fren2]
+
+    freezer.tick(timedelta(hours=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert len(entity_entries) == 2
+
+    mock_psnawpapi.user.return_value.friends_list.return_value = [fren1]
+
+    freezer.tick(timedelta(hours=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert len(entity_entries) == 1
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_notify_dynamic_group_entity_creation_and_removal(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test group notifiers are created and removed dynamically."""
+    mock_psnawpapi.user.return_value.friends_list.return_value = []
+
+    group2 = MagicMock(spec=Group, group_id="test-groupid2")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert len(entity_entries) == 1
+
+    mock_psnawpapi.me.return_value.get_groups.return_value.append(group2)
+
+    freezer.tick(timedelta(hours=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert len(entity_entries) == 2
+
+    mock_psnawpapi.me.return_value.get_groups.return_value.pop(1)
+
+    freezer.tick(timedelta(hours=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert len(entity_entries) == 1

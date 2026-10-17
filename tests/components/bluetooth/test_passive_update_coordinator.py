@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time
@@ -143,10 +141,11 @@ async def test_context_compatiblity_with_data_update_coordinator(
 async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the coordinator goes unavailable when the bluetooth stack no longer sees the device."""
+    """Test coordinator goes unavailable when device unseen."""
     start_monotonic = time.monotonic()
     with patch(
-        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        # Must patch before we setup
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",
         {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -201,7 +200,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
 @pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_passive_bluetooth_coordinator_entity(hass: HomeAssistant) -> None:
-    """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
+    """Test PassiveBluetoothDataUpdateCoordinator with entity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     coordinator = MyCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE

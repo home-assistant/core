@@ -1,7 +1,5 @@
 """Utilities for the Huawei LTE integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import re
 from urllib.parse import urlparse

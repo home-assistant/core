@@ -1,9 +1,8 @@
 """Support for yalexs ble sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yalexs_ble import ConnectionInfo, LockInfo, LockState
 
@@ -98,6 +97,7 @@ class YaleXSBLESensor(YALEXSBLEEntity, SensorEntity):
         self._attr_unique_id = f"{data.lock.address}{description.key}"
 
     @callback
+    @override
     def _async_update_state(
         self, new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
     ) -> None:

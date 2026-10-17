@@ -6,7 +6,6 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.generic_hygrostat import (
-    CONF_DEVICE_CLASS,
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
     CONF_NAME,
@@ -15,6 +14,7 @@ from homeassistant.components.generic_hygrostat import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

@@ -1,9 +1,9 @@
 """Support for ADS binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -24,9 +24,9 @@ from .hub import AdsHub
 DEFAULT_NAME = "ADS binary sensor"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 )
 
@@ -62,11 +62,13 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
         super().__init__(ads_hub, name, ads_var)
         self._attr_device_class = device_class or BinarySensorDeviceClass.MOVING
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]

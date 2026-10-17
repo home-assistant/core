@@ -1,12 +1,10 @@
 """Coordinator module for Miele integration."""
 
-from __future__ import annotations
-
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientResponseError
 from pymiele import (
@@ -77,37 +75,35 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MieleCoordinatorData:
         """Fetch data from the Miele API."""
-        async with asyncio.timeout(10):
-            # Get devices
-            devices_json = await self.api.get_devices()
-            devices = {
-                device_id: MieleDevice(device)
-                for device_id, device in devices_json.items()
-            }
-            self.devices = devices
-            actions = {}
+        devices_json = await self.api.get_devices()
+        devices = {
+            device_id: MieleDevice(device) for device_id, device in devices_json.items()
+        }
+        self.devices = devices
+        actions = {}
 
-            for device_id in devices:
-                try:
-                    actions_json = await self.api.get_actions(device_id)
-                except ClientResponseError as err:
-                    _LOGGER.debug(
-                        "Error fetching actions for device %s: Status: %s, Message: %s",
-                        device_id,
-                        str(err.status),
-                        err.message,
-                    )
-                    actions_json = {}
-                except TimeoutError:
-                    _LOGGER.debug(
-                        "Timeout fetching actions for device %s",
-                        device_id,
-                    )
-                    actions_json = {}
-                actions[device_id] = MieleAction(actions_json)
-            return MieleCoordinatorData(devices=devices, actions=actions)
+        for device_id in devices:
+            try:
+                actions_json = await self.api.get_actions(device_id)
+            except ClientResponseError as err:
+                _LOGGER.debug(
+                    "Error fetching actions for device %s: Status: %s, Message: %s",
+                    device_id,
+                    str(err.status),
+                    err.message,
+                )
+                actions_json = {}
+            except TimeoutError:
+                _LOGGER.debug(
+                    "Timeout fetching actions for device %s",
+                    device_id,
+                )
+                actions_json = {}
+            actions[device_id] = MieleAction(actions_json)
+        return MieleCoordinatorData(devices=devices, actions=actions)
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""
@@ -118,20 +114,26 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
 
     async def callback_update_data(self, devices_json: dict[str, dict]) -> None:
         """Handle data update from the API."""
-        devices = {
+        updated_devices = {
             device_id: MieleDevice(device) for device_id, device in devices_json.items()
         }
         self.async_set_updated_data(
-            MieleCoordinatorData(devices=devices, actions=self.data.actions)
+            MieleCoordinatorData(
+                devices={**self.data.devices, **updated_devices},
+                actions=self.data.actions,
+            )
         )
 
     async def callback_update_actions(self, actions_json: dict[str, dict]) -> None:
         """Handle data update from the API."""
-        actions = {
+        updated_actions = {
             device_id: MieleAction(action) for device_id, action in actions_json.items()
         }
         self.async_set_updated_data(
-            MieleCoordinatorData(devices=self.data.devices, actions=actions)
+            MieleCoordinatorData(
+                devices=self.data.devices,
+                actions={**self.data.actions, **updated_actions},
+            )
         )
 
 
@@ -156,6 +158,7 @@ class MieleAuxDataUpdateCoordinator(DataUpdateCoordinator[MieleAuxCoordinatorDat
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MieleAuxCoordinatorData:
         """Fetch data from the Miele API."""
         filling_levels_json = await self.api.get_filling_levels()

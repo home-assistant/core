@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
@@ -117,7 +117,10 @@ class FitbitApi(ABC):
         return devices
 
     async def async_get_latest_time_series(self, resource_type: str) -> dict[str, Any]:
-        """Return the most recent value from the time series for the specified resource type."""
+        """Return the most recent value from the time series.
+
+        Returns the value for the specified resource type.
+        """
         client = await self._async_get_client()
 
         # Set request header based on the configured unit system
@@ -174,6 +177,7 @@ class OAuthFitbitApi(FitbitApi):
         super().__init__(hass, unit_system)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> dict[str, Any]:
         """Return a valid access token for the Fitbit API."""
         await self._oauth_session.async_ensure_token_valid()
@@ -195,6 +199,7 @@ class ConfigFlowFitbitApi(FitbitApi):
         super().__init__(hass)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> dict[str, Any]:
         """Return the token for the Fitbit API."""
         return self._token

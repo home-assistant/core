@@ -11,7 +11,7 @@ upload_image:
         media:
           accept:
             - image/*
-    advanced_options:
+    additional_fields:
       collapsed: true
       fields:
         rotation:

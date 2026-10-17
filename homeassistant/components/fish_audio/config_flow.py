@@ -1,13 +1,12 @@
 """Config flow for the Fish Audio integration."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from fishaudio import AsyncFishAudio
 from fishaudio.exceptions import AuthenticationError, FishAudioError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -18,10 +17,14 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     LanguageSelector,
     LanguageSelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -31,20 +34,22 @@ from homeassistant.helpers.selector import (
 from .const import (
     API_KEYS_URL,
     BACKEND_MODELS,
-    CONF_API_KEY,
     CONF_BACKEND,
-    CONF_LANGUAGE,
     CONF_LATENCY,
-    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
+    CONF_SPEED,
     CONF_TITLE,
     CONF_USER_ID,
     CONF_VOICE_ID,
+    DEFAULT_SPEED,
     DOMAIN,
     LATENCY_OPTIONS,
+    MAX_SPEED,
+    MIN_SPEED,
     SIGNUP_URL,
     SORT_BY_OPTIONS,
+    SPEED_STEP,
     TTS_SUPPORTED_LANGUAGES,
 )
 from .error import (
@@ -57,26 +62,30 @@ from .error import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_api_key_schema(default: str | None = None) -> vol.Schema:
+def get_api_key_schema(default: str | None = None) -> probatio.Schema:
     """Return the schema for API key input."""
-    return vol.Schema(
-        {vol.Required(CONF_API_KEY, default=default or vol.UNDEFINED): str}
+    return probatio.Schema(
+        {
+            probatio.Required(
+                probatio.Secret(CONF_API_KEY), default=default or probatio.UNDEFINED
+            ): str
+        }
     )
 
 
-def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
+def get_filter_schema(options: dict[str, Any]) -> probatio.Schema:
     """Return the schema for the filter step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_TITLE, default=options.get(CONF_TITLE, "")): str,
-            vol.Optional(
+            probatio.Optional(CONF_TITLE, default=options.get(CONF_TITLE, "")): str,
+            probatio.Optional(
                 CONF_LANGUAGE, default=options.get(CONF_LANGUAGE, "Any")
             ): LanguageSelector(
                 LanguageSelectorConfig(
                     languages=TTS_SUPPORTED_LANGUAGES,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SORT_BY, default=options.get(CONF_SORT_BY, "task_count")
             ): SelectSelector(
                 SelectSelectorConfig(
@@ -85,7 +94,7 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
                     translation_key="sort_by",
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SELF_ONLY, default=options.get(CONF_SELF_ONLY, False)
             ): bool,
         }
@@ -95,11 +104,11 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
 def get_model_selection_schema(
     options: dict[str, Any],
     model_options: list[SelectOptionDict],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the schema for the model selection step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_VOICE_ID,
                 default=options.get(CONF_VOICE_ID, ""),
             ): SelectSelector(
@@ -109,7 +118,7 @@ def get_model_selection_schema(
                     custom_value=True,
                 )
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_BACKEND,
                 default=options.get(CONF_BACKEND, "s2-pro"),
             ): SelectSelector(
@@ -120,7 +129,7 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_LATENCY,
                 default=options.get(CONF_LATENCY, "balanced"),
             ): SelectSelector(
@@ -132,9 +141,22 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Required(
+            probatio.Optional(
+                CONF_SPEED,
+                default=options.get(CONF_SPEED, DEFAULT_SPEED),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_SPEED,
+                    max=MAX_SPEED,
+                    step=SPEED_STEP,
+                    mode=NumberSelectorMode.SLIDER,
+                )
+            ),
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
+            probatio.Required(
                 CONF_NAME,
-                default=options.get(CONF_NAME) or vol.UNDEFINED,
+                default=options.get(CONF_NAME) or probatio.UNDEFINED,
             ): str,
         }
     )
@@ -170,6 +192,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.client = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -182,19 +205,8 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"signup_url": SIGNUP_URL},
             )
 
-        errors: dict[str, str] = {}
-
-        try:
-            user_id, self.client = await _validate_api_key(
-                self.hass, user_input[CONF_API_KEY]
-            )
-        except InvalidAuthError:
-            errors["base"] = "invalid_auth"
-        except CannotConnectError:
-            errors["base"] = "cannot_connect"
-        except UnexpectedError:
-            errors["base"] = "unknown"
-        else:
+        user_id, errors = await self._async_validate_input(user_input[CONF_API_KEY])
+        if user_id is not None:
             await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
 
@@ -218,8 +230,52 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            user_id, errors = await self._async_validate_input(user_input[CONF_API_KEY])
+            if user_id is not None:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=get_api_key_schema(),
+            errors=errors,
+            description_placeholders={"api_keys_url": API_KEYS_URL},
+        )
+
+    async def _async_validate_input(
+        self, api_key: str
+    ) -> tuple[str | None, dict[str, str]]:
+        """Validate the API key and return the user id and any errors."""
+        try:
+            user_id, self.client = await _validate_api_key(self.hass, api_key)
+        except InvalidAuthError:
+            return None, {"base": "invalid_auth"}
+        except CannotConnectError:
+            return None, {"base": "cannot_connect"}
+        except UnexpectedError:
+            return None, {"base": "unknown"}
+        return user_id, {}
+
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type]:
@@ -284,7 +340,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         entry = self._get_entry()
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         self.client = entry.runtime_data
@@ -343,6 +399,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                     self._get_reconfigure_subentry(),
                     data=self.config_data,
                     unique_id=unique_id,
+                    reason="reconfigure_successful",
                 )
 
         return self.async_show_form(

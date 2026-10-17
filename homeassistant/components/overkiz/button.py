@@ -1,8 +1,7 @@
 """Support for Overkiz (virtual) buttons."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
 from pyoverkiz.types import StateType as OverkizStateType
@@ -25,7 +24,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizButtonDescription(ButtonEntityDescription):
     """Class to describe an Overkiz button."""
 
-    press_args: OverkizStateType | None = None
+    press_args: list[OverkizStateType] | None = None
 
 
 BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
@@ -37,7 +36,8 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     ),
     # Identify
     OverkizButtonDescription(
-        key=OverkizCommand.IDENTIFY,  # startIdentify and identify are reversed... Swap this when fixed in API.
+        # startIdentify and identify are reversed... Swap this when fixed in API.
+        key=OverkizCommand.IDENTIFY,
         name="Start identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -51,7 +51,8 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         entity_registry_enabled_default=False,
     ),
     OverkizButtonDescription(
-        key=OverkizCommand.START_IDENTIFY,  # startIdentify and identify are reversed... Swap this when fixed in API.
+        # startIdentify and identify are reversed... Swap this when fixed in API.
+        key=OverkizCommand.START_IDENTIFY,
         name="Identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -73,7 +74,7 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
     OverkizButtonDescription(
         key=OverkizCommand.GO_TO_ALIAS,
-        press_args="1",
+        press_args=["1"],
         name="My position",
         icon="mdi:star",
     ),
@@ -82,10 +83,25 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         name="Toggle",
         icon="mdi:sync",
     ),
+    # DimmerOnOffLight (rts:DimmableLightRTSComponent)
+    OverkizButtonDescription(
+        key=OverkizCommand.STEP_POSITIVE,
+        name="Brightness up",
+        icon="mdi:brightness-7",
+        # step (0-127), execution duration (0-15, optional)
+        press_args=[5],
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.STEP_NEGATIVE,
+        name="Brightness down",
+        icon="mdi:brightness-3",
+        # step (0-127), execution duration (0-15, optional)
+        press_args=[5],
+    ),
     # SmokeSensor
     OverkizButtonDescription(
         key=OverkizCommand.CHECK_EVENT_TRIGGER,
-        press_args=OverkizCommandParam.SHORT,
+        press_args=[OverkizCommandParam.SHORT],
         name="Test",
         icon="mdi:smoke-detector",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -95,6 +111,9 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
 SUPPORTED_COMMANDS = {
     description.key: description for description in BUTTON_DESCRIPTIONS
 }
+
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -120,7 +139,7 @@ async def async_setup_entry(
                 description,
             )
             for command in device.definition.commands
-            if (description := SUPPORTED_COMMANDS.get(command.command_name))
+            if (description := SUPPORTED_COMMANDS.get(command))
         )
 
     async_add_entities(entities)
@@ -131,11 +150,12 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
 
     entity_description: OverkizButtonDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
-        if self.entity_description.press_args:
+        if (press_args := self.entity_description.press_args) is not None:
             await self.executor.async_execute_command(
-                self.entity_description.key, self.entity_description.press_args
+                self.entity_description.key, *press_args
             )
             return
 

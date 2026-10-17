@@ -1,7 +1,5 @@
 """Constants for the Tomorrow.io integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pytomorrowio.const import DAILY, HOURLY, NOWCAST, WeatherCode
@@ -29,6 +27,7 @@ FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 DEFAULT_TIMESTEP = 60
 DEFAULT_FORECAST_TYPE = DAILY
 DOMAIN = "tomorrowio"
+SUBENTRY_TYPE_LOCATION = "location"
 INTEGRATION_NAME = "Tomorrow.io"
 DEFAULT_NAME = INTEGRATION_NAME
 ATTRIBUTION = "Powered by Tomorrow.io"

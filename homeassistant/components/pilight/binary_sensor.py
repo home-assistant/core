@@ -1,11 +1,9 @@
 """Support for Pilight binary sensors."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -33,17 +31,17 @@ CONF_RESET_DELAY_SEC = "reset_delay_sec"
 DEFAULT_NAME = "Pilight Binary Sensor"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_VARIABLE): cv.string,
-        vol.Required(CONF_PAYLOAD): vol.Schema(dict),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default="on"): vol.Any(
+        probatio.Required(CONF_VARIABLE): cv.string,
+        probatio.Required(CONF_PAYLOAD): probatio.Schema(dict),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default="on"): probatio.Any(
             cv.positive_int, cv.small_float, cv.string
         ),
-        vol.Optional(CONF_PAYLOAD_OFF, default="off"): vol.Any(
+        probatio.Optional(CONF_PAYLOAD_OFF, default="off"): probatio.Any(
             cv.positive_int, cv.small_float, cv.string
         ),
-        vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
-        vol.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int,
+        probatio.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
+        probatio.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int,
     }
 )
 
@@ -155,12 +153,12 @@ class PilightTriggerSensor(BinarySensorEntity):
         self._on_value = on_value
         self._off_value = off_value
         self._reset_delay_sec = rst_dly_sec
-        self._delay_after: datetime.datetime | None = None
+        self._delay_after: dt.datetime | None = None
         self._hass = hass
 
         hass.bus.listen(EVENT, self._handle_code)
 
-    def _reset_state(self, _: datetime.datetime) -> None:
+    def _reset_state(self, _: dt.datetime) -> None:
         self._attr_is_on = False
         self._delay_after = None
         self.schedule_update_ha_state()
@@ -187,7 +185,7 @@ class PilightTriggerSensor(BinarySensorEntity):
             value = call.data[self._variable]
             self._attr_is_on = value == self._on_value
             if self._delay_after is None:
-                self._delay_after = dt_util.utcnow() + datetime.timedelta(
+                self._delay_after = dt_util.utcnow() + dt.timedelta(
                     seconds=self._reset_delay_sec
                 )
                 track_point_in_time(self._hass, self._reset_state, self._delay_after)

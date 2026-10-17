@@ -1,7 +1,5 @@
 """Test the Sky Remote config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -45,9 +43,15 @@ async def test_device_exists_abort(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: mock_config_entry.data[CONF_HOST]},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: mock_config_entry.data[CONF_HOST]},
     )
 
     assert result["type"] is FlowResultType.ABORT

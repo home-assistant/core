@@ -1,15 +1,13 @@
 """The config flow for the Prowl component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import prowlpy
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 
 from .const import DOMAIN
 from .helpers import async_verify_key
@@ -22,6 +20,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -35,7 +34,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await self._validate_api_key(api_key)
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title="Prowl",
                     data={
                         CONF_API_KEY: api_key,
                     },
@@ -44,13 +43,10 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_API_KEY): str,
-                        vol.Required(CONF_NAME): str,
-                    },
+                probatio.Schema(
+                    {probatio.Required(probatio.Secret(CONF_API_KEY)): str},
                 ),
-                user_input or {CONF_NAME: "Prowl"},
+                user_input,
             ),
             errors=errors,
         )

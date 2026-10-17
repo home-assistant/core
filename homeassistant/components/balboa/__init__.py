@@ -1,7 +1,5 @@
 """The Balboa Spa Client integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 
@@ -35,18 +33,16 @@ SYNC_TIME_INTERVAL = timedelta(hours=1)
 type BalboaConfigEntry = ConfigEntry[SpaClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:
     """Set up Balboa Spa from a config entry."""
     host = entry.data[CONF_HOST]
 
     _LOGGER.debug("Attempting to connect to %s", host)
     spa = SpaClient(host)
     if not await spa.connect():
-        _LOGGER.error("Failed to connect to spa at %s", host)
-        raise ConfigEntryNotReady("Unable to connect")
+        raise ConfigEntryNotReady(f"Failed to connect to spa at {host}")
     if not await spa.async_configuration_loaded():
-        _LOGGER.error("Failed to get spa info at %s", host)
-        raise ConfigEntryNotReady("Unable to configure")
+        raise ConfigEntryNotReady(f"Failed to get spa info at {host}")
 
     entry.runtime_data = spa
 
@@ -56,12 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bo
     entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.async_on_unload(spa.disconnect)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:

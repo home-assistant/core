@@ -1,9 +1,7 @@
 """Amber Electric Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 import amberelectric
 from amberelectric.models.actual_interval import ActualInterval
@@ -50,7 +48,7 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
 
 
 class AmberUpdateCoordinator(DataUpdateCoordinator):
-    """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
+    """Coordinator in charge of downloading site data for all sensors."""
 
     config_entry: AmberConfigEntry
 
@@ -134,6 +132,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Fetched new Amber data: %s", intervals)
         return result
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
         return await self.hass.async_add_executor_job(self.update_price_data)

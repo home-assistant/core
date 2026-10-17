@@ -1,19 +1,14 @@
 """Support for Portainer buttons."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
-from pyportainer import Portainer
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
+from pyportainer import DockerContainerState, Portainer
+from pyportainer.models.docker import DockerContainer
+from pyportainer.models.stacks import Stack, StackType
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -22,56 +17,91 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
+    PortainerStackData,
 )
-from .entity import PortainerContainerEntity, PortainerEndpointEntity
+from .entity import (
+    PortainerContainerEntity,
+    PortainerEndpointEntity,
+    PortainerStackEntity,
+)
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class PortainerButtonDescription(ButtonEntityDescription):
-    """Class to describe a Portainer button entity."""
+class PortainerEndpointButtonDescription(ButtonEntityDescription):
+    """Class to describe a Portainer endpoint button entity."""
 
-    # Note to reviewer: I am keeping the third argument a str, in order to keep mypy happy :)
+    press_action: Callable[[Portainer, int], Coroutine[Any, Any, Any]]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerContainerButtonDescription(ButtonEntityDescription):
+    """Class to describe a Portainer container button entity."""
+
     press_action: Callable[
         [Portainer, int, str],
-        Coroutine[Any, Any, None],
+        Coroutine[Any, Any, DockerContainer | None],
     ]
+    available_fn: Callable[[PortainerContainerData], bool]
 
 
-ENDPOINT_BUTTONS: tuple[PortainerButtonDescription, ...] = (
-    PortainerButtonDescription(
+@dataclass(frozen=True, kw_only=True)
+class PortainerStackButtonDescription(ButtonEntityDescription):
+    """Class to describe a Portainer stack button entity."""
+
+    press_action: Callable[[Portainer, int, int], Coroutine[Any, Any, Stack]]
+
+
+ENDPOINT_BUTTONS: tuple[PortainerEndpointButtonDescription, ...] = (
+    PortainerEndpointButtonDescription(
         key="images_prune",
         translation_key="images_prune",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=(
-            lambda portainer, endpoint_id, _: portainer.images_prune(
+            lambda portainer, endpoint_id: portainer.images_prune(
                 endpoint_id=endpoint_id, dangling=False, until=timedelta(days=0)
             )
         ),
     ),
-    PortainerButtonDescription(
+    PortainerEndpointButtonDescription(
         key="volumes_prune",
         translation_key="volumes_prune",
         entity_category=EntityCategory.CONFIG,
         press_action=(
-            lambda portainer, endpoint_id, _: portainer.prune_volumes(endpoint_id)
+            lambda portainer, endpoint_id: portainer.prune_volumes(endpoint_id)
+        ),
+    ),
+    PortainerEndpointButtonDescription(
+        key="build_cache_prune",
+        translation_key="build_cache_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id: portainer.prune_build_cache(
+                endpoint_id, all_cache=True
+            )
+        ),
+    ),
+    PortainerEndpointButtonDescription(
+        key="networks_prune",
+        translation_key="networks_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id: portainer.prune_networks(endpoint_id)
         ),
     ),
 )
 
-CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
-    PortainerButtonDescription(
+CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
+    PortainerContainerButtonDescription(
         key="restart",
         translation_key="restart_container",
         device_class=ButtonDeviceClass.RESTART,
@@ -81,8 +111,11 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
                 endpoint_id, container_id
             )
         ),
+        available_fn=lambda container: (
+            container.container.state != DockerContainerState.PAUSED
+        ),
     ),
-    PortainerButtonDescription(
+    PortainerContainerButtonDescription(
         key="pause",
         translation_key="pause_container",
         entity_category=EntityCategory.CONFIG,
@@ -91,8 +124,11 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
                 endpoint_id, container_id
             )
         ),
+        available_fn=lambda container: (
+            container.container.state == DockerContainerState.RUNNING
+        ),
     ),
-    PortainerButtonDescription(
+    PortainerContainerButtonDescription(
         key="resume",
         translation_key="resume_container",
         entity_category=EntityCategory.CONFIG,
@@ -101,14 +137,52 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
                 endpoint_id, container_id
             )
         ),
+        available_fn=lambda container: (
+            container.container.state == DockerContainerState.PAUSED
+        ),
     ),
-    PortainerButtonDescription(
+    PortainerContainerButtonDescription(
+        key="recreate",
+        translation_key="recreate_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.container_recreate(
+                endpoint_id=endpoint_id,
+                container_id=container_id,
+                timeout=timedelta(minutes=10),
+                pull_image=True,
+            )
+        ),
+        available_fn=lambda container: (
+            container.container.state
+            not in (DockerContainerState.REMOVING, DockerContainerState.DEAD)
+        ),
+    ),
+    PortainerContainerButtonDescription(
         key="kill",
         translation_key="kill_container",
         entity_category=EntityCategory.CONFIG,
         press_action=(
             lambda portainer, endpoint_id, container_id: portainer.kill_container(
                 endpoint_id, container_id
+            )
+        ),
+        available_fn=lambda container: (
+            container.container.state
+            in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
+        ),
+    ),
+)
+
+STACK_BUTTONS: tuple[PortainerStackButtonDescription, ...] = (
+    PortainerStackButtonDescription(
+        key="update_stack",
+        translation_key="update_stack",
+        device_class=ButtonDeviceClass.UPDATE,
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, stack_id: portainer.update_stack(
+                endpoint_id, stack_id, timeout=timedelta(minutes=10)
             )
         ),
     ),
@@ -150,8 +224,26 @@ async def async_setup_entry(
             for entity_description in CONTAINER_BUTTONS
         )
 
+    def _async_add_new_stacks(
+        stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
+    ) -> None:
+        """Add new stack buttons."""
+        async_add_entities(
+            PortainerStackButton(
+                coordinator,
+                entity_description,
+                stack,
+                endpoint,
+            )
+            for (endpoint, stack) in stacks
+            # Portainer updates Kubernetes stacks through a different API
+            if stack.stack.stack_type != StackType.KUBERNETES
+            for entity_description in STACK_BUTTONS
+        )
+
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
 
     _async_add_new_endpoints(
         [
@@ -167,62 +259,78 @@ async def async_setup_entry(
             for container in endpoint.containers.values()
         ]
     )
+    _async_add_new_stacks(
+        [
+            (endpoint, stack)
+            for endpoint in coordinator.data.values()
+            for stack in endpoint.stacks.values()
+        ]
+    )
 
 
 class PortainerBaseButton(ButtonEntity):
-    """Common base for Portainer buttons. Basically to ensure the async_press logic isn't duplicated."""
+    """Common base for Portainer buttons.
 
-    entity_description: PortainerButtonDescription
+    Ensures the async_press logic isn't duplicated.
+    """
+
     coordinator: PortainerCoordinator
 
     @abstractmethod
     async def _async_press_call(self) -> None:
         """Abstract method used per Portainer button class."""
 
+    @override
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        try:
-            await self._async_press_call()
-        except PortainerConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect_no_details",
-            ) from err
-        except PortainerAuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth_no_details",
-            ) from err
-        except PortainerTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect_no_details",
-            ) from err
-
+        await self.coordinator.async_call_portainer(self._async_press_call())
         await self.coordinator.async_request_refresh()
 
 
 class PortainerEndpointButton(PortainerEndpointEntity, PortainerBaseButton):
     """Defines a Portainer endpoint button."""
 
-    entity_description: PortainerButtonDescription
+    entity_description: PortainerEndpointButtonDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Call the endpoint button press action."""
         await self.entity_description.press_action(
-            self.coordinator.portainer, self.device_id, ""
+            self.coordinator.portainer, self.device_id
         )
 
 
 class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
     """Defines a Portainer button."""
 
-    entity_description: PortainerButtonDescription
+    entity_description: PortainerContainerButtonDescription
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the button is available."""
+        return super().available and self.entity_description.available_fn(
+            self.container_data
+        )
+
+    @override
     async def _async_press_call(self) -> None:
         """Call the container button press action."""
         await self.entity_description.press_action(
             self.coordinator.portainer,
             self.endpoint_id,
             self.container_data.container.id,
+        )
+
+
+class PortainerStackButton(PortainerStackEntity, PortainerBaseButton):
+    """Defines a Portainer stack button."""
+
+    entity_description: PortainerStackButtonDescription
+
+    @override
+    async def _async_press_call(self) -> None:
+        """Call the stack button press action."""
+        await self.entity_description.press_action(
+            self.coordinator.portainer, self.endpoint_id, self.stack_id
         )

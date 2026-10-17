@@ -1,11 +1,9 @@
 """Notification service for Google Mail integration."""
 
-from __future__ import annotations
-
 import base64
 from email.mime.text import MIMEText
 from email.utils import formataddr
-from typing import Any
+from typing import Any, override
 
 from googleapiclient.http import HttpRequest
 
@@ -50,6 +48,7 @@ class GMailNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.auth: AsyncConfigEntryAuth = config[DATA_AUTH]
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
         data: dict[str, Any] = kwargs.get(ATTR_DATA) or {}

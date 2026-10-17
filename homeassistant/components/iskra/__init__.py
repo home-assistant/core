@@ -1,7 +1,5 @@
 """The iskra integration."""
 
-from __future__ import annotations
-
 from pyiskra.adapters import Modbus, RestAPI
 from pyiskra.devices import Device
 from pyiskra.exceptions import DeviceConnectionError, DeviceNotSupported, NotAuthorised
@@ -25,7 +23,7 @@ from .coordinator import IskraConfigEntry, IskraDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> None:
     """Set up iskra device from a config entry."""
     conf = entry.data
     adapter = None
@@ -61,7 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
     # Initialize the device
     await base_device.init()
 
-    # if the device is a gateway, add all child devices, otherwise add the device itself.
+    # If the device is a gateway, add all child devices,
+    # otherwise add the device itself.
     if base_device.is_gateway:
         # Add the gateway device to the device registry
         device_registry = dr.async_get(hass)
@@ -88,9 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

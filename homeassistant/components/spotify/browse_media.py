@@ -1,7 +1,5 @@
 """Support for Spotify media browsing."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -224,7 +222,10 @@ async def async_browse_media(
         )
 
     if media_content_id is None or not media_content_id.startswith(MEDIA_PLAYER_PREFIX):
-        raise BrowseError("Invalid Spotify URL specified")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_url",
+        )
 
     # The config entry id is the host name of the URL, the Spotify URI is the name
     parsed_url = yarl.URL(media_content_id)
@@ -241,7 +242,10 @@ async def async_browse_media(
         is None
         or entry.state is not ConfigEntryState.LOADED
     ):
-        raise BrowseError("Invalid Spotify account specified")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_account",
+        )
     media_content_id = parsed_url.name
     info = entry.runtime_data
 
@@ -287,7 +291,14 @@ async def async_browse_media_internal(
         can_play_artist=can_play_artist,
     )
     if response is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="media_not_found",
+            translation_placeholders={
+                "media_content_type": str(media_content_type),
+                "media_content_id": str(media_content_id),
+            },
+        )
     return response
 
 

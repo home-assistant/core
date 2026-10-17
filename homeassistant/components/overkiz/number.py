@@ -1,11 +1,9 @@
 """Support for Overkiz (virtual) numbers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from typing import cast
+from dataclasses import dataclass, replace
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -13,6 +11,7 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -21,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
+from .cover import SUPPORTED_DEVICES as SUPPORTED_COVER_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 BOOST_MODE_DURATION_DELAY = 1
@@ -187,9 +187,42 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
     ),
+    # AtlanticElectricalTowelDryer - boost mode duration in minutes
+    OverkizNumberDescription(
+        key=OverkizState.IO_BOOST_DURATION_USER_PARAMETER,
+        name="Boost mode duration",
+        icon="mdi:radiator",
+        command=OverkizCommand.SET_TOWEL_DRYER_BOOST_MODE_DURATION,
+        native_min_value=0,
+        native_max_value=60,
+        native_step=1,
+        mode=NumberMode.BOX,
+        max_value_state_name=OverkizState.IO_BOOST_DURATION_MAX,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+    # AtlanticElectricalTowelDryer - drying duration in minutes (0 - 120)
+    OverkizNumberDescription(
+        key=OverkizState.IO_DRYING_DURATION_USER_PARAMETER,
+        name="Drying duration",
+        icon="mdi:tumble-dryer",
+        command=OverkizCommand.SET_DRYING_DURATION,
+        native_min_value=0,
+        native_max_value=120,
+        native_step=1,
+        mode=NumberMode.BOX,
+        max_value_state_name=OverkizState.IO_DRYING_DURATION_MAX,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
+
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -208,15 +241,31 @@ async def async_setup_entry(
         ):
             continue
 
-        entities.extend(
-            OverkizNumber(
-                device.device_url,
-                data.coordinator,
-                description,
+        for state in device.definition.states:
+            if not (description := SUPPORTED_STATES.get(state)):
+                continue
+
+            if not device.supports_command(description.command):
+                continue
+
+            # Mirror the cover's position inversion.
+            if description.key == OverkizState.CORE_MEMORIZED_1_POSITION and (
+                cover_description := (
+                    SUPPORTED_COVER_DEVICES.get(device.widget)
+                    or SUPPORTED_COVER_DEVICES.get(device.ui_class)
+                )
+            ):
+                description = replace(
+                    description, inverted=cover_description.invert_position
+                )
+
+            entities.append(
+                OverkizNumber(
+                    device.device_url,
+                    data.coordinator,
+                    description,
+                )
             )
-            for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
-        )
 
     async_add_entities(entities)
 
@@ -250,6 +299,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
             self._attr_native_max_value = cast(float, state.value)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
@@ -260,6 +310,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
 
         return None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.inverted:

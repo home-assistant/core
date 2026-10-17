@@ -1,18 +1,16 @@
 """Support for Ubiquiti mFi sensors."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
-    StateType,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -28,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +46,12 @@ SENSOR_MODELS = [
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Optional(CONF_PORT): probatio.Port(),
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -102,11 +100,13 @@ class MfiSensor(SensorEntity):
         self._port = port
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._port.label
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         try:
@@ -121,6 +121,7 @@ class MfiSensor(SensorEntity):
         return round(self._port.value, digits)
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         try:
@@ -134,6 +135,7 @@ class MfiSensor(SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         try:

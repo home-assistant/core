@@ -9,6 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -24,7 +25,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.plugwise.climate import PlugwiseClimateExtraStoredData
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -41,11 +48,11 @@ HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
 )
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -112,8 +119,8 @@ async def test_adam_climate_entity_climate_changes(
     assert mock_smile_adam.set_schedule_state.call_count == 2
     mock_smile_adam.set_schedule_state.assert_called_with(
         "c50f167537524366a5af7aa3942feb1e",
-        STATE_OFF,
         "GF7  Woonkamer",
+        STATE_OFF,
     )
 
     with pytest.raises(
@@ -162,7 +169,7 @@ async def test_adam_restore_state_climate(
             (
                 State("climate.living_room", "heat"),
                 PlugwiseClimateExtraStoredData(
-                    last_active_schedule=None,
+                    last_active_schedule="off",
                     previous_action_mode="heating",
                 ).as_dict(),
             ),
@@ -183,7 +190,6 @@ async def test_adam_restore_state_climate(
     assert (state := hass.states.get("climate.living_room"))
     assert state.state == "heat"
 
-    # Verify a HomeAssistantError is raised setting a schedule with last_active_schedule = None
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -225,7 +231,7 @@ async def test_adam_restore_state_climate(
         assert (state := hass.states.get("climate.bathroom"))
         assert state.state == "heat"
 
-        # Verify restoration is used when setting the schedule, schedule == "off"
+        # Verify restoration is used when setting the schedule, from "off"
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -234,7 +240,9 @@ async def test_adam_restore_state_climate(
         )
         # Verify set_schedule_state was called with the restored schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-            "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
+            "f871b8c4d63549319221e294e4f88074",
+            "Badkamer",
+            STATE_ON,
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
 
@@ -259,13 +267,13 @@ async def test_adam_restore_state_climate(
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_smile_adam_heat_cool")
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_2_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_adam_heat_cool: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -274,15 +282,111 @@ async def test_adam_2_climate_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating_off_schedule"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_none_restore(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test last_active_schedule restored as None from before the plugwise v1.14.3 bump."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.living_room", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule=None,
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+            (
+                State("climate.bathroom", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule="Badkamer",
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify that setting a schedule with last_active_schedule=None fails
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating_off_schedule"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_off_regulation_mode_change(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing from regulation off mode."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.living_room", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule="off",
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+            (
+                State("climate.bathroom", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule="Badkamer",
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.living_room"))
+    assert state.state == "off"
+
+    # Verify that the active schedule is turned off when transitioning from regulation-off-mode to a manual mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
+        "f871b8c4d63549319221e294e4f88074",
+        "Badkamer",
+        STATE_OFF,
+    )
+
+
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
-async def test_adam_3_climate_entity_attributes(
+async def test_adam_climate_entity_attributes(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test creation of adam climate device environment."""
+    """Test creation of adam climate device environment.
+
+    Restored data is according to the plugwise v1.14.3 updated format.
+    """
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -381,7 +485,8 @@ async def test_adam_3_climate_entity_attributes(
             HVACMode.HEAT,
             HVACMode.COOL,
         ]
-        # Test setting regulation_mode to cooling, from off, ignoring the restored previous_action_mode
+        # Test setting regulation_mode to cooling, from off,
+        # ignoring the restored previous_action_mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -427,8 +532,8 @@ async def test_adam_3_climate_entity_attributes(
         # And set_schedule_state was called with the restored last_active_schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
             "f871b8c4d63549319221e294e4f88074",
-            STATE_ON,
             "Badkamer",
+            STATE_ON,
         )
 
 
@@ -486,13 +591,13 @@ async def test_adam_climate_off_mode_change(
     assert mock_smile_adam_jip.set_regulation_mode.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_anna_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -555,14 +660,34 @@ async def test_anna_climate_entity_climate_changes(
     assert mock_smile_anna.set_schedule_state.call_count == 1
     mock_smile_anna.set_schedule_state.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5",
-        STATE_OFF,
         "standaard",
+        STATE_OFF,
     )
+
+    data = mock_smile_anna.async_update.return_value
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["climate_mode"] = "heat"
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
+        assert mock_smile_anna.set_schedule_state.call_count == 2
+        mock_smile_anna.set_schedule_state.assert_called_with(
+            "c784ee9fdab44e1395b8dee7d7a497d5",
+            "standaard",
+            STATE_ON,
+        )
 
     # Mock user deleting last schedule from app or browser
     data = mock_smile_anna.async_update.return_value
-    data["3cb70739631c4d17a86b8b12e8a5161b"]["available_schedules"] = []
-    data["3cb70739631c4d17a86b8b12e8a5161b"]["select_schedule"] = None
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["available_schedules"] = ["off"]
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["select_schedule"] = "off"
     data["3cb70739631c4d17a86b8b12e8a5161b"]["climate_mode"] = "heat_cool"
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
         freezer.tick(timedelta(minutes=1))
@@ -574,13 +699,13 @@ async def test_anna_climate_entity_climate_changes(
         assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT_COOL]
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["m_anna_heatpump_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_anna_2_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -600,3 +725,37 @@ async def test_anna_p1_climate_snapshot(
 ) -> None:
     """Test Anna P1 climate snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_tom_without_temperature_measurement(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+) -> None:
+    """Test Tom without temperature measurement."""
+    data = mock_smile_adam_heat_cool.async_update.return_value
+    del data["f871b8c4d63549319221e294e4f88074"]["sensors"]["temperature"]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.bathroom")) is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+
+
+@pytest.mark.usefixtures("mock_smile_legacy_anna")
+async def test_legacy_anna_no_schedule(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test failing to set a schedule with no schedule defined."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )

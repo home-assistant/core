@@ -1,17 +1,16 @@
 """Support for Azure Storage backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
@@ -78,12 +77,13 @@ def handle_backup_errors[_R, **P](
                 exc_info=True,
             )
             raise BackupAgentError(
-                f"Error during backup operation in {func.__name__}:"
-                f" Status {err.status_code}, message: {err.message}"
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_failed",
             ) from err
         except ServiceRequestError as err:
             raise BackupAgentError(
-                f"Timeout during backup operation in {func.__name__}"
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_timed_out",
             ) from err
         except AzureError as err:
             _LOGGER.debug(
@@ -93,7 +93,8 @@ def handle_backup_errors[_R, **P](
                 exc_info=True,
             )
             raise BackupAgentError(
-                f"Error during backup operation in {func.__name__}: {err}"
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_failed",
             ) from err
 
     return wrapper
@@ -112,6 +113,7 @@ class AzureStorageBackupAgent(BackupAgent):
         self.unique_id = entry.entry_id
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -120,11 +122,16 @@ class AzureStorageBackupAgent(BackupAgent):
         """Download a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupNotFound(f"Backup {backup_id} not found")
+            raise BackupNotFound(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="backup_not_found",
+                translation_placeholders={"backup_id": backup_id},
+            )
         download_stream = await self._client.download_blob(blob.name)
         return download_stream.chunks()
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -141,14 +148,19 @@ class AzureStorageBackupAgent(BackupAgent):
             "backup_metadata": json.dumps(backup.as_dict()),
         }
 
+        async def progress_hook(current: int, total: int | None) -> None:
+            on_progress(bytes_uploaded=current)
+
         await self._client.upload_blob(
             name=suggested_filename(backup),
             metadata=metadata,
             data=await open_stream(),
             length=backup.size,
+            progress_hook=progress_hook,
         )
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -157,10 +169,15 @@ class AzureStorageBackupAgent(BackupAgent):
         """Delete a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupNotFound(f"Backup {backup_id} not found")
+            raise BackupNotFound(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="backup_not_found",
+                translation_placeholders={"backup_id": backup_id},
+            )
         await self._client.delete_blob(blob.name)
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
@@ -175,6 +192,7 @@ class AzureStorageBackupAgent(BackupAgent):
         return backups
 
     @handle_backup_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -183,7 +201,11 @@ class AzureStorageBackupAgent(BackupAgent):
         """Return a backup."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupNotFound(f"Backup {backup_id} not found")
+            raise BackupNotFound(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="backup_not_found",
+                translation_placeholders={"backup_id": backup_id},
+            )
 
         return AgentBackup.from_dict(json.loads(blob.metadata["backup_metadata"]))
 

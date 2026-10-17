@@ -7,23 +7,34 @@ from google_air_quality_api.auth import Auth
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_REFERRER
+from .const import CONF_REFERRER, DOMAIN
 from .coordinator import (
     GoogleAirQualityConfigEntry,
     GoogleAirQualityRuntimeData,
     GoogleAirQualityUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Air Quality integration."""
+    async_setup_services(hass)
+    return True
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Air Quality from a config entry."""
     session = async_get_clientsession(hass)
     api_key = entry.data[CONF_API_KEY]
@@ -47,14 +58,13 @@ async def async_setup_entry(
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(

@@ -1,13 +1,11 @@
 """Config flow for Ukraine Alarm."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
+import probatio
 from uasiren.client import Client
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_REGION
@@ -28,6 +26,7 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         self.states: list[dict[str, Any]] | None = None
         self.selected_region: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -95,7 +94,8 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             source = self.states
 
         if user_input is not None:
-            # Only offer to browse subchildren if picked region wasn't the previously picked one
+            # Only offer to browse subchildren if picked
+            # region wasn't the previously picked one
             if (
                 not self.selected_region
                 or user_input[CONF_REGION] != self.selected_region["regionId"]
@@ -119,9 +119,9 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         regions.update(_make_regions_object(source))
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_REGION): vol.In(regions),
+                probatio.Required(CONF_REGION): probatio.In(regions),
             }
         )
 

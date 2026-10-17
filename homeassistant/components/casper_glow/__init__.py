@@ -1,14 +1,14 @@
 """The Casper Glow integration."""
 
-from __future__ import annotations
-
 from pycasperglow import CasperGlow
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import CasperGlowConfigEntry, CasperGlowCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -20,13 +20,20 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> None:
     """Set up Casper Glow from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find Casper Glow device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass, address.upper(), BluetoothReachabilityIntent.CONNECTION
+                ),
+            },
         )
 
     glow = CasperGlow(ble_device)
@@ -37,9 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -
 
     entry.async_on_unload(coordinator.async_start())
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

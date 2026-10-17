@@ -1,7 +1,5 @@
 """Provides diagnostics for ZHA."""
 
-from __future__ import annotations
-
 import dataclasses
 from importlib.metadata import version
 from typing import Any
@@ -121,7 +119,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     zha_device_proxy: ZHADeviceProxy = async_get_zha_device_proxy(hass, device.id)

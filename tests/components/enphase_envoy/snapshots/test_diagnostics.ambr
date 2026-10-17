@@ -30,14 +30,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -57,7 +51,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -65,7 +58,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -120,7 +113,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -175,7 +168,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -227,7 +220,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -284,14 +277,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -311,7 +298,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -319,7 +305,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -371,7 +357,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -411,7 +397,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -451,7 +437,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -491,7 +477,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -531,7 +517,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -571,7 +557,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -611,7 +597,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -654,7 +640,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -694,7 +680,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -734,7 +720,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -774,7 +760,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -814,7 +800,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -853,12 +839,11 @@
       }),
     ]),
     'envoy_model_data': dict({
-      'ctmeter_consumption': None,
-      'ctmeter_consumption_phases': None,
-      'ctmeter_production': None,
-      'ctmeter_production_phases': None,
-      'ctmeter_storage': None,
-      'ctmeter_storage_phases': None,
+      'acb_inventory': None,
+      'acb_power': None,
+      'battery_aggregate': None,
+      'c6cc': None,
+      'collar': None,
       'ctmeters': dict({
       }),
       'ctmeters_phases': dict({
@@ -945,14 +930,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -972,7 +951,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -980,7 +958,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1035,7 +1013,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1090,7 +1068,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -1142,7 +1120,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1199,14 +1177,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -1226,7 +1198,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -1234,7 +1205,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1286,7 +1257,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1326,7 +1297,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1366,7 +1337,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1406,7 +1377,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1446,7 +1417,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1486,7 +1457,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1526,7 +1497,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1569,7 +1540,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1609,7 +1580,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1649,7 +1620,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1689,7 +1660,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1729,7 +1700,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -1768,12 +1739,11 @@
       }),
     ]),
     'envoy_model_data': dict({
-      'ctmeter_consumption': None,
-      'ctmeter_consumption_phases': None,
-      'ctmeter_production': None,
-      'ctmeter_production_phases': None,
-      'ctmeter_storage': None,
-      'ctmeter_storage_phases': None,
+      'acb_inventory': None,
+      'acb_power': None,
+      'battery_aggregate': None,
+      'c6cc': None,
+      'collar': None,
       'ctmeters': dict({
       }),
       'ctmeters_phases': dict({
@@ -1822,8 +1792,14 @@
       ]),
     }),
     'fixtures': dict({
+      '/admin/lib/acb_config': 'Testing request replies.',
+      '/admin/lib/acb_config_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/admin/lib/network_display': 'Testing request replies.',
+      '/admin/lib/network_display_log': '{"headers":{"Hello":"World"},"code":200}',
       '/admin/lib/tariff': 'Testing request replies.',
       '/admin/lib/tariff_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/admin/lib/wireless_display': 'Testing request replies.',
+      '/admin/lib/wireless_display_log': '{"headers":{"Hello":"World"},"code":200}',
       '/api/v1/production': 'Testing request replies.',
       '/api/v1/production/inverters': 'Testing request replies.',
       '/api/v1/production/inverters_log': '{"headers":{"Hello":"World"},"code":200}',
@@ -1832,6 +1808,8 @@
       '/home_log': '{"headers":{"Hello":"World"},"code":200}',
       '/info': 'Testing request replies.',
       '/info_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/inventory.json?deleted=1': 'Testing request replies.',
+      '/inventory.json?deleted=1_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/dry_contacts': 'Testing request replies.',
       '/ivp/ensemble/dry_contacts_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/generator': 'Testing request replies.',
@@ -1840,18 +1818,26 @@
       '/ivp/ensemble/inventory_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/power': 'Testing request replies.',
       '/ivp/ensemble/power_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/ivp/ensemble/relay': 'Testing request replies.',
+      '/ivp/ensemble/relay_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/secctrl': 'Testing request replies.',
       '/ivp/ensemble/secctrl_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ensemble/status': 'Testing request replies.',
       '/ivp/ensemble/status_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/ivp/livedata/status': 'Testing request replies.',
+      '/ivp/livedata/status_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/meters': 'Testing request replies.',
       '/ivp/meters/readings': 'Testing request replies.',
       '/ivp/meters/readings_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/meters_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/pdm/device_data': 'Testing request replies.',
       '/ivp/pdm/device_data_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/ivp/pdm/energy': 'Testing request replies.',
+      '/ivp/pdm/energy_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/sc/pvlimit': 'Testing request replies.',
       '/ivp/sc/pvlimit_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/ivp/sc/sched': 'Testing request replies.',
+      '/ivp/sc/sched_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ss/dry_contact_settings': 'Testing request replies.',
       '/ivp/ss/dry_contact_settings_log': '{"headers":{"Hello":"World"},"code":200}',
       '/ivp/ss/gen_config': 'Testing request replies.',
@@ -1904,14 +1890,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -1931,7 +1911,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -1939,7 +1918,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -1994,7 +1973,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2049,7 +2028,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -2101,7 +2080,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2158,14 +2137,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -2185,7 +2158,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -2193,7 +2165,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2245,7 +2217,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2285,7 +2257,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2325,7 +2297,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2365,7 +2337,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2405,7 +2377,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2445,7 +2417,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2485,7 +2457,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2528,7 +2500,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2568,7 +2540,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2608,7 +2580,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2648,7 +2620,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2688,7 +2660,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -2727,12 +2699,11 @@
       }),
     ]),
     'envoy_model_data': dict({
-      'ctmeter_consumption': None,
-      'ctmeter_consumption_phases': None,
-      'ctmeter_production': None,
-      'ctmeter_production_phases': None,
-      'ctmeter_storage': None,
-      'ctmeter_storage_phases': None,
+      'acb_inventory': None,
+      'acb_power': None,
+      'battery_aggregate': None,
+      'c6cc': None,
+      'collar': None,
       'ctmeters': dict({
       }),
       'ctmeters_phases': dict({
@@ -2781,7 +2752,16 @@
       ]),
     }),
     'fixtures': dict({
+      '/admin/lib/acb_config_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/admin/lib/network_display_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
       '/admin/lib/tariff_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/admin/lib/wireless_display_log': dict({
         'Error': "EnvoyError('Test')",
       }),
       '/api/v1/production/inverters_log': dict({
@@ -2796,6 +2776,9 @@
       '/info_log': dict({
         'Error': "EnvoyError('Test')",
       }),
+      '/inventory.json?deleted=1_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
       '/ivp/ensemble/dry_contacts_log': dict({
         'Error': "EnvoyError('Test')",
       }),
@@ -2808,10 +2791,16 @@
       '/ivp/ensemble/power_log': dict({
         'Error': "EnvoyError('Test')",
       }),
+      '/ivp/ensemble/relay_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
       '/ivp/ensemble/secctrl_log': dict({
         'Error': "EnvoyError('Test')",
       }),
       '/ivp/ensemble/status_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/livedata/status_log': dict({
         'Error': "EnvoyError('Test')",
       }),
       '/ivp/meters/readings_log': dict({
@@ -2823,7 +2812,13 @@
       '/ivp/pdm/device_data_log': dict({
         'Error': "EnvoyError('Test')",
       }),
+      '/ivp/pdm/energy_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
       '/ivp/sc/pvlimit_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/sc/sched_log': dict({
         'Error': "EnvoyError('Test')",
       }),
       '/ivp/ss/dry_contact_settings_log': dict({
@@ -2884,14 +2879,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -2911,7 +2900,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -2919,7 +2907,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -2971,7 +2959,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3011,7 +2999,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3051,7 +3039,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3091,7 +3079,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3131,7 +3119,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3171,7 +3159,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3211,7 +3199,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3251,7 +3239,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3291,7 +3279,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -3329,7 +3317,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3372,7 +3360,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3412,7 +3400,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3454,14 +3442,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
             list([
@@ -3485,7 +3467,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -3493,7 +3474,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3548,7 +3529,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -3600,7 +3581,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3655,7 +3636,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3711,12 +3692,11 @@
       }),
     ]),
     'envoy_model_data': dict({
-      'ctmeter_consumption': None,
-      'ctmeter_consumption_phases': None,
-      'ctmeter_production': None,
-      'ctmeter_production_phases': None,
-      'ctmeter_storage': None,
-      'ctmeter_storage_phases': None,
+      'acb_inventory': None,
+      'acb_power': None,
+      'battery_aggregate': None,
+      'c6cc': None,
+      'collar': None,
       'ctmeters': dict({
       }),
       'ctmeters_phases': dict({
@@ -3808,14 +3788,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -3835,7 +3809,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -3843,7 +3816,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3895,7 +3868,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3935,7 +3908,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -3975,7 +3948,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4015,7 +3988,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4055,7 +4028,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4095,7 +4068,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4135,7 +4108,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4175,7 +4148,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4215,7 +4188,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4253,7 +4226,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4296,7 +4269,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4336,7 +4309,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4378,14 +4351,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -4405,7 +4372,6 @@
           'model_id': None,
           'name': 'Collar 482520020939',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '482520020939',
           'sw_version': '3.0.6-D0',
         }),
@@ -4413,7 +4379,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4458,7 +4424,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4502,7 +4468,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4546,7 +4512,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4591,7 +4557,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4635,7 +4601,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4689,14 +4655,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -4716,7 +4676,6 @@
           'model_id': None,
           'name': 'C6 Combiner 482523040549',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '482523040549',
           'sw_version': '0.1.20-D1',
         }),
@@ -4724,7 +4683,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4769,7 +4728,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4816,14 +4775,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -4843,7 +4796,6 @@
           'model_id': None,
           'name': 'Enpower 654321',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '654321',
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -4851,7 +4803,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4896,7 +4848,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -4940,7 +4892,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -4995,7 +4947,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5050,7 +5002,87 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'sensor.enpower_654321_communication_level_2_4_ghz',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Communication level 2.4 GHz',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Communication level 2.4 GHz',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'comm_level_2_4_ghz',
+              'unique_id': '654321_comm_level_2_4_ghz',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'sensor.enpower_654321_communication_level_sub_ghz',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Communication level sub-GHz',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Communication level sub-GHz',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'comm_level_sub_ghz',
+              'unique_id': '654321_comm_level_sub_ghz',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -5095,7 +5127,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5147,7 +5179,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -5191,7 +5223,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -5237,14 +5269,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -5264,7 +5290,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.1.2',
         }),
@@ -5272,7 +5297,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5324,7 +5349,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5367,7 +5392,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5410,7 +5435,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5453,7 +5478,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5496,7 +5521,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5551,7 +5576,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5594,7 +5619,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5637,7 +5662,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5680,7 +5705,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5735,7 +5760,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5778,7 +5803,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5821,7 +5846,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5864,7 +5889,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5919,7 +5944,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5962,7 +5987,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6005,7 +6030,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6048,7 +6073,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6091,7 +6116,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6134,7 +6159,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6177,7 +6202,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6220,7 +6245,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6269,7 +6294,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -6318,7 +6343,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6373,7 +6398,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6416,7 +6441,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6459,7 +6484,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6502,7 +6527,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6557,7 +6582,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6600,7 +6625,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6643,7 +6668,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6686,7 +6711,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6741,7 +6766,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6784,7 +6809,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6827,7 +6852,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6870,7 +6895,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6925,7 +6950,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -6968,7 +6993,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7011,7 +7036,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7054,7 +7079,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7106,7 +7131,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7147,7 +7172,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7188,7 +7213,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7229,7 +7254,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7284,7 +7309,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7327,7 +7352,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7370,7 +7395,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7413,7 +7438,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7465,7 +7490,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7506,7 +7531,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7547,7 +7572,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -7588,7 +7613,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7643,7 +7668,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7686,7 +7711,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7729,7 +7754,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7772,7 +7797,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7815,7 +7840,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7858,7 +7883,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7901,7 +7926,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7944,7 +7969,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -7999,7 +8024,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8042,7 +8067,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8085,7 +8110,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8128,7 +8153,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8183,7 +8208,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8226,7 +8251,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8269,7 +8294,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8312,7 +8337,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8367,7 +8392,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8410,7 +8435,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8453,7 +8478,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8496,7 +8521,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8536,7 +8561,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8576,7 +8601,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8616,7 +8641,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8656,7 +8681,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8696,7 +8721,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8736,7 +8761,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8776,7 +8801,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8816,7 +8841,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8856,7 +8881,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8896,7 +8921,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8936,7 +8961,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -8976,7 +9001,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9016,7 +9041,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9056,7 +9081,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9096,7 +9121,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9136,7 +9161,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9176,7 +9201,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9216,7 +9241,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9256,7 +9281,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9296,7 +9321,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9336,7 +9361,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9376,7 +9401,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9416,7 +9441,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9456,7 +9481,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9496,7 +9521,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9536,7 +9561,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9576,7 +9601,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9616,7 +9641,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9659,7 +9684,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9702,7 +9727,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9745,7 +9770,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9788,7 +9813,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9843,7 +9868,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9886,7 +9911,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9929,7 +9954,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -9972,7 +9997,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10027,7 +10052,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10070,7 +10095,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10113,7 +10138,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10156,7 +10181,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10211,7 +10236,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10254,7 +10279,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10297,7 +10322,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10340,7 +10365,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10395,7 +10420,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10438,7 +10463,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10481,7 +10506,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10524,7 +10549,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10579,7 +10604,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10622,7 +10647,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10665,7 +10690,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10708,7 +10733,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10763,7 +10788,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10806,7 +10831,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10849,7 +10874,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10892,7 +10917,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10935,7 +10960,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -10978,7 +11003,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11021,7 +11046,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11064,7 +11089,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11119,7 +11144,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11162,7 +11187,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11205,7 +11230,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11248,7 +11273,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11303,7 +11328,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11346,7 +11371,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11389,7 +11414,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11432,7 +11457,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11487,7 +11512,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11530,7 +11555,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11573,7 +11598,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -11616,7 +11641,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11654,7 +11679,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11692,7 +11717,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11730,7 +11755,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11768,7 +11793,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11806,7 +11831,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11844,7 +11869,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11882,7 +11907,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11920,7 +11945,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11958,7 +11983,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -11996,7 +12021,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12034,7 +12059,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12072,7 +12097,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12110,7 +12135,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12148,7 +12173,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12186,7 +12211,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12224,7 +12249,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12262,7 +12287,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12300,7 +12325,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12338,7 +12363,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12376,7 +12401,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12414,7 +12439,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12452,7 +12477,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12490,7 +12515,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12528,7 +12553,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12566,7 +12591,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12604,7 +12629,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12642,7 +12667,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -12680,7 +12705,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12724,7 +12749,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12768,7 +12793,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12812,7 +12837,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12856,7 +12881,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12900,7 +12925,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12944,7 +12969,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -12988,7 +13013,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13032,7 +13057,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13076,7 +13101,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13120,7 +13145,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13164,7 +13189,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13208,7 +13233,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13252,7 +13277,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13296,7 +13321,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13340,7 +13365,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13384,7 +13409,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13428,7 +13453,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13472,7 +13497,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13516,7 +13541,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13560,7 +13585,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13604,7 +13629,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13648,7 +13673,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13692,7 +13717,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13736,7 +13761,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13780,7 +13805,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13824,7 +13849,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13868,7 +13893,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13912,7 +13937,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13955,7 +13980,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -13998,7 +14023,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14041,7 +14066,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14084,7 +14109,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14124,7 +14149,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14164,7 +14189,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14204,7 +14229,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14244,7 +14269,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14284,7 +14309,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14324,7 +14349,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14364,7 +14389,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14404,7 +14429,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14444,7 +14469,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14484,7 +14509,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14524,7 +14549,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14564,7 +14589,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14604,7 +14629,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14644,7 +14669,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14684,7 +14709,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14724,7 +14749,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14764,7 +14789,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14804,7 +14829,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14844,7 +14869,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14884,7 +14909,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14924,7 +14949,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -14964,7 +14989,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15004,7 +15029,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15044,7 +15069,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15084,7 +15109,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15124,7 +15149,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15164,7 +15189,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15204,7 +15229,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15247,7 +15272,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15290,7 +15315,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15333,7 +15358,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15376,7 +15401,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15431,7 +15456,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15474,7 +15499,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15517,7 +15542,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15560,7 +15585,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15615,7 +15640,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15658,7 +15683,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15701,7 +15726,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15744,7 +15769,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15799,7 +15824,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15842,7 +15867,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15885,7 +15910,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15928,7 +15953,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -15971,7 +15996,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16014,7 +16039,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16057,7 +16082,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16100,7 +16125,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16155,7 +16180,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16198,7 +16223,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16241,7 +16266,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16284,7 +16309,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16339,7 +16364,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16382,7 +16407,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16425,7 +16450,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16468,7 +16493,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16523,7 +16548,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16566,7 +16591,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16609,7 +16634,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16652,7 +16677,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16704,7 +16729,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16728,7 +16753,7 @@
               'object_id_base': 'Reserve battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Reserve battery level',
               'platform': 'enphase_envoy',
@@ -16741,7 +16766,6 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'Envoy <<envoyserial>> Reserve battery level',
                 'state_class': 'measurement',
                 'unit_of_measurement': '%',
@@ -16753,7 +16777,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16796,7 +16820,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16839,7 +16863,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16882,7 +16906,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16925,7 +16949,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -16968,7 +16992,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17011,7 +17035,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17054,7 +17078,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17097,7 +17121,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17140,7 +17164,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17183,7 +17207,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17226,7 +17250,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17269,7 +17293,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17312,7 +17336,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17355,7 +17379,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17398,7 +17422,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17441,7 +17465,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17484,7 +17508,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17527,7 +17551,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17570,7 +17594,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17613,7 +17637,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17656,7 +17680,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17699,7 +17723,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17742,7 +17766,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17785,7 +17809,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17828,7 +17852,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17871,7 +17895,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17914,7 +17938,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -17957,7 +17981,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18000,7 +18024,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18043,7 +18067,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18086,7 +18110,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18131,14 +18155,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -18158,7 +18176,6 @@
           'model_id': None,
           'name': 'Encharge <<envoyserial>>56',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>56',
           'sw_version': '2.6.5973_rel/22.11',
         }),
@@ -18166,7 +18183,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -18211,7 +18228,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -18255,7 +18272,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18307,7 +18324,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18356,7 +18373,87 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_communication_level_2_4_ghz',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Communication level 2.4 GHz',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Communication level 2.4 GHz',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'comm_level_2_4_ghz',
+              'unique_id': '<<envoyserial>>56_comm_level_2_4_ghz',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_communication_level_sub_ghz',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Communication level sub-GHz',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Communication level sub-GHz',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'comm_level_sub_ghz',
+              'unique_id': '<<envoyserial>>56_comm_level_sub_ghz',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -18401,7 +18498,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18453,7 +18550,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18507,14 +18604,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -18534,7 +18625,6 @@
           'model_id': None,
           'name': 'NC1 Fixture',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': None,
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -18542,7 +18632,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18596,7 +18686,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18650,7 +18740,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18707,7 +18797,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18764,7 +18854,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18821,7 +18911,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18874,7 +18964,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -18920,14 +19010,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -18947,7 +19031,6 @@
           'model_id': None,
           'name': 'NC2 Fixture',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': None,
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -18955,7 +19038,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19009,7 +19092,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19063,7 +19146,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19120,7 +19203,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19177,7 +19260,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19234,7 +19317,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19287,7 +19370,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -19333,14 +19416,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -19360,7 +19437,6 @@
           'model_id': None,
           'name': 'NC3 Fixture',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': None,
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -19368,7 +19444,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19422,7 +19498,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19476,7 +19552,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19533,7 +19609,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19590,7 +19666,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19647,7 +19723,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -19700,7 +19776,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -19745,59 +19821,16 @@
       }),
     ]),
     'envoy_model_data': dict({
-      'ctmeter_consumption': dict({
-        '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-        'repr': "EnvoyMeterData(eid='100000020', timestamp=1708006120, energy_delivered=21234, energy_received=22345, active_power=101, power_factor=0.21, voltage=112, current=0.3, frequency=50.2, state='enabled', measurement_type='net-consumption', metering_status='normal', status_flags=[])",
+      'acb_inventory': None,
+      'acb_power': None,
+      'battery_aggregate': None,
+      'c6cc': dict({
+        '__type': "<class 'pyenphase.models.c6combiner.EnvoyC6CC'>",
+        'repr': "EnvoyC6CC(admin_state=82, admin_state_str='ENCMN_C6_CC_READY', firmware_loaded_date=1752945451, firmware_version='0.1.20-D1', installed_date=1752945451, last_report_date=1752945451, communicating=True, part_number='800-02403-r08', serial_number='482523040549', dmir_version='0.1.20-D1')",
       }),
-      'ctmeter_consumption_phases': dict({
-        'L1': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000021', timestamp=1708006121, energy_delivered=212341, energy_received=223451, active_power=21, power_factor=0.22, voltage=112, current=0.3, frequency=50.2, state='enabled', measurement_type='net-consumption', metering_status='normal', status_flags=[])",
-        }),
-        'L2': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000022', timestamp=1708006122, energy_delivered=212342, energy_received=223452, active_power=31, power_factor=0.23, voltage=112, current=0.3, frequency=50.2, state='enabled', measurement_type='net-consumption', metering_status='normal', status_flags=[])",
-        }),
-        'L3': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000023', timestamp=1708006123, energy_delivered=212343, energy_received=223453, active_power=51, power_factor=0.24, voltage=112, current=0.3, frequency=50.2, state='enabled', measurement_type='net-consumption', metering_status='normal', status_flags=[])",
-        }),
-      }),
-      'ctmeter_production': dict({
-        '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-        'repr': "EnvoyMeterData(eid='100000010', timestamp=1708006110, energy_delivered=11234, energy_received=12345, active_power=100, power_factor=0.11, voltage=111, current=0.2, frequency=50.1, state='enabled', measurement_type='production', metering_status='normal', status_flags=['production-imbalance', 'power-on-unused-phase'])",
-      }),
-      'ctmeter_production_phases': dict({
-        'L1': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000011', timestamp=1708006111, energy_delivered=112341, energy_received=123451, active_power=20, power_factor=0.12, voltage=111, current=0.2, frequency=50.1, state='enabled', measurement_type='production', metering_status='normal', status_flags=['production-imbalance'])",
-        }),
-        'L2': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000012', timestamp=1708006112, energy_delivered=112342, energy_received=123452, active_power=30, power_factor=0.13, voltage=111, current=0.2, frequency=50.1, state='enabled', measurement_type='production', metering_status='normal', status_flags=['power-on-unused-phase'])",
-        }),
-        'L3': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000013', timestamp=1708006113, energy_delivered=112343, energy_received=123453, active_power=50, power_factor=0.14, voltage=111, current=0.2, frequency=50.1, state='enabled', measurement_type='production', metering_status='normal', status_flags=[])",
-        }),
-      }),
-      'ctmeter_storage': dict({
-        '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-        'repr': "EnvoyMeterData(eid='100000030', timestamp=1708006120, energy_delivered=31234, energy_received=32345, active_power=103, power_factor=0.23, voltage=113, current=0.4, frequency=50.3, state='enabled', measurement_type='storage', metering_status='normal', status_flags=[])",
-      }),
-      'ctmeter_storage_phases': dict({
-        'L1': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000031', timestamp=1708006121, energy_delivered=312341, energy_received=323451, active_power=22, power_factor=0.32, voltage=113, current=0.4, frequency=50.3, state='enabled', measurement_type='storage', metering_status='normal', status_flags=[])",
-        }),
-        'L2': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000032', timestamp=1708006122, energy_delivered=312342, energy_received=323452, active_power=33, power_factor=0.23, voltage=112, current=0.3, frequency=50.2, state='enabled', measurement_type='storage', metering_status='normal', status_flags=[])",
-        }),
-        'L3': dict({
-          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000033', timestamp=1708006123, energy_delivered=312343, energy_received=323453, active_power=53, power_factor=0.24, voltage=112, current=0.3, frequency=50.2, state='enabled', measurement_type='storage', metering_status='normal', status_flags=[])",
-        }),
+      'collar': dict({
+        '__type': "<class 'pyenphase.models.collar.EnvoyCollar'>",
+        'repr': "EnvoyCollar(admin_state=88, admin_state_str='ENCMN_MDE_ON_GRID', firmware_loaded_date=1752939759, firmware_version='3.0.6-D0', installed_date=1752939759, last_report_date=1752939759, communicating=True, mid_state='close', grid_state='on_grid', part_number='865-00400-r22', serial_number='482520020939', temperature=42, temperature_unit='C', control_error=0, collar_state='Installed')",
       }),
       'ctmeters': dict({
         'backfeed': dict({
@@ -20049,6 +20082,7 @@
       'supported_features': list([
         'INVERTERS',
         'METERING',
+        'TOTAL_CONSUMPTION',
         'NET_CONSUMPTION',
         'ENCHARGE',
         'ENPOWER',

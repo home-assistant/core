@@ -1,20 +1,17 @@
 """Support for Vallox ventilation unit binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .entity import ValloxEntity
 
 
@@ -38,6 +35,7 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.data.get(self.entity_description.metric_key) == 1
@@ -61,14 +59,11 @@ BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ValloxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-
-    data = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
+        ValloxBinarySensorEntity(entry.data[CONF_NAME], entry.runtime_data, description)
         for description in BINARY_SENSOR_ENTITIES
     )

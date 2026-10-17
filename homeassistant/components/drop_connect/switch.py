@@ -1,11 +1,9 @@
 """Support for DROP switches."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -98,14 +96,17 @@ class DROPSwitch(DROPEntity, SwitchEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return SWITCH_VALUE.get(self.entity_description.value_fn(self.coordinator))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.entity_description.set_fn(self.coordinator, 1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.entity_description.set_fn(self.coordinator, 0)

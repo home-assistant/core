@@ -1,11 +1,10 @@
 """Configure number in a device through MQTT topic."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import number
 from homeassistant.components.number import (
@@ -13,6 +12,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     NumberDeviceClass,
+    NumberEntityCapabilityAttribute,
     NumberMode,
     RestoreNumber,
 )
@@ -61,9 +61,9 @@ DEFAULT_NAME = "MQTT Number"
 
 MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        number.ATTR_MAX,
-        number.ATTR_MIN,
-        number.ATTR_STEP,
+        NumberEntityCapabilityAttribute.MAX,
+        NumberEntityCapabilityAttribute.MIN,
+        NumberEntityCapabilityAttribute.STEP,
     }
 )
 
@@ -77,37 +77,39 @@ def validate_config(config: ConfigType) -> ConfigType:
         config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS[unit_of_measurement]
 
     if config[CONF_MIN] > config[CONF_MAX]:
-        raise vol.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
+        raise probatio.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
 
     return config
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(
-            vol.All(vol.Lower, vol.Coerce(NumberDeviceClass)), None
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(
+            probatio.All(probatio.Lower, probatio.Coerce(NumberDeviceClass)), None
         ),
-        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
-        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
-        vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-        vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
-            vol.Coerce(float), vol.Range(min=1e-3)
+        probatio.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): probatio.Coerce(float),
+        probatio.Optional(CONF_MODE, default=NumberMode.AUTO): probatio.Coerce(
+            NumberMode
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        probatio.Optional(CONF_STEP, default=DEFAULT_STEP): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=1e-3)
+        ),
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     validate_config,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     validate_config,
 )
 
@@ -141,10 +143,12 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._config = config
@@ -199,6 +203,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_value = num_value
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -208,6 +213,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
             self._attr_assumed_state = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -217,6 +223,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         ):
             self._attr_native_value = last_number_data.native_value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         current_number = value

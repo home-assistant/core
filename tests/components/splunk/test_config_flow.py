@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.splunk.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -57,6 +57,27 @@ async def test_user_flow_success(
 
     # Verify that check was called twice (connectivity and token)
     assert mock_hass_splunk.check.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_hass_splunk")
+async def test_user_flow_defaults_ssl_on(hass: HomeAssistant) -> None:
+    """Test a new entry defaults to SSL enabled when the field is omitted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: "test-token-123",
+            CONF_HOST: "splunk.example.com",
+            CONF_PORT: 8088,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SSL] is True
+    assert result["data"][CONF_VERIFY_SSL] is True
 
 
 @pytest.mark.parametrize(
@@ -126,104 +147,6 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_import_flow_success(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
-    """Test successful import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-            CONF_NAME: "Imported Splunk",
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "splunk.example.com:8088"
-    assert result["data"] == {
-        CONF_TOKEN: "test-token-123",
-        CONF_HOST: "splunk.example.com",
-        CONF_PORT: 8088,
-        CONF_SSL: False,
-        CONF_NAME: "Imported Splunk",
-    }
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "reason"),
-    [
-        ([False, True], "cannot_connect"),
-        ([True, False], "invalid_auth"),
-        (Exception("Unexpected error"), "unknown"),
-    ],
-)
-async def test_import_flow_error_and_recovery(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    side_effect: list[bool] | Exception,
-    reason: str,
-) -> None:
-    """Test import flow errors and recovery."""
-    mock_hass_splunk.check.side_effect = side_effect
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-    # Test recovery by resetting mock and importing again
-    mock_hass_splunk.check.side_effect = None
-    mock_hass_splunk.check.return_value = True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test import flow when entry is already configured (single instance)."""
-    mock_config_entry.add_to_hass(hass)
-
-    # With single_config_entry in manifest, import should abort immediately
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: DEFAULT_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
 async def test_reconfigure_flow_success(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -256,6 +179,20 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_VERIFY_SSL] is False
     assert mock_config_entry.data[CONF_NAME] == "Updated Splunk"
     assert mock_config_entry.title == "new-splunk.example.com:9088"
+
+
+@pytest.mark.usefixtures("mock_hass_splunk")
+async def test_reconfigure_flow_preserves_stored_ssl(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure pre-fills the stored SSL value, not the schema default."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_SSL) is False
 
 
 @pytest.mark.parametrize(

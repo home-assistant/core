@@ -1,13 +1,12 @@
 """Support for scenes provided by WMS WebControl pro."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from wmspro.scene import Scene as WMS_Scene
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -24,7 +23,7 @@ async def async_setup_entry(
     hub = config_entry.runtime_data
 
     async_add_entities(
-        WebControlProScene(config_entry.entry_id, scene)
+        WebControlProScene(hass, config_entry.entry_id, scene)
         for scene in hub.scenes.values()
     )
 
@@ -35,7 +34,9 @@ class WebControlProScene(Scene):
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
-    def __init__(self, config_entry_id: str, scene: WMS_Scene) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry_id: str, scene: WMS_Scene
+    ) -> None:
         """Initialize the entity with the configured scene."""
         super().__init__()
 
@@ -55,10 +56,13 @@ class WebControlProScene(Scene):
             name=room_name,
             serial_number=room_id_str,
             suggested_area=room_name,
-            via_device=(DOMAIN, config_entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, config_entry_id), config_entry_id=config_entry_id
+            ),
             configuration_url=f"http://{scene.host}/control",
         )
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._scene()

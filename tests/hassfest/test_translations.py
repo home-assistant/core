@@ -1,7 +1,11 @@
 """Tests for hassfest translations."""
 
+from dataclasses import replace
+import json
+from pathlib import Path
+
+import probatio
 import pytest
-import voluptuous as vol
 
 from script.hassfest import translations
 from script.hassfest.model import Config
@@ -9,11 +13,59 @@ from script.hassfest.model import Config
 from . import get_integration
 
 
+@pytest.mark.parametrize(
+    ("reference", "expected_errors"),
+    [
+        ("common::test", []),
+        (
+            "common::missing",
+            [
+                "strings.json::config::error::cannot_connect contains invalid reference"
+                "common::missing: Could not find missing"
+            ],
+        ),
+    ],
+)
+def test_validate_uses_core_path(
+    config: Config,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    reference: str,
+    expected_errors: list[str],
+) -> None:
+    """Resolve translation references from the configured Core path, not the cwd."""
+    core_path = tmp_path / "core"
+    integration_path = core_path / "homeassistant/components/test_integration"
+    integration_path.mkdir(parents=True)
+    (core_path / "homeassistant/strings.json").write_text(
+        json.dumps({"common": {"test": "Test"}})
+    )
+    (integration_path / "strings.json").write_text(
+        json.dumps(
+            {
+                "config": {
+                    "step": {"user": {"title": "Test"}},
+                    "error": {"cannot_connect": f"[%key:{reference}%]"},
+                }
+            }
+        )
+    )
+    config = replace(config, root=core_path)
+    integration = replace(
+        get_integration("test_integration", config), path=integration_path
+    )
+    monkeypatch.chdir(tmp_path)
+
+    translations.validate({integration.domain: integration}, config)
+
+    assert [error.error for error in integration.errors] == expected_errors
+
+
 def test_string_with_no_placeholders_in_single_quotes() -> None:
     """Test string with no placeholders in single quotes."""
-    schema = vol.Schema(translations.string_no_single_quoted_placeholders)
+    schema = probatio.Schema(translations.string_no_single_quoted_placeholders)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("This has '{placeholder}' in single quotes")
 
     for value in (
@@ -165,6 +217,7 @@ SAMPLE_STRINGS = {
                 "field_one": {
                     "name": "Field one",
                     "description": "Description of field one",
+                    "overview_label": "Field one: {value}",
                 },
                 "field_two": {
                     "name": "Field two",
@@ -224,7 +277,9 @@ SAMPLE_STRINGS = {
         },
     },
     "application_credentials": {
-        "description": "To configure this integration, you need to create an application",
+        "description": (
+            "To configure this integration, you need to create an application"
+        ),
     },
     "issues": {
         "firmware_update_required": {
@@ -246,6 +301,7 @@ SAMPLE_STRINGS = {
         },
         "deprecated_yaml": {
             "title": "Deprecated YAML configuration",
+            "short_title": "Deprecated YAML",
             "description": "YAML configuration is deprecated, please use the UI",
         },
     },
@@ -421,6 +477,43 @@ def test_gen_strings_schema(
     assert validated == SAMPLE_STRINGS
 
 
+@pytest.mark.usefixtures("mock_core_integration")
+def test_step_title_brand_name_shared_schema(config: Config) -> None:
+    """Test the brand name step title check uses the validated integration."""
+    blocked = get_integration("test_integration", config)
+    allowed = get_integration("cert_expiry", config)
+    assert "cert_expiry" in translations.ALLOW_NAME_TRANSLATION
+
+    hits = translations._gen_strings_schema.cache_info().hits
+    blocked_schema = translations.gen_strings_schema(config, blocked)
+    allowed_schema = translations.gen_strings_schema(config, allowed)
+    # Both integrations share one cached schema
+    assert translations._gen_strings_schema.cache_info().hits > hits
+
+    with pytest.raises(probatio.Invalid, match="Do not set title of step user"):
+        blocked_schema({"config": {"step": {"user": {"title": blocked.name}}}})
+
+    strings = {"config": {"step": {"user": {"title": allowed.name}}}}
+    assert allowed_schema(strings) == strings
+
+
+def test_removed_title_warning_shared_schema(config: Config) -> None:
+    """Test the removed config.title warning lands on the validated integration."""
+    config = replace(config, specific_integrations=[Path("first"), Path("second")])
+    first = get_integration("first", config)
+    second = get_integration("second", config)
+    second_schema = translations.gen_strings_schema(config, second)
+    first_schema = translations.gen_strings_schema(config, first)
+
+    second_schema({"config": {"title": "Old title", "step": {}}})
+    first_schema({"config": {"step": {}}})
+
+    assert [warning.error for warning in second.warnings] == [
+        translations.REMOVED_TITLE_MSG
+    ]
+    assert first.warnings == []
+
+
 @pytest.mark.parametrize(
     "translation_string",
     [
@@ -433,9 +526,9 @@ def test_gen_strings_schema(
 )
 def test_no_placeholders_used_for_urls(translation_string: str) -> None:
     """Test that translation strings containing URLs are rejected."""
-    schema = vol.Schema(translations.translation_value_validator)
+    schema = probatio.Schema(translations.translation_value_validator)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(translation_string)
 
 
@@ -451,9 +544,94 @@ def test_no_placeholders_used_for_urls(translation_string: str) -> None:
 )
 def test_allow_urls_in_translation_value(translation_string: str) -> None:
     """Test that URLs are allowed when allow_urls=True."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         translations.custom_translation_value_validator(allow_urls=True)
     )
 
     # Should not raise
     schema(translation_string)
+
+
+@pytest.mark.parametrize(
+    "translation_string",
+    [
+        "Field one",
+        "Field one: {name}",
+        "Field one: {value} {name}",
+    ],
+)
+def test_overview_label_requires_value_placeholder(translation_string: str) -> None:
+    """Test that overview labels must only use the value placeholder."""
+    schema = probatio.Schema(translations.overview_label_validator)
+
+    with pytest.raises(probatio.Invalid):
+        schema(translation_string)
+
+    schema("Field one: {value}")
+
+
+INTEGRATION_CATEGORY_STRINGS = {
+    "integration_category": {
+        "energy": {
+            "name": "Energy",
+            "description": "Solar panels, home batteries and energy meters.",
+            "subcategory": {
+                "meters_monitoring": {"name": "Meters & monitoring"},
+            },
+        },
+        "pets": {
+            "name": "Pets",
+            "description": "Feeders, litter boxes and pet doors.",
+        },
+    },
+}
+
+
+def test_homeassistant_schema_integration_category(config: Config) -> None:
+    """Test the homeassistant integration accepts integration categories."""
+    integration = get_integration("homeassistant", config)
+    schema = translations.gen_homeassistant_schema(config, integration)
+
+    assert schema(INTEGRATION_CATEGORY_STRINGS) == INTEGRATION_CATEGORY_STRINGS
+
+
+def test_integration_category_only_for_homeassistant(config: Config) -> None:
+    """Test other integrations can't define integration categories."""
+    integration = get_integration("test_integration", config)
+    schema = translations.gen_strings_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid, match="not a valid option"):
+        schema(INTEGRATION_CATEGORY_STRINGS)
+
+
+@pytest.mark.parametrize(
+    "integration_category",
+    [
+        {"Energy": {"name": "Energy", "description": "Energy things."}},
+        {"energy": {"name": "Energy"}},
+        {"energy": {"description": "Energy things."}},
+        {
+            "energy": {
+                "name": "Energy",
+                "description": "Energy things.",
+                "subcategory": {"Meters": {"name": "Meters"}},
+            }
+        },
+        {
+            "energy": {
+                "name": "Energy",
+                "description": "Energy things.",
+                "subcategory": {"meters": {}},
+            }
+        },
+    ],
+)
+def test_homeassistant_schema_invalid_integration_category(
+    config: Config, integration_category: dict
+) -> None:
+    """Test invalid integration categories are rejected."""
+    integration = get_integration("homeassistant", config)
+    schema = translations.gen_homeassistant_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid):
+        schema({"integration_category": integration_category})

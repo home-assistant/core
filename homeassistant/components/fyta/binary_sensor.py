@@ -1,10 +1,8 @@
 """Binary sensors for Fyta."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from fyta_cli.fyta_models import Plant
 
@@ -113,6 +111,7 @@ class FytaPlantBinarySensor(FytaPlantEntity, BinarySensorEntity):
     entity_description: FytaBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return value of the binary sensor."""
 

@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for System Bridge."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -28,7 +26,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -94,13 +92,24 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 )
                 await self.clean_disconnect()
 
-    async def close_websocket(self) -> None:
+    async def close_websocket(self, _: Event) -> None:
         """Close WebSocket connection."""
         await self.websocket_client.close()
         if self.listen_task is not None:
             self.listen_task.cancel(
                 msg="WebSocket closed on Home Assistant shutdown",
             )
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop listening and close the WebSocket on unload or failed setup."""
+        await super().async_shutdown()
+        if self.unsub:
+            self.unsub()
+            self.unsub = None
+        await self.websocket_client.close()
+        if self.listen_task is not None:
+            self.listen_task.cancel(msg="Config entry unloaded")
 
     async def clean_disconnect(self) -> None:
         """Clean disconnect WebSocket."""
@@ -170,6 +179,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             )
             await self.clean_disconnect()
 
+    @override
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         if self.listen_task is None or not self.websocket_client.connected:
@@ -188,17 +198,16 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     RegisterDataListener(modules=MODULES)
                 )
             except AuthenticationException as exception:
-                self.logger.error(
-                    "Authentication failed at setup for %s: %s", self.title, exception
-                )
                 await self.clean_disconnect()
-                raise ConfigEntryAuthFailed from exception
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                    translation_placeholders={
+                        "title": self.title,
+                        "host": self._host,
+                    },
+                ) from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
-                self.logger.warning(
-                    "[register] Connection error occurred for %s: %s",
-                    self.title,
-                    exception,
-                )
                 await self.clean_disconnect()
                 raise UpdateFailed(
                     f"Connection error occurred for {self.title}: {exception}"
@@ -211,8 +220,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP,
-                lambda _: self.close_websocket(),
+                EVENT_HOMEASSISTANT_STOP, self.close_websocket
             )
 
         self.logger.debug("[_async_update_data] Done")

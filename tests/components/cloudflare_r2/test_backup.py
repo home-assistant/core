@@ -260,7 +260,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     # Should delete both the tar and the metadata file
     assert mock_client.delete_object.call_count == 2
 
@@ -284,7 +284,7 @@ async def test_agents_delete_not_throwing_on_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_client.delete_object.call_count == 0
 
 
@@ -411,7 +411,9 @@ async def test_multipart_upload_consistent_part_sizes(
     assert len(uploaded_part_sizes) >= 2, "Expected at least 2 parts"
     non_trailing_parts = uploaded_part_sizes[:-1]
     assert all(size == MULTIPART_MIN_PART_SIZE_BYTES for size in non_trailing_parts), (
-        f"All non-trailing parts should be {MULTIPART_MIN_PART_SIZE_BYTES} bytes, got {non_trailing_parts}"
+        f"All non-trailing parts should be"
+        f" {MULTIPART_MIN_PART_SIZE_BYTES} bytes,"
+        f" got {non_trailing_parts}"
     )
 
     # Verify the trailing part contains the remainder
@@ -523,9 +525,12 @@ async def test_error_during_delete(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed during async_delete_backup"
-        }
+            f"{DOMAIN}.{mock_config_entry.entry_id}": (
+                "Failed during async_delete_backup"
+            )
+        },
     }
 
 

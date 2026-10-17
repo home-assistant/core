@@ -1,7 +1,7 @@
 """Class to hold all fan accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_FAN
 from pyhap.service import Service
@@ -10,9 +10,7 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
-    ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
@@ -20,15 +18,17 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -66,14 +66,18 @@ class Fan(HomeAccessory):
         assert state
         self._reload_on_change_attrs.extend(
             (
-                ATTR_PERCENTAGE_STEP,
-                ATTR_PRESET_MODES,
+                FanEntityStateAttribute.PERCENTAGE_STEP,
+                FanEntityCapabilityAttribute.PRESET_MODES,
             )
         )
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
-        self.preset_modes: list[str] | None = state.attributes.get(ATTR_PRESET_MODES)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+        percentage_step = state.attributes.get(
+            FanEntityStateAttribute.PERCENTAGE_STEP, 1
+        )
+        self.preset_modes: list[str] | None = state.attributes.get(
+            FanEntityCapabilityAttribute.PRESET_MODES
+        )
 
         if features & FanEntityFeature.DIRECTION:
             self.chars.append(CHAR_ROTATION_DIRECTION)
@@ -96,9 +100,10 @@ class Fan(HomeAccessory):
             )
 
         if CHAR_ROTATION_SPEED in self.chars:
-            # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by async_update_state
-            # to set to the correct initial value.
+            # Initial value is set to 100 because 0 is a special
+            # value (off). 100 is an arbitrary non-zero value. It
+            # is updated immediately by async_update_state to set
+            # to the correct initial value.
             self.char_speed = serv_fan.configure_char(
                 CHAR_ROTATION_SPEED,
                 value=100,
@@ -209,7 +214,9 @@ class Fan(HomeAccessory):
             params[ATTR_PRESET_MODE] = self.preset_modes[0]
             self.async_call_service(FAN_DOMAIN, SERVICE_SET_PRESET_MODE, params)
         elif current_state := self.hass.states.get(self.entity_id):
-            percentage: float = current_state.attributes.get(ATTR_PERCENTAGE) or 50.0
+            percentage: float = (
+                current_state.attributes.get(FanEntityStateAttribute.PERCENTAGE) or 50.0
+            )
             params[ATTR_PERCENTAGE] = percentage
             _LOGGER.debug("%s: Set auto to 0", self.entity_id)
             self.async_call_service(FAN_DOMAIN, SERVICE_TURN_ON, params)
@@ -254,6 +261,7 @@ class Fan(HomeAccessory):
         self.async_call_service(FAN_DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update fan after state change."""
         # Handle State
@@ -265,7 +273,7 @@ class Fan(HomeAccessory):
 
         # Handle Direction
         if self.char_direction is not None:
-            direction = new_state.attributes.get(ATTR_DIRECTION)
+            direction = new_state.attributes.get(FanEntityStateAttribute.DIRECTION)
             if direction in (DIRECTION_FORWARD, DIRECTION_REVERSE):
                 hk_direction = 1 if direction == DIRECTION_REVERSE else 0
                 self.char_direction.set_value(hk_direction)
@@ -274,7 +282,7 @@ class Fan(HomeAccessory):
         if self.char_speed is not None and state != STATE_OFF:
             # We do not change the homekit speed when turning off
             # as it will clear the restore state
-            percentage = attributes.get(ATTR_PERCENTAGE)
+            percentage = attributes.get(FanEntityStateAttribute.PERCENTAGE)
             # If the homeassistant component reports its speed as the first entry
             # in its speed list but is not off, the hk_speed_value is 0. But 0
             # is a special value in homekit. When you turn on a homekit accessory
@@ -293,12 +301,12 @@ class Fan(HomeAccessory):
 
         # Handle Oscillating
         if self.char_swing is not None:
-            oscillating = attributes.get(ATTR_OSCILLATING)
+            oscillating = attributes.get(FanEntityStateAttribute.OSCILLATING)
             if isinstance(oscillating, bool):
                 hk_oscillating = 1 if oscillating else 0
                 self.char_swing.set_value(hk_oscillating)
 
-        current_preset_mode = attributes.get(ATTR_PRESET_MODE)
+        current_preset_mode = attributes.get(FanEntityStateAttribute.PRESET_MODE)
         if self.char_target_fan_state is not None:
             # Handle single preset mode
             self.char_target_fan_state.set_value(int(current_preset_mode is not None))

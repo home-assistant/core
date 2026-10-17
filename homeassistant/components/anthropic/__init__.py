@@ -1,25 +1,19 @@
 """The Anthropic integration."""
 
-from __future__ import annotations
+from functools import partial
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DEFAULT_CONVERSATION_NAME,
-    DEPRECATED_MODELS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
@@ -32,7 +26,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Set up Anthropic from a config entry."""
     coordinator = AnthropicCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -42,11 +36,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.async_on_unload(
+        coordinator.async_add_listener(
+            partial(_async_check_model_lifecycle, hass, entry)
+        )
+    )
+    _async_check_model_lifecycle(hass, entry)
 
+
+@callback
+def _async_check_model_lifecycle(
+    hass: HomeAssistant, entry: AnthropicConfigEntry
+) -> None:
+    """Create a repair for models deprecated or retired by the API."""
     for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
-            tuple(DEPRECATED_MODELS)
-        ):
+        if not (model := subentry.data.get(CONF_CHAT_MODEL)):
+            continue
+        model_info, found = entry.runtime_data.get_model_info(model)
+        if found and model_info.lifecycle in ("deprecated", "retired"):
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -59,12 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
             )
             break
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Unload Anthropic."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(
@@ -114,8 +119,8 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             DOMAIN,
             entry.entry_id,
         )
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.entry_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.entry_id), entry.entry_id
         )
 
         if conversation_entity_id is not None:
@@ -145,7 +150,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by = device.disabled_by
+            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -155,20 +160,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 device.id,
                 disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, subentry.subentry_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
@@ -182,26 +176,14 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     if entry.version == 2 and entry.minor_version == 1:
-        # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
-        device_registry = dr.async_get(hass)
-        for device in dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
-        ):
-            device_registry.async_update_device(
-                device.id,
-                remove_config_entry_id=entry.entry_id,
-                remove_config_subentry_id=None,
-            )
-
+        # Devices left in both the config entry and its subentry by Home Assistant Core
+        # 2025.7.0b0-2025.7.0b1 are collapsed onto the subentry by the device registry
+        # migration, so there's nothing to correct here.
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     if entry.version == 2 and entry.minor_version == 2:
@@ -236,8 +218,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
                 )
         hass.config_entries.async_update_entry(entry, minor_version=3)
 
+    if entry.version == 2 and entry.minor_version == 3:
+        # Remove Temperature parameter
+        temperature_key = "temperature"
+
+        for subentry in entry.subentries.values():
+            data = subentry.data.copy()
+            if temperature_key not in data:
+                continue
+            data.pop(temperature_key, None)
+            hass.config_entries.async_update_subentry(entry, subentry, data=data)
+
+        hass.config_entries.async_update_entry(entry, minor_version=4)
+
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True

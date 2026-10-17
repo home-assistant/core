@@ -97,7 +97,9 @@ async def test_device_diagnostics(
     await setup_platform()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, NEST_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, NEST_DEVICE_ID), config_entry.entry_id
+    )
     assert device is not None
 
     assert (

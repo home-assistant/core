@@ -1,10 +1,8 @@
 """Sensor for Risco Events."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Mapping
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from pyrisco.cloud.event import Event
 
@@ -89,11 +87,13 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         self._attr_name = f"Risco {self.coordinator.risco.site_name} {name} Events"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._entity_registry = er.async_get(self.hass)
 
+    @override
     def _handle_coordinator_update(self) -> None:
         events = self.coordinator.data
         for event in reversed(events):
@@ -106,6 +106,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
             self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Value of sensor."""
         if self._event is None:
@@ -116,6 +117,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """State attributes."""
         if self._event is None:

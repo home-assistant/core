@@ -4,6 +4,7 @@ from collections.abc import Callable
 from copy import copy
 import dataclasses
 import logging
+from typing import override
 
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.const.msg import CODE
@@ -356,6 +357,7 @@ class ScreenLogicSensor(ScreenLogicEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """State of the sensor."""
         val = self.entity_data[ATTR.VALUE]

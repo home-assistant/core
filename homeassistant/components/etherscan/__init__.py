@@ -1,1 +1,0 @@
-"""The etherscan component."""

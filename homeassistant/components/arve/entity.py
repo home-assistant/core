@@ -1,6 +1,6 @@
 """Arve base entity."""
 
-from __future__ import annotations
+from typing import override
 
 from asyncarve import ArveDeviceInfo
 
@@ -41,9 +41,10 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Check if device is available."""
-        return super()._attr_available and (
+        return super().available and (
             self.device_serial_number in self.coordinator.data
         )
 

@@ -54,7 +54,10 @@ async def test_heater_set_temperature(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.baseboard_heater", ATTR_TEMPERATURE: 22.0},
+            {
+                ATTR_ENTITY_ID: "climate.baseboard_heater_baseboard_heater",
+                ATTR_TEMPERATURE: 22.0,
+            },
             blocking=True,
         )
 
@@ -127,7 +130,10 @@ async def test_aircon_set_hvac_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.air_conditioning", ATTR_HVAC_MODE: hvac_mode},
+            {
+                ATTR_ENTITY_ID: "climate.air_conditioning_air_conditioning",
+                ATTR_HVAC_MODE: hvac_mode,
+            },
             blocking=True,
         )
 

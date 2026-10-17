@@ -1,27 +1,42 @@
 """Viessmann ViCare water_heater device."""
 
-from __future__ import annotations
-
+from collections.abc import Callable
 from contextlib import suppress
+from datetime import time
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
+    PyViCareInvalidDataError,
+    PyViCareNotSupportedFeatureError,
+    PyViCareRateLimitError,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import ViCareEntity
+from .services import ATTR_FROM, ATTR_TO, HA_TO_VICARE_CIRCULATION_MODE, WEEKDAYS
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_circuits, get_device_serial
+from .utils import get_circuits
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +70,25 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
+VICARE_TO_HA_CIRCULATION_MODE = {
+    value: key for key, value in HA_TO_VICARE_CIRCULATION_MODE.items()
+}
+
+VICARE_API_ERRORS = (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
+    PyViCareInvalidDataError,
+    PyViCareRateLimitError,
+)
+
+
+def _to_vicare_time(value: time) -> str:
+    """Format a slot time for ViCare, which marks the end of the day as 24:00."""
+    if value == time.max:
+        return "24:00"
+    return value.strftime("%H:%M")
+
+
 def _build_entities(
     device_list: list[ViCareDevice],
 ) -> list[ViCareWater]:
@@ -62,7 +96,7 @@ def _build_entities(
 
     return [
         ViCareWater(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
             circuit,
@@ -91,7 +125,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
@@ -115,12 +149,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Let HA know there has been an update from the ViCare API."""
         with self.vicare_api_handler():
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_current_temperature = (
+                self._attr_native_current_temperature = (
                     self._api.getDomesticHotWaterStorageTemperature()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_target_temperature = (
+                self._attr_native_target_temperature = (
                     self._api.getDomesticHotWaterDesiredTemperature()
                 )
 
@@ -130,13 +164,15 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._dhw_active = self._api.getDomesticHotWaterActive()
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)
-            self._attr_target_temperature = temp
+            self._attr_native_target_temperature = temp
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         if self._dhw_active is not None:
@@ -144,3 +180,87 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         if self._current_mode is None:
             return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
+
+    def get_circulation_schedule(self) -> ServiceResponse:
+        """Return the DHW circulation pump schedule."""
+        schedule = self._get_circulation_schedule()
+        return {
+            day: [
+                {
+                    ATTR_FROM: f"{slot['start']}:00",
+                    ATTR_TO: f"{slot['end']}:00",
+                    ATTR_MODE: VICARE_TO_HA_CIRCULATION_MODE[slot["mode"]],
+                }
+                for slot in sorted(
+                    schedule[day[:3]], key=lambda entry: entry["position"]
+                )
+            ]
+            for day in WEEKDAYS
+        }
+
+    def set_circulation_schedule(self, **slots_by_day: list[dict[str, Any]]) -> None:
+        """Set the DHW circulation pump schedule, keeping days not passed."""
+        schedule = self._get_circulation_schedule()
+        supported_modes = self._read_circulation(
+            self._api.getDomesticHotWaterCirculationScheduleModes
+        )
+        for slots in slots_by_day.values():
+            for slot in slots:
+                if (
+                    HA_TO_VICARE_CIRCULATION_MODE[slot[ATTR_MODE]]
+                    not in supported_modes
+                ):
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="circulation_mode_not_supported",
+                        translation_placeholders={
+                            "mode": slot[ATTR_MODE],
+                            "modes": ", ".join(
+                                VICARE_TO_HA_CIRCULATION_MODE[mode]
+                                for mode in supported_modes
+                            ),
+                        },
+                    )
+        new_schedule = {day[:3]: schedule[day[:3]] for day in WEEKDAYS}
+        for day, slots in slots_by_day.items():
+            new_schedule[day[:3]] = [
+                {
+                    "start": _to_vicare_time(slot[ATTR_FROM]),
+                    "end": _to_vicare_time(slot[ATTR_TO]),
+                    "mode": HA_TO_VICARE_CIRCULATION_MODE[slot[ATTR_MODE]],
+                    "position": position,
+                }
+                for position, slot in enumerate(slots)
+            ]
+        try:
+            self._api.setDomesticHotWaterCirculationSchedule(new_schedule)
+        except PyViCareCommandError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="circulation_schedule_not_set",
+                translation_placeholders={"error": err.message},
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
+
+    def _get_circulation_schedule(self) -> dict[str, Any]:
+        """Return the raw circulation schedule or raise if unsupported."""
+        return self._read_circulation(self._api.getDomesticHotWaterCirculationSchedule)
+
+    def _read_circulation[T](self, read: Callable[[], T]) -> T:
+        """Read circulation data, translating unsupported features and API errors."""
+        try:
+            return read()
+        except PyViCareNotSupportedFeatureError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="circulation_schedule_not_supported",
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err

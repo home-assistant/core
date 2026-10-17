@@ -1,10 +1,8 @@
 """Creates HomeWizard switch entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
@@ -95,6 +93,7 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -102,17 +101,20 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @homewizard_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_fn(self.coordinator.api, True)
         await self.coordinator.async_refresh()
 
     @homewizard_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_fn(self.coordinator.api, False)

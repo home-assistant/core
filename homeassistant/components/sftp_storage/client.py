@@ -1,7 +1,5 @@
 """Client for SFTP Storage integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
@@ -15,12 +13,13 @@ from asyncssh import (
     SSHClientConnectionOptions,
     connect,
 )
-from asyncssh.misc import PermissionDenied
+from asyncssh.misc import Error as SSHError, PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant
@@ -31,8 +30,12 @@ if TYPE_CHECKING:
     from . import SFTPConfigEntry, SFTPConfigEntryData
 
 
+class SFTPConnectionError(BackupAgentError):
+    """Error raised when the SSH connection could not be established."""
+
+
 def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
-    """Use this function with `hass.async_add_executor_job` to asynchronously get `SSHClientConnectionOptions`."""
+    """Get `SSHClientConnectionOptions` for use with `hass.async_add_executor_job`."""
 
     return SSHClientConnectionOptions(
         known_hosts=None,
@@ -179,7 +182,8 @@ class BackupAgentClient:
         if not await self.sftp.exists(metadata.file_path):
             await self.sftp.unlink(metadata.metadata_file)
             raise FileNotFoundError(
-                f"File at provided remote location: {metadata.file_path} does not exist."
+                "File at provided remote location:"
+                f" {metadata.file_path} does not exist."
             )
 
         LOGGER.debug("Removing file at path: %s", metadata.file_path)
@@ -188,7 +192,7 @@ class BackupAgentClient:
         await self.sftp.unlink(metadata.metadata_file)
 
     async def async_list_backups(self) -> list[AgentBackup]:
-        """Iterate through a list of metadata files and return a list of `AgentBackup` objects."""
+        """Iterate through metadata files and return a list of `AgentBackup` objects."""
 
         backups: list[AgentBackup] = []
 
@@ -218,15 +222,19 @@ class BackupAgentClient:
         self,
         iterator: AsyncIterator[bytes],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
     ) -> None:
-        """Accept `iterator` as bytes iterator and write backup archive to SFTP Server."""
+        """Accept `iterator` as bytes iterator and write backup archive."""
 
         file_path = (
             f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
         )
+        bytes_uploaded = 0
         async with self.sftp.open(file_path, "wb") as f:
             async for b in iterator:
                 await f.write(b)
+                bytes_uploaded += len(b)
+                on_progress(bytes_uploaded=bytes_uploaded)
 
         LOGGER.debug("Writing backup metadata")
         metadata: dict[str, str | dict[str, list[str]]] = {
@@ -246,8 +254,10 @@ class BackupAgentClient:
     async def iter_file(self, backup_id: str) -> AsyncFileIterator:
         """Return Async File Iterator object.
 
-        `SFTPClientFile` object (that would be returned with `sftp.open`) is not an iterator.
-        So we return custom made class - `AsyncFileIterator` that would allow iteration on file object.
+        `SFTPClientFile` object (that would be returned with
+        `sftp.open`) is not an iterator. So we return custom
+        made class - `AsyncFileIterator` that would allow
+        iteration on file object.
 
         Raises:
         ------
@@ -294,9 +304,16 @@ class BackupAgentClient:
                     get_client_options, self.cfg.runtime_data
                 ),
             )
-        except (OSError, PermissionDenied) as e:
+        except PermissionDenied as e:
             raise BackupAgentError(
-                "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-install the integration"
+                "Failure while attempting to establish SSH"
+                " connection. Please check SSH credentials"
+                " and if changed, re-install the integration"
+            ) from e
+        except (OSError, SSHError) as e:
+            raise SFTPConnectionError(
+                f"Failed to establish SSH connection to"
+                f" {self.cfg.runtime_data.host}: {e}"
             ) from e
 
         # Configure SFTP Client Connection
@@ -305,7 +322,12 @@ class BackupAgentClient:
             await self.sftp.chdir(self.cfg.runtime_data.backup_location)
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
-                "Failed to create SFTP client. Re-installing integration might be required"
+                "Failed to create SFTP client."
+                " Re-installing integration might be required"
+            ) from e
+        except (OSError, SSHError) as e:
+            raise SFTPConnectionError(
+                f"Failed to open SFTP session on {self.cfg.runtime_data.host}: {e}"
             ) from e
 
         return self

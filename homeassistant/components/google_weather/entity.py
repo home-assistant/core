@@ -1,7 +1,5 @@
 """Base entity for Google Weather."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity

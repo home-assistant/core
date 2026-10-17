@@ -1,8 +1,6 @@
 """Switch platform for the Trane Local integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from steamloop import HoldType, ThermostatConnection
 
@@ -24,7 +22,7 @@ async def async_setup_entry(
     """Set up Trane Local switch entities."""
     conn = config_entry.runtime_data
     async_add_entities(
-        TraneHoldSwitch(conn, config_entry.entry_id, zone_id)
+        TraneHoldSwitch(hass, conn, config_entry.entry_id, zone_id)
         for zone_id in conn.state.zones
     )
 
@@ -34,19 +32,28 @@ class TraneHoldSwitch(TraneZoneEntity, SwitchEntity):
 
     _attr_translation_key = "hold"
 
-    def __init__(self, conn: ThermostatConnection, entry_id: str, zone_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        conn: ThermostatConnection,
+        entry_id: str,
+        zone_id: str,
+    ) -> None:
         """Initialize the hold switch."""
-        super().__init__(conn, entry_id, zone_id, "hold")
+        super().__init__(hass, conn, entry_id, zone_id, "hold")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the zone is in permanent hold."""
         return self._zone.hold_type == HoldType.MANUAL
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
         self._conn.set_temperature_setpoint(self._zone_id, hold_type=HoldType.MANUAL)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Return to schedule."""
         self._conn.set_temperature_setpoint(self._zone_id, hold_type=HoldType.SCHEDULE)

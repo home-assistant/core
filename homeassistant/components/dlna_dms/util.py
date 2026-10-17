@@ -1,7 +1,5 @@
 """Small utility functions for the dlna_dms integration."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.util import slugify
 

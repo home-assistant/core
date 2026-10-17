@@ -1,7 +1,5 @@
 """The elmax-cloud integration."""
 
-from __future__ import annotations
-
 from elmax_api.exceptions import ElmaxBadLoginError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry
@@ -70,8 +68,9 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
     panels = await client.list_control_panels()
     panel = next((panel for panel in panels if panel.hash == panel_id), None)
 
-    # If the panel is no longer available within the ones associated to that client, raise
-    # a config error as the user must reconfigure it in order to  make it work again
+    # If the panel is no longer available within the ones
+    # associated to that client, raise a config error as the
+    # user must reconfigure it in order to make it work again
     if not panel:
         raise ConfigEntryAuthFailed(
             f"Panel ID {panel_id} is no longer linked to this user account"
@@ -79,7 +78,7 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
     return panel
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
     """Set up elmax-cloud from a config entry."""
     try:
         client, panel = await _load_elmax_panel_client(entry)
@@ -113,7 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> boo
 
     # Perform platform initialization.
     await hass.config_entries.async_forward_entry_setups(entry, ELMAX_PLATFORMS)
-    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
@@ -121,6 +119,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> No
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ELMAX_PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, ELMAX_PLATFORMS)

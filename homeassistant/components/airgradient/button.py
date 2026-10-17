@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from airgradient import AirGradientClient, ConfigurationControl
 
@@ -16,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirGradientConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, supports_action
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity, exception_handler
 
@@ -52,36 +53,37 @@ async def async_setup_entry(
     """Set up AirGradient button entities based on a config entry."""
     coordinator = entry.runtime_data
     model = coordinator.data.measures.model
-
-    added_entities = False
+    descriptions = (CO2_CALIBRATION, LED_BAR_TEST)
+    descriptions_by_key = {description.key: description for description in descriptions}
+    added_entities: set[str] = set()
 
     @callback
     def _check_entities() -> None:
         nonlocal added_entities
+        desired_entities = {
+            description.key
+            for description in descriptions
+            if coordinator.data.config.configuration_control
+            is ConfigurationControl.LOCAL
+            and supports_action(model, description.key)
+        }
 
-        if (
-            coordinator.data.config.configuration_control is ConfigurationControl.LOCAL
-            and not added_entities
-        ):
-            entities = [AirGradientButton(coordinator, CO2_CALIBRATION)]
-            if "L" in model:
-                entities.append(AirGradientButton(coordinator, LED_BAR_TEST))
-
-            async_add_entities(entities)
-            added_entities = True
-        elif (
-            coordinator.data.config.configuration_control
-            is not ConfigurationControl.LOCAL
-            and added_entities
-        ):
+        if entities_to_add := desired_entities - added_entities:
+            async_add_entities(
+                [
+                    AirGradientButton(coordinator, descriptions_by_key[key])
+                    for key in entities_to_add
+                ]
+            )
+        if entities_to_remove := added_entities - desired_entities:
             entity_registry = er.async_get(hass)
-            for entity_description in (CO2_CALIBRATION, LED_BAR_TEST):
-                unique_id = f"{coordinator.serial_number}-{entity_description.key}"
+            for key in entities_to_remove:
+                unique_id = f"{coordinator.serial_number}-{key}"
                 if entity_id := entity_registry.async_get_entity_id(
                     BUTTON_DOMAIN, DOMAIN, unique_id
                 ):
                     entity_registry.async_remove(entity_id)
-            added_entities = False
+        added_entities = desired_entities
 
     coordinator.async_add_listener(_check_entities)
     _check_entities()
@@ -103,6 +105,7 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.coordinator.client)

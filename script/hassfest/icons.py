@@ -1,12 +1,10 @@
 """Validate integration icon translation files."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import orjson
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import convert_shorthand_service_icon
@@ -19,8 +17,9 @@ def icon_value_validator(value: Any) -> str:
     """Validate that the icon is a valid icon."""
     value = cv.string_with_no_html(value)
     if not value.startswith("mdi:"):
-        raise vol.Invalid(
-            "The icon needs to be a valid icon from Material Design Icons and start with `mdi:`"
+        raise probatio.Invalid(
+            "The icon needs to be a valid icon from Material"
+            " Design Icons and start with `mdi:`"
         )
     return str(value)
 
@@ -30,7 +29,9 @@ def range_key_validator(value: str) -> str:
     try:
         float(value)
     except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"Invalid range key '{value}', needs to be numeric.") from err
+        raise probatio.Invalid(
+            f"Invalid range key '{value}', needs to be numeric."
+        ) from err
 
     return value
 
@@ -38,7 +39,7 @@ def range_key_validator(value: str) -> str:
 def require_default_icon_validator(value: dict) -> dict:
     """Validate that a default icon is set."""
     if "_" not in value:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "An entity component needs to have a default icon defined with `_`"
         )
     return value
@@ -50,7 +51,7 @@ def ensure_not_same_as_default(value: dict) -> dict:
         if (default := section.get("default")) and (states := section.get("state")):
             for state, icon in states.items():
                 if icon == default:
-                    raise vol.Invalid(
+                    raise probatio.Invalid(
                         f"The icon for state `{translation_key}.{state}` is the"
                         " same as the default icon and thus can be removed"
                     )
@@ -66,19 +67,19 @@ def ensure_range_is_sorted(value: dict) -> dict:
             try:
                 range_values = [float(key) for key in ranges]
             except ValueError as err:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Range values for `{section_key}` must be numeric"
                 ) from err
 
             if range_values != sorted(range_values):
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Range values for `{section_key}` must be in ascending order"
                 )
 
     return value
 
 
-DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
+DATA_ENTRY_ICONS_SCHEMA = probatio.Schema(
     {
         "step": {
             str: {
@@ -92,10 +93,10 @@ DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
 
 
 CORE_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional("service"): icon_value_validator,
-            vol.Optional("sections"): cv.schema_with_slug_keys(
+            probatio.Optional("service"): icon_value_validator,
+            probatio.Optional("sections"): cv.schema_with_slug_keys(
                 icon_value_validator, slug_validator=translation_key_validator
             ),
         }
@@ -105,12 +106,12 @@ CORE_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
 
 
 CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.All(
+    probatio.All(
         convert_shorthand_service_icon,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Optional("service"): icon_value_validator,
-                vol.Optional("sections"): cv.schema_with_slug_keys(
+                probatio.Optional("service"): icon_value_validator,
+                probatio.Optional("sections"): cv.schema_with_slug_keys(
                     icon_value_validator, slug_validator=translation_key_validator
                 ),
             }
@@ -121,9 +122,9 @@ CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
 
 
 CONDITION_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional("condition"): icon_value_validator,
+            probatio.Optional("condition"): icon_value_validator,
         }
     ),
     slug_validator=cv.underscore_slug,
@@ -131,18 +132,30 @@ CONDITION_ICONS_SCHEMA = cv.schema_with_slug_keys(
 
 
 TRIGGER_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional("trigger"): icon_value_validator,
+            probatio.Optional("trigger"): icon_value_validator,
         }
     ),
     slug_validator=cv.underscore_slug,
 )
 
 
+INTEGRATION_CATEGORY_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    {
+        probatio.Required("default"): icon_value_validator,
+        probatio.Optional("subcategory"): cv.schema_with_slug_keys(
+            {probatio.Required("default"): icon_value_validator},
+            slug_validator=translation_key_validator,
+        ),
+    },
+    slug_validator=translation_key_validator,
+)
+
+
 def icon_schema(
     core_integration: bool, integration_type: IntegrationType, no_entity_platform: bool
-) -> vol.Schema:
+) -> probatio.Schema:
     """Create an icon schema."""
 
     state_validator = cv.schema_with_slug_keys(
@@ -155,17 +168,17 @@ def icon_schema(
         slug_validator=range_key_validator,
     )
 
-    def icon_schema_slug(marker: type[vol.Marker]) -> dict[vol.Marker, Any]:
+    def icon_schema_slug(marker: type[probatio.Marker]) -> dict[probatio.Marker, Any]:
         return {
             marker("default"): icon_value_validator,
-            vol.Optional("state"): state_validator,
-            vol.Optional("range"): range_validator,
-            vol.Optional("state_attributes"): vol.All(
+            probatio.Optional("state"): state_validator,
+            probatio.Optional("range"): range_validator,
+            probatio.Optional("state_attributes"): probatio.All(
                 cv.schema_with_slug_keys(
                     {
                         marker("default"): icon_value_validator,
-                        vol.Optional("state"): state_validator,
-                        vol.Optional("range"): range_validator,
+                        probatio.Optional("state"): state_validator,
+                        probatio.Optional("range"): range_validator,
                     },
                     slug_validator=translation_key_validator,
                 ),
@@ -174,18 +187,18 @@ def icon_schema(
             ),
         }
 
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Optional("conditions"): CONDITION_ICONS_SCHEMA,
-            vol.Optional("config"): DATA_ENTRY_ICONS_SCHEMA,
-            vol.Optional("issues"): vol.Schema(
+            probatio.Optional("conditions"): CONDITION_ICONS_SCHEMA,
+            probatio.Optional("config"): DATA_ENTRY_ICONS_SCHEMA,
+            probatio.Optional("issues"): probatio.Schema(
                 {str: {"fix_flow": DATA_ENTRY_ICONS_SCHEMA}}
             ),
-            vol.Optional("options"): DATA_ENTRY_ICONS_SCHEMA,
-            vol.Optional("services"): CORE_SERVICE_ICONS_SCHEMA
+            probatio.Optional("options"): DATA_ENTRY_ICONS_SCHEMA,
+            probatio.Optional("services"): CORE_SERVICE_ICONS_SCHEMA
             if core_integration
             else CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA,
-            vol.Optional("triggers"): TRIGGER_ICONS_SCHEMA,
+            probatio.Optional("triggers"): TRIGGER_ICONS_SCHEMA,
         }
     )
 
@@ -195,15 +208,15 @@ def icon_schema(
         IntegrationType.SYSTEM,
     ):
         if integration_type != IntegrationType.ENTITY or no_entity_platform:
-            field = vol.Optional("entity_component")
+            field = probatio.Optional("entity_component")
         else:
-            field = vol.Required("entity_component")
+            field = probatio.Required("entity_component")
         schema = schema.extend(
             {
-                field: vol.All(
+                field: probatio.All(
                     cv.schema_with_slug_keys(
-                        icon_schema_slug(vol.Required),
-                        slug_validator=vol.Any("_", cv.slug),
+                        icon_schema_slug(probatio.Required),
+                        slug_validator=probatio.Any("_", cv.slug),
                     ),
                     require_default_icon_validator,
                     ensure_not_same_as_default,
@@ -211,13 +224,13 @@ def icon_schema(
                 )
             }
         )
-    if integration_type not in (IntegrationType.ENTITY, IntegrationType.SYSTEM):
+    if integration_type != IntegrationType.ENTITY:
         schema = schema.extend(
             {
-                vol.Optional("entity"): vol.All(
+                probatio.Optional("entity"): probatio.All(
                     cv.schema_with_slug_keys(
                         cv.schema_with_slug_keys(
-                            icon_schema_slug(vol.Optional),
+                            icon_schema_slug(probatio.Optional),
                             slug_validator=translation_key_validator,
                         ),
                         slug_validator=cv.slug,
@@ -227,6 +240,39 @@ def icon_schema(
             }
         )
     return schema
+
+
+def integration_category_keys(categories: dict[str, Any]) -> set[str]:
+    """Return the category and subcategory keys, like `energy.meters_monitoring`."""
+    keys = set()
+    for category, details in categories.items():
+        keys.add(category)
+        keys.update(
+            f"{category}.{subcategory}"
+            for subcategory in details.get("subcategory", {})
+        )
+
+    return keys
+
+
+def validate_integration_category_icons(
+    integration: Integration, icons: dict[str, Any]
+) -> None:
+    """Validate every integration category has an icon, and every icon a category."""
+    # Invalid strings are reported by the json and translations plugins.
+    try:
+        strings = orjson.loads((integration.path / "strings.json").read_text())
+        categories = integration_category_keys(strings.get("integration_category", {}))
+    except ValueError, AttributeError, TypeError:
+        return
+
+    category_icons = integration_category_keys(icons.get("integration_category", {}))
+
+    for key in sorted(categories - category_icons):
+        integration.add_error("icons", f"Integration category `{key}` has no icon")
+
+    for key in sorted(category_icons - categories):
+        integration.add_error("icons", f"Icon for unknown integration category `{key}`")
 
 
 def validate_icon_file(config: Config, integration: Integration) -> None:
@@ -248,11 +294,23 @@ def validate_icon_file(config: Config, integration: Integration) -> None:
     schema = icon_schema(
         integration.core, integration.integration_type, no_entity_platform
     )
+    if integration.domain == "homeassistant":
+        schema = schema.extend(
+            {
+                probatio.Optional(
+                    "integration_category"
+                ): INTEGRATION_CATEGORY_ICONS_SCHEMA
+            }
+        )
 
     try:
         schema(icons)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         integration.add_error("icons", f"Invalid {name}: {humanize_error(icons, err)}")
+        return
+
+    if integration.domain == "homeassistant":
+        validate_integration_category_icons(integration, icons)
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

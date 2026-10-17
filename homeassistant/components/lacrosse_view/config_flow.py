@@ -1,13 +1,11 @@
 """Config flow for LaCrosse View integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from lacrosse_view import LaCrosse, Location, LoginError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -16,10 +14,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        probatio.Required("username"): str,
+        probatio.Required("password"): str,
     }
 )
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +53,7 @@ class LaCrosseViewConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, str] = {}
         self.locations: list[Location] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -104,9 +103,9 @@ class LaCrosseViewConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Showing initial location selection")
             return self.async_show_form(
                 step_id="location",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required("location"): vol.In(
+                        probatio.Required("location"): probatio.In(
                             {location.id: location.name for location in self.locations}
                         )
                     }

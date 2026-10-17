@@ -1,6 +1,6 @@
 """Tests for Mill config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -16,9 +16,7 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_show_config_form(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -28,9 +26,7 @@ async def test_show_config_form(
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,10 +59,11 @@ async def test_create_entry(
         CONF_PASSWORD: "pswd",
         CONNECTION_TYPE: CLOUD,
     }
+    assert result["result"].unique_id == "user"
 
 
 async def test_flow_entry_already_exists(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test user input for config_entry that already exists."""
 
@@ -107,9 +104,7 @@ async def test_flow_entry_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_connection_error(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,10 +132,20 @@ async def test_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch("mill.Mill.connect", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pswd",
+            },
+        )
+        await hass.async_block_till_done()
 
-async def test_local_create_entry(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_local_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -178,10 +183,11 @@ async def test_local_create_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data[CONF_IP_ADDRESS]
     assert result["data"] == test_data
+    assert result["result"].unique_id == "192.168.1.59"
 
 
 async def test_local_flow_entry_already_exists(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test user input for config_entry that already exists."""
 
@@ -233,7 +239,7 @@ async def test_local_flow_entry_already_exists(
 
 
 async def test_local_connection_error(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test connection error."""
 
@@ -266,3 +272,19 @@ async def test_local_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "mill_local.Mill.connect",
+        return_value={
+            "name": "panel heater gen. 3",
+            "version": "0x210927",
+            "operation_key": "",
+            "status": "ok",
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            test_data,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

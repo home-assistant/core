@@ -1,7 +1,5 @@
 """The tests for the Group Sensor platform."""
 
-from __future__ import annotations
-
 from math import prod
 import statistics
 from typing import Any
@@ -39,7 +37,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import MockConfigEntry, get_fixture_path
 
 VALUES = [17, 20, 15.3]
 
@@ -237,6 +235,33 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
+
+
+@pytest.mark.parametrize(
+    "sensor_type",
+    ["min", "max", "mean", "median", "last", "range", "stdev", "sum", "product"],
+)
+async def test_no_members(hass: HomeAssistant, sensor_type: str) -> None:
+    """Test a group without members does not try to calculate a value."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": [],
+            "group_type": "sensor",
+            "hide_members": False,
+            "ignore_non_numeric": False,
+            "name": "My sensor group",
+            "type": sensor_type,
+        },
+        title="My sensor group",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_sensor_group")
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_reload(hass: HomeAssistant) -> None:
@@ -596,8 +621,8 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.state == STATE_UNKNOWN
 
     assert (
-        "Unable to use state. Only entities with correct unit of measurement is supported"
-        in caplog.text
+        "Unable to use state. Only entities with correct unit"
+        " of measurement is supported" in caplog.text
     )
 
     hass.states.async_set(
@@ -620,7 +645,7 @@ async def test_sensor_with_uoms_but_no_device_class(
 async def test_sensor_calculated_properties_not_same(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the sensor calculating device_class, state_class and unit of measurement not same."""
+    """Test sensor calculating properties when not all the same."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,
@@ -756,7 +781,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the sensor calculating device_class, state_class and unit of measurement when device class not convertible."""
+    """Test sensor with non-convertible device class."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,
@@ -926,7 +951,7 @@ async def test_first_available_sensor(hass: HomeAssistant) -> None:
 async def test_sensors_attributes_added_when_entity_info_available(
     hass: HomeAssistant,
 ) -> None:
-    """Test the sensor calculate attributes once all entities attributes are available."""
+    """Test sensor calculates attributes once all entities are available."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,

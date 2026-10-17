@@ -29,7 +29,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.BUTTON]
 
@@ -44,11 +44,13 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -64,7 +66,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -81,7 +85,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
@@ -137,7 +143,9 @@ async def test_connected_devices(
     client.get_available_commands = get_available_commands_original_mock
     client.get_all_programs = get_all_programs_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     assert entity_registry.async_get_entity_id(
         Platform.BUTTON,
@@ -178,7 +186,7 @@ async def test_button_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_ids = [
         "button.washer_pause_program",
         "button.washer_stop_program",
@@ -244,7 +252,7 @@ async def test_button_functionality(
     expected_kwargs: dict[str, Any],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -267,7 +275,7 @@ async def test_command_button_exception(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_id = "button.washer_pause_program"
 
     client_with_exception.get_available_commands = AsyncMock(
@@ -302,7 +310,7 @@ async def test_stop_program_button_exception(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_id = "button.washer_stop_program"
 
     assert await integration_setup(client_with_exception)

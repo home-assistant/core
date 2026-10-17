@@ -184,9 +184,8 @@ async def test_agents_get_backup_does_not_throw_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent get backup does not throw on a backup not found."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": "random"})
@@ -209,7 +208,8 @@ async def test_agents_list_backups_with_corrupted_metadata(
     agent = S3BackupAgent(hass, mock_config_entry)
 
     # Set up mock responses for both valid and corrupted metadata files
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {
@@ -265,7 +265,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     # Should delete both the tar and the metadata file
     assert mock_client.delete_object.call_count == 2
 
@@ -276,9 +276,8 @@ async def test_agents_delete_not_throwing_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent delete backup does not throw on a backup not found."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
 
     client = await hass_ws_client(hass)
 
@@ -291,7 +290,7 @@ async def test_agents_delete_not_throwing_on_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_client.delete_object.call_count == 0
 
 
@@ -410,7 +409,8 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    # Coordinator first refresh reads metadata (1) + download reads metadata (1) + tar (1)
+    # Coordinator first refresh reads metadata (1) +
+    # download reads metadata (1) + tar (1)
     assert mock_client.get_object.call_count == 3
 
 
@@ -436,9 +436,12 @@ async def test_error_during_delete(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed during async_delete_backup"
-        }
+            f"{DOMAIN}.{mock_config_entry.entry_id}": (
+                "Failed during async_delete_backup"
+            )
+        },
     }
 
 
@@ -467,7 +470,8 @@ async def test_cache_expiration(
     metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {
@@ -570,7 +574,8 @@ async def test_list_backups_with_pagination(
 
     # Setup mock client
     mock_client = mock_config_entry.runtime_data.client
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         page1,
         page2,
     ]
@@ -656,7 +661,7 @@ async def test_agent_delete_backup_parametrized(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     tar_filename, metadata_filename = suggested_filenames(mock_agent_backup)
 

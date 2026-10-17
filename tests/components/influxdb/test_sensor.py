@@ -1,7 +1,5 @@
 """The tests for the InfluxDB sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
@@ -10,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
 
 from homeassistant.components import sensor
 from homeassistant.components.influxdb.const import (

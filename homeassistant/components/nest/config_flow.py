@@ -8,11 +8,9 @@ NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
 some overrides to custom steps inserted in the middle of the flow.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from google_nest_sdm.admin_client import (
     DEFAULT_TOPIC_IAM_POLICY,
@@ -22,7 +20,7 @@ from google_nest_sdm.admin_client import (
 )
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.structure import Structure
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -115,11 +113,13 @@ class NestFlowHandler(
         self._eligible_subscriptions: EligibleSubscriptions | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -129,6 +129,7 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
+    @override
     async def async_generate_authorize_url(self) -> str:
         """Generate a url for the user to authorize based on user input."""
         project_id = self._data.get(CONF_PROJECT_ID)
@@ -136,6 +137,7 @@ class NestFlowHandler(
         authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return f"{authorize_url}{query}"
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
         _LOGGER.debug("Finishing post-oauth configuration")
@@ -163,6 +165,7 @@ class NestFlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -212,9 +215,9 @@ class NestFlowHandler(
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CLOUD_PROJECT_ID): str,
+                    probatio.Required(CONF_CLOUD_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -244,9 +247,9 @@ class NestFlowHandler(
 
         return self.async_show_form(
             step_id="device_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROJECT_ID): str,
+                    probatio.Required(CONF_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -300,9 +303,9 @@ class NestFlowHandler(
         ]
         return self.async_show_form(
             step_id="pubsub_topic",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_TOPIC_NAME, default=next(iter(topics))
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -323,7 +326,7 @@ class NestFlowHandler(
     async def async_step_pubsub_topic_confirm(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        """Have the user confirm the Pub/Sub topic is set correctly in Device Access Console."""
+        """Confirm the Pub/Sub topic is set correctly in Device Access Console."""
         if user_input is not None:
             return await self.async_step_pubsub_subscription()
         return self.async_show_form(
@@ -367,7 +370,8 @@ class NestFlowHandler(
                 else:
                     user_input[CONF_SUBSCRIPTION_NAME] = subscription_name
             else:
-                # The user created this subscription themselves so do not delete when removing the integration.
+                # The user created this subscription themselves so
+                # do not delete when removing the integration.
                 user_input[CONF_SUBSCRIBER_ID_IMPORTED] = True
 
             if not errors:
@@ -406,9 +410,9 @@ class NestFlowHandler(
         subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
         return self.async_show_form(
             step_id="pubsub_subscription",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SUBSCRIPTION_NAME,
                         default=next(iter(subscriptions)),
                     ): SelectSelector(

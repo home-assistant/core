@@ -1,10 +1,8 @@
 """The tests for Select device conditions."""
 
-from __future__ import annotations
-
+from probatio import to_field_list
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -140,7 +138,10 @@ async def test_if_selected_option(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option1 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -159,7 +160,10 @@ async def test_if_selected_option(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option2 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option2 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -229,7 +233,10 @@ async def test_if_selected_option_legacy(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option1 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -264,7 +271,7 @@ async def test_get_condition_capabilities(
     capabilities = await async_get_condition_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -290,7 +297,7 @@ async def test_get_condition_capabilities(
     capabilities = await async_get_condition_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -326,7 +333,7 @@ async def test_get_condition_capabilities_legacy(
     capabilities = await async_get_condition_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -352,7 +359,7 @@ async def test_get_condition_capabilities_legacy(
     capabilities = await async_get_condition_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

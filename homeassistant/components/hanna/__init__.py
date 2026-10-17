@@ -1,7 +1,5 @@
 """The Hanna Instruments integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from hanna_cloud import HannaCloudClient
@@ -24,7 +22,7 @@ def _authenticate_and_get_devices(
     return api_client.get_devices()
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> None:
     """Set up Hanna Instruments from a config entry."""
     api_client = HannaCloudClient()
     devices = await hass.async_add_executor_job(
@@ -46,9 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> boo
 
     # Forward the setup to the platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

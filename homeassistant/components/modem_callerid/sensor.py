@@ -1,6 +1,6 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 
-from __future__ import annotations
+from typing import override
 
 from phone_modem import PhoneModem
 
@@ -50,6 +50,7 @@ class ModemCalleridSensor(RestoreSensor):
         }
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, server_unique_id)})
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the modem sensor is added to Home Assistant."""
         await super().async_added_to_hass()

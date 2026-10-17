@@ -1,7 +1,5 @@
 """UniFi Network abstraction."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -125,10 +123,9 @@ class UnifiHub:
     async def async_config_entry_updated(
         hass: HomeAssistant, config_entry: UnifiConfigEntry
     ) -> None:
-        """Handle signals of config entry being updated.
+        """Apply updated options to the hub.
 
-        If config entry is updated due to reauth flow
-        the entry might already have been reset and thus is not available.
+        Config flows reload the entry after they change its data.
         """
         hub = config_entry.runtime_data
         hub.config = UnifiConfig.from_config_entry(config_entry)

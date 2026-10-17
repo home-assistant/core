@@ -1,18 +1,20 @@
 """Config flow for Livisi Home Assistant."""
 
-from __future__ import annotations
+from typing import override
 
-from contextlib import suppress
-from typing import Any
-
-from aiohttp import ClientConnectorError
-from livisi import errors as livisi_errors
-from livisi.aiolivisi import AioLivisi
-import voluptuous as vol
+from livisi import (
+    IncorrectIpAddressException,
+    LivisiConnection,
+    LivisiController,
+    LivisiException,
+    ShcUnreachableException,
+    WrongCredentialException,
+    connect as livisi_connect,
+)
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
 
@@ -22,14 +24,15 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Create the configuration file."""
-        self.aio_livisi: AioLivisi = None
-        self.data_schema = vol.Schema(
+        self.aio_livisi: LivisiConnection | None = None
+        self.data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -40,19 +43,22 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         try:
             await self._login(user_input)
-        except livisi_errors.WrongCredentialException:
+        except WrongCredentialException:
             errors["base"] = "wrong_password"
-        except livisi_errors.ShcUnreachableException:
+        except ShcUnreachableException:
             errors["base"] = "cannot_connect"
-        except livisi_errors.IncorrectIpAddressException:
+        except IncorrectIpAddressException:
             errors["base"] = "wrong_ip_address"
-        else:
-            controller_info: dict[str, Any] = {}
-            with suppress(ClientConnectorError):
-                controller_info = await self.aio_livisi.async_get_controller()
-            if controller_info:
-                return await self.create_entity(user_input, controller_info)
+        except LivisiException:
             errors["base"] = "cannot_connect"
+        else:
+            assert self.aio_livisi is not None
+            try:
+                if controller := self.aio_livisi.controller:
+                    return await self.create_entity(user_input, controller)
+                errors["base"] = "cannot_connect"
+            finally:
+                await self.aio_livisi.close()
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors
@@ -60,30 +66,22 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _login(self, user_input: dict[str, str]) -> None:
         """Login into Livisi Smart Home."""
-        web_session = aiohttp_client.async_get_clientsession(self.hass)
-        self.aio_livisi = AioLivisi(web_session)
-        livisi_connection_data = {
-            "ip_address": user_input[CONF_HOST],
-            "password": user_input[CONF_PASSWORD],
-        }
-
-        await self.aio_livisi.async_set_token(livisi_connection_data)
+        self.aio_livisi = await livisi_connect(
+            user_input[CONF_HOST], user_input[CONF_PASSWORD]
+        )
 
     async def create_entity(
-        self, user_input: dict[str, str], controller_info: dict[str, Any]
+        self, user_input: dict[str, str], controller: LivisiController
     ) -> ConfigFlowResult:
         """Create LIVISI entity."""
-        if (controller_data := controller_info.get("gateway")) is None:
-            controller_data = controller_info
-        controller_type = controller_data["controllerType"]
         LOGGER.debug(
             "Integrating SHC %s with serial number: %s",
-            controller_type,
-            controller_data["serialNumber"],
+            controller.controller_type,
+            controller.serial_number,
         )
 
         return self.async_create_entry(
-            title=f"SHC {controller_type}",
+            title=f"SHC {controller.controller_type}",
             data={
                 **user_input,
             },

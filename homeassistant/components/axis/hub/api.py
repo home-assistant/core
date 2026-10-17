@@ -36,6 +36,7 @@ async def get_axis_api(
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],
             web_proto=config.get(CONF_PROTOCOL, "http"),
+            websocket_enabled=True,
         )
     )
 

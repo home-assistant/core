@@ -1,7 +1,5 @@
 """Diagnostics support for Modern Forms."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
@@ -13,6 +11,7 @@ from .coordinator import ModernFormsConfigEntry
 
 REDACT_CONFIG = {CONF_MAC}
 REDACT_DEVICE_INFO = {"mac_address", "owner"}
+REDACT_DEVICE_STATUS = {"name", "schedule", "user_data"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -27,6 +26,8 @@ async def async_get_config_entry_diagnostics(
             "info": async_redact_data(
                 asdict(coordinator.modern_forms.info), REDACT_DEVICE_INFO
             ),
-            "status": asdict(coordinator.modern_forms.status),
+            "status": async_redact_data(
+                asdict(coordinator.modern_forms.status), REDACT_DEVICE_STATUS
+            ),
         },
     }

@@ -1,25 +1,24 @@
 """Support for the Abode Security System locks."""
 
-from typing import Any
+from typing import Any, override
 
 from jaraco.abode.devices.lock import Lock
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry
 from .entity import AbodeDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode lock devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeLock(data, device)
@@ -33,15 +32,18 @@ class AbodeLock(AbodeDevice, LockEntity):
     _device: Lock
     _attr_name = None
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._device.lock()
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self._device.unlock()
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return true if device is on."""
         return bool(self._device.is_locked)

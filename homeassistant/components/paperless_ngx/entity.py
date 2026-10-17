@@ -1,9 +1,7 @@
 """Paperless-ngx base entity."""
 
-from __future__ import annotations
-
-from homeassistant.components.sensor import EntityDescription
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN

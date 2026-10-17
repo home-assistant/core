@@ -1,10 +1,8 @@
 """Support for TPLink Omada binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from tplink_omada_client.definitions import (
     DeviceStatusCategory,
@@ -133,6 +131,7 @@ class OmadaGatewayPortBinarySensor(
         self._attr_unique_id = f"{device.mac}_{port_number}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": f"{port_number}"}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -148,6 +147,7 @@ class OmadaGatewayPortBinarySensor(
             self._attr_is_on = self.entity_description.update_func(port)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._do_update()

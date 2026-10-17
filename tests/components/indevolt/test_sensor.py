@@ -4,6 +4,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from indevolt_api import (
+    IndevoltBattery,
+    IndevoltConfig,
+    IndevoltEnergyMode,
+    IndevoltSystem,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -55,6 +61,162 @@ async def test_sensor_availability(
 
     assert (state := hass.states.get("sensor.cms_sf2000_battery_soc"))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_realtime_sensor_energy_mode_availability(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test real-time sensors are only available in real-time control energy mode."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Default fixture is not in RT mode (1), sensors should be unavailable
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_mode").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_target_soc").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_power_limit").state
+        == STATE_UNAVAILABLE
+    )
+
+    # Switch to RT mode (4), sensors should be available
+    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
+        IndevoltEnergyMode.REAL_TIME_CONTROL
+    )
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.cms_sf2000_real_time_mode").state == "standby"
+    assert hass.states.get("sensor.cms_sf2000_real_time_target_soc").state == "80"
+    assert hass.states.get("sensor.cms_sf2000_real_time_power_limit").state == "200"
+
+    # Switch back to a non-RT mode (0), sensors become unavailable again
+    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
+        IndevoltEnergyMode.OUTDOOR_PORTABLE
+    )
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_mode").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_target_soc").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_power_limit").state
+        == STATE_UNAVAILABLE
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("generation", [1], indirect=True)
+async def test_inverter_sensor_temperature_availability(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test inverter sensors are only available when temperature is reported."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Default fixture reports a valid temperature (35.2) with heating off, sensor should be available
+    assert hass.states.get("sensor.bk1600_inverter_temperature").state == "35.2"
+
+    # Set temperature to 0 with heating off - sensor should become unavailable
+    mock_indevolt.fetch_data.return_value[
+        IndevoltBattery.GEN_1_INVERTER_TEMPERATURE
+    ] = 0
+
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.bk1600_inverter_temperature").state == STATE_UNAVAILABLE
+    )
+
+    # Switch heating on, sensor should be available again with value 0
+    mock_indevolt.fetch_data.return_value[IndevoltSystem.HEATING_STATE] = 1000
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.bk1600_inverter_temperature").state == "0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_remaining_time_sensor_charge_state_availability(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test remaining time sensors are only available in the matching charge/discharge state."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Default charge / discharge state is static (1000), both sensors should be unavailable
+    assert (
+        hass.states.get("sensor.cms_sf2000_remaining_charging_time").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_remaining_discharging_time").state
+        == STATE_UNAVAILABLE
+    )
+
+    # Switch to charging (1001), only remaining charging time should be available
+    mock_indevolt.fetch_data.return_value[IndevoltBattery.CHARGE_DISCHARGE_STATE] = 1001
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.cms_sf2000_remaining_charging_time").state == "45"
+    assert (
+        hass.states.get("sensor.cms_sf2000_remaining_discharging_time").state
+        == STATE_UNAVAILABLE
+    )
+
+    # Switch to discharging (1002), only remaining discharging time should be available
+    mock_indevolt.fetch_data.return_value[IndevoltBattery.CHARGE_DISCHARGE_STATE] = 1002
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.cms_sf2000_remaining_charging_time").state
+        == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("sensor.cms_sf2000_remaining_discharging_time").state == "0"
+
+    # Switch back to static (1000), both sensors become unavailable again
+    mock_indevolt.fetch_data.return_value[IndevoltBattery.CHARGE_DISCHARGE_STATE] = 1000
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.cms_sf2000_remaining_charging_time").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_remaining_discharging_time").state
+        == STATE_UNAVAILABLE
+    )
 
 
 # In individual tests, you can override the mock behavior
@@ -126,7 +288,6 @@ async def test_battery_pack_filtering_fetch_error(
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test battery pack filtering when fetch fails."""
 

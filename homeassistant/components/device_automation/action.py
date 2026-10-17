@@ -1,10 +1,8 @@
 """Device action validator."""
 
-from __future__ import annotations
-
 from typing import Any, Protocol
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import Context, HomeAssistant
@@ -21,7 +19,7 @@ class DeviceAutomationActionProtocol(Protocol):
     Each module must define either ACTION_SCHEMA or async_validate_action_config.
     """
 
-    ACTION_SCHEMA: vol.Schema
+    ACTION_SCHEMA: probatio.Schema
 
     async def async_validate_action_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -39,7 +37,7 @@ class DeviceAutomationActionProtocol(Protocol):
 
     async def async_get_action_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List action capabilities."""
 
     async def async_get_actions(

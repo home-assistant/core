@@ -1,10 +1,8 @@
 """Support for SleepIQ buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from asyncsleepiq import SleepIQBed
 
@@ -68,6 +66,7 @@ class SleepNumberButton(SleepIQEntity, ButtonEntity):
         self._attr_unique_id = f"{bed.id}-{entity_description.key}"
         self.entity_description = entity_description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_action(self.bed)

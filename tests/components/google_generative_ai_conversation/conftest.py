@@ -1,8 +1,11 @@
 """Tests helpers."""
 
 from collections.abc import AsyncGenerator, Generator
+import json
 from unittest.mock import AsyncMock, Mock, patch
 
+from google.genai._api_client import HttpRequest, HttpResponse
+from google.genai.types import HttpOptionsOrDict
 import pytest
 
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -11,6 +14,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
+    DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
@@ -29,7 +33,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
-        domain="google_generative_ai_conversation",
+        domain=DOMAIN,
         title="Google Generative AI Conversation",
         data={
             "api_key": "bla",
@@ -111,9 +115,7 @@ async def mock_init_component(
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
     with patch("google.genai.models.AsyncModels.get"):
-        assert await async_setup_component(
-            hass, "google_generative_ai_conversation", {}
-        )
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 
@@ -156,4 +158,31 @@ def mock_generate_content() -> Generator[AsyncMock]:
     with patch(
         "google.genai.models.AsyncModels.generate_content",
     ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_genai_transport() -> Generator[AsyncMock]:
+    """Capture real SDK request construction, without making HTTP requests."""
+    mock = AsyncMock()
+    mock.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {"role": "model", "parts": [{"text": "Done"}]},
+                    "finishReason": "STOP",
+                }
+            ]
+        }
+    ]
+
+    async def request(
+        http_request: HttpRequest,
+        http_options: HttpOptionsOrDict | None = None,
+        stream: bool = False,
+    ) -> HttpResponse:
+        return HttpResponse({}, [json.dumps(mock.return_value.pop(0))])
+
+    mock.side_effect = request
+    with patch("google.genai._api_client.BaseApiClient._async_request", mock):
         yield mock

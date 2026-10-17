@@ -1,6 +1,6 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -29,11 +29,13 @@ class YeelightEntity(Entity):
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID."""
         return self._unique_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return if bulb is available."""
         return self._device.available

@@ -1,6 +1,6 @@
 """API for Aladdin Connect Genie bound to Home Assistant OAuth."""
 
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from genie_partner_sdk.auth import Auth
@@ -18,13 +18,14 @@ class AsyncConfigFlowAuth(Auth):
         """Initialize Aladdin Connect Genie auth."""
         super().__init__(websession, API_URL, access_token, API_KEY)
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self.access_token
 
 
 class AsyncConfigEntryAuth(Auth):
-    """Provide Aladdin Connect Genie authentication tied to an OAuth2 based config entry."""
+    """Provide Aladdin Connect Genie auth tied to an OAuth2 config entry."""
 
     def __init__(
         self,
@@ -37,9 +38,9 @@ class AsyncConfigEntryAuth(Auth):
         )
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
 
         return cast(str, self._oauth_session.token["access_token"])

@@ -58,7 +58,7 @@ async def test_dynamic_new_device(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that new entities are added when a new device appears in coordinator data."""
+    """Test new entities are added when a new device appears in data."""
     await setup_integration(hass, mock_config_entry)
 
     # Initially the existing device's battery sensor has a state

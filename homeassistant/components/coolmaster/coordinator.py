@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for coolmaster integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
+from typing import override
 
 from pycoolmasternet_async import CoolMasterNet
 from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
@@ -26,6 +25,8 @@ class CoolmasterDataUpdateCoordinator(
 ):
     """Class to manage fetching Coolmaster data."""
 
+    config_entry: CoolmasterConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -45,6 +46,7 @@ class CoolmasterDataUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, CoolMasterNetUnit]:
         """Fetch data from Coolmaster."""
         retries_left = MAX_RETRIES
@@ -56,7 +58,9 @@ class CoolmasterDataUpdateCoordinator(
             except OSError as error:
                 if retries_left == 0:
                     raise UpdateFailed(
-                        f"Error communicating with Coolmaster (aborting after {MAX_RETRIES} retries): {error}"
+                        "Error communicating with Coolmaster"
+                        f" (aborting after {MAX_RETRIES}"
+                        f" retries): {error}"
                     ) from error
                 _LOGGER.debug(
                     "Error communicating with coolmaster (%d retries left): %s",
@@ -68,7 +72,8 @@ class CoolmasterDataUpdateCoordinator(
                     return status
 
                 _LOGGER.debug(
-                    "Error communicating with coolmaster: empty status received (%d retries left)",
+                    "Error communicating with coolmaster:"
+                    " empty status received (%d retries left)",
                     retries_left,
                 )
 
@@ -76,5 +81,7 @@ class CoolmasterDataUpdateCoordinator(
             await asyncio.sleep(backoff)
 
         raise UpdateFailed(
-            f"Error communicating with Coolmaster (aborting after {MAX_RETRIES} retries): empty status received"
+            "Error communicating with Coolmaster"
+            f" (aborting after {MAX_RETRIES} retries):"
+            " empty status received"
         )

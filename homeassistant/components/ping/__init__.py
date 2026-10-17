@@ -1,7 +1,5 @@
 """The ping component."""
 
-from __future__ import annotations
-
 import logging
 
 from icmplib import SocketPermissionError, async_ping
@@ -23,7 +21,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 DATA_PRIVILEGED_KEY: HassKey[bool | None] = HassKey(DOMAIN)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version == 1:
         _LOGGER.debug("Migrating to minor version 2")
@@ -31,18 +29,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bo
         # Migrate device registry identifiers from homeassistant domain to ping domain
         registry = dr.async_get(hass)
         if (
-            device := registry.async_get_device(
-                identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
+            device := registry.async_get_device_by_identifier(
+                (HOMEASSISTANT_DOMAIN, entry.entry_id), entry.entry_id
             )
-        ) is not None and entry.entry_id in device.config_entries:
+        ) is not None:
             registry.async_update_device(
                 device_id=device.id,
                 new_identifiers={(DOMAIN, entry.entry_id)},
             )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -52,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
     """Set up Ping (ICMP) from a config entry."""
     privileged = hass.data[DATA_PRIVILEGED_KEY]
 
@@ -71,14 +67,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool
 
     entry.runtime_data = coordinator
 
+    # Ensure the device exists before forwarding to platforms, so that the
+    # device tracker (which looks up the device on init) is not racing the
+    # binary sensor / sensor platforms that create the device via DeviceInfo.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Ping",
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _can_use_icmp_lib_with_privilege() -> bool | None:

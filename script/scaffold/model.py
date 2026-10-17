@@ -1,14 +1,12 @@
 """Models for scaffolding."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
 
 import attr
 
-from script.util import sort_manifest
+from script.hassfest.manifest_util import sort_manifest
 
 from .const import COMPONENT_DIR, TESTS_DIR
 

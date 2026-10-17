@@ -2,10 +2,12 @@
 
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from aiobotocore.session import AioSession
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,21 +33,31 @@ from .const import (
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     CONF_VALIDATE,
-    DATA_CONFIG,
-    DATA_HASS_CONFIG,
-    DATA_SESSIONS,
+    DATA_AWS,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-AWS_CREDENTIAL_SCHEMA = vol.Schema(
+
+@dataclass
+class AWSData:
+    """Runtime data for the AWS integration."""
+
+    hass_config: ConfigType
+    config: dict[str, Any]
+    sessions: OrderedDict[str, AioSession]
+
+
+AWS_CREDENTIAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Optional(CONF_VALIDATE, default=True): cv.boolean,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
+        probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Optional(CONF_VALIDATE, default=True): cv.boolean,
     }
 )
 
@@ -54,48 +67,49 @@ DEFAULT_CREDENTIAL = [
 
 SUPPORTED_SERVICES = ["lambda", "sns", "sqs", "events"]
 
-NOTIFY_PLATFORM_SCHEMA = vol.Schema(
+NOTIFY_PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_SERVICE): vol.All(
-            cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_SERVICE): probatio.All(
+            cv.string, probatio.Lower, probatio.In(SUPPORTED_SERVICES)
         ),
-        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
-        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
+        probatio.Required(CONF_REGION): probatio.All(cv.string, probatio.Lower),
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
+        probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
+        probatio.Optional(CONF_CONTEXT): probatio.Coerce(dict),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL): vol.All(
-                    cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]
-                ),
-                vol.Optional(CONF_NOTIFY, default=[]): vol.All(
-                    cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
+                probatio.Optional(
+                    CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL
+                ): probatio.All(probatio.EnsureList(), [AWS_CREDENTIAL_SCHEMA]),
+                probatio.Optional(CONF_NOTIFY, default=[]): probatio.All(
+                    probatio.EnsureList(), [NOTIFY_PLATFORM_SCHEMA]
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up AWS component."""
-    hass.data[DATA_HASS_CONFIG] = config
-
+    """Set up AWS integration."""
     if (conf := config.get(DOMAIN)) is None:
         # create a default conf using default profile
         conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
 
-    hass.data[DATA_CONFIG] = conf
-    hass.data[DATA_SESSIONS] = OrderedDict()
+    hass.data[DATA_AWS] = AWSData(
+        hass_config=config, config=conf, sessions=OrderedDict()
+    )
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -106,19 +120,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Load a config entry.
 
     Validate and save sessions per aws credential.
     """
-    config = hass.data[DATA_HASS_CONFIG]
-    conf = hass.data[DATA_CONFIG]
+    data = hass.data[DATA_AWS]
+    conf = data.config
 
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
             # user removed config from configuration.yaml, abort setup
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="config_removed",
+            )
 
         if conf != entry.data:
             # user changed config from configuration.yaml, use conf to setup
@@ -143,21 +160,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 validation = False
             else:
-                hass.data[DATA_SESSIONS][name] = result
+                data.sessions[name] = result
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, Platform.NOTIFY, DOMAIN, notify_config, config
+                hass, Platform.NOTIFY, DOMAIN, notify_config, data.hass_config
             )
         )
 
-    return validation
+    if not validation:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="credential_validation_failed",
+        )
 
 
-async def _validate_aws_credentials(hass, credential):
+async def _validate_aws_credentials(
+    hass: HomeAssistant, credential: dict[str, Any]
+) -> AioSession:
     """Validate AWS credential config."""
     aws_config = credential.copy()
     del aws_config[CONF_NAME]

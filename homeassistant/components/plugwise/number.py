@@ -1,8 +1,7 @@
 """Number platform for Plugwise integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -31,14 +30,14 @@ class PlugwiseNumberEntityDescription(NumberEntityDescription):
 
 NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
-        key="maximum_boiler_temperature",
+        key="boiler_temperature",
         translation_key="maximum_boiler_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     PlugwiseNumberEntityDescription(
-        key="max_dhw_temperature",
+        key="dhw_temperature",
         translation_key="max_dhw_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
@@ -95,7 +94,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
-        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_unique_id = f"{device_id}-{description.translation_key}"
         self.device_id = device_id
         self.entity_description = description
 
@@ -105,11 +104,13 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self._attr_native_step = native_step
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the present setpoint value."""
         return self.device[self.entity_description.key]["setpoint"]
 
     @plugwise_command
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
         await self.coordinator.api.set_number(

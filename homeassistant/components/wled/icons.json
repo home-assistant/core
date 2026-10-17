@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "next_playlist_entry": {
+        "default": "mdi:skip-next"
+      }
+    },
     "light": {
       "main": {
         "default": "mdi:led-strip-variant"
@@ -51,11 +56,29 @@
       }
     },
     "switch": {
+      "audio_reactive": {
+        "default": "mdi:music-note-off",
+        "state": {
+          "on": "mdi:music-note"
+        }
+      },
+      "freeze": {
+        "default": "mdi:timer",
+        "state": {
+          "on": "mdi:eye"
+        }
+      },
       "nightlight": {
         "default": "mdi:weather-night"
       },
       "reverse": {
         "default": "mdi:swap-horizontal-bold"
+      },
+      "segment_freeze": {
+        "default": "mdi:timer",
+        "state": {
+          "on": "mdi:eye"
+        }
       },
       "segment_reverse": {
         "default": "mdi:swap-horizontal-bold"

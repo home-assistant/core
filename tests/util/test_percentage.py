@@ -103,7 +103,7 @@ async def test_percentage_to_ordered_list_item() -> None:
 
 
 async def test_ranged_value_to_percentage_large() -> None:
-    """Test a large range of low and high values convert a single value to a percentage."""
+    """Test large range low/high values convert a value to a percentage."""
     value_range = (1, 255)
 
     assert ranged_value_to_percentage(value_range, 255) == 100
@@ -113,7 +113,7 @@ async def test_ranged_value_to_percentage_large() -> None:
 
 
 async def test_percentage_to_ranged_value_large() -> None:
-    """Test a large range of low and high values convert a percentage to a single value."""
+    """Test large range low/high values convert a percentage to a value."""
     value_range = (1, 255)
 
     assert percentage_to_ranged_value(value_range, 100) == 255
@@ -126,7 +126,7 @@ async def test_percentage_to_ranged_value_large() -> None:
 
 
 async def test_ranged_value_to_percentage_small() -> None:
-    """Test a small range of low and high values convert a single value to a percentage."""
+    """Test small range low/high values convert a value to a percentage."""
     value_range = (1, 6)
 
     assert ranged_value_to_percentage(value_range, 1) == 16
@@ -138,7 +138,7 @@ async def test_ranged_value_to_percentage_small() -> None:
 
 
 async def test_percentage_to_ranged_value_small() -> None:
-    """Test a small range of low and high values convert a percentage to a single value."""
+    """Test small range low/high values convert a percentage to a value."""
     value_range = (1, 6)
 
     assert math.ceil(percentage_to_ranged_value(value_range, 16)) == 1

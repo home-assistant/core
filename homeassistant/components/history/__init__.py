@@ -1,16 +1,16 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from __future__ import annotations
-
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 from typing import cast
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
+from homeassistant.auth.permissions import filter_entity_ids_by_permission
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import frontend
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
@@ -28,18 +28,18 @@ CONF_ORDER = "use_include_order"
 
 _ONE_DAY = timedelta(days=1)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.deprecated(CONF_INCLUDE),
             cv.deprecated(CONF_EXCLUDE),
             cv.deprecated(CONF_ORDER),
             INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+                {probatio.Optional(CONF_ORDER, default=False): cv.boolean}
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -82,6 +82,12 @@ class HistoryPeriodView(HomeAssistantView):
                 return self.json_message(
                     "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
                 )
+
+        entity_ids = filter_entity_ids_by_permission(
+            request[KEY_HASS_USER], entity_ids, POLICY_READ
+        )
+        if not entity_ids:
+            return self.json([])
 
         now = dt_util.utcnow()
         if datetime_:

@@ -39,7 +39,7 @@
 # name: test_entities[button.test_snoo_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Snoo Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Snoo Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_snoo_start',

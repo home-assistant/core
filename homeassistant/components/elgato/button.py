@@ -1,10 +1,8 @@
 """Support for Elgato button."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from elgato import Elgato
 
@@ -19,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import elgato_exception_handler
+from .helpers import elgato_device_action
 
 PARALLEL_UPDATES = 1
 
@@ -80,7 +78,8 @@ class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
             f"{coordinator.data.info.serial_number}_{description.key}"
         )
 
-    @elgato_exception_handler
+    @elgato_device_action
+    @override
     async def async_press(self) -> None:
         """Trigger button press on the Elgato device."""
         await self.entity_description.press_fn(self.coordinator.client)

@@ -1,7 +1,5 @@
 """Validate dependencies."""
 
-from __future__ import annotations
-
 import ast
 from collections import deque
 import multiprocessing
@@ -10,8 +8,11 @@ from pathlib import Path
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
-from . import ast_parse_module
 from .model import Config, Integration
+
+# Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
+# eager component pre-imports) into hassfest. Kept in sync via test_dependencies.
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 
 class ImportCollector(ast.NodeVisitor):
@@ -33,12 +34,21 @@ class ImportCollector(ast.NodeVisitor):
 
             self._cur_fil_dir = fil.relative_to(self.integration.path)
             self.referenced[self._cur_fil_dir] = set()
-            try:
-                self.visit(ast_parse_module(fil))
-            except SyntaxError as e:
-                e.add_note(f"File: {fil}")
-                raise
+            source = fil.read_text()
+            # Every reference contains this text, so skip parsing files without it
+            if "homeassistant.components" in source:
+                try:
+                    self.visit(ast.parse(source))
+                except SyntaxError as e:
+                    e.add_note(f"File: {fil}")
+                    raise
             self._cur_fil_dir = None
+
+    def generic_visit(self, node: ast.AST) -> None:
+        """Visit child statements only, imports never appear in expressions."""
+        for field in ("body", "orelse", "finalbody", "handlers", "cases"):
+            for child in getattr(node, field, ()):
+                self.visit(child)
 
     def _add_reference(self, reference_domain: str) -> None:
         """Add a reference."""
@@ -68,7 +78,8 @@ class ImportCollector(ast.NodeVisitor):
             return
 
         if node.module.startswith("homeassistant.components."):
-            # from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+            # from homeassistant.components.alexa.smart_home
+            #   import EVENT_ALEXA_SMART_HOME
             # from homeassistant.components.logbook import bla
             self._add_reference(node.module.split(".")[2])
 
@@ -86,6 +97,7 @@ class ImportCollector(ast.NodeVisitor):
 
 
 ALLOWED_USED_COMPONENTS = {
+    *CORE_INTEGRATIONS,
     *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
@@ -95,7 +107,6 @@ ALLOWED_USED_COMPONENTS = {
     "device_automation",
     "frontend",
     "group",
-    "homeassistant",
     "input_boolean",
     "input_button",
     "input_datetime",
@@ -106,7 +117,6 @@ ALLOWED_USED_COMPONENTS = {
     "media_source",
     "onboarding",
     "panel_custom",
-    "persistent_notification",
     "person",
     "script",
     "shopping_list",
@@ -278,7 +288,9 @@ def _check_circular_deps(
         if domain == start_domain:
             integrations[start_domain].add_error(
                 "dependencies",
-                f"Found a circular dependency with {integration.domain} ({', '.join(checking)})",
+                f"Found a circular dependency with"
+                f" {integration.domain}"
+                f" ({', '.join(checking)})",
             )
             break
 
@@ -290,7 +302,10 @@ def _check_circular_deps(
             if domain == start_domain:
                 integrations[start_domain].add_error(
                     "dependencies",
-                    f"Found a circular dependency with after dependencies of {integration.domain} ({', '.join(checking)})",
+                    f"Found a circular dependency"
+                    " with after dependencies of"
+                    f" {integration.domain}"
+                    f" ({', '.join(checking)})",
                 )
                 break
 
@@ -330,6 +345,13 @@ def _validate_dependencies(
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
+                )
+
+            if dep in CORE_INTEGRATIONS:
+                integration.add_error(
+                    "dependencies",
+                    f"Dependency {dep} is a core integration and is "
+                    "unconditionally loaded",
                 )
 
 

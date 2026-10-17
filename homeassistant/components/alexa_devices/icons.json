@@ -1,8 +1,51 @@
 {
   "entity": {
+    "event": {
+      "voice_event": {
+        "default": "mdi:chat-processing"
+      }
+    },
+    "select": {
+      "dropin": {
+        "default": "mdi:account-multiple-plus",
+        "state": {
+          "all": "mdi:account-multiple-plus",
+          "home": "mdi:home-plus",
+          "off": "mdi:phone-off"
+        }
+      }
+    },
     "sensor": {
       "voc_index": {
         "default": "mdi:molecule"
+      }
+    },
+    "switch": {
+      "announcements": {
+        "default": "mdi:microphone-message",
+        "state": {
+          "off": "mdi:microphone-message-off"
+        }
+      },
+      "communications": {
+        "default": "mdi:message-bulleted",
+        "state": {
+          "off": "mdi:message-bulleted-off"
+        }
+      },
+      "do_not_disturb": {
+        "default": "mdi:bell",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      }
+    },
+    "todo": {
+      "shop": {
+        "default": "mdi:cart"
+      },
+      "todo": {
+        "default": "mdi:checkbox-marked-circle-auto-outline"
       }
     }
   },

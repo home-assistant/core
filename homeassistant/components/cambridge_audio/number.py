@@ -2,12 +2,12 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiostreammagic import StreamMagicClient
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,8 +22,9 @@ class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
     """Describes Cambridge Audio number entity."""
 
     exists_fn: Callable[[StreamMagicClient], bool] = lambda _: True
-    value_fn: Callable[[StreamMagicClient], int]
+    value_fn: Callable[[StreamMagicClient], int | None]
     set_value_fn: Callable[[StreamMagicClient, int], Awaitable[None]]
+    available_fn: Callable[[StreamMagicClient], bool] = lambda _: True
 
 
 def room_correction_intensity(client: StreamMagicClient) -> int:
@@ -44,6 +45,18 @@ CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
         exists_fn=lambda client: client.audio.tilt_eq is not None,
         value_fn=room_correction_intensity,
         set_value_fn=lambda client, value: client.set_room_correction_intensity(value),
+    ),
+    CambridgeAudioNumberEntityDescription(
+        key="volume_limit",
+        translation_key="volume_limit",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1,
+        native_max_value=100,
+        native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
+        available_fn=lambda client: client.state.pre_amp_mode,
+        value_fn=lambda client: client.audio.volume_limit_percent,
+        set_value_fn=lambda client, value: client.set_volume_limit(value),
     ),
 )
 
@@ -78,11 +91,19 @@ class CambridgeAudioNumber(CambridgeAudioEntity, NumberEntity):
         self._attr_unique_id = f"{client.info.unit_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.client)
 
     @command
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.set_value_fn(self.client, int(value))
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.entity_description.available_fn(self.client)

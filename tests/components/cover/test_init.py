@@ -1,9 +1,20 @@
 """The tests for Cover."""
 
+import pytest
+
 from homeassistant.components import cover
-from homeassistant.components.cover import CoverState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TOGGLE
+from homeassistant.components.cover import ATTR_SPEED, CoverState
+from homeassistant.components.cover.const import ATTR_POSITION
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_TOGGLE,
+)
 from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +41,7 @@ async def test_services(
     # ent4 = cover with all tilt functions but no position
     # ent5 = cover with all functions
     # ent6 = cover with only open/close, but also reports opening/closing
-    ent1, ent2, ent3, ent4, ent5, ent6 = mock_cover_entities
+    ent1, ent2, ent3, ent4, ent5, ent6, _ = mock_cover_entities
 
     # Test init all covers should be open
     assert is_open(hass, ent1)
@@ -48,7 +59,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent5)
     await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities should be either closed or closing, depending on if they report transitional states
+    # entities should be either closed or closing,
+    # depending on if they report transitional states
     assert is_closed(hass, ent1)
     assert is_closing(hass, ent2, 50)
     assert is_closed(hass, ent3)
@@ -66,7 +78,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent5)
     await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and cover position
+    # entities should be in correct state depending on
+    # the SUPPORT_STOP feature and cover position
     assert is_open(hass, ent1)
     assert is_closed(hass, ent2, 0)
     assert is_open(hass, ent3)
@@ -82,7 +95,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent5)
     await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and cover position
+    # entities should be in correct state depending on
+    # the SUPPORT_STOP feature and cover position
     assert is_closed(hass, ent1)
     assert is_opening(hass, ent2, 0, closed=True)
     assert is_closed(hass, ent3)
@@ -188,3 +202,137 @@ def is_closing(hass: HomeAssistant, ent: Entity, position: int | None = None) ->
         expected_position=position,
         expected_is_closed=False,
     )
+
+
+async def test_services_with_speed(
+    hass: HomeAssistant,
+    mock_cover_entities: list[MockCover],
+) -> None:
+    """Test speed validation in cover services."""
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
+
+    assert await async_setup_component(
+        hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    # ent1 = cover without tilt and position and no speed support
+    # ent2 = cover with position but no speed support
+    # ent3 .. ent6 not needed in this test
+    # speed_cover = cover with speed support
+    ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
+
+    state = hass.states.get(speed_cover.entity_id)
+    assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
+
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "fast"},
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {"speed": "fast"}
+    assert is_opening(hass, speed_cover, 50)
+
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "slow"},
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {"speed": "slow"}
+    assert is_closing(hass, speed_cover, 50)
+
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {
+            ATTR_ENTITY_ID: speed_cover.entity_id,
+            ATTR_POSITION: 75,
+            ATTR_SPEED: "default",
+        },
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
+
+    speed_cover.last_kwargs = None
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            cover.DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+            blocking=True,
+        )
+    assert speed_cover.last_kwargs is None
+    assert exc.value.translation_key == "not_valid_speed"
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            cover.DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+            blocking=True,
+        )
+    assert speed_cover.last_kwargs is None
+    assert exc.value.translation_key == "not_valid_speed"
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            cover.DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {
+                ATTR_ENTITY_ID: speed_cover.entity_id,
+                ATTR_POSITION: 50,
+                ATTR_SPEED: "invalid",
+            },
+            blocking=True,
+        )
+    assert speed_cover.last_kwargs is None
+    assert exc.value.translation_key == "not_valid_speed"
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ent1.entity_id, ATTR_SPEED: "ignore"},
+        blocking=True,
+    )
+    assert is_open(hass, ent1)
+    assert ent1.last_kwargs == {}
+
+    ent1.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: ent1.entity_id, ATTR_SPEED: "ignore"},
+        blocking=True,
+    )
+    assert is_closed(hass, ent1)
+    assert ent1.last_kwargs == {}
+
+    ent2.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ent2.entity_id, ATTR_POSITION: 49, ATTR_SPEED: "ignore"},
+        blocking=True,
+    )
+    assert ent2.last_kwargs == {"position": 49}
+
+
+async def test_deprecated_is_closed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated is_closed helper."""
+    hass.states.async_set("cover.test", CoverState.CLOSED)
+    assert cover.is_closed(hass, "cover.test") is True
+
+    hass.states.async_set("cover.test", CoverState.OPEN)
+    assert cover.is_closed(hass, "cover.test") is False
+
+    assert (
+        "The deprecated function is_closed was called. It will be removed in HA Core "
+        "2027.10. Use hass.states.is_state(entity_id, 'closed') instead"
+    ) in caplog.text

@@ -2,14 +2,13 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
-    DOMAIN,
-)
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.components.aurora_abb_powerone.const import ATTR_FIRMWARE, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from .test_sensor import _simulated_returns
 
 from tests.common import MockConfigEntry
 
@@ -19,6 +18,15 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     with (
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure",
+            side_effect=_simulated_returns,
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=_simulated_returns,
+        ),
         patch(
             "aurorapy.client.AuroraSerialClient.serial_number",
             return_value="9876543",
@@ -49,5 +57,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         mock_entry.add_to_hass(hass)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
+        assert mock_entry.state is ConfigEntryState.LOADED
+
         assert await hass.config_entries.async_unload(mock_entry.entry_id)
         await hass.async_block_till_done()
+        assert mock_entry.state is ConfigEntryState.NOT_LOADED

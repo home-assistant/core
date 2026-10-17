@@ -3,8 +3,8 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.sql.util import (
@@ -55,7 +55,8 @@ async def test_resolve_db_url_when_configured(hass: HomeAssistant) -> None:
             "SQL query must be of type SELECT",
         ),
         (
-            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+            "WITH test AS (SELECT state FROM states)"
+            " UPDATE states SET states.state = test.state;",
             "SQL query must be of type SELECT",
         ),
         (
@@ -69,8 +70,8 @@ async def test_invalid_sql_queries(
     sql_query: str,
     expected_error_message: str,
 ) -> None:
-    """Test that various invalid or disallowed SQL queries raise the correct exception."""
-    with pytest.raises(vol.Invalid, match=expected_error_message):
+    """Test that invalid SQL queries raise the correct exception."""
+    with pytest.raises(probatio.Invalid, match=expected_error_message):
         validate_sql_select(Template(sql_query, hass))
 
 

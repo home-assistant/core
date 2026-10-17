@@ -1,11 +1,9 @@
 """Demo platform that has two fake alarm control panels."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.manual.alarm_control_panel import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.manual.alarm_control_panel import (  # pylint: disable=home-assistant-component-root-import
     ManualAlarm,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -32,36 +30,36 @@ async def async_setup_entry(
                 False,
                 {
                     AlarmControlPanelState.ARMED_AWAY: {
-                        CONF_ARMING_TIME: datetime.timedelta(seconds=5),
-                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
-                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                        CONF_ARMING_TIME: dt.timedelta(seconds=5),
+                        CONF_DELAY_TIME: dt.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: dt.timedelta(seconds=10),
                     },
                     AlarmControlPanelState.ARMED_HOME: {
-                        CONF_ARMING_TIME: datetime.timedelta(seconds=5),
-                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
-                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                        CONF_ARMING_TIME: dt.timedelta(seconds=5),
+                        CONF_DELAY_TIME: dt.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: dt.timedelta(seconds=10),
                     },
                     AlarmControlPanelState.ARMED_NIGHT: {
-                        CONF_ARMING_TIME: datetime.timedelta(seconds=5),
-                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
-                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                        CONF_ARMING_TIME: dt.timedelta(seconds=5),
+                        CONF_DELAY_TIME: dt.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: dt.timedelta(seconds=10),
                     },
                     AlarmControlPanelState.ARMED_VACATION: {
-                        CONF_ARMING_TIME: datetime.timedelta(seconds=5),
-                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
-                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                        CONF_ARMING_TIME: dt.timedelta(seconds=5),
+                        CONF_DELAY_TIME: dt.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: dt.timedelta(seconds=10),
                     },
                     AlarmControlPanelState.DISARMED: {
-                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
-                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                        CONF_DELAY_TIME: dt.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: dt.timedelta(seconds=10),
                     },
                     AlarmControlPanelState.ARMED_CUSTOM_BYPASS: {
-                        CONF_ARMING_TIME: datetime.timedelta(seconds=5),
-                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
-                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                        CONF_ARMING_TIME: dt.timedelta(seconds=5),
+                        CONF_DELAY_TIME: dt.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: dt.timedelta(seconds=10),
                     },
                     AlarmControlPanelState.TRIGGERED: {
-                        CONF_ARMING_TIME: datetime.timedelta(seconds=5)
+                        CONF_ARMING_TIME: dt.timedelta(seconds=5)
                     },
                 },
             )

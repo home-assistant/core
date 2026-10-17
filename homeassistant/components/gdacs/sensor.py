@@ -1,11 +1,9 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_georss_client.status_update import StatusUpdate
 
@@ -77,6 +75,7 @@ class GdacsSensor(SensorEntity):
             manufacturer="GDACS",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
@@ -88,6 +87,7 @@ class GdacsSensor(SensorEntity):
         # First update is manual because of how the feed entity manager is updated.
         await self.async_update()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         if self._remove_signal_status:
@@ -126,11 +126,13 @@ class GdacsSensor(SensorEntity):
         self._removed = status_info.removed
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._total
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

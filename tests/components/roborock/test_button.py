@@ -4,14 +4,18 @@ from unittest.mock import Mock
 
 import pytest
 from roborock import RoborockException
+from roborock.data.v1 import RoborockDockTypeCode
+from roborock.device_features import RoborockDockFeatures
+from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockTimeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FakeDevice
 
@@ -41,6 +45,45 @@ async def test_buttons(
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
+@pytest.fixture
+def non_wash_n_fill_dock(fake_vacuum: FakeDevice) -> None:
+    """Disable wash towel mode and cleaning brush to indicate this device has no wash functions."""
+    fake_vacuum.v1_properties.wash_towel_mode = None
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.o1_dock)
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    non_wash_n_fill_dock: None,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Dock consumable buttons must not be created when dock type is not wash-n-fill."""
+    for entity_id in (
+        "button.roborock_s7_maxv_dock_reset_strainer_consumable",
+        "button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable",
+    ):
+        assert hass.states.get(entity_id) is None
+    # Non-dock consumable buttons must still exist.
+    for entity_id in (
+        "button.roborock_s7_maxv_reset_sensor_consumable",
+        "button.roborock_s7_maxv_reset_air_filter_consumable",
+        "button.roborock_s7_maxv_reset_side_brush_consumable",
+        "button.roborock_s7_maxv_reset_main_brush_consumable",
+    ):
+        assert hass.states.get(entity_id) is not None
+    # No phantom dock device should be registered for the non-wash-n-fill vacuum.
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "abc123_dock"), setup_entry.entry_id
+        )
+        is None
+    )
+
+
 @pytest.fixture(name="consumeables_trait", autouse=True)
 def consumeables_trait_fixture(fake_vacuum: FakeDevice) -> Mock:
     """Get the fake vacuum device command trait for asserting that commands happened."""
@@ -49,12 +92,28 @@ def consumeables_trait_fixture(fake_vacuum: FakeDevice) -> Mock:
 
 
 @pytest.mark.parametrize(
-    ("entity_id"),
+    ("entity_id", "expected_attribute"),
     [
-        ("button.roborock_s7_maxv_reset_sensor_consumable"),
-        ("button.roborock_s7_maxv_reset_air_filter_consumable"),
-        ("button.roborock_s7_maxv_reset_side_brush_consumable"),
-        ("button.roborock_s7_maxv_reset_main_brush_consumable"),
+        (
+            "button.roborock_s7_maxv_reset_sensor_consumable",
+            ConsumableAttribute.SENSOR_DIRTY_TIME,
+        ),
+        (
+            "button.roborock_s7_maxv_reset_air_filter_consumable",
+            ConsumableAttribute.FILTER_WORK_TIME,
+        ),
+        (
+            "button.roborock_s7_maxv_reset_side_brush_consumable",
+            ConsumableAttribute.SIDE_BRUSH_WORK_TIME,
+        ),
+        (
+            "button.roborock_s7_maxv_reset_main_brush_consumable",
+            ConsumableAttribute.MAIN_BRUSH_WORK_TIME,
+        ),
+        (
+            "button.roborock_s7_maxv_dock_reset_strainer_consumable",
+            ConsumableAttribute.STRAINER_WORK_TIME,
+        ),
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
@@ -64,6 +123,7 @@ async def test_update_success(
     bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
+    expected_attribute: ConsumableAttribute,
     consumeables_trait: Mock,
 ) -> None:
     """Test pressing the button entities."""
@@ -75,7 +135,7 @@ async def test_update_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert consumeables_trait.reset_consumable.assert_called_once
+    consumeables_trait.reset_consumable.assert_called_once_with(expected_attribute)
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
@@ -323,4 +383,79 @@ async def test_press_q10_empty_dustbin_button_failure(
         )
 
     fake_q10_vacuum.b01_q10_properties.vacuum.empty_dustbin.assert_called_once()
+
+
+async def test_dock_cleaning_brush_button_not_created_and_cleaned_up(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test cleaning brush button is not created and removed if it was in the registry."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.pearl_dock)
+    )
+    entity_registry.async_get_or_create(
+        domain=Platform.BUTTON,
+        platform=DOMAIN,
+        unique_id="reset_dock_cleaning_brush_consumable_abc123",
+        config_entry=mock_roborock_entry,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "reset_dock_cleaning_brush_consumable_abc123"
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Cleaning brush button must be removed from the entity registry
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "reset_dock_cleaning_brush_consumable_abc123"
+        )
+        is None
+    )
+    assert (
+        hass.states.get("button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable")
+        is None
+    )
+    # Washable dock strainer button must still exist
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "reset_dock_strainer_consumable_abc123"
+        )
+        is not None
+    )
+
+
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dock_cleaning_brush_button_press(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    consumeables_trait: Mock,
+) -> None:
+    """Test pressing the cleaning brush button on a dock that supports it."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.o3_plus_dock)
+    )
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable"
+    assert hass.states.get(entity_id).state == "unknown"
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    consumeables_trait.reset_consumable.assert_called_once_with(
+        ConsumableAttribute.CLEANING_BRUSH_WORK_TIME
+    )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"

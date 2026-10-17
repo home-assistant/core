@@ -1,8 +1,9 @@
 """Intents for the vacuum integration."""
 
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
@@ -63,15 +64,17 @@ class CleanAreaIntentHandler(intent.IntentHandler):
     description = "Tells a vacuum to clean a specific area"
 
     @property
+    @override
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         return {
-            vol.Required("area"): cv.string,
-            vol.Optional("name"): cv.string,
-            vol.Optional("preferred_area_id"): cv.string,
-            vol.Optional("preferred_floor_id"): cv.string,
+            probatio.Required("area"): cv.string,
+            probatio.Optional("name"): cv.string,
+            probatio.Optional("preferred_area_id"): cv.string,
+            probatio.Optional("preferred_floor_id"): cv.string,
         }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

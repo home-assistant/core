@@ -2,17 +2,19 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
+import yaml
 
+from homeassistant import config
 from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import async_capture_events, async_mock_service, patch_yaml_files
 
 
 async def test_reload_config_service(hass: HomeAssistant) -> None:
@@ -46,9 +48,41 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
     assert hass.states.get("scene.bye") is not None
 
 
+@pytest.mark.parametrize(
+    ("files_patch", "expected_error"),
+    [
+        (
+            {config.YAML_CONFIG_FILE: yaml.dump(["invalid", "config"])},
+            "YAML file .*configuration.yaml does not contain a dict",
+        ),
+        ({"not_existing": "blabla"}, "File not found: .*configuration.yaml"),
+    ],
+)
+async def test_reload_config_service_failed(
+    hass: HomeAssistant, files_patch: dict[str, str], expected_error: str
+) -> None:
+    """Test error handling when the reload config service fails."""
+    assert await async_setup_component(hass, "scene", {})
+    await hass.async_block_till_done()
+
+    with (
+        patch_yaml_files(files_patch, True),
+        pytest.raises(
+            HomeAssistantError,
+            match=(
+                "Failed to reload the Home Assistant scene platform configuration - "
+                f"{expected_error}"
+            ),
+        ),
+    ):
+        await hass.services.async_call("scene", "reload", blocking=True)
+
+
 async def test_apply_service(hass: HomeAssistant) -> None:
     """Test the apply service."""
     assert await async_setup_component(hass, "scene", {})
+    # demo needs the homeassistant component, set up by scene in the background
+    await hass.async_block_till_done()
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 
@@ -290,7 +324,7 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "scene", {"scene": {}})
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.MultipleInvalid) as ex:
+    with pytest.raises(probatio.MultipleInvalid) as ex:
         await hass.services.async_call(
             "scene",
             "create",

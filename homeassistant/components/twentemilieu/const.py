@@ -22,3 +22,11 @@ WASTE_TYPE_TO_DESCRIPTION = {
     WasteType.PAPER: "Paper waste pickup",
     WasteType.TREE: "Christmas tree pickup",
 }
+
+SENSOR_UNIQUE_ID_MIGRATION = {
+    "tree": "tree",
+    "Non-recyclable": "non_recyclable",
+    "Organic": "organic",
+    "Paper": "paper",
+    "Plastic": "packages",
+}

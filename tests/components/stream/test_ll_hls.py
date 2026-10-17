@@ -128,7 +128,7 @@ async def test_ll_hls_stream(
     """
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -261,7 +261,7 @@ async def test_ll_hls_playlist_view(
     """Test rendering the hls playlist with 1 and 2 output segments."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -332,7 +332,7 @@ async def test_ll_hls_msn(
     """Test that requests using _HLS_msn get held and returned or rejected."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -402,7 +402,7 @@ async def test_ll_hls_playlist_bad_msn_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -458,14 +458,16 @@ async def test_ll_hls_playlist_bad_msn_part(
     # Current sequence number is 1 and part number is num_completed_parts-1
     # The following two tests should fail immediately:
     # - request with a _HLS_msn of 4
-    # - request with a _HLS_msn of 1 and a _HLS_part of num_completed_parts-1+advance_part_limit
+    # - request with a _HLS_msn of 1 and a _HLS_part of
+    #   num_completed_parts-1+advance_part_limit
     assert (
         await hls_client.get("/playlist.m3u8?_HLS_msn=4")
     ).status == HTTPStatus.BAD_REQUEST
+    part_limit = hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit
     assert (
         await hls_client.get(
             "/playlist.m3u8?_HLS_msn=1&_HLS_part="
-            f"{num_completed_parts - 1 + hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit}"
+            f"{num_completed_parts - 1 + part_limit}"
         )
     ).status == HTTPStatus.BAD_REQUEST
     stream_worker_sync.resume()
@@ -478,7 +480,7 @@ async def test_ll_hls_playlist_rollover_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -559,7 +561,7 @@ async def test_ll_hls_playlist_msn_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -627,7 +629,7 @@ async def test_get_part_segments(
     """Test requests for part segments and hinted parts."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmlight.const import AMBI_EFFECT_LIST, AmbiEffect, Pages
 from pysmlight.models import AmbilightPayload
@@ -17,8 +17,10 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -76,6 +78,7 @@ class SmLightEntity(SmEntity, LightEntity):
         self._attr_effect_list = description.effect_list
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if ambi := self.coordinator.data.sensors.ambilight:
@@ -85,6 +88,7 @@ class SmLightEntity(SmEntity, LightEntity):
             self._attr_rgb_color = self._parse_rgb_color(ambi.ultLedColor)
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register SSE page callback when entity is added to hass."""
         await super().async_added_to_hass()
@@ -117,6 +121,7 @@ class SmLightEntity(SmEntity, LightEntity):
             pass
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Format kwargs into the specific schema for SLZB-OS and set."""
         payload = AmbilightPayload()
@@ -125,9 +130,13 @@ class SmLightEntity(SmEntity, LightEntity):
             effect_name: str = kwargs[ATTR_EFFECT]
             try:
                 idx = self.entity_description.effect_list.index(effect_name)
-            except ValueError:
-                _LOGGER.warning("Unknown effect: %s", effect_name)
-                return
+            except ValueError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_effect",
+                    translation_placeholders={"effect": effect_name},
+                ) from err
+
             payload.ultLedMode = AmbiEffect(idx)
         elif not self.is_on:
             payload.ultLedMode = AmbiEffect.WSULT_SOLID
@@ -145,6 +154,7 @@ class SmLightEntity(SmEntity, LightEntity):
             self.coordinator.client.actions.ambilight, payload
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Ambilight off using effect OFF."""
         await self.coordinator.async_execute_command(

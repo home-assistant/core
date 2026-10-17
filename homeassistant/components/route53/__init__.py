@@ -1,14 +1,12 @@
 """Update the IP addresses of your Route53 DNS records."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 
 import boto3
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -27,20 +25,22 @@ DOMAIN = "route53"
 INTERVAL = timedelta(minutes=60)
 DEFAULT_TTL = 300
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_RECORDS): vol.All(cv.ensure_list, [cv.string]),
-                vol.Required(CONF_SECRET_ACCESS_KEY): cv.string,
-                vol.Required(CONF_ZONE): cv.string,
-                vol.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
+                probatio.Required(CONF_ACCESS_KEY_ID): cv.string,
+                probatio.Required(CONF_DOMAIN): cv.string,
+                probatio.Required(CONF_RECORDS): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
+                probatio.Required(probatio.Secret(CONF_SECRET_ACCESS_KEY)): cv.string,
+                probatio.Required(CONF_ZONE): cv.string,
+                probatio.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -67,6 +67,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     track_time_interval(hass, update_records_interval, INTERVAL)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "update_records", update_records_service)
     return True
 

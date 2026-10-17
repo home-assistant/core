@@ -144,18 +144,18 @@ async def test_cover_mqtt_state_by_calling_service(
 
     await call_service(hass, "cover.test_shutter_0", SERVICE_OPEN_COVER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/shutter/0/set", "OPEN", 0, False
+        "pglab/test/shutter/0/set", "OPEN", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await call_service(hass, "cover.test_shutter_0", SERVICE_STOP_COVER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/shutter/0/set", "STOP", 0, False
+        "pglab/test/shutter/0/set", "STOP", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await call_service(hass, "cover.test_shutter_0", SERVICE_CLOSE_COVER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/shutter/0/set", "CLOSE", 0, False
+        "pglab/test/shutter/0/set", "CLOSE", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()

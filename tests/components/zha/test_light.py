@@ -199,7 +199,7 @@ async def test_on_with_off_color(
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test turning on the light and sending color commands before on/level commands for supporting lights."""
+    """Test color commands sent before on/level for supporting lights."""
 
     await setup_zha()
     gateway = get_zha_gateway(hass)
@@ -242,7 +242,8 @@ async def test_on_with_off_color(
     dev1_cluster_on_off = zigpy_device.endpoints[1].on_off
     dev1_cluster_level = zigpy_device.endpoints[1].level
 
-    # Execute_if_off will override the "enhanced turn on from an off-state" config option that's enabled here
+    # Execute_if_off will override the "enhanced turn on from an
+    # off-state" config option that's enabled here
     dev1_cluster_color.PLUGGED_ATTR_READS = {
         "options": lighting.Color.Options.Execute_if_off
     }
@@ -292,14 +293,17 @@ async def test_on_with_off_color(
     assert light1_state.attributes["color_temp_kelvin"] == 4255
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
-    # now let's turn off the Execute_if_off option and see if the old behavior is restored
+    # now let's turn off Execute_if_off and see if old behavior
+    # is restored
     dev1_cluster_color.PLUGGED_ATTR_READS = {"options": 0}
     update_attribute_cache(dev1_cluster_color)
 
-    # turn off via UI, so the old "enhanced turn on from an off-state" behavior can do something
+    # turn off via UI, so the old "enhanced turn on from an
+    # off-state" behavior can do something
     await async_test_off_from_hass(hass, dev1_cluster_on_off, device_1_entity_id)
 
-    # turn on via UI (with a different color temp, so the "enhanced turn on" does something)
+    # turn on via UI (with a different color temp, so the
+    # "enhanced turn on" does something)
     dev1_cluster_on_off.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
     dev1_cluster_color.request.reset_mock()

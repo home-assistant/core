@@ -1,9 +1,8 @@
 """Support for Steamist sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiosteamist import SteamistStatus
 
@@ -13,13 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SteamistDataUpdateCoordinator
+from .coordinator import SteamistConfigEntry, SteamistDataUpdateCoordinator
 from .entity import SteamistEntity
 
 _KEY_MINUTES_REMAIN = "minutes_remain"
@@ -57,13 +54,11 @@ SENSORS: tuple[SteamistSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SteamistConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator: SteamistDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     async_add_entities(
         [
             SteamistSensorEntity(coordinator, config_entry, description)
@@ -80,7 +75,7 @@ class SteamistSensorEntity(SteamistEntity, SensorEntity):
     def __init__(
         self,
         coordinator: SteamistDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: SteamistConfigEntry,
         description: SteamistSensorEntityDescription,
     ) -> None:
         """Initialize the sensor entity."""
@@ -91,6 +86,7 @@ class SteamistSensorEntity(SteamistEntity, SensorEntity):
             ]
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._status)

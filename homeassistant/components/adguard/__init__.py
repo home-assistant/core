@@ -1,152 +1,148 @@
 """Support for AdGuard Home."""
 
-from __future__ import annotations
+from adguardhome import AdGuardHome
+from yarl import URL
 
-from dataclasses import dataclass
-
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError
-import voluptuous as vol
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_FORCE,
-    DOMAIN,
-    SERVICE_ADD_URL,
-    SERVICE_DISABLE_URL,
-    SERVICE_ENABLE_URL,
-    SERVICE_REFRESH,
-    SERVICE_REMOVE_URL,
+from .const import DOMAIN, LOGGER
+from .coordinator import (
+    AdGuardConfigEntry,
+    AdGuardData,
+    AdGuardHomeStateCoordinator,
+    AdGuardHomeStatisticsCoordinator,
+    AdGuardHomeUpdateCoordinator,
 )
-
-SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): vol.Any(cv.url, cv.path)})
-SERVICE_ADD_URL_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_URL): vol.Any(cv.url, cv.path),
-    }
-)
-SERVICE_REFRESH_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FORCE, default=False): cv.boolean}
-)
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
-type AdGuardConfigEntry = ConfigEntry[AdGuardData]
-
-
-@dataclass
-class AdGuardData:
-    """Adguard data type."""
-
-    client: AdGuardHome
-    version: str
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
 
-    def _get_adguard_instances(hass: HomeAssistant) -> list[AdGuardHome]:
-        """Get the AdGuardHome instances."""
-        entries: list[AdGuardConfigEntry] = hass.config_entries.async_loaded_entries(
-            DOMAIN
-        )
-        if not entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
-            )
-        return [entry.runtime_data.client for entry in entries]
-
-    async def add_url(call: ServiceCall) -> None:
-        """Service call to add a new filter subscription to AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.add_url(
-                allowlist=False, name=call.data[CONF_NAME], url=call.data[CONF_URL]
-            )
-
-    async def remove_url(call: ServiceCall) -> None:
-        """Service call to remove a filter subscription from AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def enable_url(call: ServiceCall) -> None:
-        """Service call to enable a filter subscription in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.enable_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def disable_url(call: ServiceCall) -> None:
-        """Service call to disable a filter subscription in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.disable_url(
-                allowlist=False, url=call.data[CONF_URL]
-            )
-
-    async def refresh(call: ServiceCall) -> None:
-        """Service call to refresh the filter subscriptions in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.refresh(
-                allowlist=False, force=call.data[CONF_FORCE]
-            )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_URL, enable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_URL, disable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REFRESH, refresh, schema=SERVICE_REFRESH_SCHEMA
-    )
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
+@callback
+def _async_migrate_device_identifiers(
+    hass: HomeAssistant, entry: AdGuardConfigEntry
+) -> None:
+    """Migrate devices identified by host, port and base path to the entry ID.
+
+    Those identifiers had four parts, while the device registry only supports two.
+    """
+    device_registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, entry.entry_id)}
+    migrated = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.identifiers == identifiers:
+            continue
+
+        # Downgrading recreates the old device, leaving a duplicate behind. Its
+        # entities move back to the migrated device when the platforms set up.
+        if migrated is not None:
+            device_registry.async_remove_device(device.id)
+            continue
+
+        device_registry.async_update_device(device.id, new_identifiers=identifiers)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
+    """Migrate an AdGuard Home config entry to the current version."""
+    if entry.minor_version < 2:
+        # Entities were identified by host and port, which change when
+        # AdGuard Home moves. They are identified by the entry ID now.
+        legacy_prefix = f"{DOMAIN}_{entry.data[CONF_HOST]}_{entry.data[CONF_PORT]}_"
+        entity_registry = er.async_get(hass)
+
+        @callback
+        def _migrate_unique_id(entity: er.RegistryEntry) -> dict[str, str] | None:
+            """Return the new unique ID of an entity with a legacy one."""
+            if not entity.unique_id.startswith(legacy_prefix):
+                return None
+
+            # Like `sensor_dns_queries`, or just `update` for the update entity.
+            legacy_key = entity.unique_id.removeprefix(legacy_prefix)
+            if legacy_key == Platform.UPDATE:
+                new_unique_id = entry.entry_id
+            else:
+                key = legacy_key.removeprefix(f"{entity.domain}_")
+                new_unique_id = f"{entry.entry_id}_{key}"
+
+            # Downgrading and upgrading again can leave both behind.
+            if entity_registry.async_get_entity_id(
+                entity.domain, DOMAIN, new_unique_id
+            ):
+                LOGGER.debug(
+                    "Not migrating %s, %s is already in use",
+                    entity.entity_id,
+                    new_unique_id,
+                )
+                return None
+
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
     """Set up AdGuard Home from a config entry."""
+    _async_migrate_device_identifiers(hass, entry)
+
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
-        entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
+        URL.build(
+            scheme="https" if entry.data[CONF_SSL] else "http",
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+        ),
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        tls=entry.data[CONF_SSL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         session=session,
     )
 
-    try:
-        version = await adguard.version()
-    except AdGuardHomeConnectionError as exception:
-        raise ConfigEntryNotReady from exception
+    state = AdGuardHomeStateCoordinator(hass, entry, adguard)
+    await state.async_config_entry_first_refresh()
 
-    entry.runtime_data = AdGuardData(adguard, version)
+    statistics = AdGuardHomeStatisticsCoordinator(hass, entry, adguard)
+    await statistics.async_config_entry_first_refresh()
+
+    # Checking for updates needs AdGuard Home to reach the internet, which not
+    # every installation can. That should not keep the rest from working.
+    update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
+    await update.async_refresh()
+
+    entry.runtime_data = AdGuardData(
+        client=adguard, state=state, statistics=statistics, update=update
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
     """Unload AdGuard Home config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

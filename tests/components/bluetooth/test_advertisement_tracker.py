@@ -133,7 +133,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
-async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_change_connectable(
+async def test_adv_interval_longer_than_stack_timeout_adapter_change_connectable(
     hass: HomeAssistant,
 ) -> None:
     """Test device with a long advertisement interval with an adapter change."""
@@ -199,7 +199,11 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_connectable(
     hass: HomeAssistant,
 ) -> None:
-    """Test device with a long advertisement interval that is not connectable not reaching the advertising interval."""
+    """Test device with a long advertisement interval.
+
+    Device is not connectable and not reaching the
+    advertising interval.
+    """
     start_monotonic_time = time.monotonic()
     switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
@@ -249,10 +253,13 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
-async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_change_not_connectable(
+async def test_adv_interval_shorter_than_stack_timeout_change_not_connectable(
     hass: HomeAssistant,
 ) -> None:
-    """Test device with a short advertisement interval with an adapter change that is not connectable."""
+    """Test device with short adv interval, adapter change.
+
+    Device is not connectable.
+    """
     start_monotonic_time = time.monotonic()
     switchbot_device = generate_ble_device("44:44:33:11:23:5C", "wohand")
     switchbot_adv = generate_advertisement_data(
@@ -322,10 +329,13 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
-async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_change_not_connectable(
+async def test_adv_interval_longer_than_stack_timeout_change_not_connectable(
     hass: HomeAssistant,
 ) -> None:
-    """Test device with a long advertisement interval with an adapter change that is not connectable."""
+    """Test device with long adv interval, adapter change.
+
+    Device is not connectable.
+    """
     start_monotonic_time = time.monotonic()
     switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
@@ -426,10 +436,13 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
-async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeout_adapter_change_not_connectable(
+async def test_adv_interval_longer_increasing_than_stack_timeout_not_connectable(
     hass: HomeAssistant,
 ) -> None:
-    """Test device with a increasing advertisement interval with an adapter change that is not connectable."""
+    """Test device with increasing adv interval.
+
+    Adapter change, device is not connectable.
+    """
     start_monotonic_time = time.monotonic()
     switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(

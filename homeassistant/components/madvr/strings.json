@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
     },
     "error": {
@@ -130,6 +129,17 @@
       "temp_mainboard": {
         "name": "Mainboard temperature"
       }
+    }
+  },
+  "exceptions": {
+    "power_off_failed": {
+      "message": "Failed to turn off the device"
+    },
+    "power_on_failed": {
+      "message": "Failed to turn on the device"
+    },
+    "send_command_failed": {
+      "message": "Failed to send the command {command}"
     }
   }
 }

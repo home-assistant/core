@@ -1,13 +1,11 @@
 """Config flow to configure the Meteo-France integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import Place
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -40,12 +38,17 @@ class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_CITY, default=user_input.get(CONF_CITY, "")): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_CITY, default=user_input.get(CONF_CITY, "")
+                    ): str
+                }
             ),
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -92,10 +95,10 @@ class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_show_form(
                     step_id="cities",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Required(CONF_CITY): vol.All(
-                                vol.Coerce(str), vol.In(places_for_form)
+                            probatio.Required(CONF_CITY): probatio.All(
+                                probatio.Coerce(str), probatio.In(places_for_form)
                             )
                         }
                     ),

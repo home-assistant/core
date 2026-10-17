@@ -6,18 +6,17 @@ from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
 from elevenlabs.types import GetVoicesResponse
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
 
 from homeassistant.components.elevenlabs.const import (
-    CONF_MODEL,
     CONF_STT_AUTO_LANGUAGE,
     CONF_STT_MODEL,
     CONF_VOICE,
     DEFAULT_SIMILARITY,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_MODELS, MOCK_VOICES

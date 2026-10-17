@@ -1,19 +1,17 @@
 """Brand validation."""
 
-from __future__ import annotations
-
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from .model import Brand, Config, Integration
 
-BRAND_SCHEMA = vol.Schema(
+BRAND_SCHEMA = probatio.Schema(
     {
-        vol.Required("domain"): str,
-        vol.Required("name"): str,
-        vol.Optional("integrations"): [str],
-        vol.Optional("iot_standards"): [
-            vol.Any("homekit", "matter", "zigbee", "zwave")
+        probatio.Required("domain"): str,
+        probatio.Required("name"): str,
+        probatio.Optional("integrations"): [str],
+        probatio.Optional("iot_standards"): [
+            probatio.Any("homekit", "matter", "zigbee", "zwave")
         ],
     }
 )
@@ -27,7 +25,7 @@ def _validate_brand(
     """Validate brand file."""
     try:
         BRAND_SCHEMA(brand.brand)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         config.add_error(
             "brand",
             f"Invalid brand file {brand.path.name}: {humanize_error(brand.brand, err)}",
@@ -56,7 +54,8 @@ def _validate_brand(
             if sub_integration not in integrations:
                 config.add_error(
                     "brand",
-                    f"{brand.path.name}: References unknown integration {sub_integration}",
+                    f"{brand.path.name}: References unknown"
+                    f" integration {sub_integration}",
                 )
 
     if brand.domain in integrations and (

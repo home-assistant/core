@@ -121,10 +121,10 @@ async def test_reauth_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: type[Exception],
     error: str,
@@ -203,10 +203,10 @@ async def test_reconfigure_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: type[Exception],
     error: str,

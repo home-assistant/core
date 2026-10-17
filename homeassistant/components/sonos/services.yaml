@@ -1,22 +1,20 @@
 snapshot:
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
-    entity_id:
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
     with_group:
       default: true
       selector:
         boolean:
 
 restore:
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
   fields:
-    entity_id:
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
     with_group:
       default: true
       selector:

@@ -1,8 +1,8 @@
 """Support for control of ElkM1 outputs (relays)."""
 
-from __future__ import annotations
-
-from typing import Any
+from datetime import timedelta
+from math import ceil
+from typing import Any, override
 
 from elkm1_lib.const import ThermostatMode, ThermostatSetting
 from elkm1_lib.elements import Element
@@ -12,6 +12,7 @@ from elkm1_lib.thermostats import Thermostat
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
@@ -41,17 +42,24 @@ class ElkOutput(ElkAttachedEntity, SwitchEntity):
     _element: Output
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get the current output status."""
         return self._element.output_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the output."""
         self._element.turn_on(0)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the output."""
         self._element.turn_off()
+
+    async def async_switch_output_turn_on_for(self, duration: timedelta) -> None:
+        """Turn on an output for specified length of time."""
+        self._element.turn_on(ceil(duration.total_seconds()))
 
 
 class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
@@ -66,18 +74,25 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
         self._attr_name = f"{element.name} emergency heat"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get the current emergency heat status."""
-        return self._element.mode == ThermostatMode.EMERGENCY_HEAT
+        return self._element.mode is ThermostatMode.EMERGENCY_HEAT
 
     def _elk_set(self, mode: ThermostatMode) -> None:
         """Set the thermostat mode."""
         self._element.set(ThermostatSetting.MODE, mode)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the output."""
         self._elk_set(ThermostatMode.EMERGENCY_HEAT)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the output."""
         self._elk_set(ThermostatMode.EMERGENCY_HEAT)
+
+    async def async_switch_output_turn_on_for(self, duration: timedelta) -> None:
+        """Turn on an output for specified length of time: not supported for thermostat."""
+        raise HomeAssistantError("supported only on ElkM1 output switch entities")

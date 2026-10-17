@@ -1,13 +1,18 @@
 """Test tts."""
 
-from __future__ import annotations
-
+import asyncio
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
+from wyoming.event import Event
 from wyoming.info import Info
 
-from homeassistant.components.wyoming.data import WyomingService, load_wyoming_info
+from homeassistant.components.wyoming.data import (
+    _INFO_TIMEOUT,
+    WyomingService,
+    load_wyoming_info,
+)
 from homeassistant.core import HomeAssistant
 
 from . import SATELLITE_INFO, STT_INFO, TTS_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
@@ -98,3 +103,47 @@ async def test_satellite_with_wake_word(hass: HomeAssistant) -> None:
         assert service is not None
         assert service.get_name() == satellite_info.satellite.name
         assert not service.platforms
+
+
+class SlowMockAsyncTcpClient(MockAsyncTcpClient):
+    """Mock client that delays its response to simulate a busy satellite."""
+
+    def __init__(self, responses: list[Event | None], delay: float) -> None:
+        """Initialize."""
+        super().__init__(responses)
+        self._delay = delay
+
+    async def read_event(self) -> Event | None:
+        """Receive after a delay."""
+        await asyncio.sleep(self._delay)
+        return await super().read_event()
+
+
+def test_info_timeout_is_relaxed() -> None:
+    """Test the default info timeout tolerates satellites busy on connect.
+
+    Some satellites do not answer the initial Describe immediately (e.g. while
+    playing a startup sound), so the default must be generous enough to avoid
+    spurious setup failures.
+    """
+    assert _INFO_TIMEOUT >= 5
+
+
+@pytest.mark.parametrize(
+    ("timeout", "expect_loaded"),
+    [(0.05, False), (0.5, True)],
+    ids=["too_short", "long_enough"],
+)
+async def test_load_info_timeout_governs_slow_satellite(
+    hass: HomeAssistant, timeout: float, expect_loaded: bool
+) -> None:
+    """Test a slow satellite loads only when the timeout is generous enough."""
+    with patch(
+        "homeassistant.components.wyoming.data.AsyncTcpClient",
+        SlowMockAsyncTcpClient([STT_INFO.event()], delay=0.2),
+    ):
+        info = await load_wyoming_info(
+            "localhost", 1234, retries=0, retry_wait=0, timeout=timeout
+        )
+
+    assert (info is not None) == expect_loaded

@@ -1,9 +1,8 @@
 """Provide an OpenExchangeRates data coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientSession
 from aioopenexchangerates import (
@@ -48,6 +47,7 @@ class OpenexchangeratesCoordinator(DataUpdateCoordinator[Latest]):
         self.base = base
         self.client = Client(api_key, session)
 
+    @override
     async def _async_update_data(self) -> Latest:
         """Update data from Open Exchange Rates."""
         try:

@@ -123,6 +123,20 @@ FIRMWARE_UPDATES = {
 }
 
 
+def _mock_install_command(
+    client: MagicMock, install_result: dict[str, Any]
+) -> asyncio.Event:
+    """Mock the install command and return an event set once it is sent."""
+    install_started = asyncio.Event()
+
+    async def send_command(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        install_started.set()
+        return {"result": install_result}
+
+    client.async_send_command.side_effect = send_command
+    return install_started
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
@@ -220,7 +234,7 @@ async def test_update_entity_states(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for this entity" in caplog.text
+    assert f"There is no value to refresh for {entity_id}" in caplog.text
 
     client.async_send_command.return_value = {"updates": []}
 
@@ -336,7 +350,7 @@ async def test_update_entity_ha_not_running(
 
     client.async_send_command.return_value = {"updates": []}
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -504,7 +518,7 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"result": install_result}
+    install_started = _mock_install_command(client, install_result)
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -518,8 +532,7 @@ async def test_update_entity_progress(
         )
     )
 
-    # Sleep so that task starts
-    await asyncio.sleep(0.05)
+    await install_started.wait()
 
     state = hass.states.get(entity_id)
     assert state
@@ -528,7 +541,6 @@ async def test_update_entity_progress(
     assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
     driver.receive_event(progress_event)
-    await asyncio.sleep(0.05)
 
     # Validate that the progress is updated
     state = hass.states.get(entity_id)
@@ -652,7 +664,7 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"result": install_result}
+    install_started = _mock_install_command(client, install_result)
 
     # Test install call - we expect it to finish fail
     install_task = hass.async_create_task(
@@ -666,11 +678,9 @@ async def test_update_entity_install_failed(
         )
     )
 
-    # Sleep so that task starts
-    await asyncio.sleep(0.05)
+    await install_started.wait()
 
     driver.receive_event(progress_event)
-    await asyncio.sleep(0.05)
 
     # Validate that the progress is updated
     state = hass.states.get(entity_id)
@@ -780,7 +790,7 @@ async def test_update_entity_delay(
     client.async_send_command.return_value = {"updates": []}
     hass.set_state(CoreState.not_running)
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -854,7 +864,7 @@ async def test_update_entity_partial_restore_data(
             )
         ],
     )
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -894,7 +904,7 @@ async def test_update_entity_partial_restore_data_2(
             )
         ],
     )
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -936,7 +946,7 @@ async def test_update_entity_full_restore_data_skipped_version(
             )
         ],
     )
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -998,7 +1008,7 @@ async def test_update_entity_full_restore_data_update_available(
             )
         ],
     )
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1010,7 +1020,7 @@ async def test_update_entity_full_restore_data_update_available(
     assert state.attributes[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"result": install_result}
+    install_started = _mock_install_command(client, install_result)
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -1024,8 +1034,7 @@ async def test_update_entity_full_restore_data_update_available(
         )
     )
 
-    # Sleep so that task starts
-    await asyncio.sleep(0.05)
+    await install_started.wait()
 
     state = hass.states.get(entity_id)
     assert state
@@ -1089,7 +1098,7 @@ async def test_update_entity_full_restore_data_no_update_available(
             )
         ],
     )
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1132,7 +1141,7 @@ async def test_update_entity_no_latest_version(
             )
         ],
     )
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

@@ -42,7 +42,7 @@ async def test_sensor_return_value_enum_sensor(
     mock_return_value: Any | None,
     test_description: str,
 ) -> None:
-    """Test that sensor entity shows unknown when get_current_option returns various invalid values."""
+    """Test sensor entity shows unknown for invalid values."""
     mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
         mock_return_value
     )
@@ -59,7 +59,7 @@ async def test_sensor_enum_value_cannot_return_number(
     mock_config_entry: MockConfigEntry,
     mock_connector: MagicMock,
 ) -> None:
-    """Test that sensor entity shows unknown when get_current_option returns various invalid values."""
+    """Test sensor entity shows unknown for invalid values."""
     mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
         123  # Invalid enum value
     )
@@ -102,7 +102,7 @@ async def test_sensor_number_value_cannot_return_enum(
     mock_config_entry: MockConfigEntry,
     mock_connector: MagicMock,
 ) -> None:
-    """Test that sensor entity shows unknown when get_current_value returns enum instead of number."""
+    """Test sensor shows unknown when value is an enum, not a number."""
     mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
         "eco"  # Invalid number value
     )

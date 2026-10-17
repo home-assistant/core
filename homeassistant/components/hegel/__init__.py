@@ -1,7 +1,5 @@
 """The Hegel integration."""
 
-from __future__ import annotations
-
 import logging
 
 from hegel_ip_client import HegelClient
@@ -20,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 type HegelConfigEntry = ConfigEntry[HegelClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> None:
     """Set up the Hegel integration."""
     host = entry.data[CONF_HOST]
 
@@ -33,9 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
         await client.ensure_connected(timeout=10.0)
         _LOGGER.debug("Successfully connected to Hegel at %s:%s", host, DEFAULT_PORT)
     except (HegelConnectionError, TimeoutError, OSError) as err:
-        _LOGGER.error(
-            "Failed to connect to Hegel at %s:%s: %s", host, DEFAULT_PORT, err
-        )
         await client.stop()  # Clean up
         raise ConfigEntryNotReady(
             f"Unable to connect to Hegel amplifier at {host}:{DEFAULT_PORT}"
@@ -54,19 +49,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
     # Forward setup to supported platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> None:
     """Unload a Hegel config entry and stop active client connection."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        client = entry.runtime_data
-        _LOGGER.debug("Stopping Hegel client for %s", entry.title)
-        try:
-            await client.stop()
-        except (HegelConnectionError, OSError) as err:
-            _LOGGER.warning("Error while stopping Hegel client: %s", err)
-
-    return unload_ok
+    client = entry.runtime_data
+    _LOGGER.debug("Stopping Hegel client for %s", entry.title)
+    try:
+        await client.stop()
+    except (HegelConnectionError, OSError) as err:
+        _LOGGER.warning("Error while stopping Hegel client: %s", err)

@@ -1,13 +1,13 @@
 """Constants for Synology DSM."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from aiohttp import ClientTimeout
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
+    SynologyDSMAPINoDataException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
@@ -28,6 +28,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -70,6 +71,7 @@ SERVICES = [
 ]
 
 SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginInvalidException,
@@ -78,6 +80,7 @@ SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
 
 SYNOLOGY_CONNECTION_EXCEPTIONS = (
     SynologyDSMAPIErrorException,
+    SynologyDSMAPINoDataException,
     SynologyDSMLoginFailedException,
     SynologyDSMRequestException,
 )

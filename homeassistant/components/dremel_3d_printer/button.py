@@ -1,9 +1,8 @@
 """Support for Dremel 3D Printer buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from dremel3dpy import Dremel3DPrinter
 
@@ -59,6 +58,7 @@ class Dremel3DPrinterButtonEntity(Dremel3DPrinterEntity, ButtonEntity):
 
     entity_description: Dremel3DPrinterButtonEntityDescription
 
+    @override
     def press(self) -> None:
         """Handle the button press."""
         # api does not care about the current state

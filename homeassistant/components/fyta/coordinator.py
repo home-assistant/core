@@ -1,10 +1,9 @@
 """Coordinator for FYTA integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+from typing import override
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -21,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_EXPIRATION, DOMAIN
 
@@ -49,15 +49,13 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
         self._plants_last_update: set[int] = set()
         self.new_device_callbacks: list[Callable[[int], None]] = []
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[int, Plant]:
         """Fetch data from API endpoint."""
 
-        if (
-            self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < datetime.now().timestamp()
-        ):
+        if self.fyta.expiration is None or self.fyta.expiration < dt_util.now():
             await self.renew_authentication()
 
         try:
@@ -68,7 +66,8 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
             ) from err
         _LOGGER.debug("Data successfully updated")
 
-        # data must be assigned before _async_add_remove_devices, as it is uses to set-up possible new devices
+        # data must be assigned before _async_add_remove_devices,
+        # as it is uses to set-up possible new devices
         self.data = data
         self._async_add_remove_devices()
 
@@ -96,18 +95,11 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
             device_registry = dr.async_get(self.hass)
             for plant_id in removed_plants:
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.config_entry.entry_id}-{plant_id}",
-                        )
-                    }
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self.config_entry.entry_id}-{plant_id}"),
+                    self.config_entry.entry_id,
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
                     _LOGGER.debug("Device removed from device registry: %s", device.id)
 
         # add new devices

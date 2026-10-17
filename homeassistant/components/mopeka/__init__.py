@@ -1,7 +1,5 @@
 """The Mopeka integration."""
 
-from __future__ import annotations
-
 import logging
 
 from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData
@@ -24,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 type MopekaConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> None:
     """Set up Mopeka BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -43,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bo
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
     entry.async_on_unload(entry.add_update_listener(update_listener))
-    return True
 
 
 async def update_listener(hass: HomeAssistant, entry: MopekaConfigEntry) -> None:
@@ -51,6 +48,6 @@ async def update_listener(hass: HomeAssistant, entry: MopekaConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MopekaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

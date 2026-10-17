@@ -4,21 +4,25 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.battery.trigger import TRIGGERS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -30,34 +34,66 @@ from tests.components.common import (
 @pytest.fixture
 async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple binary sensor entities associated with different targets."""
-    return await target_entities(hass, "binary_sensor")
+    return await target_entities(
+        hass, "binary_sensor", entity_category=EntityCategory.DIAGNOSTIC
+    )
 
 
 @pytest.fixture
 async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple sensor entities associated with different targets."""
-    return await target_entities(hass, "sensor")
+    return await target_entities(
+        hass, "sensor", entity_category=EntityCategory.DIAGNOSTIC
+    )
+
+
+_LEVEL_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_LEVEL_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "became_low": TargetSupport.STANDARD,
+    "no_longer_low": TargetSupport.STANDARD,
+    "started_charging": TargetSupport.STANDARD,
+    "stopped_charging": TargetSupport.STANDARD,
+    "level_changed": TargetSupport.STANDARD,
+    "level_crossed_threshold": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "battery.low",
-        "battery.not_low",
-        "battery.started_charging",
-        "battery.stopped_charging",
-        "battery.level_changed",
-        "battery.level_crossed_threshold",
+        ("battery.became_low", {}, True, True),
+        ("battery.no_longer_low", {}, True, True),
+        ("battery.started_charging", {}, True, True),
+        ("battery.stopped_charging", {}, True, True),
+        ("battery.level_changed", _LEVEL_CHANGED_THRESHOLD, False, False),
+        ("battery.level_crossed_threshold", _LEVEL_CROSSED_THRESHOLD, True, True),
     ],
 )
-async def test_battery_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_battery_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the battery triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that battery triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -66,14 +102,14 @@ async def test_battery_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="battery.low",
+            trigger="battery.became_low",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="battery.not_low",
+            trigger="battery.no_longer_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -95,7 +131,7 @@ async def test_battery_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_battery_binary_sensor_trigger_behavior_any(
+async def test_battery_binary_sensor_trigger_behavior_each(
     hass: HomeAssistant,
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -105,8 +141,8 @@ async def test_battery_binary_sensor_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the battery binary sensor triggers with 'any' behavior."""
-    await assert_trigger_behavior_any(
+    """Test the battery binary sensor triggers with 'each' behavior."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
@@ -118,7 +154,6 @@ async def test_battery_binary_sensor_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -127,14 +162,14 @@ async def test_battery_binary_sensor_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="battery.low",
+            trigger="battery.became_low",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="battery.not_low",
+            trigger="battery.no_longer_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -179,7 +214,6 @@ async def test_battery_binary_sensor_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -188,14 +222,14 @@ async def test_battery_binary_sensor_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="battery.low",
+            trigger="battery.became_low",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="battery.not_low",
+            trigger="battery.no_longer_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -217,7 +251,7 @@ async def test_battery_binary_sensor_trigger_behavior_first(
         ),
     ],
 )
-async def test_battery_binary_sensor_trigger_behavior_last(
+async def test_battery_binary_sensor_trigger_behavior_all(
     hass: HomeAssistant,
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -227,8 +261,8 @@ async def test_battery_binary_sensor_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test the battery binary sensor triggers with 'last' behavior."""
-    await assert_trigger_behavior_last(
+    """Test the battery binary sensor triggers with 'all' behavior."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
@@ -240,7 +274,6 @@ async def test_battery_binary_sensor_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -260,7 +293,7 @@ async def test_battery_binary_sensor_trigger_behavior_last(
         ),
     ],
 )
-async def test_battery_sensor_trigger_behavior_any(
+async def test_battery_sensor_trigger_behavior_each(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -270,8 +303,8 @@ async def test_battery_sensor_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery sensor triggers with 'any' behavior."""
-    await assert_trigger_behavior_any(
+    """Test battery sensor triggers with 'each' behavior."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -283,7 +316,6 @@ async def test_battery_sensor_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -308,7 +340,7 @@ async def test_battery_level_crossed_threshold_sensor_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery level_crossed_threshold trigger fires on the first sensor state change."""
+    """Test trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -321,7 +353,6 @@ async def test_battery_level_crossed_threshold_sensor_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -336,7 +367,7 @@ async def test_battery_level_crossed_threshold_sensor_behavior_first(
         ),
     ],
 )
-async def test_battery_level_crossed_threshold_sensor_behavior_last(
+async def test_battery_level_crossed_threshold_sensor_behavior_all(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -346,8 +377,8 @@ async def test_battery_level_crossed_threshold_sensor_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery level_crossed_threshold trigger fires when the last sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test trigger fires when all sensors have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,

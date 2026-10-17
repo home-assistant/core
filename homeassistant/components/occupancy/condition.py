@@ -9,14 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
-_OCCUPANCY_DOMAIN_SPECS = {
-    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
+OCCUPANCY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY),
 }
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_detected": make_entity_state_condition(_OCCUPANCY_DOMAIN_SPECS, STATE_ON),
-    "is_not_detected": make_entity_state_condition(_OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
+    "is_detected": make_entity_state_condition(OCCUPANCY_DOMAIN_SPECS, STATE_ON),
+    "is_not_detected": make_entity_state_condition(OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
 }
 
 

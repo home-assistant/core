@@ -1,7 +1,5 @@
 """The Liebherr integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 import logging
@@ -10,6 +8,7 @@ from pyliebherrhomeapi import LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
+    LiebherrTimeoutError,
 )
 
 from homeassistant.const import CONF_API_KEY, Platform
@@ -26,6 +25,7 @@ from .coordinator import LiebherrConfigEntry, LiebherrCoordinator, LiebherrData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.COVER,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -34,7 +34,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> None:
     """Set up Liebherr from a config entry."""
     # Create shared API client
     client = LiebherrClient(
@@ -46,9 +46,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
-        raise ConfigEntryAuthFailed("Invalid API key") from err
-    except LiebherrConnectionError as err:
-        raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
+    except (LiebherrConnectionError, LiebherrTimeoutError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     # Create a coordinator for each device (may be empty if no devices)
     data = LiebherrData(client=client)
@@ -73,12 +79,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Start SSE push streams for the initial devices
+    for coordinator in data.coordinators.values():
+        coordinator.async_start_stream()
+
     # Schedule periodic scan for new devices
     async def _async_scan_for_new_devices(_now: datetime) -> None:
         """Scan for new devices added to the account."""
         try:
             devices = await client.get_devices()
-        except LiebherrAuthenticationError, LiebherrConnectionError:
+        except (
+            LiebherrAuthenticationError,
+            LiebherrConnectionError,
+            LiebherrTimeoutError,
+        ):
             _LOGGER.debug("Failed to scan for new devices")
             return
         except Exception:
@@ -97,14 +111,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                 if identifier[0] == DOMAIN
             }
             if device_ids - current_device_ids:
-                # Shut down coordinator if one exists
                 for device_id in device_ids:
                     if coordinator := data.coordinators.pop(device_id, None):
                         await coordinator.async_shutdown()
-                device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
+                device_registry.async_remove_device(device_entry.id)
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
@@ -122,6 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                     continue
                 data.coordinators[device.device_id] = coordinator
                 new_coordinators.append(coordinator)
+                coordinator.async_start_stream()
 
         if new_coordinators:
             async_dispatcher_send(
@@ -136,9 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

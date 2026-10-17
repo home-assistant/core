@@ -1,25 +1,20 @@
 """Support for BSH Home Connect appliances."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import EventKey
-import aiohttp
 import jwt
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -54,27 +49,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> None:
     """Set up Home Connect from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
 
     config_entry_auth = AsyncConfigEntryAuth(hass, session)
-    try:
-        await config_entry_auth.async_get_access_token()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+    await config_entry_auth.async_get_access_token()
 
     home_connect_client = HomeConnectClient(config_entry_auth)
 
@@ -92,9 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
 
     for device in device_entries:
         if not device.identifiers.intersection(appliances_identifiers):
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -119,12 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
             f"home_connect-initial-full-refresh-{entry.entry_id}-{appliance_id}",
         )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     issue_registry = ir.async_get(hass)
     issues_to_delete = [
@@ -141,12 +119,12 @@ async def async_unload_entry(
 
     for coordinator in entry.runtime_data.appliance_coordinators.values():
         await coordinator.async_shutdown()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -187,4 +165,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-    return True

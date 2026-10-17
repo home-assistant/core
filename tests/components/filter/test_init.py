@@ -1,7 +1,5 @@
 """Test Filter component setup process."""
 
-from __future__ import annotations
-
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

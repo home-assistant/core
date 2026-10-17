@@ -1,8 +1,6 @@
 """Support for UpCloud."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import upcloud_api
 
@@ -43,11 +41,13 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         return self.coordinator.data[self.uuid]
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique ID for the entity."""
         return self.uuid
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the component."""
         try:
@@ -56,6 +56,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon of this server."""
         return "mdi:server" if self.is_on else "mdi:server-off"
@@ -69,6 +70,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
             return False
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and STATE_MAP.get(
@@ -76,6 +78,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         ) in (STATE_ON, STATE_OFF)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the UpCloud server."""
         return {
@@ -91,6 +94,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         }
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
         assert self.config_entry is not None

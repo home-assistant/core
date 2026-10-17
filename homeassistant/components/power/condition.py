@@ -1,7 +1,5 @@
 """Provides conditions for power."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -12,7 +10,7 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.util.unit_conversion import PowerConverter
 
-POWER_DOMAIN_SPECS = {
+POWER_DOMAIN_SPECS: dict[str, DomainSpec] = {
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.POWER),
 }
 

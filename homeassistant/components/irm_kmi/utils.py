@@ -6,13 +6,13 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_LANGUAGE_OVERRIDE, LANGS
 
 
-def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry | None) -> str:
-    """Get the preferred language for the integration if it was overridden by the configuration."""
+def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry) -> str:
+    """Return the language to use for this config entry.
 
-    if (
-        config_entry is None
-        or config_entry.options.get(CONF_LANGUAGE_OVERRIDE) == "none"
-    ):
+    Falls back to the Home Assistant language, or to English when that one is
+    not supported.
+    """
+    language: str = config_entry.options.get(CONF_LANGUAGE_OVERRIDE, "none")
+    if language == "none":
         return hass.config.language if hass.config.language in LANGS else "en"
-
-    return config_entry.options.get(CONF_LANGUAGE_OVERRIDE, "en")
+    return language

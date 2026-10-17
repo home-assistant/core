@@ -1,12 +1,10 @@
 """Coordinator for lookin devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -71,11 +69,13 @@ class LookinDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
 
     @callback
+    @override
     def async_set_updated_data(self, data: _DataT) -> None:
-        """Manually update data, notify listeners and reset refresh interval, and remember."""
+        """Manually update data, notify listeners and reset refresh interval."""
         self.push_coordinator.update()
         super().async_set_updated_data(data)
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch data only if we have not received a push inside the interval."""
         interval = self.update_interval

@@ -165,7 +165,8 @@ async def test_set_bed_temp(
         )
 
         assert len(mock_set_bed_temp.mock_calls) == 1
-        # Verify that we pass integer, expected by the pyoctoprintapi, and that it's rounded down
+        # Verify that we pass integer, expected by pyoctoprintapi,
+        # and that it's rounded down
         mock_set_bed_temp.assert_called_with(80)
 
 
@@ -189,7 +190,7 @@ async def test_set_bed_temp(
 async def test_set_tool_n_temp(
     hass: HomeAssistant,
 ) -> None:
-    """Test setting tool temperature via number entity when multiple tools are present."""
+    """Test setting tool temperature when multiple tools present."""
     with patch(
         "pyoctoprintapi.OctoprintClient.set_tool_temperature"
     ) as mock_set_tool_temp:

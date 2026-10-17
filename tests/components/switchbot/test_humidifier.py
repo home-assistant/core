@@ -160,7 +160,10 @@ async def test_exception_handling_humidifier_service(
     entry.add_to_hass(hass)
     entity_id = "humidifier.test_name"
 
-    patch_target = f"homeassistant.components.switchbot.humidifier.switchbot.SwitchbotHumidifier.{mock_method}"
+    patch_target = (
+        "homeassistant.components.switchbot.humidifier"
+        f".switchbot.SwitchbotHumidifier.{mock_method}"
+    )
 
     with patch(patch_target, new=AsyncMock(side_effect=exception)):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -240,7 +243,10 @@ async def test_evaporative_humidifier_services_with_exception(
     entry.add_to_hass(hass)
     entity_id = "humidifier.test_name"
 
-    patch_target = f"homeassistant.components.switchbot.humidifier.switchbot.SwitchbotEvaporativeHumidifier.{mock_method}"
+    patch_target = (
+        "homeassistant.components.switchbot.humidifier"
+        f".switchbot.SwitchbotEvaporativeHumidifier.{mock_method}"
+    )
 
     with patch(
         patch_target,

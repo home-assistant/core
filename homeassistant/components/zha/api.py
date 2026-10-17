@@ -1,7 +1,5 @@
 """API for Zigbee Home Automation."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Literal
 
 from zha.application.const import RadioType

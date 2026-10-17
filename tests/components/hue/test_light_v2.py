@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+import pytest
+
 from homeassistant.components.light import (
     ATTR_EFFECT,
     DOMAIN as LIGHT_DOMAIN,
@@ -52,7 +54,7 @@ async def test_lights(
     assert light_1.attributes["effect"] == "off"
 
     # test light which supports color temperature only
-    light_2 = hass.states.get("light.hue_light_with_color_temperature_only")
+    light_2 = hass.states.get("light.test_room_hue_light_with_color_temperature_only")
     assert light_2 is not None
     assert (
         light_2.attributes["friendly_name"] == "Hue light with color temperature only"
@@ -77,7 +79,7 @@ async def test_lights(
     assert light_3.attributes["dynamics"] == "dynamic_palette"
 
     # test light which supports on/off only
-    light_4 = hass.states.get("light.hue_on_off_light")
+    light_4 = hass.states.get("light.test_room_hue_on_off_light")
     assert light_4 is not None
     assert light_4.attributes["friendly_name"] == "Hue on/off light"
     assert light_4.state == "off"
@@ -93,7 +95,7 @@ async def test_light_turn_on_service(
 
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
-    test_light_id = "light.hue_light_with_color_temperature_only"
+    test_light_id = "light.test_room_hue_light_with_color_temperature_only"
 
     # verify the light is off before we start
     assert hass.states.get(test_light_id).state == "off"
@@ -372,7 +374,8 @@ async def test_light_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
 
-    # Add new fake entity (and attached device and zigbee_connectivity) by emitting events
+    # Add new fake entity (and attached device and zigbee_connectivity) by emitting
+    # events
     mock_bridge_v2.api.emit_event("add", FAKE_LIGHT)
     await hass.async_block_till_done()
 
@@ -427,7 +430,7 @@ async def test_grouped_lights(
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     # test if entities for hue groups are created and enabled by default
-    for entity_id in ("light.test_zone", "light.test_room"):
+    for entity_id in ("light.test_zone", "light.test_room_test_room"):
         entity_entry = entity_registry.async_get(entity_id)
 
         assert entity_entry
@@ -462,7 +465,7 @@ async def test_grouped_lights(
     }
 
     # test light created for hue room
-    test_entity = hass.states.get("light.test_room")
+    test_entity = hass.states.get("light.test_room_test_room")
     assert test_entity is not None
     assert test_entity.attributes["friendly_name"] == "Test Room"
     assert test_entity.state == "off"
@@ -480,8 +483,8 @@ async def test_grouped_lights(
         "Hue light with color temperature only",
     }
     assert test_entity.attributes["entity_id"] == {
-        "light.hue_light_with_color_temperature_only",
-        "light.hue_on_off_light",
+        "light.test_room_hue_light_with_color_temperature_only",
+        "light.test_room_hue_on_off_light",
     }
 
     # Test calling the turn on service on a grouped light
@@ -531,7 +534,8 @@ async def test_grouped_lights(
     # While we have a group on, test the color aggregation logic, XY first
 
     # Turn off one of the bulbs in the group
-    # "hue_light_with_color_and_color_temperature_1" corresponds to "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
+    # "hue_light_with_color_and_color_temperature_1" corresponds to
+    # "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
     mock_bridge_v2.mock_requests.clear()
     single_light_id = "light.hue_light_with_color_and_color_temperature_1"
     await hass.services.async_call(
@@ -548,13 +552,15 @@ async def test_grouped_lights(
     mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
-    # The group should still show the same XY color since other lights maintain their color
+    # The group should still show the same XY color since other lights maintain their
+    # color
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 
-    # Turn the light back on with a white XY color (different from the rest of the group)
+    # Turn the light back on with a white XY color (different from the rest of the
+    # group)
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -587,8 +593,10 @@ async def test_grouped_lights(
     assert abs(group_x - expected_x) < 0.001  # Allow small floating point differences
     assert abs(group_y - expected_y) < 0.001
 
-    # Test turning off another light in the group, leaving only two lights on - one white and one original color
-    # "hue_light_with_color_and_color_temperature_2" corresponds to "b3fe71ef-d0ef-48de-9355-d9e604377df0"
+    # Test turning off another light in the group, leaving only two lights on - one
+    # white and one original color
+    # "hue_light_with_color_and_color_temperature_2" corresponds to
+    # "b3fe71ef-d0ef-48de-9355-d9e604377df0"
     second_light_id = "light.hue_light_with_color_and_color_temperature_2"
     await hass.services.async_call(
         "light",
@@ -897,7 +905,8 @@ async def test_grouped_lights(
         blocking=True,
     )
 
-    # PUT request should have been sent to ONLY the grouped_light resource with correct params
+    # PUT request should have been sent to ONLY the grouped_light resource with correct
+    # params
     assert len(mock_bridge_v2.mock_requests) == 1
     assert mock_bridge_v2.mock_requests[0]["method"] == "put"
     assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
@@ -1015,7 +1024,7 @@ async def test_light_turn_on_service_deprecation(
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    test_light_id = "light.hue_light_with_color_temperature_only"
+    test_light_id = "light.test_room_hue_light_with_color_temperature_only"
 
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
@@ -1039,3 +1048,71 @@ async def test_light_turn_on_service_deprecation(
         blocking=True,
     )
     assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.hue_light_with_color_and_color_temperature_1", id="light"),
+        pytest.param("light.test_zone", id="grouped_light"),
+    ],
+)
+async def test_light_with_zero_mirek(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    entity_id: str,
+) -> None:
+    """Test lights don't crash when the bridge reports zero mirek values.
+
+    A light may report both a zeroed mirek schema and a zeroed current mirek,
+    each of which used to reach a mired -> kelvin conversion unguarded.
+
+    Regression test for https://github.com/home-assistant/core/issues/116258
+    and https://github.com/home-assistant/core/issues/181168
+    """
+    # Patch the fixture data to have zero mirek values before loading
+    for resource in v2_resources_test_data:
+        if resource.get("type") == "light" and "color_temperature" in resource:
+            resource["color_temperature"]["mirek"] = 0
+            resource["color_temperature"]["mirek_valid"] = True
+            resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
+            resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    # Should not raise ZeroDivisionError during setup
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    test_light = hass.states.get(entity_id)
+    assert test_light is not None
+    # Should fall back to defaults instead of crashing
+    assert test_light.attributes["max_color_temp_kelvin"] == 6535
+    assert test_light.attributes["min_color_temp_kelvin"] == 2000
+    # A zeroed mirek is not a usable color temperature, so it is not reported
+    assert test_light.attributes["color_temp_kelvin"] is None
+
+
+async def test_light_with_null_mirek(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a color temperature only light doesn't crash without a mirek value."""
+    for resource in v2_resources_test_data:
+        if resource["id"] == "3a6710fa-4474-4eba-b533-5e6e72968feb":
+            resource["on"]["on"] = True
+            resource["color_temperature"]["mirek"] = None
+            resource["color_temperature"]["mirek_valid"] = False
+            break
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    test_light = hass.states.get(
+        "light.test_room_hue_light_with_color_temperature_only"
+    )
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    # Falls back instead of converting the missing mirek value
+    assert test_light.attributes["color_temp_kelvin"] == 5800

@@ -1,12 +1,10 @@
 """Platform for sensor integration for squeezebox."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -136,6 +134,7 @@ class ServerStatusSensor(LMSStatusEntity, SensorEntity):
     """LMS Status based sensor from LMS via coordinator."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """LMS Status directly from coordinator data."""
         return cast(StateType, self.coordinator.data[self.entity_description.key])
@@ -157,6 +156,7 @@ class SqueezeboxSensorEntity(SqueezeboxEntity, SensorEntity):
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Sensor value directly from player coordinator."""
         return self.entity_description.value_fn(self)

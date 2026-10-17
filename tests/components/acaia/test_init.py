@@ -57,9 +57,12 @@ async def test_device(
     mock_scale: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Snapshot the device from registry."""
 
-    device = device_registry.async_get_device({(DOMAIN, mock_scale.mac)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_scale.mac), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot

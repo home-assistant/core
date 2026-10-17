@@ -1,7 +1,5 @@
 """Diagnostics support for Google Weather."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -36,9 +34,11 @@ async def async_get_config_entry_diagnostics(
             "daily_forecast_data": subentry_rt.coordinator_daily_forecast.data.to_dict()
             if subentry_rt.coordinator_daily_forecast.data
             else None,
-            "hourly_forecast_data": subentry_rt.coordinator_hourly_forecast.data.to_dict()
-            if subentry_rt.coordinator_hourly_forecast.data
-            else None,
+            "hourly_forecast_data": (
+                subentry_rt.coordinator_hourly_forecast.data.to_dict()
+                if subentry_rt.coordinator_hourly_forecast.data
+                else None
+            ),
         }
 
     return async_redact_data(diag_data, TO_REDACT)

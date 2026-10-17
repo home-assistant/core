@@ -45,6 +45,13 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.BRUSH, 80, 60 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.FILTER, 56, 40 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
+    event_bus.notify(LifeSpanEvent(LifeSpan.CLEANING_SOLUTION, 100, 100))
+    event_bus.notify(LifeSpanEvent(LifeSpan.SEWAGE_BOX, 75, 2700))
+    event_bus.notify(LifeSpanEvent(LifeSpan.DUST_BUCKET, 90, 5400))
+    event_bus.notify(LifeSpanEvent(LifeSpan.DUST_CONTAINER_FILTER, 70, 4200))
+    event_bus.notify(LifeSpanEvent(LifeSpan.HEAVY_DUTY_CLEANING_SOLUTION, 60, 3600))
+    event_bus.notify(LifeSpanEvent(LifeSpan.MOP_WASHING_TRAY, 50, 3000))
+    event_bus.notify(LifeSpanEvent(LifeSpan.STRAINER, 30, 1800))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
     event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
     await block_till_done(hass, event_bus)
@@ -75,11 +82,11 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
         (
             "5xu9h3",
             [
-                "sensor.goat_g1_area_cleaned",
-                "sensor.goat_g1_cleaning_duration",
-                "sensor.goat_g1_total_area_cleaned",
-                "sensor.goat_g1_total_cleaning_duration",
-                "sensor.goat_g1_total_cleanings",
+                "sensor.goat_g1_area_mowed",
+                "sensor.goat_g1_mowing_duration",
+                "sensor.goat_g1_total_area_mowed",
+                "sensor.goat_g1_total_mowing_duration",
+                "sensor.goat_g1_total_mowings",
                 "sensor.goat_g1_battery",
                 "sensor.goat_g1_ip_address",
                 "sensor.goat_g1_wi_fi_rssi",
@@ -110,8 +117,59 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.dusty_error",
             ],
         ),
+        (
+            "9eamof",
+            [
+                "sensor.t80_omni_area_cleaned",
+                "sensor.t80_omni_cleaning_duration",
+                "sensor.t80_omni_total_area_cleaned",
+                "sensor.t80_omni_total_cleaning_duration",
+                "sensor.t80_omni_total_cleanings",
+                "sensor.t80_omni_battery",
+                "sensor.t80_omni_ip_address",
+                "sensor.t80_omni_wi_fi_rssi",
+                "sensor.t80_omni_wi_fi_ssid",
+                "sensor.t80_omni_station_state",
+                "sensor.t80_omni_main_brush_lifespan",
+                "sensor.t80_omni_cleaning_solution_lifespan",
+                "sensor.t80_omni_filter_lifespan",
+                "sensor.t80_omni_hand_filter_lifespan",
+                "sensor.t80_omni_sewage_box_lifespan",
+                "sensor.t80_omni_side_brush_lifespan",
+                "sensor.t80_omni_unit_care_lifespan",
+                "sensor.t80_omni_error",
+            ],
+        ),
+        (
+            "twunby",
+            [
+                "sensor.t90_pro_omni_area_cleaned",
+                "sensor.t90_pro_omni_cleaning_duration",
+                "sensor.t90_pro_omni_total_area_cleaned",
+                "sensor.t90_pro_omni_total_cleaning_duration",
+                "sensor.t90_pro_omni_total_cleanings",
+                "sensor.t90_pro_omni_battery",
+                "sensor.t90_pro_omni_ip_address",
+                "sensor.t90_pro_omni_wi_fi_rssi",
+                "sensor.t90_pro_omni_wi_fi_ssid",
+                "sensor.t90_pro_omni_station_state",
+                "sensor.t90_pro_omni_main_brush_lifespan",
+                "sensor.t90_pro_omni_cleaning_solution_lifespan",
+                "sensor.t90_pro_omni_dust_bag_lifespan",
+                "sensor.t90_pro_omni_dust_bucket_lifespan",
+                "sensor.t90_pro_omni_dust_container_filter_lifespan",
+                "sensor.t90_pro_omni_filter_lifespan",
+                "sensor.t90_pro_omni_heavy_duty_cleaning_solution_lifespan",
+                "sensor.t90_pro_omni_mop_washing_tray_lifespan",
+                "sensor.t90_pro_omni_round_mop_lifespan",
+                "sensor.t90_pro_omni_side_brush_lifespan",
+                "sensor.t90_pro_omni_strainer_lifespan",
+                "sensor.t90_pro_omni_unit_care_lifespan",
+                "sensor.t90_pro_omni_error",
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3", "qhe2o2"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof", "twunby"],
 )
 async def test_sensors(
     hass: HomeAssistant,
@@ -179,9 +237,7 @@ async def test_disabled_by_default_sensors(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_vacbot", "init_integration"
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_vacbot")
 @pytest.mark.parametrize(("device_fixture"), ["123"])
 async def test_legacy_sensors(
     hass: HomeAssistant,

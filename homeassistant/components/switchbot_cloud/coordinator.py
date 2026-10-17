@@ -2,15 +2,24 @@
 
 from asyncio import timeout
 from logging import getLogger
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
-from switchbot_api import Device, Remote, SwitchBotAPI, SwitchBotConnectionError
+from switchbot_api import (
+    Device,
+    Remote,
+    SwitchBotAPI,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
+)
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import SwitchbotCloudConfigEntry
 
 _LOGGER = getLogger(__name__)
 
@@ -20,7 +29,7 @@ type Status = dict[str, Any] | None
 class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     """SwitchBot Cloud coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwitchbotCloudConfigEntry
     _api: SwitchBotAPI
     _device_id: str
     _manageable_by_webhook: bool
@@ -29,7 +38,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotCloudConfigEntry,
         api: SwitchBotAPI,
         device: Device | Remote,
         manageable_by_webhook: bool,
@@ -60,6 +69,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         """Return update_by_webhook value."""
         return self._manageable_by_webhook
 
+    @override
     async def _async_update_data(self) -> Status:
         """Fetch data from API endpoint."""
         if not self._should_poll:
@@ -70,5 +80,10 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
                 status: Status = await self._api.get_status(self._device_id)
                 _LOGGER.debug("Refreshing %s with %s", self._device_id, status)
                 return status
+        except SwitchBotAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except SwitchBotConnectionError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

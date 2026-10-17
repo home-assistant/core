@@ -1,7 +1,5 @@
 """Constants for Mold indicator component."""
 
-from __future__ import annotations
-
 DOMAIN = "mold_indicator"
 
 CONF_CALIBRATION_FACTOR = "calibration_factor"

@@ -1,7 +1,5 @@
 """Test the Powerfox init module."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError

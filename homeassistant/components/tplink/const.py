@@ -1,7 +1,5 @@
 """Const for TP-Link."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from kasa.smart.modules.clean import AreaUnit

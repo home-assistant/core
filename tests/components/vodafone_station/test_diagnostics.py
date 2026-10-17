@@ -1,7 +1,5 @@
 """Tests for Vodafone Station diagnostics platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion

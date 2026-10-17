@@ -1,9 +1,7 @@
 """Support for Hive light devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 
@@ -14,12 +12,12 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import HiveConfigEntry, refresh_system
-from .const import ATTR_MODE
 from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0
@@ -37,7 +35,9 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("light")
     if not devices:
         return
-    async_add_entities((HiveDeviceLight(hive, dev) for dev in devices), True)
+    async_add_entities(
+        (HiveDeviceLight(hass, entry, hive, dev) for dev in devices), True
+    )
 
 
 class HiveDeviceLight(HiveEntity, LightEntity):
@@ -46,9 +46,15 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     _attr_min_color_temp_kelvin = 2700  # 370 Mireds
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
+        hive: Hive,
+        hive_device: dict[str, Any],
+    ) -> None:
         """Initialise hive light."""
-        super().__init__(hive, hive_device)
+        super().__init__(hass, entry, hive, hive_device)
         if self.device["hiveType"] == "warmwhitelight":
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -60,6 +66,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_color_mode = ColorMode.UNKNOWN
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         new_brightness = None
@@ -84,6 +91,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         )
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.hive.light.turnOff(self.device)

@@ -1,9 +1,8 @@
 """Support for V2C binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pytrydan import Trydan
 
@@ -35,7 +34,6 @@ TRYDAN_SENSORS = (
     ),
     V2CBinarySensorEntityDescription(
         key="charging",
-        translation_key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value_fn=lambda evse: evse.charging,
     ),
@@ -77,6 +75,7 @@ class V2CBinarySensorBaseEntity(V2CBaseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the V2C binary_sensor."""
         return self.entity_description.value_fn(self.coordinator.evse)

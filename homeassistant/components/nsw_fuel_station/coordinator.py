@@ -1,10 +1,9 @@
 """Coordinator for the NSW Fuel Station integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
+from typing import override
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
@@ -13,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(hours=1)
+SCAN_INTERVAL = dt.timedelta(hours=1)
 
 
 @dataclass
@@ -40,6 +39,7 @@ class NSWFuelStationCoordinator(DataUpdateCoordinator[StationPriceData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> StationPriceData:
         """Fetch data from API."""
         return await self.hass.async_add_executor_job(

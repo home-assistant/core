@@ -1,8 +1,6 @@
 """Support for Mikrotik routers as device tracker."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -10,11 +8,14 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .entity import MikrotikBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -67,21 +68,20 @@ def update_items(
     async_add_entities(new_tracked)
 
 
-class MikrotikDataUpdateCoordinatorTracker(
-    CoordinatorEntity[MikrotikDataUpdateCoordinator], ScannerEntity
-):
+class MikrotikDataUpdateCoordinatorTracker(MikrotikBaseEntity, ScannerEntity):
     """Representation of network device."""
 
     def __init__(
         self, device: Device, coordinator: MikrotikDataUpdateCoordinator
     ) -> None:
         """Initialize the tracked device."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, EntityDescription(key=device.mac))
         self.device = device
         self._attr_name = device.name
         self._attr_unique_id = device.mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
         if (
@@ -93,21 +93,25 @@ class MikrotikDataUpdateCoordinatorTracker(
         return False
 
     @property
+    @override
     def hostname(self) -> str:
         """Return the hostname of the client."""
         return self.device.name
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the client."""
         return self.device.mac
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.device.ip_address
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         return self.device.attrs if self.is_connected else None

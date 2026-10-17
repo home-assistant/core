@@ -1,7 +1,5 @@
 """Tests for the MadVR integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from homeassistant.config_entries import ConfigEntryState

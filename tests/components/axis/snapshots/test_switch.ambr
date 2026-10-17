@@ -39,8 +39,8 @@
 # name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_doorbell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'home Doorbell',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Doorbell',
     }),
     'context': <ANY>,
     'entity_id': 'switch.home_doorbell',
@@ -90,8 +90,8 @@
 # name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'home Relay 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Relay 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.home_relay_1',
@@ -141,8 +141,8 @@
 # name: test_switches_with_port_management[port_management_payload0-api_discovery_items0][switch.home_doorbell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'home Doorbell',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Doorbell',
     }),
     'context': <ANY>,
     'entity_id': 'switch.home_doorbell',
@@ -192,8 +192,8 @@
 # name: test_switches_with_port_management[port_management_payload0-api_discovery_items0][switch.home_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'home Relay 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Relay 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.home_relay_1',

@@ -1,7 +1,5 @@
 """Refoss helpers functions."""
 
-from __future__ import annotations
-
 from refoss_ha.discovery import Discovery
 
 from homeassistant.core import HomeAssistant

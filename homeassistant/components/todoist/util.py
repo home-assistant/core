@@ -1,7 +1,5 @@
 """Utility functions for the Todoist integration."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 
 from todoist_api_python.models import Due

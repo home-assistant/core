@@ -1,7 +1,5 @@
 """Reproduce an Vacuum state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
@@ -17,7 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
-    ATTR_FAN_SPEED,
     DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
@@ -26,6 +23,7 @@ from . import (
     SERVICE_STOP,
     VacuumActivity,
 )
+from .const import VacuumEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +57,8 @@ async def _async_reproduce_state(
 
     # Return if we are already at the right state.
     if cur_state.state == state.state and cur_state.attributes.get(
-        ATTR_FAN_SPEED
-    ) == state.attributes.get(ATTR_FAN_SPEED):
+        VacuumEntityStateAttribute.FAN_SPEED
+    ) == state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
@@ -84,9 +82,13 @@ async def _async_reproduce_state(
             DOMAIN, service, service_data, context=context, blocking=True
         )
 
-    if cur_state.attributes.get(ATTR_FAN_SPEED) != state.attributes.get(ATTR_FAN_SPEED):
+    if cur_state.attributes.get(
+        VacuumEntityStateAttribute.FAN_SPEED
+    ) != state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED):
         # Wrong fan speed
-        service_data["fan_speed"] = state.attributes[ATTR_FAN_SPEED]
+        service_data["fan_speed"] = state.attributes[
+            VacuumEntityStateAttribute.FAN_SPEED
+        ]
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_FAN_SPEED, service_data, context=context, blocking=True
         )

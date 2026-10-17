@@ -1,7 +1,5 @@
 """Describe lutron_caseta logbook events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME

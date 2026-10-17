@@ -1,9 +1,6 @@
 """Support for Canary devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-import logging
 from typing import Final
 
 from canary.api import Api
@@ -16,8 +13,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS, DEFAULT_TIMEOUT
 from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
-_LOGGER: Final = logging.getLogger(__name__)
-
 MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=30)
 
 PLATFORMS: Final[list[Platform]] = [
@@ -27,7 +22,7 @@ PLATFORMS: Final[list[Platform]] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> None:
     """Set up Canary from a config entry."""
     if not entry.options:
         options = {
@@ -41,7 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bo
     try:
         canary_api = await hass.async_add_executor_job(_get_canary_api_instance, entry)
     except (ConnectTimeout, HTTPError) as error:
-        _LOGGER.error("Unable to connect to Canary service: %s", str(error))
         raise ConfigEntryNotReady from error
 
     coordinator = CanaryDataUpdateCoordinator(hass, entry, api=canary_api)
@@ -53,12 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: CanaryConfigEntry) -> None:

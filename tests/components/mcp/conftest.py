@@ -1,7 +1,7 @@
 """Common fixtures for the Model Context Protocol tests."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -13,15 +13,15 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.mcp.const import (
-    CONF_ACCESS_TOKEN,
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -103,15 +103,15 @@ async def mock_credential(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="config_entry_token_expiration")
-def mock_config_entry_token_expiration() -> datetime.datetime:
+def mock_config_entry_token_expiration() -> dt.datetime:
     """Fixture to mock the token expiration."""
-    return datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
+    return dt_util.utcnow() + dt.timedelta(days=1)
 
 
 @pytest.fixture(name="config_entry_with_auth")
 def mock_config_entry_with_auth(
     hass: HomeAssistant,
-    config_entry_token_expiration: datetime.datetime,
+    config_entry_token_expiration: dt.datetime,
 ) -> MockConfigEntry:
     """Fixture to load the integration with authentication."""
     config_entry = MockConfigEntry(

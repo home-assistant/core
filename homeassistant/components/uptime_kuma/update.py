@@ -1,8 +1,7 @@
 """Update platform for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
+from typing import override
 
 from yarl import URL
 
@@ -84,33 +83,39 @@ class UptimeKumaUpdateEntity(
         )
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Current version."""
 
         return self.coordinator.api.version.version
 
     @property
+    @override
     def title(self) -> str | None:
         """Title of the release."""
 
         return f"Uptime Kuma {self.update_checker.data.name}"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes."""
 
         return self.update_checker.data.html_url
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version."""
 
         return self.update_checker.data.tag_name
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         return self.update_checker.data.body
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass.
 
@@ -122,6 +127,7 @@ class UptimeKumaUpdateEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.update_checker.last_update_success

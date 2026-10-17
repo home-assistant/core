@@ -1,10 +1,9 @@
-"""Support for Droplet."""
-
-from __future__ import annotations
+"""Support for Droplet sensors."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pydroplet.droplet import Droplet
 
@@ -116,16 +115,19 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Get Droplet's availability."""
         return self.coordinator.get_availability()
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.droplet)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the last reset of the sensor, if applicable."""
         return self.entity_description.last_reset_fn(self.coordinator.droplet)

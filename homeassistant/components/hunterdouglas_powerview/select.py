@@ -1,10 +1,8 @@
 """Support for hunterdouglass_powerview settings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiopvapi.helpers.constants import ATTR_NAME, FUNCTION_SET_POWER
 from aiopvapi.resources.shade import BaseShade
@@ -96,15 +94,18 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.current_fn(self._shade)
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         return self.entity_description.options_fn(self._shade)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)

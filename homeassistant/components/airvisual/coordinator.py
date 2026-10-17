@@ -1,9 +1,7 @@
 """Define an AirVisual data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyairvisual.cloud_api import (
     CloudAPI,
@@ -50,6 +48,7 @@ class AirVisualDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new data from the API."""
         if CONF_CITY in self.config_entry.data:

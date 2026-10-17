@@ -13,13 +13,18 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
     RepeatMode,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -274,9 +279,9 @@ async def test_media_previous_track(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test media player previous track command."""
-    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK] = {
-        Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["rewind"])
-    }
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK][
+        Attribute.SUPPORTED_PLAYBACK_COMMANDS
+    ] = Status(["rewind"])
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -300,9 +305,9 @@ async def test_media_next_track(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test media player next track command."""
-    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK] = {
-        Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["fastForward"])
-    }
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK][
+        Attribute.SUPPORTED_PLAYBACK_COMMANDS
+    ] = Status(["fastForward"])
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -325,7 +330,7 @@ async def test_select_source(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test media player stop command."""
+    """Test media player select source command."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -339,8 +344,103 @@ async def test_select_source(
         Capability.MEDIA_INPUT_SOURCE,
         Command.SET_INPUT_SOURCE,
         MAIN,
-        "digital",
+        argument="digital",
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_vd_capability_select_source(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test media player select source command using Samsung VD capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
+    assert state is not None
+    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
+            ATTR_INPUT_SOURCE: "hdmi1",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        Command.SET_INPUT_SOURCE,
+        MAIN,
+        argument="HDMI1",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_select_source_legacy_raw_id(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test select source falls back to raw ID when not found in source map.
+
+    When a legacy/raw source ID (e.g. 'HDMI1') is passed directly instead of the
+    slugified HA name ('hdmi1'), it should be forwarded as-is to SmartThings.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
+            ATTR_INPUT_SOURCE: "HDMI1",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        Command.SET_INPUT_SOURCE,
+        MAIN,
+        argument="HDMI1",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_vd_capability_source_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test source state update using Samsung VD capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
+    assert state is not None
+    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+    )
+    assert state.attributes[ATTR_INPUT_SOURCE] == "hdmi1"
+
+    # Update source to dtv
+    await trigger_update(
+        hass,
+        devices,
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        Attribute.INPUT_SOURCE,
+        "dtv",
+    )
+
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "digital_tv"
 
 
 @pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
@@ -397,7 +497,7 @@ async def test_media_repeat_mode(
 ) -> None:
     """Test media player repeat mode command."""
     devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK_REPEAT] = {
-        Attribute.REPEAT_MODE: Status("one")
+        Attribute.PLAYBACK_REPEAT_MODE: Status("one")
     }
     await setup_integration(hass, mock_config_entry)
 
@@ -413,6 +513,60 @@ async def test_media_repeat_mode(
         Command.SET_PLAYBACK_REPEAT_MODE,
         MAIN,
         argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_network_audio_002s"])
+async def test_select_sound_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test media player select sound mode command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: "media_player.theater_soundbar_living",
+            ATTR_SOUND_MODE: "adaptive_sound",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "0d94e5db-8501-2355-eb4f-214163702cac",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=[
+            "/sec/networkaudio/soundmode",
+            {"x.com.samsung.networkaudio.soundmode": "adaptive sound"},
+        ],
+    )
+    assert (
+        hass.states.get("media_player.theater_soundbar_living").attributes[
+            ATTR_SOUND_MODE
+        ]
+        == "adaptive_sound"
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["im_speaker_ai_0001"])
+async def test_no_sound_mode_on_non_soundbar(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test non-soundbar network audio devices don't expose sound mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.galaxy_home_mini")
+    assert state is not None
+    assert ATTR_SOUND_MODE_LIST not in state.attributes
+    assert not (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
 

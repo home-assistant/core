@@ -1,15 +1,13 @@
 """Support for IP Cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
-from datetime import datetime, timedelta
 import logging
-from typing import Any
+import time
+from typing import Any, override
 
-import httpx
-import voluptuous as vol
+import httpx2
+import probatio
 import yarl
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -59,8 +57,8 @@ async def async_setup_entry(
     )
 
 
-def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
-    """Generate httpx.Auth object from credentials."""
+def generate_auth(device_info: Mapping[str, Any]) -> httpx2.Auth | None:
+    """Generate httpx2.Auth object from credentials."""
     username: str | None = device_info.get(CONF_USERNAME)
     password: str | None = device_info.get(CONF_PASSWORD)
     if username and password:
@@ -68,8 +66,8 @@ def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
             device_info[SECTION_ADVANCED].get(CONF_AUTHENTICATION)
             == HTTP_DIGEST_AUTHENTICATION
         ):
-            return httpx.DigestAuth(username=username, password=password)
-        return httpx.BasicAuth(username=username, password=password)
+            return httpx2.DigestAuth(username=username, password=password)
+        return httpx2.BasicAuth(username=username, password=password)
     return None
 
 
@@ -77,7 +75,7 @@ class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
     _last_image: bytes | None
-    _last_update: datetime
+    _last_update: float
     _update_lock: asyncio.Lock
 
     def __init__(
@@ -116,7 +114,7 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
-        self._last_update = datetime.min
+        self._last_update = 0.0
         self._update_lock = asyncio.Lock()
 
         self._attr_device_info = DeviceInfo(
@@ -125,10 +123,12 @@ class GenericCamera(Camera):
         )
 
     @property
+    @override
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return not self._still_image_url
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -137,13 +137,14 @@ class GenericCamera(Camera):
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
 
         try:
-            vol.Schema(vol.Url())(url)
-        except vol.Invalid as err:
+            probatio.Schema(probatio.Url())(url)
+        except probatio.Invalid as err:
             _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
             return self._last_image
 
@@ -154,13 +155,12 @@ class GenericCamera(Camera):
             if (
                 self._last_image is not None
                 and url == self._last_url
-                and self._last_update + timedelta(0, self._attr_frame_interval)
-                > datetime.now()
+                and self._last_update + self._attr_frame_interval > time.time()
             ):
                 return self._last_image
 
             try:
-                update_time = datetime.now()
+                update_time = time.time()
                 async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
                 response = await async_client.get(
                     url,
@@ -172,10 +172,10 @@ class GenericCamera(Camera):
                 self._last_image = response.content
                 self._last_update = update_time
 
-            except httpx.TimeoutException:
+            except httpx2.TimeoutException:
                 _LOGGER.error("Timeout getting camera image from %s", self._name)
                 return self._last_image
-            except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            except (httpx2.RequestError, httpx2.HTTPStatusError) as err:
                 _LOGGER.error(
                     "Error getting new camera image from %s: %s", self._name, err
                 )
@@ -185,10 +185,12 @@ class GenericCamera(Camera):
             return self._last_image
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this device."""
         return self._name
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if self._stream_source is None:

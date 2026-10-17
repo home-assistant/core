@@ -1,7 +1,5 @@
 """The SwitchBee Smart Home integration."""
 
-from __future__ import annotations
-
 import logging
 import re
 
@@ -52,7 +50,7 @@ async def get_api_object(
     return api
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) -> None:
     """Set up SwitchBee Smart Home from a config entry."""
 
     central_unit = entry.data[CONF_HOST]
@@ -69,12 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(
@@ -86,7 +82,7 @@ async def update_listener(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SwitchBeeConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -125,7 +121,6 @@ async def async_migrate_entry(
             for device_entry in dr.async_entries_for_config_entry(
                 dev_reg, config_entry.entry_id
             ):
-                assert isinstance(device_entry, dr.DeviceEntry)
                 for identifier in device_entry.identifiers:
                     if match := re.match(
                         rf"(?P<id>.+)-{old_unique_id}$", identifier[1]
@@ -154,5 +149,3 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, version=2)
 
         _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True

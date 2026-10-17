@@ -1,11 +1,10 @@
 """The Cloudflare R2 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
 from aiobotocore.client import AioBaseClient as S3Client
+from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import (
     ClientError,
@@ -33,7 +32,7 @@ type R2ConfigEntry = ConfigEntry[S3Client]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> None:
     """Set up Cloudflare R2 from a config entry."""
 
     data = cast(dict, entry.data)
@@ -45,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
             endpoint_url=data.get(CONF_ENDPOINT_URL),
             aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=data[CONF_ACCESS_KEY_ID],
+            config=AioConfig(warm_up_loader_caches=True),
         ).__aenter__()
         await client.head_bucket(Bucket=data[CONF_BUCKET])
     except ClientError as err:
@@ -77,11 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.async_on_state_change(notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> None:
     """Unload a config entry."""
     client = entry.runtime_data
     await client.__aexit__(None, None, None)
-    return True

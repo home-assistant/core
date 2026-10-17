@@ -1,13 +1,11 @@
 """Config flow for LG webOS TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 from aiowebostv import WebOsClient, WebOsTvPairError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -28,11 +26,11 @@ from . import WebOsTvConfigEntry
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
 from .helpers import get_sources
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -64,10 +62,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: WebOsTvConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -110,6 +110,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="pairing", errors=errors)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -134,9 +135,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._uuid = uuid
         return await self.async_step_pairing()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._host == self._host  # noqa: SLF001
+        return other_flow._host == self._host
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -190,9 +192,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=reconfigure_entry.data.get(CONF_HOST)
                     ): cv.string
                 }
@@ -232,9 +234,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if not sources:
             sources = sources_list
 
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources},
                 ): cv.multi_select({source: source for source in sources_list}),

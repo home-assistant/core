@@ -12,7 +12,7 @@ from homeassistant.components.switchbot.services import (
     async_setup_services,
 )
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -100,8 +100,8 @@ async def test_device_not_found(
                 blocking=True,
             )
 
-        assert err.value.translation_domain == DOMAIN
-        assert err.value.translation_key == "invalid_device_id"
+        assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+        assert err.value.translation_key == "service_device_not_found"
         assert err.value.translation_placeholders == {"device_id": "nonexistent_device"}
 
 
@@ -142,9 +142,12 @@ async def test_device_not_belonging(
             blocking=True,
         )
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "device_not_belonging"
-    assert err.value.translation_placeholders == {"device_id": device_entry.id}
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_device_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "device_name": "Other device",
+        "domain": DOMAIN,
+    }
 
 
 async def test_device_entry_not_loaded(
@@ -184,9 +187,12 @@ async def test_device_entry_not_loaded(
             blocking=True,
         )
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "device_entry_not_loaded"
-    assert err.value.translation_placeholders == {"device_id": device_entry.id}
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": second_entry.title,
+    }
 
 
 async def test_service_unsupported_device(
@@ -245,6 +251,6 @@ async def test_device_without_config_entry_id(
             blocking=True,
         )
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "invalid_device_id"
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_device_not_found"
     assert err.value.translation_placeholders == {"device_id": "abc"}

@@ -6,7 +6,7 @@ from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
 import pytest
 from yarl import URL
 
-from homeassistant.components.homeassistant_yellow.const import RADIO_DEVICE
+from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -78,7 +78,7 @@ async def test_switch_turn_on_off(
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
         title="Home Assistant Yellow",
-        domain="homeassistant_yellow",
+        domain=DOMAIN,
         data={
             "firmware": "ezsp",
             "firmware_version": "7.3.1.0 build 0",
