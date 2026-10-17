@@ -1,0 +1,93 @@
+{
+  "entity": {
+    "sensor": {
+      "barometric_pressure": {
+        "default": "mdi:gauge"
+      },
+      "co2": {
+        "default": "mdi:molecule-co2"
+      },
+      "humidity": {
+        "default": "mdi:water-percent",
+        "range": {
+          "0": "mdi:water-percent-alert",
+          "30.00001": "mdi:water-percent",
+          "65": "mdi:water-percent-alert"
+        }
+      },
+      "lowbatt": {
+        "default": "mdi:battery",
+        "state": {
+          "critical": "mdi:battery-sync",
+          "low": "mdi:battery-alert",
+          "missing": "mdi:battery-off"
+        }
+      },
+      "rssi": {
+        "default": "mdi:wifi-strength-1",
+        "range": {
+          "0": "mdi:wifi-strength-1",
+          "100": "mdi:wifi-strength-2",
+          "150": "mdi:wifi-strength-3",
+          "220": "mdi:wifi-strength-4"
+        }
+      },
+      "temperature": {
+        "default": "mdi:thermometer",
+        "range": {
+          "-50": "mdi:thermometer-low",
+          "0.00001": "mdi:thermometer",
+          "25": "mdi:thermometer-high"
+        }
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline",
+        "state": {
+          "e": "mdi:arrow-left",
+          "ene": "mdi:arrow-bottom-left",
+          "ese": "mdi:arrow-left",
+          "n": "mdi:arrow-down",
+          "ne": "mdi:arrow-bottom-left",
+          "nne": "mdi:arrow-down",
+          "nnw": "mdi:arrow-bottom-right",
+          "nw": "mdi:arrow-bottom-right",
+          "s": "mdi:arrow-up",
+          "se": "mdi:arrow-top-left",
+          "sse": "mdi:arrow-top-left",
+          "ssw": "mdi:arrow-up",
+          "sw": "mdi:arrow-top-right",
+          "w": "mdi:arrow-right",
+          "wnw": "mdi:arrow-right",
+          "wsw": "mdi:arrow-top-right"
+        }
+      },
+      "wind_direction_deg": {
+        "default": "mdi:compass-outline",
+        "range": {
+          "0": "mdi:arrow-down",
+          "22": "mdi:arrow-down",
+          "45": "mdi:arrow-bottom-left",
+          "68": "mdi:arrow-bottom-left",
+          "90": "mdi:arrow-left",
+          "112": "mdi:arrow-left",
+          "135": "mdi:arrow-top-left",
+          "157": "mdi:arrow-top-left",
+          "180": "mdi:arrow-up",
+          "202": "mdi:arrow-up",
+          "225": "mdi:arrow-top-right",
+          "247": "mdi:arrow-top-right",
+          "270": "mdi:arrow-right",
+          "292": "mdi:arrow-right",
+          "315": "mdi:arrow-bottom-right",
+          "337": "mdi:arrow-bottom-right"
+        }
+      },
+      "wind_gust": {
+        "default": "mdi:weather-windy-variant"
+      },
+      "wind_speed": {
+        "default": "mdi:weather-windy"
+      }
+    }
+  }
+}
