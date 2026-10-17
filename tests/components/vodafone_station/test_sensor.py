@@ -118,9 +118,10 @@ async def test_coordinator_client_connector_error(
     await setup_integration(hass, mock_config_entry)
 
     mock_vodafone_station_router.get_devices_data.side_effect = side_effect
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch("homeassistant.components.vodafone_station.coordinator.asyncio.sleep"):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         state := hass.states.get(f"sensor.vodafone_station_{TEST_SERIAL_NUMBER}_uptime")
