@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
-from google.maps.routing_v2 import Units
+from google.maps.routing_v2 import RoutingPreference, Units
 import pytest
 
 from homeassistant.components.google_travel_time.config_flow import default_options
@@ -13,6 +13,7 @@ from homeassistant.components.google_travel_time.const import (
     CONF_DEPARTURE_TIME,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
     UNITS_METRIC,
@@ -140,6 +141,45 @@ async def test_sensor_departure_time(hass: HomeAssistant) -> None:
 async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     """Test that sensor works for arrival time."""
     assert hass.states.get("sensor.google_travel_time").state == "27.0"
+
+
+@pytest.mark.parametrize(
+    ("travel_routing_preference", "expected_option"),
+    [
+        (None, RoutingPreference.TRAFFIC_AWARE_OPTIMAL),
+        ("traffic_unaware", RoutingPreference.TRAFFIC_UNAWARE),
+        ("traffic_aware", RoutingPreference.TRAFFIC_AWARE),
+        ("traffic_aware_optimal", RoutingPreference.TRAFFIC_AWARE_OPTIMAL),
+    ],
+)
+async def test_sensor_travel_routing_preference(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    travel_routing_preference: str,
+    expected_option: str,
+) -> None:
+    """Test that the travel_routing_preference option is provided to compute_routes."""
+
+    options = {
+        **DEFAULT_OPTIONS,
+        CONF_MODE: "driving",
+        CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=options,
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    routes_mock.compute_routes.assert_called_once()
+    assert (
+        routes_mock.compute_routes.call_args.args[0].routing_preference
+        == expected_option
+    )
 
 
 @pytest.mark.parametrize(
