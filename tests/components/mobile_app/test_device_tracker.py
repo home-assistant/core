@@ -1,5 +1,6 @@
 """Test mobile app device tracker."""
 
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -183,6 +184,24 @@ async def setup_zone(hass: HomeAssistant) -> None:
             },
             "School",
         ),
+        # location_time is exposed as a UTC datetime attribute
+        (
+            {"location_time": "2026-09-26T12:42:55.123Z"},
+            {
+                "location_time": datetime(2026, 9, 26, 12, 42, 55, 123000, tzinfo=UTC),
+                "in_zones": [],
+            },
+            "unknown",
+        ),
+        # location_time with a UTC offset is normalized to UTC
+        (
+            {"location_time": "2026-09-26T08:42:55-04:00"},
+            {
+                "location_time": datetime(2026, 9, 26, 12, 42, 55, tzinfo=UTC),
+                "in_zones": [],
+            },
+            "unknown",
+        ),
     ],
 )
 async def test_sending_location(
@@ -287,6 +306,7 @@ async def test_restoring_location(
                 "course": 60,
                 "speed": 70,
                 "vertical_accuracy": 80,
+                "location_time": "2026-09-26T12:42:55Z",
             },
         },
     )
@@ -322,6 +342,9 @@ async def test_restoring_location(
     assert state_2.attributes["course"] == 60
     assert state_2.attributes["speed"] == 70
     assert state_2.attributes["vertical_accuracy"] == 80
+    assert state_2.attributes["location_time"] == datetime(
+        2026, 9, 26, 12, 42, 55, tzinfo=UTC
+    )
 
 
 @pytest.mark.usefixtures("setup_zone")
@@ -571,6 +594,21 @@ async def test_saving_state(
                 "tracking_type": "position",
             },
         ),
+        # location_time is persisted as an ISO string and parsed back on restore
+        (
+            {
+                "in_zones": [],
+                "location_time": "2026-09-26T12:42:55+00:00",
+            },
+            "not_home",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "location_time": datetime(2026, 9, 26, 12, 42, 55, tzinfo=UTC),
+                "in_zones": [],
+                "tracking_type": "position",
+            },
+        ),
     ],
 )
 async def test_restoring_state(
@@ -724,6 +762,8 @@ async def test_restoring_state_legacy_fallback(
         {"gps_accuracy": "not-a-number"},
         # in_zones contains a non-zone entity_id
         {"in_zones": ["sensor.foo"]},
+        # location_time rejected by cv.datetime
+        {"location_time": "not-a-datetime"},
     ],
 )
 async def test_restoring_state_invalid_extra_data(
