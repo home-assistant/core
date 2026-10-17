@@ -45,6 +45,7 @@ from homeassistant.const import EVENT_LOGBOOK_ENTRY, WEEKDAYS
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -626,8 +627,8 @@ async def test_window_crossing_midnight(
             {"2026.10.2": _local(19, 2), "2026.10.3": _local(21, 2)},
             "2026.10.3",
             [],
-            ["2026.10.2"],
-            id="newest_that_waited",
+            [],
+            id="newer_patch_still_waits",
         ),
         pytest.param(
             {"2026.10.2": _local(18, 2), "2026.10.3": _local(19, 2)},
@@ -993,13 +994,13 @@ async def test_unload_during_backup(
     supervisor_client.homeassistant.update.assert_not_called()
 
 
-async def test_window_closed_during_backup(
+async def test_backup_may_run_past_window(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test nothing installs when the window closed while backing up."""
+    """Test the window bounds when the update starts, not when it ends."""
 
     async def slow_backup(hass: HomeAssistant) -> None:
         freezer.move_to(_local(22, 5, 10))
@@ -1017,7 +1018,7 @@ async def test_window_closed_during_backup(
             options={**ENABLED, "core_backup_before_update": True},
         )
 
-    supervisor_client.homeassistant.update.assert_not_called()
+    assert _installed(supervisor_client) == ["2026.10.2"]
 
 
 async def test_skipped_during_backup(
@@ -1503,3 +1504,101 @@ async def test_own_backup_job_after_backup(
         )
 
     assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_withdrawn_then_replaced(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test a withdrawn release is not installed once a replacement is offered."""
+    # 2026.10.2 waited long enough, but Supervisor withdrew it again
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, version_latest="2026.10.1"
+    )
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, version_latest="2026.10.3"
+    )
+    await _refresh_main_coordinator(hass, freezer)
+    # A check that sees 2026.10.3 offered
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+    freezer.move_to(_local(26, 3, 30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _installed(supervisor_client) == ["2026.10.3"]
+
+
+async def test_turned_off_while_saving(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test turning automatic updates off during the last save stops the update."""
+    save = Store.async_save
+
+    async def save_and_turn_off(store: Store, data: Any) -> None:
+        await save(store, data)
+        if store.key == STORAGE_KEY and data["attempted_window"] is not None:
+            entry = hass.config_entries.async_entries(DOMAIN)[0]
+            hass.config_entries.async_update_entry(
+                entry, options={**entry.options, "core_auto_update": False}
+            )
+
+    with patch.object(Store, "async_save", save_and_turn_off):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+        )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_turned_off_while_saving_pending(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test turning off during the pending save stops the update and clears it."""
+    save = Store.async_save
+
+    async def save_and_turn_off(store: Store, data: Any) -> None:
+        await save(store, data)
+        if store.key == STORAGE_KEY and data["pending"] is not None:
+            entry = hass.config_entries.async_entries(DOMAIN)[0]
+            hass.config_entries.async_update_entry(
+                entry, options={**entry.options, "core_auto_update": False}
+            )
+
+    with patch.object(Store, "async_save", save_and_turn_off):
+        await _setup_scheduled(
+            hass,
+            hass_storage,
+            freezer,
+            _local(22, 3, 30),
+            first_seen={"2026.10.2": _local(19, 2)},
+        )
+        await hass.async_block_till_done()
+
+    supervisor_client.homeassistant.update.assert_not_called()
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None

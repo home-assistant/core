@@ -484,10 +484,11 @@ class AutoUpdateManager:
     def async_get_install_candidate(self, now: datetime) -> str | None:
         """Return the patch release to install automatically, if any.
 
-        That is the newest patch of the running major that waited long
-        enough since it was first seen and is not skipped. Never newer than
-        what Supervisor offers now, so rolling back the version file stops
-        a pulled release.
+        That is the newest patch of the running major that is not skipped,
+        once it waited long enough since it was first seen. An older patch
+        is never installed while a newer one waits; the newer one may fix a
+        regression in it. Never newer than what Supervisor offers now, so
+        rolling back the version file stops a pulled release.
         """
         core = self._coordinator.data.core
         if core.version is None or core.version_latest is None:
@@ -495,16 +496,20 @@ class AutoUpdateManager:
 
         running = AwesomeVersion(core.version)
         offered = AwesomeVersion(core.version_latest)
-        delay = self.settings.delay
-        candidates = [
+        patches = [
             AwesomeVersion(version)
-            for version, first_seen in self._first_seen.items()
+            for version in self._first_seen
             if _major(version) == _major(core.version)
             and version not in self._skipped
-            and first_seen + delay <= now
+            and running < AwesomeVersion(version) <= offered
         ]
-        eligible = [version for version in candidates if running < version <= offered]
-        return str(max(eligible)) if eligible else None
+        if not patches:
+            return None
+
+        newest = str(max(patches))
+        if self._first_seen[newest] + self.settings.delay > now:
+            return None
+        return newest
 
     @callback
     def _async_install_time(self, now: datetime) -> datetime | None:
@@ -559,8 +564,8 @@ class AutoUpdateManager:
         )
 
     @callback
-    def _async_due_version(self, now: datetime) -> str | None:
-        """Return the version to install now, if it is time for one."""
+    def _async_eligible_version(self, now: datetime) -> str | None:
+        """Return the version to install, if automatic updates may run."""
         if (
             self.settings.enabled is not True
             or self.unavailable_reason is not None
@@ -568,12 +573,17 @@ class AutoUpdateManager:
         ):
             return None
 
+        return self.async_get_install_candidate(now)
+
+    @callback
+    def _async_due_version(self, now: datetime) -> str | None:
+        """Return the version to install now, if it is time for one."""
         if (
             install_time := self._async_install_time(now)
         ) is None or now < install_time:
             return None
 
-        return self.async_get_install_candidate(now)
+        return self._async_eligible_version(now)
 
     async def _async_check(self) -> None:
         """Install an eligible patch release when it is time.
@@ -614,21 +624,6 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
-                # A backup takes a while: the window may have closed, the
-                # version been skipped or pulled, the data gone stale, or
-                # someone else started an update. Not the backup check again;
-                # that backup was ours and may not show as finished yet.
-                if (
-                    self._async_due_version(dt_util.now()) != version
-                    or self._async_is_unsafe()
-                ):
-                    _LOGGER.info(
-                        "Not installing Home Assistant %s automatically, "
-                        "it is no longer due or safe to install",
-                        version,
-                    )
-                    return
-
             # Stored before asking Supervisor; Home Assistant restarts during
             # the update and finds out afterwards how it went
             self._pending = PendingUpdate(
@@ -637,6 +632,25 @@ class AutoUpdateManager:
                 started=dt_util.utcnow().isoformat(),
             )
             await self._store.async_save(self._data_to_save())
+
+            # Checked again, with nothing awaited until the request: the saves
+            # and the backup let the version be skipped or pulled, the data go
+            # stale or another update start. The window only bounds the start,
+            # so a long backup may run past its end. After our own backup the
+            # backup check is left out; it may not show as finished yet.
+            if (
+                self._async_eligible_version(dt_util.now()) != version
+                or self._async_is_unsafe()
+                or (not backup and self._async_is_backing_up())
+            ):
+                _LOGGER.info(
+                    "Not installing Home Assistant %s automatically, "
+                    "it is no longer due or safe to install",
+                    version,
+                )
+                self._pending = None
+                self._async_save()
+                return
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)
             await update_core(self._hass, version, False)
