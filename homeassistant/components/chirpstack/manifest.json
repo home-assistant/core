@@ -1,0 +1,15 @@
+{
+  "domain": "chirpstack",
+  "name": "ChirpStack",
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "dependencies": ["lorawan"],
+  "documentation": "https://www.home-assistant.io/integrations/chirpstack",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": [
+    "chirpstack-api==4.19.0",
+    "lorawan-connection[chirpstack]==1.2.0"
+  ]
+}

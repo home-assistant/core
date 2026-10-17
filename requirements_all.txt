@@ -776,6 +776,9 @@ chefiq-ble==1.0.1
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
 
+# homeassistant.components.chirpstack
+chirpstack-api==4.19.0
+
 # homeassistant.components.cielo_home
 cielo-connect-api==1.0.6
 
@@ -1571,8 +1574,9 @@ london-tube-status==0.7
 # homeassistant.components.loqed
 loqedAPI==2.1.16
 
+# homeassistant.components.chirpstack
 # homeassistant.components.lorawan
-lorawan-connection==1.2.0
+lorawan-connection[chirpstack]==1.2.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
