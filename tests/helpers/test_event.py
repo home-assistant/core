@@ -1626,6 +1626,45 @@ async def test_track_template_result_super_template_2_initially_false(
     info3.async_remove()
 
 
+@pytest.mark.parametrize(
+    ("parse_result", "expected"),
+    [(True, [1, 0.0]), (False, ["1", "1.0", "0.0"])],
+)
+async def test_track_template_result_parse_result(
+    hass: HomeAssistant, parse_result: bool, expected: list[int | float | str]
+) -> None:
+    """Test tracking a template compares results the way they are parsed."""
+    results = []
+    hass.states.async_set("sensor.test", "0")
+
+    @ha.callback
+    def run_callback(
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        results.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(
+                Template("{{ states('sensor.test') }}", hass),
+                None,
+                parse_result=parse_result,
+            )
+        ],
+        run_callback,
+    )
+
+    # Parsed, 1 and 1.0 are equal, and so are 0 and 0.0.
+    for state in ("1", "1.0", "0.0"):
+        hass.states.async_set("sensor.test", state)
+        await hass.async_block_till_done()
+
+    assert results == expected
+    info.async_remove()
+
+
 async def test_track_template_result_complex(hass: HomeAssistant) -> None:
     """Test tracking template."""
     specific_runs = []

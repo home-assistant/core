@@ -143,11 +143,13 @@ class TrackTemplate:
     The template is template to calculate.
     The variables are variables to pass to the template.
     The rate_limit is a rate limit on how often the template is re-rendered.
+    The parse_result controls whether the result is parsed into a native type.
     """
 
     template: Template
     variables: TemplateVarsType
     rate_limit: float | None = None
+    parse_result: bool = True
 
 
 @dataclass(slots=True)
@@ -882,7 +884,10 @@ class TrackTemplateResultInfo:
             template = super_template.template
             variables = super_template.variables
             self._info[template] = info = template.async_render_to_info(
-                variables, strict=strict, log_fn=log_fn
+                variables,
+                strict=strict,
+                log_fn=log_fn,
+                parse_result=super_template.parse_result,
             )
 
             # If the super template did not render to True, don't update other templates
@@ -903,7 +908,10 @@ class TrackTemplateResultInfo:
             template = track_template_.template
             variables = track_template_.variables
             self._info[template] = info = template.async_render_to_info(
-                variables, strict=strict, log_fn=log_fn
+                variables,
+                strict=strict,
+                log_fn=log_fn,
+                parse_result=track_template_.parse_result,
             )
 
             if info.exception:
@@ -1028,7 +1036,7 @@ class TrackTemplateResultInfo:
 
         self._rate_limit.async_triggered(template, now)
         self._info[template] = info = template.async_render_to_info(
-            track_template_.variables
+            track_template_.variables, parse_result=track_template_.parse_result
         )
 
         try:
