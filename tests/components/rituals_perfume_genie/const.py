@@ -2,3 +2,4 @@
 
 TEST_EMAIL = "test@rituals.com"
 TEST_PASSWORD = "test-password"
+TEST_TOKEN = "test-token"
