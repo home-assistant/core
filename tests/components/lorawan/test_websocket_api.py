@@ -99,7 +99,6 @@ async def test_reconnect_rebuilds_observations(
     replacement, _ = await registered_backend("network", [DESCRIPTOR])
     states = _snapshot(hass)["devices"]
     assert len(states) == 1
-    assert states[0]["connection"]["connected"] is True
     assert states[0]["last_uplink"] is None
     assert states[0]["last_join"] is None
     assert states[0]["last_status"] is None
@@ -479,7 +478,6 @@ async def test_configuration_url_without_devices(
     result = (await client.receive_json())["result"]
     assert result["devices"] == []
     assert result["connections"][0]["configuration_url"] == configuration_url
-    assert result["connections"][0]["connected"] is True
     backend.disconnect()
     assert _snapshot(hass) == {"devices": [], "connections": []}
     unsubscribe()

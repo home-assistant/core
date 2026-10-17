@@ -4,7 +4,6 @@
     'connections': list([
       dict({
         'configuration_url': None,
-        'connected': True,
         'domain': 'test_provider',
         'entry_id': 'network',
         'title': 'Mock Title',
@@ -16,7 +15,6 @@
         'battery_level': None,
         'connection': dict({
           'configuration_url': None,
-          'connected': True,
           'domain': 'test_provider',
           'entry_id': 'network',
           'title': 'Mock Title',
@@ -43,7 +41,6 @@
     'connections': list([
       dict({
         'configuration_url': None,
-        'connected': True,
         'domain': 'test_provider',
         'entry_id': 'network',
         'title': 'Mock Title',
@@ -55,7 +52,6 @@
         'battery_level': 0,
         'connection': dict({
           'configuration_url': None,
-          'connected': True,
           'domain': 'test_provider',
           'entry_id': 'network',
           'title': 'Mock Title',

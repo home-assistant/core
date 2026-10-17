@@ -43,7 +43,6 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
             "entry_id": entry_id,
             "domain": entry.domain,
             "title": entry.title,
-            "connected": True,
             "configuration_url": registered.configuration_url,
         }
         connections.append(connection)
