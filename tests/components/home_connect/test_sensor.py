@@ -36,6 +36,7 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_OPERATION_STATE_DELAYED_START,
+    BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_READY,
     BSH_OPERATION_STATE_RUN,
@@ -1727,5 +1728,119 @@ async def test_program_start_time_unknown_for_program_started_before_setup(
         [
             (60, [_operation_state(BSH_OPERATION_STATE_PAUSE)], STATE_UNKNOWN),
             (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
+        ],
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize(
+    "steps",
+    [
+        pytest.param(
+            [
+                (
+                    60,
+                    [
+                        _operation_state(BSH_OPERATION_STATE_FINISHED),
+                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
+                    ],
+                    STATE_UNKNOWN,
+                ),
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        ),
+                        _operation_state(BSH_OPERATION_STATE_RUN),
+                    ],
+                    "2021-01-09T12:03:00+00:00",
+                ),
+            ],
+            id="same_program_after_finished",
+        ),
+        pytest.param(
+            [
+                (
+                    60,
+                    [_notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None})],
+                    STATE_UNKNOWN,
+                ),
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:03:00+00:00",
+                ),
+            ],
+            id="same_program_while_running",
+        ),
+        pytest.param(
+            [
+                (
+                    60,
+                    [_operation_state(BSH_OPERATION_STATE_FINISHED)],
+                    "2021-01-09T12:01:00+00:00",
+                ),
+                (
+                    60,
+                    [
+                        _notify(
+                            {
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                                )
+                            }
+                        )
+                    ],
+                    "2021-01-09T12:03:00+00:00",
+                ),
+                (
+                    60,
+                    [_operation_state(BSH_OPERATION_STATE_RUN)],
+                    "2021-01-09T12:03:00+00:00",
+                ),
+            ],
+            id="other_program_after_finished",
+        ),
+    ],
+)
+async def test_program_start_time_new_run_without_ready(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    steps: list[ProgramStartTimeStep],
+) -> None:
+    """Test a new program run gets a new start time without the ready state."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await _run_program_start_time_steps(
+        hass,
+        freezer,
+        client,
+        appliance.ha_id,
+        [
+            (
+                60,
+                [_operation_state(BSH_OPERATION_STATE_RUN)],
+                "2021-01-09T12:01:00+00:00",
+            ),
+            *steps,
         ],
     )
