@@ -14,9 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, LOGGER
 
@@ -25,7 +23,6 @@ STEP_USER_SCHEMA = probatio.Schema(
 )
 
 TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
-UNKNOWN_TRMNL_ACCOUNT = "unknown_trmnl_account"
 
 
 class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -74,26 +71,6 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"account_url": TRMNL_ACCOUNT_URL},
         )
-
-    @override
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle DHCP discovery."""
-        # Entries are per account, so use a placeholder to only have one discovery flow
-        await self.async_set_unique_id(UNKNOWN_TRMNL_ACCOUNT)
-        self._abort_if_unique_id_configured()
-        device_registry = dr.async_get(self.hass)
-        connection = (
-            dr.CONNECTION_NETWORK_MAC,
-            dr.format_mac(discovery_info.macaddress),
-        )
-        for entry in self._async_current_entries(include_ignore=False):
-            if device_registry.async_get_device_by_connection(
-                connection, entry.entry_id
-            ):
-                return self.async_abort(reason="already_configured")
-        return await self.async_step_user()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
