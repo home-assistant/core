@@ -893,6 +893,9 @@ split-on-trailing-comma = false
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
 
+# Keep Core's wrapper from shadowing the installed hassfest package.
+"script/hassfest/*" = ["INP001"]
+
 # Some utils have constants that benefit from being uppercase
 "homeassistant/util/*" = ["N806"]
 

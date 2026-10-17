@@ -812,7 +812,7 @@ jobs:
         run: |
           "${RUNNER_TEMP}/hassfest-venv/bin/hassfest" --help
           "${RUNNER_TEMP}/hassfest-venv/bin/python" \
-            "${GITHUB_WORKSPACE}/script/hassfest/check_package.py"
+            "${GITHUB_WORKSPACE}/packages/hassfest/tests/check_package.py"
 
   build-pytest-package:
     name: Build pytest-home-assistant package
