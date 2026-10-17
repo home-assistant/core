@@ -46,5 +46,10 @@
         "name": "Wi-Fi signal"
       }
     }
+  },
+  "exceptions": {
+    "firmware_update_failed": {
+      "message": "Rituals could not start the firmware update: {error}"
+    }
   }
 }
