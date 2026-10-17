@@ -1,0 +1,352 @@
+"""Tests for the Timer list triggers."""
+
+import pytest
+
+from homeassistant.components import automation
+from homeassistant.components.timer_list.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_PLATFORM,
+    CONF_TARGET,
+    SERVICE_TURN_OFF,
+)
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.setup import async_setup_component
+
+from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
+
+from tests.common import (
+    MockConfigEntry,
+    MockPlatform,
+    async_mock_service,
+    mock_platform,
+)
+from tests.components.common import assert_trigger_options_supported
+
+TEST_ENTITY_ID = "timer_list.timers"
+
+
+@pytest.fixture
+def service_calls(hass: HomeAssistant) -> list[ServiceCall]:
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
+
+
+@pytest.fixture(autouse=True)
+async def setup_entity(hass: HomeAssistant) -> None:
+    """Create a timer list entity via the mock platform."""
+    entity = MockTimerListEntity()
+    entity.entity_id = TEST_ENTITY_ID
+    entity._attr_unique_id = "timers"
+    await create_mock_platform(hass, [entity])
+
+
+async def _setup_automation(
+    hass: HomeAssistant,
+    trigger_type: str,
+    extra_data: dict[str, str] | None = None,
+    entity_id: str = TEST_ENTITY_ID,
+) -> None:
+    """Set up an automation for the given timer list trigger."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": [
+                    {
+                        CONF_PLATFORM: f"{DOMAIN}.{trigger_type}",
+                        CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+                    }
+                ],
+                "action": {
+                    "service": "test.automation",
+                    "data": {
+                        "entity_id": "{{ trigger.entity_id }}",
+                        "timer_id": "{{ trigger.timer.timer_id }}",
+                        "status": "{{ trigger.timer.status }}",
+                        **(extra_data or {}),
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def _create_timer(hass: HomeAssistant) -> str:
+    """Create a timer and return its id."""
+    result = await hass.services.async_call(
+        DOMAIN,
+        "create_timer",
+        {"duration": {"seconds": 60}},
+        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    return result[TEST_ENTITY_ID]["timer_id"]
+
+
+async def _call_timer_service(hass: HomeAssistant, service: str, timer_id: str) -> None:
+    """Call an entity action for a single timer."""
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {"timer_id": timer_id},
+        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+
+async def test_timer_finished_trigger(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test the timer_finished trigger fires when a timer finishes."""
+    await _setup_automation(hass, "timer_finished")
+    timer_id = await _create_timer(hass)
+
+    assert len(service_calls) == 0
+
+    await _call_timer_service(hass, "finish_timer", timer_id)
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data == {
+        "entity_id": TEST_ENTITY_ID,
+        "timer_id": timer_id,
+        "status": "finished",
+    }
+
+
+async def test_timer_created_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the timer_created trigger fires when a timer is created."""
+    await _setup_automation(hass, "timer_created")
+    timer_id = await _create_timer(hass)
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["timer_id"] == timer_id
+    assert service_calls[0].data["status"] == "active"
+
+
+async def test_timer_cancelled_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the timer_cancelled trigger fires and ignores other events."""
+    await _setup_automation(hass, "timer_cancelled")
+    timer_id = await _create_timer(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        "cancel_timer",
+        {"timer_id": timer_id},
+        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["status"] == "cancelled"
+
+
+async def test_timer_paused_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test pausing a timer fires the paused trigger."""
+    await _setup_automation(hass, "timer_paused")
+    timer_id = await _create_timer(hass)
+
+    await _call_timer_service(hass, "pause_timer", timer_id)
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["timer_id"] == timer_id
+    assert service_calls[0].data["status"] == "paused"
+
+
+async def test_timer_unpaused_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test resuming a timer fires the unpaused trigger, not the paused one."""
+    await _setup_automation(hass, "timer_unpaused")
+    timer_id = await _create_timer(hass)
+    await _call_timer_service(hass, "pause_timer", timer_id)
+
+    await _call_timer_service(hass, "unpause_timer", timer_id)
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["timer_id"] == timer_id
+    assert service_calls[0].data["status"] == "active"
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_delta"),
+    [
+        pytest.param("add_time", 30.0, id="add_time"),
+        pytest.param("subtract_time", -30.0, id="subtract_time"),
+    ],
+)
+async def test_timer_time_changed_trigger_reports_delta(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    service: str,
+    expected_delta: float,
+) -> None:
+    """Test the time_changed trigger reports the signed amount of time added."""
+    await _setup_automation(
+        hass, "timer_time_changed", extra_data={"delta": "{{ trigger.delta }}"}
+    )
+    timer_id = await _create_timer(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {"timer_id": timer_id, "duration": {"seconds": 30}},
+        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["timer_id"] == timer_id
+    assert service_calls[0].data["delta"] == expected_delta
+
+
+async def test_trigger_picks_up_entity_added_after_setup(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a timer list created after the automation still fires the trigger."""
+    late_entity_id = "timer_list.late"
+    await _setup_automation(hass, "timer_created", entity_id=late_entity_id)
+
+    entity = MockTimerListEntity(name="Late")
+    entity.entity_id = late_entity_id
+    await create_mock_platform(hass, [entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "create_timer",
+        {"duration": {"seconds": 60}},
+        target={ATTR_ENTITY_ID: late_entity_id},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["entity_id"] == late_entity_id
+
+
+async def test_trigger_options_supported(hass: HomeAssistant) -> None:
+    """Test the timer list triggers do not advertise behavior or duration."""
+    for trigger_type in (
+        "timer_created",
+        "timer_paused",
+        "timer_unpaused",
+        "timer_time_changed",
+        "timer_finished",
+        "timer_cancelled",
+    ):
+        await assert_trigger_options_supported(
+            hass,
+            f"{DOMAIN}.{trigger_type}",
+            None,
+            supports_behavior=False,
+            supports_duration=False,
+        )
+
+
+async def test_trigger_unsubscribes_when_automation_turned_off(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test turning the automation off releases the timer list subscription."""
+    await _setup_automation(hass, "timer_created")
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "automation.automation_0"},
+        blocking=True,
+    )
+
+    await _create_timer(hass)
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 0
+
+
+async def test_trigger_without_target_fails_to_attach(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a trigger targeting nothing is rejected rather than silently idle."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": [
+                    {
+                        CONF_PLATFORM: f"{DOMAIN}.timer_created",
+                        CONF_TARGET: {},
+                    }
+                ],
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert "No target defined" in caplog.text
+
+
+async def test_trigger_follows_entity_replaced_by_reload(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the trigger resubscribes to the entity object a reload creates.
+
+    A config entry reload builds a new entity object but leaves its registry
+    entry untouched, so the target set never changes and nothing else would
+    tell the trigger its subscription points at a discarded object.
+    """
+    reloaded_entity_id = "timer_list.reloaded"
+    await _setup_automation(hass, "timer_created", entity_id=reloaded_entity_id)
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Build a fresh entity per setup, as a real integration does."""
+        entity = MockTimerListEntity(name="Reloaded")
+        entity.entity_id = reloaded_entity_id
+        entity._attr_unique_id = "reloaded"
+        async_add_entities([entity])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "create_timer",
+        {"duration": {"seconds": 60}},
+        target={ATTR_ENTITY_ID: reloaded_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["entity_id"] == reloaded_entity_id
