@@ -62,8 +62,20 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Rituals didn't accept your credentials. Sign in again to continue."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with Rituals."
+    },
     "firmware_update_failed": {
       "message": "Rituals could not start the firmware update: {error}"
+    },
+    "rate_limited": {
+      "message": "Rituals is limiting how often it can be used. Try again later."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with Rituals: {error}"
     }
   }
 }
