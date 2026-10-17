@@ -82,6 +82,16 @@
       }
     }
   },
+  "issues": {
+    "deprecated_zone_switch": {
+      "description": "The zone switch {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nUpdate your dashboards, templates, automations and scripts to use the replacement valve, then disable the deprecated switch to have it removed after the next restart.",
+      "title": "RainMachine zone switch has been replaced by a valve"
+    },
+    "deprecated_zone_switch_scripts": {
+      "description": "The zone switch {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nThe switch is used in the following automations or scripts:\n{items}\n\nUpdate the above automations or scripts to use the replacement valve, then disable the deprecated switch to have it removed after the next restart.",
+      "title": "RainMachine zone switch has been replaced by a valve"
+    }
+  },
   "options": {
     "step": {
       "init": {

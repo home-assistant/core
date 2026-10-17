@@ -13,6 +13,8 @@ from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEA
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.dt import as_timestamp, utcnow
 
@@ -128,6 +130,29 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     }
 )
 
+SERVICE_START_ZONE_SCHEMA = {
+    probatio.Optional(
+        CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
+    ): cv.positive_int
+}
+
+
+@callback
+def async_get_zone_entities(hass: HomeAssistant) -> dict[str, Entity]:
+    """Get RainMachine zone switch and valve entities."""
+    return {
+        entity_id: entity
+        for platform in async_get_platforms(hass, DOMAIN)
+        for entity_id, entity in platform.entities.items()
+        if entity_id.startswith("valve.")
+        or (
+            entity_id.startswith("switch.")
+            and entity.unique_id is not None
+            and "_zone_" in entity.unique_id
+            and not entity.unique_id.endswith("_enabled")
+        )
+    }
+
 
 async def async_update_programs_and_zones(
     hass: HomeAssistant, entry: RainMachineConfigEntry
@@ -159,6 +184,38 @@ def async_get_entry_for_service_call(
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
+
+    async def async_start_zone(call: ServiceCall) -> None:
+        """Start a zone using either the valve or deprecated switch entity."""
+        await service.entity_service_call(
+            hass,
+            lambda: async_get_zone_entities(hass),
+            "async_start_zone",
+            call,
+        )
+
+    async def async_stop_zone(call: ServiceCall) -> None:
+        """Stop a zone using either the valve or deprecated switch entity."""
+        await service.entity_service_call(
+            hass,
+            lambda: async_get_zone_entities(hass),
+            "async_stop_zone",
+            call,
+        )
+
+    for service_name, schema, entity_method in (
+        (
+            "start_zone",
+            cv.make_entity_service_schema(SERVICE_START_ZONE_SCHEMA),
+            async_start_zone,
+        ),
+        (
+            "stop_zone",
+            cv.make_entity_service_schema({}),
+            async_stop_zone,
+        ),
+    ):
+        hass.services.async_register(DOMAIN, service_name, entity_method, schema=schema)
 
     def call_with_controller(
         update_programs_and_zones: bool = True,
@@ -304,17 +361,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     entity_services: tuple[tuple[str, VolDictType | None, str], ...] = (
         ("start_program", None, "async_start_program"),
-        (
-            "start_zone",
-            {
-                probatio.Optional(
-                    CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
-                ): cv.positive_int
-            },
-            "async_start_zone",
-        ),
         ("stop_program", None, "async_stop_program"),
-        ("stop_zone", None, "async_stop_zone"),
     )
     for service_name, entity_schema, func in entity_services:
         service.async_register_platform_entity_service(
