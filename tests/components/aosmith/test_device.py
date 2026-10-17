@@ -16,8 +16,8 @@ async def test_device(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test creation of the device."""
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "junctionId")},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "junctionId"), init_integration.entry_id
     )
 
     assert reg_device == snapshot

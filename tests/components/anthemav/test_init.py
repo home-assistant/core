@@ -44,8 +44,8 @@ async def test_device_registry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device registry entry, including the network MAC connection."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:01")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), init_integration.entry_id
     )
     assert device_entry
     assert device_entry == snapshot

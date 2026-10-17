@@ -66,10 +66,11 @@ def mock_transmission_client() -> Generator[AsyncMock]:
         }
         client.session_stats.return_value = SessionStats(fields=session_stats_data)
 
-        session_data = {"alt-speed-enabled": False}
+        session_data = {"alt-speed-enabled": False, "download-dir": "/downloads"}
         client.get_session.return_value = Session(fields=session_data)
 
         client.get_torrents.return_value = []
+        client.free_space.return_value = 42949672960  # 40 GiB
 
         yield mock_client_class
 

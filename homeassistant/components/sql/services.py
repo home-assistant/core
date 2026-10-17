@@ -2,10 +2,10 @@
 
 import logging
 
+import probatio
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.core import (
@@ -35,12 +35,12 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_QUERY = "query"
-SERVICE_QUERY_SCHEMA = vol.Schema(
+SERVICE_QUERY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_QUERY): vol.All(
+        probatio.Required(CONF_QUERY): probatio.All(
             cv.template, ValueTemplate.from_template, validate_sql_select
         ),
-        vol.Optional(CONF_DB_URL): cv.string,
+        probatio.Optional(CONF_DB_URL): cv.string,
     }
 )
 

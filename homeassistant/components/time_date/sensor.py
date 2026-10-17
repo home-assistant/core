@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -33,8 +32,8 @@ TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): vol.All(
-            cv.ensure_list, [vol.In(OPTION_TYPES)]
+        probatio.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): probatio.All(
+            probatio.EnsureList(), [probatio.In(OPTION_TYPES)]
         )
     }
 )

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
 from homematicip.connection.connection_context import ConnectionContext
+from homematicip.connection.rest_connection import RestResult
 from homematicip.exceptions.connection_exceptions import (
     HmipAuthenticationError,
     HmipConnectionError,
@@ -197,6 +198,7 @@ async def test_auth_create(hass: HomeAssistant, simple_mock_auth) -> None:
     """Mock AsyncAuth to execute get_auth."""
     config = {HMIPC_HAPID: HAPID, HMIPC_PIN: HAPPIN, HMIPC_NAME: "hmip"}
     hmip_auth = HomematicipAuth(hass, config)
+    simple_mock_auth.connection_request.return_value = RestResult(status=200)
     assert hmip_auth
 
     with (
@@ -243,6 +245,29 @@ async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> N
         ),
     ):
         assert not await hmip_auth.get_auth(hass, HAPID, HAPPIN)
+
+
+async def test_auth_create_rejected(
+    hass: HomeAssistant, simple_mock_auth: AsyncMock
+) -> None:
+    """Test a connection request the cloud rejects does not yield an auth."""
+    config = {HMIPC_HAPID: HAPID, HMIPC_PIN: HAPPIN, HMIPC_NAME: "hmip"}
+    hmip_auth = HomematicipAuth(hass, config)
+    # a wrong or missing PIN is answered with a 400, which the library returns
+    simple_mock_auth.connection_request.return_value = RestResult(
+        status=400, text='{"errorCode":"INVALID_PIN"}'
+    )
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.Auth",
+            return_value=simple_mock_auth,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
+    ):
+        assert not await hmip_auth.async_setup()
 
 
 async def test_get_state_after_disconnect(

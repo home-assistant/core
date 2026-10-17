@@ -1,10 +1,9 @@
 """Test the Liebherr sensor platform."""
 
 import copy
-from datetime import timedelta
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
     Device,
     DeviceState,
@@ -26,10 +25,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -153,10 +153,10 @@ async def test_multi_zone_with_none_position(
 async def test_sensor_update_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
     exception: Exception,
 ) -> None:
-    """Test sensor becomes unavailable when coordinator update fails."""
+    """Test sensor becomes unavailable when the stream disconnects."""
     entity_id = "sensor.test_fridge_top_zone"
 
     # Initial state should be available with value
@@ -164,32 +164,42 @@ async def test_sensor_update_failure(
     assert state is not None
     assert state.state == "5"
 
-    # Simulate update error
+    # Simulate a stream disconnect via the mocked ``get_device_state``.
     mock_liebherr_client.get_device_state.side_effect = exception
 
-    # Advance time to trigger coordinator refresh (60 second interval)
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_push()
 
     # Sensor should now be unavailable
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        MOCK_DEVICE_STATE
+    # Simulate reconnect with a changed top-zone temperature.
+    fresh_state = replace(
+        MOCK_DEVICE_STATE,
+        controls=[
+            replace(control, value=6)
+            if isinstance(control, TemperatureControl) and control.zone_id == 1
+            else control
+            for control in MOCK_DEVICE_STATE.controls
+        ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: fresh_state
+    reconnect_states: list[str] = []
+    unsubscribe = async_track_state_change_event(
+        hass,
+        entity_id,
+        lambda event: reconnect_states.append(event.data["new_state"].state),
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
+    unsubscribe()
 
-    # Sensor should recover
+    # Sensor should recover directly with fresh data, without exposing stale data.
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "5"
+    assert state.state == "6"
+    assert reconnect_states == ["6"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -197,7 +207,7 @@ async def test_sensor_update_auth_failure_triggers_reauth(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test authentication error triggers reauth flow."""
     entity_id = "sensor.test_fridge_top_zone"
@@ -207,17 +217,13 @@ async def test_sensor_update_auth_failure_triggers_reauth(
     assert state is not None
     assert state.state == "5"
 
-    # Simulate auth error
+    # Simulate auth error from the SSE stream
     mock_liebherr_client.get_device_state.side_effect = LiebherrAuthenticationError(
         "API key revoked"
     )
 
-    # Advance time to trigger coordinator refresh (60 second interval)
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_push()
 
-    # Sensor should now be unavailable
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -236,7 +242,7 @@ async def test_sensor_unavailable_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test sensor becomes unavailable when control is removed."""
     entity_id = "sensor.test_fridge_top_zone"
@@ -246,15 +252,13 @@ async def test_sensor_unavailable_when_control_missing(
     assert state is not None
     assert state.state == "5"
 
-    # Device stops reporting controls (e.g., zone removed or API issue)
+    # Device stops reporting controls (e.g., zone removed or API issue).
+    # Only observable via a full-state event on stream reconnect.
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
         device=MOCK_DEVICE, controls=[]
     )
 
-    # Advance time to trigger coordinator refresh
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
 
     # Sensor should now be unavailable
     state = hass.states.get(entity_id)

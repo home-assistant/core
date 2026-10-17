@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import Mock, patch
 
-from aioshelly.const import MODEL_PLUG, MODEL_WALL_DISPLAY
+from aioshelly.const import MODEL_CAMERA, MODEL_PLUG, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, NotInitialized, RpcCallError
 import pytest
 
@@ -16,6 +16,7 @@ from homeassistant.components.shelly.const import (
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     PUSH_UPDATE_ISSUE_ID,
+    RTSP_DISABLED_ISSUE_ID,
     BLEScannerMode,
     DeprecatedFirmwareInfo,
 )
@@ -758,6 +759,135 @@ async def test_plug_1_push_update_issue_created(
     await hass.async_block_till_done()
     await init_integration(hass, 1, model=MODEL_PLUG)
     await mock_block_device_push_update_failure(hass, mock_block_device)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+
+async def test_rtsp_disabled_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test repair issue when camera RTSP is disabled."""
+    monkeypatch.setitem(
+        mock_camera_rpc_device.config["camera:0"]["rtsp"], "enable", False
+    )
+
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 3, MODEL_CAMERA)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    result = await process_repair_fix_flow(
+        client, result["flow_id"], {"next_step_id": "confirm"}
+    )
+    assert result["type"] == "create_entry"
+    assert mock_camera_rpc_device.set_camera_rtsp.call_count == 1
+    assert mock_camera_rpc_device.set_camera_rtsp.call_args[0] == (0, True)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+async def test_no_rtsp_disabled_issue_when_enabled(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test no repair issue when camera RTSP is enabled."""
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    await init_integration(hass, 3, MODEL_CAMERA)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+async def test_rtsp_disabled_issue_ignore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test ignoring the RTSP disabled issue."""
+    monkeypatch.setitem(
+        mock_camera_rpc_device.config["camera:0"]["rtsp"], "enable", False
+    )
+
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 3, MODEL_CAMERA)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    result = await process_repair_fix_flow(
+        client, result["flow_id"], {"next_step_id": "ignore"}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "issue_ignored"
+    assert mock_camera_rpc_device.set_camera_rtsp.call_count == 0
+
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.dismissed_version
+
+
+@pytest.mark.parametrize(
+    "exception", [DeviceConnectionError, RpcCallError(999, "Unknown error")]
+)
+async def test_rtsp_disabled_issue_exc(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+) -> None:
+    """Test repair issue handling when set_camera_rtsp ends with an exception."""
+    mock_camera_rpc_device.set_camera_rtsp.side_effect = exception
+    monkeypatch.setitem(
+        mock_camera_rpc_device.config["camera:0"]["rtsp"], "enable", False
+    )
+
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 3, MODEL_CAMERA)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    result = await process_repair_fix_flow(
+        client, result["flow_id"], {"next_step_id": "confirm"}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+    assert mock_camera_rpc_device.set_camera_rtsp.call_count == 1
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 1

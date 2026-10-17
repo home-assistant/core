@@ -1,6 +1,6 @@
 """Test the habitica module."""
 
-import datetime
+import datetime as dt
 import logging
 from unittest.mock import AsyncMock
 
@@ -125,7 +125,7 @@ async def test_coordinator_rate_limited(
     habitica.get_user.side_effect = ERROR_TOO_MANY_REQUESTS
 
     with caplog.at_level(logging.DEBUG):
-        freezer.tick(datetime.timedelta(seconds=60))
+        freezer.tick(dt.timedelta(seconds=60))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -148,8 +148,8 @@ async def test_remove_party_and_reload(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry.unique_id}_{group_id}"), config_entry.entry_id
         )
         is not None
     )
@@ -163,13 +163,13 @@ async def test_remove_party_and_reload(
         await async_load_fixture(hass, "user_no_party.json", DOMAIN)
     )
 
-    freezer.tick(datetime.timedelta(seconds=60))
+    freezer.tick(dt.timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry.unique_id}_{group_id}"), config_entry.entry_id
         )
         is None
     )

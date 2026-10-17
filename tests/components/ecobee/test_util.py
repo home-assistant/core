@@ -1,7 +1,7 @@
 """Tests for the ecobee.util module."""
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.ecobee.util import ecobee_date, ecobee_time
 
@@ -17,7 +17,7 @@ async def test_ecobee_date_with_invalid_input() -> None:
     """Test that the date function raises the expected exception."""
     test_input = "20190927"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ecobee_date(test_input)
 
 
@@ -32,5 +32,5 @@ async def test_ecobee_time_with_invalid_input() -> None:
     """Test that the time function raises the expected exception."""
     test_input = "20:55"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ecobee_time(test_input)

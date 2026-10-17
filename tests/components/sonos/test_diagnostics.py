@@ -1,9 +1,11 @@
 """Tests for the diagnostics data provided by the Sonos integration."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.components.sonos.const import DOMAIN
+from homeassistant.components.sonos.diagnostics import TO_REDACT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
@@ -48,7 +50,9 @@ async def test_diagnostics_device(
 
     TEST_DEVICE = "RINCON_test"
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE), config_entry.entry_id
+    )
     assert device_entry is not None
 
     result = await get_diagnostics_for_device(
@@ -61,3 +65,31 @@ async def test_diagnostics_device(
             "sonos_group_entities",
         )
     )
+
+
+@pytest.mark.parametrize("key", sorted(TO_REDACT))
+async def test_diagnostics_redacts_keys(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+    key: str,
+) -> None:
+    """Test sensitive keys are redacted at any level."""
+    speaker = config_entry.runtime_data.discovered["RINCON_test"]
+    speaker._last_event_cache = {
+        "zone_group_topology": {
+            key: "secret",
+            "nested": [{key: "secret", "keep": 1}],
+        }
+    }
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert "secret" not in str(result)
+    assert result["discovered"]["RINCON_test"]["_last_event_cache"] == {
+        "zone_group_topology": {
+            key: "**REDACTED**",
+            "nested": [{key: "**REDACTED**", "keep": 1}],
+        }
+    }

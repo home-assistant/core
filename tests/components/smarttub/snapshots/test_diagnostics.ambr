@@ -1,0 +1,80 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'email': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+    'spas': list([
+      dict({
+        'errors': list([
+          dict({
+            'code': 11,
+            'created_at': '2021-01-01T00:00:00+00:00',
+            'description': 'The flow switch is stuck in the open position.',
+            'error_type': 'TUB_ERROR',
+            'title': 'Flow Switch Stuck Open',
+            'updated_at': '2021-01-02T00:00:00+00:00',
+          }),
+        ]),
+        'reminders': list([
+          dict({
+            'name': 'MyFilter',
+            'remaining_days': 2,
+            'snoozed': False,
+          }),
+        ]),
+        'status': dict({
+          'blowoutCycle': 'INACTIVE',
+          'cleanupCycle': 'INACTIVE',
+          'flowSwitch': 'OPEN',
+          'heatMode': 'AUTO',
+          'heater': 'ON',
+          'lastWifi': dict({
+            'lastConnectionTimestamp': '2025-08-29T18:26:25.689257Z',
+            'ssid': '**REDACTED**',
+          }),
+          'lights': list([
+          ]),
+          'online': True,
+          'ozone': 'OFF',
+          'panelSerialNumber': '**REDACTED**',
+          'primaryFiltration': dict({
+            'cycle': 1,
+            'duration': 4,
+            'lastUpdated': '2021-01-20T11:38:57.014Z',
+            'mode': 'NORMAL',
+            'startHour': 2,
+            'status': 'INACTIVE',
+          }),
+          'pumps': list([
+          ]),
+          'secondaryFiltration': dict({
+            'lastUpdated': '2020-07-09T19:39:52.961Z',
+            'mode': 'AWAY',
+            'status': 'INACTIVE',
+          }),
+          'sensors': list([
+            dict({
+              'address': '**REDACTED**',
+              'fill_drain': None,
+              'magnet': True,
+              'motion': None,
+              'name': '{sensor-name}',
+              'pressure': None,
+              'spaId': '**REDACTED**',
+              'subType': 'magnet',
+              'type': 'ibs0x',
+            }),
+          ]),
+          'setTemperature': 39,
+          'state': 'NORMAL',
+          'uv': 'OFF',
+          'water': dict({
+            'temperature': 38,
+          }),
+        }),
+      }),
+    ]),
+  })
+# ---

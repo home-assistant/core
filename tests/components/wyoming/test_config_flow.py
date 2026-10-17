@@ -62,6 +62,7 @@ async def test_form_stt(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test ASR"
     assert result2["data"] == {
@@ -92,6 +93,7 @@ async def test_form_tts(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test TTS"
     assert result2["data"] == {
@@ -121,6 +123,20 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 1234,
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_no_supported_services(hass: HomeAssistant) -> None:
@@ -210,6 +226,14 @@ async def test_hassio_addon_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=TTS_INFO,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_hassio_addon_no_supported_services(hass: HomeAssistant) -> None:

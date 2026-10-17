@@ -34,9 +34,15 @@ async def test_user_device_exists_abort(
     await init_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.local", CONF_PORT: 8090},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.local", CONF_PORT: 8090},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -50,14 +56,39 @@ async def test_connection_error(
     aioclient_mock.get("http://example.local:8090/command.cgi?cmd=getStatus", text="")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.local", CONF_PORT: 8090},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.local", CONF_PORT: 8090},
     )
 
     assert result["errors"]["base"] == "cannot_connect"
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getStatus",
+        text=await async_load_fixture(hass, "status.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getObjects",
+        text=await async_load_fixture(hass, "objects.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.local", CONF_PORT: 8090},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_full_user_flow_implementation(

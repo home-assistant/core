@@ -11,7 +11,7 @@ from soco.data_structures import DidlContainer, DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
-from homeassistant.components import media_source, plex, spotify
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
@@ -152,18 +152,25 @@ async def async_browse_media(
             hass, media_content_id, content_filter=media_source_filter
         )
 
-    if plex.is_plex_media_id(media_content_id):
-        return await plex.async_browse_media(
-            hass, media_content_type, media_content_id, platform=DOMAIN
-        )
+    # Plex and Spotify are only imported once set up, as they are heavy to load
+    if "plex" in hass.config.components:
+        from homeassistant.components import plex  # noqa: PLC0415
 
-    if media_content_type == "plex":
-        return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
+        if plex.is_plex_media_id(media_content_id):
+            return await plex.async_browse_media(
+                hass, media_content_type, media_content_id, platform=DOMAIN
+            )
 
-    if spotify.is_spotify_media_type(media_content_type):
-        return await spotify.async_browse_media(
-            hass, media_content_type, media_content_id, can_play_artist=False
-        )
+        if media_content_type == "plex":
+            return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
+
+    if "spotify" in hass.config.components:
+        from homeassistant.components import spotify  # noqa: PLC0415
+
+        if spotify.is_spotify_media_type(media_content_type):
+            return await spotify.async_browse_media(
+                hass, media_content_type, media_content_id, can_play_artist=False
+            )
 
     if media_content_type == "library":
         return await hass.async_add_executor_job(
@@ -288,6 +295,9 @@ def build_item_response(
 
     thumbnail = None
     title = None
+    # Library listings such as Albums and Artists are browsed, not played; only a
+    # single album resolved below can be played as a whole.
+    playable = False
 
     # Fetch album info for titles and thumbnails
     # Can't be extracted from track info
@@ -303,7 +313,12 @@ def build_item_response(
         item = get_media(media_library, idstring, search_type)
 
         title = getattr(item, "title", None)
-        thumbnail = get_thumbnail_url(search_type, payload["idstring"])
+        # The browse image proxy round-trips this back to async_get_browse_image,
+        # which matches on MediaType, not on the Sonos search type.
+        thumbnail = get_thumbnail_url(
+            SONOS_TO_MEDIA_TYPES[search_type], payload["idstring"]
+        )
+        playable = can_play(search_type)
 
     if not title:
         title = _get_title(id_string=payload["idstring"])
@@ -328,7 +343,7 @@ def build_item_response(
         media_content_id=payload["idstring"],
         media_content_type=payload["search_type"],
         children=children,
-        can_play=can_play(payload["search_type"]),
+        can_play=playable,
         can_expand=can_expand(payload["search_type"]),
     )
 
@@ -412,6 +427,8 @@ async def root_payload(
         )
 
     if "spotify" in hass.config.components:
+        from homeassistant.components import spotify  # noqa: PLC0415
+
         result = await spotify.async_browse_media(hass, None, None)
         if result.children:
             children.extend(result.children)

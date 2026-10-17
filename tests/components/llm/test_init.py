@@ -1,25 +1,28 @@
 """Tests for the LLM integration."""
 
-from unittest.mock import Mock
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components.llm import DATA_PLATFORMS, LLMTools, async_get_tools
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import llm
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import frame, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import mock_platform
+from tests.common import MockUser, mock_platform
 
 
 class _StubTool(llm.Tool):
     """Minimal tool for registry tests."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, integration: str | None = "test") -> None:
         """Initialize the stub tool."""
         self.name = name
         self.description = f"{name} description"
+        self.integration = integration
 
     async def async_call(
         self,
@@ -44,7 +47,10 @@ def llm_context() -> llm.LLMContext:
 
 
 def _mock_tools_platform(
-    hass: HomeAssistant, domain: str, tools: LLMTools | Exception | None
+    hass: HomeAssistant,
+    domain: str,
+    tools: LLMTools | Exception | None,
+    built_in: bool = True,
 ) -> Mock:
     """Register a mock <integration>/llm.py platform returning the given tools."""
     if isinstance(tools, Exception):
@@ -52,7 +58,9 @@ def _mock_tools_platform(
     else:
         async_get_tools = Mock(return_value=tools)
     hass.config.components.add(domain)
-    mock_platform(hass, f"{domain}.llm", Mock(async_get_tools=async_get_tools))
+    mock_platform(
+        hass, f"{domain}.llm", Mock(async_get_tools=async_get_tools), built_in=built_in
+    )
     return async_get_tools
 
 
@@ -72,8 +80,8 @@ async def test_get_tools(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    # The llm integration also exposes its own GetDateTime tool (domain "llm").
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "my_tool"]
+    # The llm integration also exposes its own llm__GetDateTime tool (domain "llm").
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime", "my_tool"]
     assert result.prompt == "use my_tool wisely"
     platform_get_tools.assert_called_once_with(hass, llm_context, "assist")
 
@@ -85,7 +93,7 @@ async def test_get_tools_empty(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime"]
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime"]
     assert result.prompt is None
 
 
@@ -102,7 +110,11 @@ async def test_get_tools_merges_sorted(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "tool_a", "tool_b"]
+    assert [tool.name for tool in result.tools] == [
+        "llm__GetDateTime",
+        "tool_a",
+        "tool_b",
+    ]
     assert result.prompt == "prompt a\nprompt b"
 
 
@@ -117,7 +129,7 @@ async def test_get_tools_skips_none_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime", "good_tool"]
     assert result.prompt is None
 
 
@@ -134,6 +146,185 @@ async def test_get_tools_isolates_failing_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("built_in", "expected_level", "expected_type"),
+    [(True, logging.ERROR, ""), (False, logging.WARNING, "custom ")],
+    ids=["core", "custom"],
+)
+async def test_get_tools_reports_unprefixed_tool_names(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+    built_in: bool,
+    expected_level: int,
+    expected_type: str,
+) -> None:
+    """Test tools not prefixed with the offering domain are reported."""
+    tools = [_StubTool("test__prefixed"), _StubTool("unprefixed")]
+    _mock_tools_platform(hass, "test", LLMTools(tools=tools), built_in=built_in)
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        result = await async_get_tools(hass, llm_context, "assist")
+
+    # The tools are still returned until the requirement starts to fail.
+    assert [tool.name for tool in result.tools] == [
+        "llm__GetDateTime",
+        "test__prefixed",
+        "unprefixed",
+    ]
+    expected_message = (
+        f"Detected that {expected_type}integration 'test' provides LLM tools that are "
+        "not prefixed with 'test__': unprefixed. This will stop working in Home "
+        "Assistant 2027.3"
+    )
+    record = next(
+        record for record in caplog.records if expected_message in record.getMessage()
+    )
+    assert record.levelno == expected_level
+
+
+async def test_get_tools_untagged_tool_raises_for_core(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test a core integration must record the integration on its tools."""
+    tools = [_StubTool("test__untagged", integration=None)]
+    _mock_tools_platform(hass, "test", LLMTools(tools=tools))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(
+            RuntimeError,
+            match="provides the LLM tool test__untagged without an integration",
+        ),
+    ):
+        await async_get_tools(hass, llm_context, "assist")
+
+
+async def test_get_tools_untagged_tool_reported_for_custom(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration is warned about tools without an integration."""
+    tools = [_StubTool("test__untagged", integration=None)]
+    _mock_tools_platform(hass, "test", LLMTools(tools=tools), built_in=False)
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        result = await async_get_tools(hass, llm_context, "assist")
+
+    # The tool is still returned until the requirement starts to fail.
+    assert "test__untagged" in [tool.name for tool in result.tools]
+    assert (
+        "Detected that custom integration 'test' provides the LLM tool test__untagged "
+        "without an integration. This will stop working in Home Assistant 2027.10"
+        in caplog.text
+    )
+    # The platform domain is recorded on the tool, so it is not reported again.
+    assert tools[0].integration == "test"
+
+
+async def test_get_tools_untagged_wrapped_tool_reported_once(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a tool wrapper is tagged along with the tool it wraps."""
+    wrapper = llm.NamespacedTool("test", _StubTool("untagged", integration=None))
+    _mock_tools_platform(hass, "test", LLMTools(tools=[wrapper]), built_in=False)
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        await async_get_tools(hass, llm_context, "assist")
+
+    # The wrapper is tagged too, so the API instance does not report it again.
+    assert wrapper.integration == "test"
+    assert wrapper.tool.integration == "test"
+    assert caplog.text.count("without an integration") == 1
+
+
+async def test_get_tools_prefixed_tool_names_not_reported(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a platform prefixing all its tools is not reported."""
+    _mock_tools_platform(hass, "test", LLMTools(tools=[_StubTool("test__tool")]))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        await async_get_tools(hass, llm_context, "assist")
+
+    assert "not prefixed with 'test__'" not in caplog.text
+
+
+async def test_home_assistant_api(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test that HomeAssistantAPI is registered and retrieves Home Assistant tools for admin."""
+    tool = _StubTool("test__ha_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="ha prompt"))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    admin_context = llm.LLMContext(
+        platform="test",
+        context=Context(user_id=hass_admin_user.id),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api_instance = await llm.async_get_api(
+        hass, llm.LLM_API_HOME_ASSISTANT, admin_context
+    )
+    assert api_instance.api_prompt == "ha prompt"
+    assert [t.name for t in api_instance.tools] == [
+        "llm__GetDateTime",
+        "test__ha_tool",
+    ]
+
+
+async def test_home_assistant_api_denied_for_non_admin(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
+    """Test that HomeAssistantAPI raises Unauthorized for non-admin user."""
+    tool = _StubTool("test__ha_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="ha prompt"))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    non_admin_context = llm.LLMContext(
+        platform="test",
+        context=Context(user_id=hass_read_only_user.id),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    with pytest.raises(Unauthorized):
+        await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, non_admin_context)
+
+
+async def test_home_assistant_api_denied_without_user(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that HomeAssistantAPI raises Unauthorized when no user is in context."""
+    tool = _StubTool("test__ha_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="ha prompt"))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with pytest.raises(Unauthorized):
+        await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)

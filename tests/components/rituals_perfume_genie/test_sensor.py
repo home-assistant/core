@@ -1,5 +1,7 @@
 """Tests for the Rituals Perfume Genie sensor platform."""
 
+import pytest
+
 from homeassistant.components.rituals_perfume_genie.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -18,6 +20,7 @@ from .common import (
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_diffuser_v1_battery_cartridge(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

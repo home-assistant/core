@@ -6,6 +6,8 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AZIMUTH,
@@ -22,13 +24,22 @@ from .const import (
     SUBENTRY_TYPE_PLANE,
 )
 from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Forecast.Solar integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry."""
 
     if entry.version == 1:
@@ -70,12 +81,10 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
-    return True
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Set up Forecast.Solar from a config entry."""
     plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
     if not plane_subentries:
@@ -99,8 +108,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
@@ -111,6 +118,6 @@ async def _async_update_listener(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

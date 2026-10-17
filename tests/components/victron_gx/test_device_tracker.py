@@ -1,10 +1,13 @@
 """Tests for Victron GX MQTT device trackers."""
 
+from unittest.mock import MagicMock
+
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.device_tracker import SourceType, TrackingType
 from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -65,8 +68,8 @@ async def test_victron_device_tracker(
         "tracking_type": TrackingType.POSITION,
     }
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_gps_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_gps_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
@@ -122,6 +125,7 @@ async def test_victron_device_tracker(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
+    assert state.state == STATE_UNKNOWN
     assert state.attributes == {
         "source_type": SourceType.GPS,
         "altitude": None,
@@ -131,3 +135,12 @@ async def test_victron_device_tracker(
         "in_zones": [],
         "tracking_type": TrackingType.POSITION,
     }
+
+    metric = victron_hub.devices["gps_0"].get_metric("gps_location")
+    assert metric is not None
+    metric._keepalive(force_invalidate=True, log_debug=MagicMock())
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

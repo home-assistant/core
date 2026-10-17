@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from pyintelliclima.intelliclima_types import IntelliClimaECO
+from pyintelliclima import IntelliClimaECO2
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 0
 class IntelliClimaSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor entity."""
 
-    value_fn: Callable[[IntelliClimaECO], int | float | str | None]
+    value_fn: Callable[[IntelliClimaECO2], int | float | str | None]
 
 
 INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a IntelliClima Sensors."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.devices_coordinator
 
     entities: list[IntelliClimaSensor] = [
         IntelliClimaSensor(
@@ -82,7 +82,7 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO,
+        device: IntelliClimaECO2,
         description: IntelliClimaSensorEntityDescription,
     ) -> None:
         """Class initializer."""

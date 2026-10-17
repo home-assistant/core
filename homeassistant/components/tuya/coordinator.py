@@ -151,7 +151,7 @@ class DeviceListener(SharingDeviceListener):
 
         device_registry.async_get_or_create(
             config_entry_id=self._entry.entry_id,
-            **get_device_info(device, initial=True),
+            **get_device_info(device),
         )
 
     def remove_device(self, device_id: str) -> None:

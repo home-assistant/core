@@ -14,7 +14,7 @@ from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import MOCK_HEATER_STATUS
@@ -81,35 +81,49 @@ async def test_stale_devices_cleanup(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    old_entries = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    old_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(old_entries) == 3
-    old_heater = device_registry.async_get_device({(DOMAIN, "c01d00c0ffee")})
+    old_heater = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c01d00c0ffee"), mock_config_entry.entry_id
+    )
     assert old_heater is not None
     assert old_heater.serial_number == "c01d00c0ffee"
-    old_climate = device_registry.async_get_device({(DOMAIN, "c01d00c0ffee_1")})
+    old_climate = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c01d00c0ffee_1"), mock_config_entry.entry_id
+    )
     assert old_heater is not None
-    old_climate = device_registry.async_get_device({(DOMAIN, "c01d00c0ffee_1")})
+    old_climate = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c01d00c0ffee_1"), mock_config_entry.entry_id
+    )
     assert old_climate is not None
 
     mock_heater_status["serial_no"] = "c0ffeec0ffee"
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    new_entries = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    new_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(new_entries) == 3
-    new_heater = device_registry.async_get_device({(DOMAIN, "c0ffeec0ffee")})
+    new_heater = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c0ffeec0ffee"), mock_config_entry.entry_id
+    )
     assert new_heater is not None
     assert new_heater.serial_number == "c0ffeec0ffee"
-    new_climate = device_registry.async_get_device({(DOMAIN, "c0ffeec0ffee_1")})
+    new_climate = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c0ffeec0ffee_1"), mock_config_entry.entry_id
+    )
     assert new_climate is not None
 
-    old_heater = device_registry.async_get_device({(DOMAIN, "c01d00c0ffee")})
+    old_heater = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c01d00c0ffee"), mock_config_entry.entry_id
+    )
     assert old_heater is None
-    old_climate = device_registry.async_get_device({(DOMAIN, "c01d00c0ffee_1")})
+    old_climate = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c01d00c0ffee_1"), mock_config_entry.entry_id
+    )
     assert old_climate is None
 
 

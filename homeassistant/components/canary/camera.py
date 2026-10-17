@@ -8,7 +8,7 @@ from aiohttp.web import Request, StreamResponse
 from canary.live_stream_api import LiveStreamSession
 from canary.model import Device, Location
 from haffmpeg.camera import CameraMjpeg
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
@@ -29,11 +29,11 @@ from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
 FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
-PLATFORM_SCHEMA: Final = vol.All(
+PLATFORM_SCHEMA: Final = probatio.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
     CAMERA_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
             ): cv.string
         }

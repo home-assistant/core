@@ -58,7 +58,6 @@ from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -481,74 +480,6 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
 
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": True}, {})
-    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
-
-
-async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
-    """Test EnergyStorage trait support for vacuum domain."""
-    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
-    assert trait.EnergyStorageTrait.supported(
-        vacuum.DOMAIN, VacuumEntityFeature.BATTERY, None, None
-    )
-
-    trt = trait.EnergyStorageTrait(
-        hass,
-        State(
-            "vacuum.bla",
-            vacuum.VacuumActivity.DOCKED,
-            {
-                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
-                ATTR_BATTERY_LEVEL: 100,
-            },
-        ),
-        BASIC_CONFIG,
-    )
-
-    assert trt.sync_attributes() == {
-        "isRechargeable": True,
-        "queryOnlyEnergyStorage": True,
-    }
-
-    assert trt.query_attributes() == {
-        "descriptiveCapacityRemaining": "FULL",
-        "capacityRemaining": [{"rawValue": 100, "unit": "PERCENTAGE"}],
-        "capacityUntilFull": [{"rawValue": 0, "unit": "PERCENTAGE"}],
-        "isCharging": True,
-        "isPluggedIn": True,
-    }
-
-    trt = trait.EnergyStorageTrait(
-        hass,
-        State(
-            "vacuum.bla",
-            vacuum.VacuumActivity.CLEANING,
-            {
-                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
-                ATTR_BATTERY_LEVEL: 20,
-            },
-        ),
-        BASIC_CONFIG,
-    )
-
-    assert trt.sync_attributes() == {
-        "isRechargeable": True,
-        "queryOnlyEnergyStorage": True,
-    }
-
-    assert trt.query_attributes() == {
-        "descriptiveCapacityRemaining": "CRITICALLY_LOW",
-        "capacityRemaining": [{"rawValue": 20, "unit": "PERCENTAGE"}],
-        "capacityUntilFull": [{"rawValue": 80, "unit": "PERCENTAGE"}],
-        "isCharging": False,
-        "isPluggedIn": False,
-    }
-
-    with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": True}, {})
-    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
-
-    with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": False}, {})
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
@@ -1417,6 +1348,7 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
             "climate.bla",
             climate.HVACMode.AUTO,
             {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
                 climate.ATTR_HVAC_MODES: [],
                 climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
                 climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
@@ -1432,6 +1364,89 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
         },
         "thermostatTemperatureUnit": "C",
     }
+
+
+@pytest.mark.parametrize(
+    ("hvac_modes", "expected_modes"),
+    [
+        # No made-up "heat" fallback: it only exists to allow setting a temperature.
+        pytest.param([], [], id="no_modes"),
+        pytest.param([climate.HVACMode.HEAT], ["heat"], id="single_mode"),
+    ],
+)
+async def test_temperature_setting_climate_query_only(
+    hass: HomeAssistant,
+    hvac_modes: list[climate.HVACMode],
+    expected_modes: list[str],
+) -> None:
+    """Test a climate entity that can neither set a target nor switch modes.
+
+    Such an entity (e.g. a template climate that only mirrors sensors) must be
+    reported as query-only so Google doesn't offer controls that would fail.
+    """
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.HEAT,
+            {
+                ATTR_SUPPORTED_FEATURES: 0,
+                climate.ATTR_CURRENT_TEMPERATURE: 21.5,
+                climate.ATTR_CURRENT_HUMIDITY: 48,
+                climate.ATTR_HVAC_MODES: hvac_modes,
+                climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
+                climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "availableThermostatModes": expected_modes,
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": climate.DEFAULT_MIN_TEMP,
+            "maxThresholdCelsius": climate.DEFAULT_MAX_TEMP,
+        },
+        "thermostatTemperatureUnit": "C",
+        "queryOnlyTemperatureSetting": True,
+    }
+    assert trt.query_attributes() == {
+        "thermostatMode": "heat",
+        "thermostatTemperatureAmbient": 21.5,
+        "thermostatHumidityAmbient": 48,
+    }
+
+
+@pytest.mark.parametrize(
+    ("features", "hvac_modes"),
+    [
+        pytest.param(ClimateEntityFeature.TARGET_TEMPERATURE, [], id="target"),
+        pytest.param(ClimateEntityFeature.TARGET_TEMPERATURE_RANGE, [], id="range"),
+        pytest.param(
+            0, [climate.HVACMode.OFF, climate.HVACMode.HEAT], id="multiple_modes"
+        ),
+    ],
+)
+async def test_temperature_setting_climate_not_query_only(
+    hass: HomeAssistant,
+    features: ClimateEntityFeature,
+    hvac_modes: list[climate.HVACMode],
+) -> None:
+    """Test a climate entity with any control is not reported as query-only."""
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.HEAT,
+            {
+                ATTR_SUPPORTED_FEATURES: features,
+                climate.ATTR_HVAC_MODES: hvac_modes,
+                climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
+                climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert "queryOnlyTemperatureSetting" not in trt.sync_attributes()
 
 
 async def test_temperature_setting_climate_range_fahrenheit_precision(

@@ -66,9 +66,8 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         # The effects *Static* and *Dynamic* are not supported by Home Assistant.
         # These reserved effects are implicitly set and are not in the effect_list.
         # https://forum.nanoleaf.me/docs/openapi#_byoot0bams8f
-        return (
-            None if self._nanoleaf.effect in RESERVED_EFFECTS else self._nanoleaf.effect
-        )
+        effect = self._nanoleaf.effect
+        return None if not effect or effect in RESERVED_EFFECTS else effect
 
     @property
     @override

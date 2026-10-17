@@ -1,5 +1,6 @@
 """Tests for the Fish Audio TTS entity."""
 
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -22,6 +23,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.tts import TTSAudioRequest
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -57,6 +59,12 @@ async def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
 
+async def _failing_stream(error: Exception) -> AsyncGenerator[bytes]:
+    if error is not None:
+        raise error
+    yield b""  # Keep this an async generator
+
+
 async def test_tts_service_success(
     hass: HomeAssistant,
     mock_fishaudio_client: AsyncMock,
@@ -84,6 +92,41 @@ async def test_tts_service_success(
 
     # Verify the client was called
     mock_fishaudio_client.tts.convert.assert_called_once()
+
+
+async def test_tts_stream_success(
+    hass: HomeAssistant,
+    mock_fishaudio_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test TTS stream with successful audio generation."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the TTS entity
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
+    assert entity is not None
+
+    # Test the TTS stream generation
+    async def generate_message() -> AsyncGenerator[str]:
+        yield "Hello, "
+        yield "World!"
+
+    message_gen = generate_message()
+
+    request = TTSAudioRequest(language="en", options={}, message_gen=message_gen)
+
+    response = await entity.async_stream_tts_audio(request)
+
+    assert response.extension == "mp3"
+    assert [chunk async for chunk in response.data_gen] == [
+        b"first audio chunk",
+        b"second audio chunk",
+    ]
+
+    assert mock_fishaudio_client.tts.stream_websocket.call_args.args[0] == message_gen
+    mock_fishaudio_client.tts.convert.assert_not_called()
 
 
 async def test_tts_rate_limited(
@@ -365,8 +408,8 @@ async def test_tts_service_speak_server_error(
     # Get the client from runtime_data and make it fail with ServerError
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    mock_fishaudio_client.tts.convert = AsyncMock(
-        side_effect=ServerError(500, "Internal server error")
+    mock_fishaudio_client.tts.stream_websocket.side_effect = lambda *_args, **_kwargs: (
+        _failing_stream(ServerError(500, "Internal server error"))
     )
 
     await hass.services.async_call(
@@ -402,8 +445,8 @@ async def test_tts_service_speak_rate_limit_error(
     # Get the client from runtime_data and make it fail with RateLimitError
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    mock_fishaudio_client.tts.convert = AsyncMock(
-        side_effect=RateLimitError(429, "Rate limit exceeded")
+    mock_fishaudio_client.tts.stream_websocket.side_effect = lambda *_args, **_kwargs: (
+        _failing_stream(RateLimitError(429, "Rate limit exceeded"))
     )
 
     await hass.services.async_call(

@@ -44,13 +44,5 @@
       }
     }
   },
-  "selector": {
-    "device_class": {
-      "options": {
-        "dehumidifier": "Dehumidifier",
-        "humidifier": "Humidifier"
-      }
-    }
-  },
   "title": "Generic hygrostat"
 }

@@ -3,13 +3,17 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiowaqi import WAQIError
+from aiowaqi import WAQIAuthenticationError, WAQIError
 import attr
 import pytest
 
 from homeassistant.components.waqi import DOMAIN
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,6 +35,31 @@ async def test_setup_failed(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "An error occurred while communicating with the World Air Quality Index API: API error"
+    )
+
+
+async def test_setup_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waqi: AsyncMock,
+) -> None:
+    """Test setup failure due to an invalid API key starts reauth."""
+    mock_waqi.get_by_station_number.side_effect = WAQIAuthenticationError
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.reason
+        == "The API key for the World Air Quality Index is invalid"
+    )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -111,13 +140,15 @@ async def test_migration_from_v1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert (device := device_registry.async_get_device(identifiers={(DOMAIN, "4584")}))
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "4584"), mock_config_entry.entry_id
+        )
+    )
     assert device.identifiers == {(DOMAIN, "4584")}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = list(entry.subentries.values())[1]
     assert subentry.subentry_type == "station"
@@ -129,13 +160,15 @@ async def test_migration_from_v1(
     assert entity.unique_id == "4585_air_quality"
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert (device := device_registry.async_get_device(identifiers={(DOMAIN, "4585")}))
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "4585"), mock_config_entry.entry_id
+        )
+    )
     assert device.identifiers == {(DOMAIN, "4585")}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -255,7 +288,7 @@ async def test_migration_from_v1_disabled(
     # validates it against the config entry's disabled state; write it
     # directly to simulate existing storage.
     device_1 = attr.evolve(device_1, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY)
-    device_registry.devices[device_1.id] = device_1
+    device_registry._devices[device_1.id] = device_1
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -276,7 +309,7 @@ async def test_migration_from_v1_disabled(
     # API; clear the flag directly to simulate existing storage with a stale
     # enabled device.
     device_2 = attr.evolve(device_2, disabled_by=None)
-    device_registry.devices[device_2.id] = device_2
+    device_registry._devices[device_2.id] = device_2
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -315,11 +348,11 @@ async def test_migration_from_v1_disabled(
         assert subentry.data == {CONF_STATION_NUMBER: int(subentry.unique_id)}
         assert "de Jongweg" in subentry.title
 
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry_2.entry_id), mock_config_entry_2.entry_id
     )
 
     for idx, subentry in enumerate(station_subentries):
@@ -331,16 +364,13 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.unique_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.unique_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.unique_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
