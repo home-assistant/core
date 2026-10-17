@@ -416,9 +416,12 @@ def validate_categories(integration: Integration, known_categories: set[str]) ->
             f"Integrations of type {integration.integration_type} can't have categories",
         )
 
+    # Custom integrations only get a warning, so a category that is renamed
+    # or removed in core never breaks an existing repository
+    report = integration.add_error if integration.core else integration.add_warning
     for category in categories:
         if category not in known_categories:
-            integration.add_error(
+            report(
                 "manifest",
                 f"Unknown category `{category}`, "
                 f"see {HOMEASSISTANT_STRINGS_PATH} for the known categories",

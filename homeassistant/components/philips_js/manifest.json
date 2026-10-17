@@ -1,6 +1,7 @@
 {
   "domain": "philips_js",
   "name": "Philips TV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/philips_js",
