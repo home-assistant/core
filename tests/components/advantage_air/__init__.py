@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_SYSTEM_DATA = load_json_object_fixture("getSystemData.json", DOMAIN)
+TEST_SYSTEM_DATA_NO_RID = load_json_object_fixture("getSystemDataNoRid.json", DOMAIN)
 TEST_SET_RESPONSE = None
 
 USER_INPUT = {
