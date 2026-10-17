@@ -1376,7 +1376,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_bottom-entry]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_bottom_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1390,7 +1390,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_bottom',
+    'entity_id': 'button.eve_energy_20ecn4101_bottom_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1398,12 +1398,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify (bottom)',
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (bottom)',
+    'original_name': 'Identify',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1413,21 +1413,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_bottom-state]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_bottom_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Identify (bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bottom Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_bottom',
+    'entity_id': 'button.eve_energy_20ecn4101_bottom_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_top-entry]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_top_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1441,7 +1441,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_top',
+    'entity_id': 'button.eve_energy_20ecn4101_top_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1449,12 +1449,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify (top)',
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (top)',
+    'original_name': 'Identify',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1464,14 +1464,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_top-state]
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_top_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Identify (top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'top Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_energy_20ecn4101_identify_top',
+    'entity_id': 'button.eve_energy_20ecn4101_top_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
