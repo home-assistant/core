@@ -5,7 +5,7 @@ import ssl
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx2
-from mcp import MCPError as McpError
+from mcp import MCPError
 from mcp.types import (
     CallToolResult,
     ListToolsResult,
@@ -222,7 +222,7 @@ async def test_mcp_server_sse_transport_failure(
         (
             ExceptionGroup(
                 "Some exception group",
-                [McpError(500, "Session terminated")],
+                [MCPError(500, "Session terminated")],
             )
         ),
     ],

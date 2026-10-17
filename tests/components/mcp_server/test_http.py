@@ -13,7 +13,7 @@ import mcp
 import mcp.client.session
 import mcp.client.sse
 import mcp.client.streamable_http
-from mcp.shared.exceptions import MCPError as McpError
+from mcp.shared.exceptions import MCPError
 import probatio
 import pydantic
 import pytest
@@ -558,7 +558,7 @@ async def test_request_invalid_device_id(
     """Reject caller device metadata with an invalid type."""
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(
-            McpError, match="io.home-assistant/device_id must be a string"
+            MCPError, match="io.home-assistant/device_id must be a string"
         ):
             await session.list_tools(
                 params=mcp.types.PaginatedRequestParams(
@@ -576,7 +576,7 @@ async def test_tool_call_invalid_device_id(
     """Invalid caller metadata raises an error without performing the action."""
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(
-            McpError, match="io.home-assistant/device_id must be a string"
+            MCPError, match="io.home-assistant/device_id must be a string"
         ):
             await session.call_tool(
                 name="intent__HassTurnOn",
@@ -937,7 +937,7 @@ async def test_get_unknown_prompt(
     """Test the get prompt endpoint."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        with pytest.raises(McpError):
+        with pytest.raises(MCPError):
             await session.get_prompt(name="Unknown")
 
 
@@ -1007,7 +1007,7 @@ async def test_mcp_resource_read_unknown_resource(
     ).uri
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        with pytest.raises(McpError, match="Unknown resource"):
+        with pytest.raises(MCPError, match="Unknown resource"):
             await session.read_resource(unknown_uri)
 
 
@@ -1035,7 +1035,7 @@ async def test_mcp_resources_unavailable_without_live_context_tool(
 
         assert result.resources == []
 
-        with pytest.raises(McpError, match="Unknown resource"):
+        with pytest.raises(MCPError, match="Unknown resource"):
             await session.read_resource(resource_uri)
 
 
