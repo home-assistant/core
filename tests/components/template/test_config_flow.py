@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import patch
 
-import probatio
 import pytest
 from pytest_unordered import unordered
 
@@ -1265,6 +1264,10 @@ async def test_config_flow_preview(
 
 
 EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of template')"
+REQUIRED_OPTION_ERROR = (
+    "Required option: '{0}' is missing for option '{1}'. "
+    "Remove '{1}' from your config or add '{0}'."
+)
 
 
 @pytest.mark.parametrize(
@@ -1272,6 +1275,34 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
     [
         ("binary_sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         ("sensor", "{{", {}, {"state": EARLY_END_ERROR}),
+        (
+            "media_player",
+            "",
+            {"source": "{{ 'TV' }}"},
+            {"source": REQUIRED_OPTION_ERROR.format("source_list", "source")},
+        ),
+        (
+            "media_player",
+            "",
+            {"select_source": []},
+            {
+                "select_source": REQUIRED_OPTION_ERROR.format(
+                    "source_list", "select_source"
+                )
+            },
+        ),
+        (
+            "media_player",
+            "",
+            {"volume_up": []},
+            {"volume_up": REQUIRED_OPTION_ERROR.format("volume_down", "volume_up")},
+        ),
+        (
+            "media_player",
+            "",
+            {"volume_down": []},
+            {"volume_down": REQUIRED_OPTION_ERROR.format("volume_up", "volume_down")},
+        ),
         (
             "sensor",
             "",
@@ -1383,25 +1414,25 @@ async def test_config_flow_preview_bad_input(
     [
         pytest.param(
             {"source": "{{ 'TV' }}"},
-            "Required option: 'source_list' is missing for option 'source'",
+            "source_list_required",
             {"source_list": "{{ ['TV'] }}"},
             id="source_without_list",
         ),
         pytest.param(
             {"select_source": []},
-            "Required option: 'source_list' is missing for option 'select_source'",
+            "source_list_required",
             {"source_list": "{{ ['TV'] }}"},
             id="select_source_without_list",
         ),
         pytest.param(
             {"volume_up": []},
-            "volume_up_and_down",
+            "volume_up_and_down_required",
             {"volume_down": []},
             id="volume_up_only",
         ),
         pytest.param(
             {"volume_down": []},
-            "volume_up_and_down",
+            "volume_up_and_down_required",
             {"volume_up": []},
             id="volume_down_only",
         ),
@@ -1422,11 +1453,12 @@ async def test_config_flow_media_player_required_options(
         {"next_step_id": "media_player"},
     )
 
-    with pytest.raises(probatio.Invalid, match=error):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"name": "My template", **user_input},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

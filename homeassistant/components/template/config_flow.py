@@ -45,6 +45,7 @@ from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
 )
@@ -125,8 +126,6 @@ from .media_player import (
     CONF_IS_VOLUME_MUTED,
     CONF_SOURCE_LIST,
     CONF_VOLUME_LEVEL,
-    CONF_VOLUME_UP_AND_DOWN,
-    MEDIA_PLAYER_VALIDATION,
     async_create_preview_media_player,
 )
 from .number import (
@@ -181,6 +180,14 @@ from .weather import (
 _SCHEMA_STATE: dict[probatio.Marker, Any] = {
     probatio.Required(CONF_STATE): selector.TemplateSelector(),
 }
+
+# (option, the option it requires, error when missing)
+_MEDIA_PLAYER_REQUIRED_OPTIONS = (
+    (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+    (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+    (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
+    (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
+)
 
 # Device class can only be chosen when the entity is created.
 _CONFIG_DEVICE_CLASS_DOMAINS = (
@@ -356,12 +363,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_VOLUME_LEVEL): selector.TemplateSelector(),
             probatio.Optional(CONF_IS_VOLUME_MUTED): selector.TemplateSelector(),
             probatio.Optional(SERVICE_VOLUME_SET): selector.ActionSelector(),
-            probatio.Inclusive(
-                SERVICE_VOLUME_UP, CONF_VOLUME_UP_AND_DOWN
-            ): selector.ActionSelector(),
-            probatio.Inclusive(
-                SERVICE_VOLUME_DOWN, CONF_VOLUME_UP_AND_DOWN
-            ): selector.ActionSelector(),
+            probatio.Optional(SERVICE_VOLUME_UP): selector.ActionSelector(),
+            probatio.Optional(SERVICE_VOLUME_DOWN): selector.ActionSelector(),
             probatio.Optional(SERVICE_VOLUME_MUTE): selector.ActionSelector(),
             probatio.Optional(SERVICE_MEDIA_PLAY): selector.ActionSelector(),
             probatio.Optional(SERVICE_MEDIA_PAUSE): selector.ActionSelector(),
@@ -606,8 +609,9 @@ def validate_user_input(
                 user_input
             )
         if template_type == Platform.MEDIA_PLAYER:
-            for validator in MEDIA_PLAYER_VALIDATION:
-                validator(user_input)
+            for option, required_option, error in _MEDIA_PLAYER_REQUIRED_OPTIONS:
+                if option in user_input and required_option not in user_input:
+                    raise SchemaFlowError(error)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -916,6 +920,13 @@ def ws_start_preview(
                 _validate_state_class(user_input)
             except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
+
+        if domain == Platform.MEDIA_PLAYER:
+            for option, required_option, _ in _MEDIA_PLAYER_REQUIRED_OPTIONS:
+                try:
+                    tcv.requires_option(option, required_option)(user_input)
+                except probatio.Invalid as ex:
+                    errors[option] = str(ex.msg)
 
         return errors
 
