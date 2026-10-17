@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "nymo_client_id": "Client ID",
+          "nymo_client_secret": "Client secret",
+          "nymo_device_id": "Nymo device ID"
+        },
+        "data_description": {
+          "nymo_client_id": "The Client ID that is copied from the Solyx Energy app.",
+          "nymo_client_secret": "The Client secret that is copied from the Solyx Energy app.",
+          "nymo_device_id": "The Nymo device ID that is copied from the Solyx Energy app."
+        },
+        "description": "Set up your Nymo to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "boiler_current": {
+        "name": "Boiler current"
+      },
+      "boiler_power": {
+        "name": "Boiler power"
+      },
+      "boiler_voltage": {
+        "name": "Boiler voltage"
+      },
+      "days_since_maximum_temperature": {
+        "name": "Days since maximum temperature"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "legionella_days": {
+        "name": "Legionella days"
+      },
+      "saved_this_month": {
+        "name": "Saved this month"
+      },
+      "saved_this_week": {
+        "name": "Saved this week"
+      },
+      "saved_today": {
+        "name": "Saved today"
+      }
+    }
+  }
+}
