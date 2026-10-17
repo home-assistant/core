@@ -1,11 +1,13 @@
 """Tests for the luci config flow."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
+from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.luci.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
@@ -201,3 +203,27 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_luci_client")
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow updates consider_home."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_CONSIDER_HOME: 300}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_CONSIDER_HOME: 300}
+    assert mock_config_entry.runtime_data.consider_home == timedelta(seconds=300)

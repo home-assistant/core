@@ -7,7 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntityStateAttribute,
+)
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -39,7 +43,7 @@ async def test_device_tracker_disconnect(
     mock_luci_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device goes not_home when disconnected."""
+    """Test a disconnected device stays home until consider_home has elapsed."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -55,9 +59,58 @@ async def test_device_tracker_disconnect(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    # Still home, the default consider_home of 180 seconds has not elapsed yet
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1")
+    assert state is not None
+    assert state.state == STATE_HOME
+    # The last known details are kept while the device is considered home
+    assert state.attributes[ScannerEntityStateAttribute.IP] == MOCK_DEVICE_1.ip
+
+    freezer.tick(timedelta(seconds=180))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1")
     assert state is not None
     assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("consider_home", "elapsed", "expected_state"),
+    [
+        # Both cases use an elapsed time that the default of 180 seconds would
+        # resolve the other way, so they only pass if the option is honored.
+        pytest.param(0, timedelta(seconds=30), STATE_NOT_HOME, id="disabled"),
+        pytest.param(900, timedelta(seconds=300), STATE_HOME, id="maximum"),
+    ],
+)
+async def test_consider_home_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    consider_home: int,
+    elapsed: timedelta,
+    expected_state: str,
+) -> None:
+    """Test the consider_home option controls how long a device stays home."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_CONSIDER_HOME: consider_home}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_2]
+
+    freezer.tick(elapsed)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1")
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
