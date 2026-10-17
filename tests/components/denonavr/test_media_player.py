@@ -28,10 +28,12 @@ from homeassistant.components.denonavr.config_flow import (
     DOMAIN,
 )
 from homeassistant.components.denonavr.const import (
+    ACTION_REFRESH_DEBOUNCE_COOLDOWN,
     ATTR_DYNAMIC_EQ,
     CONF_UPDATE_AUDYSSEY,
     CONF_USE_TELNET,
     CONF_ZONE2,
+    COORDINATOR_UPDATE_INTERVAL,
 )
 from homeassistant.components.denonavr.coordinator import mark_unavailable
 from homeassistant.components.denonavr.services import (
@@ -594,47 +596,50 @@ async def test_unavailable_coordinator_reads_before_recovering(
     assert hass.states.get(ENTITY_ID).state == expected_state
 
 
-@pytest.mark.parametrize(
-    ("failing", "reading", "failing_method"),
-    [
-        pytest.param(
-            "coordinator", "audyssey_coordinator", "async_update", id="status_fails"
-        ),
-        pytest.param(
-            "audyssey_coordinator",
-            "coordinator",
-            "async_update_audyssey",
-            id="audyssey_fails",
-        ),
-    ],
-)
-async def test_a_polling_coordinator_keeps_its_own_verdict(
-    hass: HomeAssistant,
-    client: MagicMock,
-    failing: str,
-    reading: str,
-    failing_method: str,
+async def test_a_polling_audyssey_coordinator_keeps_its_own_verdict(
+    hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """A coordinator with its own poll is not handed the other one's failure.
+    """A polling Audyssey coordinator is not handed a status failure.
 
     Both poll over HTTP here, so neither is guessing, and one endpoint
     refusing is no reason to hide data the receiver just answered for.
     """
     entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
-    failing_coordinator = getattr(entry.runtime_data, failing)
-    reading_coordinator = getattr(entry.runtime_data, reading)
-    getattr(client, failing_method).side_effect = AvrNetworkError(
-        "Network error", "test"
+    assert await async_setup_component(hass, "homeassistant", {})
+    client.async_update.side_effect = AvrNetworkError("Network error", "test")
+
+    # Reads status alone: a poll tick also runs Audyssey's own read, which
+    # could restore what a wrong hand-over took.
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
-    await failing_coordinator.async_refresh()
+    assert entry.runtime_data.coordinator.last_update_success is False
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is True
 
-    assert failing_coordinator.last_update_success is False
-    assert reading_coordinator.last_update_success is True
+
+async def test_a_polling_status_coordinator_keeps_its_own_verdict(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A polling status coordinator is not handed an Audyssey failure.
+
+    Both poll over HTTP here, so neither is guessing, and one endpoint
+    refusing is no reason to hide data the receiver just answered for.
+    """
+    client.async_update_audyssey.side_effect = AvrNetworkError("Network error", "test")
+
+    # Setup's fetch is the one Audyssey read that no status read follows.
+    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is False
+    assert entry.runtime_data.coordinator.last_update_success is True
 
 
 async def test_repeated_failure_still_reaches_a_coordinator_without_a_poll(
-    hass: HomeAssistant, client: MagicMock
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """A failure that repeats must keep reaching a coordinator with no poll.
 
@@ -643,27 +648,43 @@ async def test_repeated_failure_still_reaches_a_coordinator_without_a_poll(
     no poll to check again. Audyssey has no recurring poll here.
     """
     entry = await setup_denonavr(hass)
-    coordinator = entry.runtime_data.coordinator
+    assert await async_setup_component(hass, "homeassistant", {})
     audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DYNAMIC_EQ,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: False},
+        blocking=True,
+    )
     client.async_update.side_effect = AvrNetworkError("Network error", "test")
 
-    await coordinator.async_refresh()
+    # Fails ahead of the Audyssey read the action queued, and replaces the
+    # status read it queued alongside.
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
 
     assert audyssey_coordinator.last_update_success is False
 
     # Its own fetch answers, but it has no poll to keep confirming that.
-    await audyssey_coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=ACTION_REFRESH_DEBOUNCE_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert audyssey_coordinator.last_update_success is True
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert audyssey_coordinator.last_update_success is False
 
 
-@pytest.mark.usefixtures("client")
 async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_poll(
-    hass: HomeAssistant,
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """A second out-of-band failure must reach a peer that recovered since.
 
@@ -671,15 +692,32 @@ async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_po
     the peer would stay available after the receiver failed again.
     """
     entry = await setup_denonavr(hass, pref_disable_polling=True)
+    assert await async_setup_component(hass, "homeassistant", {})
     coordinator = entry.runtime_data.coordinator
     audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DYNAMIC_EQ,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: False},
+        blocking=True,
+    )
+    client.async_update.side_effect = AvrNetworkError("Network error", "test")
 
-    mark_unavailable(coordinator)
+    # Fails ahead of the Audyssey read the action queued, and replaces the
+    # status read it queued alongside.
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
 
     assert audyssey_coordinator.last_update_success is False
 
     # A read of its own answers while the status coordinator is still down.
-    await audyssey_coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=ACTION_REFRESH_DEBOUNCE_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert audyssey_coordinator.last_update_success is True
 

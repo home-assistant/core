@@ -160,7 +160,7 @@ def _coordinator(
 
 
 async def test_a_failure_while_waiting_for_the_lock_forces_the_read(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """The skip is decided once the lock is held, not before waiting for it.
 
@@ -169,14 +169,15 @@ async def test_a_failure_while_waiting_for_the_lock_forces_the_read(
     """
     refresh_fn = AsyncMock()
     coordinator = _coordinator(hass, refresh_fn)
-    await coordinator.async_refresh()
+    coordinator.async_add_listener(lambda: None)
 
     async with coordinator.lock:
-        refresh = hass.async_create_task(coordinator.async_refresh())
+        freezer.tick(timedelta(seconds=31))
+        async_fire_time_changed(hass)
         await asyncio.sleep(0)
         mark_unavailable(coordinator)
 
-    await refresh
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert refresh_fn.await_args.kwargs["force"] is True
 

@@ -8,7 +8,7 @@ still be refreshable on demand without joining every status refresh.
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Protocol, override
+from typing import TYPE_CHECKING, Protocol, override
 
 from denonavr import DenonAVR
 from denonavr.exceptions import (
@@ -20,12 +20,14 @@ from denonavr.exceptions import (
     DenonAvrError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ACTION_REFRESH_DEBOUNCE_COOLDOWN, DOMAIN
+
+if TYPE_CHECKING:
+    from . import DenonavrConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,12 +123,12 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     notifies the entities once it has been.
     """
 
-    config_entry: ConfigEntry
+    config_entry: DenonavrConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: DenonavrConfigEntry,
         receiver: DenonAVR,
         lock: asyncio.Lock,
         name: str,
