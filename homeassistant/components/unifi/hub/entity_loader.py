@@ -23,7 +23,12 @@ from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UnifiDataUpdateCoordinator
-from ..entity import UnifiEntity, UnifiEntityDescription
+from ..entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_device_adopted_fn,
+    async_object_adopted_fn,
+)
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -88,6 +93,16 @@ class UnifiEntityLoader:
 
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
+
+        self._add_entities_callbacks: list[Callable[[], None]] = []
+        """Callbacks adding entities for currently known objects, one per platform."""
+        self._devices_pending_adoption: set[str] = set()
+        """MAC addresses of devices listed by the controller but not adopted."""
+        hub.config.entry.async_on_unload(
+            hub.api.devices.subscribe(
+                self._async_device_updated, (ItemEvent.ADDED, ItemEvent.CHANGED)
+            )
+        )
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
@@ -218,9 +233,31 @@ class UnifiEntityLoader:
         """Validate if entity is allowed and supported before creating it."""
         return bool(
             (description.key, obj_id) not in self.known_objects
+            and async_object_adopted_fn(
+                self.hub, description.api_handler_fn(self.hub.api), obj_id
+            )
             and description.allowed_fn(self.hub, obj_id)
             and description.supported_fn(self.hub, obj_id)
         )
+
+    @callback
+    def _async_device_updated(self, event: ItemEvent, obj_id: str) -> None:
+        """Add entities for a device once the controller has adopted it.
+
+        Entities are only created on added events, so a device that is first
+        seen pending adoption would otherwise stay without entities until
+        the integration is reloaded.
+        """
+        if not async_device_adopted_fn(self.hub, obj_id):
+            self._devices_pending_adoption.add(obj_id)
+            return
+
+        if obj_id not in self._devices_pending_adoption:
+            return
+
+        self._devices_pending_adoption.remove(obj_id)
+        for add_entities in self._add_entities_callbacks:
+            add_entities()
 
     @callback
     def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
@@ -251,6 +288,7 @@ class UnifiEntityLoader:
             )
 
         add_unifi_entities()
+        self._add_entities_callbacks.append(add_unifi_entities)
 
         self.hub.config.entry.async_on_unload(
             async_dispatcher_connect(

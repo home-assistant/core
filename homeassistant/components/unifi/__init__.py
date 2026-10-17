@@ -16,6 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .entity import async_device_adopted_fn
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -63,6 +64,8 @@ async def async_setup_entry(
     # when entities with DeviceInfo are added by their respective platforms.
     device_registry = dr.async_get(hass)
     for device in hub.api.devices.values():
+        if not async_device_adopted_fn(hub, device.mac):
+            continue
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
@@ -99,7 +102,8 @@ async def async_remove_config_entry_device(
         return False
     hub = config_entry.runtime_data
     return not any(
-        identifier in hub.api.devices for _, identifier in device_entry.connections
+        identifier in hub.api.devices and async_device_adopted_fn(hub, identifier)
+        for _, identifier in device_entry.connections
     )
 
 

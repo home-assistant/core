@@ -50,6 +50,31 @@ def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
+def async_device_adopted_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if device is adopted by the controller.
+
+    The controller also lists devices that are only pending adoption,
+    like a neighbour's access point. Those are not part of the site.
+    """
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    return hub.api.devices[obj_id].raw.get("adopted", True)
+
+
+@callback
+def async_object_adopted_fn(hub: UnifiHub, handler: APIHandler, obj_id: str) -> bool:
+    """Check if the device an object belongs to is adopted by the controller.
+
+    Objects that are not part of a device, like clients, are always considered adopted.
+    """
+    api = hub.api
+    if handler not in (api.devices, api.ports, api.outlets):
+        return True
+    return async_device_adopted_fn(hub, obj_id)
+
+
+@callback
 def async_wlan_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if WLAN is available."""
     wlan = hub.api.wlans[obj_id]
@@ -249,7 +274,9 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             return
 
         description = self.entity_description
-        if not description.supported_fn(self.hub, self._obj_id):
+        if not async_object_adopted_fn(
+            self.hub, handler, self._obj_id
+        ) or not description.supported_fn(self.hub, self._obj_id):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
