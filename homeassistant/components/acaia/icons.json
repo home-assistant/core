@@ -19,6 +19,20 @@
       "tare": {
         "default": "mdi:scale-balance"
       }
+    },
+    "number": {
+      "idle_timeout": {
+        "default": "mdi:timer-sand"
+      }
+    },
+    "switch": {
+      "keep_connected": {
+        "default": "mdi:bluetooth-off",
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth-connect"
+        }
+      }
     }
   }
 }
