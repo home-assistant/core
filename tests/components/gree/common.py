@@ -75,6 +75,7 @@ def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc1122
         bind=AsyncMock(),
         update_state=AsyncMock(),
         push_state_update=AsyncMock(),
+        has_valid_state=True,
         temperature_units=0,
         mode=0,
         fan_speed=0,

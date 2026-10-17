@@ -1,6 +1,6 @@
 """Tests for gree component."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
@@ -15,9 +15,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -199,3 +202,72 @@ async def test_entity_state(
 
     state = hass.states.async_all(SWITCH_DOMAIN)
     assert state == snapshot
+
+
+@pytest.mark.parametrize(
+    ("member", "entity"),
+    [
+        pytest.param("light", ENTITY_ID_PANEL_LIGHT, id="light"),
+        pytest.param("quiet", ENTITY_ID_QUIET_MODE, id="quiet"),
+        pytest.param("fresh_air", ENTITY_ID_FRESH_AIR, id="fresh_air"),
+        pytest.param("xfan", ENTITY_ID_XTRA_FAN, id="xfan"),
+        pytest.param("anion", ENTITY_ID_HEALTH_MODE, id="health_mode"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("restored_value", "restored_state"),
+    [
+        pytest.param(False, STATE_OFF, id="off"),
+        pytest.param(True, STATE_ON, id="on"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_missing_switch_state(
+    hass: HomeAssistant,
+    device: MagicMock,
+    member: str,
+    entity: str,
+    restored_value: bool,
+    restored_state: str,
+) -> None:
+    """Test missing readings stay unknown until the device reports a value."""
+    device().light = False
+    device().quiet = False
+    device().fresh_air = False
+    device().xfan = False
+    device().anion = False
+    setattr(device(), member, None)
+
+    entry = await async_setup_gree(hass)
+    coordinator = entry.runtime_data.coordinators[0]
+
+    state = hass.states.get(entity)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    siblings = {
+        ENTITY_ID_PANEL_LIGHT,
+        ENTITY_ID_QUIET_MODE,
+        ENTITY_ID_FRESH_AIR,
+        ENTITY_ID_XTRA_FAN,
+        ENTITY_ID_HEALTH_MODE,
+    } - {entity}
+    for sibling in siblings:
+        state = hass.states.get(sibling)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+    setattr(device(), member, restored_value)
+    coordinator.async_set_updated_data({member: restored_value})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity)
+    assert state is not None
+    assert state.state == restored_state
+
+    coordinator.async_set_update_error(UpdateFailed("Device unavailable"))
+    await hass.async_block_till_done()
+
+    for switch in siblings | {entity}:
+        state = hass.states.get(switch)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE

@@ -24,7 +24,7 @@ from .entity import DeviceDataUpdateCoordinator, GreeEntity
 class GreeSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Gree switch entity."""
 
-    get_value_fn: Callable[[Device], bool]
+    get_value_fn: Callable[[Device], bool | int | None]
     set_value_fn: Callable[[Device, bool], None]
 
 
@@ -126,9 +126,10 @@ class GreeSwitch(GreeEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the state is turned on."""
-        return self.entity_description.get_value_fn(self.coordinator.device)
+        value = self.entity_description.get_value_fn(self.coordinator.device)
+        return None if value is None else bool(value)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -1,7 +1,7 @@
 """Tests for gree component."""
 
 from datetime import timedelta
-from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from greeclimate.device import (
@@ -9,7 +9,10 @@ from greeclimate.device import (
     TEMP_MAX_F,
     TEMP_MIN,
     TEMP_MIN_F,
+    FanSpeed,
     HorizontalSwing,
+    Mode,
+    TemperatureUnits,
     VerticalSwing,
 )
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
@@ -17,6 +20,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -62,6 +66,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -78,6 +83,181 @@ from .common import async_setup_gree, build_device_mock
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.fake_device_1"
+
+
+@pytest.mark.parametrize(
+    ("power", "mode", "expected_state"),
+    [
+        pytest.param(None, Mode.Cool, STATE_UNKNOWN, id="missing-power"),
+        pytest.param(True, None, STATE_UNKNOWN, id="missing-mode"),
+        pytest.param(True, 99, STATE_UNKNOWN, id="invalid-mode"),
+        pytest.param(False, None, HVACMode.OFF, id="off-without-mode"),
+    ],
+)
+async def test_hvac_state_loss_and_recovery(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device: Mock,
+    power: bool | None,
+    mode: int | None,
+    expected_state: str,
+) -> None:
+    """Test missing HVAC data stays unknown without making the device unavailable."""
+    fake_device = device()
+    fake_device.power = True
+    fake_device.mode = Mode.Cool
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+
+    fake_device.power = power
+    fake_device.mode = mode
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+    fake_device.power = True
+    fake_device.mode = Mode.Cool
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+
+
+@pytest.mark.parametrize(
+    ("device_attribute", "state_attribute", "restored_value", "expected_value"),
+    [
+        pytest.param(
+            "current_temperature", ATTR_CURRENT_TEMPERATURE, 24, 24, id="current"
+        ),
+        pytest.param("target_temperature", ATTR_TEMPERATURE, 26, 26, id="target"),
+        pytest.param("fan_speed", ATTR_FAN_MODE, FanSpeed.High, FAN_HIGH, id="fan"),
+        pytest.param(
+            "vertical_swing",
+            ATTR_SWING_MODE,
+            VerticalSwing.FullSwing,
+            "full_swing",
+            id="vertical-swing",
+        ),
+        pytest.param(
+            "horizontal_swing",
+            ATTR_SWING_HORIZONTAL_MODE,
+            HorizontalSwing.FullSwing,
+            "full_swing",
+            id="horizontal-swing",
+        ),
+        pytest.param("steady_heat", ATTR_PRESET_MODE, False, PRESET_NONE, id="away"),
+        pytest.param("power_save", ATTR_PRESET_MODE, False, PRESET_NONE, id="eco"),
+        pytest.param("sleep", ATTR_PRESET_MODE, False, PRESET_NONE, id="sleep"),
+        pytest.param("turbo", ATTR_PRESET_MODE, False, PRESET_NONE, id="boost"),
+    ],
+)
+async def test_optional_state_loss_and_recovery(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device: Mock,
+    device_attribute: str,
+    state_attribute: str,
+    restored_value: int,
+    expected_value: int | str,
+) -> None:
+    """Test missing ancillary state stays nullable without disabling the climate."""
+    fake_device = device()
+    fake_device.power = True
+    fake_device.mode = Mode.Cool
+    await async_setup_gree(hass)
+
+    setattr(fake_device, device_attribute, None)
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes[state_attribute] is None
+
+    setattr(fake_device, device_attribute, restored_value)
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes[state_attribute] == expected_value
+
+
+async def test_missing_temperature_units(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, device: Mock
+) -> None:
+    """Test temperatures stay unknown until their unit is reported."""
+    device().temperature_units = None
+    device().current_temperature = 77
+    device().target_temperature = 77
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
+
+    device().temperature_units = TemperatureUnits.F
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25
+    assert state.attributes[ATTR_TEMPERATURE] == 25
+
+
+@pytest.mark.parametrize(
+    ("flags", "expected_preset"),
+    [
+        pytest.param((False, False, False, False), PRESET_NONE, id="inactive"),
+        pytest.param((None, None, None, None), None, id="unknown"),
+        pytest.param((True, None, None, None), PRESET_AWAY, id="away"),
+        pytest.param((None, True, None, None), PRESET_ECO, id="eco"),
+        pytest.param((None, None, True, None), PRESET_SLEEP, id="sleep"),
+        pytest.param((None, None, None, True), PRESET_BOOST, id="boost"),
+        pytest.param((True, True, True, True), PRESET_AWAY, id="priority"),
+    ],
+)
+async def test_preset_with_optional_flags(
+    hass: HomeAssistant,
+    device: Mock,
+    flags: tuple[bool | None, bool | None, bool | None, bool | None],
+    expected_preset: str | None,
+) -> None:
+    """Test known active presets take priority over missing sibling flags."""
+    fake_device = device()
+    fake_device.power = True
+    fake_device.mode = Mode.Cool
+    (
+        fake_device.steady_heat,
+        fake_device.power_save,
+        fake_device.sleep,
+        fake_device.turbo,
+    ) = flags
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset
 
 
 async def test_discovery_called_once(hass: HomeAssistant, discovery, device) -> None:

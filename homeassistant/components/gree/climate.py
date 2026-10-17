@@ -157,14 +157,18 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
     @property
     @override
-    def native_current_temperature(self) -> float:
-        """Return the reported current temperature for the device."""
+    def native_current_temperature(self) -> float | None:
+        """Return the reported current temperature when its unit is known."""
+        if self.coordinator.device.temperature_units is None:
+            return None
         return self.coordinator.device.current_temperature
 
     @property
     @override
-    def native_target_temperature(self) -> float:
-        """Return the target temperature for the device."""
+    def native_target_temperature(self) -> float | None:
+        """Return the target temperature when its unit is known."""
+        if self.coordinator.device.temperature_units is None:
+            return None
         return self.coordinator.device.target_temperature
 
     @override
@@ -191,10 +195,13 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode for the device."""
-        if not self.coordinator.device.power:
+        if (power := self.coordinator.device.power) is None:
+            return None
+        if not power:
             return HVACMode.OFF
-
-        return HVAC_MODES.get(self.coordinator.device.mode)
+        if (mode := self.coordinator.device.mode) is None:
+            return None
+        return HVAC_MODES.get(mode)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -241,7 +248,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
     @property
     @override
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode for the device."""
         if self.coordinator.device.steady_heat:
             return PRESET_AWAY
@@ -251,6 +258,13 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             return PRESET_SLEEP
         if self.coordinator.device.turbo:
             return PRESET_BOOST
+        if None in (
+            self.coordinator.device.steady_heat,
+            self.coordinator.device.power_save,
+            self.coordinator.device.sleep,
+            self.coordinator.device.turbo,
+        ):
+            return None
         return PRESET_NONE
 
     @override
@@ -287,6 +301,8 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the current fan mode for the device."""
         speed = self.coordinator.device.fan_speed
+        if speed is None:
+            return None
         return FAN_MODES.get(speed)
 
     @override
@@ -303,10 +319,10 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     @override
     def swing_mode(self) -> str | None:
         """Return the current vertical swing mode for the device."""
+        if (swing := self.coordinator.device.vertical_swing) is None:
+            return None
         try:
-            return VERTICAL_SWING_MODES_INVERSE.get(
-                VerticalSwing(self.coordinator.device.vertical_swing)
-            )
+            return VERTICAL_SWING_MODES_INVERSE.get(VerticalSwing(swing))
         except ValueError:
             return None
 
@@ -327,10 +343,10 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     @override
     def swing_horizontal_mode(self) -> str | None:
         """Return the current horizontal swing mode for the device."""
+        if (swing := self.coordinator.device.horizontal_swing) is None:
+            return None
         try:
-            return HORIZONTAL_SWING_MODES_INVERSE.get(
-                HorizontalSwing(self.coordinator.device.horizontal_swing)
-            )
+            return HORIZONTAL_SWING_MODES_INVERSE.get(HorizontalSwing(swing))
         except ValueError:
             return None
 

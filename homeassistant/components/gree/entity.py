@@ -1,5 +1,7 @@
 """Entity object for shared properties of Gree entities."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,3 +28,9 @@ class GreeEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             manufacturer="Gree",
             name=name,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the device has received a valid state."""
+        return super().available and self.coordinator.device.has_valid_state

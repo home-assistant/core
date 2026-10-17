@@ -59,13 +59,14 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.device = device
         self.device.add_handler(Response.RESULT, self.device_state_updated)
+        self.device.add_handler(Response.DATA, self.device_state_updated)
 
         self._error_count: int = 0
         self._last_response_time: datetime = utcnow()
         self._last_error_time: datetime | None = None
 
     def device_state_updated(self, *args: Any) -> None:
-        """Handle device state updates."""
+        """Handle status replies and command results."""
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
         self._error_count = 0
         self._last_response_time = utcnow()
