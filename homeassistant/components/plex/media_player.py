@@ -16,6 +16,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -40,7 +42,7 @@ from .const import (
     TRANSIENT_DEVICE_MODELS,
 )
 from .helpers import PlexConfigEntry
-from .media_browser import browse_media
+from .media_browser import browse_media, search_media_payloads
 from .services import process_plex_payload
 
 _LOGGER = logging.getLogger(__name__)
@@ -417,10 +419,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | MediaPlayerEntityFeature.PLAY_MEDIA
                 | MediaPlayerEntityFeature.VOLUME_MUTE
                 | MediaPlayerEntityFeature.BROWSE_MEDIA
+                | MediaPlayerEntityFeature.SEARCH_MEDIA
             )
 
         return (
-            MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+            MediaPlayerEntityFeature.BROWSE_MEDIA
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.SEARCH_MEDIA
         )
 
     @override
@@ -593,3 +598,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
+
+    @override
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search the Plex server for media matching the query."""
+        is_internal = is_internal_request(self.hass)
+        result = await self.hass.async_add_executor_job(
+            search_media_payloads, self.plex_server, is_internal, query
+        )
+        return SearchMedia(result=result)

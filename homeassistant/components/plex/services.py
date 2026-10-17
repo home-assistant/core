@@ -1,24 +1,109 @@
 """Services for the Plex integration."""
 
+from datetime import timedelta
 import json
 import logging
+from typing import Any
 
 from plexapi.exceptions import NotFound
 import probatio
 from yarl import URL
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.template import result_as_boolean
+from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, PLEX_URI_SCHEME, SERVICE_REFRESH_LIBRARY
+from .const import (
+    DOMAIN,
+    PLEX_URI_SCHEME,
+    SERVICE_ON_DECK,
+    SERVICE_REFRESH_LIBRARY,
+    SERVICE_SEARCH,
+)
 from .errors import MediaNotFound
 from .helpers import get_plex_servers
+from .media_browser import get_proxy_image_url
+from .media_search import fuzzy_search, search_media
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
 REFRESH_LIBRARY_SCHEMA = probatio.Schema(
     {probatio.Optional("server_name"): str, probatio.Required("library_name"): str}
 )
+
+SEARCH_FILTER_KEYS = (
+    "title",
+    "show_name",
+    "season_number",
+    "episode_name",
+    "episode_number",
+    "artist_name",
+    "album_name",
+    "track_name",
+    "track_number",
+    "year",
+    "filters",
+)
+
+SEARCH_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Optional("server_name"): str,
+            probatio.Optional("username"): str,
+            probatio.Optional("query"): str,
+            probatio.Optional("plex_key"): int,
+            probatio.Optional("playlist_name"): str,
+            probatio.Optional("library_name"): str,
+            probatio.Optional("media_type"): probatio.In(
+                [
+                    "movie",
+                    "show",
+                    "season",
+                    "episode",
+                    "artist",
+                    "album",
+                    "track",
+                    "playlist",
+                ]
+            ),
+            probatio.Optional("title"): str,
+            probatio.Optional("show_name"): str,
+            probatio.Optional("season_number"): int,
+            probatio.Optional("episode_name"): str,
+            probatio.Optional("episode_number"): int,
+            probatio.Optional("artist_name"): str,
+            probatio.Optional("album_name"): str,
+            probatio.Optional("track_name"): str,
+            probatio.Optional("track_number"): int,
+            probatio.Optional("year"): int,
+            probatio.Optional("filters"): dict,
+            probatio.Optional("include_on_deck", default=False): bool,
+        }
+    ),
+    probatio.AtLeastOne("query", "plex_key", "playlist_name", *SEARCH_FILTER_KEYS),
+)
+
+ON_DECK_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional("server_name"): str,
+        probatio.Optional("username"): str,
+        probatio.Optional("library_name"): str,
+        probatio.Optional("media_type"): probatio.In(["movie", "episode"]),
+        probatio.Optional("limit", default=20): probatio.All(
+            int, probatio.Range(min=1, max=100)
+        ),
+    }
+)
+
+THUMBNAIL_URL_EXPIRATION = timedelta(hours=1)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -35,6 +120,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_REFRESH_LIBRARY,
         async_refresh_library_service,
         schema=REFRESH_LIBRARY_SCHEMA,
+    )
+
+    async def async_search_service(service_call: ServiceCall) -> ServiceResponse:
+        return await hass.async_add_executor_job(search_plex_media, hass, service_call)
+
+    async def async_on_deck_service(service_call: ServiceCall) -> ServiceResponse:
+        return await hass.async_add_executor_job(get_on_deck_media, hass, service_call)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ON_DECK,
+        async_on_deck_service,
+        schema=ON_DECK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEARCH,
+        async_search_service,
+        schema=SEARCH_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -57,6 +164,184 @@ def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
 
     _LOGGER.debug("Scanning %s for new and updated media", library_name)
     library.update()
+
+
+def search_plex_media(
+    hass: HomeAssistant, service_call: ServiceCall
+) -> ServiceResponse:
+    """Look up Plex media, accepting the same criteria as play_media."""
+    data = dict(service_call.data)
+    plex_server = get_plex_server(hass, data.pop("server_name", None))
+
+    if username := data.pop("username", None):
+        plex_server = plex_server.switch_user(username)
+
+    media_type = data.pop("media_type", None)
+    library_name = data.pop("library_name", None)
+    query = data.pop("query", None)
+    plex_key = data.pop("plex_key", None)
+    playlist_name = data.pop("playlist_name", None)
+    include_on_deck = data.pop("include_on_deck", False)
+    filters = {**data.pop("filters", {}), **data}
+
+    results: list[Any]
+    try:
+        if plex_key is not None:
+            results = [plex_server.fetch_item(plex_key)]
+        elif playlist_name:
+            results = [plex_server.playlist(playlist_name)]
+        elif library_name:
+            if query:
+                filters.setdefault("title", query)
+            results = _search_library(plex_server, library_name, media_type, filters)
+        elif filters:
+            raise HomeAssistantError("'library_name' is required to use filters")
+        else:
+            results = fuzzy_search(plex_server, query, media_type)
+    except NotFound, MediaNotFound:
+        results = []
+        if query and library_name and not (plex_key or playlist_name):
+            section = plex_server.library.section(library_name)
+            results = fuzzy_search(plex_server, query, media_type, section)
+
+    infos: list[JsonValueType] = []
+    for item in results:
+        info = _media_result_info(hass, item, plex_server)
+        if include_on_deck and item.type == "show":
+            episode = item.onDeck()
+            info["on_deck"] = (
+                _media_result_info(hass, episode, plex_server) if episode else None
+            )
+        infos.append(info)
+
+    return {"results": infos}
+
+
+def get_on_deck_media(
+    hass: HomeAssistant, service_call: ServiceCall
+) -> ServiceResponse:
+    """Return unfinished and next up media from the Continue Watching hub."""
+    data = service_call.data
+    plex_server = get_plex_server(hass, data.get("server_name"))
+
+    if username := data.get("username"):
+        plex_server = plex_server.switch_user(username)
+
+    items = plex_server.continue_watching()
+    if library_name := data.get("library_name"):
+        items = [x for x in items if x.librarySectionTitle == library_name]
+    if media_type := data.get("media_type"):
+        items = [x for x in items if x.type == media_type]
+
+    return {
+        "results": [
+            _media_result_info(hass, item, plex_server)
+            for item in items[: data["limit"]]
+        ]
+    }
+
+
+def _search_library(
+    plex_server: PlexServer,
+    library_name: str,
+    media_type: str | None,
+    filters: dict[str, Any],
+) -> list[Any]:
+    """Search a single library using play_media compatible filters."""
+    try:
+        library_section = plex_server.library.section(library_name)
+    except NotFound as err:
+        library_names = [x.title for x in plex_server.library.sections()]
+        raise HomeAssistantError(
+            f"Library '{library_name}' not found in {library_names}"
+        ) from err
+    results = search_media(
+        media_type or "",
+        library_section,
+        allow_multiple=True,
+        libtype=media_type,
+        **filters,
+    )
+    return results if isinstance(results, list) else [results]
+
+
+SEARCH_RESULT_ATTRIBUTES = {
+    "year": "year",
+    "summary": "summary",
+    "tagline": "tagline",
+    "studio": "studio",
+    "content_rating": "contentRating",
+    "rating": "rating",
+    "audience_rating": "audienceRating",
+    "duration": "duration",
+    "view_count": "viewCount",
+    "library_id": "librarySectionID",
+    "library_name": "librarySectionTitle",
+    "episode_count": "leafCount",
+    "watched_episode_count": "viewedLeafCount",
+    "season_count": "childCount",
+    "show_title": "grandparentTitle",
+    "show_rating_key": "grandparentRatingKey",
+    "show_guid": "grandparentGuid",
+    "season_title": "parentTitle",
+    "season_rating_key": "parentRatingKey",
+    "season_guid": "parentGuid",
+    "season_number": "parentIndex",
+    "episode_number": "index",
+    "artist_name": "parentTitle",
+}
+
+SEARCH_RESULT_DATES = {
+    "originally_available_at": "originallyAvailableAt",
+    "added_at": "addedAt",
+    "last_viewed_at": "lastViewedAt",
+}
+
+
+def _proxy_thumb_url(
+    hass: HomeAssistant, item: Any, plex_server: PlexServer
+) -> str | None:
+    """Return a signed Home Assistant thumbnail URL that doesn't expose the Plex token."""
+    if not (thumb_url := getattr(item, "thumbUrl", None)):
+        return None
+    plex_server.thumbnail_cache.setdefault(str(item.ratingKey), thumb_url)
+    return async_sign_path(
+        hass,
+        get_proxy_image_url(plex_server.machine_identifier, item.ratingKey),
+        THUMBNAIL_URL_EXPIRATION,
+    )
+
+
+def _media_result_info(
+    hass: HomeAssistant, item: Any, plex_server: PlexServer
+) -> dict[str, Any]:
+    """Return info for a Plex media item, usable in automations (e.g. deep links)."""
+    info: dict[str, Any] = {
+        "title": item.title,
+        "media_type": item.type,
+        "guid": item.guid,
+        "rating_key": item.ratingKey,
+        "key": item.key,
+        "thumb_url": _proxy_thumb_url(hass, item, plex_server),
+        "server_id": plex_server.machine_identifier,
+        "server_name": plex_server.friendly_name,
+    }
+    for name, attribute in SEARCH_RESULT_ATTRIBUTES.items():
+        if name == "artist_name" and item.type != "album":
+            continue
+        info[name] = getattr(item, attribute, None)
+    for name, attribute in SEARCH_RESULT_DATES.items():
+        value = getattr(item, attribute, None)
+        info[name] = value.isoformat() if value else None
+    info["genres"] = [x.tag for x in getattr(item, "genres", None) or []]
+    info["is_watched"] = getattr(item, "isPlayed", None)
+    view_offset = getattr(item, "viewOffset", None)
+    duration = info["duration"]
+    info["view_offset"] = view_offset
+    info["progress_percent"] = (
+        round(view_offset / duration * 100) if view_offset and duration else None
+    )
+    return info
 
 
 def get_plex_server(
@@ -181,6 +466,12 @@ def process_plex_payload(
         search_query.pop(internal_key, None)
 
     media = plex_server.lookup_media(content_type, **search_query)
+
+    resume = content.get("resume", False)
+    if isinstance(resume, str):
+        resume = result_as_boolean(resume)
+    if resume and getattr(media, "type", None) == "show":
+        media = media.onDeck() or media
 
     if supports_playqueues and (isinstance(media, list) or shuffle or continuous):
         playqueue = plex_server.create_playqueue(

@@ -2,11 +2,17 @@
 
 from yarl import URL
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    SearchMediaQuery,
+)
 
 from .const import DOMAIN
 from .errors import MediaNotFound
 from .helpers import get_plex_server, get_plex_servers, pretty_title
+from .media_search import fuzzy_search
 
 
 class UnknownMediaType(BrowseError):
@@ -28,6 +34,20 @@ ITEM_TYPE_MEDIA_CLASS = {
     "track": MediaClass.TRACK,
     "video": MediaClass.VIDEO,
 }
+
+
+MEDIA_CLASS_SEARCH_TYPE = {
+    MediaClass.MOVIE: "movie",
+    MediaClass.TV_SHOW: "show",
+    MediaClass.SEASON: "season",
+    MediaClass.EPISODE: "episode",
+    MediaClass.ARTIST: "artist",
+    MediaClass.ALBUM: "album",
+    MediaClass.TRACK: "track",
+    MediaClass.PLAYLIST: "playlist",
+}
+SEARCH_TYPE_ORDER = list(MEDIA_CLASS_SEARCH_TYPE.values())
+RESUMABLE_TYPES = {"movie", "show", "episode"}
 
 
 def browse_media(  # noqa: C901
@@ -54,32 +74,14 @@ def browse_media(  # noqa: C901
 
     def item_payload(item, short_name=False, extra_params=None):
         """Create response payload for a single media item."""
-        try:
-            media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
-        except KeyError as err:
-            raise UnknownMediaType(f"Unknown type received: {item.type}") from err
-        payload = {
-            "title": pretty_title(item, short_name),
-            "media_class": media_class,
-            "media_content_id": generate_plex_uri(
-                server_id, item.ratingKey, params=extra_params
-            ),
-            "media_content_type": item.type,
-            "can_play": True,
-            "can_expand": item.type in EXPANDABLES,
-        }
-        if hasattr(item, "thumbUrl"):
-            plex_server.thumbnail_cache.setdefault(str(item.ratingKey), item.thumbUrl)
-            if is_internal:
-                thumbnail = item.thumbUrl
-            else:
-                thumbnail = get_proxy_image_url(
-                    server_id,
-                    item.ratingKey,
-                )
-            payload["thumbnail"] = thumbnail
-
-        return BrowseMedia(**payload)
+        return build_item_payload(
+            plex_server,
+            server_id,
+            is_internal,
+            item,
+            short_name=short_name,
+            extra_params=extra_params,
+        )
 
     def server_payload():
         """Create response payload to describe libraries of the Plex server."""
@@ -275,6 +277,73 @@ def browse_media(  # noqa: C901
     if response is None:
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
     return response
+
+
+def build_item_payload(
+    plex_server, server_id, is_internal, item, *, short_name=False, extra_params=None
+):
+    """Create response payload for a single media item."""
+    try:
+        media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
+    except KeyError as err:
+        raise UnknownMediaType(f"Unknown type received: {item.type}") from err
+    payload = {
+        "title": pretty_title(item, short_name),
+        "media_class": media_class,
+        "media_content_id": generate_plex_uri(
+            server_id, item.ratingKey, params=extra_params
+        ),
+        "media_content_type": item.type,
+        "can_play": True,
+        "can_expand": item.type in EXPANDABLES,
+    }
+    if hasattr(item, "thumbUrl"):
+        plex_server.thumbnail_cache.setdefault(str(item.ratingKey), item.thumbUrl)
+        if is_internal:
+            thumbnail = item.thumbUrl
+        else:
+            thumbnail = get_proxy_image_url(
+                server_id,
+                item.ratingKey,
+            )
+        payload["thumbnail"] = thumbnail
+
+    return BrowseMedia(**payload)
+
+
+def search_media_payloads(
+    plex_server, is_internal: bool, query: SearchMediaQuery
+) -> list[BrowseMedia]:
+    """Search the Plex server and return playable results, most relevant types first."""
+    server_id = plex_server.machine_identifier
+
+    mediatypes: list[str | None] = [
+        MEDIA_CLASS_SEARCH_TYPE[media_class]
+        for media_class in query.media_filter_classes or []
+        if media_class in MEDIA_CLASS_SEARCH_TYPE
+    ]
+    if not mediatypes:
+        if query.media_filter_classes:
+            return []
+        mediatypes = [None]
+
+    items = []
+    for mediatype in mediatypes:
+        items.extend(fuzzy_search(plex_server, query.search_query, mediatype))
+
+    items = [x for x in items if x.type in SEARCH_TYPE_ORDER]
+    items.sort(key=lambda x: SEARCH_TYPE_ORDER.index(x.type))
+
+    return [
+        build_item_payload(
+            plex_server,
+            server_id,
+            is_internal,
+            item,
+            extra_params={"resume": 1} if item.type in RESUMABLE_TYPES else None,
+        )
+        for item in items
+    ]
 
 
 def generate_plex_uri(server_id, media_id, params=None):

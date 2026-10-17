@@ -1,11 +1,14 @@
 """Tests for various Plex services."""
 
 from http import HTTPStatus
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import plexapi.audio
 from plexapi.exceptions import NotFound
 import plexapi.playqueue
+import plexapi.video
+import probatio
 import pytest
 import requests_mock
 
@@ -16,7 +19,9 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
+    SERVICE_ON_DECK,
     SERVICE_REFRESH_LIBRARY,
+    SERVICE_SEARCH,
 )
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
@@ -104,6 +109,176 @@ async def test_refresh_library(
         )
     assert "Multiple Plex servers configured" in str(excinfo.value)
     assert refresh.call_count == 1
+
+
+async def test_search_service(
+    hass: HomeAssistant,
+    mock_plex_server,
+    requests_mock: requests_mock.Mocker,
+    hubs_search,
+) -> None:
+    """Test search service call."""
+    url = mock_plex_server.url_in_use
+    requests_mock.get(f"{url}/hubs/search", text=hubs_search)
+
+    # Test server-wide search across media types
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Movie 1"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(result["results"]) == 2
+
+    movie_result = next(x for x in result["results"] if x["media_type"] == "movie")
+    assert movie_result["title"] == "Movie 1"
+    assert movie_result["year"] == 2000
+    assert movie_result["summary"] == "Some elaborate summary."
+    assert movie_result["guid"] == "plex://movie/5d776b85594b2b001e6dc641"
+    assert movie_result["rating_key"] == 1
+    assert movie_result["key"] == "/library/metadata/1"
+    assert movie_result["thumb_url"].startswith(
+        f"/api/plex_image_proxy/{mock_plex_server.machine_identifier}/1?authSig="
+    )
+    assert "X-Plex-Token" not in movie_result["thumb_url"]
+    assert movie_result["server_id"] == mock_plex_server.machine_identifier
+    assert movie_result["server_name"] == mock_plex_server.friendly_name
+    assert movie_result["library_name"] == "Movies"
+    assert movie_result["content_rating"] == "R"
+    assert movie_result["duration"] == 9000000
+    assert movie_result["originally_available_at"].startswith("2000-01-01")
+    assert movie_result["genres"] == []
+
+    show_result = next(x for x in result["results"] if x["media_type"] == "show")
+    assert show_result["title"] == "TV Show"
+    assert "on_deck" not in show_result
+    assert "on_deck" not in movie_result
+    assert show_result["guid"] == "plex://show/5d9c07f7e98e47001eb03fc7"
+
+    # Test the on deck episode is included for shows
+    on_deck_episode = SimpleNamespace(
+        title="Episode 5",
+        type="episode",
+        guid="plex://episode/60d5ff1c4a0721002c4e5d75",
+        ratingKey=35,
+        key="/library/metadata/35",
+    )
+    with patch.object(plexapi.video.Show, "onDeck", return_value=on_deck_episode):
+        result = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {"query": "TV Show", "media_type": "show", "include_on_deck": True},
+            blocking=True,
+            return_response=True,
+        )
+    assert result["results"][0]["on_deck"]["title"] == "Episode 5"
+    assert result["results"][0]["on_deck"]["rating_key"] == 35
+
+    # Test search scoped to a specific media type
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Movie 1", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(result["results"]) == 1
+    assert result["results"][0]["media_type"] == "movie"
+
+    # Test search scoped to a specific library
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Movie 1", "library_name": "Movies"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(result["results"]) == 5
+    assert all(x["media_type"] == "movie" for x in result["results"])
+
+    # Test with non-existent library
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {"query": "Movie 1", "library_name": "Not a Library"},
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test with non-existent server
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {"query": "Movie 1", "server_name": "Not a Server"},
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test lookup by Plex key
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"plex_key": 1},
+        blocking=True,
+        return_response=True,
+    )
+    assert [x["title"] for x in result["results"]] == ["Movie 1"]
+
+    # Test lookup of an unknown Plex key
+    requests_mock.get(f"{url}/library/metadata/999", status_code=HTTPStatus.NOT_FOUND)
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"plex_key": 999},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+    # Test playlist lookup
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"playlist_name": "Playlist 1"},
+        blocking=True,
+        return_response=True,
+    )
+    assert [x["title"] for x in result["results"]] == ["Playlist 1"]
+    assert result["results"][0]["media_type"] == "playlist"
+
+    # Test play_media compatible filters in a library
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"library_name": "TV Shows", "show_name": "TV Show", "media_type": "show"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(result["results"]) == 1
+    assert result["results"][0]["media_type"] == "show"
+
+    # Test filters without a library
+    with pytest.raises(HomeAssistantError, match="'library_name' is required"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {"year": 2000},
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test a call without any search criteria
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {"library_name": "Movies"},
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_lookup_media_for_other_integrations(
@@ -253,3 +428,107 @@ async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> 
     assert isinstance(result.media, plexapi.audio.Track)
     assert result.continuous is True
     assert result.offset == 0
+
+
+async def test_search_service_fuzzy(
+    hass: HomeAssistant,
+    mock_plex_server,
+    requests_mock: requests_mock.Mocker,
+    empty_payload,
+) -> None:
+    """Test the search service tolerates misspelled queries."""
+    url = mock_plex_server.url_in_use
+    requests_mock.get(f"{url}/hubs/search", text=empty_payload)
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Moovie 1", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"]
+    assert result["results"][0]["title"] == "Movie 1"
+    assert all(x["media_type"] == "movie" for x in result["results"])
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"query": "Completely unrelated words"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+
+async def test_play_show_resumes_on_deck_episode(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test a show resolves to its on deck episode only when resume is set."""
+    content_id = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/30"
+
+    result = process_plex_payload(
+        hass, MediaType.TVSHOW, content_id, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.video.Show)
+
+    on_deck_episode = SimpleNamespace(type="episode")
+    with patch.object(plexapi.video.Show, "onDeck", return_value=on_deck_episode):
+        result = process_plex_payload(
+            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
+        )
+    assert result.media is on_deck_episode
+
+    with patch.object(plexapi.video.Show, "onDeck", return_value=None):
+        result = process_plex_payload(
+            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
+        )
+    assert isinstance(result.media, plexapi.video.Show)
+
+
+async def test_on_deck_service(
+    hass: HomeAssistant,
+    mock_plex_server,
+    requests_mock: requests_mock.Mocker,
+    library_movies_all,
+) -> None:
+    """Test the on deck service."""
+    url = mock_plex_server.url_in_use
+    requests_mock.get(f"{url}/hubs/continueWatching/items", text=library_movies_all)
+
+    result = await hass.services.async_call(
+        DOMAIN, SERVICE_ON_DECK, {}, blocking=True, return_response=True
+    )
+    assert len(result["results"]) == 5
+    first = result["results"][0]
+    assert first["title"] == "Movie 1"
+    assert first["media_type"] == "movie"
+    assert first["server_id"] == mock_plex_server.machine_identifier
+    assert first["progress_percent"] is None
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ON_DECK,
+        {"limit": 2, "library_name": "Movies", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(result["results"]) == 2
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ON_DECK,
+        {"media_type": "episode"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ON_DECK,
+        {"library_name": "TV Shows"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []

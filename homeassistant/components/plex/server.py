@@ -620,6 +620,16 @@ class PlexServer:
         """Fetch item from Plex server."""
         return self._plex_server.fetchItem(item)
 
+    def continue_watching(self):
+        """Return the items in the Continue Watching hub."""
+        return self._plex_server.continueWatching()
+
+    def search(self, query, mediatype=None, limit=None, **kwargs):
+        """Search the entire Plex server using the hub search endpoint."""
+        return self._plex_server.search(
+            query, mediatype=mediatype, limit=limit, **kwargs
+        )
+
     def lookup_media(self, media_type, **kwargs):
         """Lookup a piece of media."""
         media_type = media_type.lower()
