@@ -196,6 +196,38 @@ async def test_doorbell_with_ring_event_type_in_template(
 
 
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_doorbell_with_resolved_empty_event_types_in_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a templated doorbell entity whose event_types resolves to [] warns.
+
+    An empty list is a legitimate, fully-rendered result (see
+    test_event_types_template), not a sign that the template hasn't rendered
+    yet, so it must still be checked for the 'ring' event type.
+    """
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": "{{ [] }}",
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" in caplog.text
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

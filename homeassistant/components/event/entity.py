@@ -74,6 +74,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     __last_event_type: str | None = None
     __last_event_attributes: dict[str, Any] | None = None
     __doorbell_event_type_checked: bool = False
+    _event_types_known: bool = True
 
     @cached_property
     @override
@@ -179,7 +180,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         """
         if (
             not self.__doorbell_event_type_checked
-            and self.event_types
+            and self._event_types_known
             and self.device_class == EventDeviceClass.DOORBELL
         ):
             self.__doorbell_event_type_checked = True
