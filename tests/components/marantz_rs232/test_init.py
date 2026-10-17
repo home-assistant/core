@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from marantz_rs232 import V2007ReceiverState
 import pytest
+from serialx import SerialException
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -191,3 +192,19 @@ async def test_generic_receiver(
     assert device.manufacturer == "Marantz"
     assert device.model is None
     assert device.model_id is None
+
+
+async def test_setup_serial_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Retry setup when the serial transport cannot be opened."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "serialx.open_serial_connection",
+        side_effect=SerialException("Serial proxy is unavailable"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
