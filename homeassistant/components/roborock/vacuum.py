@@ -387,6 +387,19 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "y": robot_position.y,
         }
 
+    async def async_resolve_error(self, error_code: int | None = None) -> None:
+        """Resolve a dock or robot error."""
+        try:
+            await self._status_trait.resolve_error(error_code=error_code)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "resolve_error",
+                },
+            ) from err
+
 
 class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
@@ -680,6 +693,10 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         """Clean the specified zone."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
 
+    async def async_resolve_error(self, error_code: int | None = None) -> None:
+        """Resolve a dock or robot error."""
+        raise ServiceNotSupported(DOMAIN, "resolve_error", self.entity_id)
+
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
@@ -938,4 +955,17 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={"command": "set_vacuum_zoned_cleaning"},
+            ) from err
+
+    async def async_resolve_error(self, error_code: int | None = None) -> None:
+        """Resolve a dock or robot error."""
+        try:
+            await self.coordinator.api.status.resolve_error(error_code=error_code)  # type: ignore[attr-defined]
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "resolve_error",
+                },
             ) from err
