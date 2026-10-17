@@ -1,5 +1,6 @@
 """Test util methods."""
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import UTC, datetime, timedelta
 import os
@@ -14,6 +15,7 @@ import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -44,6 +46,7 @@ from homeassistant.components.recorder.util import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.recorder import SESSION_INFO_READ_ONLY
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -79,6 +82,22 @@ async def test_session_scope_not_setup(
         util.session_scope(hass=hass),
     ):
         pass
+
+
+async def test_session_scope_read_only_marker_ends_with_scope(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test a session is only marked read-only within a read-only scope.
+
+    Sessions are reused per thread, so a marker left behind would let a failed
+    query roll back a later session holding writes.
+    """
+    with util.session_scope(hass=hass, read_only=True) as session:
+        assert session.info[SESSION_INFO_READ_ONLY] is True
+    with util.session_scope(hass=hass) as reused_session:
+        assert reused_session is session
+        assert SESSION_INFO_READ_ONLY not in reused_session.info
 
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
@@ -1172,114 +1191,136 @@ def test_build_mysqldb_conv() -> None:
     )
 
 
-@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-async def test_execute_retries_after_lost_connection(
-    hass: HomeAssistant,
-    setup_recorder: None,
-) -> None:
-    """Test execute rolls back and retries after the connection is lost.
-
-    This test is specific for SQLite: the in-memory database is lost with the
-    connection, so the retried query raises OperationalError. Without the rollback
-    every retry would raise PendingRollbackError instead.
-    """
-    hass.states.async_set("sensor.on", "on")
-    await async_wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        query = session.query(StatesMeta).limit(1)
-        # Simulate a lost connection: the session object stays intact and unaware
-        session.connection().invalidate()
-
-        with pytest.raises(OperationalError):
-            util.execute(query)
-
-
-@pytest.mark.skip_on_db_engine(["sqlite"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_execute_recovers_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute returns rows after the connection is lost.
+    """Test execute reconnects and returns rows after the connection is lost.
 
-    This test is specific for MySQL and PostgreSQL, where the database survives
-    the lost connection and the retry can reconnect and succeed.
-    """
-    hass.states.async_set("sensor.on", "on")
-    await async_wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        query = session.query(StatesMeta).limit(1)
-        session.connection().invalidate()
-
-        assert len(util.execute(query)) == 1
-
-
-@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-async def test_execute_stmt_lambda_element_retries_after_lost_connection(
-    hass: HomeAssistant,
-    setup_recorder: None,
-) -> None:
-    """Test execute_stmt_lambda_element retries after a lost connection.
-
-    This test is specific for SQLite, same as
-    test_execute_retries_after_lost_connection.
+    The database must survive the lost connection, which an in-memory SQLite
+    database does not.
     """
     instance = recorder.get_instance(hass)
     hass.states.async_set("sensor.on", "on")
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
-        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
-        start_time_ts = dt_util.utcnow().timestamp()
-        stmt = lambda_stmt(
-            lambda: _get_single_entity_start_time_stmt(
-                start_time_ts, metadata_id, False, False, False
-            )
-        )
-        session.connection().invalidate()
+    def _query() -> None:
+        with session_scope(hass=hass, read_only=True) as session:
+            query = session.query(StatesMeta).limit(1)
+            # Simulate a lost connection: the session object stays intact and unaware
+            session.connection().invalidate()
+            assert len(util.execute(query)) == 1
 
-        with pytest.raises(OperationalError):
-            util.execute_stmt_lambda_element(session, stmt)
+    await instance.async_add_executor_job(_query)
 
 
-@pytest.mark.skip_on_db_engine(["sqlite"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute_stmt_lambda_element returns rows after a lost connection.
-
-    This test is specific for MySQL and PostgreSQL, same as
-    test_execute_recovers_after_lost_connection.
-    """
+    """Test execute_stmt_lambda_element reconnects after the connection is lost."""
     instance = recorder.get_instance(hass)
     hass.states.async_set("sensor.on", "on")
     new_state = hass.states.get("sensor.on")
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
-        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
-        start_time_ts = dt_util.utcnow().timestamp()
-        stmt = lambda_stmt(
-            lambda: _get_single_entity_start_time_stmt(
-                start_time_ts, metadata_id, False, False, False
+    def _query() -> None:
+        with session_scope(hass=hass, read_only=True) as session:
+            metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+            start_time_ts = dt_util.utcnow().timestamp()
+            stmt = lambda_stmt(
+                lambda: _get_single_entity_start_time_stmt(
+                    start_time_ts, metadata_id, False, False, False
+                )
             )
-        )
-        session.connection().invalidate()
+            session.connection().invalidate()
 
-        rows = util.execute_stmt_lambda_element(session, stmt)
-        assert isinstance(rows, list)
-        assert rows[0].state == new_state.state
-        assert rows[0].metadata_id == metadata_id
+            rows = util.execute_stmt_lambda_element(session, stmt)
+            assert rows[0].state == new_state.state
+            assert rows[0].metadata_id == metadata_id
+
+    await instance.async_add_executor_job(_query)
+
+
+def _execute_failing_once(session: Session) -> None:
+    """Run a query through execute which fails on the first attempt."""
+    query = MagicMock(session=session)
+    query.all.side_effect = [OperationalError("SELECT", {}, Exception()), []]
+    util.execute(query)
+
+
+def _execute_stmt_lambda_element_failing_once(session: Session) -> None:
+    """Run a statement through execute_stmt_lambda_element which fails once."""
+    with patch.object(
+        session,
+        "execute",
+        side_effect=[OperationalError("SELECT", {}, Exception()), MagicMock()],
+    ):
+        util.execute_stmt_lambda_element(session, MagicMock())
+
+
+@pytest.mark.parametrize(
+    ("read_only", "pending_write_kept"),
+    [
+        pytest.param(True, False, id="read_only_session_rolled_back"),
+        pytest.param(False, True, id="write_session_not_rolled_back"),
+    ],
+)
+@pytest.mark.parametrize(
+    "run_query",
+    [
+        pytest.param(_execute_failing_once, id="execute"),
+        pytest.param(
+            _execute_stmt_lambda_element_failing_once,
+            id="execute_stmt_lambda_element",
+        ),
+    ],
+)
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_query_retry_only_rolls_back_read_only_session(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    run_query: Callable[[Session], None],
+    read_only: bool,
+    pending_write_kept: bool,
+) -> None:
+    """Test a failed query only rolls back a read-only session before retrying.
+
+    A read-only session is never committed, so rolling it back loses nothing. A
+    session holding writes must not be rolled back, as the retry would then succeed
+    and the caller would go on to commit what is left of its unit of work.
+    """
+    with session_scope(hass=hass, read_only=read_only) as session:
+        pending_write = RecorderRuns(start=dt_util.utcnow())
+        session.add(pending_write)
+
+        run_query(session)
+
+        assert (pending_write in session.new) is pending_write_kept
+        # Don't commit the pending write when the scope ends
+        session.expunge_all()
+
+
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_query_retry_continues_after_failed_rollback(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rollback which fails neither replaces the query error nor ends the retries."""
+    with session_scope(hass=hass, read_only=True) as session:
+        query = MagicMock(session=session)
+        query.all.side_effect = [OperationalError("SELECT", {}, Exception()), ["row"]]
+        with patch.object(
+            session, "rollback", side_effect=SQLAlchemyError("rollback failed")
+        ):
+            assert util.execute(query) == ["row"]
+
+    assert "rollback failed" in caplog.text
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
