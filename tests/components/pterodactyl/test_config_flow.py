@@ -44,6 +44,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     [
         (PterodactylApiError, "cannot_connect"),
         (BadRequestError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (Exception, "unknown"),
         (
             ClientResponseError(request_info=None, history=[], status=401),

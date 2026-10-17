@@ -93,6 +93,7 @@ class PterodactylAPI:
             BadRequestError,
             PterodactylApiError,
             ClientError,
+            TimeoutError,
         ) as error:
             raise PterodactylConnectionError(error) from error
 
@@ -138,7 +139,12 @@ class PterodactylAPI:
                     raise PterodactylAuthorizationError(error) from error
 
                 raise PterodactylConnectionError(error) from error
-            except (BadRequestError, PterodactylApiError, ClientError) as error:
+            except (
+                BadRequestError,
+                PterodactylApiError,
+                ClientError,
+                TimeoutError,
+            ) as error:
                 raise PterodactylConnectionError(error) from error
             else:
                 name = server["name"]
@@ -198,5 +204,10 @@ class PterodactylAPI:
                 raise PterodactylAuthorizationError(error) from error
 
             raise PterodactylConnectionError(error) from error
-        except (BadRequestError, PterodactylApiError, ClientError) as error:
+        except (
+            BadRequestError,
+            PterodactylApiError,
+            ClientError,
+            TimeoutError,
+        ) as error:
             raise PterodactylConnectionError(error) from error
