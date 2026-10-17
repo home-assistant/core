@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pyzonneplan import (
     BatteryInstallation,
+    ChargePointInstallation,
     Token,
     ZonneplanAuthenticationError,
     ZonneplanConnectionError,
@@ -86,6 +87,29 @@ async def test_setup_entry_battery_update_failed(
 ) -> None:
     """Test a failing home battery fetch marks the entry for retry."""
     mock_zonneplan_client.async_get_battery.side_effect = side_effect
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(ZonneplanConnectionError("boom"), id="connection_error"),
+        pytest.param([ChargePointInstallation()], id="charge_point_not_found"),
+    ],
+)
+async def test_setup_entry_charge_point_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    side_effect: Exception | list[ChargePointInstallation],
+) -> None:
+    """Test a failing charge point fetch marks the entry for retry."""
+    mock_zonneplan_client.async_get_charge_point.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
