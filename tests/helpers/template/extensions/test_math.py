@@ -185,6 +185,41 @@ def test_arc_functions(hass: HomeAssistant) -> None:
     assert render(hass, "{{ atan2('invalid', 1, 1) }}") == 1
 
 
+def test_degrees_radians(hass: HomeAssistant) -> None:
+    """Test conversions between degrees and radians."""
+    tests = [
+        (0.0, 0.0),
+        (math.pi / 2, 90.0),
+        (math.pi, 180.0),
+        (math.pi * 1.5, 270.0),
+        (math.pi / 3, 60.0),
+    ]
+
+    for rad, deg in tests:
+        assert render(hass, f"{{{{ {rad} | degrees | round(3) }}}}") == deg
+        assert render(hass, f"{{{{ degrees({rad}) | round(3) }}}}") == deg
+
+        assert render(hass, f"{{{{ {deg} | radians | round(3) }}}}") == round(rad, 3)
+        assert render(hass, f"{{{{ radians({deg}) | round(3) }}}}") == round(rad, 3)
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'duck' | degrees }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'duck' | radians }}")
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | degrees(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | degrees(default=1) }}") == 1
+    assert render(hass, "{{ degrees('no_number', 1) }}") == 1
+    assert render(hass, "{{ degrees('no_number', default=1) }}") == 1
+
+    assert render(hass, "{{ 'no_number' | radians(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | radians(default=1) }}") == 1
+    assert render(hass, "{{ radians('no_number', 1) }}") == 1
+    assert render(hass, "{{ radians('no_number', default=1) }}") == 1
+
+
 def test_average(hass: HomeAssistant) -> None:
     """Test the average function."""
     assert render(hass, "{{ average([1, 2, 3]) }}") == 2
