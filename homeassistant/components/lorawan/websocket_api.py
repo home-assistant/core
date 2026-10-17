@@ -1,5 +1,6 @@
 """WebSocket API for the LoRaWAN integration."""
 
+import logging
 from typing import Any
 
 import probatio
@@ -7,10 +8,13 @@ import probatio
 from homeassistant.components import websocket_api
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .connection import DATA_REGISTRY
 from .const import SIGNAL_DEVICES_CHANGED
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -142,16 +146,49 @@ def websocket_subscribe_devices(
 ) -> None:
     """Send the current devices and subsequent changes."""
 
+    device_registry = dr.async_get(hass)
+    registry = hass.data[DATA_REGISTRY]
+    linked_device_ids: set[str] = set()
+
     @callback
     def send_snapshot() -> None:
-        connection.send_event(msg["id"], _snapshot(hass))
+        snapshot = _snapshot(hass)
+        linked_device_ids.clear()
+        linked_device_ids.update(
+            device["device_id"]
+            for device in snapshot["devices"]
+            if device["device_id"] is not None
+        )
+        connection.send_event(msg["id"], snapshot)
+
+    debouncer = Debouncer(
+        hass, _LOGGER, cooldown=1, immediate=False, function=send_snapshot
+    )
 
     @callback
     def registry_updated(event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
-        send_snapshot()
+        device_id = event.data["device_id"]
+        if device_id in linked_device_ids:
+            debouncer.async_schedule_call()
+            return
+        if (device := device_registry.async_get(device_id)) is None:
+            return
+        if any(
+            domain in registry.integrations
+            and any(
+                identifier
+                == f"{state.descriptor.network_id}:{state.descriptor.dev_eui}"
+                and (state.descriptor.stack, state.descriptor.brand_id)
+                in registry.integrations[domain]
+                for registered in registry.connections.values()
+                for state in registered.devices.values()
+            )
+            for domain, identifier in device.identifiers
+        ):
+            debouncer.async_schedule_call()
 
     unsubscribe_changes = async_dispatcher_connect(
-        hass, SIGNAL_DEVICES_CHANGED, send_snapshot
+        hass, SIGNAL_DEVICES_CHANGED, debouncer.async_schedule_call
     )
     unsubscribe_registry = hass.bus.async_listen(
         dr.EVENT_DEVICE_REGISTRY_UPDATED, registry_updated
@@ -161,6 +198,7 @@ def websocket_subscribe_devices(
     def unsubscribe() -> None:
         unsubscribe_changes()
         unsubscribe_registry()
+        debouncer.async_shutdown()
 
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])

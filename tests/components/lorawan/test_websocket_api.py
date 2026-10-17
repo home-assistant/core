@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR
 
-from tests.common import MockConfigEntry, MockUser
+from tests.common import MockConfigEntry, MockUser, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -242,10 +242,12 @@ async def test_subscribe_unsubscribe(
     assert (await client.receive_json())["event"]["devices"][0]["last_uplink"] is None
     now = dt_util.utcnow()
     backend.emit(UplinkEvent(descriptor=DESCRIPTOR, received_at=now, data=b"data"))
+    async_fire_time_changed(hass, now + timedelta(seconds=1))
     assert (await client.receive_json())["event"]["devices"][0][
         "last_uplink"
     ] == now.isoformat()
     backend.disconnect()
+    async_fire_time_changed(hass, now + timedelta(seconds=1))
     event = (await client.receive_json())["event"]
     assert event["devices"] == []
     assert event["connections"] == []
@@ -253,6 +255,135 @@ async def test_subscribe_unsubscribe(
     assert (await client.receive_json())["success"]
     with patch("homeassistant.components.lorawan.websocket_api._snapshot") as snapshot:
         await registered_backend("network", [DESCRIPTOR])
+        await hass.async_block_till_done()
+        snapshot.assert_not_called()
+
+
+async def test_subscription_batches_updates(
+    hass: HomeAssistant,
+    registered_backend: RegisterBackend,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A burst produces one snapshot with the latest observations."""
+    descriptors = [replace(DESCRIPTOR, dev_eui=f"{index:016x}") for index in range(20)]
+    backend, _ = await registered_backend("network", descriptors)
+    client = await hass_ws_client(hass)
+    with patch(
+        "homeassistant.components.lorawan.websocket_api._snapshot", wraps=_snapshot
+    ) as snapshot:
+        await client.send_json({"id": 1, "type": "lorawan/devices/subscribe"})
+        assert (await client.receive_json())["success"]
+        assert len((await client.receive_json())["event"]["devices"]) == 20
+        snapshot.assert_called_once_with(hass)
+        snapshot.reset_mock()
+        now = dt_util.utcnow()
+        for descriptor in descriptors:
+            backend.emit(
+                UplinkEvent(descriptor=descriptor, received_at=now, data=b"data")
+            )
+        await hass.async_block_till_done()
+        snapshot.assert_not_called()
+        async_fire_time_changed(hass, now + timedelta(seconds=1))
+        event = (await client.receive_json())["event"]
+        assert len(event["devices"]) == 20
+        assert all(
+            device["last_uplink"] == now.isoformat() for device in event["devices"]
+        )
+        snapshot.assert_called_once_with(hass)
+
+        snapshot.reset_mock()
+        backend.disconnect()
+        await client.send_json(
+            {"id": 2, "type": "unsubscribe_events", "subscription": 1}
+        )
+        assert (await client.receive_json())["success"]
+        async_fire_time_changed(hass, now + timedelta(seconds=2))
+        await hass.async_block_till_done()
+        snapshot.assert_not_called()
+
+
+async def test_subscription_registry_changes(
+    hass: HomeAssistant,
+    registered_backend: RegisterBackend,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Track registry links appearing, changing, and disappearing."""
+    await registered_backend("different_entry_id", [DESCRIPTOR])
+    entry = MockConfigEntry(domain="test_vendor")
+    entry.add_to_hass(hass)
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "lorawan/devices/subscribe"})
+    assert (await client.receive_json())["success"]
+    assert (await client.receive_json())["event"]["devices"][0]["device_id"] is None
+
+    identifier = (entry.domain, f"{DESCRIPTOR.network_id}:{DESCRIPTOR.dev_eui}")
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={identifier}, name="Original"
+    )
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    result = (await client.receive_json())["event"]["devices"][0]
+    assert result["device_id"] == device.id
+    assert result["name"] == "Original"
+
+    device_registry.async_update_device(device.id, name_by_user="Office")
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    assert (await client.receive_json())["event"]["devices"][0]["name"] == "Office"
+
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    result = (await client.receive_json())["event"]["devices"][0]
+    assert result["device_id"] is None
+    assert result["support"] == "unsupported_model"
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(entry.domain, "unrelated")}
+    )
+    await hass.async_block_till_done()
+    device_registry.async_update_device(device.id, new_identifiers={identifier})
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    assert (await client.receive_json())["event"]["devices"][0][
+        "device_id"
+    ] == device.id
+
+    device_registry.async_update_device(
+        device.id, new_identifiers={(entry.domain, "unrelated")}
+    )
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    assert (await client.receive_json())["event"]["devices"][0]["device_id"] is None
+
+
+@pytest.mark.parametrize("domain", ["unrelated", "test_vendor"])
+async def test_subscription_ignores_unrelated_registry_devices(
+    hass: HomeAssistant,
+    registered_backend: RegisterBackend,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    domain: str,
+) -> None:
+    """Unrelated registry changes do not rebuild snapshots."""
+    await registered_backend("network", [DESCRIPTOR])
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "lorawan/devices/subscribe"})
+    assert (await client.receive_json())["success"]
+    await client.receive_json()
+    with patch("homeassistant.components.lorawan.websocket_api._snapshot") as snapshot:
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id, identifiers={(domain, "unrelated")}
+        )
+        await hass.async_block_till_done()
+        device_registry.async_update_device(device.id, name_by_user="Unrelated")
+        await hass.async_block_till_done()
+        device_registry.async_remove_device(device.id)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done()
         snapshot.assert_not_called()
 
