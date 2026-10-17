@@ -106,8 +106,6 @@ class OAuth2FlowHandler(
                 errors["base"] = "unknown"
             else:
                 home_id = home_info["id"]
-                # Keying on the home id allows one entry per home instead
-                # of one per account.
                 await self.async_set_unique_id(home_id)
 
                 if self.source == SOURCE_REAUTH:

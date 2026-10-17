@@ -148,16 +148,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> No
         raise ConfigEntryNotReady from err
 
     if CONF_HOME_ID not in entry.data:
-        # Recorded for entries created before the home id was stored, so that
-        # the same home cannot be added again through the other authentication
-        # method. The home is up at this point, so a failure of this call is
-        # left for a later start to retry rather than undoing a working setup.
+        # Backfill the home id of older entries, best effort.
         try:
             async with asyncio.timeout(10):
                 home_info = await yolink_home.async_get_home_info()
         except (YoLinkClientError, TimeoutError) as err:
-            # YoLinkAuthFailError is a YoLinkClientError: credentials that just
-            # set up the home are not worth a reauthentication flow over.
+            # Includes YoLinkAuthFailError: a failed backfill must not start a reauth.
             _LOGGER.debug("Could not determine the home of the entry: %s", err)
         else:
             if home_id := (home_info.data or {}).get("id"):

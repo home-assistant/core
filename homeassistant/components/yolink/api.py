@@ -16,7 +16,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
 
-# Fields a token response carries when it reports an error instead of a token.
 _TOKEN_ERROR_FIELDS = ("code", "desc", "error", "error_description")
 
 
@@ -28,9 +27,7 @@ def _parse_token_response(payload: Any) -> dict[str, Any]:
     access_token = payload.get("access_token")
     if not isinstance(access_token, str) or not access_token:
         if not any(field in payload for field in _TOKEN_ERROR_FIELDS):
-            # Nothing was refused, the response is simply unusable. Reporting it
-            # as an authentication failure would ask the user to reauthenticate
-            # over what the next request may well answer correctly.
+            # Nothing was refused, so this must not start a reauthentication.
             raise YoLinkClientError(
                 "invalid_response", "Token response has no usable access token"
             )
@@ -80,11 +77,7 @@ class ConfigEntryAuth(YoLinkAuthMgr):
 
 
 class StaticTokenAuth(YoLinkAuthMgr):
-    """Provide yolink authentication with an already obtained access token.
-
-    Used by the config flow, where an OAuth2 token has been resolved but no
-    config entry exists yet to refresh it from.
-    """
+    """Provide yolink authentication with an already resolved access token."""
 
     def __init__(self, websession: ClientSession, access_token: str) -> None:
         """Initialize yolink static token Auth."""
@@ -100,13 +93,9 @@ class StaticTokenAuth(YoLinkAuthMgr):
         return self._access_token
 
 
+# Not a YoLinkLocalAuthMgr: the library's MQTT client would use local hub credentials.
 class UACAuth(YoLinkAuthMgr):
-    """Provide yolink authentication using User Access Credentials.
-
-    Extends YoLinkAuthMgr instead of the library's YoLinkLocalAuthMgr because
-    the library's MQTT client uses isinstance(auth_mgr, YoLinkLocalAuthMgr) to
-    select local hub credentials, while UAC connects to the cloud broker.
-    """
+    """Provide yolink authentication using User Access Credentials."""
 
     def __init__(
         self,
@@ -139,8 +128,7 @@ class UACAuth(YoLinkAuthMgr):
                 # The credentials were refused, retrying cannot fix that.
                 raise
             except YoLinkClientError as err:
-                # A cached token stays usable for the rest of its lifetime, so a
-                # transient failure of the token endpoint interrupts nothing.
+                # A cached token outlives a transient failure of the token endpoint.
                 if cached is None or time.time() >= cached["expires_at"]:
                     raise
                 _LOGGER.debug(
@@ -149,8 +137,7 @@ class UACAuth(YoLinkAuthMgr):
                 )
                 return cached["access_token"]
             now = time.time()
-            # Refresh once half the lifetime has passed, so a failing token
-            # endpoint can be retried while the current token still works.
+            # Refresh at half the lifetime to leave room to retry a failing endpoint.
             token["refresh_at"] = now + token["expires_in"] / 2
             token["expires_at"] = now + token["expires_in"]
             self._token = token
@@ -176,7 +163,6 @@ class UACAuth(YoLinkAuthMgr):
                     except ClientError, ValueError:
                         error_response = None
                     if not isinstance(error_response, dict):
-                        # A body that is not a JSON object carries no error.
                         error_response = {}
                     error_code = error_response.get("error", "unknown")
                     error_desc = error_response.get(
