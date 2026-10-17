@@ -9,7 +9,7 @@ from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,6 +47,16 @@ COZYTOUCH_DHW = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "io://1234-5678-5643/109286#2",
     "sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption",
+)
+HEATING_DISCRETE_RSSI = FixtureDevice(
+    "setup/cloud_nexity_rail_din_europe.json",
+    "io://1234-5678-1698/15702199#1",
+    "sensor.maple_residence_garden_radiator_discrete_rssi_level",
+)
+DHW_HEAT_PUMP_OPERATING_TIME = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/6713703#1",
+    "sensor.my_home_water_heater_heat_pump_operating_time",
 )
 # Hitachi Yutaki heat pump exposing energy and temperature sensors
 YUTAKI = FixtureDevice(
@@ -158,6 +168,81 @@ async def test_sensor_battery_level_state_update(
 
     state = hass.states.get(HEATING_BATTERY.entity_id)
     assert state.state == "42"
+
+
+@pytest.mark.parametrize(
+    ("device", "state_name", "state_type", "value", "expected"),
+    [
+        pytest.param(
+            TEMPERATURE_SENSOR,
+            OverkizState.CORE_TEMPERATURE,
+            2,
+            0.0,
+            "0.0",
+            id="measurement",
+        ),
+        pytest.param(
+            COZYTOUCH_DHW,
+            OverkizState.CORE_ELECTRIC_ENERGY_CONSUMPTION,
+            1,
+            0,
+            "0",
+            id="total_increasing",
+        ),
+        pytest.param(
+            DHW_HEAT_PUMP_OPERATING_TIME,
+            OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
+            1,
+            0,
+            "0",
+            id="no_state_class",
+        ),
+        pytest.param(
+            HEATING_DISCRETE_RSSI,
+            OverkizState.CORE_DISCRETE_RSSI_LEVEL,
+            3,
+            "",
+            STATE_UNKNOWN,
+            id="empty_string_enum",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_falsy_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device: FixtureDevice,
+    state_name: OverkizState,
+    state_type: int,
+    value: float | str,
+    expected: str,
+) -> None:
+    """Test falsy values: 0 is a valid state, an empty string is unknown."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    state = hass.states.get(device.entity_id)
+    assert state
+    assert state.state not in (expected, STATE_UNKNOWN)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=device.device_url,
+                device_states=[
+                    {"name": state_name.value, "type": state_type, "value": value},
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(device.entity_id)
+    assert state
+    assert state.state == expected
 
 
 async def test_sensor_unavailability(
