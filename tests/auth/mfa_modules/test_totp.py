@@ -1,12 +1,17 @@
 """Test the Time-based One Time Password (MFA) auth module."""
 
 import asyncio
+from datetime import datetime, timedelta
 from unittest.mock import patch
+
+from freezegun import freeze_time
+import pyotp
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser
 
@@ -130,6 +135,24 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"].id == "mock-id"
+
+
+async def test_setup_flow_accepts_code_with_clock_drift(hass: HomeAssistant) -> None:
+    """Test setup flow tolerates the same clock drift as login validation."""
+    totp_auth_module = await auth_mfa_module_from_config(hass, {"type": "totp"})
+    user = MockUser(id="mock-user").add_to_auth_manager(hass.auth)
+
+    with freeze_time(datetime(2024, 1, 1, 0, 0, 5)):
+        flow = await totp_auth_module.async_setup_flow(user.id)
+        flow.hass = hass
+        await flow.async_step_init()
+
+        drifted_code = pyotp.TOTP(flow._ota_secret).at(
+            dt_util.naive_now() - timedelta(seconds=25)
+        )
+        result = await flow.async_step_init({"code": drifted_code})
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
