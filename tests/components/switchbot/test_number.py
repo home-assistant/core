@@ -3,22 +3,38 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
+from bleak_retry_connector import BleakConnectionError
 import pytest
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STARTED,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from . import DOMAIN, STANDING_FAN_SERVICE_INFO, WOMETERTHPC_SERVICE_INFO
+from . import (
+    DOMAIN,
+    STANDING_FAN_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+)
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+)
+
+TIME_OFFSET_ENTITY_ID = "number.test_name_display_time_offset"
 
 
 @pytest.mark.parametrize(
@@ -50,11 +66,104 @@ async def test_meter_pro_co2_display_time_offset_initial_state(
         return_value=offset_seconds_on_device,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-        state = hass.states.get("number.test_name_display_time_offset")
+        state = hass.states.get(TIME_OFFSET_ENTITY_ID)
         assert state is not None
         assert float(state.state) == expected_state
+
+
+async def test_meter_pro_co2_display_time_offset_disabled_by_default(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the offset entity does not connect while it is disabled."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_time_offset = AsyncMock(return_value=60)
+    with patch("switchbot.SwitchbotMeterProCO2.get_time_offset", mock_get_time_offset):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_time_offset.assert_not_awaited()
+    assert hass.states.get(TIME_OFFSET_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_meter_pro_co2_display_time_offset_waits_for_start(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the offset is only read once Home Assistant has started."""
+    hass.set_state(CoreState.not_running)
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_time_offset = AsyncMock(return_value=60)
+    with patch("switchbot.SwitchbotMeterProCO2.get_time_offset", mock_get_time_offset):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Setting up the platform must not reach out over Bluetooth.
+        mock_get_time_offset.assert_not_awaited()
+        assert hass.states.get(TIME_OFFSET_ENTITY_ID).state == STATE_UNKNOWN
+
+        hass.set_state(CoreState.running)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_get_time_offset.await_count
+        assert hass.states.get(TIME_OFFSET_ENTITY_ID).state == "1"
+
+
+@pytest.mark.parametrize(
+    ("service_info", "side_effect", "expected_await_count"),
+    [
+        pytest.param(
+            WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+            None,
+            0,
+            id="no_connectable_path",
+        ),
+        pytest.param(
+            WOMETERTHPC_SERVICE_INFO,
+            BleakConnectionError("no connectable Bluetooth adapters"),
+            1,
+            id="connection_fails",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_meter_pro_co2_display_time_offset_unreachable(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+    service_info: BluetoothServiceInfoBleak,
+    side_effect: Exception | None,
+    expected_await_count: int,
+) -> None:
+    """Test an unreachable device leaves the entity added and unknown."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info_bleak(hass, service_info)
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_time_offset = AsyncMock(return_value=60, side_effect=side_effect)
+    with patch("switchbot.SwitchbotMeterProCO2.get_time_offset", mock_get_time_offset):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_get_time_offset.await_count == expected_await_count
+    assert hass.states.get(TIME_OFFSET_ENTITY_ID).state == STATE_UNKNOWN
+    assert "Error on device update" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -95,13 +204,13 @@ async def test_meter_pro_co2_set_display_time_offset(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_name_display_time_offset",
+                ATTR_ENTITY_ID: TIME_OFFSET_ENTITY_ID,
                 ATTR_VALUE: time_offset,
             },
             blocking=True,
@@ -109,7 +218,7 @@ async def test_meter_pro_co2_set_display_time_offset(
 
         mock_set_time_offset.assert_awaited_once_with(expected_seconds_on_device)
 
-        state = hass.states.get("number.test_name_display_time_offset")
+        state = hass.states.get(TIME_OFFSET_ENTITY_ID)
         assert state is not None
         assert float(state.state) == time_offset
 
@@ -148,7 +257,7 @@ async def test_set_display_time_offset_out_of_range(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             ServiceValidationError,
@@ -162,7 +271,7 @@ async def test_set_display_time_offset_out_of_range(
                 NUMBER_DOMAIN,
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.test_name_display_time_offset",
+                    ATTR_ENTITY_ID: TIME_OFFSET_ENTITY_ID,
                     ATTR_VALUE: value,
                 },
                 blocking=True,
