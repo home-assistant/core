@@ -105,6 +105,7 @@ def patch_aidot_client(
         ),
     ):
         mock_instance = mocked_aidot_client.return_value
+        mock_instance.class_mock = mocked_aidot_client
         mock_instance.get_device_client = get_device_client
         mock_instance.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
         mock_instance.async_post_login = AsyncMock(return_value=TEST_LOGIN_RESP)
