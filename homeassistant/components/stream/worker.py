@@ -57,6 +57,83 @@ def redact_av_error_string(err: av.FFmpegError) -> str:
     return ", ".join(parts)
 
 
+def is_annexb(data: bytes) -> bool:
+    """Return True if data starts with an Annex B start code."""
+    return data[:3] == b"\x00\x00\x01" or data[:4] == b"\x00\x00\x00\x01"
+
+
+def hevc_parameter_set_id(nal_type: int, nal_unit: bytes) -> int:
+    """Return the ID of a VPS (32), SPS (33) or PPS (34) NAL unit.
+
+    Raises ValueError if the NAL unit is too short to hold its ID.
+    """
+    # RBSP after the 2-byte NAL unit header, emulation prevention bytes removed
+    rbsp = nal_unit[2:].replace(b"\x00\x00\x03", b"\x00\x00")
+    bits = "".join(f"{byte:08b}" for byte in rbsp)
+    if nal_type == 32:
+        # vps_video_parameter_set_id u(4)
+        if len(bits) < 4:
+            raise ValueError("VPS too short")
+        return int(bits[:4], 2)
+    pos = 0
+    if nal_type == 33:
+        # sps_video_parameter_set_id u(4), sps_max_sub_layers_minus1 u(3),
+        # sps_temporal_id_nesting_flag u(1), then profile_tier_level():
+        # general profile 88 bits, general_level_idc 8 bits
+        max_sub_layers_minus1 = int(bits[4:7], 2)
+        pos = 8 + 88 + 8
+        # Sub-layer present flags, 2 bits each, padded to 8 sub-layers
+        flags = bits[pos : pos + 2 * max_sub_layers_minus1]
+        if len(flags) < 2 * max_sub_layers_minus1:
+            raise ValueError("SPS too short")
+        pos += 16 if max_sub_layers_minus1 else 0
+        for i in range(max_sub_layers_minus1):
+            pos += (88 if flags[2 * i] == "1" else 0) + (
+                8 if flags[2 * i + 1] == "1" else 0
+            )
+    # sps_seq_parameter_set_id or pps_pic_parameter_set_id, unsigned Exp-Golomb
+    leading_zeros = bits.index("1", pos) - pos
+    code = bits[pos + leading_zeros : pos + 2 * leading_zeros + 1]
+    if len(code) < leading_zeros + 1:
+        raise ValueError("Parameter set ID truncated")
+    return int(code, 2) - 1
+
+
+def hevc_parameter_sets(data: bytes) -> dict[tuple[int, int], bytes]:
+    """Return the VPS, SPS and PPS NAL units ahead of the first slice.
+
+    The data is Annex B: an access unit or extradata. Keys are (NAL type,
+    parameter set ID); a NAL unit whose ID does not parse is left out.
+    """
+    parameter_sets: dict[tuple[int, int], bytes] = {}
+    start = data.find(b"\x00\x00\x01")
+    while 0 <= start < len(data) - 3:
+        start += 3
+        # Parameter sets precede the first slice (VCL NAL unit types 0-31)
+        if (nal_type := (data[start] >> 1) & 0x3F) < 32:
+            break
+        end = data.find(b"\x00\x00\x01", start)
+        if nal_type in (32, 33, 34):
+            # A NAL unit never ends in a zero byte; those belong to a start code
+            nal_unit = data[start : end if end >= 0 else None].rstrip(b"\x00")
+            try:
+                parameter_set_id = hevc_parameter_set_id(nal_type, nal_unit)
+            except ValueError:
+                pass
+            else:
+                parameter_sets[nal_type, parameter_set_id] = nal_unit
+        start = end
+    return parameter_sets
+
+
+def hevc_picture_size(extradata: bytes) -> tuple[int, int]:
+    """Return the picture size the parameter sets in extradata declare."""
+    decoder = av.CodecContext.create("hevc", "r")
+    decoder.extradata = extradata
+    decoder.open()
+    return decoder.width, decoder.height
+
+
 class StreamState:
     """Responsible for trakcing output and playback state for a stream.
 
@@ -91,6 +168,10 @@ class StreamState:
         """Increment the sequence number."""
         self._sequence += 1
         return self._sequence
+
+    def next_stream_id(self) -> None:
+        """Start a discontinuity for segments that need a new init."""
+        self._stream_id += 1
 
     @property
     def stream_id(self) -> int:
@@ -150,6 +231,20 @@ class StreamMuxer:
         self._stream_settings = stream_settings
         self._stream_state = stream_state
         self._start_time = dt_util.utcnow()
+        # The mov muxer drops in-band parameter sets from hvc1 samples when the
+        # extradata is Annex B, so a keyframe that changes them needs a new init.
+        extradata = video_stream.codec_context.extradata or b""
+        self._follow_parameter_sets = video_stream.name == "hevc" and is_annexb(
+            extradata
+        )
+        # The parameter sets of the current init; a keyframe may repeat only some of them
+        self._parameter_sets = (
+            hevc_parameter_sets(extradata) if self._follow_parameter_sets else {}
+        )
+        self._first_keyframe = True
+        self._video_extradata: bytes | None = None
+        self._video_size = (0, 0)
+        self._new_init = False
 
     @staticmethod
     def _add_stream_from_template(
@@ -282,21 +377,63 @@ class StreamMuxer:
             input_astream=self._input_audio_stream,
         )
         if self._input_video_stream.name == "hevc":
-            self._output_video_stream.codec_context.codec_tag = "hvc1"
+            codec_context = self._output_video_stream.codec_context
+            codec_context.codec_tag = "hvc1"
+            if self._video_extradata:
+                codec_context.extradata = self._video_extradata
+                codec_context.width, codec_context.height = self._video_size
+
+    def _parameter_sets_changed(self, packet: av.Packet) -> bool:
+        """Return True if a keyframe carries parameter sets the init lacks."""
+        first_keyframe, self._first_keyframe = self._first_keyframe, False
+        if not self._follow_parameter_sets or not (
+            found := hevc_parameter_sets(bytes(packet))
+        ):
+            return False
+        parameter_sets = self._parameter_sets | found
+        if parameter_sets == self._parameter_sets:
+            return False
+        if first_keyframe:
+            # Its output was already created from the stream's extradata
+            self._parameter_sets = parameter_sets
+            return False
+        # VPS, SPS, PPS, each in ID order
+        extradata = b"".join(
+            b"\x00\x00\x00\x01" + parameter_sets[key] for key in sorted(parameter_sets)
+        )
+        try:
+            self._video_size = hevc_picture_size(extradata)
+        except av.FFmpegError as err:
+            _LOGGER.debug(
+                "Ignoring video parameter sets that do not parse: %s",
+                redact_av_error_string(err),
+            )
+            return False
+        self._parameter_sets = parameter_sets
+        self._video_extradata = extradata
+        _LOGGER.debug("Video parameter sets changed, size %sx%s", *self._video_size)
+        return True
 
     def mux_packet(self, packet: av.Packet) -> None:
         """Mux a packet to the appropriate output stream."""
 
         # Check for end of segment
         if packet.stream == self._input_video_stream:
+            new_init = packet.is_keyframe and self._parameter_sets_changed(packet)
             if (
                 packet.is_keyframe
                 and packet.dts
-                and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= self._stream_settings.min_segment_duration
+                and (
+                    new_init
+                    or (packet.dts - self._segment_start_dts) * packet.time_base
+                    >= self._stream_settings.min_segment_duration
+                )
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)
+                if new_init:
+                    self._stream_state.next_stream_id()
+                    self._new_init = True
 
             # Mux the packet
             packet.stream = self._output_video_stream
@@ -324,7 +461,9 @@ class StreamMuxer:
             # worker started.
             _stream_outputs=self._stream_state.outputs,
             start_time=self._start_time,
+            new_init=self._new_init,
         )
+        self._new_init = False
         self._memory_file_pos = self._memory_file.tell()
         self._memory_file.seek(0, SEEK_END)
 

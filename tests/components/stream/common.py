@@ -62,7 +62,7 @@ def frame_image_data(frame_i, total_frames):
     return np.full((480, 320, 3), color, dtype=np.uint8)
 
 
-def generate_video(encoder, container_format, duration):
+def generate_video(encoder, container_format, duration, size=(480, 320), options=None):
     """Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
@@ -76,10 +76,9 @@ def generate_video(encoder, container_format, duration):
     container = av.open(output, mode="w", format=container_format)
 
     stream = container.add_stream(encoder, rate=fps)
-    stream.width = 480
-    stream.height = 320
+    stream.width, stream.height = size
     stream.pix_fmt = "yuv420p"
-    stream.options.update({"g": str(fps), "keyint_min": str(fps)})
+    stream.options.update({"g": str(fps), "keyint_min": str(fps), **(options or {})})
 
     for frame_i in range(total_frames):
         img = frame_image_data(frame_i, total_frames)
@@ -106,6 +105,113 @@ def generate_h264_video(container_format="mp4", duration=5):
 def generate_h265_video(container_format="mp4", duration=5):
     """Generate a test video with libx265."""
     return generate_video("libx265", container_format, duration)
+
+
+def split_hevc_nal_units(data, nal_types):
+    """Split an Annex B access unit into the NAL units of the given types and the rest."""
+    nal_units = data.split(b"\x00\x00\x01")
+    selected = [
+        nal_unit for nal_unit in nal_units[1:] if (nal_unit[0] >> 1) & 0x3F in nal_types
+    ]
+    rest = [nal_units[0]] + [
+        nal_unit
+        for nal_unit in nal_units[1:]
+        if (nal_unit[0] >> 1) & 0x3F not in nal_types
+    ]
+    return b"".join(b"\x00\x00\x01" + nal_unit for nal_unit in selected), (
+        b"\x00\x00\x01".join(rest)
+    )
+
+
+def hevc_pps_with_id(pps, pps_id):
+    """Return a copy of a PPS NAL unit whose ID is 0 with the ID set to pps_id."""
+    rbsp = pps[2:].replace(b"\x00\x00\x03", b"\x00\x00")
+    # RBSP bits without the stop bit and alignment zeros
+    bits = "".join(f"{byte:08b}" for byte in rbsp).rstrip("0")[:-1]
+    assert bits[0] == "1"  # pps_pic_parameter_set_id 0, unsigned Exp-Golomb
+    code = f"{pps_id + 1:b}"
+    bits = "0" * (len(code) - 1) + code + bits[1:] + "1"
+    bits += "0" * (-len(bits) % 8)
+    nal_unit = bytearray(pps[:2])
+    zeros = 0
+    for byte in int(bits, 2).to_bytes(len(bits) // 8):
+        if zeros >= 2 and byte <= 3:
+            nal_unit.append(3)
+            zeros = 0
+        nal_unit.append(byte)
+        zeros = zeros + 1 if byte == 0 else 0
+    return bytes(nal_unit)
+
+
+def generate_video_with_size_change(
+    encoder,
+    sizes,
+    duration,
+    keyframe_vps=True,
+    first_size_keyframe_sets=True,
+    extra_pps=False,
+):
+    """Generate an MPEG-TS video whose picture size changes at a keyframe.
+
+    Each size is encoded separately for `duration` seconds and carries its own
+    in-band parameter sets, repeated at every keyframe. With `keyframe_vps`
+    False, only the first keyframe carries a VPS. With
+    `first_size_keyframe_sets` False, the keyframes of the first size carry no
+    parameter sets; they come once, ahead of the second packet (the stream's
+    extradata), as with a source that sends them out of band. With
+    `extra_pps`, the first keyframe (the stream's extradata) also carries a
+    copy of its PPS with ID 1, which no later keyframe repeats.
+    """
+    options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
+    output = io.BytesIO()
+    container = av.open(output, mode="w", format="mpegts")
+    stream = None
+    offset = 0
+    for part_index, size in enumerate(sizes):
+        part = av.open(generate_video(encoder, "mpegts", duration, size, options))
+        if stream is None:
+            stream = container.add_stream_from_template(part.streams.video[0])
+        packets = [packet for packet in part.demux(video=0) if packet.dts is not None]
+        shift = offset - packets[0].dts
+        out_of_band = b""
+        for packet_index, packet in enumerate(packets):
+            first = not part_index and not packet_index
+            nal_types = set()
+            if not keyframe_vps and not first:
+                nal_types.add(32)
+            if not first_size_keyframe_sets and not part_index:
+                nal_types.update((32, 33, 34))
+            data = bytes(packet)
+            if nal_types:
+                removed, data = split_hevc_nal_units(data, nal_types)
+                if first:
+                    out_of_band = removed
+                elif packet_index == 1:
+                    data = out_of_band + data
+            if extra_pps and first:
+                pps, _ = split_hevc_nal_units(data, {34})
+                data = data.replace(
+                    pps,
+                    pps
+                    + b"\x00\x00\x01"
+                    + hevc_pps_with_id(pps[3:].rstrip(b"\x00"), 1),
+                    1,
+                )
+            if data != bytes(packet):
+                stripped = av.Packet(data)
+                stripped.pts, stripped.dts = packet.pts, packet.dts
+                stripped.time_base = packet.time_base
+                stripped.is_keyframe = packet.is_keyframe
+                packet = stripped
+            packet.pts += shift
+            packet.dts += shift
+            packet.stream = stream
+            container.mux(packet)
+        offset = packets[-1].dts + shift + packets[-1].duration
+        part.close()
+    container.close()
+    output.seek(0)
+    return output
 
 
 def remux_with_audio(source, container_format, audio_codec):

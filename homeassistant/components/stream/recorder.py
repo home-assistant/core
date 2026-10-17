@@ -131,6 +131,9 @@ class RecorderOutput(StreamOutput):
 
             # Recalculate pts adjustments on first segment and on any discontinuity
             # We are assuming time base is the same across all discontinuities
+            if segment.new_init and pts_adjuster["video"] is not None:
+                # A new init within a stream keeps its timestamps
+                last_stream_id = segment.stream_id
             if last_stream_id != segment.stream_id:
                 last_stream_id = segment.stream_id
                 pts_adjuster["video"] = int(
