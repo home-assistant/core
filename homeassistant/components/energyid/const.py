@@ -9,6 +9,7 @@ NAME: Final = "EnergyID"
 CONF_PROVISIONING_KEY: Final = "provisioning_key"
 CONF_PROVISIONING_SECRET: Final = "provisioning_secret"
 CONF_DEVICE_NAME: Final = "device_name"
+CONF_ENABLE_DIRECTIVES: Final = "enable_directives"
 
 # --- Subentry (Mapping) Data ---
 CONF_HA_ENTITY_UUID: Final = "ha_entity_uuid"
