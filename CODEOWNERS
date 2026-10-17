@@ -609,8 +609,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/fortios/ @kimfrellsen
 /homeassistant/components/foscam/ @Foscam-wangzhengyu
 /tests/components/foscam/ @Foscam-wangzhengyu
-/homeassistant/components/freebox/ @hacf-fr/reviewers @Quentame
-/tests/components/freebox/ @hacf-fr/reviewers @Quentame
+/homeassistant/components/freebox/ @Quentame
+/tests/components/freebox/ @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
 /homeassistant/components/freshr/ @SierraNL
@@ -1177,8 +1177,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore
 /tests/components/met_eireann/ @DylanGore
-/homeassistant/components/meteo_france/ @hacf-fr/reviewers @oncleben31 @Quentame
-/tests/components/meteo_france/ @hacf-fr/reviewers @oncleben31 @Quentame
+/homeassistant/components/meteo_france/ @oncleben31 @Quentame
+/tests/components/meteo_france/ @oncleben31 @Quentame
 /homeassistant/components/meteo_lt/ @xE1H
 /tests/components/meteo_lt/ @xE1H
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
