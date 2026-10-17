@@ -61,6 +61,7 @@ class PingDataICMPLib(PingData):
         except NameLookupError:
             _LOGGER.debug("Error resolving host: %s", self.ip_address)
             self.is_alive = False
+            self.data = None
             return
 
         _LOGGER.debug(
@@ -72,17 +73,18 @@ class PingDataICMPLib(PingData):
         )
 
         self.is_alive = data.is_alive
+        self.data = {"loss": data.packet_loss * 100} if data.packets_sent else {}
         if not self.is_alive:
-            self.data = None
             return
 
-        self.data = {
-            "min": data.min_rtt,
-            "max": data.max_rtt,
-            "avg": data.avg_rtt,
-            "jitter": data.jitter,
-            "loss": data.packet_loss * 100,
-        }
+        self.data.update(
+            {
+                "min": data.min_rtt,
+                "max": data.max_rtt,
+                "avg": data.avg_rtt,
+                "jitter": data.jitter,
+            }
+        )
 
 
 class PingDataSubProcess(PingData):
