@@ -9,6 +9,7 @@ from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
     Device as VictronVenusDevice,
+    FirmwareUpdateInfo,
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
@@ -42,6 +43,7 @@ type VictronGxConfigEntry = ConfigEntry[Hub]
 type NewMetricCallback = Callable[
     [VictronVenusDevice, VictronVenusMetric, dr.DeviceInfo, str], None
 ]
+type FirmwareUpdateCallback = Callable[[FirmwareUpdateInfo], None]
 
 
 class Hub:
@@ -80,13 +82,16 @@ class Hub:
             update_frequency_seconds=UPDATE_FREQUENCY_AUTO,
         )
         self._hub.on_new_metric = self._on_new_metric
+        self._hub.on_firmware_update = self._on_firmware_update
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
+        self._firmware_update_callback: FirmwareUpdateCallback | None = None
 
     async def start(self) -> None:
         """Start the Victron MQTT hub."""
         _LOGGER.info("Starting hub")
         try:
             await self._hub.connect()
+            self._hub.check_firmware_update()
         except AuthenticationError as auth_error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -111,6 +116,34 @@ class Hub:
                 self.host,
                 exc_info=err,
             )
+
+    @property
+    def firmware_update_info(self) -> FirmwareUpdateInfo:
+        """Return the library's current firmware update snapshot."""
+        return self._hub.firmware_update_info
+
+    def register_firmware_update_callback(
+        self, firmware_update_callback: FirmwareUpdateCallback
+    ) -> None:
+        """Register the firmware update callback."""
+        self._firmware_update_callback = firmware_update_callback
+
+    def unregister_firmware_update_callback(self) -> None:
+        """Unregister the firmware update callback."""
+        self._firmware_update_callback = None
+
+    async def install_firmware_update(
+        self, progress_callback: Callable[[int], None] | None = None
+    ) -> None:
+        """Install available firmware using the library lifecycle handler."""
+        await self._hub.install_firmware_update(progress_callback)
+
+    def _on_firmware_update(
+        self, hub: VictronVenusHub, info: FirmwareUpdateInfo
+    ) -> None:
+        """Handle updated firmware information."""
+        if self._firmware_update_callback is not None:
+            self._firmware_update_callback(info)
 
     def _on_new_metric(
         self,
