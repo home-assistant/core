@@ -16,7 +16,10 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityStateAttribute,
     MediaPlayerState,
 )
-from homeassistant.components.template.media_player import DEFAULT_NAME
+from homeassistant.components.template.media_player import (
+    DEFAULT_NAME,
+    RESTORED_MEDIA_TEMPLATES,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -70,6 +73,10 @@ SOUND_MODE_LIST = {"sound_mode_list": "{{ ['Movie', 'Music'] }}"}
 ON_OFF_ACTIONS = {
     **make_test_action("turn_on"),
     **make_test_action("turn_off"),
+}
+NO_MEDIA_DATA = {
+    "media": {option: None for option, _ in RESTORED_MEDIA_TEMPLATES},
+    "media_position_updated_at": None,
 }
 PLAYBACK_ACTIONS = {
     **make_test_action("media_play"),
@@ -809,6 +816,7 @@ async def test_device_class(hass: HomeAssistant, style: ConfigurationStyle) -> N
         pytest.param(
             "playing",
             {
+                **NO_MEDIA_DATA,
                 "is_volume_muted": True,
                 "repeat": "all",
                 "shuffle": True,
@@ -835,6 +843,7 @@ async def test_device_class(hass: HomeAssistant, style: ConfigurationStyle) -> N
         pytest.param(
             "playing",
             {
+                **NO_MEDIA_DATA,
                 "is_volume_muted": None,
                 "repeat": "never",
                 "shuffle": None,
@@ -851,6 +860,7 @@ async def test_device_class(hass: HomeAssistant, style: ConfigurationStyle) -> N
         pytest.param(
             "standby",
             {
+                **NO_MEDIA_DATA,
                 "is_volume_muted": None,
                 "repeat": None,
                 "shuffle": None,
@@ -938,6 +948,7 @@ async def test_restore_state_is_saved(
     stored = restore_data.last_states_by_entity_id[TEST_MEDIA_PLAYER.entity_id]
     assert stored.state.state == MediaPlayerState.PLAYING
     assert stored.extra_data.as_dict() == {
+        **NO_MEDIA_DATA,
         "is_volume_muted": None,
         "repeat": "all",
         "shuffle": None,
@@ -947,6 +958,111 @@ async def test_restore_state_is_saved(
         "source_list": ["TV", "Radio"],
         "volume_level": None,
     }
+
+
+async def test_restore_media_metadata_trigger(hass: HomeAssistant) -> None:
+    """Test media metadata is restored before a trigger entity renders."""
+    saved_media = {
+        **NO_MEDIA_DATA["media"],
+        "media_content_id": "song-1",
+        "media_duration": 300,
+        "media_image_url": "/local/art.png",
+        "media_position": 30,
+        "media_title": "Song",
+    }
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        saved_extra_data={
+            "is_volume_muted": None,
+            "media": saved_media,
+            "media_position_updated_at": "2026-10-17T00:00:00+00:00",
+            "repeat": None,
+            "shuffle": None,
+            "sound_mode": None,
+            "sound_mode_list": None,
+            "source": None,
+            "source_list": None,
+            "volume_level": None,
+        },
+    )
+    await setup_restore_template_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        ConfigurationStyle.TRIGGER,
+        {
+            "state": STATE_TEMPLATE,
+            **{
+                option: _attribute_template(option)
+                for option in (
+                    "media_content_id",
+                    "media_duration",
+                    "media_image_url",
+                    "media_position",
+                    "media_title",
+                )
+            },
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        {
+            "media_content_id": "song-1",
+            "media_duration": 300,
+            "media_position": 30,
+            "media_position_updated_at": dt_util.parse_datetime(
+                "2026-10-17T00:00:00+00:00"
+            ),
+            "media_title": "Song",
+        },
+    )
+    state = hass.states.get(TEST_MEDIA_PLAYER.entity_id)
+    assert state.attributes[ATTR_ENTITY_PICTURE].startswith(
+        f"/api/media_player_proxy/{TEST_MEDIA_PLAYER.entity_id}?token="
+    )
+
+
+@pytest.mark.usefixtures("calls")
+@pytest.mark.parametrize("style", BOTH_STYLES)
+async def test_restore_media_metadata_is_saved(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test media metadata and the position timestamp are saved for restoring."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {
+            "media_title": _attribute_template("media_title"),
+            "media_position": _attribute_template("media_position"),
+        },
+        STATE_TEMPLATE,
+    )
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "playing",
+        {"media_title": "Song", "media_position": 30},
+    )
+
+    restore_data = await async_mock_restore_state_shutdown_restart(hass)
+    stored = restore_data.last_states_by_entity_id[TEST_MEDIA_PLAYER.entity_id]
+    assert stored.extra_data.as_dict()["media"] == {
+        **NO_MEDIA_DATA["media"],
+        "media_position": 30,
+        "media_title": "Song",
+    }
+    assert (
+        stored.extra_data.as_dict()["media_position_updated_at"]
+        == dt_util.utcnow().isoformat()
+    )
 
 
 @pytest.mark.parametrize("style", BOTH_STYLES)

@@ -1,6 +1,7 @@
 """Support for Template media players."""
 
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Self, override
 
 import probatio
@@ -135,6 +136,14 @@ STRING_TEMPLATES = (
     (CONF_MEDIA_TITLE, "_attr_media_title"),
 )
 
+# Media metadata restored for trigger entities that have not rendered yet.
+RESTORED_MEDIA_TEMPLATES = (
+    *STRING_TEMPLATES,
+    (CONF_MEDIA_DURATION, "_attr_media_duration"),
+    (CONF_MEDIA_POSITION, "_attr_media_position"),
+    (CONF_MEDIA_TRACK, "_attr_media_track"),
+)
+
 # Deprecated states must not be produced by new entities.
 DEPRECATED_STATES = (MediaPlayerState("standby"),)
 
@@ -248,6 +257,8 @@ class MediaPlayerExtraStoredData(ExtraStoredData):
     """Holds extra stored data for template media player entities."""
 
     is_volume_muted: bool | None
+    media: dict[str, str | int | None]
+    media_position_updated_at: datetime | None
     repeat: RepeatMode | str | None
     shuffle: bool | None
     sound_mode: str | None
@@ -259,7 +270,12 @@ class MediaPlayerExtraStoredData(ExtraStoredData):
     @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the media player data."""
-        return asdict(self)
+        data = asdict(self)
+        if self.media_position_updated_at is not None:
+            data["media_position_updated_at"] = (
+                self.media_position_updated_at.isoformat()
+            )
+        return data
 
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
@@ -269,8 +285,17 @@ class MediaPlayerExtraStoredData(ExtraStoredData):
             if _repeat := restored["repeat"]:
                 repeat = RepeatMode(_repeat)
 
+            media_position_updated_at: datetime | None = None
+            if _updated_at := restored["media_position_updated_at"]:
+                media_position_updated_at = dt_util.parse_datetime(_updated_at)
+
             return cls(
                 is_volume_muted=restored["is_volume_muted"],
+                media={
+                    option: restored["media"][option]
+                    for option, _ in RESTORED_MEDIA_TEMPLATES
+                },
+                media_position_updated_at=media_position_updated_at,
                 repeat=repeat,
                 shuffle=restored["shuffle"],
                 sound_mode=restored["sound_mode"],
@@ -590,6 +615,10 @@ class AbstractTemplateMediaPlayer(
         """Return media player specific state data to be restored."""
         return MediaPlayerExtraStoredData(
             is_volume_muted=self._attr_is_volume_muted,
+            media={
+                option: getattr(self, attr) for option, attr in RESTORED_MEDIA_TEMPLATES
+            },
+            media_position_updated_at=self._attr_media_position_updated_at,
             repeat=self._attr_repeat,
             shuffle=self._attr_shuffle,
             sound_mode=self._attr_sound_mode,
@@ -603,6 +632,9 @@ class AbstractTemplateMediaPlayer(
     def restore_extra_data(self, extra_data: MediaPlayerExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_is_volume_muted = extra_data.is_volume_muted
+        for option, attr in RESTORED_MEDIA_TEMPLATES:
+            setattr(self, attr, extra_data.media[option])
+        self._attr_media_position_updated_at = extra_data.media_position_updated_at
         self._attr_repeat = extra_data.repeat
         self._attr_shuffle = extra_data.shuffle
         self._attr_sound_mode = extra_data.sound_mode
