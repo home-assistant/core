@@ -396,11 +396,10 @@ class AbstractTemplateMediaPlayer(
                 "_attr_sound_mode",
             ),
         ):
-            # The list template must be set up first, the item validator reads it.
-            self.setup_template(
-                list_option, list_attr, tcv.list_of_strings(self, list_option)
-            )
-            self.setup_template(
+            self.setup_list_item_templates(
+                list_option,
+                list_attr,
+                tcv.list_of_strings(self, list_option),
                 option,
                 attr,
                 tcv.item_in_list(
@@ -448,7 +447,19 @@ class AbstractTemplateMediaPlayer(
         """Update the state and rebase the position timestamp on transitions."""
         # Resuming at an unchanged position must not extrapolate over the pause.
         if state != self._attr_state and self._attr_media_position is not None:
-            self._attr_media_position_updated_at = dt_util.utcnow()
+            now = dt_util.utcnow()
+            if (
+                self._attr_state == MediaPlayerState.PLAYING
+                and (updated_at := self._attr_media_position_updated_at) is not None
+            ):
+                # Keep the playback elapsed since the last position sample.
+                position = self._attr_media_position + int(
+                    (now - updated_at).total_seconds()
+                )
+                if self._attr_media_duration is not None:
+                    position = min(position, self._attr_media_duration)
+                self._attr_media_position = position
+            self._attr_media_position_updated_at = now
         self._attr_state = state
 
     @callback

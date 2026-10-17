@@ -89,6 +89,15 @@ def _attribute_template(attribute: str) -> str:
     return f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', '{attribute}') }}}}"
 
 
+async def _async_call_media_player(hass: HomeAssistant, service: str) -> None:
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER.entity_id},
+        blocking=True,
+    )
+
+
 @pytest.mark.parametrize("style", BOTH_STYLES)
 @pytest.mark.parametrize(
     ("rendered", "expected"),
@@ -323,6 +332,94 @@ async def test_media_position_updated_at_optimistic_play(
         TEST_MEDIA_PLAYER,
         "playing",
         {"media_position": 30, "media_position_updated_at": dt_util.utcnow()},
+    )
+
+
+@pytest.mark.usefixtures("calls")
+@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    ("elapsed", "attributes", "expected_position"),
+    [
+        pytest.param(20, {}, 50, id="elapsed"),
+        pytest.param(400, {"media_duration": 300}, 300, id="capped_at_duration"),
+    ],
+)
+async def test_media_position_optimistic_play_pause_play(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    freezer: FrozenDateTimeFactory,
+    elapsed: int,
+    attributes: dict[str, Any],
+    expected_position: int,
+) -> None:
+    """Test pausing keeps the playback elapsed since the last position sample."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {
+            **PLAYBACK_ACTIONS,
+            "media_duration": _attribute_template("media_duration"),
+            "media_position": _attribute_template("media_position"),
+        },
+    )
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "on", {"media_position": 30, **attributes}
+    )
+
+    await _async_call_media_player(hass, "media_play")
+
+    freezer.tick(elapsed)
+    await _async_call_media_player(hass, "media_pause")
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "paused",
+        {
+            "media_position": expected_position,
+            "media_position_updated_at": dt_util.utcnow(),
+        },
+    )
+
+    # The pause must not count towards the resumed position.
+    freezer.tick(60)
+    await _async_call_media_player(hass, "media_play")
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "playing",
+        {
+            "media_position": expected_position,
+            "media_position_updated_at": dt_util.utcnow(),
+        },
+    )
+
+
+@pytest.mark.parametrize("style", BOTH_STYLES)
+async def test_media_position_fresh_sample_on_pause(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a position sampled with the pause is not advanced again."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {"media_position": _attribute_template("media_position")},
+        STATE_TEMPLATE,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "playing", {"media_position": 30})
+
+    freezer.tick(20)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "paused", {"media_position": 50})
+    assert_state_and_attributes(
+        hass,
+        TEST_MEDIA_PLAYER,
+        "paused",
+        {"media_position": 50, "media_position_updated_at": dt_util.utcnow()},
     )
 
 
@@ -777,6 +874,49 @@ async def test_option_requires_option(
     """Test options are rejected without the option they depend on."""
     await setup_entity(hass, TEST_MEDIA_PLAYER, style, 0, config, STATE_TEMPLATE)
     assert hass.states.async_all(media_player.DOMAIN) == []
+
+
+@pytest.mark.parametrize("style", BOTH_STYLES)
+@pytest.mark.parametrize(
+    ("option", "list_option", "value"),
+    [
+        pytest.param("source", "source_list", "TV", id="source"),
+        pytest.param("sound_mode", "sound_mode_list", "Movie", id="sound_mode"),
+    ],
+)
+async def test_selection_revalidated_on_list_change(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    option: str,
+    list_option: str,
+    value: str,
+) -> None:
+    """Test an unchanged selection becomes valid when its list later includes it."""
+    await setup_entity(
+        hass,
+        TEST_MEDIA_PLAYER,
+        style,
+        1,
+        {
+            option: _attribute_template(option),
+            list_option: f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', '{list_option}')"
+            " or [] }}",
+        },
+        STATE_TEMPLATE,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {option: value})
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "on", {option: None})
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "on",
+        {option: value, list_option: [value, "Other"]},
+    )
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "on", {option: value})
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {option: value})
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "on", {option: None})
 
 
 @pytest.mark.parametrize("style", BOTH_STYLES)
