@@ -5,7 +5,7 @@ import asyncio
 from ritualsgenie import RitualsGenie, RitualsGenieHub
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
@@ -28,7 +28,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:
     """Set up Rituals Perfume Genie from a config entry."""
     # Initiate reauth for old config entries which don't have
     # username / password in the entry data
@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> b
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
         session=async_get_clientsession(hass),
+        token=entry.data.get(CONF_TOKEN),
     )
 
     hubs = RitualsHubsCoordinator(hass, entry, client)
@@ -63,12 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> b
         *(coordinator.async_refresh() for coordinator in sensors.values())
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback
@@ -107,11 +106,10 @@ def async_migrate_entities_unique_ids(
 
 
 # Migration helpers for API v2
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate config entry to version 2: drop legacy ACCOUNT_HASH and bump version."""
     if entry.version < 2:
         data = dict(entry.data)
         data.pop(ACCOUNT_HASH, None)
         hass.config_entries.async_update_entry(entry, data=data, version=2)
-        return True
-    return True
+        return

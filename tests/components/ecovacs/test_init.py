@@ -7,10 +7,11 @@ from deebot_client.exceptions import (
     DeviceVerificationRequiredError,
     InvalidAuthenticationError,
 )
+from deebot_client.models import AccountCredentials
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ecovacs.const import DOMAIN
+from homeassistant.components.ecovacs.const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
@@ -18,8 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
+    ACCOUNT_CREDENTIALS_DATA,
     CLOUD_DEVICE_ID,
     SELF_HOSTED_DEVICE_ID,
+    STORED_ENTRY_DATA_CLOUD,
     VALID_ENTRY_DATA_CLOUD,
     VALID_ENTRY_DATA_SELF_HOSTED,
 )
@@ -150,6 +153,77 @@ async def test_migrate_entry_keeps_device_id(
 
     assert entry.minor_version == 2
     assert entry.data == entry_data
+
+
+@pytest.mark.parametrize(
+    ("mock_config_entry_data", "account_credentials"),
+    [
+        pytest.param(STORED_ENTRY_DATA_CLOUD, None, id="not_stored"),
+        pytest.param(
+            STORED_ENTRY_DATA_CLOUD | ACCOUNT_CREDENTIALS_DATA,
+            AccountCredentials("account_token", "account_user_id"),
+            id="stored",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_mqtt_client")
+async def test_stored_account_credentials_seed_authenticator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator_class: Mock,
+    account_credentials: AccountCredentials | None,
+) -> None:
+    """Test the authenticator starts from the stored account credentials."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        mock_authenticator_class.call_args.kwargs["account_credentials"]
+        == account_credentials
+    )
+
+
+@pytest.mark.usefixtures("mock_mqtt_client")
+async def test_new_account_credentials_are_stored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+) -> None:
+    """Test new account credentials of the authenticator are stored in the entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    store_account_credentials = (
+        mock_authenticator.subscribe_account_credentials.call_args.args[0]
+    )
+    await store_account_credentials(AccountCredentials("new_token", "new_user_id"))
+
+    assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD | {
+        CONF_ACCOUNT_CREDENTIALS: {
+            "access_token": "new_token",
+            "user_id": "new_user_id",
+        }
+    }
+
+
+@pytest.mark.usefixtures("mock_mqtt_client")
+async def test_unload_unsubscribes_account_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+) -> None:
+    """Test unloading stops storing new account credentials."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_authenticator.subscribe_account_credentials.return_value.assert_called_once()
 
 
 async def test_devices_in_dr(

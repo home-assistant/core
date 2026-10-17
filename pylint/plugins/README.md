@@ -89,6 +89,7 @@ Every check has a code following the
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
+| `C7416` | [`home-assistant-noqa-f401-with-all`](#c7416-home-assistant-noqa-f401-with-all) | List re-exported names in `__all__` instead of using `# noqa: F401` |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
@@ -105,6 +106,7 @@ Every check has a code following the
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
+| `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -146,11 +148,14 @@ Every check has a code following the
 | `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
 | `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
+| `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
+| `W7445` | [`home-assistant-test-flow-start-helper`](#w7445-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 | `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
-
+| `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
+| `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
 
 ## `home_assistant_logger` checker
 
@@ -206,6 +211,14 @@ Aliased `DOMAIN` import from another integration should use a descriptive alias.
 ### `C7408`: `home-assistant-import-constant-unnecessary-alias`
 
 Unnecessary alias when importing `DOMAIN` from within the same integration.
+
+### `C7416`: `home-assistant-noqa-f401-with-all`
+
+In an integration module that defines `__all__`, re-exported names must be
+listed in `__all__` instead of being kept with a `# noqa: F401` marker.
+Imports of submodules only (e.g. `from . import sensor, switch  # noqa: F401`,
+used to preload platforms) are allowed, as are imports inside functions or
+classes, which cannot be exported through `__all__`.
 
 
 ## `home_assistant_enforce_type_hints` checker
@@ -315,7 +328,7 @@ Use `entry.runtime_data` instead of `hass.data[DOMAIN]`. The `runtime_data`
 approach is type-safe (via `ConfigEntry[T]`), automatically cleaned up on
 entry unload, and avoids key collisions in the shared `hass.data` dictionary.
 
-See the [runtime-data quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data)
+See the [runtime-data quality scale rule](https://contributors.home-assistant.io/core/quality-scale/runtime-data/)
 for migration guidance.
 
 
@@ -428,7 +441,7 @@ the config entry. Uses variable tracking to catch indirect usage (e.g.,
 stable hardware identifier instead: a MAC address (via `format_mac`),
 serial number, or device-provided unique ID.
 
-See the [unique-config-entry quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/unique-config-entry).
+See the [unique-config-entry quality scale rule](https://contributors.home-assistant.io/core/quality-scale/unique-config-entry/).
 
 
 ## `home_assistant_enforce_config_flow_no_polling` checker
@@ -444,7 +457,7 @@ Config flow should not include polling interval fields like
 integration author determines the appropriate polling frequency based on
 API rate limits, device capabilities, and data freshness needs.
 
-See the [appropriate-polling quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/appropriate-polling).
+See the [appropriate-polling quality scale rule](https://contributors.home-assistant.io/core/quality-scale/appropriate-polling/).
 
 ## `home_assistant_enforce_config_flow_no_name` checker
 
@@ -674,7 +687,7 @@ for finishing the flow, with the arguments they are called with. A reason
 taken from a test argument counts when all its `pytest.mark.parametrize`
 values end with `_successful`.
 
-See the [config-flow-test-coverage quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow-test-coverage).
+See the [config-flow-test-coverage quality scale rule](https://contributors.home-assistant.io/core/quality-scale/config-flow-test-coverage/).
 
 
 ## `home_assistant_enforce_utcnow` checker
@@ -727,7 +740,7 @@ checkers.
 
 ## `home_assistant_entity_unique_id` checker
 
-Quality-scale-gated checker for the [`entity-unique-id`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unique-id)
+Quality-scale-gated checker for the [`entity-unique-id`](https://contributors.home-assistant.io/core/quality-scale/entity-unique-id/)
 Bronze rule. Only fires for entity-platform modules whose
 `quality_scale.yaml` marks `entity-unique-id` as `done`.
 
@@ -941,7 +954,25 @@ inside helper functions that are called from `async_setup_entry` are
 caught too, as are calls to the conventional `async_setup_services` helper
 from `services.py`.
 
-See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
+See the [action-setup quality scale rule](https://contributors.home-assistant.io/core/quality-scale/action-setup/).
+
+
+## `home_assistant_actions_services_module` checker
+
+Detects actions registered outside the integration's `services.py`.
+
+### `W7452`: `home-assistant-action-registered-outside-services-module`
+
+Actions should be registered in `services.py`, from `async_setup_services`
+(called from `async_setup`) or `setup_services` (called from a synchronous
+`setup`). Module-level functions in `services.py` that are called from these
+functions may register actions too.
+
+### `W7453`: `home-assistant-invalid-setup-services`
+
+`async_setup_services` should be a synchronous function decorated with
+`@callback`, and `setup_services` a synchronous function that is not, since
+it runs in the executor. Both should only take `hass`.
 
 
 ## `home_assistant_exception_translations` checker
@@ -950,6 +981,11 @@ Ensures `HomeAssistantError` and its subclasses use the translation system
 (`translation_domain`, `translation_key`) instead of hardcoded English
 strings. Also verifies that referenced translation keys exist in the
 integration's `strings.json` and that placeholders match.
+
+`translation_domain` may be a string literal, the integration's own `DOMAIN`,
+or a constant that resolves to a string, such as
+`from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN`. Keys
+and placeholders are then checked against that domain's `strings.json`.
 
 ### `W7417`: `home-assistant-exception-not-translated`
 
@@ -1035,6 +1071,39 @@ fixtures themselves are defined) and `tests.helpers` (which exercises the
 registry helpers directly) are exempt.
 
 
+## `home_assistant_tests_user_flow_no_data` checker
+
+Detects tests that pass a `data` argument when initializing a user config
+flow. In production a user flow is always started without data — only
+discovery flows (zeroconf, dhcp, ssdp, ...) receive `data`. Passing `data`
+to a user flow init therefore exercises a code path that cannot happen in
+reality.
+
+### `R7405`: `home-assistant-tests-user-flow-no-data`
+
+A `hass.config_entries.flow.async_init(...)` or
+`hass.config_entries.subentries.async_init(...)` call passes a `data`
+keyword argument while its `context` sets the source to the user source.
+The user source is recognized as `SOURCE_USER`, `config_entries.SOURCE_USER`,
+or the literal `"user"`, and the `context` may be a dict literal or a
+`ConfigFlowContext(source=...)` call:
+
+```python
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": SOURCE_USER},
+    data={CONF_HOST: "127.0.0.1"},  # <-- flagged
+)
+```
+
+Only the config-entry flow managers (`config_entries.flow` and
+`config_entries.subentries`) are checked, so unrelated `async_init` methods
+are not flagged. Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`),
+dynamic source values (a variable rather than a known user source), and user
+flows without
+`data` are not flagged. The checker is scoped to test modules.
+
+
 ## `home_assistant_test_determinism` checker
 
 `if` and `match` statements inside test functions create non-deterministic
@@ -1053,7 +1122,7 @@ no `assert`. `match` statements have no exemptions.
 ## `home_assistant_reauthentication_flow` checker
 
 Quality-scale-gated checker for the
-[`reauthentication-flow`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/reauthentication-flow)
+[`reauthentication-flow`](https://contributors.home-assistant.io/core/quality-scale/reauthentication-flow/)
 Silver rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7410`: `home-assistant-missing-reauthentication-flow`
@@ -1064,7 +1133,7 @@ Integration's `config_flow.py` should implement `async_step_reauth`.
 ## `home_assistant_parallel_updates` checker
 
 Quality-scale-gated checker for the
-[`parallel-updates`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/parallel-updates)
+[`parallel-updates`](https://contributors.home-assistant.io/core/quality-scale/parallel-updates/)
 Silver rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7411`: `home-assistant-missing-parallel-updates`
@@ -1075,7 +1144,7 @@ Platform module should define a module-level `PARALLEL_UPDATES` constant.
 ## `home_assistant_diagnostics` checker
 
 Quality-scale-gated checker for the
-[`diagnostics`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/diagnostics)
+[`diagnostics`](https://contributors.home-assistant.io/core/quality-scale/diagnostics/)
 Gold rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7412`: `home-assistant-missing-diagnostics`
@@ -1087,7 +1156,7 @@ Integration's `diagnostics.py` should implement
 ## `home_assistant_config_entry_unloading` checker
 
 Quality-scale-gated checker for the
-[`config-entry-unloading`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-entry-unloading)
+[`config-entry-unloading`](https://contributors.home-assistant.io/core/quality-scale/config-entry-unloading/)
 Silver rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7413`: `home-assistant-missing-config-entry-unloading`
@@ -1112,7 +1181,7 @@ blocking calls. The rule applies to integration modules only.
 ## `home_assistant_has_entity_name` checker
 
 Quality-scale-gated checker for the
-[`has-entity-name`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/has-entity-name)
+[`has-entity-name`](https://contributors.home-assistant.io/core/quality-scale/has-entity-name/)
 Bronze rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7416`: `home-assistant-missing-has-entity-name`
@@ -1157,7 +1226,7 @@ subentry handler class names to their type keys.
 ## `home_assistant_test_before_configure` checker
 
 Quality-scale-gated checker for the
-[`test-before-configure`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-configure)
+[`test-before-configure`](https://contributors.home-assistant.io/core/quality-scale/test-before-configure/)
 Bronze rule. Fires only when the integration claims the rule as `done`.
 
 ### `W7433`: `home-assistant-missing-test-before-configure`
@@ -1286,3 +1355,41 @@ Detects config flow classes that set `CONNECTION_CLASS`.
 
 `CONNECTION_CLASS` is no longer used by Home Assistant and should not be set
 on config flows. Remove the attribute.
+
+## `home-assistant-step_id-match-method` checker
+
+Detects config flows using a `step_id` parameter different than the method it is
+currently in.
+
+### `W7443`: `home-assistant-step_id-match-method`
+
+Check the `step_id` parameter for all calls to `async_show_form`,
+`async_external_step`, `async_show_progress` and `async_show_menu`.
+The `step_id` parameter should be same as the method it is in.
+For example: `step_id="user"` should be used in `async_step_user`
+
+
+## `home_assistant_flow_start_helpers` checker
+
+Enforces the use of `MockConfigEntry` helpers to start reauth and
+reconfigure flows in integration tests.
+
+### `W7445`: `home-assistant-test-flow-start-helper`
+
+Tests must not start a reauth or reconfigure flow by calling
+`hass.config_entries.flow.async_init` with a hand-built `context`
+(`"source": SOURCE_REAUTH` / `SOURCE_RECONFIGURE`). Use
+`entry.start_reauth_flow(hass)` or `entry.start_reconfigure_flow(hass)`
+instead; they build the same context Home Assistant uses at runtime.
+
+```python
+# Bad
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+    data=entry.data,
+)
+
+# Good
+result = await entry.start_reauth_flow(hass)
+```

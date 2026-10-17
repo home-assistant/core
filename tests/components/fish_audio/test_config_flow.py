@@ -1,8 +1,9 @@
 """Config flow tests for Fish Audio."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from fishaudio import AuthenticationError, FishAudioError
+from fishaudio.types.account import Credits
 import pytest
 
 from homeassistant.components.fish_audio.const import (
@@ -110,6 +111,97 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_fishaudio_client")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_base"),
+    [
+        pytest.param(
+            FishAudioError("Connection error"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            AuthenticationError(401, "Invalid API key"),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(Exception("Unexpected error"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fishaudio_client: AsyncMock,
+    side_effect: Exception,
+    error_base: str,
+) -> None:
+    """Test reauthentication flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_fishaudio_client.account.get_credits.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "bad-key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error_base}
+
+    mock_fishaudio_client.account.get_credits.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fishaudio_client: AsyncMock,
+) -> None:
+    """Test reauthentication with an API key from a different account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_fishaudio_client.account.get_credits.return_value = MagicMock(
+        spec=Credits, user_id="other_user"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "other-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_API_KEY] == "test-api-key"
 
 
 async def test_subflow_happy_path(

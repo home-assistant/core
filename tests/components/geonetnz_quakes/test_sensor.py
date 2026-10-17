@@ -1,6 +1,6 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -42,7 +42,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        time=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,

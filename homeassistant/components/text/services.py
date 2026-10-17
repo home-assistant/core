@@ -5,31 +5,47 @@ from typing import TYPE_CHECKING
 import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_VALUE, DATA_COMPONENT, SERVICE_SET_VALUE
+from .const import ATTR_VALUE, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
 
 if TYPE_CHECKING:
-    from . import TextEntity
+    from .entity import TextEntity
 
 
 async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new value."""
     value = service_call.data[ATTR_VALUE]
     if len(value) < entity.min:
-        raise ValueError(
-            f"Value {value} for {entity.entity_id} is too short (minimum length"
-            f" {entity.min})"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="value_too_short",
+            translation_placeholders={
+                "value": value,
+                "entity_id": entity.entity_id,
+                "min": str(entity.min),
+            },
         )
     if len(value) > entity.max:
-        raise ValueError(
-            f"Value {value} for {entity.entity_id}"
-            f" is too long (maximum length {entity.max})"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="value_too_long",
+            translation_placeholders={
+                "value": value,
+                "entity_id": entity.entity_id,
+                "max": str(entity.max),
+            },
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
-        raise ValueError(
-            f"Value {value} for {entity.entity_id}"
-            f" doesn't match pattern {entity.pattern}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="value_pattern_mismatch",
+            translation_placeholders={
+                "value": value,
+                "entity_id": entity.entity_id,
+                "pattern": str(entity.pattern),
+            },
         )
     await entity.async_set_value(value)
 

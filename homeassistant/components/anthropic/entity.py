@@ -1182,7 +1182,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ) from err
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
@@ -1201,7 +1201,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 "model_context_window_exceeded",
                 "stop_sequence",
             ) or (stop_reason == "pause_turn" and iteration == max_iterations - 1):
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key={
@@ -1214,7 +1214,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
 
             if delta_stream.tool_args_error is not None:
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="tool_args_parse_error",
@@ -1224,7 +1224,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 continue
 
             if not chat_log.unresponded_tool_results:
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 break
 
 

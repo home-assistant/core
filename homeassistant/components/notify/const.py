@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import NotifyEntity
+    from .entity import NotifyEntity
 
 DOMAIN: Final = "notify"
 
