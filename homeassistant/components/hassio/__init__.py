@@ -458,6 +458,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     issues_coordinator = SupervisorIssuesCoordinator(hass, entry)
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
+    auto_update = AutoUpdateManager(hass, entry, coordinator)
+    await auto_update.async_setup()
+    hass.data[DATA_AUTO_UPDATE] = auto_update
+
     @callback
     def _refresh_main_coordinator_on_mount_issue(_: IssueSubscriptionEvent) -> None:
         coordinator.config_entry.async_create_task(hass, coordinator.async_refresh())
@@ -566,12 +570,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # This is done after the initial data refresh to ensure that
     # the info needed is available.
     _check_deprecated_setup(hass)
-
-    # After the issues refresh: settling an automatic update needs to know
-    # whether Supervisor rolled it back
-    auto_update = AutoUpdateManager(hass, entry, coordinator)
-    await auto_update.async_setup()
-    hass.data[DATA_AUTO_UPDATE] = auto_update
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

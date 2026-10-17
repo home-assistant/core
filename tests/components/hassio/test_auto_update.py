@@ -1602,3 +1602,81 @@ async def test_turned_off_while_saving_pending(
 
     supervisor_client.homeassistant.update.assert_not_called()
     assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
+
+
+async def test_rollback_asked_again_when_supervisor_cannot_tell(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test the record is kept until Supervisor can say whether it rolled back."""
+    resolution_info.side_effect = SupervisorError("Boom")
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.1"):
+        await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
+        manager = hass.data[DATA_AUTO_UPDATE]
+
+        assert manager.async_get_history() == []
+        assert hass_storage[STORAGE_KEY]["data"]["pending"] == PENDING
+
+        resolution_info.side_effect = None
+        supervisor_rolled_back(resolution_info)
+        freezer.tick(CHECK_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["rolled_back"]
+    assert manager.async_is_skipped("2026.10.2")
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back")
+
+
+async def test_later_job_events_ignored_once_settled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test watching Supervisor's jobs ends with the restored update.
+
+    A later automatic update has its own outcome; its job must not settle
+    it as the restored one.
+    """
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value,
+        version="2026.10.2",
+        version_latest="2026.10.3",
+    )
+    freezer.move_to(_local(22, 3, 30))
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "key": STORAGE_KEY,
+        "data": {
+            "first_seen": {"2026.10.3": _local(18, 2).isoformat()},
+            "skipped": [],
+            "window_offset": 0.0,
+            "attempted_window": None,
+            "pending": PENDING,
+            "history": [],
+        },
+    }
+    with patch("homeassistant.components.hassio.auto_update.HA_VERSION", "2026.10.2"):
+        await _setup_hassio(hass, ENABLED)
+        await hass.async_block_till_done()
+        manager = hass.data[DATA_AUTO_UPDATE]
+
+        # The restored update worked, and the next patch is on its way
+        assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+        assert _installed(supervisor_client) == ["2026.10.3"]
+
+        async_dispatcher_send(
+            hass,
+            EVENT_SUPERVISOR_EVENT,
+            {"event": "job", "data": _core_update_job(done=True).to_dict()},
+        )
+        await hass.async_block_till_done()
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["success"]
+    assert hass_storage[STORAGE_KEY]["data"]["pending"]["to_version"] == "2026.10.3"

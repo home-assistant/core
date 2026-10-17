@@ -9,7 +9,7 @@ import random
 from typing import Any, Self, TypedDict, override
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import Job, UpdateChannel
+from aiohasupervisor.models import ContextType, IssueType, Job, UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
 
@@ -21,7 +21,7 @@ from homeassistant.const import (
     WEEKDAYS,
     __version__ as HA_VERSION,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -37,7 +37,6 @@ from homeassistant.util import dt as dt_util
 from .config_entry import async_get_update_options
 from .const import (
     CORE_AUTO_UPDATE_DELAYS,
-    DATA_KEY_SUPERVISOR_ISSUES,
     DEFAULT_CORE_AUTO_UPDATE_DELAY,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_END,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_START,
@@ -51,6 +50,7 @@ from .const import (
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
 )
 from .coordinator import HassioMainDataUpdateCoordinator, JobSubscription
+from .handler import get_supervisor_client
 from .update_helper import update_core
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,9 +67,6 @@ HISTORY_LENGTH = 10
 
 ISSUE_ROLLED_BACK = "core_auto_update_rolled_back"
 ISSUE_FAILED = "core_auto_update_failed"
-
-# Supervisor raises this when the new Core version failed its health check
-_SUPERVISOR_ISSUE_ROLLED_BACK = "issue_core_update_rollback"
 
 # Supervisor jobs that must finish before Home Assistant is updated
 _BUSY_JOB_NAME = "home_assistant_core_update"
@@ -278,6 +275,9 @@ class AutoUpdateManager:
         self._window_offset = random.random()
         self._attempted_window: datetime | None = None
         self._pending: PendingUpdate | None = None
+        # The pending update as found at setup, which Home Assistant restarted in
+        self._restored_pending: PendingUpdate | None = None
+        self._unsub_settling: CALLBACK_TYPE | None = None
         self._history: list[AutoUpdateHistoryEntry] = []
 
     async def async_setup(self) -> None:
@@ -299,6 +299,7 @@ class AutoUpdateManager:
         # Settled once started: Supervisor rolls back a version that does not
         # come up, and that has to find the record still there.
         if self._pending is not None:
+            self._restored_pending = self._pending
             self._entry.async_on_unload(
                 async_at_started(self._hass, self._async_start_settling)
             )
@@ -333,40 +334,74 @@ class AutoUpdateManager:
 
     @callback
     def _async_start_settling(self, hass: HomeAssistant) -> None:
-        """Settle the pending update now, or once Supervisor is done with it.
+        """Settle the restored update now, or once Supervisor is done with it.
 
         Supervisor can still be busy with it, like after a reload of this
         integration during the update.
         """
-        jobs_coordinator = hass.data[JOBS_COORDINATOR]
-        self._entry.async_on_unload(
-            jobs_coordinator.subscribe(
-                JobSubscription(
-                    self._async_core_update_job_changed, name=_BUSY_JOB_NAME
-                )
-            )
+        self._unsub_settling = hass.data[JOBS_COORDINATOR].subscribe(
+            JobSubscription(self._async_core_update_job_changed, name=_BUSY_JOB_NAME)
         )
-        if not any(
+        self._entry.async_on_unload(self._async_stop_settling)
+        if not self._async_core_update_running():
+            self._async_schedule_settle()
+
+    @callback
+    def _async_core_update_running(self) -> bool:
+        """Return if Supervisor is updating Home Assistant Core."""
+        return any(
             job.name == _BUSY_JOB_NAME and job.done is False
-            for job in jobs_coordinator.current_jobs
-        ):
-            self._async_finish_pending()
+            for job in self._hass.data[JOBS_COORDINATOR].current_jobs
+        )
 
     @callback
     def _async_core_update_job_changed(self, job: Job) -> None:
-        """Settle the pending update once Supervisor finished it."""
+        """Settle the restored update once Supervisor finished it."""
         if job.done:
-            self._async_finish_pending()
+            self._async_schedule_settle()
 
     @callback
-    def _async_finish_pending(self) -> None:
-        """Find out how the automatic update went.
+    def _async_schedule_settle(self) -> None:
+        """Settle the restored update as a background task."""
+        self._entry.async_create_background_task(
+            self._hass, self._async_settle(), "hassio automatic update result"
+        )
+
+    @callback
+    def _async_stop_settling(self) -> None:
+        """Stop watching Supervisor for the restored update."""
+        self._restored_pending = None
+        if self._unsub_settling is not None:
+            self._unsub_settling()
+            self._unsub_settling = None
+
+    async def _async_supervisor_rolled_back(self) -> bool | None:
+        """Return if Supervisor rolled Core back, or None if it cannot tell now.
+
+        Asked directly; hassio's own issue list can be empty after a failed
+        refresh, or miss an issue whose suggestions could not be loaded.
+        """
+        try:
+            info = await get_supervisor_client(self._hass).resolution.info()
+        except SupervisorError as err:
+            _LOGGER.debug("Could not ask Supervisor about a rollback: %s", err)
+            return None
+
+        return any(
+            issue.type == IssueType.UPDATE_ROLLBACK
+            and issue.context == ContextType.CORE
+            for issue in info.issues
+        )
+
+    async def _async_settle(self) -> None:
+        """Find out how the update restored from the record went.
 
         Supervisor checks the new version and rolls back when it does not
         come up healthy, and says so. Still running the old version without
-        that means the update never happened.
+        that means the update never happened. When Supervisor cannot tell
+        yet, the record stays and the next check asks again.
         """
-        if (pending := self._pending) is None:
+        if (pending := self._restored_pending) is None or self._pending is not pending:
             return
 
         hass = self._hass
@@ -387,10 +422,13 @@ class AutoUpdateManager:
                 },
             )
         elif pending["from_version"] == HA_VERSION:
-            if not any(
-                issue.key == _SUPERVISOR_ISSUE_ROLLED_BACK
-                for issue in hass.data[DATA_KEY_SUPERVISOR_ISSUES].issues
-            ):
+            rolled_back = await self._async_supervisor_rolled_back()
+            # Settled meanwhile, or Supervisor cannot tell yet
+            if self._pending is not pending or rolled_back is None:
+                return
+
+            if not rolled_back:
+                self._async_stop_settling()
                 self._async_update_failed(to_version)
                 return
 
@@ -413,6 +451,7 @@ class AutoUpdateManager:
             # Someone else changed the version; nothing to tell
             self._pending = None
 
+        self._async_stop_settling()
         self._async_save()
 
     @callback
@@ -591,6 +630,12 @@ class AutoUpdateManager:
         Only looks at the current state, so it gives the same answer no
         matter what made it run.
         """
+        # The last update is not settled yet; nothing new before it is
+        if self._restored_pending is not None:
+            if not self._async_core_update_running():
+                await self._async_settle()
+            return
+
         now = dt_util.now()
         if (window := _window_start(self.settings, now)) is None:
             return
