@@ -1,8 +1,4 @@
-"""Ordered config-entry writeback using Core's public mutation APIs.
-
-Mirrored in hass_client. Acknowledgement means Core accepted and scheduled
-persistence, with the same durability semantics as a local integration update.
-"""
+"""Ordered config-entry writeback using Core's public mutation APIs."""
 
 import asyncio
 from collections.abc import Callable

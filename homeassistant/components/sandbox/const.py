@@ -11,21 +11,10 @@ DOMAIN = "sandbox"
 
 DATA_SANDBOX: HassKey[SandboxData] = HassKey(DOMAIN)
 
-# Proxy entities all register under the shared ``sandbox`` platform_name,
-# so the entity-registry uniqueness key ``(domain, "sandbox", unique_id)``
-# would collide when two integrations in one group reuse a unique_id. The
-# proxy unique_id is therefore namespaced as
-# ``f"{source_domain}{UNIQUE_ID_SEPARATOR}{unique_id}"``. ``:`` is chosen
-# because HA's default slug logic never produces it, so it cannot clash with
-# a real unique_id segment.
+# Namespace IDs because integrations share the sandbox platform registry key.
 UNIQUE_ID_SEPARATOR = ":"
 
-# Platforms that the sandbox cannot host today. Any integration that ships a
-# platform file in this set is forced onto `main`. Each entry needs a one-line
-# "why" so the deny-list is reviewable.
-#
-# TODO(sandbox): revisit each entry once the protocol can carry the missing
-# payload shape. Tracked in sandbox/plan.md "Risks → Deny-list rot".
+# Keep platforms on main when the protocol cannot carry their data.
 SANDBOX_INCOMPATIBLE_PLATFORMS: frozenset[str] = frozenset(
     {
         # stt: streams audio chunks via async generator; not serializable over WS.
@@ -40,12 +29,7 @@ SANDBOX_INCOMPATIBLE_PLATFORMS: frozenset[str] = frozenset(
         "wake_word",
         # camera: entity surface returns image/stream bytes; needs a byte channel.
         "camera",
-        # To-do lists: the panel reads the sync `todo_items` property (which
-        # also feeds `TodoListEntity.state`), so it can't be satisfied by a
-        # request/response query — it needs the sandbox to push the item list
-        # into a proxy cache. Until that subscription/push primitive lands a
-        # sandboxed list would render empty in the UI while looking supported,
-        # so route it to main. See sandbox/docs/query-shaped-rpcs.md.
+        # The synchronous todo_items property needs a pushed cache, not query RPCs.
         "todo",
     }
 )
@@ -57,32 +41,17 @@ ALWAYS_MAIN: frozenset[str] = frozenset(
         "automation",
         "scene",
         "cloud",
-        # ai_task's service handler resolves attachments into Attachment
-        # objects with Path values + temp files before the entity method
-        # runs. Neither bridge option intercepts at service-call level yet,
-        # and resolution depends on camera/image bytes (deny-listed). Folded
-        # into ALWAYS_MAIN — revisit when ai_task is made sandbox-aware or
-        # we add service-handler-level interception.
+        # Attachment paths and temporary files must be resolved on main.
         "ai_task",
-        # image owns the same bytes-returning entity surface camera does;
-        # the deny-list above catches integrations *providing* an image
-        # platform, but the image integration itself needs to stay on main
-        # so consumers (ai_task, etc.) can fetch bytes locally.
+        # Keep image providers on main for consumers that read image bytes locally.
         "image",
-        # Broad readers — read ALL entities / registries, not narrowly
-        # scopable, so they break under sandbox lockdown. See
-        # sandbox/plans/research/builtin-lockdown-breakage.md (point 1,
-        # decision: blanket ALWAYS_MAIN).
-        # template: Jinja states()/is_state() over any entity at render time.
+        # These integrations need access to states or registries outside their group.
         "template",
         # group: state/attrs derive entirely from foreign member entities.
         "group",
         # homekit: hass.states.async_all() + entity/device registries.
         "homekit",
-        # Source-entity helpers — read a declared set of foreign entities
-        # (and sometimes the registries). ALWAYS_MAIN until the share-states
-        # consumer lands a scoped declared-source-entity allow-list.
-        # min_max: min/max/mean over foreign sensors.
+        # These helpers need foreign states that the bridge does not subscribe to.
         "min_max",
         # statistics: stats buffer over a foreign entity.
         "statistics",

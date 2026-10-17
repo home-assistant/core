@@ -1,24 +1,4 @@
-"""Routing rules: which sandbox should host a given integration?
-
-`classify(integration)` is a pure function from a loaded `Integration`
-(manifest + on-disk shape) to a `SandboxAssignment`. It is called by the
-config-flow router and by config-entry setup interception — every
-decision about "main vs sandbox" funnels through here.
-
-Rule order (first match wins):
-
-1. `integration_type == "system"` → Main. System integrations are part of
-   the HA runtime; sandboxing them is meaningless.
-2. `domain in ALWAYS_MAIN` → Main. Hand-picked deny-list for integrations
-   the bridge cannot host correctly today (see `const.py` for the why).
-3. Any platform file in `SANDBOX_INCOMPATIBLE_PLATFORMS` → Main. Platform-
-   level deny-list for shapes the websocket bridge can't ferry yet.
-4. Custom (non-built-in) integration → `Sandbox("custom")`.
-5. Otherwise → `Sandbox("built-in")`.
-
-The check uses `Integration.platforms_exists()` so we never have to import
-the integration to classify it.
-"""
+"""Routing rules: which sandbox should host a given integration?"""
 
 from dataclasses import dataclass
 from typing import Final
@@ -34,11 +14,7 @@ GROUP_CUSTOM: Final = "custom"
 
 @dataclass(frozen=True, slots=True)
 class SandboxAssignment:
-    """Where an integration should run.
-
-    `group is None` means "stay on main"; otherwise it's the name of the
-    sandbox process that should host the integration.
-    """
+    """Where an integration should run."""
 
     group: str | None
 

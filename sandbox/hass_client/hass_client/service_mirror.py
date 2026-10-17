@@ -1,18 +1,4 @@
-"""Sandbox-side service-registration mirror.
-
-Watches ``EVENT_SERVICE_REGISTERED`` / ``EVENT_SERVICE_REMOVED`` on the
-sandbox bus. For each registration whose domain is in
-:class:`ApprovedDomains`, it pushes ``sandbox/register_service`` to
-main with the metadata main needs to install a forwarding handler. Same
-shape for removals via ``sandbox/unregister_service``.
-
-Schemas are intentionally not serialised — the sandbox is the
-authoritative validator (the call comes back over
-``sandbox/call_service`` and is run through ``services.async_call``
-on the sandbox side, where the real schema lives). Main only needs
-``supports_response`` so it can register the proxy with the right return
-shape; the proxy handler forwards everything else verbatim.
-"""
+"""Sandbox-side service-registration mirror."""
 
 import asyncio
 import logging
@@ -36,12 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ServiceMirror:
-    """Forward sandbox-side service registrations up to main.
-
-    One instance per sandbox process. Lifetime is bound to the
-    :class:`Channel` it was registered against: :meth:`register` attaches
-    the bus listeners, :meth:`async_stop` detaches them.
-    """
+    """Forward sandbox-side service registrations up to main."""
 
     def __init__(self, hass: HomeAssistant, approved: ApprovedDomains) -> None:
         """Initialise with the sandbox HA and the shared approved-domains gate."""
@@ -64,11 +45,7 @@ class ServiceMirror:
         self._unsub_removed = self.hass.bus.async_listen(
             EVENT_SERVICE_REMOVED, self._on_service_removed
         )
-        # Replay services a domain registered *before* it became approved:
-        # EVENT_SERVICE_REGISTERED fires synchronously during
-        # ``async_setup_entry``, but the entry runner only approves the
-        # domain once setup returns, so those early registrations were
-        # dropped. Re-mirror them the moment the domain is approved.
+        # Replay setup-time services once their domain is approved for forwarding.
         self.approved.add_listener(self.async_sync_domain)
 
     async def async_stop(self) -> None:
@@ -83,12 +60,7 @@ class ServiceMirror:
 
     @callback
     def async_sync_domain(self, domain: str) -> None:
-        """Mirror every already-registered service of a freshly-approved domain.
-
-        Invoked as an :class:`ApprovedDomains` approve listener. Services
-        already mirrored (``_mirrored``) are skipped, so this is a no-op for
-        a domain that was approved before its services registered.
-        """
+        """Mirror every already-registered service of a freshly-approved domain."""
         if self._channel is None or self._channel.closed:
             return
         if not self.approved.approves(domain):
@@ -115,18 +87,11 @@ class ServiceMirror:
 
     @callback
     def _mirror_service(self, domain: str, service: str) -> None:
-        """Push one ``register_service`` for ``domain.service`` (once).
-
-        Shared by the live ``EVENT_SERVICE_REGISTERED`` path and the
-        approval-replay path. Caller guarantees the domain is approved.
-        """
+        """Push one ``register_service`` for ``domain.service`` (once)."""
         key = (domain.lower(), service.lower())
         if key in self._mirrored:
             return
-        # One registry lookup feeds both metadata fields. Best-effort: the
-        # service may not be visible yet (a race with the
-        # EVENT_SERVICE_REGISTERED listener) — main treats the metadata as
-        # authoritative and the sandbox's own handler still validates.
+        # Service metadata may not be visible when the registration event arrives.
         service_obj = self.hass.services.async_services_for_domain(domain).get(
             service.lower()
         )
@@ -188,13 +153,7 @@ class ServiceMirror:
 
 
 def _supports_response(service_obj: Service | None) -> str:
-    """Extract the service's ``supports_response`` value for the wire.
-
-    Returns the lowercase string value (``"none"`` / ``"only"`` /
-    ``"optional"``) since that's what main needs to pass back to
-    :meth:`hass.services.async_register`. Falls back to ``"none"`` for a
-    service that isn't actually registered yet.
-    """
+    """Extract the service's ``supports_response`` value for the wire."""
     if service_obj is None:
         return "none"
     value = getattr(service_obj.supports_response, "value", None)

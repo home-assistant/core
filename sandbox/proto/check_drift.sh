@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
-# Drift guard for the checked-in sandbox protobuf gencode.
-#
-# Regenerates the _pb2 mirrors from sandbox.proto (via generate.sh, which
-# bootstraps its own throwaway venv with a pinned compiler toolchain)
-# and fails if the result differs from what is checked in.
-#
-# Degrades gracefully: if `uv` (needed to build the isolated protoc venv) is
-# not on PATH, it skips with a notice and exits 0 rather than blocking the
-# commit. This is why it is wired as a MANUAL-stage prek hook
-# (`prek run --hook-stage manual sandbox-proto-drift`) / dedicated CI lane,
-# not an every-commit hook.
+# Regenerate protobuf bindings and compare them with the checked-in copies.
 
 set -euo pipefail
 

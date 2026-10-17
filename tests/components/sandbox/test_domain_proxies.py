@@ -1,21 +1,4 @@
-"""Per-domain smoke tests for the 28 proxy entities.
-
-Each parametrised case:
-
-1. Wires an in-memory channel pair and a :class:`SandboxBridge`.
-2. Pushes a ``sandbox/register_entity`` describing a synthetic entity
-   on the domain under test.
-3. Pushes a ``sandbox/state_changed`` so the cache reflects a real
-   value.
-4. Invokes one method on the proxy and asserts the resulting
-   ``sandbox/call_service`` RPC carries the expected ``(domain,
-   service)`` plus an entity-targeted target list.
-
-The 4 "rich" proxies (light / switch / sensor /
-binary_sensor) have dedicated coverage in ``test_bridge.py``; this file
-holds the 28 additions plus ``scene`` (which is in ``ALWAYS_MAIN`` but
-still ships a proxy for symmetry).
-"""
+"""Per-domain smoke tests for the 28 proxy entities."""
 
 from __future__ import annotations
 
@@ -445,12 +428,7 @@ async def test_sensor_timestamp_and_date_states_surface(
     pushed_state: str,
     parse: Callable[[str], datetime | date | None],
 ) -> None:
-    """A timestamp/date sensor's pushed ISO string surfaces a working state.
-
-    ``SensorEntity.state`` needs a real ``datetime`` / ``date`` back from
-    ``native_value`` — handing it the raw pushed string used to die on
-    ``'str' object has no attribute 'tzinfo'``.
-    """
+    """A timestamp/date sensor's pushed ISO string surfaces a working state."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
 
     payload = make_entity_description(
@@ -477,11 +455,7 @@ async def test_sensor_timestamp_and_date_states_surface(
 async def test_upsert_clears_dropped_device_class(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """A re-sent registration without device_class clears the mirrored attr.
-
-    Clearing is symmetric with setting: a field dropped from an upsert must
-    not stick from the previous registration.
-    """
+    """A re-sent registration without device_class clears the mirrored attr."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
     def _payload(device_class: str | None) -> pb.EntityDescription:

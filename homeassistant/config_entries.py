@@ -593,9 +593,7 @@ class ConfigEntry[_DataT = Any]:
         _setter(self, "modified_at", modified_at or utcnow())
         _setter(self, "discovery_keys", discovery_keys)
 
-        # Sandbox group this entry belongs to, or None for non-sandboxed
-        # entries. Set by sandbox at flow completion (CREATE_ENTRY) and
-        # consulted by ConfigEntries.router on every setup/unload.
+        # Placement is set before setup and persists with the config entry.
         _setter(self, "sandbox", sandbox)
 
     @override
@@ -739,12 +737,7 @@ class ConfigEntry[_DataT = Any]:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        # The router consult lives here — the single funnel every setup path
-        # uses (ConfigEntries.async_setup, setup.py's component-setup path at
-        # boot, the SETUP_RETRY timer) — so a routed entry can never slip
-        # into local setup. Core owns the state on both sides of the router
-        # contract: True marks LOADED, ConfigEntryError marks SETUP_ERROR
-        # with the message, None falls through to local setup.
+        # Route every setup path, including startup and retries, before local execution.
         if (router := hass.config_entries.router) is not None:
             try:
                 result = await router.async_setup_entry(self)
@@ -1397,8 +1390,7 @@ class ConfigEntry[_DataT = Any]:
             "unique_id": self.unique_id,
             "version": self.version,
         }
-        # Persist sandbox tag only when set, to keep on-disk shape lean
-        # for the common (non-sandboxed) case.
+        # Omit placement for local entries to preserve their storage representation.
         if self.sandbox is not None:
             result["sandbox"] = self.sandbox
         return result
@@ -2591,8 +2583,7 @@ class ConfigEntries:
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
-                # Only sandboxed entries persist this key (as_dict writes it
-                # solely when set), so non-sandboxed entries lack it.
+                # Local entries do not persist a placement tag.
                 sandbox=entry.get("sandbox"),
                 source=entry["source"],
                 subentries_data=entry["subentries"],
@@ -2687,10 +2678,7 @@ class ConfigEntries:
                 f" be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
-        # A routed entry never needs its component set up on main — a custom
-        # (HACS) integration has no code here, so async_setup_component would
-        # fail before the entry ever reached the router. entry.async_setup
-        # performs the actual router consult.
+        # Remote custom integrations may have no code available on main.
         if self.router is not None and entry.sandbox is not None:
             if _lock:
                 async with entry.setup_lock:

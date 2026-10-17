@@ -1,39 +1,4 @@
-"""Main-side bridge — owns the per-sandbox entity registry + outbound dispatch.
-
-Responsibilities:
-
-* Hold a :class:`SandboxBridge` per sandbox group. Each one knows its
-  :class:`Channel` plus the set of proxy entities the sandbox has
-  registered with it.
-* Handle inbound sandbox→main calls:
-
-  - ``sandbox/register_entity`` — instantiate a proxy entity, add it to
-    the matching :class:`EntityComponent` via
-    :meth:`async_register_remote_platform`, and reply with the assigned
-    main-side ``entity_id``.
-  - ``sandbox/unregister_entity`` — drop the proxy.
-  - ``sandbox/state_changed`` — push state/attributes into the cached
-    state of the matching proxy entity.
-
-* Expose :meth:`SandboxBridge.async_call_service` for proxy entities to
-  forward action calls back to the sandbox — one RPC per call. (Coalescing
-  same-tick calls for the same service into a single multi-entity RPC is a
-  possible future optimisation; the first iteration keeps it simple.)
-* Translate sandbox-side exceptions back into the exception types proxy
-  callers would have raised locally (``probatio.Invalid`` → ``TypeError``,
-  unknown service / entity → ``HomeAssistantError``).
-
-Split-out companions (mechanical seams, no logic of their own):
-
-* :mod:`.store` — the per-group :class:`SandboxStoreServer` backing the
-  ``sandbox/store_load`` / ``store_save`` / ``store_remove`` handlers
-  (each key lands at ``<config>/.storage/sandbox/<group>/<key>``) plus
-  ``validate_key``.
-* :mod:`.service_forwarder` — the mirrored-service forwarder factory and
-  the sandbox→main exception translation.
-* :mod:`.description` — :class:`SandboxEntityDescription` (the
-  ``register_entity`` snapshot) and its ``DeviceInfo`` deserialiser.
-"""
+"""Main-side bridge — owns the per-sandbox entity registry + outbound dispatch."""
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -103,23 +68,12 @@ _LOGGER = logging.getLogger(__name__)
 
 _REMOTE_PLATFORM_NAME = "sandbox"
 
-# Lifetime of a remembered context_id → Context mapping. Only contexts main
-# hands *down* to the sandbox (service calls) are cached, and the sandbox
-# echoes them back within the same operation (seconds), so a 15-minute TTL is
-# generous headroom while keeping the cache naturally tiny. A miss is always
-# safe — it degrades to a fresh ``user_id=None`` Context — so expiry only ever
-# loses attribution on a pathologically delayed echo, never correctness.
+# Expire old attribution without retaining every Context for the process lifetime.
 _CONTEXT_TTL = timedelta(minutes=15)
 # Sanity backstop only; the TTL does the real bounding given the low volume.
 _CONTEXT_CACHE_MAX = 2048
 
-# Core/internal event types a sandbox may never fire on main's bus, regardless
-# of which domains it owns. The owned-domain ``<domain>_`` prefix rule already
-# blocks anything outside an owned namespace, but these are hard-denied so an
-# "owned domain" can never alias a control-plane event (e.g. a sandbox owning
-# the ``automation`` integration must still not be able to fire
-# ``homeassistant_stop`` or ``call_service``). Defense in depth — see
-# ``_handle_fire_event`` and ARCHITECTURE §6.
+# Reject lifecycle events even if an owned domain matches their prefix.
 _DENIED_EVENT_TYPES = frozenset(
     {
         EVENT_HOMEASSISTANT_START,
@@ -173,10 +127,7 @@ class SandboxBridge:
 
         self._store_server = SandboxStoreServer(hass, group)
 
-        # Cached _owned_domains() result; None = dirty, recomputed lazily on
-        # the next access. Invalidated on proxy register/unregister, platform
-        # creation, entry teardown, and any config-entry change (the dispatcher
-        # subscription below) — the inputs the derivation reads.
+        # Invalidate ownership when entries or proxies change.
         self._owned_domains_cache: set[str] | None = None
         self._unsub_entry_changed = async_dispatcher_connect(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, self._on_config_entry_changed
@@ -188,18 +139,7 @@ class SandboxBridge:
             EVENT_CORE_CONFIG_UPDATE, self._on_core_config_update
         )
 
-        # Context security + restoration: the sandbox only ever sends a
-        # context_id (a string) — it can never set parent_id / user_id on the
-        # wire. Main records every Context it hands *down* to the sandbox
-        # (service forwards, entity service calls) keyed by id; when the
-        # sandbox echoes that id back (state_changed / fire_event), main
-        # restores the original Context verbatim, so a user-initiated action's
-        # attribution survives the round-trip. An id main never issued (or one
-        # whose entry has expired) resolves to a brand-new main-owned Context
-        # with no fabricated parentage — main never adopts the sandbox's id
-        # (it is an untrusted ULID; see ``_resolve_context``). The cache is
-        # TTL-bounded (``_CONTEXT_TTL``) and ordered by insertion so expiry
-        # pruning is a cheap front-to-back walk; a miss is always safe.
+        # Restore attribution only from contexts issued by main.
         self._contexts: OrderedDict[str, _CachedContext] = OrderedDict()
 
         channel.register(MSG_REGISTER_ENTITY, self._handle_register_entity)
@@ -225,19 +165,7 @@ class SandboxBridge:
         context: Context | None = None,
         return_response: bool = False,
     ) -> Any:
-        """Forward one entity service call to the sandbox as a single RPC.
-
-        ``context`` is the main-side Context driving the entity call. It is
-        remembered here (before the id is reduced to a bare wire value) so that
-        when the sandbox echoes the same id back on a resulting state change
-        or event, :meth:`_resolve_context` restores the original
-        ``parent_id`` / ``user_id`` instead of minting a fresh attribution.
-
-        One RPC per call keeps the first iteration simple. Coalescing same-tick
-        calls for one service into a single multi-entity RPC (so a 200-entity
-        area call pays one round-trip instead of 200) is a possible future
-        optimisation — see ``docs/FOLLOWUPS.md``.
-        """
+        """Forward one entity service call to the sandbox as a single RPC."""
         self.remember_context(context)
         return await self.async_raw_call_service(
             domain=domain,
@@ -256,18 +184,7 @@ class SandboxBridge:
         args: dict[str, Any],
         context: Context | None = None,
     ) -> Any:
-        """Forward one server-side entity query to the sandbox as a single RPC.
-
-        The companion to :meth:`async_call_service` for the query-shaped entity
-        APIs that have no ``SupportsResponse`` service to ride (media search,
-        update release notes, vacuum segments, the WS-only calendar event
-        edits). ``method`` names the real entity method; ``args`` are its
-        kwargs. Like a service call the ``context`` is remembered before its id
-        is reduced to a bare wire value, errors translate through the same
-        :func:`.service_forwarder.translate_remote_error` /
-        ``ChannelClosedError`` paths, and the wrapped ``{"value": …}`` return
-        is unwrapped.
-        """
+        """Forward one server-side entity query to the sandbox as a single RPC."""
         self.remember_context(context)
         request = pb.EntityQuery(
             sandbox_entity_id=sandbox_entity_id,
@@ -316,13 +233,7 @@ class SandboxBridge:
             ) from err
 
     def _prune_contexts(self, now: datetime) -> None:
-        """Drop expired entries from the front of the context cache.
-
-        The cache is kept ordered by insertion (every write moves its key to
-        the end), and the TTL is constant, so insertion order *is* expiry
-        order — expired entries always cluster at the front and a single walk
-        that stops at the first live entry prunes everything stale.
-        """
+        """Drop expired entries from the front of the context cache."""
         contexts = self._contexts
         while contexts:
             key = next(iter(contexts))
@@ -332,15 +243,7 @@ class SandboxBridge:
 
     @callback
     def _store_context(self, key: str, context: Context, now: datetime) -> None:
-        """Insert/refresh a cache entry and enforce the size backstop.
-
-        Shared by :meth:`remember_context` (real main-issued contexts) and the
-        miss path of :meth:`_resolve_context` (fresh contexts minted for an
-        unknown id). Keeps the cache ordered by expiry (move-to-end) and caps
-        its size so neither path can grow it without bound — a sandbox flooding
-        distinct unknown ``context_id``s is bounded the same as legitimate
-        traffic.
-        """
+        """Insert/refresh a cache entry and enforce the size backstop."""
         contexts = self._contexts
         contexts[key] = _CachedContext(context, now + _CONTEXT_TTL)
         contexts.move_to_end(key)
@@ -350,15 +253,7 @@ class SandboxBridge:
 
     @callback
     def remember_context(self, context: Context | None) -> None:
-        """Record a Context main is handing down to the sandbox.
-
-        Keyed by its (trusted, main-issued) id so an echoed id resolves back
-        to the original Context, restoring ``parent_id`` / ``user_id``. The
-        entry lives for ``_CONTEXT_TTL``; re-recording refreshes it and moves
-        it to the end so the cache stays ordered by expiry. Expiry only loses
-        attribution on a later echo (it degrades to a fresh Context), never
-        correctness.
-        """
+        """Record a Context main is handing down to the sandbox."""
         if context is None:
             return
         now = dt_util.utcnow()
@@ -367,24 +262,7 @@ class SandboxBridge:
 
     @callback
     def _resolve_context(self, context_id: str | None) -> Context:
-        """Resolve a sandbox-supplied context_id to an authoritative Context.
-
-        The sandbox can never set ``parent_id`` / ``user_id`` on the wire —
-        main owns that. A context_id main handed down (and still remembers)
-        resolves back to the original Context verbatim, so a user-initiated
-        action's attribution survives the round-trip.
-
-        An id main never issued — or whose entry has expired — yields a
-        **brand-new** main-owned ``Context(user_id=None)``: a fresh
-        main-generated id, no fabricated parentage. Main never adopts the
-        sandbox-supplied id: context ids are ULIDs carrying an embedded
-        millisecond timestamp, and main cannot trust the sandbox's clock (a
-        crafted id could back- or forward-date the event for recorder /
-        logbook ordering). The sandbox string is used only as the cache
-        **key**, never as the resulting Context's identity. Caching the fresh
-        context under that key lets repeated echoes within one operation map
-        to the same stable Context.
-        """
+        """Resolve a sandbox-supplied context_id to an authoritative Context."""
         now = dt_util.utcnow()
         self._prune_contexts(now)
         if context_id is None:
@@ -405,12 +283,7 @@ class SandboxBridge:
             raise HomeAssistantError(
                 f"register_entity: unknown entry_id {description.entry_id!r}"
             )
-        # Trust the entry_id only after re-deriving ownership from main-side
-        # state: the sandbox may register entities *only* for entries main
-        # routed to this very group. Without this a compromised sandbox could
-        # attach entities (and pre-create devices) against a victim
-        # integration's config entry. ``entry.sandbox`` is set by main at flow
-        # completion, never by the sandbox.
+        # Validate entry ownership before creating entities or devices on main.
         if entry.sandbox != self.group:
             raise HomeAssistantError(
                 f"register_entity: entry {description.entry_id!r} not owned by "
@@ -421,10 +294,7 @@ class SandboxBridge:
             and description.config_subentry_id not in entry.subentries
         ):
             raise HomeAssistantError("register_entity: unknown config subentry")
-        # Namespace the proxy unique_id with the source integration domain so
-        # two integrations in one group reusing the same unique_id don't
-        # collide on the shared sandbox platform_name. A None unique_id
-        # stays None (the entity opts out of the registry).
+        # Namespace IDs because all proxies share the sandbox platform.
         if description.unique_id is not None:
             description.unique_id = (
                 f"{entry.domain}{UNIQUE_ID_SEPARATOR}{description.unique_id}"
@@ -434,24 +304,13 @@ class SandboxBridge:
         # component itself has to be set up so its EntityComponent exists.
         await self._ensure_domain_loaded(
             description.domain,
-            # Only the entry's own integration domain may fall back to a
-            # bare EntityComponent — anything else must be a real,
-            # loadable platform domain, or a compromised sandbox could
-            # mint entities in arbitrary made-up domains.
+            # Only the source integration may use a bare component without a local platform.
             allow_bare=description.domain == entry.domain,
         )
-        # Pre-create the device entry so its id is known before the proxy
-        # registers; the framework's own async_get_or_create call inside
-        # EntityPlatform.async_add_entities is idempotent on (identifiers,
-        # connections) and will reuse the same DeviceEntry.
+        # Create the device first so proxy registration can reuse its registry ID.
         if description.device_info is not None:
             device_registry = dr.async_get(self.hass)
-            # ``async_get_or_create`` merges into an existing device that shares
-            # the supplied identifiers/connections, adding our entry to its
-            # config_entries set. Refuse to merge into a device already owned by
-            # an entry outside this group, so a sandbox cannot hijack a foreign
-            # integration's device with crafted identifiers. The device stays
-            # scoped to the (now-verified-owned) entry.
+            # Do not merge sandbox devices into devices owned outside this group.
             self._reject_foreign_device_merge(device_registry, description)
             try:
                 device_registry.async_get_or_create(
@@ -464,11 +323,7 @@ class SandboxBridge:
                     f"register_entity: invalid device_info for "
                     f"{description.sandbox_entity_id!r}: {err}"
                 ) from err
-        # MSG_REGISTER_ENTITY is an upsert: a re-send for an already-tracked
-        # entity (the client re-describes on registry/device updates) refreshes
-        # the existing proxy in place rather than adding a duplicate. The
-        # device pre-creation above already refreshed the DeviceEntry via the
-        # idempotent async_get_or_create.
+        # Refresh repeated registrations in place to preserve entity identity.
         existing = self._entities.get(description.sandbox_entity_id)
         if existing is not None:
             existing.sandbox_update_description(description)
@@ -497,11 +352,7 @@ class SandboxBridge:
         device_registry: dr.DeviceRegistry,
         description: SandboxEntityDescription,
     ) -> None:
-        """Reject device identifiers or connections claimed outside this group.
-
-        Devices are owned by individual config entries. Keep the sandbox's
-        conservative collision policy across all matching entries.
-        """
+        """Reject device identifiers or connections claimed outside this group."""
         info = description.device_info or {}
         identifiers: set[tuple[str, str]] = info.get("identifiers") or set()
         connections: set[tuple[str, str]] = info.get("connections") or set()
@@ -528,11 +379,7 @@ class SandboxBridge:
         await async_setup_component(self.hass, domain, {})
         if domain in self.hass.data.get(DATA_INSTANCES, {}) or not allow_bare:
             return
-        # An integration's *own* domain (sun.sun, …): its EntityComponent is
-        # only built inside its own async_setup_entry, which runs sandboxed —
-        # a bare component gives the proxies a home without running any
-        # integration code on main. EntityComponent self-registers into
-        # DATA_INSTANCES.
+        # Own-domain proxies need a component without running the integration on main.
         EntityComponent(_LOGGER, domain, self.hass)
 
     async def _handle_unregister_entity(
@@ -573,38 +420,10 @@ class SandboxBridge:
     async def _handle_register_service(
         self, msg: pb.RegisterService
     ) -> pb.RegisterServiceResult:
-        """Mirror a sandbox-registered service onto main's service registry.
-
-        The handler that gets installed forwards every call back over
-        the shared ``sandbox/call_service`` channel, so the
-        integration's real handler (and its real schema) runs on the
-        sandbox side. Exception translation reuses
-        :func:`.service_forwarder.translate_remote_error`.
-
-        The service ``domain`` must be one this group owns (same main-side
-        :meth:`_owned_domains` derivation the fire_event gate uses): a
-        compromised sandbox may not squat ``persistent_notification.*`` or any
-        other ``domain.service`` slot outside the domains main routed to it.
-        An unowned domain is rejected with a :class:`HomeAssistantError` (the
-        channel turns it into a remote-error frame).
-
-        If a service with the same ``(domain, service)`` already exists
-        on main (e.g. the host ``light`` EntityComponent registered
-        ``light.turn_on`` for our proxy entities, or another integration
-        already owns the slot) we skip the install — the existing
-        handler stays in charge.
-        """
+        """Mirror a sandbox-registered service onto main's service registry."""
         domain = msg.domain.lower()
         service = msg.service.lower()
         if domain not in self._owned_domains():
-            _LOGGER.warning(
-                "SandboxBridge[%s]: refusing register_service for unowned "
-                "domain %r (%s.%s)",
-                self.group,
-                domain,
-                domain,
-                service,
-            )
             raise HomeAssistantError(
                 f"register_service: domain {domain!r} not owned by group {self.group!r}"
             )
@@ -620,6 +439,8 @@ class SandboxBridge:
 
         forwarder = build_service_forwarder(self, domain, service, supports_response)
         schema = reconstruct_schema(decode_json(msg.schema))
+        # Worker-owned services arrive dynamically after integration setup.
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self.hass.services.async_register(
             domain,
             service,
@@ -679,24 +500,7 @@ class SandboxBridge:
 
     @callback
     def _owned_domains(self) -> set[str]:
-        """Return the set of domains this sandbox group legitimately owns.
-
-        Trust is derived entirely from **main-side** state — never from a value
-        the (possibly compromised) sandbox sends:
-
-        * the integration ``domain`` of every config entry main routed to
-          *this* group (``entry.sandbox == self.group``); plus
-        * the platform domains of the proxy entities this bridge has
-          registered (some integrations legitimately fire events / own services
-          named for a platform they provide rather than their manifest domain).
-
-        Reused by the ``fire_event`` and ``register_service`` gates so the two
-        cannot disagree on what the group is allowed to touch. Called on every
-        inbound ``fire_event`` / ``register_service``, so the result is cached
-        and only recomputed after one of its inputs changed (proxy
-        register/unregister, platform creation, entry teardown, any
-        config-entry change).
-        """
+        """Return the set of domains this sandbox group legitimately owns."""
         if (cached := self._owned_domains_cache) is not None:
             return cached
         domains = {
@@ -713,21 +517,12 @@ class SandboxBridge:
     def _on_config_entry_changed(
         self, _change: ConfigEntryChange, _entry: ConfigEntry
     ) -> None:
-        """Invalidate the owned-domains cache on any config-entry change.
-
-        Add/remove/update can all move an entry in or out of this group
-        (``entry.sandbox``), so any change marks the cache dirty — the next
-        :meth:`_owned_domains` access recomputes.
-        """
+        """Invalidate the owned-domains cache on any config-entry change."""
         self._owned_domains_cache = None
 
     @callback
     def _is_event_allowed(self, event_type: str) -> bool:
-        """Decide whether the sandbox may fire ``event_type`` on main's bus.
-
-        A core/control-plane event is denied outright; otherwise the name must
-        live in an owned domain's ``<domain>_`` namespace.
-        """
+        """Decide whether the sandbox may fire ``event_type`` on main's bus."""
         if event_type in _DENIED_EVENT_TYPES:
             return False
         return any(
@@ -736,21 +531,7 @@ class SandboxBridge:
 
     @callback
     def _handle_fire_event(self, msg: pb.FireEvent) -> None:
-        """Re-fire a sandbox-side event on main's bus.
-
-        The sandbox tags every push with ``event_type`` + ``event_data`` and,
-        optionally, a ``context_id``. Main resolves that id to an authoritative
-        Context — restoring the original attribution for an id it handed down,
-        or a fresh ``user_id=None`` Context otherwise. The sandbox can never
-        inject a ``parent_id`` / ``user_id``.
-
-        Main re-derives trust from its own state: the event name must fall in
-        the ``<domain>_`` namespace of a domain this group owns and must not be
-        a core control-plane event (see :meth:`_is_event_allowed`). A forged
-        ``homeassistant_stop`` / ``call_service`` / foreign ``zha_event`` from a
-        compromised sandbox is logged and dropped, never re-fired — and never
-        raised into the dispatch loop (this is a one-way push).
-        """
+        """Re-fire a sandbox-side event on main's bus."""
         event_type = msg.event_type
         if not self._is_event_allowed(event_type):
             _LOGGER.warning(
@@ -811,14 +592,7 @@ class SandboxBridge:
 
     @callback
     def async_mark_all_unavailable(self) -> None:
-        """Flip every proxy this bridge owns to unavailable.
-
-        Called when the sandbox's channel drops (process exit): the proxies
-        would otherwise keep serving the last state they saw — a dead
-        sandbox's ``light`` would read ``on`` forever to automations and the
-        UI. They flip back to available on respawn via the normal
-        register/``state_changed`` round-trip.
-        """
+        """Flip every proxy this bridge owns to unavailable."""
         for proxy in self._entities.values():
             proxy.sandbox_set_available(False)
 
@@ -828,24 +602,14 @@ class SandboxBridge:
         self.entry_sync.forget(entry.entry_id)
 
     async def async_teardown(self) -> None:
-        """Release every proxy + platform registration this bridge owns.
-
-        Called when a sandbox restart hands the integration a fresh
-        process: the old bridge's proxy entities and their
-        :class:`EntityComponent` platform slots must be torn down so the
-        replacement bridge can re-register the same entries without
-        tripping the ``"has already been setup!"`` guard.
-        """
+        """Release every proxy + platform registration this bridge owns."""
         entry_ids = {eid for (eid, _domain) in list(self._platforms)}
         entry_ids.update(
             proxy.description.entry_id for proxy in list(self._entities.values())
         )
         for entry_id in entry_ids:
             await self._async_teardown_entry(entry_id)
-        # Remove the mirrored service forwarders — each closes over this
-        # bridge's (now dead) channel, and a respawned sandbox's
-        # re-registration is skipped by the has_service() guard, so a stale
-        # forwarder would fail every call until HA restarts.
+        # Remove forwarders that still reference the dead channel before restart.
         if self._unsub_core_config is not None:
             self._unsub_core_config()
             self._unsub_core_config = None
@@ -857,15 +621,7 @@ class SandboxBridge:
         await self.entry_sync.async_stop()
 
     async def _async_teardown_entry(self, entry_id: str) -> None:
-        """Remove every platform + proxy this bridge added for one entry.
-
-        Shared by :meth:`async_unload_entry` and :meth:`async_teardown`.
-        The :class:`EntityPlatform` is dropped from its
-        :class:`EntityComponent` through the public inverse hook
-        (:meth:`EntityComponent.async_unregister_remote_platform`) — never a
-        private ``_platforms`` poke — and then destroyed, which removes its
-        proxy entities from the state machine.
-        """
+        """Remove every platform + proxy this bridge added for one entry."""
         domains = [d for (eid, d) in list(self._platforms) if eid == entry_id]
         for domain in domains:
             platform = self._platforms.pop((entry_id, domain), None)

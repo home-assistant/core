@@ -1,28 +1,4 @@
-"""Proxy :class:`ConfigFlow` that forwards every step to a sandbox runtime.
-
-Behaviour:
-
-1. The framework dispatches a flow step by name (``async_step_user``,
-   ``async_step_reauth``, …) on the flow object. We catch *any* such
-   call via ``__getattr__``.
-2. On the **first** call we issue ``sandbox/flow_init`` with the
-   integration domain plus the initial context/user input; the sandbox
-   returns its own ``flow_id`` and the initial step's result.
-3. **Subsequent** calls go out as ``sandbox/flow_step`` carrying the
-   sandbox's ``flow_id`` and the user input from the framework.
-4. On ``async_remove`` (framework cleanup) we fire
-   ``sandbox/flow_abort`` so the sandbox tears its flow down too.
-5. On the CREATE_ENTRY step we attach ``sandbox=<group>`` to the
-   ``ConfigFlowResult`` so the framework's entry constructor sets
-   :attr:`ConfigEntry.sandbox` before ``async_setup`` runs — that's
-   where the router consults it.
-
-The proxy never touches ``data_schema`` on the wire — schema-driven
-validation happens *inside* the sandbox where the real schema lives. The
-proxy treats the sandbox's reply as authoritative; a re-shown form (with
-``errors`` set) is just another ``FORM`` result that the framework will
-forward to the user as usual.
-"""
+"""Proxy :class:`ConfigFlow` that forwards every step to a sandbox runtime."""
 
 from collections.abc import Mapping
 import dataclasses
@@ -62,15 +38,7 @@ _BACKGROUND_ABORTS: set = set()
 
 
 def _to_jsonable(value: Any) -> Any:
-    """Coerce a flow ``context`` / first-step payload into plain JSON data.
-
-    Discovery flows carry objects with no generic JSON shape: the
-    ``*ServiceInfo`` dataclass as the first-step ``user_input`` (with
-    ``IPv4Address`` fields, sets, …) and a :class:`DiscoveryKey` dataclass in
-    ``context``. Walk the structure into plain JSON primitives, flattening
-    dataclasses to per-field dicts, so the sandbox side rebuilds the real
-    objects from the same field names (see ``flow_runner._rehydrate_discovery``).
-    """
+    """Coerce a flow ``context`` / first-step payload into plain JSON data."""
     if isinstance(value, Mapping):
         return {str(key): _to_jsonable(val) for key, val in value.items()}
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
@@ -120,32 +88,17 @@ class _SandboxFlowProxyMixin:
         self._remote_subentry_type = subentry_type
         self._sandbox_flow_id: str | None = None
         self._terminated: bool = False
-        # Set when the last sandbox result was a MENU: the framework then
-        # dispatches ``async_step_<chosen>`` for the selected option, which we
-        # must forward as the sandbox flow's ``{"next_step_id": <chosen>}``
-        # menu navigation rather than a fresh step.
+        # Translate menu dispatch into navigation on the existing worker flow.
         self._awaiting_menu_selection: bool = False
 
     @property
     def sandbox_group(self) -> str:
-        """The sandbox group this in-progress flow forwards to.
-
-        Read by the translation provider to resolve a brand-new custom
-        integration's group before any ``ConfigEntry`` exists.
-        """
+        """The sandbox group this in-progress flow forwards to."""
         return self._sandbox_group
 
     @override
     def __getattribute__(self, name: str) -> Any:
-        """Catch every ``async_step_*`` access and forward to the sandbox.
-
-        ConfigFlow's base class already defines several step methods (e.g.
-        ``async_step_user``, ``async_step_ignore``, ``async_step_reauth*``),
-        so we cannot rely on ``__getattr__`` — those names resolve in the
-        normal MRO before ``__getattr__`` is consulted. ``__getattribute__``
-        runs for every attribute access; we only re-wrap the
-        ``async_step_*`` family.
-        """
+        """Catch every ``async_step_*`` access and forward to the sandbox."""
         if name.startswith("async_step_"):
             step_id = name[len("async_step_") :]
             forward = object.__getattribute__(self, "_forward_step")
@@ -172,10 +125,7 @@ class _SandboxFlowProxyMixin:
 
         try:
             if self._sandbox_flow_id is None:
-                # First step — bootstrap the flow on the sandbox. The
-                # framework's first call passes the initial data; for a
-                # USER source this is None. Everything else (REAUTH,
-                # DISCOVERY, …) gets its discovery payload here.
+                # Discovery and reauth flows need their initial payload on the first step.
                 request = pb.FlowInit(
                     handler=self._handler_key,
                     context=encode_json(_to_jsonable(dict(self.context))),
@@ -184,11 +134,7 @@ class _SandboxFlowProxyMixin:
                     request.subentry_type = self._remote_subentry_type
                 if user_input is not None:
                     request.data = encode_json(_to_jsonable(user_input))
-                # A reauth / reconfigure / reset flow operates on an existing
-                # entry that main owns. Carry a copy so the sandbox flow
-                # manager can resolve it — otherwise _get_reauth_entry() /
-                # _get_reconfigure_entry() raise UnknownEntry on the private
-                # hass.
+                # Seed the main-owned entry so worker flows can resolve it.
                 if (
                     entry_id := (
                         self.handler[0]
@@ -214,10 +160,7 @@ class _SandboxFlowProxyMixin:
             else:
                 step = pb.FlowStep(flow_id=self._sandbox_flow_id)
                 if self._awaiting_menu_selection:
-                    # The framework dispatched ``async_step_<chosen>`` for the
-                    # menu option the user picked; the sandbox flow expects that
-                    # as a ``{"next_step_id": <chosen>}`` selection on its menu
-                    # step, not a fresh step call.
+                    # Menu choices continue the current step instead of starting a new one.
                     self._awaiting_menu_selection = False
                     step.user_input = encode_json({"next_step_id": step_id})
                 elif user_input is not None:
@@ -259,15 +202,7 @@ class _SandboxFlowProxyMixin:
         return self._adapt_result(result, step_id)
 
     async def _apply_remote_context(self, result: pb.FlowResult) -> None:
-        """Mirror ``unique_id`` (and other context bits) onto our own flow.
-
-        The sandbox's :meth:`ConfigFlow.async_set_unique_id` mutates the
-        sandbox flow's ``context["unique_id"]``; the flow-runner surfaces
-        it in the marshalled result. We pass it through
-        :meth:`async_set_unique_id` so main's duplicate detection fires
-        (it raises :class:`AbortFlow` for an in-progress collision,
-        which the flow framework turns into an ABORT result).
-        """
+        """Mirror ``unique_id`` (and other context bits) onto our own flow."""
         if self._remote_subentry_type is not None or not result.HasField("context"):
             return
         remote = decode_json_dict(result.context)
@@ -282,13 +217,7 @@ class _SandboxFlowProxyMixin:
         await self.async_set_unique_id(unique_id)
 
     def _adapt_result(self, result: pb.FlowResult, step_id: str) -> ConfigFlowResult:
-        """Translate a sandbox-side ``FlowResult`` message into a main-side one.
-
-        The sandbox's ``flow_id`` and ``handler`` are replaced with main's
-        view (so HA's frontend / FlowManager keep tracking the proxy
-        flow), and CREATE_ENTRY data is tagged with the sandbox group so
-        the setup interceptor knows where to route the entry.
-        """
+        """Translate a sandbox-side ``FlowResult`` message into a main-side one."""
         result_type = FlowResultType(result.type)
         placeholders = (
             decode_json_dict(result.description_placeholders)
@@ -311,13 +240,7 @@ class _SandboxFlowProxyMixin:
                 decode_json_dict(result.options) if result.HasField("options") else None
             )
             self._terminated = True
-            # ``async_create_entry`` stamps the created result's
-            # ``version``/``minor_version`` from ``self.VERSION``/
-            # ``self.MINOR_VERSION`` (read off the instance, not the class —
-            # see ``ConfigFlow.async_create_entry``). Override the proxy
-            # instance's values with the sandbox flow's so the entry carries
-            # the integration's real schema version; otherwise the proxy's
-            # default ``VERSION=1`` triggers a spurious migration on next setup.
+            # Preserve the integration schema version to avoid a spurious migration.
             if result.HasField("version"):
                 self.VERSION = result.version
             if result.HasField("minor_version"):
@@ -332,10 +255,7 @@ class _SandboxFlowProxyMixin:
                 options=options,
                 subentries=decode_json(result.subentries) or (),
             )
-            # Tag the FlowResult so the framework's entry constructor in
-            # ``ConfigEntriesFlowManager.async_finish_flow`` reads it into
-            # ``ConfigEntry.sandbox`` — this lands the tag *before*
-            # ``async_setup`` runs, where the router needs it.
+            # Set placement before config-entry setup consults the router.
             create_result["sandbox"] = self._sandbox_group
             return create_result
 
@@ -386,12 +306,7 @@ class _SandboxFlowProxyMixin:
                 description_placeholders=placeholders,
             )
 
-        # Remaining types (EXTERNAL_STEP, SHOW_PROGRESS, …) are not supported;
-        # surface a noisy abort. We deliberately do NOT set ``_terminated`` here:
-        # the sandbox-side flow is still in progress (it returned a non-terminal
-        # result), so ``async_remove`` must still fire ``flow_abort`` to reap it —
-        # otherwise a flow that set a ``unique_id`` wedges retries on
-        # ``already_in_progress`` until the sandbox restarts.
+        # Leave the flow abortable so unsupported results cannot strand its unique ID.
         _LOGGER.warning(
             "Sandbox %r returned unsupported flow result type %s for %s;"
             " aborting (only FORM/CREATE_ENTRY/ABORT/MENU are supported)",
@@ -437,12 +352,7 @@ class SandboxSubentryFlowProxy(_SandboxFlowProxyMixin, ConfigSubentryFlow):
 
 
 def _reconstruct_menu_options(items: list[Any]) -> list[str] | dict[str, str]:
-    """Rebuild MENU ``menu_options`` from the wire list.
-
-    A dict (id → label) form crossed as a list of ``[id, label]`` pairs; a list
-    form crossed as a list of step-id strings. Mirror :func:`_marshal_menu_options`
-    on the sandbox side.
-    """
+    """Rebuild MENU ``menu_options`` from the wire list."""
     if items and all(isinstance(item, list) and len(item) == 2 for item in items):
         return {str(item[0]): str(item[1]) for item in items}
     return [str(item) for item in items]

@@ -95,12 +95,7 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Two integrations reusing unique_id ``"1"`` land without colliding.
-
-    All proxies share ``platform_name="sandbox"``, so the registry key
-    ``("light", "sandbox", unique_id)`` would clash if the unique_id
-    weren't namespaced with the source integration domain.
-    """
+    """Two integrations reusing unique_id ``"1"`` land without colliding."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
 
     entry_a = MockConfigEntry(domain="demo_a", title="A", sandbox="built-in")
@@ -367,10 +362,7 @@ async def test_proxy_method_exception_translated(
     async def _on_call_service(_payload: dict[str, Any]) -> Any:
         raise ChannelRemoteError("bad kwarg", error_type="Invalid")
 
-    # The Channel framework already wraps handler exceptions in error
-    # frames, but our test stub raises ChannelRemoteError to simulate an
-    # error frame coming back from the sandbox. Patch the channel's call
-    # to fake the error response directly.
+    # Simulate the remote error frame at the channel boundary.
     async def _fake_call(*_args: Any, **_kwargs: Any) -> Any:
         raise ChannelRemoteError("bad kwarg", error_type="Invalid")
 
@@ -548,13 +540,7 @@ async def test_register_entity_auto_loads_domain_component(
 async def test_register_entity_own_domain_gets_bare_component_passthrough(
     hass: HomeAssistant,
 ) -> None:
-    """An own-domain entity works even when the domain can't load on main.
-
-    ``mysun.sun`` for an entry owning domain ``mysun``: no integration of
-    that name exists on main, so ``async_setup_component`` fails — the
-    bridge falls back to a bare EntityComponent and the generic proxy
-    surfaces the pushed state and attributes verbatim.
-    """
+    """An own-domain entity works even when the domain can't load on main."""
     entry = MockConfigEntry(domain="mysun", title="My Sun", sandbox="built-in")
     entry.add_to_hass(hass)
     _bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -586,11 +572,7 @@ async def test_register_entity_own_domain_gets_bare_component_passthrough(
 async def test_register_entity_bare_component_foreign_domain_rejected(
     hass: HomeAssistant,
 ) -> None:
-    """The bare-EntityComponent fallback is own-domain only.
-
-    A made-up entity domain that differs from the entry's domain must not
-    get a minted component — the registration errors and no proxy lands.
-    """
+    """The bare-EntityComponent fallback is own-domain only."""
     entry = MockConfigEntry(domain="generic", title="Generic", sandbox="built-in")
     entry.add_to_hass(hass)
     bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -682,13 +664,7 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
 async def test_forwarded_context_restores_on_echoed_state(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """A user's Context flows main → sandbox → back and is restored verbatim.
-
-    Main forwards a service call carrying a real user Context into the
-    sandbox; the bridge remembers it. When the sandbox emits a state change
-    echoing that same context_id, main restores the *original*
-    ``user_id`` / ``parent_id`` instead of minting a fresh attribution.
-    """
+    """A user's Context flows main → sandbox → back and is restored verbatim."""
     MockConfigEntry(
         domain="mirror_demo", title="Mirror", sandbox="built-in"
     ).add_to_hass(hass)

@@ -1,30 +1,4 @@
-"""Sandbox-side approved-domains gate.
-
-A single shared :class:`ApprovedDomains` instance tracks which domains
-the sandbox is allowed to own. It is the firewall the user asked for:
-the service mirror and event mirror consult it before pushing anything
-up to main, so a sandboxed integration can't silently impersonate (say)
-``notify`` or fire ``persistent_notification_event`` on main's bus.
-
-Population:
-
-* The :class:`hass_client.entry_runner.EntryRunner` adds an entry's
-  domain when ``sandbox/entry_setup`` succeeds, and removes it on
-  ``entry_unload`` once the last entry for that domain unloads.
-* The :class:`hass_client.entity_bridge.EntityBridge` adds the entity's
-  domain on each successful ``register_entity``. This covers the
-  ``light`` is approved because a sandboxed integration registers light
-  entities clause from the plan.
-
-Lookups:
-
-* :meth:`approves` — exact domain match. Used by the service mirror.
-* :meth:`approves_event` — ``<domain>_*`` pattern match against any
-  approved domain. Used by the event mirror.
-
-Domain comparison is case-insensitive; everything is normalised to
-lowercase at insertion time so the lookups stay cheap.
-"""
+"""Sandbox-side approved-domains gate."""
 
 from collections.abc import Callable, Iterable
 import contextlib
@@ -47,13 +21,7 @@ class ApprovedDomains:
                 self.add(domain)
 
     def add_listener(self, listener: ApproveListener) -> None:
-        """Subscribe ``listener`` to absent→present domain transitions.
-
-        The listener fires (with the lowercased domain) only the first time
-        a domain becomes approved, not on every refcount bump. Used by the
-        :class:`~hass_client.service_mirror.ServiceMirror` to replay services
-        a domain registered before its approval landed.
-        """
+        """Subscribe ``listener`` to absent→present domain transitions."""
         self._listeners.append(listener)
 
     def remove_listener(self, listener: ApproveListener) -> None:
@@ -62,11 +30,7 @@ class ApprovedDomains:
             self._listeners.remove(listener)
 
     def add(self, domain: str) -> None:
-        """Approve ``domain``; multiple ``add`` calls bump a refcount.
-
-        The first ``add`` for a domain (absent→present) notifies any
-        registered approve listeners.
-        """
+        """Approve ``domain``; multiple ``add`` calls bump a refcount."""
         key = domain.lower()
         is_new = key not in self._counts
         self._counts[key] = self._counts.get(key, 0) + 1
@@ -88,14 +52,7 @@ class ApprovedDomains:
         return domain.lower() in self._counts
 
     def approves_event(self, event_type: str) -> bool:
-        """Return whether ``event_type`` matches ``<approved_domain>_*``.
-
-        Event names like ``zha_event`` and ``mqtt_message_received`` are
-        matched by the longest approved-domain prefix followed by ``_``;
-        this means a sandbox owning ``device_tracker`` correctly
-        approves ``device_tracker_see`` (which a shorter prefix would
-        miss).
-        """
+        """Return whether ``event_type`` matches ``<approved_domain>_*``."""
         if "_" not in event_type:
             return False
         lower = event_type.lower()

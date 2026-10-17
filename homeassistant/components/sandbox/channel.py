@@ -1,65 +1,6 @@
-"""Request/response channel between manager and sandbox runtime.
+"""Request/response channel between manager and sandbox runtime."""
 
-The channel is split into three layers so the wire format and the byte
-transport can each be swapped without touching the concurrency-critical
-dispatch core:
-
-* :class:`Channel` — the dispatch core: pending-id map, inflight
-  semaphore, ``register`` / ``call`` / ``push`` / ``close``. It speaks in
-  :class:`Frame` objects and never touches raw bytes.
-* :class:`Codec` — turns a :class:`Frame` into bytes and back.
-  :class:`~.codec_protobuf.ProtobufCodec` is the production wire (a typed
-  protobuf ``Frame`` envelope; the codec owns the ``type → message`` registry
-  so this dispatch core stays codec-agnostic). A registry-free one-JSON-object-
-  per-frame codec lives in the test helpers as the channel-core test/debug wire.
-* :class:`Transport` — moves whole frame blobs over some byte channel.
-  :class:`StreamTransport` length-prefixes each frame (4-byte big-endian
-  length + body) over an :class:`asyncio.StreamReader` /
-  :class:`asyncio.StreamWriter` pair (stdio, unix socket). A future
-  ``WebSocketTransport`` drops in via ``Channel(transport=...)`` using
-  aiohttp's native binary framing.
-
-The :class:`Frame` shape mirrors the three message kinds that cross the
-wire:
-
-* **call**: ``id`` (>0), ``type``, ``payload`` — expects a reply
-* **push**: ``id`` 0, ``type``, ``payload`` — one-way, no reply
-* **response**: ``id`` (>0), ``ok``, and either ``result`` or
-  ``error`` / ``error_type`` / ``error_data``
-
-The channel is symmetric: either side may call or be called on. The same
-class runs in the HA Core integration and inside the sandbox subprocess
-(the sandbox side lives at :mod:`hass_client.channel`; the two are kept in
-sync by the protocol shape rather than a shared import — the integration
-must not depend on ``hass_client``).
-
-Inbound dispatch has two modes:
-
-* **Task dispatch** (:meth:`Channel.register`, async handlers) — calls and
-  pushes run in their own tasks so a handler that itself issues
-  :meth:`Channel.call` does not block the reader — the reply for the
-  nested call has to come back through the same reader. A bounded
-  semaphore caps how many handlers can run concurrently; the N+1th
-  inbound message queues at the semaphore (not at the reader) until a
-  slot frees up.
-* **Inline push dispatch** (:meth:`Channel.register_push_inline`, sync
-  handlers) — the handler runs directly in the read loop, no task, no
-  semaphore. For pure-synchronous work (state pushes are dict updates)
-  this removes a task spawn per frame and makes in-order delivery a
-  *guarantee* instead of an accident of FIFO task scheduling. Inline
-  handlers queue nothing, so they also bypass the ``max_queued`` shed.
-  Calls can never be inline (they must write replies): the call branch
-  consults only the async handlers, so a call to an inline-only type is
-  rejected with ``ChannelUnknownType``.
-"""
-
-# This module is hand-mirrored: a byte-identical copy lives at both
-# ``homeassistant/components/sandbox/channel.py`` and
-# ``sandbox/hass_client/hass_client/channel.py``. The HA Core integration must
-# not import from ``hass_client`` (and ``hass_client`` must not import from
-# ``homeassistant.components.*``), so the file is duplicated rather than shared.
-# EDIT BOTH COPIES IN THE SAME CHANGE — ``sandbox/proto/check_mirror_drift.sh``
-# fails the build if they diverge.
+# Keep both channel.py copies identical; check_mirror_drift.sh enforces this.
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
@@ -79,13 +20,7 @@ SyncHandler = Callable[[Any], None]
 
 DEFAULT_MAX_INFLIGHT = 16
 
-# Hard cap on inbound handler tasks (running + queued) a flood may create. The
-# inflight semaphore bounds how many handlers *run*; without this, queued
-# handler tasks — each pinning a decoded payload up to MAX_FRAME_SIZE — could
-# still grow without bound under a frame-flood. Over the cap, inbound calls are
-# rejected with an error frame and pushes are dropped (responses are always
-# handled inline, so backpressure never starves a reply). Generous enough that
-# honest fan-out never trips it.
+# Bound queued payloads as well as running handlers to limit memory use.
 DEFAULT_MAX_QUEUED = 1024
 
 # Hard cap on a single frame's body. A length prefix larger than this aborts
@@ -97,11 +32,7 @@ _LENGTH_PREFIX = struct.Struct(">I")
 
 
 def _serialize_invalid(err: probatio.Invalid) -> dict[str, Any]:
-    """Capture a ``probatio.Invalid``'s message + path so the peer can rebuild it.
-
-    Path parts may be ``probatio.Marker``s or other non-JSON objects, so each
-    part is stringified.
-    """
+    """Capture a ``probatio.Invalid``'s message + path so the peer can rebuild it."""
     return {
         "kind": "invalid",
         "msg": err.error_message,
@@ -110,11 +41,7 @@ def _serialize_invalid(err: probatio.Invalid) -> dict[str, Any]:
 
 
 def error_data_for(err: BaseException) -> dict[str, Any] | None:
-    """Structured payload that lets the peer reconstruct a voluptuous error.
-
-    ``MultipleInvalid`` is a subclass of ``Invalid``, so it is checked first.
-    Returns ``None`` for anything that is not a voluptuous error.
-    """
+    """Structured payload that lets the peer reconstruct a voluptuous error."""
     if isinstance(err, probatio.MultipleInvalid):
         return {
             "kind": "multiple",
@@ -159,11 +86,7 @@ class Frame:
 
     @classmethod
     def ok_response(cls, call_id: int, result: Any, msg_type: str = "") -> Frame:
-        """Build a success response frame.
-
-        ``msg_type`` is carried so a stateless codec (the protobuf one) can
-        look up the result message class on encode + decode.
-        """
+        """Build a success response frame."""
         return cls(
             FrameKind.RESPONSE, id=call_id, type=msg_type, ok=True, result=result
         )
@@ -220,13 +143,7 @@ class FrameTooLargeError(Exception):
 
 
 class StreamTransport:
-    """Length-prefixed framing over a reader/writer pair.
-
-    Each frame is a 4-byte big-endian length followed by exactly that many
-    body bytes. Used for stdio and unix-socket connections — anywhere the
-    byte channel is an :class:`asyncio.StreamReader` /
-    :class:`asyncio.StreamWriter` pair.
-    """
+    """Length-prefixed framing over a reader/writer pair."""
 
     def __init__(
         self,
@@ -283,11 +200,7 @@ class ChannelRemoteError(Exception):
         error_type: str | None = None,
         error_data: dict[str, Any] | None = None,
     ) -> None:
-        """Initialise with the remote error message and exception class name.
-
-        ``error_data`` carries a structured payload (set for voluptuous
-        errors) so the receiver can rebuild the original exception shape.
-        """
+        """Initialise with the remote error message and exception class name."""
         super().__init__(error)
         self.error = error
         self.error_type = error_type
@@ -308,21 +221,7 @@ class Channel:
         max_inflight: int = DEFAULT_MAX_INFLIGHT,
         max_queued: int = DEFAULT_MAX_QUEUED,
     ) -> None:
-        """Wrap a reader/writer pair (or a transport) into a channel.
-
-        The common case passes a ``reader``/``writer`` pair, framed with
-        :class:`StreamTransport` (length-prefixed). To run over a non-stream
-        transport (e.g. websockets), pass ``transport=`` instead.
-
-        ``codec`` is required — production passes
-        :class:`~.codec_protobuf.ProtobufCodec`; a forgotten codec is a
-        construction-time error rather than a silent wire-format mismatch.
-        ``max_inflight`` bounds how many handler tasks may run at once. Once the
-        cap is reached, the read loop keeps draining the wire but newly-spawned
-        handlers wait on the semaphore until a slot frees up — so a misbehaving
-        integration can't starve the reader by fanning out unbounded inbound
-        work.
-        """
+        """Wrap a reader/writer pair (or a transport) into a channel."""
         if transport is None:
             if reader is None or writer is None:
                 raise TypeError("Channel needs a reader/writer pair or a transport")
@@ -352,16 +251,7 @@ class Channel:
         self._handlers[msg_type] = handler
 
     def register_push_inline(self, msg_type: str, handler: SyncHandler) -> None:
-        """Register a sync handler run inline in the read loop for pushes.
-
-        The handler executes directly in ``_dispatch`` — no task, no
-        semaphore — so it must be purely synchronous (no awaits, no
-        blocking I/O). Frames of this type are delivered strictly in wire
-        order and never shed under the ``max_queued`` cap (they queue
-        nothing). Only PUSH frames dispatch here: the call branch consults
-        only :meth:`register` handlers, so a CALL of this type errors back
-        with ``ChannelUnknownType``.
-        """
+        """Register a sync handler run inline in the read loop for pushes."""
         self._inline_push_handlers[msg_type] = handler
 
     def start(self) -> None:
@@ -375,12 +265,7 @@ class Channel:
     async def call(
         self, msg_type: str, payload: Any = None, *, timeout: float | None = None
     ) -> Any:
-        """Send a request and await its response.
-
-        Raises :class:`ChannelClosedError` if the channel closes while the
-        call is in flight and :class:`ChannelRemoteError` if the remote
-        returns an error response.
-        """
+        """Send a request and await its response."""
         if self._closed:
             raise ChannelClosedError(f"channel {self._name!r} is closed")
         call_id = self._next_id
@@ -403,16 +288,7 @@ class Channel:
         await self._write(Frame.push(msg_type, payload))
 
     async def close(self) -> None:
-        """Close the channel and cancel any in-flight calls.
-
-        Idempotent and safe after the read loop has already marked the
-        channel closed on EOF: that path sets ``_closed`` and cancels
-        inflight tasks but cannot close the transport or await the cancelled
-        tasks (it runs *inside* the reader). ``close()`` always finishes that
-        teardown — closing the transport and awaiting inflight exactly once
-        via the ``_close_done`` guard — no matter who set ``_closed`` first,
-        so the stdin pipe / unix connection never leaks across a restart.
-        """
+        """Close the channel and cancel any in-flight calls."""
         self._closed = True
         # Fail any still-pending calls; a no-op if the read loop already did.
         for future in self._pending.values():
@@ -440,14 +316,7 @@ class Channel:
             await asyncio.gather(*inflight, return_exceptions=True)
 
     async def drain_inflight(self, *, timeout: float = 5.0) -> None:
-        """Wait for in-flight inbound handlers to finish before closing.
-
-        Used at graceful shutdown: a call handler whose reply write is still
-        draining (write-lock contention, transport backpressure) must not be
-        cancelled by :meth:`close`, or the caller loses the reply. Bounded by
-        ``timeout`` — any handler still running afterwards is left for
-        ``close()`` to cancel. Does not itself cancel anything.
-        """
+        """Wait for in-flight inbound handlers to finish before closing."""
         if inflight := list(self._inflight):
             await asyncio.wait(inflight, timeout=timeout)
 
@@ -501,11 +370,7 @@ class Channel:
                     task.cancel()
 
     def _dispatch(self, frame: Frame) -> None:
-        """Route an inbound frame.
-
-        Non-blocking: async handlers run in tasks; inline push handlers are
-        pure-sync and run right here.
-        """
+        """Route an inbound frame."""
         if frame.kind is FrameKind.RESPONSE:
             # Response to a call we sent out — set the future inline; no I/O.
             future = self._pending.get(frame.id)
@@ -540,10 +405,7 @@ class Channel:
                 )
             return
 
-        # Backpressure: responses and inline pushes are handled above and
-        # never shed. Bound the inbound handler tasks (each pins a decoded
-        # payload) so a frame-flood throttles here instead of growing memory
-        # without bound — reject calls with an error frame, drop pushes.
+        # Shed requests before queued payloads exhaust memory; never shed replies.
         if len(self._inflight) >= self._max_queued:
             if frame.kind is FrameKind.CALL:
                 self._spawn_handler(

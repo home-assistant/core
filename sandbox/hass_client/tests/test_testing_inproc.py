@@ -1,12 +1,4 @@
-"""Smoke tests for the in-process channel pair used by the testing plugin.
-
-The real plugin path exercises the manager-side ``SandboxBridge`` and
-needs the HA Core ``sandbox`` integration loaded — covered by
-``tests/components/sandbox/test_testing_plugins.py`` on the core
-side. These tests pin the lower-level pieces that live in
-``hass_client`` and don't pull the integration: the loopback writer's
-shape and the channel pair's call/response round-trip.
-"""
+"""Smoke tests for the in-process channel pair used by the testing plugin."""
 
 import asyncio
 
@@ -42,12 +34,7 @@ async def test_loopback_writer_drain_is_noop() -> None:
 
 
 async def test_make_inproc_channel_pair_round_trips_a_call() -> None:
-    """The two channels can call each other end-to-end without a process boundary.
-
-    Uses a real registered message type (``store_load``) since the pair now
-    speaks protobuf — the handler echoes the request key back so the
-    round-trip is verified end-to-end.
-    """
+    """The two channels can call each other end-to-end without a process boundary."""
     mgr_channel, rt_channel = make_inproc_channel_pair(group="built-in")
 
     async def handler(payload: pb.StoreLoad) -> pb.StoreLoadResult:

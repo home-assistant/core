@@ -1,11 +1,4 @@
-"""Wire-facing entity description shared by the bridge and the proxy entities.
-
-:class:`SandboxEntityDescription` is the flattened snapshot of a
-sandbox-side entity carried by ``sandbox/register_entity``; the proxy
-entities consume it and the bridge builds it from the typed proto.
-Living in its own module keeps :mod:`entity` from needing anything out
-of :mod:`bridge` besides the bridge type itself.
-"""
+"""Wire-facing entity description shared by the bridge and the proxy entities."""
 
 from dataclasses import dataclass, field
 import logging
@@ -41,11 +34,7 @@ class SandboxEntityDescription:
 
     @classmethod
     def from_proto(cls, msg: pb.EntityDescription) -> SandboxEntityDescription:
-        """Build a description from the typed ``EntityDescription`` message.
-
-        Flattens the nested ``EntityInfo`` / ``InitialState`` sub-messages back
-        into the flat shape the proxy entities consume.
-        """
+        """Build a description from the typed ``EntityDescription`` message."""
         description = msg.info.description
         initial = msg.initial
         device_info = (
@@ -100,13 +89,7 @@ _DEVICE_INFO_STR_FIELDS = (
 
 
 def _deserialise_device_info(info: pb.DeviceInfo) -> dict[str, Any] | None:
-    """Rebuild a ``DeviceInfo`` TypedDict from the typed proto.
-
-    ``identifiers`` / ``connections`` come back as sets of tuples and
-    ``via_device`` as a tuple — the shapes
-    :func:`device_registry.async_get_or_create` validates. ``entry_type`` is
-    rebuilt as a :class:`DeviceEntryType` enum value.
-    """
+    """Rebuild a ``DeviceInfo`` from the typed proto."""
     out: dict[str, Any] = {}
     if info.identifiers:
         out["identifiers"] = {(pair.key, pair.value) for pair in info.identifiers}

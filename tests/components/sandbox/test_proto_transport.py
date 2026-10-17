@@ -1,19 +1,4 @@
-"""Transport tests: ProtobufCodec round-trips + the Context security model.
-
-Covers the guarantees the protobuf wire adds:
-
-* a frame survives an encode → decode → re-encode cycle byte-identically (no
-  field drops), including fidelity #7's structured voluptuous error data;
-* :meth:`SandboxBridge._resolve_context` restores a remembered Context
-  verbatim (the original ``parent_id`` / ``user_id`` survive the round-trip)
-  and mints a **brand-new** main-owned ``Context(user_id=None)`` — with its
-  own trusted id, never adopting the sandbox-supplied ULID — for an id main
-  never issued;
-* the wire carries only a ``context_id`` string — no ``parent_id`` /
-  ``user_id`` field exists for the sandbox to forge;
-* a sandbox-emitted ``state_changed`` whose ``context_id`` main never issued
-  lands on main with a fresh ``user_id=None`` Context and no ``parent_id``.
-"""
+"""Transport tests: ProtobufCodec round-trips + the Context security model."""
 
 import asyncio
 from datetime import timedelta
@@ -138,12 +123,7 @@ def test_protobuf_codec_round_trips_multiple_invalid_error_data() -> None:
 
 
 def test_wire_messages_carry_only_context_id_no_attribution() -> None:
-    """The sandbox can only ever send a ``context_id`` string — no forgery.
-
-    There is no ``parent_id`` / ``user_id`` field on any inbound message for
-    the sandbox to set, so main never reads sandbox-supplied attribution off
-    the wire; it derives the Context entirely on its own side.
-    """
+    """The sandbox can only ever send a ``context_id`` string — no forgery."""
     for message in (pb.StateChanged, pb.FireEvent, pb.CallService):
         fields = set(message.DESCRIPTOR.fields_by_name)
         assert "context_id" in fields
@@ -221,12 +201,7 @@ async def test_resolve_context_entry_expires_after_ttl(
 async def test_state_changed_unknown_context_gets_fresh_no_user(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """A state_changed with an unknown context_id lands with no forged user.
-
-    Main never issued ``sandbox-ctx-1``, so it mints its own trusted Context:
-    ``user_id=None``, no ``parent_id``, and an id main generated itself rather
-    than the untrusted sandbox-supplied string.
-    """
+    """A state_changed with an unknown context_id lands with no forged user."""
     main_channel, sandbox_channel = make_channel_pair(name_a="main", name_b="sandbox")
     # Constructing the bridge registers the inbound handlers on main_channel.
     SandboxBridge(hass, group="built-in", channel=main_channel)

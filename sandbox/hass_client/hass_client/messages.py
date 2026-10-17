@@ -1,113 +1,4 @@
-"""Wire-protocol constants, typed proto registry + dynamic-payload JSON codec.
-
-The integration and the sandbox runtime exchange typed protobuf messages over
-the :class:`Channel`. Each message type is namespaced ``sandbox/…``; this
-module holds the ``MSG_*`` type-string constants, the ``type → (request_cls,
-result_cls)`` registry (the codec resolves it on both encode and decode), and
-the single encoder/decoder pair for the genuinely dynamic payloads
-(service_data, target, state attributes, capabilities, the wrapped Store
-envelope, flow ``data``/``errors``/``context``, the serialized voluptuous
-schema). Those cross as orjson-encoded JSON in ``bytes`` fields: measured ~13x
-faster than the ``google.protobuf.Struct`` fields they replaced, with native
-number fidelity (Struct stored every number as a double) and one coercer —
-:func:`encode_json` embeds HA's rich-type JSON encoding, so producers never
-pre-coerce.
-
-Mirrored verbatim across the no-cross-import boundary, exactly like
-:mod:`channel`: the same file lives at ``hass_client.messages``. The relative
-``._proto`` import resolves to each side's own checked-in gencode, so the two
-copies are byte-identical — and ``sandbox/proto/check_mirror_drift.sh`` fails
-the build if they drift apart.
-
-Each ``MSG_*`` type maps to a request/result proto message pair in
-``REGISTRY``, generated from ``sandbox/proto/sandbox.proto``. The payload
-shapes described below are the *logical* contract for each call — they are
-carried as those typed proto messages, not free-form dicts. A registry-free
-line-oriented JSON codec lives in the test helpers as the channel-core
-test/debug wire.
-
-Main → Sandbox calls:
-
-* ``sandbox/entry_setup``  — push a serialised :class:`ConfigEntry` into
-  the sandbox, asking it to load the owning integration and run
-  ``async_setup_entry``. Returns ``{"ok": bool, "reason": str | None}``.
-  Carries an ``integration_source`` sub-message telling a stateless sandbox
-  where to fetch the integration code: ``{kind: "builtin"}`` (the bundled
-  ``homeassistant`` package provides it — a no-op) or ``{kind: "git", url,
-  ref, tag, domain, subdir}`` for custom (HACS) integrations. ``ref`` is an
-  exact commit sha (main pins tag→sha; see ``sources.py``); the sandbox
-  fetches the code before setup (see ``hass_client.sources``).
-* ``sandbox/entry_unload`` — ask the sandbox to unload an entry by id.
-* ``sandbox/call_service``  — generic service dispatch (shared with
-  the main→sandbox service mirroring path). Payload mirrors a
-  ``ServiceCall``: ``(domain, service, target, service_data, context,
-  return_response)``. Returns either ``None`` or a service-response dict.
-* ``sandbox/entity_query`` — generic request/response RPC for the
-  server-side entity queries with no ``SupportsResponse`` service to ride
-  (media search, update release notes, vacuum segments, the WS-only calendar
-  event edits). Payload ``{sandbox_entity_id, method, args, context_id}``;
-  the sandbox resolves the entity, invokes ``method`` with ``args`` as kwargs,
-  and returns the serialised result wrapped as ``{"value": <return>}``.
-  Ops that map to a ``SupportsResponse`` service use ``call_service`` instead.
-* ``sandbox/get_translations`` — pull a sandboxed integration's frontend
-  translation strings. Payload ``{language, domains: [str]}`` (main batches
-  every owned custom domain of one group into a single request). Response
-  ``{language, strings: {domain: <raw strings.json dict>}}`` — the
-  un-flattened nesting a ``translations/<lang>.json`` holds, with ``title``
-  pre-filled from the integration name (main has no ``Integration`` for a
-  custom domain, so it cannot run that fallback). Built-in domains never
-  cross the wire — main reads its byte-identical disk copy.
-* ``sandbox/ping`` — liveness probe; the runtime echoes an empty result.
-* ``sandbox/flow_init`` / ``sandbox/flow_step`` / ``sandbox/flow_abort`` —
-  config-flow forwarding: bootstrap a sandbox-side flow, drive one step,
-  tear a flow down. See ``proxy_flow`` (main) / ``flow_runner`` (sandbox).
-
-Sandbox → Main calls:
-
-* ``sandbox/register_entity`` — sandbox tells main "I just added an
-  entity, here's its description". Main builds the proxy and replies
-  ``{"entity_id": <main-side id>}`` so the sandbox can route later
-  ``call_service`` requests back to the right local entity. Optional
-  ``device_info`` field: a JSON-flattened ``DeviceInfo`` dict
-  — sets become lists of two-element lists (``identifiers`` /
-  ``connections``), tuples become lists (``via_device``), and
-  ``entry_type`` is the enum's string value. When present, main calls
-  :func:`device_registry.async_get_or_create` so the sandbox's devices
-  surface in main's device_registry tied to the sandboxed entry.
-* ``sandbox/unregister_entity`` — symmetric counterpart.
-* ``sandbox/state_changed``   — push (no response). Carries the
-  marshalled state delta for one entity.
-* ``sandbox/register_service`` — sandbox tells main "I just
-  registered a service, please mirror it". Main installs a thin handler
-  that forwards calls back over the shared ``sandbox/call_service``
-  channel.
-* ``sandbox/unregister_service`` — symmetric counterpart.
-* ``sandbox/fire_event`` — push (no response). The sandbox
-  forwards each ``<owned_domain>_*`` event so main listeners (notably
-  ``automation``) can react as if the integration ran locally.
-* ``sandbox/store_load`` — sandbox-side ``Store.async_load``
-  proxies to this RPC. Payload ``{"key": str}``; response is the wrapped
-  ``{"version", "minor_version", "key", "data"}`` dict the sandbox last
-  saved, or ``None`` if no data exists yet. The group is implicit from
-  the channel — each :class:`SandboxBridge` only ever serves one group.
-* ``sandbox/store_save`` — sandbox-side ``Store`` flush.
-  Payload ``{"key": str, "data": dict}``; main writes the wrapped dict
-  to ``<config>/.storage/sandbox/<group>/<key>`` atomically. Response
-  is ``{"ok": True}``.
-* ``sandbox/store_remove`` — sandbox-side
-  ``Store.async_remove``. Payload ``{"key": str}``; main unlinks the
-  file (if any). Response is ``{"ok": True}``.
-
-Main → Sandbox shutdown:
-
-* ``sandbox/shutdown`` — ask the runtime to unload its entries, dump
-  ``RestoreEntity`` state, fire ``EVENT_HOMEASSISTANT_FINAL_WRITE`` so any
-  pending Stores flush to main via the ``current_sandbox`` store bridge,
-  and exit cleanly. Response ``{"ok": True, "unloaded": int, "restored":
-  int}``. The runtime sets its shutdown event right after writing the
-  reply, so the subprocess exits 0 on its own — main only needs SIGTERM
-  if the round-trip times out.
-"""
+"""Wire-protocol constants, typed proto registry + dynamic-payload JSON codec."""
 
 from typing import Any, Final
 
@@ -118,10 +9,7 @@ from homeassistant.helpers.json import json_encoder_default
 
 from ._proto import sandbox_pb2 as pb
 
-# Handshake (Sandbox → Main): the runtime's first frame on the channel.
-# Replaces the old ``sandbox:ready`` stdout text marker — the manager
-# registers a handler for this push and treats its arrival as "running",
-# so stdout carries nothing but channel frames.
+# Readiness is a protocol message; stdout is reserved for channel frames.
 MSG_READY: Final = "sandbox/ready"
 
 # Main → Sandbox
@@ -191,12 +79,7 @@ REGISTRY: dict[str, tuple[type[Message], type[Message] | None]] = {
 
 
 def _default(obj: Any) -> Any:
-    """HA's JSON encoder, with a ``str(obj)`` fallback for unknown objects.
-
-    The sandbox forwards integration-supplied payloads that can hold
-    arbitrary domain objects; the fallback keeps a single odd field from
-    raising and dropping the whole best-effort payload.
-    """
+    """HA's JSON encoder, with a ``str(obj)`` fallback for unknown objects."""
     try:
         return json_encoder_default(obj)
     except TypeError:
@@ -246,14 +129,7 @@ _DEVICE_INFO_SCALARS = (
 
 
 def device_info_to_proto(flat: dict[str, Any] | None) -> pb.DeviceInfo | None:
-    """Build a ``DeviceInfo`` proto from the JSON-flattened device_info dict.
-
-    The sandbox-side serializer (``entity_bridge._serialise_device_info``)
-    already flattens sets/tuples/enums: ``identifiers`` / ``connections`` are
-    lists of two-element lists, ``via_device`` is a two-element list, and
-    ``entry_type`` is the enum's string value. This maps that shape onto the
-    explicit proto fields.
-    """
+    """Build a ``DeviceInfo`` proto from the JSON-flattened device_info dict."""
     if not flat:
         return None
     info = pb.DeviceInfo()
@@ -292,13 +168,7 @@ def make_entity_description(
     initial_attributes: dict[str, Any] | None = None,
     device_info: dict[str, Any] | None = None,
 ) -> pb.EntityDescription:
-    """Build a nested ``EntityDescription`` proto from flat fields.
-
-    Used by the sandbox entity bridge and by tests so neither has to hand-nest
-    the ``EntityInfo`` / ``InitialState`` sub-messages. ``device_info`` is the
-    JSON-flattened dict the entity bridge produces (see
-    :func:`device_info_to_proto`).
-    """
+    """Build a nested ``EntityDescription`` proto from flat fields."""
     msg = pb.EntityDescription(
         entry_id=entry_id,
         domain=domain,
@@ -334,12 +204,7 @@ def make_entity_description(
 
 
 def entry_to_setup_proto(entry: Any) -> pb.EntrySetup:
-    """Serialise the entry-identity fields of a ConfigEntry into EntrySetup.
-
-    Shared by the entry_setup payload and the flow proxy's reauth/reconfigure
-    entry carry — only the fields the sandbox needs to rebuild the entry
-    (integration_source / core_config are filled separately by entry_setup).
-    """
+    """Serialise the entry-identity fields of a ConfigEntry into EntrySetup."""
     msg = pb.EntrySetup(
         entry_id=entry.entry_id,
         domain=entry.domain,
@@ -360,11 +225,7 @@ def entry_to_setup_proto(entry: Any) -> pb.EntrySetup:
 
 
 def core_config_to_proto(config: Any) -> pb.CoreConfig:
-    """Snapshot a hass ``Config`` into the wire ``CoreConfig`` message.
-
-    Shared by the ``entry_setup`` payload and the live
-    ``sandbox/core_config`` push so the two can't drift.
-    """
+    """Snapshot a hass ``Config`` into the wire ``CoreConfig`` message."""
     msg = pb.CoreConfig(
         latitude=config.latitude,
         longitude=config.longitude,

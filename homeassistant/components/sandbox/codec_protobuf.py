@@ -1,16 +1,4 @@
-"""Protobuf :class:`~.channel.Codec` — the production wire.
-
-Serialises a :class:`~.channel.Frame` to the protobuf ``Frame`` envelope and
-back. The envelope carries ``type`` on responses too, so this stateless codec
-can look up the result message class from ``frame.type`` on both encode and
-decode — the dispatch core never has to know about proto types (the registry
-lives here, not on :meth:`Channel.register`).
-
-Mirrored verbatim across the no-cross-import boundary (the same file lives at
-``hass_client.codec_protobuf``); the relative imports resolve to each side's
-own :mod:`messages` + ``_proto`` gencode. The two copies are kept
-byte-identical by ``sandbox/proto/check_mirror_drift.sh`` — edit both.
-"""
+"""Protobuf :class:`~.channel.Codec` — the production wire."""
 
 from typing import Any
 
@@ -74,11 +62,7 @@ class ProtobufCodec:
 
 
 def _serialize_body(body: Any, cls: type[Message] | None) -> bytes:
-    """Serialise a proto-message body; ``None`` becomes an empty message.
-
-    An empty proto message serialises to zero bytes, so ``None`` maps to
-    ``b""`` whether or not the type has a registered class.
-    """
+    """Serialise a proto-message body; ``None`` becomes an empty message."""
     if body is None:
         return b""
     if isinstance(body, Message):
@@ -96,12 +80,7 @@ def _parse_body(raw: bytes, cls: type[Message] | None) -> Any:
 
 
 def _fill_error(error: pb.Error, frame: Frame) -> None:
-    """Populate the proto ``Error`` from a failure frame.
-
-    Carries fidelity #7's structured voluptuous data: the ``multiple`` flag
-    distinguishes a ``MultipleInvalid`` from a single ``Invalid`` so the peer
-    rebuilds the right exception.
-    """
+    """Populate the proto ``Error`` from a failure frame."""
     error.message = frame.error or ""
     error.type = frame.error_type or ""
     data = frame.error_data

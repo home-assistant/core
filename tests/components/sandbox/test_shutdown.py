@@ -1,14 +1,4 @@
-"""Tests for graceful shutdown orchestration.
-
-The main side spawns the real ``python -m hass_client.sandbox``
-runtime, calls :meth:`SandboxManager.async_graceful_shutdown_all`, and
-asserts the subprocess exits 0 on its own — no SIGTERM required.
-
-The hung-sandbox case uses an in-memory :class:`SandboxProcess` stub:
-the real runtime always honours ``sandbox/shutdown``, so to exercise
-the SIGTERM escalation we drive the manager's contract directly with a
-process whose channel is wired to never reply.
-"""
+"""Tests for graceful shutdown orchestration."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -79,13 +69,7 @@ async def test_graceful_shutdown_exits_subprocess_cleanly(
 async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
     hass: HomeAssistant,
 ) -> None:
-    """A sandbox that ignores ``sandbox/shutdown`` is killed by ``stop()``.
-
-    The stub runtime here sends the Ready frame, then idles forever
-    reading from stdin without ever replying. ``async_graceful_shutdown``
-    must time out; the follow-up ``async_stop_all`` then escalates to
-    SIGTERM / SIGKILL.
-    """
+    """A sandbox that ignores ``sandbox/shutdown`` is killed by ``stop()``."""
 
     def _hung_factory(group: str, url: str) -> list[str]:
         return [
@@ -163,15 +147,7 @@ async def test_graceful_shutdown_on_no_channel_is_noop(
 async def test_on_shutdown_reply_callback_is_invoked(
     hass: HomeAssistant,
 ) -> None:
-    """The manager invokes ``on_shutdown_reply`` with each runtime's reply.
-
-    Drives the path that the integration's ``_on_stop`` listener uses
-    in production: spawn the real runtime, hand the manager a callback
-    that records each reply, and assert the call landed exactly once
-    per running sandbox. The reply shape is asserted by the
-    hass_client-side ``test_shutdown`` suite — here we only pin that
-    the callback wiring fires.
-    """
+    """The manager invokes ``on_shutdown_reply`` with each runtime's reply."""
     replies: list[tuple[str, pb.ShutdownResult]] = []
 
     async def _on_shutdown_reply(group: str, reply: pb.ShutdownResult) -> None:

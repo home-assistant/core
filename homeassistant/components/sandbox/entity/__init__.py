@@ -1,15 +1,4 @@
-"""Per-domain proxy entities for sandboxed integrations.
-
-The :class:`SandboxProxyEntity` base holds the cached state and the
-``async_call_service`` plumbing every proxy shares. Domain-specific
-subclasses add typed properties that pull values out of the cache so
-service-handler kwarg filtering (``light.filter_turn_on_params``,
-``climate`` schema validation, …) and frontend rendering see the same
-shape they would for a local entity.
-
-A small "rich" set of domains ships typed proxies; the remaining
-domains use the same mechanical pattern.
-"""
+"""Per-domain proxy entities for sandboxed integrations."""
 
 import contextlib
 from enum import IntFlag
@@ -34,10 +23,7 @@ class SandboxProxyEntity(Entity):
 
     _attr_should_poll = False
 
-    # Domain subclasses set this to their ``<Domain>EntityFeature`` IntFlag so
-    # the base coerces ``supported_features`` into it. ``light``'s
-    # capability_attributes does ``X in supported_features``, which only works
-    # on the flag, not a plain int. ``None`` → leave it a plain int.
+    # Some domain APIs require an IntFlag rather than an integer feature mask.
     _features_flag: type[IntFlag] | None = None
 
     def __init__(
@@ -57,12 +43,7 @@ class SandboxProxyEntity(Entity):
         self._apply_description(description)
 
     def _coerce_supported_features(self, value: int | None) -> IntFlag | int:
-        """Coerce ``supported_features`` into the domain's IntFlag.
-
-        Domains like ``light`` index ``supported_features`` with bitwise
-        ``in``, which only works on the IntFlag; ``None`` blows up the check,
-        so default to 0. Domains without a ``_features_flag`` keep a plain int.
-        """
+        """Coerce ``supported_features`` into the domain's IntFlag."""
         features = int(value or 0)
         if self._features_flag is not None:
             return self._features_flag(features)
@@ -80,23 +61,11 @@ class SandboxProxyEntity(Entity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Typed domain proxies expose attributes through typed properties.
-
-        Anything domain-specific (``brightness``, ``hvac_mode``, …) is
-        surfaced by the domain proxy's own ``@property`` declarations
-        reading from ``_state_cache``. The generic fallback
-        (:class:`GenericSandboxEntity`) overrides this to pass the pushed
-        attributes through instead.
-        """
+        """Typed domain proxies expose attributes through typed properties."""
         return None
 
     def _apply_description(self, description: SandboxEntityDescription) -> None:
-        """Mirror the registration-carried fields onto the entity attrs.
-
-        Shared by ``__init__`` and the upsert path so init and refresh can't
-        drift; clearing is symmetric — a field dropped from a re-sent
-        registration clears the mirrored attribute rather than sticking.
-        """
+        """Mirror the registration-carried fields onto the entity attrs."""
         self.description = description
         self._attr_has_entity_name = description.has_entity_name
         self._attr_name = description.name or None
@@ -109,10 +78,7 @@ class SandboxProxyEntity(Entity):
         self._attr_supported_features = self._coerce_supported_features(
             description.supported_features
         )
-        # Surface the sandbox-side DeviceInfo so EntityPlatform's normal
-        # async_add_entities path runs dr.async_get_or_create and links
-        # the proxy to the matching DeviceEntry (idempotent with the
-        # pre-creation the bridge does).
+        # Let platform registration reuse the device established by the bridge.
         self._attr_device_info = (
             cast(DeviceInfo, description.device_info)
             if description.device_info is not None
@@ -120,14 +86,7 @@ class SandboxProxyEntity(Entity):
         )
 
     def sandbox_update_description(self, description: SandboxEntityDescription) -> None:
-        """Refresh mirrored attributes from a re-sent registration (upsert).
-
-        The unique_id is deliberately left untouched — changing it would
-        orphan the entity-registry row. State flows via the separate
-        ``state_changed`` push path, so only the registration-carried
-        fields (name / icon / category / device_class / features /
-        device_info) are refreshed here.
-        """
+        """Refresh mirrored attributes from a re-sent registration (upsert)."""
         self._apply_description(description)
         if self.hass is not None:
             self.async_write_ha_state()
@@ -138,18 +97,7 @@ class SandboxProxyEntity(Entity):
         attributes: dict[str, Any],
         context: Context | None = None,
     ) -> None:
-        """Update the cache from a sandbox push, and notify HA.
-
-        Ownership contract: the caller hands over ``attributes`` — the bridge
-        builds a fresh dict per push, so it becomes the new ``_state_cache``
-        without a defensive copy. Callers must not reuse the dict afterwards.
-
-        ``context`` is the main-side authoritative Context the bridge resolved
-        from the sandbox's ``context_id`` — the original Context for an id main
-        handed down, or a fresh ``user_id=None`` one otherwise, never carrying
-        a sandbox-supplied parent_id / user_id. When absent the entity writes
-        with its own context as before.
-        """
+        """Update the cache from a sandbox push, and notify HA."""
         self._state_cache = attributes
         if state is not None:
             self._state_cache["state"] = state
@@ -169,23 +117,7 @@ class SandboxProxyEntity(Entity):
     async def _call_service(
         self, service: str, *, return_response: bool = False, **service_data: Any
     ) -> Any:
-        """Forward a service call to the sandbox.
-
-        Domain proxies translate each entity method into one of these
-        calls (the spike's Option B); the bridge sends one RPC per call.
-
-        ``self._context`` is the main-side Context the service framework set
-        for this call. Passing it lets the bridge remember it, so a state
-        change the sandbox derives from this call resolves back to the
-        original attribution instead of a fresh context.
-
-        When ``return_response`` is set, the call forwards a
-        ``SupportsResponse`` service (``calendar.get_events``,
-        ``weather.get_forecasts``, ``media_player.browse_media``) and the
-        decoded service-response dict is returned (``{}`` when the sandbox
-        sent no response). Otherwise the raw ``CallServiceResult`` is returned
-        and ignored by command-style proxies.
-        """
+        """Forward a service call to the sandbox."""
         result = await self._bridge.async_call_service(
             domain=self.description.domain,
             service=service,
@@ -201,15 +133,7 @@ class SandboxProxyEntity(Entity):
         return {}
 
     async def _entity_query(self, method: str, **args: Any) -> Any:
-        """Forward a server-side entity query to the sandbox.
-
-        The request/response companion to :meth:`_call_service` for the
-        query-shaped entity APIs that have no ``SupportsResponse`` service to
-        ride. ``method`` names the real entity method to invoke on the sandbox
-        side; ``args`` are its kwargs. Returns the deserialised return value
-        (``None`` for mutations). ``self._context`` is forwarded so attribution
-        survives exactly as it does for a service call.
-        """
+        """Forward a server-side entity query to the sandbox."""
         return await self._bridge.async_entity_query(
             sandbox_entity_id=self.description.sandbox_entity_id,
             method=method,
@@ -219,12 +143,7 @@ class SandboxProxyEntity(Entity):
 
 
 class GenericSandboxEntity(SandboxProxyEntity):
-    """Fallback proxy for domains without a typed module.
-
-    Hosts an integration's own-domain entities (``sun.sun``, …): no typed
-    contract exists, so the pushed state string and attribute dict pass
-    through verbatim.
-    """
+    """Fallback proxy for domains without a typed module."""
 
     @property
     @override
@@ -246,25 +165,12 @@ class GenericSandboxEntity(SandboxProxyEntity):
 def build_proxy(
     bridge: SandboxBridge, description: SandboxEntityDescription
 ) -> SandboxProxyEntity:
-    """Return a domain-specific proxy for ``description.domain``.
-
-    Falls back to the generic :class:`SandboxProxyEntity` for a domain
-    with no dedicated module.
-    """
+    """Return a domain-specific proxy for ``description.domain``."""
     return proxy_class_for(description.domain)(bridge, description)
 
 
 def proxy_class_for(domain: str) -> type[SandboxProxyEntity]:
-    """Resolve (and memoize) the proxy class for one domain.
-
-    Imports only the requested domain's proxy module — and through it that
-    one domain's component package — on first use. Importing all 31 proxy
-    modules eagerly measured ~384 ms / +67 MB on a cold main instance, paid
-    inside the first ``register_entity`` RPC; per-domain laziness bounds
-    that to the domains a sandbox actually registers. The import itself
-    may block briefly, so the bridge warms this from the import executor
-    before touching it on the event loop.
-    """
+    """Resolve (and memoize) the proxy class for one domain."""
     if (cls := _DOMAIN_PROXIES.get(domain)) is not None:
         return cls
     try:

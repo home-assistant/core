@@ -13,12 +13,7 @@ from . import SandboxProxyEntity
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxDeviceTrackerEntity(SandboxProxyEntity, BaseTrackerEntity):
-    """Proxy for a ``device_tracker`` entity in a sandbox.
-
-    Subclasses the abstract :class:`BaseTrackerEntity` so we can override
-    both ``state`` and ``state_attributes`` (the GPS-specific
-    :class:`TrackerEntity` marks ``state_attributes`` ``@final``).
-    """
+    """Proxy for a ``device_tracker`` entity in a sandbox."""
 
     @property
     @override

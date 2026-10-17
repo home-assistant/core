@@ -1,15 +1,4 @@
-"""Cluster compat-lane failures into shared root-cause signatures.
-
-Reads the per-integration error dumps run_compat.py writes for every
-non-passing suite ($SANDBOX_ERRORS_DIR, default /tmp/sandbox_errors/).
-Run the sweep with --tb=line (the default) so each failure line reads
-  /abs/path.py:123: ExceptionType: message
-Normalizes that into a "<ExceptionType> @ <frame>: <message>" signature
-(noisy tokens — addresses, ULIDs, entity ids, numbers — masked) and
-clusters across integrations. Writes clusters.md + clusters.json.
-
-    python sandbox/cluster_failures.py sandbox/reports/<date>/clusters
-"""
+"""Cluster compat-lane failures into shared root-cause signatures."""
 
 # Stand-alone CLI driver, not a package module — same carve-out as
 # run_compat.py for implicit-namespace / print / tmp rules.

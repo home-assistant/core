@@ -1,24 +1,4 @@
-"""Sandbox-side event mirror.
-
-Forwards every event whose ``event_type`` matches ``<approved_domain>_*``
-up to main via ``sandbox/fire_event``. Canonical examples: ``zha_event``,
-``mqtt_message_received``, ``hue_event``, ``device_tracker_see``.
-
-The bus listener is installed via ``MATCH_ALL`` so we don't need to know
-the integration's event names ahead of time; the handler itself does the
-cheap event-type checks and returns early for foreign events. (The bus's
-``event_filter`` fast path can't host that check: a filter receives only
-``event.data`` — never the event type — and the bus skips filtered
-listeners entirely for events fired without data.) Untrusted
-(non-approved) event types are silently dropped — they would never have
-been forwarded anyway and don't deserve a log line per event.
-
-System events that already cross the bridge through dedicated channels
-(``EVENT_STATE_CHANGED``, ``EVENT_SERVICE_REGISTERED``, …) are
-suppressed unconditionally; ``state_changed`` for example is owned by
-:class:`hass_client.entity_bridge.EntityBridge` and re-emitting it as a
-plain event would double-count.
-"""
+"""Sandbox-side event mirror."""
 
 import asyncio
 import logging
@@ -49,10 +29,7 @@ from .messages import MSG_FIRE_EVENT, encode_json
 
 _LOGGER = logging.getLogger(__name__)
 
-# Events that are part of the bridge's own protocol or core lifecycle.
-# Forwarding them either double-counts (state_changed is the entity
-# bridge's job) or is meaningless on main (the sandbox's lifecycle is
-# not main's).
+# Do not mirror entity state twice or forward worker lifecycle events to main.
 _INTERNAL_EVENTS: frozenset[str] = frozenset(
     {
         EVENT_STATE_CHANGED,

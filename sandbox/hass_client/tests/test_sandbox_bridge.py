@@ -1,19 +1,4 @@
-"""Tests for the ``current_sandbox`` contextvar store routing.
-
-These exercise the routing primitive that replaced the former
-module-level ``Store`` rebinding (the deleted ``remote_store`` module):
-
-* Most tests drive ``Store``'s public API through the contextvar branch
-  using an in-memory ``_FakeBridge`` set on ``current_sandbox`` directly —
-  no channel. They cover load/unwrap, missing keys, migration, the
-  no-sandbox disk path, the ``restore_state`` warm-load, contextvar task
-  inheritance, and (the A2 guard) the ``async_delay_save`` / FINAL_WRITE
-  flush.
-* The final test exercises the concrete :class:`ChannelSandboxBridge` over
-  an in-memory channel pair, covering the wire mapping of
-  ``sandbox_bridge.py`` directly — the coverage ``test_remote_store.py``
-  used to provide transitively before A2 deleted it.
-"""
+"""Tests for the ``current_sandbox`` contextvar store routing."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
@@ -37,12 +22,7 @@ from homeassistant.helpers.sandbox_context import current_sandbox
 
 
 class _FakeBridge:
-    """In-memory ``SandboxBridge`` for exercising the contextvar path.
-
-    ``loaded`` maps a key to the *wrapped* envelope the bridge hands back
-    (matching the real bridge contract); ``saved`` records the wrapped
-    envelopes pushed back through ``async_store_save``.
-    """
+    """In-memory ``SandboxBridge`` for exercising the contextvar path."""
 
     def __init__(self) -> None:
         self.loaded: dict[str, Any] = {}
@@ -134,13 +114,7 @@ async def test_migration_runs_through_bridge(
     bridge: _FakeBridge,
     migrate_params: int,
 ) -> None:
-    """A version mismatch runs the migrate func and saves back via the bridge.
-
-    Mirrors ``test_remote_store.test_migration_runs_when_version_differs``
-    but through the contextvar path, and across both ``_async_migrate_func``
-    arities — the post-migration ``async_save`` must recurse back through the
-    bridge.
-    """
+    """A version mismatch runs the migrate func and saves back via the bridge."""
     bridge.loaded["migrating"] = _wrap(1, 1, "migrating", {"shape": "old"})
 
     if migrate_params == 2:
@@ -175,11 +149,7 @@ async def test_migration_runs_through_bridge(
 async def test_no_sandbox_round_trip_uses_local_disk(
     hass_runtime: HomeAssistant,
 ) -> None:
-    """With ``current_sandbox`` unset, save/load hit local disk as before.
-
-    Regression guard for the no-sandbox path: the contextvar branch must be
-    a no-op when nothing is set.
-    """
+    """With ``current_sandbox`` unset, save/load hit local disk as before."""
     assert current_sandbox.get() is None
 
     store = _storage.Store(hass_runtime, 1, "local_only")
@@ -193,14 +163,7 @@ async def test_restore_state_warm_load_without_workaround(
     hass_runtime: HomeAssistant,
     bridge: _FakeBridge,
 ) -> None:
-    """``RestoreStateData`` warm-load reaches the bridge with no store swap.
-
-    The smoking gun that the contextvar fix subsumes the explicit
-    ``data.store`` swap A2 deleted from ``sandbox.py``: a vanilla
-    ``RestoreStateData`` (which captured the original ``Store`` at module
-    import) routes its ``async_load`` to the bridge purely because the
-    contextvar is set — no explicit store replacement.
-    """
+    """``RestoreStateData`` warm-load reaches the bridge with no store swap."""
     data = restore_state.RestoreStateData(hass_runtime)
     await data.async_load()
 
@@ -211,12 +174,7 @@ async def test_restore_state_warm_load_without_workaround(
 async def test_contextvar_inherits_across_create_task(
     hass_runtime: HomeAssistant,
 ) -> None:
-    """A task spawned after ``set`` inherits the contextvar and reaches the bridge.
-
-    Guards against a future refactor that creates a task *before* the
-    runtime sets ``current_sandbox`` — that task would not inherit the
-    bridge and would silently route to local disk.
-    """
+    """A task spawned after ``set`` inherits the contextvar and reaches the bridge."""
     bridge = _FakeBridge()
     bridge.loaded["in_task"] = _wrap(1, 1, "in_task", {"from": "task"})
     token = current_sandbox.set(bridge)
@@ -238,17 +196,7 @@ async def test_delayed_save_flushes_through_bridge(
     hass_runtime: HomeAssistant,
     bridge: _FakeBridge,
 ) -> None:
-    """``async_delay_save`` + the FINAL_WRITE flush route through the bridge.
-
-    The A2 regression guard. ``async_delay_save`` and the
-    EVENT_HOMEASSISTANT_FINAL_WRITE flush bypass ``async_save`` entirely —
-    they funnel through ``_async_handle_write_data`` -> ``_async_write_data``.
-    The contextvar branch must live at ``_async_write_data`` (not only
-    ``async_save``) or these writes would silently land on the sandbox's
-    local disk instead of reaching main. The earlier store subclass
-    overrode ``_async_write_data`` and masked this; deleting it surfaced the
-    gap.
-    """
+    """``async_delay_save`` + the FINAL_WRITE flush route through the bridge."""
     store = _storage.Store(hass_runtime, 1, "delayed")
     store.async_delay_save(lambda: {"foo": "bar"}, delay=0)
 
@@ -297,11 +245,7 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
 
 
 def _make_json_channel_pair() -> tuple[Channel, Channel]:
-    """Build a JSON-codec channel pair for off-registry handlers.
-
-    Used for handlers whose payload/error types aren't in the proto
-    registry (e.g. ``probatio.Invalid`` over an ad-hoc ``test/bad`` route).
-    """
+    """Build a JSON-codec channel pair for off-registry handlers."""
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     return (
@@ -354,11 +298,7 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
 
 
 async def test_client_channel_serializes_vol_invalid() -> None:
-    """A sandbox handler raising ``probatio.Invalid`` ships its path on the wire.
-
-    Mirror of the main-side channel test — confirms the client channel's
-    ``error_data_for`` serialization feeds the error frame.
-    """
+    """A sandbox handler raising ``probatio.Invalid`` ships its path on the wire."""
     # ``probatio.Invalid`` and the ad-hoc ``test/bad`` route aren't in the proto
     # registry, so this pair rides the JSON codec rather than ProtobufCodec.
     main, sandbox = _make_json_channel_pair()

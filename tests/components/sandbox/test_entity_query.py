@@ -1,15 +1,4 @@
-"""Tests for query-shaped RPCs — service-path responses + ``EntityQuery``.
-
-Two layers are covered:
-
-* **Round-trip rebuild helpers** — the highest-risk part (the
-  ``as_dict``-vs-constructor asymmetry). Each rich type is serialised with its
-  own serialiser and rebuilt with the proxy's helper; the re-serialised result
-  must match, with no wire in the loop.
-* **Proxy behaviour** — a wired bridge + in-memory channel pair, a stub
-  sandbox-side handler, and an assertion that the proxy returns the rebuilt
-  typed object (or surfaces the translated error).
-"""
+"""Tests for query-shaped RPCs — service-path responses + ``EntityQuery``."""
 
 from __future__ import annotations
 

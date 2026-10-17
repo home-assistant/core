@@ -1,11 +1,4 @@
-"""Service-forwarding helpers for mirrored sandbox services.
-
-Builds the main-side forwarder installed by ``sandbox/register_service``
-(every call ships back over the bridge's shared ``sandbox/call_service``
-channel) and translates sandbox-side exceptions back into the types
-main-side callers expect. The bridge exposes ``remember_context`` /
-``async_raw_call_service`` as the declared interface this module drives.
-"""
+"""Service-forwarding helpers for mirrored sandbox services."""
 
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
@@ -38,14 +31,7 @@ def build_service_forwarder(
     service: str,
     supports_response: SupportsResponse,
 ) -> Callable[[ServiceCall], Coroutine[Any, Any, Any]]:
-    """Return a callable suitable for :meth:`ServiceRegistry.async_register`.
-
-    The forwarder rebuilds the original service-call payload and ships it
-    back over the sandbox's shared ``sandbox/call_service`` channel.
-    Schema validation already ran on the way in (main's registry runs
-    ``schema=None`` because the sandbox owns the schema); the sandbox
-    runs the real handler against its own entities and registry.
-    """
+    """Return a callable suitable for :meth:`ServiceRegistry.async_register`."""
 
     async def _forward(call: ServiceCall) -> Any:
         # Remember the real (main-issued) Context so the sandbox echoing this
@@ -88,18 +74,7 @@ def _rebuild_invalid(data: Mapping[str, Any]) -> probatio.Invalid:
 
 
 def translate_remote_error(err: ChannelRemoteError) -> Exception:
-    """Map a sandbox-side exception class name to a sensible main-side one.
-
-    Service-handler errors come back from the sandbox as whatever
-    ``services.async_call`` raised — most often :class:`probatio.Invalid`. When
-    the error frame carries structured ``error_data`` (set for probatio
-    errors), the original :class:`probatio.Invalid` / :class:`probatio.MultipleInvalid`
-    is rebuilt with its ``path`` intact — callers on main (service/flow
-    framework) handle real probatio errors correctly. Older/edge frames
-    without ``error_data`` fall back to the class-name mapping. Anything we
-    don't have a mapping for surfaces as a plain :class:`HomeAssistantError`
-    with the remote message preserved.
-    """
+    """Map a sandbox-side exception class name to a sensible main-side one."""
     if (error_data := err.error_data) is not None:
         kind = error_data.get("kind")
         if kind == "invalid":

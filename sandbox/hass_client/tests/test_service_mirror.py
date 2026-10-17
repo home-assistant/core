@@ -1,11 +1,4 @@
-"""Tests for :class:`hass_client.service_mirror.ServiceMirror`.
-
-Drives the mirror against a real sandbox-private :class:`HomeAssistant`
-(via :class:`hass_client.flow_runner.FlowRunner`) and an in-memory
-channel pair. The mirror reacts to ``EVENT_SERVICE_REGISTERED`` so we
-register services through ``hass.services.async_register`` and check
-what lands on the main side.
-"""
+"""Tests for :class:`hass_client.service_mirror.ServiceMirror`."""
 
 import asyncio
 import tempfile
@@ -156,13 +149,7 @@ async def test_unapproved_domain_is_rejected(
 async def test_service_registered_before_approval_is_replayed(
     channels: tuple[Channel, Channel], hass_runtime: Any
 ) -> None:
-    """A service registered before its domain is approved is replayed on approval.
-
-    Mirrors the real race: ``EVENT_SERVICE_REGISTERED`` fires synchronously
-    while a service is registered inside ``async_setup_entry``, before the
-    entry runner approves the domain. The early registration is dropped at
-    fire time, then replayed the moment ``ApprovedDomains.add`` approves it.
-    """
+    """A service registered before its domain is approved is replayed on approval."""
     main, sandbox = channels
     register_calls: list[pb.RegisterService] = []
 

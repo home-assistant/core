@@ -1,13 +1,4 @@
-"""Crash / restart recovery regression tests.
-
-Guards the crash-recovery cluster:
-
-* Phase 1 — a respawn tears the old bridge down so the fresh one
-  re-registers entities without ``"has already been setup!"``.
-* Phase 2 — a dead sandbox's proxies go unavailable, then recover.
-* Phase 4 — unloading an entry while the sandbox is down still releases
-  the main-side proxies + ``EntityComponent`` platform slot (no leak).
-"""
+"""Crash / restart recovery regression tests."""
 
 import asyncio
 from typing import cast

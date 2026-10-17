@@ -83,22 +83,14 @@ async def test_custom_with_incompatible_platform_forced_to_main(
 async def test_always_main_domains_pin_to_main(
     hass: HomeAssistant, domain: str
 ) -> None:
-    """Every domain in ALWAYS_MAIN must classify to main, manifest-shape agnostic.
-
-    Parametrising over the live set means a new entry can't silently miss
-    the rule — the test fans out automatically.
-    """
+    """Every domain in ALWAYS_MAIN must classify to main, manifest-shape agnostic."""
     integration = _make_integration(hass, domain, platform_files={"sensor"})
     assert classify(integration).is_main
 
 
 @pytest.mark.parametrize("domain", ["ai_task", "image"])
 async def test_ai_task_and_image_pin_to_main(hass: HomeAssistant, domain: str) -> None:
-    """ai_task and image are folded into ALWAYS_MAIN.
-
-    Pinned as their own test so the regression message is unambiguous if
-    someone removes them from the deny-list without reading the decision doc.
-    """
+    """ai_task and image are folded into ALWAYS_MAIN."""
     integration = _make_integration(hass, domain)
     assert classify(integration).is_main
 
@@ -127,12 +119,7 @@ async def test_ai_task_and_image_pin_to_main(hass: HomeAssistant, domain: str) -
     ],
 )
 async def test_lockdown_helpers_pin_to_main(hass: HomeAssistant, domain: str) -> None:
-    """Broad readers + source-entity helpers must run on main under lockdown.
-
-    These read foreign entities / registries a sandboxed integration can't
-    see once lockdown is enforced. The blanket-ALWAYS_MAIN decision lives in
-    sandbox/plans/research/builtin-lockdown-breakage.md (point 1).
-    """
+    """Broad readers + source-entity helpers must run on main under lockdown."""
     assert domain in ALWAYS_MAIN
     integration = _make_integration(hass, domain, platform_files={"sensor"})
     assert classify(integration).is_main
@@ -150,24 +137,13 @@ async def test_each_incompatible_platform_forces_main(
 
 
 async def test_image_is_domain_not_platform_level(hass: HomeAssistant) -> None:
-    """`image` lives in ALWAYS_MAIN, not the platform list.
-
-    Camera covers the bytes-platform case; image entities returning bytes
-    drive the domain-level rule. Lock the shape so a future cleanup doesn't
-    move it back without revisiting the decision doc.
-    """
+    """`image` lives in ALWAYS_MAIN, not the platform list."""
     assert "image" in ALWAYS_MAIN
     assert "image" not in SANDBOX_INCOMPATIBLE_PLATFORMS
 
 
 async def test_system_rule_beats_always_main(hass: HomeAssistant) -> None:
-    """`integration_type=system` wins even if the domain is also in ALWAYS_MAIN.
-
-    Defensive: ALWAYS_MAIN's effect is identical to the system rule (both
-    pin to main), but the rule order is observable through the assignment
-    value, and we want the order documented in `classify()` to be the order
-    the test pins.
-    """
+    """`integration_type=system` wins even if the domain is also in ALWAYS_MAIN."""
     # script is in ALWAYS_MAIN; pretend it's also system-typed.
     integration = _make_integration(hass, "script", integration_type="system")
     assert classify(integration).is_main

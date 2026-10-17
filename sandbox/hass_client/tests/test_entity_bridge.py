@@ -1,14 +1,4 @@
-"""Tests for :class:`hass_client.entity_bridge.EntityBridge`.
-
-The bridge listens for ``EVENT_STATE_CHANGED`` on the sandbox-private
-:class:`HomeAssistant`. We drive it by registering a fake entity into a
-:class:`EntityComponent` and firing the matching events; the channel
-should see ``sandbox/register_entity`` then ``sandbox/state_changed``.
-
-To stay independent of the entity_registry / device_registry machinery,
-we put the entity into the component's ``_entities`` dict manually and
-emit synthetic state events.
-"""
+"""Tests for :class:`hass_client.entity_bridge.EntityBridge`."""
 
 import asyncio
 from datetime import UTC, datetime
@@ -298,12 +288,7 @@ async def test_bridge_emits_register_and_state_pushes(
 async def test_state_push_serialises_datetime_attributes(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """Datetime attribute values survive the push path as ISO strings.
-
-    ``encode_json``'s HA-aware encoder coerces the raw datetime inside the
-    fire-and-forget push task — the push must arrive with the value
-    serialised instead of the task dying.
-    """
+    """Datetime attribute values survive the push path as ISO strings."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -353,13 +338,7 @@ async def test_state_push_serialises_datetime_attributes(
 async def test_register_attributes_sole_domain_entry_without_linkage(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """An entity with no registry/platform linkage falls back to the domain's entry.
-
-    ``registry_entry`` is None and ``platform.config_entry`` is None (an
-    own-domain entity on a bare EntityComponent) — when exactly one loaded
-    config entry owns the entity's domain, the registration is attributed
-    to it instead of being skipped.
-    """
+    """An entity with no registry/platform linkage falls back to the domain's entry."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -432,11 +411,7 @@ async def _register_initial(bridge: EntityBridge, hass: Any, entity: Entity) -> 
 async def test_unregister_releases_domain_approval(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """Registering an entity approves its domain; unregistering releases it.
-
-    The per-entity ``approved.add`` in ``_register`` previously had no
-    matching decrement, leaking the approval for the process lifetime.
-    """
+    """Registering an entity approves its domain; unregistering releases it."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -484,13 +459,7 @@ async def test_unregister_releases_domain_approval(
 async def test_state_update_during_register_is_flushed(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """A state change arriving while register is in flight is pushed after.
-
-    The register RPC is held open; a second ``async_set`` lands in the
-    entity's pending slot (the single writer is busy awaiting the register, so
-    nothing is pushed yet). Once register completes, the writer drains the
-    slot and pushes the newer state.
-    """
+    """A state change arriving while register is in flight is pushed after."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -547,12 +516,7 @@ async def test_state_update_during_register_is_flushed(
 async def test_state_burst_coalesces_to_single_push(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """A rapid burst of state changes coalesces to one push of the latest.
-
-    The writer task cannot run between the synchronous ``async_set`` calls,
-    so each write overwrites the entity's single pending slot; the writer
-    then ships one push carrying the final state instead of one per event.
-    """
+    """A rapid burst of state changes coalesces to one push of the latest."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -599,12 +563,7 @@ async def test_state_burst_coalesces_to_single_push(
 async def test_describe_failure_is_sticky_until_registry_update(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """An undescribable entity is skipped once, not re-attempted per write.
-
-    The first state write for an entity with no live entity object marks it
-    skipped; later writes never reach ``_describe`` again. An entity-registry
-    update for that entity clears the skip so the next write retries.
-    """
+    """An undescribable entity is skipped once, not re-attempted per write."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -657,12 +616,7 @@ async def test_describe_failure_is_sticky_until_registry_update(
 async def test_removal_during_register_unregisters(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """An entity removed while its register RPC is in flight is unregistered.
-
-    The removal lands as a ``_REMOVED`` slot (the writer's in-flight marker
-    keeps it from being classified as never-seen); once register completes,
-    the writer drains that slot and unregisters — no ghost proxy on main.
-    """
+    """An entity removed while its register RPC is in flight is unregistered."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 
@@ -718,11 +672,7 @@ async def test_removal_during_register_unregisters(
 async def test_entity_registry_update_resends_registration(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
-    """A post-setup name change re-sends register_entity (upsert) once.
-
-    A second identical update is a no-op thanks to the description hash
-    guard, so a registry-update storm doesn't flood the channel.
-    """
+    """A post-setup name change re-sends register_entity (upsert) once."""
     main, sandbox = channels
     hass, component = hass_with_demo_component
 

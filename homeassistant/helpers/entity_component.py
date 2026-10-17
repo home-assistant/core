@@ -226,14 +226,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     def async_register_remote_platform(
         self, config_entry: ConfigEntry, platform: EntityPlatform
     ) -> None:
-        """Register a pre-built EntityPlatform for a remote integration.
-
-        Used by ``sandbox`` to attach a proxy ``EntityPlatform`` whose
-        entities live on this Home Assistant instance but whose owning
-        integration runs in a child process. The platform is keyed by the
-        config entry just like ``async_setup_entry`` keys its own; a later
-        ``async_unload_entry`` removes it the same way.
-        """
+        """Register a pre-built EntityPlatform for a remote integration."""
         key = config_entry.entry_id
         if key in self._platforms:
             raise ValueError(
@@ -246,14 +239,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     def async_unregister_remote_platform(
         self, config_entry: ConfigEntry
     ) -> EntityPlatform | None:
-        """Drop a platform registered via ``async_register_remote_platform``.
-
-        The inverse of :meth:`async_register_remote_platform`: removes the
-        config entry's platform slot so the entry can be registered again
-        (e.g. after a sandbox restart hands ``sandbox`` a fresh process).
-        Returns the removed :class:`EntityPlatform` so the caller can reset
-        it, or ``None`` if nothing was registered for the entry.
-        """
+        """Drop a platform registered via ``async_register_remote_platform``."""
         return self._platforms.pop(config_entry.entry_id, None)
 
     async def async_extract_from_service(

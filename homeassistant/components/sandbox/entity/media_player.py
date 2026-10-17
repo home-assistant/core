@@ -35,14 +35,7 @@ from . import SandboxProxyEntity
 
 
 def _browse_media_from_dict(data: dict[str, Any]) -> BrowseMedia:
-    """Rebuild a :class:`BrowseMedia` tree from its ``as_dict`` shape.
-
-    ``BrowseMedia.as_dict`` is frontend-shaped — it carries
-    ``children_media_class`` and emits ``not_shown`` / ``children`` only at the
-    parent level — so fields map across explicitly rather than via a ``**data``
-    splat. ``children`` recurses; the JSON wire keeps native number types, and
-    the explicit ``int()`` / ``bool()`` casts guard the constructor's types.
-    """
+    """Rebuild a :class:`BrowseMedia` tree from its ``as_dict`` shape."""
     children = data.get("children")
     return BrowseMedia(
         media_class=data["media_class"],
@@ -62,12 +55,7 @@ def _browse_media_from_dict(data: dict[str, Any]) -> BrowseMedia:
 
 
 def _search_media_from_dict(data: dict[str, Any]) -> SearchMedia:
-    """Rebuild a :class:`SearchMedia` from its ``as_dict`` shape.
-
-    ``SearchMedia.as_dict`` holds its results under ``result`` as a list of
-    ``BrowseMedia`` dicts, so the rebuild reuses :func:`_browse_media_from_dict`
-    per item. ``version`` is constructor-defaulted.
-    """
+    """Rebuild a :class:`SearchMedia` from its ``as_dict`` shape."""
     return SearchMedia(
         result=[_browse_media_from_dict(item) for item in data.get("result", [])]
     )
@@ -284,16 +272,7 @@ class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
-        """Browse via the ``media_player.browse_media`` service.
-
-        Caveat: a sandboxed player's browse surfaces only its OWN sources. The
-        ``media_source`` tree a player normally merges in (via
-        ``media_source.async_browse_media(self.hass, …)``) is empty here —
-        ``media_source`` runs on main, outside the sandbox boundary, so the
-        sandbox's private hass has nothing to resolve against. Not a bug;
-        closing it needs a cross-boundary hook (pairs with the opt-in sharing
-        work). See ``sandbox/docs/query-shaped-rpcs.md``.
-        """
+        """Browse via the ``media_player.browse_media`` service."""
         service_data: dict[str, Any] = {}
         if media_content_type is not None:
             service_data["media_content_type"] = media_content_type
@@ -309,13 +288,7 @@ class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
 
     @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
-        """Search via ``EntityQuery`` against the real entity.
-
-        Forwarded to ``async_internal_search_media`` (which rebuilds the
-        ``SearchMediaQuery`` from flat kwargs on the sandbox side) rather than
-        ``async_search_media``, so the query crosses as plain JSON kwargs.
-        ``media_filter_classes`` cross as their ``MediaClass`` string values.
-        """
+        """Search via ``EntityQuery`` against the real entity."""
         args: dict[str, Any] = {"search_query": query.search_query}
         if query.media_content_type is not None:
             args["media_content_type"] = query.media_content_type

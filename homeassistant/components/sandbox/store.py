@@ -1,11 +1,4 @@
-"""Main-side store backend for the ``sandbox/store_*`` routing handlers.
-
-Each :class:`~.bridge.SandboxBridge` owns one :class:`SandboxStoreServer`,
-writing each key to ``<config>/.storage/sandbox/<group>/<key>``. Scope
-isolation is by construction — each bridge owns one channel for one group,
-so a sandbox can't reach another sandbox's files. :func:`validate_key`
-defends the host filesystem from a hostile wire key.
-"""
+"""Main-side store backend for the ``sandbox/store_*`` routing handlers."""
 
 import logging
 import os
@@ -23,15 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _STORE_KEY_FORBIDDEN = ("/", "\\", "\x00")
 
-# Store quota constants. A real integration's ``.storage`` payload is KBs to a
-# low-MB; these are generous-but-finite so a compromised sandbox cannot exhaust
-# the host disk through the store-routing channel (the only other bound is the
-# 16 MB per-frame cap). Overridable here if a legitimate integration needs more.
-#
-# * key length: well under ``NAME_MAX`` (255) so the on-disk filename is always
-#   valid even after any future suffixing.
-# * per-key value: one ``Store`` payload; 4 MB covers large registries.
-# * per-group total + key count: bound the whole ``sandbox/<group>/`` dir.
+# Bound storage use per group; frame-size limits alone do not bound disk use.
 STORE_MAX_KEY_LENGTH = 128
 STORE_MAX_VALUE_BYTES = 4 * 1024 * 1024
 STORE_MAX_TOTAL_BYTES = 32 * 1024 * 1024
@@ -39,14 +24,7 @@ STORE_MAX_KEYS = 256
 
 
 def validate_key(key: str) -> str:
-    """Validate a store ``key`` from the wire.
-
-    Defends the host filesystem from a compromised sandbox: a key must
-    be a non-empty string within the length cap, with no path separators,
-    no null bytes, and no parent-directory hop. Anything else trips a
-    :class:`HomeAssistantError`, which the channel framework turns into
-    a remote-error frame for the sandbox.
-    """
+    """Validate a store ``key`` from the wire."""
     if not key:
         raise HomeAssistantError("store request: missing 'key'")
     if len(key) > STORE_MAX_KEY_LENGTH:
@@ -61,15 +39,7 @@ def validate_key(key: str) -> str:
 
 
 class SandboxStoreServer:
-    """Per-group store backend on main.
-
-    Each :class:`~.bridge.SandboxBridge` owns one of these. The bridge's
-    channel is dedicated to one sandbox group, so scope isolation is enforced
-    by construction: sandbox "built-in" only ever talks to its own bridge,
-    which only ever reads/writes ``<config>/.storage/sandbox/built-in/``.
-    Cross-group access requires forging a channel, which the sandbox
-    cannot do.
-    """
+    """Per-group store backend on main."""
 
     def __init__(self, hass: HomeAssistant, group: str) -> None:
         """Pin the storage directory to ``<config>/.storage/sandbox/<group>``."""
@@ -106,15 +76,7 @@ class SandboxStoreServer:
         return data
 
     async def async_save(self, key: str, data: dict[str, Any]) -> None:
-        """Write the wrapped Store payload atomically, within quota.
-
-        Rejects (with a :class:`HomeAssistantError` → remote-error frame) a
-        value over the per-key cap or a write that would push the group's
-        ``.storage/sandbox/<group>/`` dir past its byte / key-count quota, so a
-        compromised sandbox cannot exhaust the host disk. The sandbox-side
-        ``Store.async_save`` tolerates a failed write (it logs and keeps the
-        in-memory data), so a rejected flush degrades rather than crashing.
-        """
+        """Write the wrapped Store payload atomically, within quota."""
         path = self._path_for(key)
         await self.hass.async_add_executor_job(self._write_sync, path, data)
 
@@ -133,13 +95,7 @@ class SandboxStoreServer:
         write_utf8_file_atomic(str(path), json_data, False, mode=mode)
 
     def _enforce_group_quota(self, path: Path, value_bytes: int) -> None:
-        """Reject a write that would exceed the per-group disk quota.
-
-        Sums the existing files in the group dir (the one being overwritten
-        counts as its new size, not its old), so a steady rewrite of the same
-        key never trips the cap while unbounded *growth* — new keys or ballooning
-        values — is bounded.
-        """
+        """Reject a write that would exceed the per-group disk quota."""
         total = value_bytes
         keys = 1
         with os.scandir(path.parent) as entries:

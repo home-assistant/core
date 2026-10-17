@@ -1,12 +1,4 @@
-"""In-memory transport joining a manager-side and runtime-side Channel.
-
-Mirrors ``tests/components/sandbox/_helpers.py:make_channel_pair`` so
-the testing plugin can build channel pairs without importing from the
-core tests tree (TID251 forbids ``hass_client`` → ``tests`` imports).
-
-The duplication is intentional — keep both copies tiny and obviously
-equivalent. If this helper grows, lift it to a shared utility.
-"""
+"""In-memory transport joining a manager-side and runtime-side Channel."""
 
 import asyncio
 from typing import Any
@@ -15,14 +7,7 @@ from hass_client.channel import Channel as ClientChannel
 
 
 class _LoopbackWriter:
-    """Async writer that pushes bytes straight into a paired StreamReader.
-
-    Implements the slice of :class:`asyncio.StreamWriter` that
-    :class:`Channel` actually uses: ``write``, ``drain``, ``close``, and
-    ``wait_closed``. Bytes written go straight into the paired reader's
-    buffer, so the partner :class:`Channel` reads them on its next loop
-    iteration with no socket or pipe involved.
-    """
+    """Async writer that pushes bytes straight into a paired StreamReader."""
 
     def __init__(self, target: asyncio.StreamReader) -> None:
         """Wrap ``target`` so writes feed it directly."""
@@ -50,18 +35,7 @@ class _LoopbackWriter:
 
 
 def make_inproc_channel_pair(*, group: str) -> tuple[Any, ClientChannel]:
-    """Return ``(manager_channel, runtime_channel)`` joined in-memory.
-
-    The manager-side channel is the one the HA integration's
-    :class:`SandboxBridge` reads from; the runtime-side channel is what
-    :class:`hass_client.sandbox.SandboxRuntime` consumes.
-
-    The manager-side type is imported lazily because the testing package
-    must not pull ``homeassistant.components.sandbox`` at import time
-    (the integration is not always installed when ``hass_client`` is
-    used). The wire format is identical on both sides; the separate
-    classes exist only to honour the project's import-boundary rule.
-    """
+    """Return ``(manager_channel, runtime_channel)`` joined in-memory."""
     # Lazy import: the manager-side Channel lives in the HA integration
     # tree. Importing it eagerly would couple the testing helper to a
     # component that may not be loaded.

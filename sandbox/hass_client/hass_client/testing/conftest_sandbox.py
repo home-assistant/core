@@ -1,33 +1,4 @@
-"""Real-subprocess pytest plugin for sandbox compat tests.
-
-Exercises the production code path end-to-end: the test HA's
-``sandbox`` integration spawns ``python -m hass_client.sandbox``
-as a real subprocess and talks to it over the JSON-line stdio
-:class:`Channel`. Slower than the in-process plugin (per-sandbox
-subprocess startup) but pins the subprocess boundary.
-
-Freezer incompatibility
------------------------
-
-Tests that use the ``freezer`` fixture (pytest-freezer) cannot use this
-plugin: ``freezer.move_to(...)`` advances time inside the test process,
-but the subprocess's clock is untouched, so any time-sensitive code
-inside the sandbox hangs the channel. Mark such tests::
-
-    @pytest.mark.no_sandbox_freezer
-    def test_foo(freezer): ...
-
-The plugin auto-skips those tests rather than v1's silent fallback, so
-the compat report shows them explicitly as ``skipped`` and reviewers
-know they need attention.
-
-Usage::
-
-    pytest -p hass_client.testing.conftest_sandbox <test path>
-
-The plugin exposes the ``sandbox_subprocess`` fixture, which yields
-a :class:`SubprocessSandbox` handle once the subprocess is running.
-"""
+"""Real-subprocess pytest plugin for sandbox compat tests."""
 
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
@@ -88,17 +59,7 @@ def pytest_terminal_summary(
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
-    """Auto-skip tests that combine the ``freezer`` fixture with the subprocess plugin.
-
-    The pytest-freezer fixture moves time inside the test process only;
-    the sandbox subprocess's clock is unaffected, so a test that calls
-    ``freezer.move_to(...)`` and waits on a sandbox-side timer will
-    deadlock. Skip explicitly so the compat report shows the gap rather
-    than silently falling back.
-
-    Tests that explicitly opt out via :data:`_MARK_NO_FREEZER` are
-    skipped without inspection — they have already declared incompatible.
-    """
+    """Auto-skip tests that combine the ``freezer`` fixture with the subprocess plugin."""
     skip_freezer = pytest.mark.skip(
         reason=(
             "freezer fixture is incompatible with the real-subprocess"
@@ -124,24 +85,14 @@ def pytest_collection_modifyitems(
 
 @dataclass
 class SubprocessSandbox:
-    """Handle for one running sandbox subprocess.
-
-    Exposed so tests can read ``.pid`` / ``.state`` for assertions and
-    ``await .stop()`` early. The fixture's teardown always calls
-    :meth:`stop` whether or not the test does.
-    """
+    """Handle for one running sandbox subprocess."""
 
     group: str
     manager: object  # SandboxManager — typed loosely to keep imports lazy
 
     async def stop(self) -> None:
         """Issue a graceful shutdown, then SIGTERM/SIGKILL escalation."""
-        # The integration's EVENT_HOMEASSISTANT_STOP listener will run
-        # the same teardown on hass shutdown, but the compat suite tears
-        # down the sandbox before hass to surface subprocess crashes in
-        # the right place. ``async_stop_all`` is idempotent.
-        # Lazy import: testing package must not pull the HA integration
-        # tree at import time.
+        # Stop the worker before hass teardown so failures are attributed to this fixture.
         from homeassistant.components.sandbox.manager import (  # noqa: PLC0415
             SandboxManager,
         )
@@ -158,13 +109,7 @@ async def async_setup_subprocess_sandbox(
     *,
     group: str = DEFAULT_GROUP,
 ) -> SubprocessSandbox:
-    """Set up ``sandbox`` and spawn a real subprocess for ``group``.
-
-    Unlike :func:`hass_client.testing.pytest_plugin.async_setup_inprocess_sandbox`,
-    this hands control to the integration's default
-    :class:`SandboxManager` — the subprocess is spawned by
-    :meth:`SandboxManager.ensure_started` as it would be in production.
-    """
+    """Set up ``sandbox`` and spawn a real subprocess for ``group``."""
     # Lazy import: testing package must not pull the HA integration
     # tree at import time.
     from homeassistant.components.sandbox.const import DATA_SANDBOX  # noqa: PLC0415

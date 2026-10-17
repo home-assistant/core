@@ -1,24 +1,4 @@
-"""Main-side reconstruction of voluptuous schemas serialised by the sandbox.
-
-The sandbox sends a list-of-fields rendering (the same shape
-:func:`probatio.to_field_list` would produce against
-:func:`cv.custom_serializer`). We rebuild a :class:`probatio.Schema` from it
-so:
-
-* :meth:`hass.services.async_register` gets a real schema (good input
-  passes, blatantly bad input is rejected before we round-trip to the
-  sandbox).
-* The flow-manager view's :func:`_prepare_result_json` can re-render the
-  same list back through :func:`probatio.to_field_list` for the
-  frontend.
-
-Selectors and expandable sections are rebuilt as the **real**
-:class:`selector.Selector` / :class:`data_entry_flow.section` objects, so
-when the flow manager re-serialises main's reconstructed schema for the
-frontend it reproduces the sandbox's original list verbatim (the form
-renders with the right widget instead of a bare text box). Only genuinely
-unknown field types fall through to a pass-through validator.
-"""
+"""Main-side reconstruction of voluptuous schemas serialised by the sandbox."""
 
 from collections.abc import Iterable
 import logging
@@ -42,11 +22,7 @@ _SCHEMA_TYPES_BY_NAME: dict[str, type] = {
 def reconstruct_schema(
     serialized: list[dict[str, Any]] | None,
 ) -> probatio.Schema | None:
-    """Build a :class:`probatio.Schema` from the wire form.
-
-    Returns ``None`` for an empty list (no fields) or ``None`` input so
-    callers can short-circuit straight to ``schema=None``.
-    """
+    """Build a :class:`probatio.Schema` from the wire form."""
     if not serialized:
         return None
     fields: dict[Any, Any] = {}
@@ -66,12 +42,7 @@ def reconstruct_schema(
 
 
 def _validator_from_entry(entry: dict[str, Any]) -> Any:
-    """Inverse of :func:`probatio.to_field_list` per field.
-
-    Rebuilds the real object where re-serialising it has to reproduce the
-    original (selectors, sections) and falls back to a pass-through for
-    anything we can't faithfully reconstruct.
-    """
+    """Inverse of :func:`probatio.to_field_list` per field."""
     # A selector field carries its config under ``selector`` (no ``type``);
     # rebuild the real Selector so it re-serialises to the same shape.
     if "selector" in entry:

@@ -1,10 +1,4 @@
-"""Client-side tests for ``hass_client.sandbox``.
-
-The HA Core test suite owns the integration-level coverage (subprocess
-spawn, restart budget, multi-group). These tests pin the runtime's
-public contract: argparser, the constant the manager scans for, and that
-``run()`` exits cleanly when shutdown is requested.
-"""
+"""Client-side tests for ``hass_client.sandbox``."""
 
 import asyncio
 
@@ -62,11 +56,7 @@ def test_ready_msg_type_is_stable() -> None:
 
 
 def test_cli_parser_accepts_name_and_url() -> None:
-    """The CLI parser accepts the manager's argv and defaults log-level.
-
-    The sandbox is not an authenticated principal inside main, so there is no
-    ``--token`` argument any more (the runtime never used the credential).
-    """
+    """The CLI parser accepts the manager's argv and defaults log-level."""
     parser = _build_parser()
     args = parser.parse_args(["--name", "built-in", "--url", "ws://x"])
     assert args.name == "built-in"
@@ -84,13 +74,7 @@ def test_cli_parser_accepts_name_and_url() -> None:
 async def test_handlers_registered_before_ready(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Inbound call handlers are live the instant the Ready frame arrives.
-
-    The manager only sends ``entry_setup`` once it sees Ready; if Ready
-    raced ahead of handler registration, an immediate call would come back
-    as ``ChannelUnknownType``. The probe issues a ``sandbox/ping`` call the
-    moment Ready lands and asserts it resolves (handler present), not errors.
-    """
+    """Inbound call handlers are live the instant the Ready frame arrives."""
     main_channel, sandbox_channel = _make_channel_pair()
     ready_seen = asyncio.Event()
     probe_result: list[object] = []
@@ -134,12 +118,7 @@ async def test_handlers_registered_before_ready(
 async def test_core_config_push_updates_private_hass(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A live ``sandbox/core_config`` push lands on the private hass.
-
-    The config values must be applied AND ``EVENT_CORE_CONFIG_UPDATE`` must
-    fire on the private bus, so sandboxed integrations recompute exactly as
-    they would locally.
-    """
+    """A live ``sandbox/core_config`` push lands on the private hass."""
     main_channel, sandbox_channel = _make_channel_pair()
     ready_seen = asyncio.Event()
 
@@ -206,13 +185,7 @@ async def test_core_config_push_updates_private_hass(
 async def test_runtime_starts_in_locked_down_sharing_posture(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """The sandbox HA sees only its own entities — no subscription to main.
-
-    There is no ``share_*`` config surface; the locked-down posture is
-    a property of the runtime itself rather than a config flag. See
-    ``sandbox/docs/design-share-states.md``
-    for the future opt-in design.
-    """
+    """The sandbox HA sees only its own entities — no subscription to main."""
     runtime = SandboxRuntime(
         url="ws://x",
         group="custom",

@@ -11,11 +11,7 @@ from homeassistant.components.update import (
 
 from . import SandboxProxyEntity
 
-# These attribute names are emitted by ``UpdateEntity.state_attributes``
-# (see ``components/update/__init__.py``). They're defined in
-# ``update.const`` but not exported from the package root, so we hold the
-# string keys locally rather than chase the pylint / mypy conflict on
-# importing from ``.const``.
+# UpdateEntity emits these keys without exporting their constants.
 _ATTR_AUTO_UPDATE = "auto_update"
 _ATTR_IN_PROGRESS = "in_progress"
 _ATTR_RELEASE_SUMMARY = "release_summary"

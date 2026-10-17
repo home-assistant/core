@@ -1,24 +1,4 @@
-"""Sandbox runtime — the long-running process inside one sandbox group.
-
-Composes the sandbox's per-process services:
-
-* :class:`FlowRunner` — drives integration ``ConfigFlow`` instances
-  out-of-process.
-* :class:`EntryRunner` — accepts ``sandbox/entry_setup`` pushes and
-  runs ``async_setup_entry`` against the sandbox-private HA.
-* :class:`EntityBridge` — pushes entity registrations + state changes
-  back to main.
-* :class:`ServiceMirror` / :class:`EventMirror` — mirror service
-  registrations and ``<owned_domain>_*`` events up to main, gated by
-  :class:`ApprovedDomains`.
-
-The handshake: open the control channel (transport selected by the
-``--url`` scheme — ``stdio://`` by default, ``unix://<path>`` to dial back
-to the manager's unix socket), register handlers, warm-load restore state,
-start HA, send :data:`MSG_READY`, then idle until
-SIGTERM (or until main asks for a graceful shutdown over the channel — see
-:meth:`SandboxRuntime._handle_shutdown`).
-"""
+"""Sandbox runtime — the long-running process inside one sandbox group."""
 
 import asyncio
 from collections.abc import Awaitable, Callable
@@ -65,15 +45,7 @@ ChannelFactory = Callable[[], Awaitable[Channel | None]]
 
 
 class SandboxRuntime:
-    """Runtime: Ready-frame handshake + length-prefixed control channel.
-
-    The control-channel transport is chosen from the ``--url`` scheme:
-    ``stdio://`` (default — frames over the process's stdin/stdout) or
-    ``unix://<path>`` (dial back to the manager's unix socket). ``ws://`` /
-    ``wss://`` are reserved for the deferred websocket transport and
-    rejected for now. The handshake is a :data:`MSG_READY` frame sent as the
-    channel's first message — there is no stdout text marker.
-    """
+    """Runtime: Ready-frame handshake + length-prefixed control channel."""
 
     def __init__(
         self,
@@ -83,12 +55,7 @@ class SandboxRuntime:
         config_dir: str | None = None,
         channel_factory: ChannelFactory | None = None,
     ) -> None:
-        """Initialise the runtime with its main-HA connection parameters.
-
-        ``channel_factory`` returns the live control channel — defaults to
-        opening one over the process's stdin/stdout. Tests pass a factory
-        that returns ``None`` (no channel) or an in-memory pair.
-        """
+        """Initialise the runtime with its main-HA connection parameters."""
         self.url = url
         self.group = group
         self._config_dir = config_dir
@@ -109,14 +76,7 @@ class SandboxRuntime:
         return self._shutdown is not None
 
     async def wait_until_ready(self, *, timeout: float = 5.0) -> None:
-        """Block until all channel handlers have been registered.
-
-        ``started`` flips to True very early in :meth:`run` (right after
-        the SIGTERM hook); tests that want to issue a channel call need
-        to wait until the runtime has finished registering every
-        handler. This event is set right before ``run`` awaits the
-        shutdown signal.
-        """
+        """Block until all channel handlers have been registered."""
         if self._ready is None:
             raise RuntimeError("SandboxRuntime.run() has not been entered yet")
         await asyncio.wait_for(self._ready.wait(), timeout=timeout)
@@ -173,45 +133,15 @@ class SandboxRuntime:
         self._channel = await self._channel_factory()
         sandbox_token: Any = None
         if self._channel is not None:
-            # Route every `Store` IO to main via `current_sandbox`. The
-            # contextvar is read at call time by `Store.async_load/save/
-            # remove`, so it reaches Stores no matter how they imported the
-            # class — including the helpers that captured the original
-            # `Store` at module load (restore_state, the registries). It is
-            # set BEFORE the warm-load and before any handler registers, so
-            # every coroutine the runtime spawns inherits it (asyncio copies
-            # the context at `create_task` time).
-            #
-            # Ordering caveat: `FlowRunner.create` explicitly loads the
-            # area/category/device/entity/floor/issue/label registries before
-            # this point, so their Stores bind to the sandbox tempdir and keep
-            # their local file backing. `restore_state`'s `async_load` runs
-            # *after* this set, so it routes to main — which is what we want.
-            # If a future refactor moves a registry's first `async_load` to
-            # straddle this line, that registry would silently start routing
-            # to main.
+            # Set routing before creating handlers so their tasks inherit the storage context.
             assert current_sandbox.get() is None, (
                 "current_sandbox already set — two sandbox runtimes sharing "
-                "one event loop? (see plan Risk #3)"
+                "one event loop?"
             )
             sandbox_token = current_sandbox.set(ChannelSandboxBridge(self._channel))
-            # Start the channel reader first so the warm-load
-            # round-trip can resolve, then pre-load this sandbox group's
-            # restore-state cache. The contextvar (set above) routes the
-            # load to main. The data lives on main under
-            # ``.storage/sandbox/<group>/core.restore_state`` and was
-            # written by the previous run's shutdown handler. Bare HA —
-            # no bootstrap — so we call it ourselves; any RestoreEntity
-            # that registers during entry_setup will see its prior state
-            # cached. Ready is pushed *after* the warm-load (and after handler
-            # registration) so no entry_setup can be processed before the
-            # cache is populated.
+            # Start the reader before restore-state loading, which calls back into main.
             self._channel.start()
-            # Register every inbound call handler BEFORE signalling readiness.
-            # The manager only sends `entry_setup` (and friends) once it sees
-            # Ready, so an `entry_setup` arriving in the gap between Ready and
-            # handler registration used to hit `ChannelUnknownType` ->
-            # SETUP_ERROR. Registering first removes that race entirely.
+            # Install handlers before readiness allows main to send entry setup calls.
             self._channel.register(MSG_PING, _handle_ping)
             self._channel.register(MSG_SHUTDOWN, self._handle_shutdown)
             self._channel.register(MSG_GET_TRANSLATIONS, self._handle_get_translations)
@@ -225,10 +155,7 @@ class SandboxRuntime:
             self._entity_bridge.register(self._channel)
             self._service_mirror.register(self._channel)
             self._event_mirror.register(self._channel)
-            # Warm-load this group's restore-state cache (an *outbound*
-            # store_load that routes to main via current_sandbox) before Ready
-            # so no entry_setup can be processed before the cache is populated
-            # — a fresh RestoreEntity must see its prior state.
+            # Load restore state before readiness so new entities see their previous values.
             await _load_restore_state(hass)
             # Ready is the LAST frame sent: handlers are up and the restore
             # cache is warm, so every entry_setup the manager now sends lands
@@ -250,11 +177,7 @@ class SandboxRuntime:
             if self._entity_bridge is not None:
                 await self._entity_bridge.async_stop()
             if self._channel is not None:
-                # Let in-flight handlers finish first — most importantly the
-                # shutdown handler's reply write, which may still be draining
-                # (write-lock contention from unload pushes, backpressure on a
-                # large restore_state). close() would otherwise cancel it and
-                # main would lose the reply.
+                # Drain the shutdown reply before closing the channel cancels its handler.
                 if self._entry_runner.entry_sync is not None:
                     await self._entry_runner.entry_sync.async_stop()
                 await self._channel.drain_inflight()
@@ -268,14 +191,7 @@ class SandboxRuntime:
         return 0
 
     async def _default_channel_factory(self) -> Channel:
-        """Open the control channel selected by the runtime's ``--url`` scheme.
-
-        * ``stdio://`` (or empty) — frames ride the process's stdin/stdout.
-        * ``unix://<path>`` — dial back to the manager's unix socket.
-        * ``ws://`` / ``wss://`` — reserved for the deferred websocket
-          transport; rejected here with a clear error (this build ships
-          stdio + unix only).
-        """
+        """Open the control channel selected by the runtime's ``--url`` scheme."""
         kind = _transport_scheme(self.url)
         if kind == "unix":
             return await _open_unix_channel(
@@ -289,16 +205,7 @@ class SandboxRuntime:
         return await _open_stdio_channel(name=self.group)
 
     async def _handle_shutdown(self, _payload: object) -> pb.ShutdownResult:
-        """Unload entries, flush restore state, then exit cleanly.
-
-        Runs inside the channel dispatcher; the channel writes this handler's
-        reply after it returns. The shutdown event is set via ``call_soon`` so
-        ``run()`` only wakes on a later loop turn — but ``call_soon`` alone
-        does not guarantee the reply has *drained* (the write can suspend on
-        backpressure). ``run()``'s finally therefore calls
-        :meth:`Channel.drain_inflight` before ``close()``, so the reply task
-        completes its write rather than being cancelled mid-flush.
-        """
+        """Unload entries, flush restore state, then exit cleanly."""
         summary = await self._run_graceful_shutdown()
         if self._shutdown is not None:
             asyncio.get_running_loop().call_soon(self._shutdown.set)
@@ -307,15 +214,7 @@ class SandboxRuntime:
     async def _handle_get_translations(
         self, msg: pb.GetTranslations
     ) -> pb.GetTranslationsResult:
-        """Serve a main-side ``sandbox/get_translations`` pull.
-
-        Main holds no ``Integration`` for a custom sandboxed domain, so it
-        cannot load the integration's ``translations/<lang>.json`` or run the
-        ``title``→``integration.name`` fallback. This sandbox does — it
-        fetched and imported the code — so it loads the raw strings here and
-        replies with the un-flattened nesting main's translation cache merges
-        as-is.
-        """
+        """Serve a main-side ``sandbox/get_translations`` pull."""
         result = pb.GetTranslationsResult(language=msg.language)
         flow_runner = self._flow_runner
         if flow_runner is None:
@@ -328,14 +227,7 @@ class SandboxRuntime:
         return result
 
     async def _handle_core_config(self, msg: pb.CoreConfig) -> None:
-        """Apply a live core-config update pushed from main.
-
-        ``entry_setup`` carries the initial snapshot; this keeps a running
-        sandbox in step when the user changes the home location / units /
-        language on main. Fires ``EVENT_CORE_CONFIG_UPDATE`` on the private
-        bus so integrations recompute exactly as they would locally (sun
-        re-derives its observer, coordinators re-localize).
-        """
+        """Apply a live core-config update pushed from main."""
         flow_runner = self._flow_runner
         if flow_runner is None:
             return
@@ -344,23 +236,7 @@ class SandboxRuntime:
         hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
 
     async def _run_graceful_shutdown(self) -> pb.ShutdownResult:
-        """Unload every loaded entry and snapshot RestoreEntity state.
-
-        Fires ``EVENT_HOMEASSISTANT_FINAL_WRITE`` and waits for
-        the bus to drain so ``Store``s with pending ``async_delay_save``
-        writes flush to main via the ``current_sandbox`` bridge — the
-        now-concurrent channel dispatcher means the re-entrant
-        ``MSG_STORE_SAVE`` call each flush issues no longer deadlocks
-        against this handler.
-
-        Restore state is still **collected** (not flushed via the
-        bridge) and returned in this reply: ``core.restore_state``
-        is owned by the runtime's explicit warm-load / shutdown-dump path,
-        not by an integration's ``Store``, so it doesn't ride the
-        FINAL_WRITE flush. Shipping it back in the reply keeps the data
-        path symmetric with the warm-load — main writes it via
-        :meth:`SandboxBridge._handle_store_save`-style atomic write.
-        """
+        """Unload every loaded entry and snapshot RestoreEntity state."""
         flow_runner = self._flow_runner
         if flow_runner is None:
             return pb.ShutdownResult(ok=True, unloaded=0)
@@ -380,10 +256,7 @@ class SandboxRuntime:
             if ok:
                 unloaded += 1
 
-        # Fire FINAL_WRITE so ``async_delay_save``-using
-        # ``Store``s flush their pending data. Concurrent channel
-        # dispatcher means each bridge write can re-enter the channel
-        # without deadlocking against this handler.
+        # Flush delayed stores before shutdown acknowledges completion.
         try:
             hass.set_state(CoreState.final_write)
             hass.bus.async_fire_internal(EVENT_HOMEASSISTANT_FINAL_WRITE)
@@ -420,18 +293,7 @@ class SandboxRuntime:
 async def _collect_component_strings(
     hass: HomeAssistant, language: str, domains: list[str]
 ) -> dict[str, Any]:
-    """Load raw translation strings for ``domains`` from this sandbox's disk.
-
-    Resolves each domain's ``Integration`` against the sandbox-private
-    ``hass`` (built-in from the bundled package, custom from the fetched
-    ``<config>/custom_components/<domain>``) and reuses core's
-    :func:`_async_get_component_strings`, which reads
-    ``translations/<language>.json`` and pre-fills ``title`` from
-    ``integration.name``. The return is ``{domain: <raw strings.json dict>}``
-    for the requested language — the exact shape main's translation cache
-    overlays. Domains the sandbox cannot resolve come back as ``{}`` (no
-    Integration ⇒ no file, no title), which is harmless on main.
-    """
+    """Load raw translation strings for ``domains`` from this sandbox's disk."""
     if not domains:
         return {}
     components = set(domains)
@@ -448,18 +310,7 @@ async def _collect_component_strings(
 
 
 async def _load_restore_state(hass: Any) -> None:
-    """Warm-load this sandbox's ``core.restore_state`` cache.
-
-    Warm-load before starting HA and advertising Ready. Periodic restore-state
-    checkpointing remains deferred; graceful shutdown supplies the final dump.
-
-    No store swap is needed: ``RestoreStateData`` builds a vanilla
-    ``Store``, and ``Store.async_load`` reads ``current_sandbox`` at call
-    time. Because the runtime set the contextvar before calling us, the
-    load — and the later shutdown dump — round-trip through main no matter
-    that ``restore_state.py`` captured the original ``Store`` reference at
-    import time.
-    """
+    """Warm-load this sandbox's ``core.restore_state`` cache."""
     data = restore_state.async_get(hass)
     try:
         await data.async_load()
@@ -468,13 +319,7 @@ async def _load_restore_state(hass: Any) -> None:
 
 
 def _transport_scheme(url: str) -> str:
-    """Map a ``--url`` to its transport kind.
-
-    Returns ``"stdio"`` (empty / ``stdio://``), ``"unix"``
-    (``unix://<path>``) or ``"ws"`` (``ws://`` / ``wss://``, reserved for
-    the deferred websocket transport). Raises :class:`ValueError` for any
-    other scheme.
-    """
+    """Map a ``--url`` to its transport kind."""
     if not url:
         return "stdio"
     scheme = url.split("://", 1)[0] if "://" in url else url
@@ -488,13 +333,7 @@ def _transport_scheme(url: str) -> str:
 
 
 async def _open_unix_channel(path: str, *, name: str) -> Channel:
-    """Connect to the manager's unix socket and wrap it in a :class:`Channel`.
-
-    The manager is the unix server; the runtime dials back here. Framing is
-    the same length-prefixed :class:`~.channel.StreamTransport` the stdio
-    path uses — a unix socket is just a different byte pipe under it, so no
-    dedicated transport class is needed.
-    """
+    """Connect to the manager's unix socket and wrap it in a :class:`Channel`."""
     reader, writer = await asyncio.open_unix_connection(path)
     return Channel(reader, writer, name=name, codec=ProtobufCodec())
 

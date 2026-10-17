@@ -1,10 +1,4 @@
-"""Tests for :func:`hass_client.schema_bridge.serialize_schema`.
-
-The serialise path must never let an unserialisable schema propagate — a
-``register_service`` / flow push that raised would drop the registration on
-main entirely. Any failure has to degrade to ``None`` (main installs the
-service with no schema; the sandbox still validates).
-"""
+"""Tests for :func:`hass_client.schema_bridge.serialize_schema`."""
 
 from typing import Any
 
@@ -41,12 +35,7 @@ def test_serialize_failure_degrades_to_none(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Any serialisation failure (not just ValueError/TypeError) returns None.
-
-    The broad fallback is the point: an exotic custom validator that makes
-    ``probatio.to_field_list`` raise something other than ValueError/TypeError
-    must NOT propagate and drop the registration.
-    """
+    """Any serialisation failure (not just ValueError/TypeError) returns None."""
 
     def _boom(*_args: Any, **_kwargs: Any) -> Any:
         raise raised

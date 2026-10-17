@@ -151,7 +151,7 @@ class _StoreManager:
         # cause the Store to return None when it should not.
         #
         # The "/" in key check is to prevent the cache from being used
-        # for subdirs in case we have a key like "hacs/XXX"
+        # for subdirs in case we have a key like "custom/cache"
         #
         if "/" in key or key in self._invalidated or self._files is None:
             _LOGGER.debug("%s: Cache miss", key)
@@ -424,10 +424,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
         elif sandbox := current_sandbox.get():
-            # A sandbox runtime routes Store IO to main instead of local
-            # disk. Fetch the wrapped envelope from the bridge; the migration
-            # block below runs unchanged regardless of whether the dict came
-            # from disk or from the bridge (design choice B).
+            # Use the same migration path for remote and local storage envelopes.
             data = await sandbox.async_store_load(self.key)
             if data is None:
                 return None
@@ -655,14 +652,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def _async_write_data(self, data: dict) -> None:
         if sandbox := current_sandbox.get():
-            # A sandbox runtime routes the wrapped envelope to main instead
-            # of writing to local disk. Branching here (rather than in
-            # async_save) is load-bearing: async_save, async_delay_save, and
-            # the EVENT_HOMEASSISTANT_FINAL_WRITE flush all funnel their
-            # writes through _async_handle_write_data -> _async_write_data,
-            # so a single branch here covers every write path uniformly. The
-            # bridge owns the envelope normalisation (resolving any pending
-            # data_func), orjson preserialise, and transport.
+            # Route here so immediate, delayed, and final writes all reach main.
             await sandbox.async_store_save(self.key, data)
             return
         if self._serialize_in_event_loop:

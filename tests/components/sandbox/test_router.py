@@ -112,12 +112,7 @@ async def test_async_create_flow_returns_none_when_classified_main(
 async def test_async_setup_entry_routes_to_sandbox(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """Entries carrying ``sandbox`` are routed to the manager.
-
-    The sandbox-side runtime replies to ``sandbox/entry_setup`` via a
-    stub on channel_b; the router rolls that response into the
-    main-side entry state.
-    """
+    """Entries carrying ``sandbox`` are routed to the manager."""
     channel_a, channel_b = make_channel_pair()
     received: list[pb.EntrySetup] = []
 
@@ -269,13 +264,7 @@ async def test_async_setup_entry_returns_none_when_not_sandboxed(
 async def test_component_setup_path_routes_tagged_entries(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """setup.py's per-entry boot path consults the router.
-
-    HA boot (and any ``async_setup_component``) sets existing entries up via
-    ``entry.async_setup_locked`` — never ``ConfigEntries.async_setup`` — so
-    the router consult must live on ``ConfigEntry.async_setup`` or a
-    sandboxed entry silently runs its integration on main at every restart.
-    """
+    """setup.py's per-entry boot path consults the router."""
     channel_a, channel_b = make_channel_pair()
     received: list[pb.EntrySetup] = []
 

@@ -19,15 +19,7 @@ from . import SandboxProxyEntity
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
-    """Proxy for a ``weather`` entity in a sandbox.
-
-    The proxy mirrors the condition + instantaneous attributes. Forecasts ride
-    the ``weather.get_forecasts`` ``SupportsResponse`` service: each
-    ``async_forecast_*`` method forwards a one-shot query and returns the real
-    entity's forecast list. The streaming ``weather/subscribe_forecast`` WS
-    command still has no push primitive, so it sees only that first fetch. See
-    ``sandbox/docs/query-shaped-rpcs.md``.
-    """
+    """Proxy for a ``weather`` entity in a sandbox."""
 
     _features_flag = WeatherEntityFeature
 
@@ -80,12 +72,7 @@ class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
         return self._state_cache.get(ATTR_WEATHER_WIND_BEARING)
 
     async def _async_forecast(self, forecast_type: str) -> list[Forecast]:
-        """Forward a forecast query as the ``weather.get_forecasts`` service.
-
-        The service response is keyed by the (sandbox-side) entity_id and wraps
-        the list under ``forecast``. ``Forecast`` is a plain TypedDict, so the
-        unwrapped list crosses verbatim with no rebuild.
-        """
+        """Forward a forecast query as the ``weather.get_forecasts`` service."""
         response = await self._call_service(
             "get_forecasts", return_response=True, type=forecast_type
         )

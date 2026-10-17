@@ -1,17 +1,4 @@
-"""Shared helpers for sandbox tests.
-
-Provides:
-
-* :func:`make_channel_pair` — two :class:`Channel` instances joined by an
-  in-memory bytes transport. Each writer feeds the other reader.
-* :class:`FakeSandboxProcess` — a stand-in for
-  :class:`homeassistant.components.sandbox.manager.SandboxProcess` that
-  exposes a pre-built channel without ever spawning a subprocess.
-* :class:`FakeSandboxManager` — minimal stand-in for
-  :class:`SandboxManager` that just returns FakeSandboxProcess instances.
-* :class:`JsonCodec` — registry-free channel-core test/debug codec, kept out
-  of the production :mod:`channel` module so a missing ``codec=`` fails loudly.
-"""
+"""Shared helpers for sandbox tests."""
 
 import asyncio
 import json
@@ -22,17 +9,7 @@ from homeassistant.components.sandbox.codec_protobuf import ProtobufCodec
 
 
 class JsonCodec:
-    """Registry-free one-JSON-object-per-frame codec for channel-core tests.
-
-    The production wire is :class:`ProtobufCodec`. This codec lived in
-    :mod:`homeassistant.components.sandbox.channel` until it was moved here:
-    keeping it out of the channel module means a ``Channel`` built without an
-    explicit ``codec=`` is a construction-time error instead of silently
-    speaking JSON at a protobuf peer. It passes frame payloads through as plain
-    JSON (no ``type``-to-proto lookup), so the concurrency-critical channel core
-    can be exercised with synthetic message types and arbitrary dict/int
-    payloads.
-    """
+    """Registry-free one-JSON-object-per-frame codec for channel-core tests."""
 
     def encode(self, frame: Frame) -> bytes:
         """Encode a frame to a compact JSON object."""
@@ -109,19 +86,7 @@ def make_channel_pair(
     max_queued_b: int | None = None,
     use_json: bool = False,
 ) -> tuple[Channel, Channel]:
-    """Return two channels connected to each other in-memory.
-
-    ``max_inflight_a`` / ``max_inflight_b`` override the per-side handler
-    concurrency cap; ``max_queued_a`` / ``max_queued_b`` override the per-side
-    inflight (queued + running) shed cap. Both default to the channel's own
-    defaults. Useful for exercising the bounded-semaphore and read-backpressure
-    paths.
-
-    The pair speaks protobuf by default (production parity, so real
-    handlers receive typed messages). ``use_json=True`` falls back to the
-    registry-free :class:`JsonCodec` for channel-core tests that drive
-    synthetic message types with plain dict payloads.
-    """
+    """Return two channels connected to each other in-memory."""
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
     writer_a = _LoopbackWriter(reader_b)  # a's writes → b's reader

@@ -1,8 +1,4 @@
-"""Tests for :class:`hass_client.entry_runner.EntryRunner`.
-
-Exercises the sandbox-side ``sandbox/entry_setup`` round-trip plus the
-``sandbox/call_service`` channel.
-"""
+"""Tests for :class:`hass_client.entry_runner.EntryRunner`."""
 
 import asyncio
 import tempfile
@@ -187,12 +183,7 @@ async def test_entry_setup_reports_failure_reason(
 async def test_failed_entry_setup_is_retryable(
     channels: tuple[Channel, Channel], runner: EntryRunner
 ) -> None:
-    """A failed setup frees the entry_id so main can re-send entry_setup.
-
-    The first attempt fails; the entry must not linger in the sandbox's
-    config_entries (else the retry is rejected with "entry already loaded").
-    The second attempt for the same entry_id then succeeds.
-    """
+    """A failed setup frees the entry_id so main can re-send entry_setup."""
     main, sandbox = channels
     runner.register(sandbox)
     main.start()
@@ -403,14 +394,7 @@ async def test_entity_query_method_raises(
 async def test_entry_setup_real_platform_adds_entities(
     channels: tuple[Channel, Channel], runner: EntryRunner
 ) -> None:
-    """A real integration's entity platform adds entities on the private hass.
-
-    Regression test for the missing registry loads: an unloaded
-    ``EntityRegistry`` has no ``.entities``, so every
-    ``EntityPlatform._async_add_entity`` died with ``AttributeError`` while
-    ``entry_setup`` still reported ok — the sandbox bridged zero entities.
-    Driving the real ``sun`` integration end-to-end pins the whole path.
-    """
+    """A real integration's entity platform adds entities on the private hass."""
     main, sandbox = channels
     runner.register(sandbox)
     main.start()
@@ -437,13 +421,7 @@ async def test_entry_setup_real_platform_adds_entities(
 async def test_entry_setup_applies_core_config(
     channels: tuple[Channel, Channel], runner: EntryRunner
 ) -> None:
-    """An ``entry_setup`` carrying ``core_config`` configures the private hass.
-
-    Main's location / time zone / unit system must be mirrored before the
-    integration's setup runs, or a sandboxed integration computes sun times,
-    distances and unit conversions against the bare-hass defaults
-    (lat/long 0, UTC, metric).
-    """
+    """An ``entry_setup`` carrying ``core_config`` configures the private hass."""
     main, sandbox = channels
     runner.register(sandbox)
     main.start()

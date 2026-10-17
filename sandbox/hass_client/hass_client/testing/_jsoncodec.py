@@ -1,15 +1,4 @@
-"""Registry-free JSON codec for channel-core tests.
-
-The production wire is :class:`hass_client.codec_protobuf.ProtobufCodec`. This
-one-JSON-object-per-frame codec lived in :mod:`hass_client.channel` until it was
-moved here: keeping it out of the channel module means a ``Channel`` built
-without an explicit ``codec=`` is a construction-time error instead of silently
-speaking JSON at a protobuf peer.
-
-It passes frame payloads through as plain JSON (no ``type``-to-proto lookup), so
-the concurrency-critical channel core can be exercised with synthetic message
-types and arbitrary dict/int payloads.
-"""
+"""Registry-free JSON codec for channel-core tests."""
 
 import json
 from typing import Any

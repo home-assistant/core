@@ -1,11 +1,4 @@
-"""Tests for the compat-lane ``MockConfigEntry.add_to_hass`` autotag patch.
-
-These pin the sync classifier behaviour directly (no HA Core fixtures
-needed). The end-to-end "patched ``add_to_hass`` mutates ``entry.data``"
-case lives on the HA-core side at
-``tests/components/sandbox/test_testing_plugins.py`` where
-``MockConfigEntry`` is importable through the running pytest session.
-"""
+"""Tests for the compat-lane ``MockConfigEntry.add_to_hass`` autotag patch."""
 
 from hass_client.testing._autotag import classify_domain_sync
 
@@ -23,11 +16,7 @@ def test_classify_always_main_returns_none() -> None:
 
 
 def test_classify_incompatible_platform_returns_none() -> None:
-    """An integration shipping a deny-listed platform routes to main.
-
-    ``cloud`` is in ``ALWAYS_MAIN`` so it short-circuits; pick ``demo``
-    instead — it ships an ``stt`` platform.
-    """
+    """An integration shipping a deny-listed platform routes to main."""
     # Use the deny-list path: any integration that ships ``stt.py`` /
     # ``tts.py`` / etc. classifies to main. ``demo`` provides every
     # platform; assert the path fires for it.
@@ -40,9 +29,5 @@ def test_classify_unknown_domain_returns_custom_group() -> None:
 
 
 def test_classify_system_integration_returns_none() -> None:
-    """A system-type integration stays on main.
-
-    ``websocket_api`` is marked ``integration_type: system`` in its
-    manifest and is the canonical example used by the classifier.
-    """
+    """A system-type integration stays on main."""
     assert classify_domain_sync("websocket_api") is None

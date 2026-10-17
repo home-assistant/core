@@ -1,17 +1,4 @@
-"""Tests for :class:`hass_client.sandbox.SandboxRuntime` shutdown.
-
-The runtime registers ``sandbox/shutdown`` once its channel is up.
-These tests exercise:
-
-* the shutdown handler unloads loaded entries via
-  ``config_entries.async_unload`` and ships a JSON-safe
-  ``restore_state`` snapshot back in the reply (so main can persist it);
-* once the handler replies, the runtime exits cleanly so ``run()``
-  returns 0 without main needing to escalate to SIGTERM;
-* ``run()`` warm-loads ``core.restore_state`` from main before the
-  channel starts, so a fresh RestoreEntity sees the previous run's
-  state via ``async_get_last_state``.
-"""
+"""Tests for :class:`hass_client.sandbox.SandboxRuntime` shutdown."""
 
 import asyncio
 from typing import Any
@@ -67,12 +54,7 @@ def _make_channel_pair() -> tuple[Channel, Channel]:
 
 @pytest.fixture(name="runtime_pair")
 async def _runtime_pair_fixture():
-    """SandboxRuntime + main-side channel joined by an in-memory pair.
-
-    Yields ``(runtime, main_channel, run_task)``. The runtime owns the
-    sandbox side; its channel factory returns the sandbox half of the
-    pair. The fixture cancels and awaits the task on teardown.
-    """
+    """SandboxRuntime + main-side channel joined by an in-memory pair."""
     main_channel, sandbox_channel = _make_channel_pair()
 
     async def _channel_factory() -> Channel:
@@ -135,13 +117,7 @@ async def test_shutdown_returns_restore_state_payload(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """The shutdown handler returns a JSON-safe restore-state snapshot.
-
-    Restore state ships back in the reply (not via the store bridge)
-    because the channel reader task is busy dispatching the shutdown
-    handler — a re-entrant ``store_save`` call would deadlock. Main is
-    responsible for persisting the payload before SIGTERM.
-    """
+    """The shutdown handler returns a JSON-safe restore-state snapshot."""
     runtime, main_channel, _task = runtime_pair
 
     # Seed an in-memory restore-state entry so the snapshot has data.
@@ -169,12 +145,7 @@ async def test_shutdown_fires_final_write_event(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """The shutdown handler fires EVENT_HOMEASSISTANT_FINAL_WRITE.
-
-    Concurrent channel dispatcher means the FINAL_WRITE fire-and-drain
-    inside the shutdown handler no longer deadlocks against re-entrant
-    bridge writes triggered by listeners on the event.
-    """
+    """The shutdown handler fires EVENT_HOMEASSISTANT_FINAL_WRITE."""
     runtime, main_channel, _task = runtime_pair
     hass = runtime._flow_runner.hass  # noqa: SLF001
 
@@ -195,14 +166,7 @@ async def test_shutdown_flushes_pending_delay_save(
     runtime_pair: tuple[SandboxRuntime, Channel, asyncio.Task[int]],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """``async_delay_save`` writes flush through the store bridge.
-
-    Without the concurrent channel dispatcher this would deadlock: the
-    Store's FINAL_WRITE listener would re-enter the same channel reader
-    that is dispatching the shutdown handler. The concurrent dispatcher
-    lets the inner ``store_save`` land on the main-side handler while the
-    shutdown handler is still running.
-    """
+    """``async_delay_save`` writes flush through the store bridge."""
     runtime, main_channel, _task = runtime_pair
     hass = runtime._flow_runner.hass  # noqa: SLF001
 
@@ -232,14 +196,7 @@ async def test_shutdown_flushes_pending_delay_save(
 
 
 class _StallableWriter:
-    """Loopback writer that holds writes until a stall event is released.
-
-    Simulates transport backpressure on the shutdown reply: while ``stall``
-    is armed, written frames are buffered (not delivered to the peer) and the
-    write suspends in ``drain`` until the event is set, then the buffer flushes
-    — so a reply write cancelled mid-stall never reaches the peer. This makes
-    the reply-vs-close race deterministic.
-    """
+    """Loopback writer that holds writes until a stall event is released."""
 
     def __init__(self, target: asyncio.StreamReader) -> None:
         self._target = target
@@ -269,12 +226,7 @@ class _StallableWriter:
 async def test_shutdown_reply_flushes_despite_stalled_drain(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A shutdown reply still reaches main when its write stalls on drain.
-
-    Without ``run()`` draining in-flight handlers before ``close()``, the
-    stalled reply task would be cancelled by close and main would never see
-    the reply. The drain holds close open until the reply flushes.
-    """
+    """A shutdown reply still reaches main when its write stalls on drain."""
     reader_main = asyncio.StreamReader()
     reader_sandbox = asyncio.StreamReader()
     sandbox_writer = _StallableWriter(reader_main)

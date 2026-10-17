@@ -1,20 +1,4 @@
-"""Sandbox-side config flow runner.
-
-Runs an integration's :class:`ConfigFlow` inside a dedicated
-:class:`HomeAssistant` instance owned by the sandbox runtime. The
-manager-side proxy :class:`ConfigFlow` calls these handlers across the
-:class:`Channel`:
-
-* ``sandbox/flow_init``  → ``(handler, source, context, data)``  → flow result
-* ``sandbox/flow_step``  → ``(flow_id, user_input)``             → flow result
-* ``sandbox/flow_abort`` → ``(flow_id)``                         → ``{}``
-
-Flow results cross the wire as plain dicts. ``data_schema`` and the
-``progress_task`` field are intentionally stripped — the schema lives on
-the sandbox where validation happens, and the task is a runtime object
-that can't be serialised. The docstring in ``_marshal_result`` is the
-load-bearing note for how the schema is later marshalled.
-"""
+"""Sandbox-side config flow runner."""
 
 import asyncio
 from collections.abc import Callable, Mapping
@@ -67,13 +51,7 @@ from .schema_bridge import serialize_schema
 _LOGGER = logging.getLogger(__name__)
 
 
-# Scalar optional-string fields copied verbatim from the integration's
-# FlowResult onto the proto. Dynamic dicts (data / options / errors /
-# description_placeholders / context) and data_schema get bespoke handling in
-# ``_marshal_result``. MENU additionally carries menu_options / sort; the
-# remaining result types (external-step / progress) carry no extra fields —
-# the main-side proxy supports FORM / CREATE_ENTRY / ABORT / MENU and aborts
-# cleanly on anything else.
+# Copy scalar flow metadata; structured fields require separate serialization.
 _SCALAR_STRING_FIELDS = (
     "flow_id",
     "handler",
@@ -94,13 +72,7 @@ _DYNAMIC_DICT_FIELDS = (
 
 
 class _SandboxFlowManager(ConfigEntriesFlowManager):
-    """ConfigEntriesFlowManager that doesn't add CREATE_ENTRY results.
-
-    Main owns the canonical entry store; the sandbox just runs the flow
-    and returns the result. The default ``async_finish_flow`` would
-    create an entry inside the sandbox-private store and try to set the
-    integration up locally — that's later work, not this layer's.
-    """
+    """ConfigEntriesFlowManager that doesn't add CREATE_ENTRY results."""
 
     async def async_finish_flow(
         self, flow: Any, result: ConfigFlowResult
@@ -143,12 +115,7 @@ class FlowRunner:
         hass.config_entries.flow = _SandboxFlowManager(hass, hass.config_entries, {})
         hass.config_entries.subentries = _SandboxSubentryFlowManager(hass)
         loader.async_setup(hass)
-        # The registry subset of bootstrap's async_load_base_functionality —
-        # a bare hass never runs bootstrap, and an unloaded EntityRegistry
-        # has no ``.entities``, so a real EntityPlatform cannot add a single
-        # entity without these. Runs before the runtime opens the channel and
-        # sets ``current_sandbox``, so registry Stores bind to the sandbox's
-        # local tempdir (fresh per process), never route to main.
+        # Load registries before enabling remote storage so their initial data stays local.
         entity.async_setup(hass)
         frame.async_setup(hass)
         translation.async_setup(hass)
@@ -172,13 +139,7 @@ class FlowRunner:
         channel.register(MSG_FLOW_ABORT, self._handle_flow_abort)
 
     async def async_stop(self) -> None:
-        """Tear down in-progress flows and stop the private hass.
-
-        ``async_stop`` shuts down the executor ``HomeAssistant.__init__``
-        created and cancels pending timers — without it, every in-process
-        (test-lane) sandbox leaks a thread pool and delay-save timers onto
-        the shared loop. In production the process exits anyway.
-        """
+        """Tear down in-progress flows and stop the private hass."""
         for flow_manager in (
             self.hass.config_entries.flow,
             self.hass.config_entries.subentries,
@@ -199,10 +160,7 @@ class FlowRunner:
         # dicts (the proxy flattened the *ServiceInfo / DiscoveryKey objects);
         # rebuild the real types so async_step_<source> sees what it expects.
         context, data = _rehydrate_discovery(context, data)
-        # Reauth / reconfigure / reset flows resolve the entry they operate on
-        # via ConfigFlow._get_reauth_entry() / _get_reconfigure_entry(), which
-        # look it up on this private hass. Main owns the entry, so seed a copy
-        # before the flow runs or those lookups raise UnknownEntry.
+        # Seed the main-owned entry before the worker flow looks it up.
         if msg.HasField("entry"):
             self._ensure_flow_entry(msg.entry)
         if msg.HasField("subentry_type"):
@@ -265,21 +223,7 @@ def _marshal_result(
     result: Mapping[str, Any],
     flow_manager: ConfigEntriesFlowManager | None = None,
 ) -> pb.FlowResult:
-    """Marshal a FlowResult into the typed ``FlowResult`` message.
-
-    ``data_schema`` is rendered via :func:`serialize_schema` —
-    the wire payload carries the same list-of-fields shape
-    :func:`probatio.to_field_list` produces, so the proxy on main
-    can rebuild a usable :class:`probatio.Schema`. ``flow.context`` (which
-    carries ``unique_id`` once the integration calls
-    :meth:`ConfigFlow.async_set_unique_id`) is pulled out of the live
-    flow when the result type doesn't already include it.
-
-    FORM / CREATE_ENTRY / ABORT / MENU fields are carried — the main-side proxy
-    supports those four and aborts cleanly on anything else, so the
-    external-step / progress extras (``url`` / …) are
-    intentionally dropped.
-    """
+    """Marshal a FlowResult into the typed ``FlowResult`` message."""
     out = pb.FlowResult(type=_flow_type_value(result["type"]))
     for key in _SCALAR_STRING_FIELDS:
         value = result.get(key)
@@ -311,10 +255,7 @@ def _marshal_result(
         if serialized is not None:
             out.data_schema = encode_json(serialized)
         else:
-            # voluptuous_serialize couldn't render it; flag the gap so the
-            # proxy still surfaces a (schema-less) form rather than abort.
-            # Log the schema's repr at warning so the lossy fallback is
-            # visible rather than silently swallowing a real form.
+            # Log lossy schemas so an unsupported form does not fail silently.
             _LOGGER.warning(
                 "Could not serialize data_schema %r; main will render a"
                 " schema-less form",
@@ -325,10 +266,7 @@ def _marshal_result(
     if isinstance(context_value, Mapping):
         out.context = encode_json(dict(context_value))
     elif flow_manager is not None:
-        # FORM / SHOW_PROGRESS / EXTERNAL_STEP results don't include the
-        # flow's context (only CREATE_ENTRY does). Look it up so the proxy
-        # can mirror ``unique_id`` into its own ``self.context`` and let
-        # main's duplicate detection fire.
+        # Read the active flow context because nonterminal results omit the unique ID.
         flow_id = result.get("flow_id")
         if isinstance(flow_id, str):
             try:
@@ -374,13 +312,7 @@ def _build_ssdp(data: dict[str, Any]) -> SsdpServiceInfo:
     )
 
 
-# Discovery source -> builder that reconstructs the BaseServiceInfo the real
-# ``async_step_<source>`` expects from the JSON-flattened wire dict. Sources
-# whose info type is a plain flat dataclass take ``Class(**data)``; zeroconf /
-# ssdp need field coercion. ``homekit`` reuses ZeroconfServiceInfo. Bluetooth is
-# intentionally absent (its info is an external non-trivially-rebuildable type);
-# an unmapped source leaves ``data`` as a dict and the integration step — not
-# the bridge — decides what to do, with the proxy aborting cleanly if it raises.
+# Reconstruct discovery types whose integration steps require typed attributes.
 _DISCOVERY_INFO_BUILDERS: dict[str, Callable[[dict[str, Any]], BaseServiceInfo]] = {
     "zeroconf": _build_zeroconf,
     "homekit": _build_zeroconf,
@@ -395,13 +327,7 @@ _DISCOVERY_INFO_BUILDERS: dict[str, Callable[[dict[str, Any]], BaseServiceInfo]]
 def _rehydrate_discovery(
     context: dict[str, Any], data: Any
 ) -> tuple[dict[str, Any], Any]:
-    """Rebuild discovery objects flattened by the proxy for the wire.
-
-    Restores ``context["discovery_key"]`` to a :class:`DiscoveryKey` and the
-    first-step ``data`` to the source's :class:`BaseServiceInfo`. Reconstruction
-    failures degrade to the plain dict rather than crash — the proxy's broadened
-    abort is the outer backstop.
-    """
+    """Rebuild discovery objects flattened by the proxy for the wire."""
     discovery_key = context.get("discovery_key")
     if isinstance(discovery_key, Mapping):
         context = {
@@ -422,12 +348,7 @@ def _rehydrate_discovery(
 
 
 def _marshal_menu_options(menu_options: Any) -> list[Any]:
-    """Render MENU ``menu_options`` (list[str] or dict[str,str]) as a wire list.
-
-    A dict maps step-id → label; it crosses as a list of ``[id, label]`` pairs
-    so order and labels survive the round-trip. A plain list crosses as a list
-    of step-id strings. The proxy on main rebuilds the original shape.
-    """
+    """Render MENU ``menu_options`` (list[str] or dict[str,str]) as a wire list."""
     if isinstance(menu_options, Mapping):
         return [[str(key), str(label)] for key, label in menu_options.items()]
     return [str(option) for option in menu_options]

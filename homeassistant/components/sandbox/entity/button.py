@@ -19,13 +19,7 @@ class SandboxButtonEntity(SandboxProxyEntity, ButtonEntity):
         attributes: dict[str, Any],
         context: Context | None = None,
     ) -> None:
-        """Forward sandbox state into ButtonEntity's last-pressed field.
-
-        ``ButtonEntity.state`` is ``@final`` and reads the name-mangled
-        ``__last_pressed_isoformat`` attribute. Setting the cache alone
-        wouldn't surface as the state on main, so we update the private
-        field directly before the framework recomputes state.
-        """
+        """Forward sandbox state into ButtonEntity's last-pressed field."""
         if state is not None:
             # pylint: disable-next=attribute-defined-outside-init
             self._ButtonEntity__last_pressed_isoformat = state

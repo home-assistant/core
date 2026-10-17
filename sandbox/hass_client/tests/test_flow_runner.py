@@ -1,11 +1,4 @@
-"""Tests for :class:`hass_client.flow_runner.FlowRunner`.
-
-Exercises the sandbox-side flow loop against a mock integration whose
-``async_setup_entry`` is intercepted before the FlowRunner is asked to
-run the flow. The wire-format assertions live here (rather than in HA
-Core) because the runner's only public surface is the JSON it returns
-on the channel.
-"""
+"""Tests for :class:`hass_client.flow_runner.FlowRunner`."""
 
 import asyncio
 import tempfile
@@ -431,12 +424,7 @@ class _ReconfigureFlow(ConfigFlow, domain="phase4_reconfigure"):
 async def test_flow_init_seeds_reconfigure_entry(
     channels: tuple[Channel, Channel], runner: FlowRunner
 ) -> None:
-    """FlowInit.entry lets a reconfigure flow resolve main's entry.
-
-    Regression for the UnknownEntry cluster: reauth/reconfigure flows call
-    ``_get_reconfigure_entry()`` / ``_get_reauth_entry()`` which look the
-    entry up on the private hass. Main owns it, so flow_init must seed a copy.
-    """
+    """FlowInit.entry lets a reconfigure flow resolve main's entry."""
     main, sandbox = channels
     runner.register(sandbox)
     main.start()

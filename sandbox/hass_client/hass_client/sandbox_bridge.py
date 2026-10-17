@@ -1,17 +1,4 @@
-"""Channel-backed :class:`SandboxBridge` for the sandbox runtime.
-
-Implements ``homeassistant.helpers.sandbox_context.SandboxBridge`` over the
-control channel: the three ``Store`` IO methods delegate to main via the
-``MSG_STORE_LOAD`` / ``MSG_STORE_SAVE`` / ``MSG_STORE_REMOVE`` RPCs. Main
-namespaces every key as ``<config>/.storage/sandbox/<group>/<key>`` so
-two sandbox processes — or main itself — can't read each other's data.
-
-The bodies are lifted from the pre-contextvar store subclass that
-this primitive replaced: same load semantics, same orjson preserialise on
-save, same channel error handling. The difference is *how* it's wired —
-``Store`` reads ``current_sandbox`` at call time instead of being rebound
-at module scope.
-"""
+"""Channel-backed :class:`SandboxBridge` for the sandbox runtime."""
 
 import logging
 from typing import Any
@@ -27,24 +14,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ChannelSandboxBridge:
-    """Route ``Store`` IO to main over a :class:`Channel`.
-
-    One bridge per sandbox runtime; the runtime sets it on
-    ``current_sandbox`` once ``run()`` opens the channel, and every
-    ``Store`` instance the sandbox builds resolves it at IO time.
-    """
+    """Route ``Store`` IO to main over a :class:`Channel`."""
 
     def __init__(self, channel: Channel) -> None:
         """Bind the bridge to the runtime's control channel."""
         self._channel = channel
 
     async def async_store_load(self, key: str) -> Any:
-        """Fetch the wrapped envelope for ``key`` from main.
-
-        Returns the wrapped dict (``{"version", "minor_version", "key",
-        "data"}``) so ``Store``'s migration loop runs against it unchanged,
-        or ``None`` when main has no data / the channel is unavailable.
-        """
+        """Fetch the wrapped envelope for ``key`` from main."""
         try:
             result = await self._channel.call(MSG_STORE_LOAD, pb.StoreLoad(key=key))
         except ChannelClosedError:
@@ -58,15 +35,7 @@ class ChannelSandboxBridge:
         return decode_json_dict(result.data)
 
     async def async_store_save(self, key: str, data: Any) -> None:
-        """Push the wrapped payload to main instead of writing to disk.
-
-        ``Store`` callers may hand us HA-specific types (``Fragment`` from
-        ``State.json_fragment``, ``set``/``tuple``, ``datetime``, ``Path``,
-        ``as_dict``-shaped objects). The wire field carries JSON bytes, so
-        the payload is run through orjson's HA-aware encoder — the same trip
-        ``Store.async_save`` would take on its way to disk — and the bytes
-        ship as-is, no re-parse.
-        """
+        """Push the wrapped payload to main instead of writing to disk."""
         if "data_func" in data:
             data["data"] = data.pop("data_func")()
         try:

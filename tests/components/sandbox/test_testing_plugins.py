@@ -1,20 +1,4 @@
-"""Tests for the ``hass_client.testing`` pytest plugins.
-
-Two plugins are exercised here:
-
-* ``hass_client.testing.pytest_plugin`` (in-process) — spins up a
-  :class:`hass_client.sandbox.SandboxRuntime` as an asyncio task and
-  joins it to the integration's manager-side bridge with an in-memory
-  channel pair.
-* ``hass_client.testing.conftest_sandbox`` (subprocess) — registers the
-  ``no_sandbox_freezer`` marker and skips tests that combine ``freezer``
-  with the real-subprocess sandbox.
-
-The real-subprocess fixture itself is covered by
-:mod:`test_subprocess` which already drives ``SandboxManager``
-through a real subprocess; the tests here unit-check the hook shape
-without spawning a nested pytest run.
-"""
+"""Tests for the ``hass_client.testing`` pytest plugins."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -36,12 +20,7 @@ from homeassistant.core import HomeAssistant
 async def _in_process_sandbox_fixture(
     hass: HomeAssistant, tmp_path_factory: pytest.TempPathFactory
 ) -> AsyncIterator[InProcessSandbox]:
-    """Local copy of the ``sandbox_inprocess`` fixture for these tests.
-
-    The plugin fixture is defined under ``hass_client.testing`` and the
-    HA Core tests don't load that plugin by default — replicating the
-    setup here keeps the assertion close to what the plugin guarantees.
-    """
+    """Local copy of the ``sandbox_inprocess`` fixture for these tests."""
     config_dir = tmp_path_factory.mktemp("sandbox_inproc")
     sandbox = await async_setup_inprocess_sandbox(
         hass, group=DEFAULT_GROUP, config_dir=str(config_dir)
@@ -71,11 +50,7 @@ async def test_inprocess_plugin_wires_manager_and_bridge(
 async def test_inprocess_plugin_round_trips_ping(
     hass: HomeAssistant, in_process_sandbox: InProcessSandbox
 ) -> None:
-    """The in-memory channel speaks the real sandbox protocol.
-
-    Calling ``sandbox/ping`` on the manager-side channel reaches the
-    runtime's handler and returns the same payload a subprocess would.
-    """
+    """The in-memory channel speaks the real sandbox protocol."""
     data = hass.data[DATA_SANDBOX]
     channel = data.bridges[DEFAULT_GROUP].channel
     result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=2.0)
@@ -128,11 +103,7 @@ def test_conftest_sandbox_skips_marker_tagged_tests() -> None:
 
 
 def test_conftest_sandbox_injects_sandbox_into_hass_tests() -> None:
-    """A hass-using test gets the ``sandbox_subprocess`` fixture injected.
-
-    Without the injection the plugin only tags entries — the router stays
-    ``None`` and the compat lane is a no-op.
-    """
+    """A hass-using test gets the ``sandbox_subprocess`` fixture injected."""
     item = _make_item(fixturenames=("hass",))
     cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
     assert not item.add_marker.called
@@ -159,14 +130,7 @@ def test_inprocess_plugin_injects_sandbox_into_hass_tests() -> None:
 
 
 def test_autotag_sets_mock_config_entry_sandbox() -> None:
-    """``install_mock_config_entry_autotag`` sets ``entry.sandbox`` on ``add_to_hass``.
-
-    Drives the patch end-to-end against a real ``MockConfigEntry``: a
-    built-in domain (``light``) classifies to ``built-in``, the patch
-    sets the first-class ``ConfigEntry.sandbox`` field (without
-    touching ``entry.data``), and ``restore()`` puts the original
-    method back.
-    """
+    """``install_mock_config_entry_autotag`` sets ``entry.sandbox`` on ``add_to_hass``."""
     from hass_client.testing._autotag import (  # noqa: PLC0415
         install_mock_config_entry_autotag,
     )

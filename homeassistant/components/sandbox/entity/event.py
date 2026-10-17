@@ -11,13 +11,7 @@ from . import SandboxProxyEntity
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxEventEntity(SandboxProxyEntity, EventEntity):
-    """Proxy for an ``event`` entity in a sandbox.
-
-    ``EventEntity`` marks ``state`` and ``state_attributes`` ``@final``,
-    so we set the name-mangled fields directly in
-    :meth:`sandbox_apply_state` and let the framework recompute the
-    state through the existing getters.
-    """
+    """Proxy for an ``event`` entity in a sandbox."""
 
     @property
     @override

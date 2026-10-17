@@ -1,12 +1,4 @@
-"""Tests for the sandbox-side ``sandbox/get_translations`` handler.
-
-Covers :func:`hass_client.sandbox._collect_component_strings` (the loader that
-mirrors core's translation read) and :meth:`SandboxRuntime._handle_get_translations`
-(the channel handler that packs the result into JSON bytes). The sandbox
-holds the ``Integration`` for a custom domain — main does not — so this is
-where the raw ``translations/<lang>.json`` and the ``title`` pre-fill come
-from.
-"""
+"""Tests for the sandbox-side ``sandbox/get_translations`` handler."""
 
 import json
 from pathlib import Path
@@ -37,12 +29,7 @@ async def _hass_fixture() -> HomeAssistant:
 def _install_custom_integration(
     hass: HomeAssistant, tmp_path: Path, *, domain: str, strings: dict[str, Any]
 ) -> ha_loader.Integration:
-    """Stand up a custom integration on disk + in the loader cache.
-
-    Writes ``<tmp_path>/<domain>/translations/en.json`` and injects a matching
-    custom :class:`Integration` into ``DATA_INTEGRATIONS`` so
-    ``async_get_integrations`` resolves it from cache.
-    """
+    """Stand up a custom integration on disk + in the loader cache."""
     root = tmp_path / domain
     (root / "translations").mkdir(parents=True)
     (root / "translations" / "en.json").write_text(json.dumps(strings))

@@ -1,20 +1,4 @@
-"""Tests for the main-side Store handlers on :class:`SandboxBridge`.
-
-We exercise the three ``sandbox/store_*`` handlers via the in-memory
-channel pair, with the bridge wired against the real ``hass`` config
-directory so we can also verify the on-disk layout.
-
-Coverage:
-
-* a save lands at ``<config>/.storage/sandbox/<group>/<key>``;
-* a subsequent load round-trips the same payload;
-* a load for a missing key returns ``None``;
-* path-traversal attempts (``..`` / slashes) are rejected;
-* two bridges with different groups never collide on the same key
-  (scope isolation by construction).
-* a "sandbox restart" simulated by tearing the bridge down and creating
-  a fresh one with a new channel still reads the previously-saved data.
-"""
+"""Tests for the main-side Store handlers on :class:`SandboxBridge`."""
 
 import json
 from pathlib import Path

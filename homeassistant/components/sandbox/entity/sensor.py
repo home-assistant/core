@@ -17,13 +17,7 @@ class SandboxSensorEntity(SandboxProxyEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> datetime | date | str | int | float | None:
-        """Return the cached state as the sensor's native value.
-
-        The sandbox pushes the already-formatted state string; timestamp /
-        date sensors must hand ``SensorEntity`` a real ``datetime`` /
-        ``date`` back or its ``state`` property dies on ``value.tzinfo``.
-        An unparsable string (``unknown`` and friends) degrades to None.
-        """
+        """Return the cached state as the sensor's native value."""
         value = self._state_cache.get("state")
         if not isinstance(value, str):
             return value

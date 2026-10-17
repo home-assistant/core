@@ -1,17 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate the checked-in protobuf gencode for both mirrors.
-#
-# Keep the compiler toolchain isolated and reproducible. The generated Python
-# 6.31.1 code is also supported by Core's protobuf 7 runtime. Generate both
-# no-cross-import mirrors with the same compiler:
-#
-#   homeassistant/components/sandbox/_proto/sandbox_pb2.py(+.pyi)
-#   sandbox/hass_client/hass_client/_proto/sandbox_pb2.py(+.pyi)
-#
-# Usage (from the repo root):  sandbox/proto/generate.sh
-#
-# After running, `git diff --exit-code` the two _pb2 paths must be clean — a
-# dirty diff means the checked-in gencode drifted from the .proto.
+# Generate protobuf bindings for the host and worker.
 
 set -euo pipefail
 

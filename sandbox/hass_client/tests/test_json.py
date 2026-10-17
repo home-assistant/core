@@ -1,10 +1,4 @@
-"""Tests for the shared ``json_safe`` coercion helper.
-
-Covers the behaviour the three former hand-rolled coercers each relied on —
-sets/enums/``as_dict`` objects/datetimes (state attrs, capabilities, service
-responses) and the ``str()`` fallback for arbitrary objects (best-effort event
-data) — so the single helper is a safe replacement for all of them.
-"""
+"""Tests for the shared ``json_safe`` coercion helper."""
 
 from datetime import UTC, datetime
 from enum import Enum

@@ -1,20 +1,4 @@
-"""Main-side :class:`ConfigEntryRouter` implementation.
-
-Bridges :class:`homeassistant.config_entries.ConfigEntries` to the sandbox
-manager:
-
-* New flows for sandboxed integrations are diverted to a
-  :class:`SandboxFlowProxy` that forwards each step over the sandbox's
-  control :class:`Channel`.
-* Existing config-entry setup is intercepted when ``entry.sandbox`` is
-  set — the entry is handed to the sandbox manager and pushed into the
-  sandbox runtime via ``sandbox/entry_setup``.
-
-The router treats classifier output as the source of truth for which
-sandbox a new entry should go into. Once an entry exists, the
-``sandbox`` field stored on it wins (so a re-classification later
-doesn't yank a running entry into a different sandbox).
-"""
+"""Main-side :class:`ConfigEntryRouter` implementation."""
 
 import logging
 from typing import TYPE_CHECKING, Any
@@ -45,13 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SandboxFlowRouter:
-    """Route config flows and entry setup to sandbox processes.
-
-    Structurally implements the :class:`ConfigEntryRouter` Protocol from
-    ``homeassistant.config_entries``; declared as a plain class so the
-    sandbox integration does not pull a runtime dependency on the
-    protocol's import side-effects.
-    """
+    """Route config flows and entry setup to sandbox processes."""
 
     def __init__(
         self,
@@ -97,44 +75,22 @@ class SandboxFlowRouter:
         )
 
     async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
-        """Hand a sandboxed entry to the manager and run its setup remotely.
-
-        Core owns the entry state: True marks the entry LOADED, a raised
-        :class:`ConfigEntryError` marks it SETUP_ERROR with the message.
-        """
+        """Hand a sandboxed entry to the manager and run its setup remotely."""
         group = entry.sandbox
         if group is None:
             return None
         try:
             sandbox = await self._manager.ensure_started(group)
         except Exception as err:
-            _LOGGER.exception(
-                "Sandbox group %r failed to start for entry %s (%s)",
-                group,
-                entry.title,
-                entry.domain,
-            )
             raise ConfigEntryError("Sandbox failed to start") from err
 
         channel = sandbox.channel
         if channel is None:
-            _LOGGER.error(
-                "Sandbox %r has no live channel for entry %s (%s)",
-                group,
-                entry.title,
-                entry.domain,
-            )
             raise ConfigEntryError("Sandbox channel down")
 
         try:
             payload = await _entry_setup_payload(self._hass, entry)
         except SandboxSourceError as err:
-            _LOGGER.error(
-                "Cannot resolve integration source for entry %s (%s): %s",
-                entry.title,
-                entry.domain,
-                err,
-            )
             raise ConfigEntryError(str(err)) from err
         if (
             self._data is not None
@@ -144,14 +100,7 @@ class SandboxFlowRouter:
         try:
             result = await channel.call(MSG_ENTRY_SETUP, payload)
         except ChannelClosedError as err:
-            # The router runs *outside* ConfigEntry.async_setup, so the
-            # SETUP_RETRY timer (async_call_later) that core wires there is
-            # never armed for a sandbox entry — setting SETUP_RETRY here would
-            # wedge the entry in a retry state that never retries (and a later
-            # async_setup would raise OperationNotAllowed). Report SETUP_ERROR
-            # honestly instead; the entry stays recoverable via a manual
-            # reload. (Follow-up: a router-driven true retry — see
-            # ARCHITECTURE.md §5.)
+            # The router has no retry timer; SETUP_ERROR keeps manual reload available.
             raise ConfigEntryError(
                 "Sandbox channel closed during setup; reload to retry"
             ) from err
@@ -169,14 +118,7 @@ class SandboxFlowRouter:
         return True
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
-        """Push the unload back to the sandbox if the entry is sandboxed.
-
-        Returns ``None`` for non-sandbox entries so the normal HA unload
-        path runs. True means unloaded (core marks the entry NOT_LOADED);
-        a raised :class:`ConfigEntryError` means a live sandbox refused the
-        unload — the main-side proxies stay in place and core leaves the
-        entry state untouched.
-        """
+        """Push the unload back to the sandbox if the entry is sandboxed."""
         group = entry.sandbox
         if group is None:
             return None
@@ -186,10 +128,7 @@ class SandboxFlowRouter:
         async_invalidate_translations(self._hass, {entry.domain})
         sandbox = self._manager.get(group)
         if sandbox is None or sandbox.channel is None:
-            # The sandbox is down. Skip the remote entry_unload RPC (the
-            # process is gone) but still tear down the main-side proxies +
-            # EntityComponent platform registration, or a later re-setup
-            # hits "has already been setup!".
+            # Release local platforms even when the worker cannot acknowledge unload.
             await self._async_unload_main_side(group, entry)
             return True
         try:
@@ -213,12 +152,6 @@ class SandboxFlowRouter:
             # A live sandbox refused the unload — the entry is still loaded
             # remotely, so leave the main-side proxies in place and report
             # the failure.
-            _LOGGER.exception(
-                "Sandbox %r failed to unload entry %s (%s)",
-                group,
-                entry.title,
-                entry.domain,
-            )
             raise ConfigEntryError(f"Sandbox refused to unload: {err.error}") from err
         if not result.ok:
             raise ConfigEntryError("Sandbox reported the unload failed")
@@ -226,14 +159,7 @@ class SandboxFlowRouter:
         return True
 
     async def _async_unload_main_side(self, group: str, entry: ConfigEntry) -> None:
-        """Tear down the main-side proxies + platform slot for ``entry``.
-
-        Shared by every :meth:`async_unload_entry` exit that should release
-        main-side state: the remote ``entry_unload`` RPC is optional (it
-        can't run when the sandbox is down) but the proxies and the
-        ``EntityComponent`` platform registration must always be removed or a
-        later re-setup trips the ``"has already been setup!"`` guard.
-        """
+        """Tear down the main-side proxies + platform slot for ``entry``."""
         if self._data is None:
             return
         bridge = self._data.bridges.get(group)
@@ -241,12 +167,7 @@ class SandboxFlowRouter:
             await bridge.async_unload_entry(entry)
 
     async def _assignment_for_new_flow(self, handler_key: str) -> SandboxAssignment:
-        """Decide where a new flow for ``handler_key`` should run.
-
-        First an existing entry's ``sandbox`` wins (so a flow for a
-        domain that already has sandboxed entries goes to the same
-        sandbox). Otherwise the classifier picks.
-        """
+        """Decide where a new flow for ``handler_key`` should run."""
         for existing in self._hass.config_entries.async_entries(handler_key):
             if (group := existing.sandbox) is not None:
                 return SandboxAssignment(group=group)
@@ -257,16 +178,7 @@ class SandboxFlowRouter:
 async def _entry_setup_payload(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> pb.EntrySetup:
-    """Build the typed ``EntrySetup`` message for ``sandbox/entry_setup``.
-
-    Surfaces the small subset of entry fields the integration's
-    ``async_setup_entry`` reads, plus the ``integration_source`` descriptor
-    telling a stateless sandbox where to fetch the code (built-in → no-op;
-    custom → a git source pinned to an exact sha), plus a ``core_config``
-    snapshot of main's core configuration so the sandbox's private hass
-    computes sun times / distances / unit conversions like main. May raise
-    :class:`SandboxSourceError` if a custom integration has no source resolver.
-    """
+    """Build the typed ``EntrySetup`` message for ``sandbox/entry_setup``."""
     msg = entry_to_setup_proto(entry)
     msg.integration_source.CopyFrom(
         await async_resolve_integration_source(hass, entry.domain)

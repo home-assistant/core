@@ -1,29 +1,4 @@
-"""Main-side translation provider for sandboxed integrations.
-
-A custom integration runs in an isolated sandbox process; its code — and so
-its ``translations/<lang>.json`` — is never on main's disk. Main's translation
-cache therefore resolves the domain to ``IntegrationNotFound`` and serves no
-strings (entity names, config-flow labels, services, exceptions all vanish).
-
-This module fills that gap. It registers a provider into core's
-sandbox-agnostic translation hook
-(:func:`homeassistant.helpers.translation.async_register_sandbox_translation_provider`).
-For each requested component the provider resolves the owning sandbox group,
-batches that group's custom domains into one ``sandbox/get_translations`` RPC
-per language, and hands the raw (``title``-pre-filled) strings back to the
-cache, which merges them as if they came off disk.
-
-Two invariants keep it safe:
-
-* **Built-in carve-out.** A sandboxed built-in integration's manifest +
-  translations resolve on main from the bundled package, byte-identical to the
-  sandbox's. Those never cross the wire — the provider returns nothing for
-  ``Integration.is_built_in`` domains and main reads its own disk.
-* **Degrade to empty.** The overlay runs under the translation cache lock, so
-  it must never block the frontend. A group with no live channel — or an RPC
-  that fails or times out — yields no strings for those domains (they fall
-  through to main's empty disk result), never an exception.
-"""
+"""Main-side translation provider for sandboxed integrations."""
 
 import logging
 from typing import TYPE_CHECKING, Any
@@ -58,12 +33,7 @@ class SandboxTranslationProvider:
     async def async_get_translations(
         self, languages: list[str], components: set[str]
     ) -> dict[str, dict[str, Any]]:
-        """Return ``{language: {domain: raw_strings}}`` for owned domains.
-
-        Only custom domains that are sandboxed into a group with a live
-        channel produce strings; everything else is omitted so it keeps its
-        on-disk (or empty) result. Never raises — see the module docstring.
-        """
+        """Return ``{language: {domain: raw_strings}}`` for owned domains."""
         domains_by_group: dict[str, set[str]] = {}
         for domain in components:
             group = await self._resolve_sandbox_group(domain)
@@ -82,24 +52,13 @@ class SandboxTranslationProvider:
                 continue
             for language in languages:
                 strings = await self._fetch(channel, group, language, domains)
-                # Trust only the domains we actually asked this group to
-                # resolve. A compromised sandbox can return strings for any
-                # domain (e.g. a co-requested ``hue`` / ``http`` it does not
-                # own) to poison a victim integration's frontend strings; keep
-                # only the requested ∩ returned intersection.
+                # Ignore unsolicited domains so a worker cannot replace another integration's strings.
                 for domain in domains & strings.keys():
                     result.setdefault(language, {})[domain] = strings[domain]
         return result
 
     async def _resolve_sandbox_group(self, domain: str) -> str | None:
-        """Return the sandbox group owning ``domain``, or ``None``.
-
-        ``None`` means "leave it to the disk path": the domain is not
-        sandboxed, or it is a built-in whose files main already holds.
-        Resolution order matches the flow router — a loaded entry's
-        ``sandbox`` field wins; otherwise an in-progress sandbox flow's group
-        (for a brand-new custom with no entry yet).
-        """
+        """Return the sandbox group owning ``domain``, or ``None``."""
         group: str | None = None
         for entry in self._hass.config_entries.async_entries(domain):
             if entry.sandbox is not None:
@@ -122,14 +81,7 @@ class SandboxTranslationProvider:
 
     @callback
     def _group_for_flow_in_progress(self, domain: str) -> str | None:
-        """Return the group of an in-progress sandbox flow for ``domain``.
-
-        A brand-new custom integration being added has no ``ConfigEntry`` yet,
-        so its group lives only on the live :class:`SandboxFlowProxy` driving
-        the add-integration dialog. The public flow API exposes only
-        serialized results, so the live flow object is reached through the flow
-        manager's per-handler progress index.
-        """
+        """Return the group of an in-progress sandbox flow for ``domain``."""
         index = self._hass.config_entries.flow._handler_progress_index  # noqa: SLF001
         for flow in index.get(domain, ()):
             if isinstance(flow, SandboxFlowProxy):

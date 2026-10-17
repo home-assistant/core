@@ -93,7 +93,7 @@ message DeviceInfo {
 
 // Where the sandbox should source the integration's code from. Makes the
 // sandbox stateless: built-ins ride the bundled `homeassistant` package
-// (no-op), custom (HACS) integrations carry a git source the sandbox fetches
+// (no-op), custom Marketplace integrations carry a git source the sandbox fetches
 // at startup. Main pins the source to an exact commit `ref` (sha) before it
 // crosses the wire — never a moving tag — see `sources.py`.
 message IntegrationSource {

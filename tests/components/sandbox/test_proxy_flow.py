@@ -16,11 +16,7 @@ from homeassistant.components.sandbox.manager import SandboxManager
 from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
 from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import SandboxFlowRouter
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigEntryState,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -181,14 +177,7 @@ async def test_full_flow_user_to_create_entry(
 async def test_create_entry_carries_version_and_options(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """A sandbox CREATE_ENTRY with VERSION/MINOR_VERSION/options round-trips.
-
-    Pins the framework behaviour the fix relies on: ``async_create_entry``
-    reads ``self.VERSION``/``self.MINOR_VERSION`` off the proxy *instance*,
-    so overriding them before the call lands the integration's real schema
-    version on the entry (instead of the proxy class default ``VERSION=1``,
-    which would trigger a spurious migration on next setup).
-    """
+    """A sandbox CREATE_ENTRY with VERSION/MINOR_VERSION/options round-trips."""
     mock_integration(hass, MockModule("test_proxy_full"))
     create_entry = pb.FlowResult(
         type=FlowResultType.CREATE_ENTRY.value,
@@ -380,12 +369,7 @@ async def test_menu_dict_options_round_trip(
 async def test_unsupported_result_type_aborts_and_reaps_sandbox_flow(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """An unsupported result aborts on main AND reaps the sandbox-side flow.
-
-    The leak fix: the sandbox flow is still in progress, so ``async_remove``
-    must fire ``flow_abort`` — otherwise a flow that set a ``unique_id`` would
-    wedge retries on ``already_in_progress``.
-    """
+    """An unsupported result aborts on main AND reaps the sandbox-side flow."""
     mock_integration(hass, MockModule("test_proxy_progress"))
     responses = [
         pb.FlowResult(
@@ -420,12 +404,7 @@ async def test_unsupported_result_type_aborts_and_reaps_sandbox_flow(
 async def test_discovery_flow_marshals_service_info(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """A zeroconf-sourced flow flattens its ServiceInfo + DiscoveryKey safely.
-
-    Without the ``_to_jsonable`` flattening, the ``ZeroconfServiceInfo``
-    (IPv4Address fields) / ``DiscoveryKey`` would cross as lossy ``str()``
-    fallbacks instead of rebuildable per-field dicts.
-    """
+    """A zeroconf-sourced flow flattens its ServiceInfo + DiscoveryKey safely."""
     mock_integration(hass, MockModule("test_proxy_discovery"))
     responses = [
         pb.FlowResult(
@@ -486,11 +465,7 @@ async def test_discovery_flow_marshals_service_info(
 async def test_reconfigure_flow_carries_entry(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """A reconfigure flow ships main's entry so the sandbox can resolve it.
-
-    Regression for the UnknownEntry cluster: without ``FlowInit.entry`` the
-    sandbox flow's ``_get_reconfigure_entry()`` raises on the private hass.
-    """
+    """A reconfigure flow ships main's entry so the sandbox can resolve it."""
     mock_integration(hass, MockModule("test_proxy_reconf"))
     entry = MockConfigEntry(
         domain="test_proxy_reconf",
@@ -517,10 +492,7 @@ async def test_reconfigure_flow_carries_entry(
         ),
     ):
         await _install_router(hass, manager)
-        result = await hass.config_entries.flow.async_init(
-            "test_proxy_reconf",
-            context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
-        )
+        result = await entry.start_reconfigure_flow(hass)
         assert result["type"] is FlowResultType.FORM
 
     assert len(stub.init_calls) == 1

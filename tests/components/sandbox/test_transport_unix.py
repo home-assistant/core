@@ -1,11 +1,4 @@
-"""Unix-socket control-channel transport.
-
-Spawns the real ``python -m hass_client.sandbox`` runtime with the
-manager configured for the unix-socket transport: the manager opens a
-listening unix socket, passes ``--url unix://<path>`` to the subprocess,
-the runtime dials back, and a ``ping`` round-trips over the socket. Also
-covers manager-side transport selection and socket cleanup on shutdown.
-"""
+"""Unix-socket control-channel transport."""
 
 import asyncio
 import os

@@ -1,9 +1,4 @@
-"""Wire-fidelity tests for the main-side ``sandbox.messages`` mirror.
-
-``messages.py`` is hand-mirrored between main and the client runtime; this
-pins the JSON-bytes codec behaviour on the main copy, where state attributes,
-capabilities, and store data are decoded from the wire.
-"""
+"""Wire-fidelity tests for the main-side ``sandbox.messages`` mirror."""
 
 from homeassistant.components.sandbox.messages import (
     decode_json,

@@ -1,10 +1,4 @@
-"""Runtime-side transport selection + unix channel.
-
-The HA Core suite owns the manager-driven subprocess coverage. These
-tests pin the runtime side: ``--url`` scheme → transport kind, the
-websocket rejection, and that :func:`_open_unix_channel` round-trips a
-call over a real unix socket.
-"""
+"""Runtime-side transport selection + unix channel."""
 
 import asyncio
 import contextlib
@@ -54,12 +48,7 @@ async def test_websocket_transport_rejected() -> None:
 
 
 async def test_open_unix_channel_round_trips() -> None:
-    """A call round-trips over a real unix socket via the runtime opener.
-
-    The server side stands in for the manager: it accepts the connection,
-    registers a ``ping`` handler returning a typed proto result, and the
-    client opened by :func:`_open_unix_channel` calls it.
-    """
+    """A call round-trips over a real unix socket via the runtime opener."""
     server_channels: list[Channel] = []
 
     async def _ping(_payload: object) -> pb.PingResult:

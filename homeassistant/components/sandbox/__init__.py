@@ -1,18 +1,4 @@
-"""Sandbox — run integrations in isolated subprocesses.
-
-The integration owns three runtime objects, all hung off
-:class:`SandboxData`:
-
-* :class:`SandboxManager` — supervises one subprocess per sandbox group
-  ("main", "built-in", "custom"), lazily spawning them on first need.
-* :class:`SandboxFlowRouter` — installed as
-  ``hass.config_entries.router``. Diverts new config flows to
-  sandbox runtimes and routes ``async_setup_entry`` for tagged entries.
-* :class:`SandboxBridge` (one per running sandbox) — owns the entity-side
-  protocol: receives ``register_entity`` + ``state_changed`` pushes from
-  the sandbox, instantiates proxy entities, and forwards entity service
-  calls back via the shared ``sandbox/call_service`` channel.
-"""
+"""Sandbox — run integrations in isolated subprocesses."""
 
 from dataclasses import dataclass, field
 import logging
@@ -59,13 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_SANDBOX] = data
 
     def _on_channel_ready(group: str, channel: Channel) -> None:
-        # A sandbox restart hands us a fresh channel; the previous bridge
-        # owned the dead one. Install the new bridge now (its handlers must
-        # be live before the channel reader starts) but defer tearing the
-        # old one down — its proxies + EntityComponent platform slots are
-        # released in ``_on_ready`` right before the fresh process
-        # re-registers, so the entities stay visible (Phase 2 marks them
-        # unavailable) across the restart gap instead of vanishing.
+        # Keep unavailable proxies visible until the replacement worker is ready.
         old_bridge = data.bridges.get(group)
         data.bridges[group] = async_create_bridge(hass, group=group, channel=channel)
         if old_bridge is None:
@@ -86,11 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             bridge.async_mark_all_unavailable()
 
     def _on_ready(group: str) -> None:
-        # The fresh process is up and can answer ``entry_setup``. Tear down
-        # the displaced bridge and re-drive setup for the group's entries so
-        # the new bridge repopulates. Capturing the loaded entries
-        # synchronously here is what keeps a *first* start (entries not yet
-        # loaded) from being mistaken for a respawn and double-setting-up.
+        # Capture loaded entries before yielding so initial startup is not replayed.
         old_bridge = data.pending_teardown.pop(group, None)
         loaded = [
             entry.entry_id
@@ -113,15 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.async_schedule_reload(entry_id)
 
     async def _on_shutdown_reply(group: str, reply: Any) -> None:
-        """Persist the sandbox's restore-state snapshot.
-
-        The runtime ships its ``RestoreEntity`` state in the shutdown
-        reply (a ``ShutdownResult``) rather than via the sandbox store
-        bridge (the reader task is busy dispatching the shutdown handler —
-        a re-entrant store_save would deadlock). We route the payload
-        through the bridge's store server so it lands at the same path the
-        next run's warm-load reads from.
-        """
+        """Persist the sandbox's restore-state snapshot."""
         if not reply.HasField("restore_state"):
             return
         bridge = data.bridges.get(group)
@@ -163,14 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async def _on_stop(_event: Event) -> None:
-        """Stop every sandbox process on HA shutdown.
-
-        Ask each sandbox to unload its entries and flush
-        ``RestoreEntity`` state through the ``current_sandbox`` store
-        bridge before pulling the plug. ``async_stop_all`` then handles SIGTERM
-        / SIGKILL for any sandbox that didn't ack the graceful request
-        within the grace.
-        """
+        """Stop every sandbox process on HA shutdown."""
         hass.config_entries.router = None
         unregister_translation_provider()
         await manager.async_graceful_shutdown_all(timeout=manager.shutdown_grace)

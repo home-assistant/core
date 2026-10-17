@@ -1,10 +1,4 @@
-"""Tests for the :mod:`hass_client.messages` JSON-bytes wire codec.
-
-Dynamic payloads cross as orjson-encoded bytes, so numbers keep their native
-types end to end — an ``int`` stays ``int``, a ``float`` stays ``float``, and
-big ints don't lose precision to a double (the failure modes of the
-``google.protobuf.Struct`` wire this replaced).
-"""
+"""Tests for the :mod:`hass_client.messages` JSON-bytes wire codec."""
 
 from hass_client.messages import decode_json, decode_json_dict, encode_json
 

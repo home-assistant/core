@@ -1,14 +1,4 @@
-"""Schema bridging, unique_id propagation, and the unload hook.
-
-Covers four pieces:
-
-* The serialised :class:`probatio.Schema` bridge for flow forms and mirrored
-  services (the proxy reconstructs a usable schema from the wire shape).
-* ``unique_id`` propagation from the sandbox flow's ``context`` to the
-  proxy's ``self.context``, so main's duplicate-detection fires.
-* The ``ConfigEntryRouter.async_unload_entry`` hook on
-  :class:`ConfigEntries.async_unload`.
-"""
+"""Schema bridging, unique_id propagation, and the unload hook."""
 
 import asyncio
 from collections.abc import Iterator
@@ -162,12 +152,7 @@ def test_reconstruct_schema_handles_select_options() -> None:
 
 
 def test_reconstruct_schema_round_trips_selectors_and_sections() -> None:
-    """Selectors + a section survive serialize → reconstruct → re-serialize.
-
-    The flow manager re-serialises main's reconstructed schema for the
-    frontend, so the reconstruction must reproduce the sandbox's original
-    list verbatim — otherwise selectors degrade to plain text boxes.
-    """
+    """Selectors + a section survive serialize → reconstruct → re-serialize."""
     original = probatio.Schema(
         {
             probatio.Required("mode"): selector.SelectSelector(
@@ -313,12 +298,7 @@ async def test_register_service_with_schema_validates_on_main(
 async def test_teardown_removes_mirrored_service_forwarders(
     hass: HomeAssistant,
 ) -> None:
-    """Bridge teardown sweeps the mirrored services off main's registry.
-
-    Each forwarder closes over the (now dead) channel, and a respawned
-    sandbox's re-registration is skipped by the has_service() guard — a
-    stale forwarder would fail every call until HA restarts.
-    """
+    """Bridge teardown sweeps the mirrored services off main's registry."""
     MockConfigEntry(domain="mock_svc", title="Mock", sandbox="built-in").add_to_hass(
         hass
     )

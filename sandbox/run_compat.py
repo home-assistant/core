@@ -1,22 +1,4 @@
-"""Run HA Core integration test suites through the sandbox plugin.
-
-Drives pytest with ``-p hass_client.testing.pytest_plugin`` (in-process)
-or ``-p hass_client.testing.conftest_sandbox`` (subprocess) across the
-``tests/components/<integration>/`` directory of every integration the
-runner is asked about, parses the pytest summary, and writes a CSV plus
-a short Markdown report into ``sandbox/``.
-
-Shape mirrors ``sandbox/run_all_sandbox_tests.py`` (v1) but the report
-location is local to ``sandbox/`` so the two compat lanes don't fight
-over the same artefacts.
-
-Usage::
-
-    cd sandbox
-    python run_compat.py                      # full run, in-process plugin
-    python run_compat.py --plugin subprocess  # use the real-subprocess lane
-    python run_compat.py input_boolean light  # restrict to specific integrations
-"""
+"""Run HA Core integration test suites through the sandbox plugin."""
 
 # This is a stand-alone CLI driver, not a Python package module — the
 # ruff rules around implicit namespace packages, ``print`` for status,
@@ -40,9 +22,6 @@ CORE_ROOT = _HERE.parent
 CORE_TESTS_DIR = CORE_ROOT / "tests" / "components"
 HASS_CLIENT_DIR = _HERE / "hass_client"
 DEFAULT_RESULTS_CSV = _HERE / "COMPAT.csv"
-# COMPAT.md is the curated baseline report and is NOT overwritten
-# on every run. Auto-generated runs land in COMPAT_LATEST.md so reviewers
-# can diff against the curated baseline.
 DEFAULT_REPORT_MD = _HERE / "COMPAT_LATEST.md"
 ERRORS_DIR = Path(os.environ.get("SANDBOX_ERRORS_DIR", "/tmp/sandbox_errors"))
 

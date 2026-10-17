@@ -18,12 +18,7 @@ from ._helpers import JsonCodec, make_channel_pair
 
 
 class _QueueTransport:
-    """In-memory :class:`Transport` backed by a pair of queues.
-
-    Stands in for a non-stream transport (the seam a future
-    ``WebSocketTransport`` uses) so ``Channel(transport=...)`` is
-    exercised without any reader/writer pipe.
-    """
+    """In-memory :class:`Transport` backed by a pair of queues."""
 
     def __init__(
         self, inbox: asyncio.Queue[bytes | None], outbox: asyncio.Queue[bytes | None]
@@ -254,12 +249,7 @@ async def test_call_to_inline_only_type_is_unknown(channels: tuple) -> None:
 
 
 async def test_handler_can_call_back_without_deadlock(channels: tuple) -> None:
-    """A handler that issues channel.call mid-execution doesn't deadlock.
-
-    Dispatch runs in a task so the reader keeps draining the
-    wire — the nested call's reply can be picked up while the outer
-    handler is still suspended.
-    """
+    """A handler that issues channel.call mid-execution doesn't deadlock."""
     channel_a, channel_b = channels
 
     async def a_ping(_payload: object) -> dict[str, bool]:
@@ -278,12 +268,7 @@ async def test_handler_can_call_back_without_deadlock(channels: tuple) -> None:
 
 
 async def test_concurrency_cap_queues_excess_handlers() -> None:
-    """The (cap+1)th call queues at the semaphore until a slot frees.
-
-    Sets a tiny ``max_inflight`` so the test fires (cap+1) slow handlers
-    and observes the last one waiting until one of the first two
-    finishes.
-    """
+    """The (cap+1)th call queues at the semaphore until a slot frees."""
     channel_a, channel_b = make_channel_pair(max_inflight_b=2, use_json=True)
     channel_a.start()
     channel_b.start()
@@ -325,13 +310,7 @@ async def test_concurrency_cap_queues_excess_handlers() -> None:
 
 
 async def test_oversize_outbound_frame_fails_only_that_call(channels: tuple) -> None:
-    """An over-cap frame fails its own call; the channel stays usable.
-
-    Outbound: encoding past MAX_FRAME_SIZE raises FrameTooLargeError to the
-    caller instead of shipping a frame the peer would abort the channel on.
-    Reply-side: a handler whose reply is oversize gets converted into an
-    error response so the caller fails cleanly rather than hanging.
-    """
+    """An over-cap frame fails its own call; the channel stays usable."""
     channel_a, channel_b = channels
 
     async def echo(payload: dict) -> dict:
@@ -356,11 +335,7 @@ async def test_oversize_outbound_frame_fails_only_that_call(channels: tuple) -> 
 
 
 class _ObservableTransport:
-    """Transport that records close()/wait_closed() and lets a test feed EOF.
-
-    The EOF path inside the read loop sets ``_closed`` but never touches the
-    transport; this records whether a later ``close()`` actually closes it.
-    """
+    """Transport that records close()/wait_closed() and lets a test feed EOF."""
 
     def __init__(self) -> None:
         self._inbox: asyncio.Queue[bytes | None] = asyncio.Queue()
@@ -384,13 +359,7 @@ class _ObservableTransport:
 
 
 async def test_close_after_eof_still_closes_transport() -> None:
-    """close() after EOF finishes the teardown the read loop couldn't.
-
-    On EOF the read loop sets ``_closed`` and cancels inflight handlers but
-    cannot close the transport or await the cancelled tasks (it runs inside
-    the reader). A later close() must still close the transport and await the
-    inflight exactly once — otherwise the byte channel leaks every restart.
-    """
+    """close() after EOF finishes the teardown the read loop couldn't."""
     transport = _ObservableTransport()
     channel = Channel(transport=transport, name="eof", codec=JsonCodec())
 
@@ -436,14 +405,7 @@ async def test_close_after_eof_still_closes_transport() -> None:
 async def test_read_backpressure_sheds_over_queued_cap(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A frame-flood is bounded: over the cap, calls are shed not queued.
-
-    With a tiny ``max_queued`` and handlers that never return, the reader keeps
-    draining the wire but stops growing handler tasks — once the cap is hit,
-    further calls come back as ``ChannelOverloaded``, task-dispatched pushes
-    are dropped with a warning, and inline pushes (which queue nothing) still
-    go through.
-    """
+    """A frame-flood is bounded: over the cap, calls are shed not queued."""
     channel_a, channel_b = make_channel_pair(
         max_inflight_b=2, max_queued_b=3, use_json=True
     )

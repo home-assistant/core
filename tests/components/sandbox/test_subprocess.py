@@ -1,14 +1,4 @@
-"""End-to-end subprocess tests.
-
-Spawns the real ``python -m hass_client.sandbox`` runtime and exercises
-the JSON-line control channel: handshake → ping round-trip → graceful
-shutdown.
-
-The flow-marshalling path is covered in-process by ``test_proxy_flow``
-and ``test_phase4_flow_runner`` — the subprocess test here pins the
-manager-runtime contract (subprocess spawn + post-marker channel works
-end-to-end) without piling more moving parts onto it.
-"""
+"""End-to-end subprocess tests."""
 
 import asyncio
 import sys

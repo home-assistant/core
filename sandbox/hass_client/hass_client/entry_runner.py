@@ -1,12 +1,4 @@
-"""Sandbox-side entry runner — loads integrations + drives ``async_setup_entry``.
-
-The manager pushes a serialised :class:`ConfigEntry` via
-``sandbox/entry_setup`` (see :mod:`hass_client.messages`). The runner
-rebuilds the entry on the sandbox's private :class:`HomeAssistant`,
-calls ``hass.config_entries.async_setup`` to load the owning integration,
-and reports back. Main holds the canonical entry; the sandbox copy is
-ephemeral state used by the integration's lifecycle hooks.
-"""
+"""Sandbox-side entry runner — loads integrations + drives ``async_setup_entry``."""
 
 import logging
 from types import MappingProxyType
@@ -48,13 +40,7 @@ class EntryRunner:
         fetch: FetchPrimitive | None = None,
         entry_sync: EntrySync | None = None,
     ) -> None:
-        """Initialise with the sandbox-private HA instance.
-
-        ``approved`` is shared with the service + event mirrors so an
-        entry's domain becomes approved as soon as setup completes.
-        ``fetch`` overrides the integration-source download primitive (tests
-        inject a local stub); ``None`` uses the real codeload tarball fetch.
-        """
+        """Initialise with the sandbox-private HA instance."""
         self.hass = hass
         self.approved = approved if approved is not None else ApprovedDomains()
         self._fetch = fetch
@@ -81,7 +67,7 @@ class EntryRunner:
             await apply_core_config(self.hass, msg.core_config)
 
         # Fetch the integration code before setup so a stateless sandbox can
-        # load custom (HACS) integrations whose code isn't bundled. Built-in
+        # load custom Marketplace integrations whose code isn't bundled. Built-in
         # sources are a no-op.
         try:
             await async_ensure_integration_source(
@@ -104,10 +90,7 @@ class EntryRunner:
         ) is not None and existing.state is not ConfigEntryState.NOT_LOADED:
             return pb.EntrySetupResult(ok=False, reason="entry already loaded")
 
-        # ConfigEntries doesn't expose a "add without persist" hook; the
-        # sandbox's instance has no Store backing, so we drop the entry
-        # straight into the internal map. `async_setup` then finds it via
-        # `async_get_known_entry`.
+        # Install the main-owned copy without persisting worker config entries.
         config_entries._entries[entry.entry_id] = entry  # noqa: SLF001
         if self.entry_sync is not None:
             self.entry_sync.track(entry)
@@ -174,13 +157,7 @@ class EntryRunner:
         return pb.EntryUnloadResult(ok=bool(unloaded))
 
     async def _handle_call_service(self, msg: pb.CallService) -> pb.CallServiceResult:
-        """Dispatch a main→sandbox service call through HA's normal path.
-
-        Service-handler errors propagate as raised exceptions so the
-        :class:`Channel`'s error frame carries the type name (e.g.
-        ``Invalid``). Main maps those back to ``TypeError`` /
-        ``HomeAssistantError`` in :mod:`bridge`'s exception translator.
-        """
+        """Dispatch a main→sandbox service call through HA's normal path."""
         target = decode_json_dict(msg.target)
         service_data = decode_json_dict(msg.service_data)
         if msg.return_response:
@@ -212,18 +189,7 @@ class EntryRunner:
         return pb.CallServiceResult()
 
     async def _handle_entity_query(self, msg: pb.EntityQuery) -> pb.EntityQueryResult:
-        """Invoke a server-side entity method and return its serialised result.
-
-        Resolves the entity on the private hass by ``sandbox_entity_id``,
-        ``getattr``s the named method, and awaits it with the decoded kwargs.
-        The return is wrapped as ``{"value": …}`` and run through the same
-        ``as_dict``-aware JSON encoder used for service responses, so rich
-        types (``SearchMedia``, ``BrowseMedia``, ``Segment`` dataclasses)
-        cross verbatim. A raised exception (``ServiceValidationError`` /
-        ``BrowseError`` / ``SearchError`` / ``HomeAssistantError`` /
-        ``probatio.Invalid``) propagates as a channel error frame, exactly like
-        ``call_service``, so main rebuilds the same error shape.
-        """
+        """Invoke a server-side entity method and return its serialised result."""
         entity = _resolve_entity(self.hass, msg.sandbox_entity_id)
         method = getattr(entity, msg.method, None)
         if not callable(method):
@@ -237,19 +203,7 @@ class EntryRunner:
 
 
 async def apply_core_config(hass: HomeAssistant, cfg: pb.CoreConfig) -> None:
-    """Apply main's core-config snapshot to the sandbox's private hass.
-
-    Direct attribute writes, deliberately not ``Config.async_update``: the
-    private hass has no Store backing and must not persist the values. This
-    function fires no event either — the live-update handler
-    (``SandboxRuntime._handle_core_config``) fires
-    ``EVENT_CORE_CONFIG_UPDATE`` itself, while the entry_setup snapshot is
-    applied silently before setup. The time zone goes through the
-    async setter so ``dt_util``'s default timezone follows. Every value comes
-    from main's own (validated) config, so a bad unit-system/time-zone name is
-    a contract violation and surfaces as a failed entry_setup rather than
-    being masked.
-    """
+    """Apply main's core-config snapshot to the sandbox's private hass."""
     config = hass.config
     if cfg.HasField("latitude"):
         config.latitude = cfg.latitude
@@ -282,11 +236,7 @@ def _resolve_entity(hass: HomeAssistant, entity_id: str) -> Entity:
 
 
 def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
-    """Rebuild a :class:`ConfigEntry` from the typed ``EntrySetup`` message.
-
-    Main owns persistence; the local copy preserves subentry identities and
-    preferences so integrations can use the normal configuration APIs.
-    """
+    """Rebuild a :class:`ConfigEntry` from the typed ``EntrySetup`` message."""
     return ConfigEntry(
         version=msg.version,
         minor_version=msg.minor_version,

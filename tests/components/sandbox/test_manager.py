@@ -1,10 +1,4 @@
-"""Tests for the sandbox lifecycle manager.
-
-These exercise the real subprocess machinery — the runtime entry point at
-``python -m hass_client.sandbox`` is spawned for the happy path; the
-restart-budget and isolation tests use a stub argv that the manager can
-spawn and that fails immediately.
-"""
+"""Tests for the sandbox lifecycle manager."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -150,11 +144,7 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
 async def test_default_command_carries_name_and_url_only(
     hass: HomeAssistant,
 ) -> None:
-    """The spawn argv carries name + url and no longer mints a ``--token``.
-
-    The sandbox is not an authenticated principal inside main — the runtime
-    stored a token it never used — so the credential was dropped end-to-end.
-    """
+    """The spawn argv carries name and URL without a credential."""
     mgr = SandboxManager(hass)
 
     builtin_argv = mgr._default_command("built-in", "stdio://")
@@ -166,12 +156,7 @@ async def test_default_command_carries_name_and_url_only(
 
 
 class _PausingProcess(SandboxProcess):
-    """A SandboxProcess that suspends inside ``_spawn`` until released.
-
-    Lets a test land ``stop()`` while a spawn is in flight (``self._process``
-    still None) — the exact window where ``stop()`` used to miss the child
-    and then block on the supervisor forever.
-    """
+    """A SandboxProcess that suspends inside ``_spawn`` until released."""
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)  # type: ignore[arg-type]
@@ -185,13 +170,7 @@ class _PausingProcess(SandboxProcess):
 
 
 async def test_stop_during_spawn_does_not_hang(hass: HomeAssistant) -> None:
-    """stop() landing mid-spawn terminates the child and returns (no hang).
-
-    A healthy child that never signals ready is spawned; stop() is triggered
-    while ``_spawn`` is suspended, so ``self._process`` is still None when
-    stop() reads it. The post-spawn ``_stopping`` check must kill the child
-    so the supervisor returns and stop() completes within the grace window.
-    """
+    """stop() landing mid-spawn terminates the child and returns (no hang)."""
     # A child that just sleeps — healthy, never sends MSG_READY.
     sleeping_cmd = [sys.executable, "-c", "import time; time.sleep(300)"]
     process = _PausingProcess(

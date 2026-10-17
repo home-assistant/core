@@ -1,27 +1,4 @@
-"""Sandbox — subprocess lifecycle and supervision.
-
-The manager owns one supervised subprocess per sandbox group
-(``main`` / ``built-in`` / ``custom``); callers invoke
-:meth:`SandboxManager.ensure_started` lazily as config entries are routed.
-
-The contract between manager and runtime is:
-
-* the manager launches ``python -m hass_client.sandbox`` and tells it
-  which control-channel transport to use via ``--url``
-* the runtime opens the control channel and sends a :data:`MSG_READY`
-  frame as its first message once it is up (no stdout text marker)
-* on ``SIGTERM`` the runtime exits cleanly
-
-Two transports are supported (selected by :class:`SandboxManager`'s
-``transport`` option, defaulting to ``stdio``):
-
-* **stdio** — frames ride the subprocess's stdin/stdout pipes
-  (``--url stdio://``); the default, unchanged from earlier phases.
-* **unix** — the manager opens a unix-domain socket, passes its path as
-  ``--url unix://<path>``, and the runtime dials back; the manager is the
-  server. Both transports share :class:`~.channel.StreamTransport`'s
-  length-prefixed framing, so there is no dedicated unix transport class.
-"""
+"""Sandbox — subprocess lifecycle and supervision."""
 
 import asyncio
 from collections import deque
@@ -88,11 +65,7 @@ class SandboxConfig:
 
 
 class SandboxProcess:
-    """One supervised sandbox subprocess.
-
-    States cycle through ``stopped`` → ``starting`` → ``running`` →
-    (``starting`` on crash) → ``failed`` once the restart budget is spent.
-    """
+    """One supervised sandbox subprocess."""
 
     def __init__(
         self,
@@ -107,33 +80,7 @@ class SandboxProcess:
         on_ready: Callable[[str], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
     ) -> None:
-        """Initialise a supervised sandbox subprocess.
-
-        ``command_factory`` is called with the control-channel URL the
-        chosen ``transport`` requires (``stdio://`` or ``unix://<path>``)
-        and returns the argv to spawn.
-
-        ``on_channel_ready`` is invoked with the live :class:`Channel` as
-        soon as it is opened — before the runtime's :data:`MSG_READY`
-        frame arrives — so its handlers are in place before the runtime's
-        own warm-load round-trip lands. It runs synchronously on the
-        manager's loop.
-
-        ``on_channel_closed`` is invoked (synchronously, with the group
-        name) right after the control channel is closed on process exit. It
-        is the seam the integration uses to mark a dead sandbox's proxy
-        entities unavailable so they stop serving stale state.
-
-        ``on_ready`` is invoked (synchronously, with the group name) once
-        the runtime has sent :data:`MSG_READY` and the process is
-        ``running`` — on every (re)spawn. It is the seam the integration
-        uses to re-drive ``entry_setup`` for a group's entries after a
-        crash, when the fresh process can actually answer.
-
-        ``on_shutdown_reply`` is invoked with the runtime's reply to
-        :data:`MSG_SHUTDOWN` so the caller can persist any
-        ``restore_state`` payload before the subprocess exits.
-        """
+        """Initialise a supervised sandbox subprocess."""
         self.group = group
         self._command_factory = command_factory
         self._config = config
@@ -170,11 +117,7 @@ class SandboxProcess:
         return self._channel
 
     async def start(self) -> None:
-        """Spawn the subprocess and block until it is ``running``.
-
-        Raises :class:`SandboxStartError` if the supervisor gives up or the
-        ready handshake times out.
-        """
+        """Spawn the subprocess and block until it is ``running``."""
         if self._supervisor is not None:
             return
         self._stopping = False
@@ -197,13 +140,7 @@ class SandboxProcess:
         )
 
     async def _wait_ready_or_stopped(self) -> None:
-        """Block until the process is running or the supervisor has stopped.
-
-        Bounded by ``ready_timeout``. Shared by :meth:`start` and
-        :meth:`async_wait_until_ready` so a caller that arrives while a
-        (re)spawn is still in flight waits for the same readiness signal
-        instead of racing a half-open channel.
-        """
+        """Block until the process is running or the supervisor has stopped."""
         ready_task = asyncio.create_task(self._ready.wait())
         stopped_task = asyncio.create_task(self._stopped.wait())
         try:
@@ -253,13 +190,7 @@ class SandboxProcess:
 
         supervisor = self._supervisor
         if supervisor is not None:
-            # A stop() that lands *inside* ``_spawn`` reads ``self._process``
-            # as None and so terminates nothing; the freshly-spawned child
-            # would then run healthy-but-unsupervised and the supervisor would
-            # block on it forever. The post-spawn ``_stopping`` check in
-            # ``_run_one_*`` kills that child, so the supervisor always
-            # returns — but bound the wait + SIGKILL fallthrough as a backstop
-            # against any other slow exit rather than hang HA shutdown.
+            # Bound shutdown even when stop races with process creation.
             try:
                 await asyncio.wait_for(
                     asyncio.shield(supervisor),
@@ -284,20 +215,7 @@ class SandboxProcess:
             self._state = "stopped"
 
     async def async_graceful_shutdown(self, *, timeout: float) -> bool:
-        """Ask the runtime to unload + flush, then wait for exit.
-
-        Sends ``sandbox/shutdown`` over the live channel and waits up
-        to ``timeout`` for the runtime to reply and then exit on its
-        own. Sets :attr:`_stopping` first so the supervisor does not
-        treat the clean exit as a crash. Returns ``True`` if the process
-        exited within the grace, ``False`` if anything went wrong
-        (timeout, no channel, channel closed) — in which case the
-        caller should fall through to :meth:`stop` for SIGTERM/SIGKILL.
-
-        ``on_reply`` is invoked with the dict the runtime returns (the
-        ``restore_state`` payload + summary counters) so the caller can
-        persist it before the channel goes away.
-        """
+        """Ask the runtime to unload + flush, then wait for exit."""
         self._stopping = True
         channel = self._channel
         proc = self._process
@@ -423,13 +341,7 @@ class SandboxProcess:
             self._process = None
 
     async def _run_one_unix(self) -> None:
-        """Spawn over a unix socket: the manager listens, runtime dials back.
-
-        The socket lives in a short-lived per-attempt tempdir rather than
-        under the (possibly long) config dir, sidestepping the ~108-char
-        ``sun_path`` limit on Linux. It is unlinked when the server closes
-        and the tempdir is removed on the way out — no leaked socket file.
-        """
+        """Spawn over a unix socket: the manager listens, runtime dials back."""
         socket_dir = tempfile.mkdtemp(prefix=f"sandbox_{self.group}_")
         socket_path = os.path.join(socket_dir, "control.sock")
         loop = asyncio.get_running_loop()
@@ -484,11 +396,7 @@ class SandboxProcess:
                 self._process = None
         finally:
             server.close()
-            # The accepted connection may linger in the server's client set:
-            # when the runtime exits, the channel's read loop sees EOF and
-            # marks the channel closed, so the later ``channel.close()`` is a
-            # no-op that never closes the accepted transport. Force-close any
-            # such leftover so ``wait_closed()`` cannot block forever.
+            # Close accepted transports after EOF so server shutdown cannot hang.
             server.close_clients()
             with contextlib.suppress(Exception):
                 await server.wait_closed()
@@ -516,14 +424,7 @@ class SandboxProcess:
         *,
         drain_stdout: bool,
     ) -> None:
-        """Wire the ready handshake, run until the process exits, clean up.
-
-        Shared by both transports — they reach here with a live channel and
-        a running process; only how the channel's byte pipe was obtained
-        differs. ``drain_stdout`` is set for the unix transport, where the
-        subprocess's stdout pipe is unused (frames ride the socket) and must
-        still be drained so its buffer never fills.
-        """
+        """Wire the ready handshake, run until the process exits, clean up."""
         ready_frame = asyncio.Event()
 
         async def _on_ready(_payload: object) -> None:
@@ -548,12 +449,7 @@ class SandboxProcess:
             )
 
         try:
-            # The ready handshake is bounded on *every* attempt, not just the
-            # first start() — a respawned child that opens its channel but
-            # never signals ready would otherwise leave the sandbox 'starting'
-            # forever. On timeout the child is killed below; _run_one returns
-            # and the supervisor loop counts the attempt against the restart
-            # budget like any other failed spawn.
+            # Apply the ready timeout to restarts too, so hung children consume the retry budget.
             await asyncio.wait(
                 {ready_task, exit_task},
                 return_when=asyncio.FIRST_COMPLETED,
@@ -599,13 +495,7 @@ class SandboxProcess:
     def _build_channel(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> Channel:
-        """Wrap a reader/writer pair in a :class:`Channel`.
-
-        Length-prefixed channel frames cross end-to-end — there is no text
-        preamble. The pair comes from the subprocess's stdout/stdin (stdio)
-        or from the accepted unix-socket connection (unix); the channel core
-        is identical either way.
-        """
+        """Wrap a reader/writer pair in a :class:`Channel`."""
         return Channel(reader, writer, name=self.group, codec=ProtobufCodec())
 
     async def _drain_stream(
@@ -639,22 +529,7 @@ class SandboxManager:
         on_shutdown_reply: ShutdownReplyCallback | None = None,
         transport: str = TRANSPORT_STDIO,
     ) -> None:
-        """Initialise the manager.
-
-        ``command_factory`` lets tests substitute the spawned command; it is
-        called with ``(group, url)`` and the default builds the
-        ``python -m hass_client.sandbox`` argv that
-        :class:`hass_client.sandbox.SandboxRuntime` consumes.
-
-        ``transport`` selects the control-channel transport for every
-        spawned sandbox: ``"stdio"`` (default — unchanged behavior) or
-        ``"unix"`` (the manager opens a unix socket and the runtime dials
-        back). Unix is opt-in so existing deployments keep using stdio.
-
-        ``on_channel_ready`` is invoked once a sandbox's control channel is
-        live; the router uses it to register inbound flow handlers
-        (e.g., ``sandbox/notify_flow_changed``).
-        """
+        """Initialise the manager."""
         self._hass = hass
         self._command_factory = command_factory or self._default_command
         self._config = config or SandboxConfig()
@@ -687,12 +562,7 @@ class SandboxManager:
         return self._sandboxes.get(group)
 
     async def ensure_started(self, group: str) -> SandboxProcess:
-        """Return a running sandbox for ``group``, spawning it if needed.
-
-        Raises :class:`SandboxFailedError` if the sandbox has already
-        exhausted its restart budget and :class:`SandboxStartError` if a
-        fresh spawn cannot reach ``running``.
-        """
+        """Return a running sandbox for ``group``, spawning it if needed."""
         lock = self._locks.setdefault(group, asyncio.Lock())
         async with lock:
             existing = self._sandboxes.get(group)
@@ -750,12 +620,7 @@ class SandboxManager:
         )
 
     async def async_graceful_shutdown_all(self, *, timeout: float) -> None:
-        """Ask every running sandbox to shut down gracefully.
-
-        Best-effort fan-out. Sandboxes that did not ack inside ``timeout``
-        are left for :meth:`async_stop_all` to clean up with SIGTERM /
-        SIGKILL — this method never raises.
-        """
+        """Ask every running sandbox to shut down gracefully."""
         if not self._sandboxes:
             return
         await asyncio.gather(
@@ -768,12 +633,7 @@ class SandboxManager:
         )
 
     def _default_command(self, group: str, url: str) -> list[str]:
-        """Argv for ``python -m hass_client.sandbox``.
-
-        ``url`` is the control-channel URL the manager's transport requires
-        (``stdio://`` or ``unix://<path>``) — the runtime reads its scheme
-        to pick the transport.
-        """
+        """Argv for ``python -m hass_client.sandbox``."""
         return [
             sys.executable,
             "-m",

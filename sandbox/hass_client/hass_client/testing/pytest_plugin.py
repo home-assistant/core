@@ -1,26 +1,4 @@
-"""In-process pytest plugin for sandbox compat tests.
-
-The plugin sets up the ``sandbox`` integration in the test HA, then
-runs the sandbox-side :class:`hass_client.sandbox.SandboxRuntime` as an
-asyncio task on the same loop, joined to the manager-side
-:class:`Channel` via an in-memory loopback transport. No subprocess
-spawn, no live socket — the same wire protocol the real sandbox uses,
-but with bytes that never leave the process.
-
-This is the "fast compat" lane: lower setup cost than spawning a
-subprocess for every test, and freezer-fixture compatible. Tests that
-need to verify the actual subprocess boundary should use
-:mod:`hass_client.testing.conftest_sandbox` instead.
-
-Usage::
-
-    pytest -p hass_client.testing.pytest_plugin <test path>
-
-The plugin exposes the ``sandbox_inprocess`` fixture, which yields
-an :class:`InProcessSandbox` handle. The fixture sets up the
-``sandbox`` integration in ``hass``, starts an in-process built-in
-group sandbox, and tears everything down on exit.
-"""
+"""In-process pytest plugin for sandbox compat tests."""
 
 import asyncio
 from collections.abc import AsyncIterator, Callable
@@ -68,13 +46,7 @@ def pytest_unconfigure(config: pytest.Config) -> None:
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
-    """Inject the in-process sandbox into every ``hass``-using test.
-
-    The autotag alone only marks entries with a group; with no sandbox
-    set up, ``hass.config_entries.router`` stays ``None`` and every
-    tagged entry quietly sets up locally — the lane measures nothing.
-    Requesting the fixture here makes the router path real for each test.
-    """
+    """Inject the in-process sandbox into every ``hass``-using test."""
     for item in items:
         fixtures = getattr(item, "fixturenames", None)
         if fixtures is None or "hass" not in fixtures:
@@ -86,11 +58,7 @@ def pytest_collection_modifyitems(
 def pytest_terminal_summary(
     terminalreporter: Any, exitstatus: int, config: pytest.Config
 ) -> None:
-    """Report how often the sandbox router actually engaged.
-
-    ``run_compat.py`` parses this line; zero engagements on a suite that
-    sets up config entries means the lane regressed to a no-op.
-    """
+    """Report how often the sandbox router actually engaged."""
     terminalreporter.write_line(
         f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s),"
         f" {tagged_count()} entries tagged"
@@ -99,13 +67,7 @@ def pytest_terminal_summary(
 
 @dataclass
 class InProcessSandbox:
-    """Handle for one running in-process sandbox.
-
-    Most tests don't touch the handle directly — they get a wired ``hass``
-    fixture and use the standard HA API. The handle is exposed for
-    advanced tests that need to read runtime state (e.g. to assert which
-    entries the sandbox loaded) or call :meth:`stop` early.
-    """
+    """Handle for one running in-process sandbox."""
 
     group: str
     runtime: SandboxRuntime
@@ -113,12 +75,7 @@ class InProcessSandbox:
     channel: Any = None
 
     async def stop(self) -> None:
-        """Gracefully shut the runtime down, then wait for the task.
-
-        Issues the same ``sandbox/shutdown`` call production uses so
-        entries unload and pending delay-saves flush — skipping it leaks
-        the private hass's timers onto the shared test loop.
-        """
+        """Gracefully shut the runtime down, then wait for the task."""
         if self.channel is not None and not self.channel.closed:
             from hass_client.messages import MSG_SHUTDOWN  # noqa: PLC0415
 
@@ -139,14 +96,7 @@ class InProcessSandbox:
 
 
 class _InProcessSandboxProcess:
-    """Stand-in for :class:`SandboxProcess` that wraps an in-memory channel.
-
-    The manager's :meth:`ensure_started` returns whatever is in its
-    ``_sandboxes`` map for the group as long as the state is
-    ``running``; the router only ever reads ``.channel`` and ``.state``.
-    Mirroring those two attributes is enough to keep the rest of the
-    integration's call path unchanged.
-    """
+    """Stand-in for :class:`SandboxProcess` that wraps an in-memory channel."""
 
     def __init__(self, group: str, channel: Any) -> None:
         """Pin the in-memory channel under this process stand-in."""
@@ -185,16 +135,7 @@ class _InProcessSandboxProcess:
 def _install_settling_block_till_done(
     hass: HomeAssistant, runtime: SandboxRuntime, mgr_channel: Any
 ) -> None:
-    """Make main's ``async_block_till_done`` settle the sandbox round-trip.
-
-    Vanilla integration tests assume local synchronous semantics: after
-    ``await hass.async_block_till_done()`` they expect entities and states
-    to be visible. With a sandbox in the middle, registrations and pushes
-    are still in flight on the (same-loop) channel and the entity bridge's
-    single-writer queue. Iterate until a pass sees the private hass idle,
-    the bridge queue drained, and no channel dispatch task in flight, then
-    settle main once more for anything late pushes scheduled.
-    """
+    """Make main's ``async_block_till_done`` settle the sandbox round-trip."""
     original = hass.async_block_till_done
 
     async def settled(wait_background_tasks: bool = False) -> None:
@@ -233,13 +174,7 @@ async def async_setup_inprocess_sandbox(
     group: str = DEFAULT_GROUP,
     config_dir: str | None = None,
 ) -> InProcessSandbox:
-    """Set up ``sandbox`` and run a sandbox runtime in-process.
-
-    Returns an :class:`InProcessSandbox` handle whose
-    :meth:`InProcessSandbox.stop` the caller is responsible for awaiting
-    on teardown. Idempotent only insofar as a second call for the same
-    ``group`` will collide with the first runtime — fixtures call once.
-    """
+    """Set up ``sandbox`` and run a sandbox runtime in-process."""
     # Lazy import to keep ``hass_client.testing`` import-time free of HA
     # integration code (the testing package may be imported even when
     # the integration isn't installed).
@@ -272,10 +207,7 @@ async def async_setup_inprocess_sandbox(
     )
 
     try:
-        # Yield until ``run()`` has entered and assigned the ``_ready``
-        # event. ``create_task`` schedules but does not run; without
-        # this poll the immediate ``wait_until_ready`` would see a None
-        # ``_ready`` attribute and raise.
+        # Wait until run() creates the readiness event before awaiting it.
         loop = asyncio.get_event_loop()
         deadline = loop.time() + 5.0
         while not runtime.started and loop.time() < deadline:
@@ -287,10 +219,7 @@ async def async_setup_inprocess_sandbox(
             await runtime_task
         raise
 
-    # Pre-populate the manager so ``ensure_started`` finds a "running"
-    # sandbox and skips the real subprocess spawn entirely. ``_sandboxes``
-    # is the manager's internal map; accessing it from testing-side code
-    # is the controlled minimum needed to inject our in-memory channel.
+    # Inject the in-memory worker so tests do not spawn a subprocess.
     process = _InProcessSandboxProcess(group, mgr_channel)
     manager._sandboxes[group] = process  # noqa: SLF001
 

@@ -1,11 +1,4 @@
-"""Tests for the main-side sandbox translation provider.
-
-The provider resolves a sandboxed integration's group, batches its custom
-domains into one ``sandbox/get_translations`` RPC per language, and returns the
-raw strings for core's translation cache to overlay. Built-in domains are
-carved out (main reads its own disk) and any channel failure degrades to empty
-so the frontend translation path never blocks.
-"""
+"""Tests for the main-side sandbox translation provider."""
 
 from types import SimpleNamespace
 from typing import Any
@@ -58,12 +51,7 @@ def _serving_channel(
 def _forging_channel(
     hass: HomeAssistant, extra: dict[str, dict[str, Any]]
 ) -> tuple[Channel, Channel]:
-    """A channel whose sandbox end injects ``extra`` domains it wasn't asked for.
-
-    Stands in for a compromised sandbox: it returns strings for every
-    requested domain *plus* the foreign ``extra`` domains, attempting to
-    poison a co-resident integration's frontend strings.
-    """
+    """A channel whose sandbox end injects ``extra`` domains it wasn't asked for."""
     main, sandbox = make_channel_pair()
 
     async def _handler(msg: pb.GetTranslations) -> pb.GetTranslationsResult:

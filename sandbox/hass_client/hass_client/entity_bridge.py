@@ -1,24 +1,4 @@
-"""Sandbox-side entity bridge — pushes registrations + state changes to main.
-
-The bridge listens for ``EVENT_STATE_CHANGED`` on the sandbox-private
-:class:`HomeAssistant`. First-time appearances (``old_state is None``)
-trigger a ``sandbox/register_entity`` call up to main; subsequent
-changes become ``sandbox/state_changed`` pushes.
-
-State flow is a per-entity latest-state slot drained by one writer task:
-the event listener only classifies and writes ``_pending[entity_id]``
-(latest write wins, so a burst for one entity coalesces to a single
-push), and the writer drains slots in insertion order, one RPC at a
-time. That makes per-entity ordering a structural guarantee (no
-task-per-event racing) and means overload coalesces instead of dropping
-the last update in a burst.
-
-We deliberately tag every event with the sandbox-side ``entry_id`` of
-the owning :class:`EntityPlatform` so main can route each proxy entity
-to the right :class:`ConfigEntry`. Entities that aren't owned by a
-sandbox-managed entry (rare — typically helper-domain entities the
-integration creates outside its own entry) are skipped with a debug log.
-"""
+"""Sandbox-side entity bridge — pushes registrations + state changes to main."""
 
 import asyncio
 import contextlib
@@ -54,25 +34,12 @@ _REMOVED = object()
 
 
 class EntityBridge:
-    """Forwards sandbox-side entity lifecycle events up to main.
-
-    One instance per sandbox process (channel). It does not own the
-    integration code — it just observes ``EVENT_STATE_CHANGED`` and
-    inspects the matching ``EntityComponent`` to extract the rich shape
-    that a proxy entity on main needs (capability dict, supported
-    features, entity category, …).
-    """
+    """Forwards sandbox-side entity lifecycle events up to main."""
 
     def __init__(
         self, hass: HomeAssistant, approved: ApprovedDomains | None = None
     ) -> None:
-        """Initialise with the sandbox-private HA instance.
-
-        ``approved`` is shared with the service + event mirrors so the
-        entity's domain becomes approved as soon as the first entity of
-        that domain registers (the plan's *light is approved if a
-        sandboxed integration registers light entities* clause).
-        """
+        """Initialise with the sandbox-private HA instance."""
         self.hass = hass
         self.entry_sync: EntrySync | None = None
         self.approved = approved if approved is not None else ApprovedDomains()
@@ -88,10 +55,7 @@ class EntityBridge:
         self._writing: str | None = None
         self._wake = asyncio.Event()
         self._writer_task: asyncio.Task[None] | None = None
-        # Entities whose ``_describe`` failed (no live entity object / no
-        # owning entry). Ignored on every state write instead of re-attempting
-        # a full register each time; cleared on an entity-registry update for
-        # that entity_id.
+        # Retry failed descriptions only after registry changes, not on every state update.
         self._skipped: set[str] = set()
         # Domain each registered entity contributed to ApprovedDomains, so its
         # approval refcount can be released symmetrically on unregister.
@@ -124,15 +88,7 @@ class EntityBridge:
         )
 
     async def async_drain(self, *, timeout: float = 2.0) -> None:
-        """Wait until every queued slot has been written to the channel.
-
-        Test-lane hook: vanilla integration tests assume local synchronous
-        setup semantics, so the compat plugins settle the bridge after
-        ``async_block_till_done``. Bounded: an entity storm (clock-jump
-        tests leave self-rescheduling updates behind) refills the queue
-        every loop tick, and an unbounded drain would spin until the test's
-        teardown finally kills the churn.
-        """
+        """Wait until every queued slot has been written to the channel."""
         deadline = asyncio.get_running_loop().time() + timeout
         while (
             self._pending or self._writing is not None
@@ -187,13 +143,7 @@ class EntityBridge:
         self._wake.set()
 
     async def _writer_loop(self) -> None:
-        """Drain ``_pending`` slots in insertion order, one RPC at a time.
-
-        The slot is popped *before* awaiting, so updates arriving during the
-        RPC land in a fresh slot and get a later round — including a state
-        change or removal racing an in-flight register. One failing RPC is
-        logged and must not kill the loop.
-        """
+        """Drain ``_pending`` slots in insertion order, one RPC at a time."""
         while True:
             await self._wake.wait()
             self._wake.clear()
@@ -326,23 +276,13 @@ class EntityBridge:
         self.approved.add(payload["domain"])
 
     def _release_approval(self, entity_id: str) -> None:
-        """Release the approval refcount ``entity_id`` contributed, if any.
-
-        Symmetric with the per-entity ``approved.add`` in :meth:`_register`:
-        the last entity of a platform domain to unregister drops the gate, so
-        the service/event mirrors stop approving a domain with no owning
-        entities.
-        """
+        """Release the approval refcount ``entity_id`` contributed, if any."""
         domain = self._approved_domain.pop(entity_id, None)
         if domain is not None:
             self.approved.remove(domain)
 
     async def _resend(self, entity_id: str) -> None:
-        """Re-send a registration as an upsert after a registry change.
-
-        Skips when the entity isn't tracked yet (the initial register will
-        carry current values) or when nothing we mirror actually changed.
-        """
+        """Re-send a registration as an upsert after a registry change."""
         if self._channel is None or self._channel.closed:
             return
         if entity_id not in self._registered:
@@ -428,12 +368,7 @@ def _to_entity_description(
 
 
 def _payload_hash(payload: dict[str, Any]) -> str:
-    """Stable hash of a description payload's mirrored fields.
-
-    State-shaped keys (``initial_state`` / ``initial_attributes``) flow via
-    the ``state_changed`` push path and are excluded so the resend guard
-    only fires on changes to fields a registration actually carries.
-    """
+    """Stable hash of a description payload's mirrored fields."""
     mirrored = {
         key: value
         for key, value in payload.items()
@@ -484,15 +419,7 @@ def _describe_entity(entity: Entity, entry_id: str) -> dict[str, Any]:
 
 
 def _serialise_device_info(device_info: Any) -> dict[str, Any] | None:
-    """Return a JSON-safe rendering of an entity's ``device_info``.
-
-    ``DeviceInfo`` is a ``TypedDict`` with set/tuple-shaped fields
-    (``identifiers``, ``connections``, ``via_device``) and a ``StrEnum``
-    (``entry_type``). Sets become lists of two-element lists (preserving
-    the pair shape main needs to rebuild tuples); enums become their
-    string value; ``URL`` instances become strings. Anything else passes
-    through :func:`json_safe` for generic JSON-safety.
-    """
+    """Return a JSON-safe rendering of an entity's ``device_info``."""
     if not device_info:
         return None
     if not isinstance(device_info, dict):

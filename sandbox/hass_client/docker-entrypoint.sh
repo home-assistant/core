@@ -1,10 +1,5 @@
 #!/bin/sh
-# Entrypoint for the Sandbox runtime image.
-#
-# Expands the SANDBOX_* env vars into the runtime CLI flags and `exec`s the
-# module so the Python process replaces this shell (tini, as PID 1, then
-# forwards signals to it for a clean shutdown). The module name stays
-# `hass_client.sandbox` — do not rename it here.
+# Replace the shell so termination signals reach the worker.
 set -eu
 
 : "${SANDBOX_NAME:?SANDBOX_NAME is required (the sandbox group, e.g. built-in / custom)}"

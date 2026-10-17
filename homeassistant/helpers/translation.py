@@ -33,15 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
 
-# A sandbox translation provider supplies frontend strings for sandboxed
-# integrations whose code (and therefore translations/<lang>.json) is not on
-# main's disk — a custom integration running in an isolated sandbox process.
-# Called inside the cache load with the requested languages and the full
-# component set; returns ``{language: {domain: <raw strings.json dict>}}`` for
-# only the domains it owns. It must never raise (a dead sandbox degrades to
-# empty) so a sandbox can't wedge the frontend translation path. Registered by
-# the sandbox integration so core stays sandbox-agnostic — mirrors the
-# ``sandbox.sources`` source-resolver convention.
+# Providers supply remote strings unavailable on disk; failures must return no strings.
 type SandboxTranslationProvider = Callable[
     [list[str], set[str]], Awaitable[dict[str, dict[str, Any]]]
 ]
@@ -134,11 +126,7 @@ async def _async_get_component_strings(
             _load_translations_files_by_language, files_to_load_by_language
         )
 
-    # Sandboxed integrations have no ``translations/<lang>.json`` on main —
-    # registered providers pull the real strings over the sandbox channel.
-    # Merge them before the title fallback below, so a provider dict without
-    # "title" gets the same fill-in as disk strings; a provider claims only
-    # domains it owns and never raises (a dead channel degrades to empty).
+    # Merge remote strings before applying the same title fallback as local strings.
     if providers := hass.data.get(DATA_SANDBOX_TRANSLATION_PROVIDERS):
         language_list = list(languages)
         for provider in providers:
@@ -521,17 +509,7 @@ async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -
 def async_register_sandbox_translation_provider(
     hass: HomeAssistant, provider: SandboxTranslationProvider
 ) -> Callable[[], None]:
-    """Register a provider of sandboxed integrations' translation strings.
-
-    The sandbox integration registers one of these so core stays
-    sandbox-agnostic (mirrors ``async_register_sandbox_source_resolver``). The
-    provider is awaited inside the translation cache load and returns
-    ``{language: {domain: raw_strings}}`` for only the domains it owns; every
-    other domain keeps its on-disk result. See
-    :data:`SandboxTranslationProvider`.
-
-    Returns a callback that unregisters the provider.
-    """
+    """Register a provider of sandboxed integrations' translation strings."""
     providers = hass.data.setdefault(DATA_SANDBOX_TRANSLATION_PROVIDERS, [])
     providers.append(provider)
 
