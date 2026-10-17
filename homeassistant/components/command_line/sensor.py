@@ -1,12 +1,8 @@
 """Allows to configure custom shell commands to turn a value for a sensor."""
 
 import asyncio
-from collections.abc import Mapping
 from datetime import datetime, timedelta
-import json
 from typing import Any, override
-
-from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -36,6 +32,7 @@ from .const import (
 from .utils import (
     async_check_output_or_log,
     create_platform_yaml_not_supported_issue,
+    parse_json_attributes,
     render_template_args,
 )
 
@@ -159,26 +156,9 @@ class CommandSensor(ManualTriggerSensorEntity):
             return
 
         if self._json_attributes:
-            self._attr_extra_state_attributes = {}
-            if value:
-                try:
-                    json_dict = json.loads(value)
-                    if self._json_attributes_path is not None:
-                        json_dict = search(self._json_attributes_path, json_dict)
-                    if isinstance(json_dict, list) and json_dict:
-                        json_dict = json_dict[0]
-                    if isinstance(json_dict, Mapping):
-                        self._attr_extra_state_attributes = {
-                            k: json_dict[k]
-                            for k in self._json_attributes
-                            if k in json_dict
-                        }
-                    else:
-                        LOGGER.warning("JSON result was not a dictionary")
-                except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
-                    LOGGER.warning("Unable to parse output as JSON: %s", value)
-            else:
-                LOGGER.warning("Empty reply found when expecting JSON data")
+            self._attr_extra_state_attributes = parse_json_attributes(
+                value, self._json_attributes, self._json_attributes_path
+            )
 
             if self._value_template is None:
                 self._attr_native_value = None

@@ -74,6 +74,8 @@ BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_COMMAND): cv.string,
         probatio.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
+        probatio.Optional(CONF_JSON_ATTRIBUTES_PATH): cv.string,
         probatio.Optional(CONF_ICON): cv.template,
         probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
