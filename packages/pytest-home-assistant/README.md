@@ -10,9 +10,9 @@ The Python import namespace is `pytest_homeassistant`.
 
 ## Installation and compatibility
 
-The package requires Python 3.14.2 or newer. Published releases pin the matching
-Home Assistant version. Upgrade the two together; helpers depend on Home Assistant's internal
-APIs and are not compatible with older releases.
+Published releases pin the matching Home Assistant version. Upgrade the two
+together; helpers depend on Home Assistant's internal APIs and are not compatible
+with older releases.
 
 Install the package into your custom integration's virtual environment:
 
@@ -135,8 +135,7 @@ uv build packages/pytest-home-assistant
 
 Core's CI installs the built wheel and Home Assistant in a clean environment,
 then runs the standalone custom-integration tests outside the checkout. The
-package version is kept at `0.0.0`; the package version and Home Assistant
-dependency version are set when publishing.
+package version and Home Assistant dependency version are set when publishing.
 Other dependency pins are synchronized with Core by `script.gen_requirements_all`.
 
 ## License
