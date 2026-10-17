@@ -259,6 +259,49 @@ async def test_subscribe_unsubscribe(
         snapshot.assert_not_called()
 
 
+async def test_subscription_config_entry_changes(
+    hass: HomeAssistant,
+    registered_backend: RegisterBackend,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Follow connection names only while the client is subscribed."""
+    await registered_backend("network", [DESCRIPTOR])
+    entry = hass.config_entries.async_get_entry("network")
+    assert entry is not None
+    unrelated = MockConfigEntry(domain="unrelated")
+    unrelated.add_to_hass(hass)
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "lorawan/devices/subscribe"})
+    assert (await client.receive_json())["success"]
+    await client.receive_json()
+
+    with patch(
+        "homeassistant.components.lorawan.websocket_api._snapshot", wraps=_snapshot
+    ) as snapshot:
+        hass.config_entries.async_update_entry(unrelated, title="Unrelated")
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        snapshot.assert_not_called()
+
+        hass.config_entries.async_update_entry(entry, title="Garden")
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        assert (await client.receive_json())["event"]["connections"][0][
+            "title"
+        ] == "Garden"
+        snapshot.assert_called_once_with(hass)
+
+    await client.send_json({"id": 2, "type": "unsubscribe_events", "subscription": 1})
+    assert (await client.receive_json())["success"]
+    with patch(
+        "homeassistant.components.lorawan.websocket_api.Debouncer.async_schedule_call"
+    ) as schedule:
+        hass.config_entries.async_update_entry(entry, title="Home")
+        await hass.async_block_till_done()
+        schedule.assert_not_called()
+
+
 async def test_subscription_batches_updates(
     hass: HomeAssistant,
     registered_backend: RegisterBackend,

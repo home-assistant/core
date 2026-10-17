@@ -6,6 +6,11 @@ from typing import Any
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.config_entries import (
+    SIGNAL_CONFIG_ENTRY_CHANGED,
+    ConfigEntry,
+    ConfigEntryChange,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
@@ -187,6 +192,18 @@ def websocket_subscribe_devices(
         ):
             debouncer.async_schedule_call()
 
+    @callback
+    def entry_changed(_change: ConfigEntryChange, entry: ConfigEntry) -> None:
+        if (
+            entry.entry_id not in registry.connections
+            and entry.domain not in registry.integrations
+        ):
+            return
+        debouncer.async_schedule_call()
+
+    unsubscribe_entries = async_dispatcher_connect(
+        hass, SIGNAL_CONFIG_ENTRY_CHANGED, entry_changed
+    )
     unsubscribe_changes = async_dispatcher_connect(
         hass, SIGNAL_DEVICES_CHANGED, debouncer.async_schedule_call
     )
@@ -198,6 +215,7 @@ def websocket_subscribe_devices(
     def unsubscribe() -> None:
         unsubscribe_changes()
         unsubscribe_registry()
+        unsubscribe_entries()
         debouncer.async_shutdown()
 
     connection.subscriptions[msg["id"]] = unsubscribe
