@@ -45,6 +45,11 @@
         "name": "Water tank lifted"
       }
     },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {
