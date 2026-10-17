@@ -8,6 +8,7 @@ from typing import Any, override
 import openai
 import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -278,6 +279,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
+        errors: dict[str, str] = {}
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
@@ -326,6 +328,40 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
         ] = bool
 
+        not_recommended: data_entry_flow.FieldCondition = {
+            "field": CONF_RECOMMENDED,
+            "value": False,
+        }
+        step_schema.update(
+            {
+                data_entry_flow.Optional(
+                    CONF_CHAT_MODEL,
+                    default=RECOMMENDED_CHAT_MODEL,
+                    visible=not_recommended,
+                ): str,
+                data_entry_flow.Optional(
+                    CONF_MAX_TOKENS,
+                    default=RECOMMENDED_MAX_TOKENS,
+                    visible=not_recommended,
+                ): int,
+                data_entry_flow.Optional(
+                    CONF_TOP_P,
+                    default=RECOMMENDED_TOP_P,
+                    visible=not_recommended,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                data_entry_flow.Optional(
+                    CONF_TEMPERATURE,
+                    default=RECOMMENDED_TEMPERATURE,
+                    visible=not_recommended,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+                data_entry_flow.Optional(
+                    CONF_STORE_RESPONSES,
+                    default=RECOMMENDED_STORE_RESPONSES,
+                    visible=not_recommended,
+                ): bool,
+            }
+        )
+
         if user_input is not None:
             if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
@@ -342,58 +378,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
 
-            options.update(user_input)
-            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
-                options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_additional()
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(step_schema), options
-            ),
-        )
-
-    async def async_step_additional(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage additional options."""
-        options = self.options
-        errors: dict[str, str] = {}
-
-        step_schema: VolDictType = {
-            probatio.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            probatio.Optional(
-                CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            probatio.Optional(
-                CONF_TOP_P,
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            probatio.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            probatio.Optional(
-                CONF_STORE_RESPONSES,
-                default=RECOMMENDED_STORE_RESPONSES,
-            ): bool,
-        }
-
-        if user_input is not None:
-            options.update(user_input)
             if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                 errors[CONF_CHAT_MODEL] = "model_not_supported"
 
+            options.update(user_input)
+            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                options.pop(CONF_LLM_HASS_API)
             if not errors:
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="additional",
+            step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(step_schema), options
             ),
