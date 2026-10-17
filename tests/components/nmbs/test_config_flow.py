@@ -3,11 +3,12 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from mashumaro.exceptions import MissingField
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
+    CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_TO,
     DOMAIN,
@@ -17,18 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-DUMMY_DATA_IMPORT: dict[str, Any] = {
-    "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
-    "STAT_BRUSSELS_CENTRAL": "Brussel-Centraal/Bruxelles-Central",
-    "STAT_BRUSSELS_SOUTH": "Brussel-Zuid/Bruxelles-Midi",
-}
-
-DUMMY_DATA_ALTERNATIVE_IMPORT: dict[str, Any] = {
-    "STAT_BRUSSELS_NORTH": "Brussels-North",
-    "STAT_BRUSSELS_CENTRAL": "Brussels-Central",
-    "STAT_BRUSSELS_SOUTH": "Brussels-South/Brussels-Midi",
-}
 
 DUMMY_DATA: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "BE.NMBS.008812005",
@@ -126,7 +115,7 @@ async def test_abort_if_exists(
 async def test_dont_abort_if_exists_when_vias_differs(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test aborting the flow if the entry already exists."""
+    """Test creating an entry when the exclude-vias option differs."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -151,8 +140,32 @@ async def test_dont_abort_if_exists_when_vias_differs(
 async def test_unavailable_api(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
-    """Test starting a flow by user and api is unavailable."""
+    """Test the flow aborts when the API is unavailable."""
     mock_nmbs_client.get_stations.return_value = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_unavailable"
+
+
+@pytest.mark.parametrize(
+    "stations_side_effect",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
+        pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
+    ],
+)
+async def test_unavailable_api_errors(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    stations_side_effect: Exception | type[Exception],
+) -> None:
+    """Test the flow aborts when the station list cannot be fetched."""
+    mock_nmbs_client.get_stations.side_effect = stations_side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},

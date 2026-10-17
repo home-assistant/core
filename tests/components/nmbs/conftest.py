@@ -3,7 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyrail.models import StationsApiResponse
+from pyrail.models import (
+    ConnectionsApiResponse,
+    LiveboardApiResponse,
+    StationsApiResponse,
+)
 import pytest
 
 from homeassistant.components.nmbs.const import (
@@ -13,6 +17,9 @@ from homeassistant.components.nmbs.const import (
 )
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+
+STATION_FROM = "BE.NMBS.008812005"
+STATION_TO = "BE.NMBS.008814001"
 
 
 @pytest.fixture
@@ -37,11 +44,27 @@ def mock_nmbs_client() -> Generator[AsyncMock]:
             "homeassistant.components.nmbs.config_flow.iRail",
             new=mock_client,
         ),
+        patch(
+            "homeassistant.components.nmbs.coordinator.iRail",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.get_stations.return_value = StationsApiResponse.from_dict(
             load_json_object_fixture("stations.json", DOMAIN)
         )
+        client.get_connections.return_value = ConnectionsApiResponse.from_dict(
+            load_json_object_fixture("connections.json", DOMAIN)
+        )
+        liveboards = {
+            STATION_FROM: LiveboardApiResponse.from_dict(
+                load_json_object_fixture("liveboard.json", DOMAIN)
+            ),
+            STATION_TO: LiveboardApiResponse.from_dict(
+                load_json_object_fixture("liveboard_zuid.json", DOMAIN)
+            ),
+        }
+        client.get_liveboard.side_effect = lambda station: liveboards[station]
         yield client
 
 
@@ -52,8 +75,8 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
         data={
-            CONF_STATION_FROM: "BE.NMBS.008812005",
-            CONF_STATION_TO: "BE.NMBS.008814001",
+            CONF_STATION_FROM: STATION_FROM,
+            CONF_STATION_TO: STATION_TO,
         },
-        unique_id="BE.NMBS.008812005_BE.NMBS.008814001",
+        unique_id=f"{STATION_FROM}_{STATION_TO}",
     )
