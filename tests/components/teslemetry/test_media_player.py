@@ -326,3 +326,90 @@ async def test_update_streaming_restore_channel(hass: HomeAssistant) -> None:
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_CHANNEL] == "Test Station"
     assert ATTR_MEDIA_PLAYLIST not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("restored", "expected"),
+    [
+        pytest.param(MediaPlayerState.PLAYING, MediaPlayerState.PLAYING, id="playing"),
+        pytest.param(MediaPlayerState.PAUSED, MediaPlayerState.PAUSED, id="paused"),
+        pytest.param(MediaPlayerState.OFF, MediaPlayerState.IDLE, id="off"),
+    ],
+)
+async def test_streaming_center_display_keeps_restored_playback(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    restored: MediaPlayerState,
+    expected: MediaPlayerState,
+) -> None:
+    """Test a center display change keeps a restored playback state."""
+
+    entity_id = "media_player.test_media_player"
+    mock_restore_cache(hass, (State(entity_id, restored),))
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+    assert hass.states.get(entity_id).state == restored
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.CENTER_DISPLAY: "On"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == expected
+
+
+@pytest.mark.parametrize(
+    ("restored", "service", "expected"),
+    [
+        pytest.param(
+            MediaPlayerState.PLAYING,
+            SERVICE_MEDIA_PAUSE,
+            MediaPlayerState.PAUSED,
+            id="pause",
+        ),
+        pytest.param(
+            MediaPlayerState.PAUSED,
+            SERVICE_MEDIA_PLAY,
+            MediaPlayerState.PLAYING,
+            id="play",
+        ),
+    ],
+)
+async def test_streaming_center_display_keeps_commanded_playback(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    restored: MediaPlayerState,
+    service: str,
+    expected: MediaPlayerState,
+) -> None:
+    """Test a center display change keeps the playback state set by a command."""
+
+    entity_id = "media_player.test_media_player"
+    mock_restore_cache(hass, (State(entity_id, restored),))
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.media_toggle_playback",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert hass.states.get(entity_id).state == expected
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.CENTER_DISPLAY: "On"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == expected
