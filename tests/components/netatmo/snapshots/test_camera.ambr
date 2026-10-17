@@ -60,7 +60,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'streaming',
+    'state': 'idle',
   })
 # ---
 # name: test_entity[camera.hall-entry]
@@ -124,7 +124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'streaming',
+    'state': 'idle',
   })
 # ---
 # name: test_entity[camera.netatmo_doorbell-entry]
@@ -158,7 +158,7 @@
     'platform': 'netatmo',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 1>,
+    'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:10:f1:66-DeviceType.NDB',
     'unit_of_measurement': None,
@@ -179,7 +179,7 @@
       'local_url': None,
       'monitoring': True,
       'sd_status': 4,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
       'vpn_url': 'https://prodvpn-eu-6.netatmo.net/10.20.30.40/1111111111111/2222222222222,,',
     }),
     'context': <ANY>,

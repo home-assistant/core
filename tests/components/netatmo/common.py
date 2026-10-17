@@ -2,10 +2,12 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo.const import DOMAIN
@@ -15,7 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 HOME_ID = "91763b24c43d3e344f424e8b"
@@ -30,6 +36,8 @@ COMMON_RESPONSE = {
 FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
+
+POLLING_INTERVAL = {"polling_cycles": 11, "polling_delta": timedelta(seconds=30)}
 
 
 async def snapshot_platform_entities(
@@ -64,7 +72,7 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     endpoint = kwargs["endpoint"].split("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
-        return b"test stream image bytes"
+        return b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
 
     if endpoint in [
         "setpersonsaway",
@@ -104,7 +112,7 @@ async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str | None:
     endpoint = kwargs["endpoint"].split("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
-        return b"test stream image bytes"
+        return b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
     return None
 
 
@@ -132,3 +140,42 @@ def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
         ),
     ):
         yield
+
+
+async def advance_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    polling_cycles: int,
+    polling_delta: timedelta,
+) -> None:
+    """Advance time to trigger polling."""
+    for _ in range(polling_cycles):
+        freezer.tick(polling_delta)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def payload_modifier(
+    payload: dict[str, Any],
+    target_id: str,
+    new_attributes: dict[str, Any],
+    timestamp: int | None = None,
+) -> None:
+    """Mutate the payload for fake post request."""
+
+    if timestamp is not None:
+        payload["time_server"] = timestamp
+    body = payload.get("body", {})
+
+    # Handle both structures: {"home": {...}} AND {"homes": [{...}]}
+    homes_to_check = []
+    if "home" in body and isinstance(body["home"], dict):
+        homes_to_check.append(body["home"])
+    elif "homes" in body and isinstance(body["homes"], list):
+        homes_to_check.extend(body["homes"])
+
+    for home_data in homes_to_check:
+        modules = home_data.get("modules", [])
+        for module in modules:
+            if module.get("id") == target_id:
+                module.update(new_attributes)
