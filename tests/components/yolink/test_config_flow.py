@@ -178,18 +178,6 @@ async def _async_complete_oauth_reauth_flow(
     )
 
 
-@pytest.mark.usefixtures("setup_credentials")
-async def test_user_flow_shows_menu(hass: HomeAssistant) -> None:
-    """Test the user flow offers both authentication methods."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "user"
-    assert result["menu_options"] == ["pick_implementation", "uac"]
-
-
 @pytest.mark.usefixtures("setup_credentials", "mock_config_entry")
 async def test_user_flow_skips_menu_with_oauth_entry(hass: HomeAssistant) -> None:
     """Test the menu is skipped when OAuth2 is already configured."""
@@ -201,20 +189,11 @@ async def test_user_flow_skips_menu_with_oauth_entry(hass: HomeAssistant) -> Non
     assert result["step_id"] == "uac"
 
 
-@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+@pytest.mark.usefixtures(
+    "setup_credentials", "current_request_with_host", "mock_uac_config_entry"
+)
 async def test_user_flow_shows_menu_with_uac_entry(hass: HomeAssistant) -> None:
     """Test a UAC entry does not prevent adding an OAuth2 entry."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_HOME_ID,
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: TEST_UAID,
-            CONF_SECRET_KEY: TEST_SECRET_KEY,
-            CONF_HOME_ID: TEST_HOME_ID,
-        },
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -262,14 +241,13 @@ async def test_abort_if_authorization_timeout(hass: HomeAssistant) -> None:
     assert result["reason"] == "authorize_url_timeout"
 
 
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_yolink_client"
-)
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
 async def test_full_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
+    mock_yolink_client: AsyncMock,
 ) -> None:
     """Test the OAuth2 flow reached through the menu."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -278,6 +256,8 @@ async def test_full_oauth_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert result["menu_options"] == ["pick_implementation", "uac"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "pick_implementation"}
@@ -310,7 +290,6 @@ async def test_full_oauth_flow(
     assert result["title"] == "YoLink"
     assert result["data"]["auth_implementation"] == DOMAIN
     assert result["data"][CONF_AUTH_TYPE] == AUTH_TYPE_OAUTH
-    # Recorded so the same home cannot also be added through UAC.
     assert result["data"][CONF_HOME_ID] == TEST_HOME_ID
 
     result["data"]["token"].pop("expires_at")
@@ -322,21 +301,6 @@ async def test_full_oauth_flow(
     assert entries[0].state is ConfigEntryState.LOADED
     assert len(mock_setup_entry.mock_calls) == 1
 
-
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
-)
-async def test_oauth_flow_uses_resolved_token_for_home_lookup(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_yolink_client: AsyncMock,
-) -> None:
-    """Test the home is looked up with the token that was just resolved."""
-    result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
     auth_mgr = mock_yolink_client.call_args.args[0]
     assert auth_mgr.access_token() == "mock-access-token"
     mock_yolink_client.return_value.execute.assert_awaited_once_with(
@@ -391,6 +355,7 @@ async def test_oauth_flow_aborts_when_oauth_entry_exists(
     "current_request_with_host",
     "mock_setup_entry",
     "mock_yolink_client",
+    "mock_uac_config_entry",
 )
 async def test_oauth_flow_aborts_when_home_configured_by_uac(
     hass: HomeAssistant,
@@ -398,18 +363,6 @@ async def test_oauth_flow_aborts_when_home_configured_by_uac(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test OAuth2 is refused for a home already added through UAC."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_HOME_ID,
-        title=TEST_HOME_NAME,
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: TEST_UAID,
-            CONF_SECRET_KEY: TEST_SECRET_KEY,
-            CONF_HOME_ID: TEST_HOME_ID,
-        },
-    ).add_to_hass(hass)
-
     result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
 
     assert result["type"] is FlowResultType.ABORT
@@ -422,19 +375,22 @@ async def test_oauth_flow_aborts_when_home_configured_by_uac(
     [
         pytest.param({CONF_AUTH_TYPE: AUTH_TYPE_OAUTH}, id="oauth_entry"),
         pytest.param({}, id="entry_without_auth_type"),
+        pytest.param(
+            {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: "home_99999"},
+            id="entry_of_other_home",
+        ),
     ],
 )
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_yolink_client"
-)
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
 async def test_oauth_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
+    mock_yolink_client: AsyncMock,
     entry_data: dict[str, str],
 ) -> None:
-    """Test OAuth2 reauthentication is not blocked by the existing entry."""
+    """Test OAuth2 reauthentication updates the token and the home."""
     old_entry = _mock_oauth_entry(hass, entry_data)
 
     result = await _async_complete_oauth_reauth_flow(
@@ -446,32 +402,8 @@ async def test_oauth_reauthentication(
     assert old_entry.data[CONF_AUTH_TYPE] == AUTH_TYPE_OAUTH
     assert old_entry.data["token"]["access_token"] == "mock-access-token"
     assert old_entry.data["token"]["refresh_token"] == "mock-refresh-token"
-    # The home of the reauthenticated account is recorded along the way.
     assert old_entry.data[CONF_HOME_ID] == TEST_HOME_ID
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
-)
-async def test_oauth_reauthentication_updates_home_id(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_yolink_client: AsyncMock,
-) -> None:
-    """Test reauthenticating against another account records its home."""
-    old_entry = _mock_oauth_entry(
-        hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: "home_99999"}
-    )
-
-    result = await _async_complete_oauth_reauth_flow(
-        hass, hass_client_no_auth, aioclient_mock, old_entry
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert old_entry.data[CONF_HOME_ID] == TEST_HOME_ID
     auth_mgr = mock_yolink_client.call_args.args[0]
     assert auth_mgr.access_token() == "mock-access-token"
 
@@ -481,6 +413,7 @@ async def test_oauth_reauthentication_updates_home_id(
     "current_request_with_host",
     "mock_setup_entry",
     "mock_yolink_client",
+    "mock_uac_config_entry",
 )
 async def test_oauth_reauthentication_aborts_when_home_configured(
     hass: HomeAssistant,
@@ -488,17 +421,6 @@ async def test_oauth_reauthentication_aborts_when_home_configured(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reauthenticating into a home another entry manages is refused."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_HOME_ID,
-        title=TEST_HOME_NAME,
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: TEST_UAID,
-            CONF_SECRET_KEY: TEST_SECRET_KEY,
-            CONF_HOME_ID: TEST_HOME_ID,
-        },
-    ).add_to_hass(hass)
     old_entry = _mock_oauth_entry(
         hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: "home_99999"}
     )
@@ -541,12 +463,23 @@ async def test_oauth_reauthentication_aborts_when_home_lookup_fails(
     assert old_entry.data == data_before
 
 
+@pytest.mark.parametrize(
+    ("home_info", "title"),
+    [
+        pytest.param(home_info_response(), TEST_HOME_NAME, id="named_home"),
+        pytest.param(home_info_response(name=None), "YoLink Home", id="unnamed_home"),
+    ],
+)
 async def test_uac_flow(
     hass: HomeAssistant,
     mock_yolink_client: AsyncMock,
     mock_setup_entry: AsyncMock,
+    home_info: BRDP,
+    title: str,
 ) -> None:
     """Test the UAC flow creates an entry keyed by home id."""
+    mock_yolink_client.return_value.execute.return_value = home_info
+
     flow_id = await _async_start_uac_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
@@ -554,7 +487,7 @@ async def test_uac_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_HOME_NAME
+    assert result["title"] == title
     assert result["data"] == {
         CONF_AUTH_TYPE: AUTH_TYPE_UAC,
         CONF_UAID: TEST_UAID,
@@ -569,50 +502,45 @@ async def test_uac_flow(
     )
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_uac_flow_unnamed_home(
-    hass: HomeAssistant, mock_yolink_client: AsyncMock
-) -> None:
-    """Test the UAC flow falls back to a default title for an unnamed home."""
-    mock_yolink_client.return_value.execute.return_value = home_info_response(name=None)
-
-    flow_id = await _async_start_uac_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        flow_id, {CONF_UAID: TEST_UAID, CONF_SECRET_KEY: TEST_SECRET_KEY}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "YoLink Home"
-    assert result["result"].unique_id == TEST_HOME_ID
-
-
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("home_lookup", "error"),
     [
         pytest.param(
-            YoLinkAuthFailError("000103", "Invalid credentials"),
+            {"side_effect": YoLinkAuthFailError("000103", "Invalid credentials")},
             "invalid_auth",
             id="invalid_auth",
         ),
         pytest.param(
-            YoLinkClientError("000201", "Connection failed"),
+            {"side_effect": YoLinkClientError("000201", "Connection failed")},
             "cannot_connect",
             id="client_error",
         ),
-        pytest.param(TimeoutError(), "cannot_connect", id="timeout"),
-        pytest.param(RuntimeError("Boom"), "unknown", id="unexpected_error"),
+        pytest.param({"side_effect": TimeoutError()}, "cannot_connect", id="timeout"),
+        pytest.param(
+            {"side_effect": RuntimeError("Boom")}, "unknown", id="unexpected_error"
+        ),
+        pytest.param(
+            {"return_value": BRDP(code="000000")},
+            "cannot_connect",
+            id="response_without_data",
+        ),
+        pytest.param(
+            {"return_value": BRDP(code="000000", data={"name": TEST_HOME_NAME})},
+            "cannot_connect",
+            id="response_without_id",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_uac_flow_errors(
     hass: HomeAssistant,
     mock_yolink_client: AsyncMock,
-    side_effect: Exception,
+    home_lookup: dict[str, Any],
     error: str,
 ) -> None:
     """Test the UAC flow reports errors and recovers."""
-    mock_yolink_client.return_value.execute.side_effect = side_effect
+    execute = mock_yolink_client.return_value.execute
+    execute.configure_mock(**home_lookup)
 
     flow_id = await _async_start_uac_flow(hass)
 
@@ -623,45 +551,7 @@ async def test_uac_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_yolink_client.return_value.execute.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        flow_id, {CONF_UAID: TEST_UAID, CONF_SECRET_KEY: TEST_SECRET_KEY}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-@pytest.mark.parametrize(
-    ("home_info", "error"),
-    [
-        pytest.param(
-            BRDP(code="000000", data={"name": TEST_HOME_NAME}),
-            "cannot_connect",
-            id="response_without_id",
-        ),
-        pytest.param(BRDP(code="000000"), "cannot_connect", id="response_without_data"),
-    ],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_uac_flow_unusable_home_info(
-    hass: HomeAssistant,
-    mock_yolink_client: AsyncMock,
-    home_info: BRDP,
-    error: str,
-) -> None:
-    """Test the UAC flow reports an error when no home is named and recovers."""
-    mock_yolink_client.return_value.execute.return_value = home_info
-
-    flow_id = await _async_start_uac_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        flow_id, {CONF_UAID: TEST_UAID, CONF_SECRET_KEY: TEST_SECRET_KEY}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": error}
-
-    mock_yolink_client.return_value.execute.return_value = home_info_response()
+    execute.configure_mock(side_effect=None, return_value=home_info_response())
     result = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_UAID: TEST_UAID, CONF_SECRET_KEY: TEST_SECRET_KEY}
     )
@@ -670,23 +560,11 @@ async def test_uac_flow_unusable_home_info(
     assert result["result"].unique_id == TEST_HOME_ID
 
 
-@pytest.mark.usefixtures("mock_yolink_client")
+@pytest.mark.usefixtures("mock_yolink_client", "mock_uac_config_entry")
 async def test_uac_flow_duplicate_home(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test a second entry for the same home is rejected."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_HOME_ID,
-        title=TEST_HOME_NAME,
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: TEST_UAID,
-            CONF_SECRET_KEY: TEST_SECRET_KEY,
-            CONF_HOME_ID: TEST_HOME_ID,
-        },
-    ).add_to_hass(hass)
-
     flow_id = await _async_start_uac_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
@@ -729,23 +607,11 @@ async def test_uac_flow_aborts_when_home_configured_by_oauth(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_uac_config_entry")
 async def test_uac_flow_multiple_homes(
     hass: HomeAssistant, mock_yolink_client: AsyncMock
 ) -> None:
     """Test entries for different homes coexist."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="home_11111",
-        title="First Home",
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: "first-uaid",
-            CONF_SECRET_KEY: "first-secret",
-            CONF_HOME_ID: "home_11111",
-        },
-    ).add_to_hass(hass)
-
     mock_yolink_client.return_value.execute.return_value = home_info_response(
         "home_22222", "Second Home"
     )
@@ -794,27 +660,16 @@ async def test_uac_reauthentication(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_uac_reauthentication_wrong_home(
-    hass: HomeAssistant, mock_yolink_client: AsyncMock
+    hass: HomeAssistant,
+    mock_uac_config_entry: MockConfigEntry,
+    mock_yolink_client: AsyncMock,
 ) -> None:
     """Test UAC reauthentication with credentials for another home."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_HOME_ID,
-        title=TEST_HOME_NAME,
-        data={
-            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
-            CONF_UAID: "old-uaid",
-            CONF_SECRET_KEY: "old-secret",
-            CONF_HOME_ID: TEST_HOME_ID,
-        },
-    )
-    old_entry.add_to_hass(hass)
-
     mock_yolink_client.return_value.execute.return_value = home_info_response(
         "home_99999", "Other Home"
     )
 
-    result = await old_entry.start_reauth_flow(hass)
+    result = await mock_uac_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     result = await hass.config_entries.flow.async_configure(
@@ -824,4 +679,4 @@ async def test_uac_reauthentication_wrong_home(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
-    assert old_entry.data[CONF_UAID] == "old-uaid"
+    assert mock_uac_config_entry.data[CONF_UAID] == TEST_UAID

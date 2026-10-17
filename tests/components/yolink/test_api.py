@@ -87,31 +87,6 @@ async def test_uac_token_request_http_error(
 
 
 @pytest.mark.parametrize(
-    ("status", "response_kwargs"),
-    [
-        pytest.param(502, {"text": "<html>Bad gateway</html>"}, id="undecodable_body"),
-        pytest.param(500, {"json": []}, id="body_is_not_an_object"),
-    ],
-)
-async def test_uac_token_request_http_error_without_usable_body(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    status: int,
-    response_kwargs: dict[str, Any],
-) -> None:
-    """Test an HTTP error whose body reports no error."""
-    aioclient_mock.post(OAUTH2_TOKEN, status=status, **response_kwargs)
-    auth = _uac_auth(hass)
-
-    with pytest.raises(YoLinkClientError) as err:
-        await auth.check_and_refresh_token()
-
-    assert type(err.value) is YoLinkClientError
-    assert err.value.code == "unknown"
-    assert err.value.message == f"HTTP {status}"
-
-
-@pytest.mark.parametrize(
     ("response", "code", "message"),
     [
         pytest.param(

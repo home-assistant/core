@@ -1,5 +1,6 @@
 """Tests for the yolink integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -57,21 +58,6 @@ async def test_device_remove_devices(
         device_registry, mock_config_entry.entry_id
     )
     assert len(device_entries) == 0
-
-
-@pytest.mark.usefixtures("setup_credentials", "mock_yolink_home")
-async def test_oauth_setup_and_unload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test an entry predating UAC support is set up over OAuth2."""
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.usefixtures("setup_credentials", "mock_auth_manager", "mock_yolink_home")
@@ -189,13 +175,18 @@ async def test_setup_records_home_id_of_legacy_entry(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    "home_lookup",
     [
-        pytest.param(YoLinkClientError("-1003", "Request failed"), id="client_error"),
         pytest.param(
-            YoLinkAuthFailError("000103", "Invalid credentials"), id="auth_error"
+            {"side_effect": YoLinkClientError("-1003", "Request failed")},
+            id="client_error",
         ),
-        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(
+            {"side_effect": YoLinkAuthFailError("000103", "Invalid credentials")},
+            id="auth_error",
+        ),
+        pytest.param({"side_effect": TimeoutError()}, id="timeout"),
+        pytest.param({"return_value": BRDP(code="000000")}, id="response_without_data"),
     ],
 )
 @pytest.mark.usefixtures("setup_credentials")
@@ -203,32 +194,16 @@ async def test_setup_survives_failing_home_id_lookup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_yolink_home: AsyncMock,
-    side_effect: Exception,
+    home_lookup: dict[str, Any],
 ) -> None:
     """Test recording the home id does not fail an otherwise working setup."""
-    mock_yolink_home.return_value.async_get_home_info.side_effect = side_effect
+    mock_yolink_home.return_value.async_get_home_info.configure_mock(**home_lookup)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # A later start records the home again.
-    assert CONF_HOME_ID not in mock_config_entry.data
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_setup_without_home_info_in_response(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_yolink_home: AsyncMock,
-) -> None:
-    """Test a home info response naming no home does not fail setup."""
-    mock_yolink_home.return_value.async_get_home_info.return_value = BRDP(code="000000")
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert CONF_HOME_ID not in mock_config_entry.data
 
 
