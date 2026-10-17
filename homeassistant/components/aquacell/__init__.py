@@ -3,11 +3,13 @@
 from aioaquacell import AquacellApi
 from aioaquacell.const import Brand
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from .const import CONF_BRAND
+from .const import CONF_BRAND, DOMAIN
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -24,6 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
     coordinator = AquacellCoordinator(hass, entry, aquacell_api)
 
     await coordinator.async_config_entry_first_refresh()
+    # Only at setup, as sensors for new softeners are only created at setup
+    coordinator.async_remove_stale_devices()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -32,3 +36,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: AquacellConfigEntry, device_entry: AnyDeviceEntry
+) -> bool:
+    """Allow removing a softener that is no longer returned by the API."""
+    if entry.state is not ConfigEntryState.LOADED:
+        return False
+    return not any(
+        identifier[0] == DOMAIN and identifier[1] in entry.runtime_data.data
+        for identifier in device_entry.identifiers
+    )
