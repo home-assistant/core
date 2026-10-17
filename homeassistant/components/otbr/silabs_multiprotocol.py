@@ -1,15 +1,17 @@
 """Silicon Labs Multiprotocol support."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
 import aiohttp
-from python_otbr_api import tlv_parser
+from python_otbr_api import OTBRError, PendingDatasetOutcomeUnknownError, tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    ChannelChangeOutcomeUnknownError,
     is_multiprotocol_url,
 )
 from homeassistant.components.thread import async_add_dataset
@@ -23,6 +25,11 @@ if TYPE_CHECKING:
     from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+# Reads of the pending dataset after a write without an answer: a router that
+# answered late is often reachable again a moment later.
+_RECONCILE_ATTEMPTS = 3
+_RECONCILE_INTERVAL_S = 2
 
 
 def async_get_otbr_data[**_P, _R, _R_Def](
@@ -65,14 +72,77 @@ async def async_change_channel(
     data: OTBRData,
     channel: int,
     delay: float,
-) -> None:
+) -> asyncio.Task[None]:
     """Set the channel to be used.
 
-    Does nothing if not configured.
+    Does nothing if not configured. Raises only when the router refused the
+    change, with the reason it gave; the dataset the mesh moves to is imported
+    in the returned task, since the change is under way whether that import
+    succeeds or not.
     """
-    await data.set_channel(channel, delay)
+    try:
+        await data.set_channel(channel, delay)
+    except HomeAssistantError as err:
+        cause = err.__cause__
+        if isinstance(cause, (aiohttp.ClientConnectorError, TimeoutError)) or (
+            isinstance(cause, OTBRError)
+            and not isinstance(cause, PendingDatasetOutcomeUnknownError)
+        ):
+            # Refused, never connected, or timed out before the write (the
+            # library reports a timeout of the write itself as an unknown
+            # outcome): nothing was written. The router's reason, not the
+            # wrapper's generic text.
+            raise HomeAssistantError(
+                str(cause) if isinstance(cause, OTBRError) else str(err)
+            ) from err
+        # No answer from the leader, or the connection dropped with the
+        # request out. The router holding the pending dataset shows the
+        # change is on its way regardless; holding another, or none, it is not.
+        try:
+            held = await _async_holds_channel_change(data, channel)
+        except HomeAssistantError as read_err:
+            raise ChannelChangeOutcomeUnknownError(
+                "the border router could not be read after the write, so whether "
+                "the channel change went through is unknown"
+            ) from read_err
+        if not held:
+            raise HomeAssistantError(
+                "the border router did not confirm the channel change and holds "
+                "no pending dataset for it"
+            ) from err
+    return hass.async_create_task(_async_import_dataset(hass, data))
 
-    # Import the new dataset
+
+async def _async_holds_channel_change(data: OTBRData, channel: int) -> bool:
+    """Return whether the router holds a pending dataset moving to the channel.
+
+    A pending dataset for another channel is another writer's, whose conflict
+    answer an unanswered write may have lost.
+    """
+    if (tlvs := await _async_pending_dataset(data)) is None:
+        return False
+    try:
+        item = tlv_parser.parse_tlv(tlvs.hex()).get(MeshcopTLVType.CHANNEL)
+    except tlv_parser.TLVError:
+        return False
+    return isinstance(item, tlv_parser.Channel) and item.channel == channel
+
+
+async def _async_pending_dataset(data: OTBRData) -> bytes | None:
+    """Read the router's pending dataset, trying again for a few seconds."""
+    attempts = _RECONCILE_ATTEMPTS
+    while True:
+        try:
+            return await data.get_pending_dataset_tlvs()
+        except HomeAssistantError:
+            attempts -= 1
+            if not attempts:
+                raise
+        await asyncio.sleep(_RECONCILE_INTERVAL_S)
+
+
+async def _async_import_dataset(hass: HomeAssistant, data: OTBRData) -> None:
+    """Import the dataset a channel change moves the mesh to."""
     dataset_tlvs = await data.get_pending_dataset_tlvs()
     if dataset_tlvs is None:
         # The activation timer may have expired already

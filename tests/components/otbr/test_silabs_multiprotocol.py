@@ -2,9 +2,19 @@
 
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
-from python_otbr_api import ActiveDataSet, tlv_parser
+from python_otbr_api import (
+    ActiveDataSet,
+    PendingDatasetConflictError,
+    PendingDatasetOutcomeUnknownError,
+    PendingDatasetRejectedError,
+    tlv_parser,
+)
 
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    ChannelChangeOutcomeUnknownError,
+)
 from homeassistant.components.otbr import (
     silabs_multiprotocol as otbr_silabs_multiprotocol,
 )
@@ -52,7 +62,11 @@ async def test_async_change_channel(
             return_value=bytes.fromhex(DATASET_CH16_PENDING),
         ),
     ):
-        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        await task
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
 
     pending_dataset = tlv_parser.parse_tlv(DATASET_CH16_PENDING)
@@ -84,7 +98,11 @@ async def test_async_change_channel_no_pending(
             return_value=None,
         ),
     ):
-        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        await task
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
 
     pending_dataset = tlv_parser.parse_tlv(DATASET_CH16_PENDING)
@@ -116,10 +134,246 @@ async def test_async_change_channel_no_update(
             return_value=None,
         ),
     ):
-        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        await task
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
 
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_import_fails_after_the_write(
+    hass: HomeAssistant,
+) -> None:
+    """A read failing after the channel was written is not a refusal.
+
+    The change is under way; the import fails in the task returned, and the
+    store is left as it was.
+    """
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            side_effect=HomeAssistantError("down"),
+        ),
+    ):
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        with pytest.raises(HomeAssistantError):
+            await task
+    mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
+
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.tlv for entry in store.datasets.values()] == [DATASET_CH16.hex()]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        PendingDatasetRejectedError("the leader rejected it"),
+        PendingDatasetConflictError("a pending dataset is already in place"),
+    ],
+)
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_refused_with_the_routers_reason(
+    hass: HomeAssistant, error: Exception
+) -> None:
+    """A refusal reaches the caller with the reason the router gave."""
+    with (
+        patch("python_otbr_api.OTBR.set_channel", side_effect=error),
+        pytest.raises(HomeAssistantError, match=str(error)),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_unanswered_but_on_its_way(
+    hass: HomeAssistant,
+) -> None:
+    """A write the leader did not answer counts once the router holds the dataset.
+
+    The pending dataset the router holds shows the change is on its way, so
+    it is accepted and imported as any other.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=PendingDatasetOutcomeUnknownError("no response"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        await task
+
+    pending_dataset = tlv_parser.parse_tlv(DATASET_CH16_PENDING)
+    pending_dataset.pop(tlv_parser.MeshcopTLVType.DELAYTIMER)
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.tlv for entry in store.datasets.values()] == [
+        tlv_parser.encode_tlv(pending_dataset)
+    ]
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_unanswered_and_not_held_is_refused(
+    hass: HomeAssistant,
+) -> None:
+    """A write the leader did not answer, and the router does not hold, is refused."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=PendingDatasetOutcomeUnknownError("no response"),
+        ),
+        patch("python_otbr_api.OTBR.get_pending_dataset_tlvs", return_value=None),
+        pytest.raises(HomeAssistantError, match="holds no pending dataset"),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.tlv for entry in store.datasets.values()] == [DATASET_CH16.hex()]
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_dropped_connection_but_on_its_way(
+    hass: HomeAssistant,
+) -> None:
+    """A connection dropped with the request out is held against the router too."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=aiohttp.ServerDisconnectedError(),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        await task
+
+    pending_dataset = tlv_parser.parse_tlv(DATASET_CH16_PENDING)
+    pending_dataset.pop(tlv_parser.MeshcopTLVType.DELAYTIMER)
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.tlv for entry in store.datasets.values()] == [
+        tlv_parser.encode_tlv(pending_dataset)
+    ]
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_timed_out_before_the_write(
+    hass: HomeAssistant,
+) -> None:
+    """A timeout reaching the hook happened before the write: nothing to ask."""
+    with (
+        patch("python_otbr_api.OTBR.set_channel", side_effect=TimeoutError()),
+        patch("python_otbr_api.OTBR.get_pending_dataset_tlvs") as mock_get_pending,
+        pytest.raises(HomeAssistantError, match="Failed to call OTBR API"),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+    mock_get_pending.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_unreadable_after_an_unanswered_write(
+    hass: HomeAssistant,
+) -> None:
+    """A router that cannot be read after an unanswered write leaves it unknown.
+
+    Read again a few times first; still unreadable, the outcome is reported
+    as unknown, not as a refusal.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=PendingDatasetOutcomeUnknownError("no response"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            side_effect=HomeAssistantError("down"),
+        ) as mock_get_pending,
+        patch(
+            "homeassistant.components.otbr.silabs_multiprotocol.asyncio.sleep"
+        ) as mock_sleep,
+        pytest.raises(
+            ChannelChangeOutcomeUnknownError, match="could not be read after the write"
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+    assert mock_get_pending.await_count == 3
+    assert mock_sleep.await_count == 2
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_read_again_after_an_unanswered_write(
+    hass: HomeAssistant,
+) -> None:
+    """A router unreadable right after an unanswered write is read again."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=PendingDatasetOutcomeUnknownError("no response"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            side_effect=[
+                HomeAssistantError("down"),
+                bytes.fromhex(DATASET_CH16_PENDING),
+                bytes.fromhex(DATASET_CH16_PENDING),
+            ],
+        ),
+        patch("homeassistant.components.otbr.silabs_multiprotocol.asyncio.sleep"),
+    ):
+        task = await otbr_silabs_multiprotocol.async_change_channel(
+            hass, 15, delay=5 * 300
+        )
+        assert task is not None
+        await task
+
+    pending_dataset = tlv_parser.parse_tlv(DATASET_CH16_PENDING)
+    pending_dataset.pop(tlv_parser.MeshcopTLVType.DELAYTIMER)
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.tlv for entry in store.datasets.values()] == [
+        tlv_parser.encode_tlv(pending_dataset)
+    ]
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_unanswered_with_another_pending_dataset(
+    hass: HomeAssistant,
+) -> None:
+    """A pending dataset for another channel is not this write's.
+
+    Another writer's, whose conflict answer the unanswered write may have
+    lost: the change is refused, and the store is left as it was.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=PendingDatasetOutcomeUnknownError("no response"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=DATASET_CH16,
+        ),
+        pytest.raises(HomeAssistantError, match="holds no pending dataset for it"),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.tlv for entry in store.datasets.values()] == [DATASET_CH16.hex()]
 
 
 async def test_async_change_channel_no_otbr(hass: HomeAssistant) -> None:
