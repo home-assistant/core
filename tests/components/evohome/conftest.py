@@ -210,11 +210,8 @@ async def evohome(
 
 def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
     """Return the TCS of the configured location."""
-
     tcs = evo.locations[config.get("location_idx", 0)].tcs
-
     assert tcs is not None, "Fixture has no TCS"
-
     return tcs
 
 
