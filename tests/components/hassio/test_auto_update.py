@@ -10,7 +10,14 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import HomeAssistantUpdateOptions, Job, UpdateChannel
+from aiohasupervisor.models import (
+    ContextType,
+    HomeAssistantUpdateOptions,
+    Issue as SupervisorIssue,
+    IssueType,
+    Job,
+    UpdateChannel,
+)
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -30,11 +37,13 @@ from homeassistant.components.hassio.auto_update import (
 )
 from homeassistant.components.hassio.const import (
     DATA_AUTO_UPDATE,
+    EVENT_SUPERVISOR_EVENT,
     HASSIO_MAIN_UPDATE_INTERVAL,
 )
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, WEEKDAYS
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -60,6 +69,7 @@ def mock_all(
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
+    resolution_suggestions_for_issue: AsyncMock,
     jobs_info: AsyncMock,
     host_info: AsyncMock,
     supervisor_root_info: AsyncMock,
@@ -714,6 +724,22 @@ async def test_window_offset(
     assert _installed(supervisor_client) == ["2026.10.2"]
 
 
+def _core_update_job(done: bool) -> Job:
+    """Return a Supervisor job for updating Home Assistant Core."""
+    return Job(
+        name="home_assistant_core_update",
+        reference=None,
+        uuid=uuid4(),
+        progress=0,
+        stage=None,
+        done=done,
+        errors=[],
+        created=dt_util.utcnow(),
+        child_jobs=[],
+        extra=None,
+    )
+
+
 async def test_no_install_while_busy(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1023,6 +1049,22 @@ async def test_skipped_during_backup(
     supervisor_client.homeassistant.update.assert_not_called()
 
 
+def supervisor_rolled_back(resolution_info: AsyncMock) -> None:
+    """Let Supervisor report that it rolled back a Core update."""
+    resolution_info.return_value = replace(
+        resolution_info.return_value,
+        issues=[
+            SupervisorIssue(
+                type=IssueType.UPDATE_ROLLBACK,
+                context=ContextType.CORE,
+                reference=None,
+                uuid=uuid4(),
+                reference_extra=None,
+            )
+        ],
+    )
+
+
 PENDING = {
     "from_version": "2026.10.1",
     "to_version": "2026.10.2",
@@ -1037,7 +1079,11 @@ async def _setup_after_update(
     pending: dict[str, str] | None,
     history: list[dict[str, str]] | None = None,
 ) -> None:
-    """Set up hassio as if Home Assistant just restarted."""
+    """Set up hassio as if Home Assistant just restarted.
+
+    Supervisor's own rollback issue is mocked separately, with
+    supervisor_rolled_back.
+    """
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 4,
@@ -1097,8 +1143,10 @@ async def test_automatic_update_rolled_back(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
+    resolution_info: AsyncMock,
 ) -> None:
     """Test a rolled back automatic update raises an issue and is not retried."""
+    supervisor_rolled_back(resolution_info)
     logbook_entries = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
 
     await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
@@ -1238,9 +1286,10 @@ async def test_reload_while_update_in_progress(
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
+    jobs_info: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a reload during the update does not mistake it for a rollback."""
+    """Test a reload during the update waits for Supervisor to finish it."""
     await _setup_scheduled(
         hass,
         hass_storage,
@@ -1250,24 +1299,62 @@ async def test_reload_while_update_in_progress(
     )
     assert _installed(supervisor_client) == ["2026.10.2"]
 
+    job = _core_update_job(done=False)
+    jobs_info.return_value = replace(jobs_info.return_value, jobs=[job])
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
+    manager = hass.data[DATA_AUTO_UPDATE]
 
-    assert hass.data[DATA_AUTO_UPDATE].async_get_history() == []
+    assert manager.async_get_history() == []
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is not None
+
+    # Supervisor gives up without restarting Home Assistant
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "job", "data": {**job.to_dict(), "done": True}},
+    )
+    await hass.async_block_till_done()
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["failed"]
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
     assert (
         issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back") is None
     )
-    assert hass_storage[STORAGE_KEY]["data"]["pending"] is not None
+    assert not manager.async_is_skipped("2026.10.2")
+
+
+async def test_old_version_without_rollback(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the old version without a Supervisor rollback is not a rollback.
+
+    The update never happened, like when a reload cancelled it before
+    Supervisor was asked. The version may be fine, so it is not skipped.
+    """
+    await _setup_after_update(hass, hass_storage, "2026.10.1", PENDING)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    assert [entry["result"] for entry in manager.async_get_history()] == ["failed"]
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "core_auto_update_rolled_back") is None
+    )
+    assert not manager.async_is_skipped("2026.10.2")
 
 
 async def test_rollback_replaces_did_not_start_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
+    resolution_info: AsyncMock,
 ) -> None:
     """Test the rollback issue persists and replaces an earlier failure."""
+    supervisor_rolled_back(resolution_info)
     ir.async_create_issue(
         hass,
         DOMAIN,

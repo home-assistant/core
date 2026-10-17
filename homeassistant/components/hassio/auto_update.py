@@ -9,7 +9,7 @@ import random
 from typing import Any, Self, TypedDict, override
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import UpdateChannel
+from aiohasupervisor.models import Job, UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
 
@@ -33,11 +33,11 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
 from .config_entry import async_get_update_options
 from .const import (
     CORE_AUTO_UPDATE_DELAYS,
+    DATA_KEY_SUPERVISOR_ISSUES,
     DEFAULT_CORE_AUTO_UPDATE_DELAY,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_END,
     DEFAULT_CORE_AUTO_UPDATE_WINDOW_START,
@@ -50,7 +50,7 @@ from .const import (
     OPTION_CORE_AUTO_UPDATE_WINDOW_START,
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
 )
-from .coordinator import HassioMainDataUpdateCoordinator
+from .coordinator import HassioMainDataUpdateCoordinator, JobSubscription
 from .update_helper import update_core
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,9 +68,8 @@ HISTORY_LENGTH = 10
 ISSUE_ROLLED_BACK = "core_auto_update_rolled_back"
 ISSUE_FAILED = "core_auto_update_failed"
 
-# Set when this process asked Supervisor for an update. It outlives a reload
-# of the integration, but not the restart that comes with the update.
-_DATA_UPDATE_REQUESTED: HassKey[bool] = HassKey("hassio_auto_update_requested")
+# Supervisor raises this when the new Core version failed its health check
+_SUPERVISOR_ISSUE_ROLLED_BACK = "issue_core_update_rollback"
 
 # Supervisor jobs that must finish before Home Assistant is updated
 _BUSY_JOB_NAME = "home_assistant_core_update"
@@ -301,7 +300,7 @@ class AutoUpdateManager:
         # come up, and that has to find the record still there.
         if self._pending is not None:
             self._entry.async_on_unload(
-                async_at_started(self._hass, self._async_finish_pending)
+                async_at_started(self._hass, self._async_start_settling)
             )
 
         self._async_record_offered_version()
@@ -333,20 +332,47 @@ class AutoUpdateManager:
         )
 
     @callback
-    def _async_finish_pending(self, hass: HomeAssistant) -> None:
-        """Find out how the automatic update that restarted us went.
+    def _async_start_settling(self, hass: HomeAssistant) -> None:
+        """Settle the pending update now, or once Supervisor is done with it.
+
+        Supervisor can still be busy with it, like after a reload of this
+        integration during the update.
+        """
+        jobs_coordinator = hass.data[JOBS_COORDINATOR]
+        self._entry.async_on_unload(
+            jobs_coordinator.subscribe(
+                JobSubscription(
+                    self._async_core_update_job_changed, name=_BUSY_JOB_NAME
+                )
+            )
+        )
+        if not any(
+            job.name == _BUSY_JOB_NAME and job.done is False
+            for job in jobs_coordinator.current_jobs
+        ):
+            self._async_finish_pending()
+
+    @callback
+    def _async_core_update_job_changed(self, job: Job) -> None:
+        """Settle the pending update once Supervisor finished it."""
+        if job.done:
+            self._async_finish_pending()
+
+    @callback
+    def _async_finish_pending(self) -> None:
+        """Find out how the automatic update went.
 
         Supervisor checks the new version and rolls back when it does not
-        come up healthy. So running the new version means it worked, and
-        running the old one means it was undone.
+        come up healthy, and says so. Still running the old version without
+        that means the update never happened.
         """
-        # A reload while Supervisor is still updating; nothing to settle yet
-        if (pending := self._pending) is None or hass.data.get(_DATA_UPDATE_REQUESTED):
+        if (pending := self._pending) is None:
             return
 
-        self._pending = None
+        hass = self._hass
         to_version = pending["to_version"]
         if to_version == HA_VERSION:
+            self._pending = None
             self._async_add_history(pending, AutoUpdateResult.SUCCESS)
             async_delete_issue(hass, DOMAIN, ISSUE_FAILED)
             hass.bus.async_fire(
@@ -361,7 +387,15 @@ class AutoUpdateManager:
                 },
             )
         elif pending["from_version"] == HA_VERSION:
+            if not any(
+                issue.key == _SUPERVISOR_ISSUE_ROLLED_BACK
+                for issue in hass.data[DATA_KEY_SUPERVISOR_ISSUES].issues
+            ):
+                self._async_update_failed(to_version)
+                return
+
             # Never try this version again on our own
+            self._pending = None
             self._skipped.add(to_version)
             self._async_add_history(pending, AutoUpdateResult.ROLLED_BACK)
             async_delete_issue(hass, DOMAIN, ISSUE_FAILED)
@@ -375,7 +409,9 @@ class AutoUpdateManager:
                 translation_key=ISSUE_ROLLED_BACK,
                 translation_placeholders={"version": to_version},
             )
-        # Running neither means someone else changed the version; nothing to tell
+        else:
+            # Someone else changed the version; nothing to tell
+            self._pending = None
 
         self._async_save()
 
@@ -584,7 +620,6 @@ class AutoUpdateManager:
                 started=dt_util.utcnow().isoformat(),
             )
             await self._store.async_save(self._data_to_save())
-            self._hass.data[_DATA_UPDATE_REQUESTED] = True
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)
             await update_core(self._hass, version, False)
@@ -597,7 +632,7 @@ class AutoUpdateManager:
 
     @callback
     def _async_update_failed(self, version: str) -> None:
-        """Tell the user an automatic update did not start.
+        """Tell the user an automatic update did not happen.
 
         Unlike a rollback, the version itself may be fine, so it is tried
         again in the next window.
@@ -612,7 +647,6 @@ class AutoUpdateManager:
             AutoUpdateResult.FAILED,
         )
         self._pending = None
-        self._hass.data.pop(_DATA_UPDATE_REQUESTED, None)
         async_create_issue(
             self._hass,
             DOMAIN,
