@@ -1,0 +1,127 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "invalid_mfg_data": "Invalid manufacturer data received from device",
+      "not_sesame": "Discovered device is not a supported Sesame device"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_mismatch": "The entered device details do not match the discovered Sesame device.",
+      "device_not_found": "The selected device was not found or has stopped advertising.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_device_uuid": "Invalid Device UUID format. It must be a valid UUID (e.g. 12345678-1234-5678-1234-567812345678).",
+      "invalid_mac": "The entered Bluetooth MAC address is invalid. Please enter a valid 6-octet MAC address (e.g. AA:BB:CC:DD:EE:FF).",
+      "invalid_mfg_data": "Invalid manufacturer data received from device.",
+      "invalid_qr_code": "Failed to parse QR code URL. Make sure it is a valid ssm:// URL.",
+      "invalid_secret_key": "Invalid Secret Key format. It must be exactly 32 hex characters.",
+      "no_devices_found": "No Sesame devices found nearby. Ensure it is powered on and in range.",
+      "no_unregistered_devices": "No unregistered Sesame devices found nearby. Make sure the device is in reset mode (LED flashing) and try again.",
+      "qr_device_mismatch": "The provided QR code credentials belong to a different Sesame device.",
+      "registration_failed": "BLE registration handshake failed. Verify that the device is in reset mode and try again.",
+      "unsupported_model": "This Sesame product model is not supported as a lock.",
+      "uuid_required": "Device UUID is required when no Bluetooth advertisement is found nearby."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "qr_code_image": "QR Code Image Upload",
+          "qr_url": "QR Code Setup URL (ssm://)",
+          "secret_key": "Secret Key (Hex: 32 characters)"
+        },
+        "data_description": {
+          "qr_code_image": "Upload an image of the QR code from the official app.",
+          "qr_url": "The full setup URL beginning with ssm://.",
+          "secret_key": "The 32-character hexadecimal secret key."
+        },
+        "description": "Do you want to set up the discovered Sesame device? Please enter its Secret Key in hex (32 characters), or provide its QR code instead.",
+        "title": "Confirm Discovery"
+      },
+      "bluetooth_register_confirm": {
+        "description": "We discovered an unregistered Sesame {model} ({mac}) nearby. Do you want to pair and register it automatically?",
+        "title": "Register Discovered Device"
+      },
+      "discover_unregistered": {
+        "data": {
+          "mac_address": "Select Device"
+        },
+        "data_description": {
+          "mac_address": "The Bluetooth MAC address of the unregistered Sesame device."
+        },
+        "description": "Select the unregistered Sesame device nearby to automatically register and configure it. Make sure the device is in reset mode (press the reset button until the LED flashes).",
+        "title": "Register New Device"
+      },
+      "import_qr": {
+        "data": {
+          "qr_code_image": "QR Code Image Upload",
+          "qr_url": "QR Code Setup URL"
+        },
+        "data_description": {
+          "qr_code_image": "Upload an image of the QR code from the official app.",
+          "qr_url": "The full setup URL beginning with ssm://."
+        },
+        "description": "Paste the shared ssm:// URL or upload a QR Code image from the official app to configure your Sesame device.",
+        "title": "Import via QR Code"
+      },
+      "manual": {
+        "data": {
+          "device_uuid": "Device UUID",
+          "mac_address": "Bluetooth MAC Address",
+          "model": "Product Model",
+          "secret_key": "Secret Key (16 bytes/32 hex characters)"
+        },
+        "data_description": {
+          "device_uuid": "The UUID of the Sesame device (required if not currently broadcasting nearby).",
+          "mac_address": "The Bluetooth MAC address of the Sesame device (e.g. AA:BB:CC:DD:EE:FF).",
+          "model": "The specific hardware model of the Sesame lock.",
+          "secret_key": "The 16-byte (32 hex characters) secret key of the lock."
+        },
+        "description": "Enter the MAC Address, Secret Key, and Product Model of your Sesame device manually.",
+        "title": "Manual Setup"
+      },
+      "select_address": {
+        "data": {
+          "mac_address": "Bluetooth MAC Address"
+        },
+        "data_description": {
+          "mac_address": "The Bluetooth MAC address of the Sesame lock."
+        },
+        "description": "Select the Bluetooth address of your Sesame device.",
+        "title": "Select Device"
+      },
+      "user": {
+        "description": "Choose how you want to configure your Sesame device.",
+        "menu_options": {
+          "discover_unregistered": "Register New Device Nearby",
+          "import_qr": "Import via QR Code",
+          "manual": "Manual Setup"
+        },
+        "title": "Configure Sesame BLE"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for Sesame lock: {error}"
+    },
+    "connection_failed": {
+      "message": "Failed to connect to Sesame {mac}: {error}"
+    },
+    "device_mismatch": {
+      "message": "Discovered Sesame BLE advertisement at {mac} does not match configured device details."
+    },
+    "device_not_found": {
+      "message": "Could not find connectable Sesame BLE device for {mac}."
+    },
+    "device_unregistered": {
+      "message": "Discovered Sesame BLE device at {mac} is unregistered or has been factory reset."
+    },
+    "lock_failed": {
+      "message": "Failed to lock Sesame {address}: {error}"
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock Sesame {address}: {error}"
+    }
+  }
+}
