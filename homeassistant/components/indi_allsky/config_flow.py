@@ -30,7 +30,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .util import get_ssl_context, normalize_host
+from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,24 +164,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if mac:
             formatted_mac = format_mac(mac)
-            for entry in self._async_current_entries(include_ignore=False):
-                if (
-                    entry.unique_id is None
-                    and entry.data.get(CONF_HOST) == host
-                    and entry.data.get(CONF_PORT) == port
-                ):
-                    self.hass.config_entries.async_update_entry(
-                        entry, unique_id=formatted_mac
-                    )
-                    break
-            await self.async_set_unique_id(formatted_mac)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: host,
-                    CONF_PORT: port,
-                    CONF_SSL: ssl,
-                }
-            )
+            current_entry = await self.async_set_unique_id(formatted_mac)
+            current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+            updates: dict[str, Any] = {
+                CONF_PORT: port,
+                CONF_SSL: ssl,
+            }
+            if not (current_host and not is_ip_address(current_host)):
+                updates[CONF_HOST] = host
+            self._abort_if_unique_id_configured(updates=updates)
         else:
             self._async_abort_entries_match(
                 {
@@ -189,6 +180,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: port,
                 }
             )
+            await self._async_handle_discovery_without_unique_id()
 
         self._discovered_data = {
             CONF_HOST: host,

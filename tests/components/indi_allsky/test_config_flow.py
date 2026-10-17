@@ -470,16 +470,16 @@ async def test_zeroconf_already_configured_with_mac_updates_info(
     assert entry.data[CONF_PORT] == 8443
 
 
-async def test_zeroconf_adopts_existing_unlinked_manual_entry(
+async def test_zeroconf_preserves_configured_hostname(
     hass: HomeAssistant,
 ) -> None:
-    """Test Zeroconf assigns unique_id to an existing manual entry matching host and port."""
+    """Test Zeroconf preserves a configured domain hostname when updating an entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=None,
-        title="INDI Allsky (192.168.1.50)",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        title="INDI Allsky (allsky.local)",
         data={
-            CONF_HOST: "192.168.1.50",
+            CONF_HOST: "allsky.local",
             CONF_PORT: 443,
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
@@ -490,7 +490,7 @@ async def test_zeroconf_adopts_existing_unlinked_manual_entry(
     discovery_info = ZeroconfServiceInfo(
         ip_address="192.168.1.50",
         ip_addresses=["192.168.1.50"],
-        port=443,
+        port=8443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
         name="INDI Allsky._indi-allsky._tcp.local.",
@@ -505,7 +505,8 @@ async def test_zeroconf_adopts_existing_unlinked_manual_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entry.data[CONF_HOST] == "allsky.local"
+    assert entry.data[CONF_PORT] == 8443
 
 
 async def test_zeroconf_already_configured_without_mac(
