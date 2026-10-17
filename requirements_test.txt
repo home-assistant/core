@@ -9,7 +9,7 @@
 -r requirements_test_pre_commit.txt
 # ast-serialize is an internal mypy dependency
 ast-serialize==0.12.1
-astroid==4.3.3
+astroid==4.3.4
 coverage==7.16.2
 freezegun==1.5.5
 # librt is an internal mypy dependency
@@ -17,12 +17,12 @@ librt==0.16.0
 license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.4.0
-prek==0.5.4
-pydantic==2.13.5
+prek==0.5.5
+pydantic==2.14.0
 PyGithub==2.10.0
 pylint==4.1.2
 pylint-per-file-ignores==4.0.0
-pipdeptree==4.2.5
+pipdeptree==4.2.6
 pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1
 pytest-codspeed==5.0.3
@@ -43,7 +43,7 @@ syrupy==6.1.1
 tqdm==4.70.1
 types-aiofiles==25.1.0.20260518
 types-atomicwrites==1.4.5.1
-types-croniter==6.2.4.20260711
+types-croniter==6.2.4.20261006
 types-chardet==0.1.5
 types-decorator==5.2.0.20260712
 types-pexpect==4.9.0.20260518
@@ -54,6 +54,6 @@ types-python-dateutil==2.9.0.20260807
 types-python-slugify==8.0.2.20240310
 types-pytz==2026.3.1.20260727
 types-PyYAML==6.0.12.20260906
-types-requests==2.33.0.20260906
+types-requests==2.33.0.20261006
 types-xmltodict==1.0.1.20260518
 unidiff==1.0.1

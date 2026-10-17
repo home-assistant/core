@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GeoJsonConfigEntry
-) -> bool:
+) -> None:
     """Set up the GeoJSON events component as config entry."""
     # Create feed entity manager for all platforms.
     manager = GeoJsonFeedEntityManager(hass, config_entry)
@@ -25,7 +25,6 @@ async def async_setup_entry(
     config_entry.async_on_unload(manager.async_stop)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     await manager.async_init()
-    return True
 
 
 async def remove_orphaned_entities(hass: HomeAssistant, entry_id: str) -> None:
@@ -46,6 +45,6 @@ async def remove_orphaned_entities(hass: HomeAssistant, entry_id: str) -> None:
                 entity_registry.async_remove(entry.entity_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GeoJsonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GeoJsonConfigEntry) -> None:
     """Unload the GeoJSON events config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -15,7 +15,7 @@ type RadioBrowserConfigEntry = ConfigEntry[RadioBrowser]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: RadioBrowserConfigEntry
-) -> bool:
+) -> None:
     """Set up Radio Browser from a config entry.
 
     This integration doesn't set up any entities, as it provides a media source
@@ -33,11 +33,9 @@ async def async_setup_entry(
         ) from err
 
     entry.runtime_data = radios
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: RadioBrowserConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True

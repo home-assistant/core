@@ -4,13 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.doorbird.const import CONF_EVENTS
 from homeassistant.components.doorbird.image import DoorBirdLastEventImage
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import mock_webhook_call
+from . import mock_not_found_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType
 
 from tests.typing import ClientSessionGenerator
@@ -107,6 +108,49 @@ async def test_image_rejects_non_image_body(
         f"/api/{IMAGE_DOMAIN}_proxy/image.mydoorbird_last_ring?token={access_token}"
     )
     assert resp.status == 500
+
+
+@pytest.mark.parametrize(
+    ("events", "event", "refreshed"),
+    [
+        pytest.param(
+            ["doorbell", "motion"],
+            "mydoorbird_doorbell",
+            {"image.mydoorbird_last_ring"},
+            id="doorbell",
+        ),
+        pytest.param(
+            ["doorbell", "motion"],
+            "mydoorbird_motion",
+            {"image.mydoorbird_last_motion"},
+            id="motion",
+        ),
+        pytest.param(["front_door"], "mydoorbird_front_door", set(), id="renamed"),
+    ],
+)
+async def test_image_updates_on_event_without_schedule_api(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+    events: list[str],
+    event: str,
+    refreshed: set[str],
+) -> None:
+    """Test models without the schedule API refresh images by event name."""
+    doorbird_entry = await doorbird_mocker(
+        options={CONF_EVENTS: events},
+        schedule_side_effect=mock_not_found_exception(),
+    )
+    client = await hass_client()
+
+    await mock_webhook_call(doorbird_entry.entry, client, event)
+    await hass.async_block_till_done()
+
+    assert {
+        entity_id
+        for entity_id in hass.states.async_entity_ids(IMAGE_DOMAIN)
+        if hass.states.get(entity_id).state != STATE_UNKNOWN
+    } == refreshed
 
 
 @pytest.mark.parametrize(

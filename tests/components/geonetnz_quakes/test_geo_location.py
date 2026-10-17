@@ -1,6 +1,6 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -54,7 +54,7 @@ async def test_setup(
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        time=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,
@@ -97,7 +97,7 @@ async def test_setup(
             ATTR_FRIENDLY_NAME: "Title 1",
             ATTR_LOCALITY: "Locality 1",
             ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_TIME: datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+            ATTR_TIME: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
             ATTR_MAGNITUDE: 5.7,
             ATTR_DEPTH: 10.5,
             ATTR_MMI: 5,

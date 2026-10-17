@@ -2674,7 +2674,7 @@ async def test_change_entity_id_then_update(
 
     entity_registry.async_update_entity("test_domain.renamed", name="New name")
     await hass.async_block_till_done()
-    assert hass.states.get("test_domain.renamed").name == "New name"
+    assert hass.states.get("test_domain.renamed").name == "Renamed device New name"
     assert hass.states.async_entity_ids() == ["test_domain.renamed"]
 
 

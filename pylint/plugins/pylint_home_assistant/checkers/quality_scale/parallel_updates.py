@@ -7,7 +7,7 @@ Every entity platform module must define a ``PARALLEL_UPDATES`` constant that
 controls how many entity updates and actions can run concurrently. The
 integration author should set this based on the device/API capabilities.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/parallel-updates
+https://contributors.home-assistant.io/core/quality-scale/parallel-updates/
 """
 
 from astroid import nodes
@@ -27,8 +27,8 @@ class ParallelUpdatesChecker(BaseChecker):
     msgs = {
         "W7411": (
             "Platform module should define `PARALLEL_UPDATES` constant "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/parallel-updates)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/parallel-updates/)",
             "home-assistant-missing-parallel-updates",
             "Used when an entity platform module does not define the "
             "PARALLEL_UPDATES constant. This constant controls how many "

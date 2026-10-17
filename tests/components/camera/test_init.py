@@ -895,7 +895,9 @@ async def test_use_stream_for_stills(
             "homeassistant.components.demo.camera.DemoCamera.stream_source",
             return_value="rtsp://some_source",
         ) as mock_stream_source,
-        patch("homeassistant.components.camera.create_stream") as mock_create_stream,
+        patch(
+            "homeassistant.components.camera.entity.create_stream"
+        ) as mock_create_stream,
         patch(
             "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
             return_value=True,
