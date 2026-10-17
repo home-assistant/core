@@ -104,7 +104,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 """
             ) from err
 
-        self.tcs = self.loc.gateways[0].systems[0]
+        if (tcs := self.loc.tcs) is None:
+            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
+        self.tcs = tcs
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
