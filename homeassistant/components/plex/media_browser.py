@@ -48,6 +48,7 @@ MEDIA_CLASS_SEARCH_TYPE = {
 }
 SEARCH_TYPE_ORDER = list(MEDIA_CLASS_SEARCH_TYPE.values())
 RESUMABLE_TYPES = {"movie", "show", "episode"}
+DEFAULT_SEARCH_TYPES = ("movie", "show")
 
 
 def browse_media(  # noqa: C901
@@ -314,7 +315,10 @@ def build_item_payload(
 def search_media_payloads(
     plex_server, is_internal: bool, query: SearchMediaQuery
 ) -> list[BrowseMedia]:
-    """Search the Plex server and return playable results, best title match first."""
+    """Search the Plex server and return playable results, best title match first.
+
+    Without media filter classes only movies and shows are returned.
+    """
     server_id = plex_server.machine_identifier
 
     mediatypes: list[str | None] = [
@@ -325,7 +329,7 @@ def search_media_payloads(
     if not mediatypes:
         if query.media_filter_classes:
             return []
-        mediatypes = [None]
+        mediatypes = list(DEFAULT_SEARCH_TYPES)
 
     items = []
     for mediatype in mediatypes:
