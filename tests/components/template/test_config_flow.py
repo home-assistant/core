@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
 from pytest_unordered import unordered
 
@@ -282,6 +283,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            "playing",
+            {"one": "playing", "two": "paused"},
+            {},
+            {},
+            {},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             "docked",
@@ -499,6 +510,12 @@ async def test_config_flow(
             {"installed_version": "{{ states('update.one') }}"},
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {},
+            {},
         ),
         (
             "vacuum",
@@ -835,6 +852,17 @@ async def test_config_flow_device(
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
             "installed_version",
+            None,
+        ),
+        (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {"state": "{{ states('media_player.two') }}"},
+            ["playing", "paused"],
+            {"one": "playing", "two": "paused"},
+            {},
+            {},
+            "state",
             None,
         ),
         (
@@ -1351,6 +1379,69 @@ async def test_config_flow_preview_bad_input(
 
 
 @pytest.mark.parametrize(
+    ("user_input", "error", "missing_option"),
+    [
+        pytest.param(
+            {"source": "{{ 'TV' }}"},
+            "Required option: 'source_list' is missing for option 'source'",
+            {"source_list": "{{ ['TV'] }}"},
+            id="source_without_list",
+        ),
+        pytest.param(
+            {"select_source": []},
+            "Required option: 'source_list' is missing for option 'select_source'",
+            {"source_list": "{{ ['TV'] }}"},
+            id="select_source_without_list",
+        ),
+        pytest.param(
+            {"volume_up": []},
+            "volume_up_and_down",
+            {"volume_down": []},
+            id="volume_up_only",
+        ),
+        pytest.param(
+            {"volume_down": []},
+            "volume_up_and_down",
+            {"volume_up": []},
+            id="volume_down_only",
+        ),
+    ],
+)
+async def test_config_flow_media_player_required_options(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    error: str,
+    missing_option: dict[str, Any],
+) -> None:
+    """Test media player options are rejected without the option they require."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "media_player"},
+    )
+
+    with pytest.raises(probatio.Invalid, match=error):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"name": "My template", **user_input},
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input, **missing_option},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "media_player",
+        **user_input,
+        **missing_option,
+    }
+
+
+@pytest.mark.parametrize(
     (
         "template_type",
         "state_template",
@@ -1844,6 +1935,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"installed_version": "{{ states('update.one') }}"},
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {},
+            {},
         ),
         (
             "vacuum",

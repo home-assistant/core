@@ -7,6 +7,7 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.components.media_player import SERVICE_SELECT_SOURCE
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -18,12 +19,22 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_SOURCE,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     DEGREE,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     Platform,
     UnitOfTemperature,
 )
@@ -110,6 +121,14 @@ from .light import (
     async_create_preview_light,
 )
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
+from .media_player import (
+    CONF_IS_VOLUME_MUTED,
+    CONF_SOURCE_LIST,
+    CONF_VOLUME_LEVEL,
+    CONF_VOLUME_UP_AND_DOWN,
+    MEDIA_PLAYER_VALIDATION,
+    async_create_preview_media_player,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -163,6 +182,15 @@ _SCHEMA_STATE: dict[probatio.Marker, Any] = {
     probatio.Required(CONF_STATE): selector.TemplateSelector(),
 }
 
+# Device class can only be chosen when the entity is created.
+_CONFIG_DEVICE_CLASS_DOMAINS = (
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.MEDIA_PLAYER,
+    Platform.UPDATE,
+)
+
 
 def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
     """Generate schema."""
@@ -215,12 +243,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         schema |= {
             probatio.Optional(CONF_PRESS): selector.ActionSelector(),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.BUTTON),
-                ),
-            }
 
     if domain == Platform.CLIMATE:
         schema |= {
@@ -268,12 +290,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_POSITION): selector.TemplateSelector(),
             probatio.Optional(POSITION_ACTION): selector.ActionSelector(),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.COVER),
-                ),
-            }
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
@@ -290,13 +306,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
             probatio.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
         }
-
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.EVENT),
-                ),
-            }
 
     if domain == Platform.FAN:
         schema |= _SCHEMA_STATE | {
@@ -337,6 +346,31 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Required(CONF_UNLOCK): selector.ActionSelector(),
             probatio.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
             probatio.Optional(CONF_OPEN): selector.ActionSelector(),
+        }
+
+    if domain == Platform.MEDIA_PLAYER:
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TURN_ON): selector.ActionSelector(),
+            probatio.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+            probatio.Optional(CONF_VOLUME_LEVEL): selector.TemplateSelector(),
+            probatio.Optional(CONF_IS_VOLUME_MUTED): selector.TemplateSelector(),
+            probatio.Optional(SERVICE_VOLUME_SET): selector.ActionSelector(),
+            probatio.Inclusive(
+                SERVICE_VOLUME_UP, CONF_VOLUME_UP_AND_DOWN
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                SERVICE_VOLUME_DOWN, CONF_VOLUME_UP_AND_DOWN
+            ): selector.ActionSelector(),
+            probatio.Optional(SERVICE_VOLUME_MUTE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_PLAY): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_PAUSE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_STOP): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_NEXT_TRACK): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_PREVIOUS_TRACK): selector.ActionSelector(),
+            probatio.Optional(CONF_SOURCE): selector.TemplateSelector(),
+            probatio.Optional(CONF_SOURCE_LIST): selector.TemplateSelector(),
+            probatio.Optional(SERVICE_SELECT_SOURCE): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -416,12 +450,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_BACKUP): selector.BooleanSelector(),
             probatio.Optional(CONF_SPECIFIC_VERSION): selector.BooleanSelector(),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.UPDATE),
-                ),
-            }
 
     if domain == Platform.VACUUM:
         schema |= _SCHEMA_STATE | {
@@ -457,6 +485,13 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             ),
             probatio.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
             probatio.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+
+    if flow_type == "config" and domain in _CONFIG_DEVICE_CLASS_DOMAINS:
+        schema |= {
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform(domain)),
+            ),
         }
 
     schema |= {
@@ -554,6 +589,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
+    For media players: Validate options that require another option.
     For all domaines: Set template type.
     """
 
@@ -569,6 +605,9 @@ def validate_user_input(
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
             )
+        if template_type == Platform.MEDIA_PLAYER:
+            for validator in MEDIA_PLAYER_VALIDATION:
+                validator(user_input)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -586,6 +625,7 @@ TEMPLATE_TYPES = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -649,6 +689,11 @@ CONFIG_FLOW = {
         config_schema(Platform.LOCK),
         preview="template",
         validate_user_input=validate_user_input(Platform.LOCK),
+    ),
+    Platform.MEDIA_PLAYER: SchemaFlowFormStep(
+        config_schema(Platform.MEDIA_PLAYER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.MEDIA_PLAYER),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -744,6 +789,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.LOCK),
     ),
+    Platform.MEDIA_PLAYER: SchemaFlowFormStep(
+        options_schema(Platform.MEDIA_PLAYER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.MEDIA_PLAYER),
+    ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
         preview="template",
@@ -795,6 +845,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
     Platform.LOCK: async_create_preview_lock,
+    Platform.MEDIA_PLAYER: async_create_preview_media_player,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,

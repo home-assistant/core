@@ -7,8 +7,9 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import media_player
+from homeassistant.components import media_player, template
 from homeassistant.components.media_player import (
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
@@ -37,6 +38,7 @@ from .conftest import (
     assert_extra_template_attributes,
     assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
+    async_get_flow_preview_state,
     async_trigger,
     make_test_action,
     make_test_trigger,
@@ -47,9 +49,9 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import async_mock_restore_state_shutdown_restart
+from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.availability"
@@ -1029,3 +1031,60 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a media player from a config entry."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "playing")
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": media_player.DOMAIN,
+            "state": STATE_TEMPLATE,
+            "device_class": "tv",
+            "volume_level": "{{ 0.5 }}",
+            "source": "{{ 'TV' }}",
+            "source_list": "{{ ['TV', 'Radio'] }}",
+            **ON_OFF_ACTIONS,
+            **make_test_action("volume_set"),
+            **make_test_action("volume_up"),
+            **make_test_action("volume_down"),
+            **make_test_action("select_source"),
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        media_player.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'playing' }}",
+            "source": "{{ 'TV' }}",
+            "source_list": "{{ ['TV', 'Radio'] }}",
+        },
+    )
+
+    assert state["state"] == MediaPlayerState.PLAYING
+    assert state["attributes"]["source"] == "TV"

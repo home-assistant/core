@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -44,7 +45,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -53,8 +57,13 @@ from . import validators as tcv
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_schema,
 )
@@ -84,6 +93,7 @@ CONF_SOUND_MODE = "sound_mode"
 CONF_SOUND_MODE_LIST = "sound_mode_list"
 CONF_SOURCE_LIST = "source_list"
 CONF_VOLUME_LEVEL = "volume_level"
+CONF_VOLUME_UP_AND_DOWN = "volume_up_and_down"
 
 DEFAULT_NAME = "Template Media Player"
 
@@ -144,17 +154,25 @@ MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SOURCE_LIST): cv.template,
         probatio.Optional(CONF_VOLUME_LEVEL): cv.template,
         **{probatio.Optional(option): cv.template for option, _ in STRING_TEMPLATES},
-        **{probatio.Optional(action): cv.SCRIPT_SCHEMA for action in SCRIPT_FIELDS},
+        **{
+            probatio.Optional(action): cv.SCRIPT_SCHEMA
+            for action in SCRIPT_FIELDS
+            if action not in (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP)
+        },
+        probatio.Inclusive(
+            SERVICE_VOLUME_DOWN, CONF_VOLUME_UP_AND_DOWN
+        ): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(
+            SERVICE_VOLUME_UP, CONF_VOLUME_UP_AND_DOWN
+        ): cv.SCRIPT_SCHEMA,
     }
 )
 
-_MEDIA_PLAYER_VALIDATION = (
+MEDIA_PLAYER_VALIDATION = (
     tcv.requires_option(CONF_SOURCE, CONF_SOURCE_LIST),
     tcv.requires_option(SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST),
     tcv.requires_option(CONF_SOUND_MODE, CONF_SOUND_MODE_LIST),
     tcv.requires_option(SERVICE_SELECT_SOUND_MODE, CONF_SOUND_MODE_LIST),
-    tcv.requires_option(SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN),
-    tcv.requires_option(SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP),
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
@@ -168,7 +186,11 @@ MEDIA_PLAYER_YAML_SCHEMA = probatio.All(
             MEDIA_PLAYER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
         ).schema
     ),
-    *_MEDIA_PLAYER_VALIDATION,
+    *MEDIA_PLAYER_VALIDATION,
+)
+
+MEDIA_PLAYER_CONFIG_ENTRY_SCHEMA = MEDIA_PLAYER_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -188,6 +210,36 @@ async def async_setup_platform(
         async_add_entities,
         discovery_info,
         script_options=SCRIPT_FIELDS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateMediaPlayerEntity,
+        MEDIA_PLAYER_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
+    )
+
+
+@callback
+def async_create_preview_media_player(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateMediaPlayerEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateMediaPlayerEntity,
+        MEDIA_PLAYER_CONFIG_ENTRY_SCHEMA,
     )
 
 
