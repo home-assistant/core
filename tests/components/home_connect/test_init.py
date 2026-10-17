@@ -12,6 +12,7 @@ from aiohomeconnect.model.error import (
     UnauthorizedError,
 )
 import aiohttp
+from hassfest.translations import RE_TRANSLATION_KEY
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -28,7 +29,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-from script.hassfest.translations import RE_TRANSLATION_KEY
 
 from .conftest import (
     CLIENT_ID,

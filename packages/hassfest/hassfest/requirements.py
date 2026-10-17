@@ -514,8 +514,11 @@ def validate_custom_requirements(integration: Integration, config: Config) -> bo
 
     start_errors = len(integration.errors)
 
-    core_requirements = _load_requirement_file(config.root / "requirements.txt")
-    all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
+    requirements_path = config.requirements_path or config.root
+    core_requirements = _load_requirement_file(requirements_path / "requirements.txt")
+    all_requirements = _load_requirement_file(
+        requirements_path / "requirements_all.txt"
+    )
     constraints = _load_requirement_file(
         config.root / "homeassistant/package_constraints.txt"
     )
@@ -669,7 +672,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
     for item in json.loads(
         subprocess.run(
-            ["pipdeptree", "-w", "silence", "--json"],
+            [sys.executable, "-m", "pipdeptree", "-w", "silence", "--json"],
             check=True,
             capture_output=True,
             text=True,
@@ -982,7 +985,16 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         if is_installed:
             continue
 
-        args = ["uv", "pip", "install", "--quiet"]
+        args = [
+            sys.executable,
+            "-m",
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--quiet",
+        ]
         if install_args:
             args.append(install_args)
         args.append(requirement_arg)

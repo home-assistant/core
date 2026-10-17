@@ -3,10 +3,10 @@
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest.model import Config, Integration
 import pytest
 
 from script.hassfest.core_files import EXTRA_BASE_PLATFORMS, validate
-from script.hassfest.model import Config, Integration
 
 
 def _create_integration(

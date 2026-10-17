@@ -3,9 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest.model import Config, Integration
 import pytest
-
-from script.hassfest.model import Config, Integration
 
 
 @pytest.fixture

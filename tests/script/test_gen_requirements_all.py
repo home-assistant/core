@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
+from hassfest.requirements_util import _normalize_package_name
 import pytest
 
 from script import gen_requirements_all
-from script.hassfest.requirements_util import _normalize_package_name
 
 
 def test_overrides_normalized() -> None:

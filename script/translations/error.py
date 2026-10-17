@@ -1,6 +1,6 @@
 """Errors for translations."""
 
-from script.hassfest.translation_data import (
+from hassfest.translation_data import (
     JSONDecodeErrorWithPath as JSONDecodeErrorWithPath,  # noqa: PLC0414
 )
 

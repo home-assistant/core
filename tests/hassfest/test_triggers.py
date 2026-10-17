@@ -5,11 +5,11 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest.model import Config
 import pytest
 
+from hassfest import triggers
 from homeassistant.util.yaml.loader import parse_yaml
-from script.hassfest import triggers
-from script.hassfest.model import Config
 
 from . import get_integration
 
@@ -135,7 +135,7 @@ def test_validate(config: Config) -> None:
     }
 
     with (
-        patch("script.hassfest.triggers.grep_dir", return_value=True),
+        patch("hassfest.triggers.grep_dir", return_value=True),
         patch("pathlib.Path.is_file", return_value=True),
         patch("pathlib.Path.read_text", _patched_path_read_text),
         patch("annotatedyaml.loader.load_yaml", side_effect=_load_yaml),

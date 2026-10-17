@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from hassfest.model import Config, Integration
+
 from homeassistant import core
 from homeassistant.util import executor, thread
-
-from .model import Config, Integration
 
 # Don't forget to update also Dockerfile.dev when updating this.
 _DOCKERFILE_SYNTAX_SHA = (
@@ -97,7 +97,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
 
-COPY --parents requirements.txt requirements_all.txt homeassistant/ script /usr/src/homeassistant/
+COPY --parents requirements.txt requirements_all.txt homeassistant/ script packages/hassfest /usr/src/homeassistant/
 
 # Uv creates a lock file in /tmp
 RUN --mount=type=tmpfs,target=/tmp \

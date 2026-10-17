@@ -6,7 +6,7 @@ import os
 import pathlib
 import subprocess
 
-from script.hassfest.translation_data import generate_upload_data
+from hassfest.translation_data import generate_upload_data
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID
 from .error import ExitApp

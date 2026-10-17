@@ -4,9 +4,8 @@ import argparse
 from pathlib import Path
 import sys
 
+from hassfest.translation_data import generate_upload_data
 import orjson
-
-from script.hassfest.translation_data import generate_upload_data
 
 from . import download
 from .const import INTEGRATIONS_DIR
