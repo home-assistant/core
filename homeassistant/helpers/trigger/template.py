@@ -59,15 +59,12 @@ def async_track_trigger_template(
     def _async_template_updated(
         event: Event[EventStateChangedData] | None, updates: list[TrackTemplateResult]
     ) -> None:
-        """Re-render the template after something it depends on changed."""
+        """Handle a new result of the template."""
         nonlocal last_result
 
-        # The tracker always parses its result, render again to honor
-        # parse_result. Rare, the tracker only calls us on a new result.
-        try:
-            result = template.async_render(variables, parse_result=parse_result)
-        except TemplateError as err:
-            on_error(err)
+        result = updates[0].result
+        if isinstance(result, TemplateError):
+            on_error(result)
             return
 
         if result == last_result:
@@ -77,7 +74,9 @@ def async_track_trigger_template(
         on_change(result)
 
     tracker = async_track_template_result(
-        hass, [TrackTemplate(template, variables)], _async_template_updated
+        hass,
+        [TrackTemplate(template, variables, parse_result=parse_result)],
+        _async_template_updated,
     )
 
     # Rendering does not record registry reads (like device_attr or

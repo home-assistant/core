@@ -90,6 +90,22 @@ async def test_state_dependency(
     remove()
 
 
+async def test_numeric_strings_are_distinct(hass: HomeAssistant) -> None:
+    """Test unparsed results that parse to equal numbers are still changes."""
+    hass.states.async_set(LEVEL_ENTITY_ID, "1")
+    on_change = Mock()
+
+    _, remove = async_track_trigger_template(
+        hass, Template("{{ states('sensor.level') }}", hass), None, on_change, Mock()
+    )
+
+    hass.states.async_set(LEVEL_ENTITY_ID, "1.0")
+    await hass.async_block_till_done()
+    on_change.assert_called_once_with("1.0")
+
+    remove()
+
+
 async def test_variables(hass: HomeAssistant) -> None:
     """Test the variables are used for every render."""
     hass.states.async_set(LEVEL_ENTITY_ID, "3")

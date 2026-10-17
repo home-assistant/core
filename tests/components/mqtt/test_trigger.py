@@ -9,7 +9,13 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import Context, HassJobType, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    Context,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr, script
 from homeassistant.setup import async_setup_component
 
@@ -491,7 +497,14 @@ async def test_templated_topic_in_wait_for_trigger(hass: HomeAssistant) -> None:
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started = asyncio.Event()
-    script_obj.change_listener = wait_started.set
+
+    @callback
+    def async_wait_started() -> None:
+        # The wait step only reports a change once its trigger is attached.
+        if script_obj.last_action == "wait step":
+            wait_started.set()
+
+    script_obj.change_listener = async_wait_started
 
     hass.async_create_task(script_obj.async_run(context=Context()))
     await asyncio.wait_for(wait_started.wait(), 1)
