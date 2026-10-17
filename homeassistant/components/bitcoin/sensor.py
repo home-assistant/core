@@ -3,7 +3,6 @@
 from datetime import timedelta
 import logging
 
-from blockchain import exchangerates, statistics
 import probatio
 
 from homeassistant.components.sensor import (
@@ -11,15 +10,24 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
+
+from . import BitcoinConfigEntry, BitcoinData
+from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_CURRENCY = "USD"
+BREAKS_IN_HA_VERSION = "2027.4.0"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -135,28 +143,130 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+# Two sensors are called Trade volume and two Miners revenue, so the first one
+# created takes the plain entity ID and the second one gets a _2 suffix. Picking
+# only the second of a pair used to give it the plain ID; now that every sensor
+# is created, the first one takes it and the plain ID means the other currency.
+# (option that used to win the ID, option that wins it now, ID, where it moved)
+COLLIDING_OPTIONS = (
+    ("trade_volume_usd", "trade_volume_btc", "trade_volume", "trade_volume_2"),
+    ("miners_revenue_btc", "miners_revenue_usd", "miners_revenue", "miners_revenue_2"),
+)
+
+
+@callback
+def _async_warn_about_reused_entity_ids(
+    hass: HomeAssistant, display_options: list[str]
+) -> None:
+    """Warn when an entity ID now belongs to the other currency of a pair."""
+    for option, takes_over, entity_id, moved_to in COLLIDING_OPTIONS:
+        if option not in display_options or takes_over in display_options:
+            continue
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"reused_entity_id_{entity_id}",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="reused_entity_id",
+            translation_placeholders={
+                "entity_id": f"sensor.{entity_id}",
+                "moved_to": f"sensor.{moved_to}",
+                "option": option,
+                "takes_over": takes_over,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+
+
+@callback
+def _async_create_import_issue(
+    hass: HomeAssistant, issue_id: str, translation_key: str, currency: str
+) -> None:
+    """Tell the user why a YAML sensor platform block was not imported."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        # The currency comes straight from YAML, so keep it out of the issue ID.
+        f"deprecated_yaml_import_issue_{slugify(issue_id)}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=f"deprecated_yaml_import_issue_{translation_key}",
+        translation_placeholders={
+            "currency": currency,
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Bitcoin sensors."""
+    """Import the YAML sensor platform into a config entry."""
+    currency = config[CONF_CURRENCY].upper()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
-    currency = config[CONF_CURRENCY]
+    if result["type"] is FlowResultType.ABORT:
+        reason = result["reason"]
+        if reason != "single_instance_allowed":
+            _async_create_import_issue(hass, f"{reason}_{currency}", reason, currency)
+            return
 
-    if currency not in exchangerates.get_ticker():
+        # Only one entry is allowed, so a second block asking for another
+        # currency is dropped. Say so instead of reporting a clean import.
+        # Ignored entries also abort the flow, and those carry no currency.
+        entries = hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+        if entries and entries[0].data[CONF_CURRENCY] != currency:
+            _async_create_import_issue(
+                hass, f"dropped_currency_{currency}", "dropped_currency", currency
+            )
+            return
+
+    _async_warn_about_reused_entity_ids(hass, config[CONF_DISPLAY_OPTIONS])
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: BitcoinConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Bitcoin sensors from a config entry."""
+    data = entry.runtime_data
+
+    currency = entry.data[CONF_CURRENCY]
+    if currency not in data.ticker:
         _LOGGER.warning("Currency %s is not available. Using USD", currency)
         currency = DEFAULT_CURRENCY
 
-    data = BitcoinData()
-    entities = [
-        BitcoinSensor(data, currency, description)
-        for description in SENSOR_TYPES
-        if description.key in config[CONF_DISPLAY_OPTIONS]
-    ]
-
-    add_entities(entities, True)
+    async_add_entities(
+        (BitcoinSensor(data, currency, description) for description in SENSOR_TYPES),
+        True,
+    )
 
 
 class BitcoinSensor(SensorEntity):
@@ -223,16 +333,3 @@ class BitcoinSensor(SensorEntity):
             self._attr_native_value = f"{stats.miners_revenue_btc * 1e-8:.1f}"
         elif sensor_type == "market_price_usd":
             self._attr_native_value = f"{stats.market_price_usd:.2f}"
-
-
-class BitcoinData:
-    """Get the latest data and update the states."""
-
-    stats: statistics.Stats
-    ticker: dict[str, exchangerates.Currency]
-
-    def update(self) -> None:
-        """Get the latest data from blockchain.com."""
-
-        self.stats = statistics.get()
-        self.ticker = exchangerates.get_ticker()

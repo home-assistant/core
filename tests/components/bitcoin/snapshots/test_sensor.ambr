@@ -1,0 +1,330 @@
+# serializer version: 1
+# name: test_entities[sensor.block_size]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Block size',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.block_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '220382927.0',
+  })
+# ---
+# name: test_entities[sensor.difficulty]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Difficulty',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.difficulty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '125807076547197',
+  })
+# ---
+# name: test_entities[sensor.est_transaction_volume]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Est. Transaction volume',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.est_transaction_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10730248533.91',
+  })
+# ---
+# name: test_entities[sensor.estimated_sent]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Estimated sent',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.estimated_sent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '134771.49',
+  })
+# ---
+# name: test_entities[sensor.exchange_rate_1_btc]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Exchange rate (1 BTC)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.exchange_rate_1_btc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '79600.7',
+  })
+# ---
+# name: test_entities[sensor.hash_rate]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hash rate',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'PH/s',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hash_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '838023.1',
+  })
+# ---
+# name: test_entities[sensor.market_price]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Market price',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.market_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '79618.09',
+  })
+# ---
+# name: test_entities[sensor.mined]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mined',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mined',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '418.75',
+  })
+# ---
+# name: test_entities[sensor.mined_blocks]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mined Blocks',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mined_blocks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '134',
+  })
+# ---
+# name: test_entities[sensor.miners_revenue]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miners revenue',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miners_revenue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32941616',
+  })
+# ---
+# name: test_entities[sensor.miners_revenue_2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Miners revenue',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miners_revenue_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41.4',
+  })
+# ---
+# name: test_entities[sensor.next_retarget]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Next retarget',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.next_retarget',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '965663.00',
+  })
+# ---
+# name: test_entities[sensor.no_of_transactions]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'No. of Transactions',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.no_of_transactions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '599226',
+  })
+# ---
+# name: test_entities[sensor.time_between_blocks]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Time between Blocks',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.time_between_blocks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.12',
+  })
+# ---
+# name: test_entities[sensor.timestamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Timestamp',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1787919684000.0',
+  })
+# ---
+# name: test_entities[sensor.total]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Total',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20076350.00',
+  })
+# ---
+# name: test_entities[sensor.total_blocks]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Total Blocks',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.total_blocks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '964432',
+  })
+# ---
+# name: test_entities[sensor.total_fees]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Total fees',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.total_fees',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.04',
+  })
+# ---
+# name: test_entities[sensor.total_sent]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Total sent',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.total_sent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1062214.95',
+  })
+# ---
+# name: test_entities[sensor.trade_volume]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trade volume',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.trade_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6448.4',
+  })
+# ---
+# name: test_entities[sensor.trade_volume_2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trade volume',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:currency-btc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.trade_volume_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '513406106.8',
+  })
+# ---
