@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_status": {
+        "default": "mdi:battery"
+      },
+      "device_mode": {
+        "default": "mdi:cog"
+      },
+      "pv_current": {
+        "default": "mdi:current-ac"
+      },
+      "pv_power": {
+        "default": "mdi:solar-power"
+      },
+      "pv_state": {
+        "default": "mdi:state-machine"
+      },
+      "pv_voltage": {
+        "default": "mdi:flash"
+      }
+    }
+  }
+}
