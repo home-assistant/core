@@ -92,6 +92,10 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         else:
             self._attr_native_current_temperature = data.get("room_temp")
         self._attr_native_target_temperature = data.get("thermostat_temp")
+        if (svl := data.get("svl")) is not None:
+            self._attr_min_temp = svl
+        if (svh := data.get("svh")) is not None:
+            self._attr_max_temp = svh
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
