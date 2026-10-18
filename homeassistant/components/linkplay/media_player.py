@@ -368,7 +368,10 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         """Image url of playing media."""
         player = self._active_player
         if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(player.album_art)
+            album_art = str(player.album_art)
+            # Devices report missing album art as a placeholder such as "unknow"
+            if album_art.startswith(("http://", "https://")):
+                return album_art
         return None
 
     @exception_wrap
