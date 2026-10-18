@@ -46,7 +46,6 @@ MISSING_ALL = {
     "tag",
     "timer",
     "websocket_api",
-    "zeroconf",
     "zone",
 }
 
