@@ -26,7 +26,6 @@ MISSING_ALL = {
     "energy",
     "ffmpeg",
     "frontend",
-    "google_assistant",
     "group",
     "homeassistant",
     "homeassistant_hardware",
