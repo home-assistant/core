@@ -13,6 +13,7 @@ Repos dropped from the HACS list are removed. Requires an authenticated `gh`.
 import argparse
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import UTC, datetime
 import fcntl
 import json
 import os
@@ -324,34 +325,42 @@ def prune(root: Path, wanted: set[str]) -> list[str]:
     return removed
 
 
-def load_state(root: Path) -> dict[str, str]:
-    """Return the recorded SHAs, refusing a destination this script does not own.
+def load_state(root: Path) -> tuple[dict[str, str], str | None]:
+    """Return the recorded SHAs and synced_at, refusing a destination not ours.
 
     Pruning deletes every unknown <owner>/<repo> directory, so a populated
     directory without a valid state file must never be used.
     """
     state_file = root / ".state.json"
     if not any(path.name != LOCK_FILE for path in root.iterdir()):
-        return {}
+        return {}, None
     try:
         data = json.loads(state_file.read_text())
     except OSError, ValueError:
         data = None
     repos = data.get("repos") if isinstance(data, dict) else None
+    synced_at = data.get("synced_at") if isinstance(data, dict) else None
     if (
         not isinstance(data, dict)
         or data.get("format") != STATE_FORMAT
         or not isinstance(repos, dict)
         or not all(isinstance(k, str) and isinstance(v, str) for k, v in repos.items())
+        or not isinstance(synced_at, str | None)
     ):
         sys.exit(f"{root} is not empty and has no valid {state_file.name}; refusing")
-    return repos
+    return repos, synced_at
 
 
-def save_state(root: Path, state: dict[str, str]) -> None:
-    """Write the state file atomically, so an interrupted run never truncates it."""
+def save_state(root: Path, state: dict[str, str], synced_at: str | None) -> None:
+    """Write the state file atomically, so an interrupted run never truncates it.
+
+    synced_at is when the last full sync without failures finished; any other
+    run keeps the previous value, so it reflects how fresh the whole copy is.
+    """
     tmp = root / ".state.json.tmp"
-    data = {"format": STATE_FORMAT, "repos": state}
+    data: dict[str, object] = {"format": STATE_FORMAT, "repos": state}
+    if synced_at is not None:
+        data["synced_at"] = synced_at
     tmp.write_text(json.dumps(data, indent=0, sort_keys=True))
     tmp.replace(root / ".state.json")
 
@@ -412,10 +421,10 @@ def main() -> None:
     load_state(root)
     # Kept open until exit; concurrent runs share the same temp paths
     _lock = lock(root)
-    state = load_state(root)
+    state, synced_at = load_state(root)
     ensure_ignored(root)
     # Write it now so a run interrupted before any download still marks root
-    save_state(root, state)
+    save_state(root, state, synced_at)
 
     hacs_list = json.loads(_get(HACS_LIST))
     if (
@@ -467,7 +476,7 @@ def main() -> None:
                 state[repo] = todo[repo]
             if done % 100 == 0 or done == len(todo):
                 print(f"  downloaded {done}/{len(todo)}", file=sys.stderr)
-                save_state(root, state)
+                save_state(root, state, synced_at)
 
     removed: list[str] = []
     if not args.repos:
@@ -483,7 +492,9 @@ def main() -> None:
                 if not any(repo_dir.parent.iterdir()):
                     repo_dir.parent.rmdir()
             state.pop(repo, None)
-    save_state(root, state)
+    if not args.repos and not failed:
+        synced_at = datetime.now(UTC).isoformat(timespec="seconds")
+    save_state(root, state, synced_at)
 
     error_log = root / ERROR_LOG
     if errors:
