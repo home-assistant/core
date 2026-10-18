@@ -1,6 +1,7 @@
 """Purge old data helper."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, replace
 from datetime import datetime
 import logging
 import time
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm.session import Session
 
 from homeassistant.util.collection import chunked_or_all
+from homeassistant.util.json import json_loads
 
 from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
@@ -28,6 +30,7 @@ from .queries import (
     delete_statistics_short_term_rows,
     disconnect_states_rows,
     find_entity_ids_to_purge,
+    find_event_data_purge_batch,
     find_event_types_to_purge,
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
@@ -51,6 +54,16 @@ DEFAULT_STATES_BATCHES_PER_PURGE = 20  # We expect ~95% de-dupe rate
 DEFAULT_EVENTS_BATCHES_PER_PURGE = 15  # We expect ~92% de-dupe rate
 
 
+@dataclass(slots=True)
+class EventDataPurgeState:
+    """Track a historical event-data scan across purge tasks."""
+
+    last_event_id: int = 0
+    max_event_id: int | None = None
+    purge_before_timestamp: float | None = None
+    complete: bool = False
+
+
 @retryable_database_job("purge")
 def purge_old_data(
     instance: Recorder,
@@ -59,14 +72,21 @@ def purge_old_data(
     apply_filter: bool = False,
     events_batch_size: int = DEFAULT_EVENTS_BATCHES_PER_PURGE,
     states_batch_size: int = DEFAULT_STATES_BATCHES_PER_PURGE,
+    event_data_purge_state: EventDataPurgeState | None = None,
 ) -> bool:
     """Purge events and states older than purge_before.
 
     Cleans up an timeframe of an hour, based on the oldest record.
+    Reuse event_data_purge_state when rescheduling to continue the event-data scan.
     """
     _LOGGER.debug(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),
+    )
+    scan_state = (
+        replace(event_data_purge_state)
+        if event_data_purge_state is not None
+        else EventDataPurgeState()
     )
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of max_bind_vars, based on the oldest states or events record
@@ -113,16 +133,28 @@ def purge_old_data(
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
 
-        if apply_filter and not _purge_filtered_data(instance, session):
-            _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
-            return False
+        filters_complete = not apply_filter or _purge_filtered_data(
+            instance, session, scan_state
+        )
+        if filters_complete:
+            # This purge cycle is finished, clean up old event types and
+            # recorder runs
+            _purge_old_event_types(instance, session)
+            _purge_old_entity_ids(instance, session)
 
-        # This purge cycle is finished, clean up old event types and
-        # recorder runs
-        _purge_old_event_types(instance, session)
-        _purge_old_entity_ids(instance, session)
+            _purge_old_recorder_runs(instance, session, purge_before)
 
-        _purge_old_recorder_runs(instance, session, purge_before)
+    # Advance the cursor only after the transaction commits so retries cannot skip rows.
+    if event_data_purge_state is not None:
+        event_data_purge_state.last_event_id = scan_state.last_event_id
+        event_data_purge_state.max_event_id = scan_state.max_event_id
+        event_data_purge_state.purge_before_timestamp = (
+            scan_state.purge_before_timestamp
+        )
+        event_data_purge_state.complete = scan_state.complete
+    if not filters_complete:
+        _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
+        return False
     with session_scope(session=instance.get_session(), read_only=True) as session:
         instance.recorder_runs_manager.load_from_db(session)
         instance.states_manager.load_from_db(session)
@@ -581,7 +613,9 @@ def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
     instance.states_manager.evict_purged_entity_ids(purge_entity_ids)
 
 
-def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
+def _purge_filtered_data(
+    instance: Recorder, session: Session, scan_state: EventDataPurgeState
+) -> bool:
     """Remove filtered states and events that shouldn't be in the database.
 
     Returns true if all states and events are purged.
@@ -622,8 +656,105 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
             instance, session, excluded_event_type_ids, now_timestamp
         )
 
+    if instance.include_event_data or instance.exclude_event_data:
+        has_more_to_purge |= not _purge_filtered_event_data(
+            instance, session, now_timestamp, scan_state
+        )
+
     # Purge has completed if there are not more state or events to purge
     return not has_more_to_purge
+
+
+def _purge_filtered_event_data(
+    instance: Recorder,
+    session: Session,
+    purge_before_timestamp: float,
+    scan_state: EventDataPurgeState,
+) -> bool:
+    """Remove historical events that match event data filters."""
+    if scan_state.complete:
+        return True
+    if scan_state.purge_before_timestamp is None:
+        scan_state.purge_before_timestamp = purge_before_timestamp
+    if scan_state.max_event_id is None:
+        scan_state.max_event_id = (
+            session.query(Events.event_id)
+            .order_by(Events.event_id.desc())
+            .limit(1)
+            .scalar()
+            or 0
+        )
+    include_event_data = instance.include_event_data
+    exclude_event_data = instance.exclude_event_data
+    event_types = set(include_event_data) | set(exclude_event_data)
+    events = session.execute(
+        find_event_data_purge_batch(
+            scan_state.last_event_id, scan_state.max_event_id, instance.max_bind_vars
+        )
+    ).all()
+    if events:
+        scan_state.last_event_id = events[-1].event_id
+    scan_state.complete = len(events) < instance.max_bind_vars
+    to_purge: list[tuple[int, int | None]] = []
+    for event_id, data_id, event_type, shared_data, time_fired_ts in events:
+        if (
+            event_type not in event_types
+            or time_fired_ts is None
+            or time_fired_ts >= scan_state.purge_before_timestamp
+        ):
+            continue
+        data = json_loads(shared_data) if shared_data else {}
+        # Recorder discards oversized payloads as {}, so their original filter
+        # matches cannot be reconstructed from the stored data.
+        if shared_data is not None and data == {}:
+            continue
+        matches_exclude = _event_data_filter_matches(
+            event_type, data, exclude_event_data
+        )
+        matches_include = _event_data_filter_matches(
+            event_type, data, include_event_data
+        )
+        if matches_exclude or (
+            event_type in include_event_data and not matches_include
+        ):
+            to_purge.append((event_id, data_id))
+
+    if not to_purge:
+        return scan_state.complete
+
+    event_ids, data_ids = zip(*to_purge, strict=False)
+    event_ids_set = set(event_ids)
+    _purge_event_ids(session, event_ids_set)
+    database_engine = instance.database_engine
+    assert database_engine is not None
+    if unused_data_ids_set := _select_unused_event_data_ids(
+        instance,
+        session,
+        {data_id for data_id in data_ids if data_id is not None},
+        database_engine,
+    ):
+        _purge_batch_data_ids(instance, session, unused_data_ids_set)
+    return scan_state.complete
+
+
+def _event_data_filter_matches(
+    event_type: str,
+    data: object,
+    filters: dict[str, tuple[tuple[tuple[str, object], ...], ...]],
+) -> bool:
+    """Return if event data matches a filter."""
+    if not (rules := filters.get(event_type)) or not isinstance(data, Mapping):
+        return False
+    return any(
+        all(
+            key in data
+            and isinstance(data[key], type(expected_value))
+            and (not isinstance(data[key], bool) or isinstance(expected_value, bool))
+            and data[key] == expected_value
+            for key, expected_value in rule
+        )
+        for rule in rules
+    )
 
 
 def _purge_filtered_states(

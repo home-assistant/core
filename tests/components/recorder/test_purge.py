@@ -9,12 +9,15 @@ from unittest.mock import patch
 from freezegun import freeze_time
 from probatio.error import MultipleInvalid
 import pytest
+from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
-from homeassistant.components.recorder import DOMAIN, Recorder
+from homeassistant.components.recorder import DOMAIN, Recorder, purge
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
+    Base,
+    EventData,
     Events,
     EventTypes,
     RecorderRuns,
@@ -25,8 +28,11 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsShortTerm,
 )
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.queries import select_event_type_ids
+from homeassistant.components.recorder.purge import EventDataPurgeState, purge_old_data
+from homeassistant.components.recorder.queries import (
+    find_event_data_purge_batch,
+    select_event_type_ids,
+)
 from homeassistant.components.recorder.services import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
@@ -35,6 +41,7 @@ from homeassistant.components.recorder.tasks import PurgeTask
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_CALL_SERVICE,
     EVENT_STATE_CHANGED,
     EVENT_THEMES_UPDATED,
     STATE_ON,
@@ -1425,6 +1432,348 @@ async def test_purge_filtered_events(
         states = session.query(States)
         assert events_purge.count() == 0
         assert states.count() == 10
+
+
+@pytest.mark.parametrize(
+    ("recorder_config", "event_data", "expected_event_data"),
+    [
+        (
+            {
+                "exclude": {
+                    "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
+                }
+            },
+            [{"command": "keep"}, {"command": "drop"}],
+            [{"command": "keep"}],
+        ),
+        (
+            {
+                "include": {
+                    "event_data": [
+                        {
+                            "event_type": "test",
+                            "match": {"command": "keep"},
+                        }
+                    ]
+                }
+            },
+            [{"command": "drop"}, {"command": "keep"}],
+            [{"command": "keep"}],
+        ),
+        (
+            {
+                "include": {
+                    "event_data": [{"event_type": "test", "match": {"command": "keep"}}]
+                }
+            },
+            [{}, {"command": "drop"}, {"command": "keep"}],
+            [{}, {"command": "keep"}],
+        ),
+        (
+            {
+                "exclude": {
+                    "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
+                }
+            },
+            [{"command": "keep"}] * 6,
+            [{"command": "keep"}] * 6,
+        ),
+        (
+            {
+                "exclude": {
+                    "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
+                }
+            },
+            [{"command": "drop"}] + [{"command": "keep"}] * 5,
+            [{"command": "keep"}] * 5,
+        ),
+        (
+            {
+                "exclude": {
+                    "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
+                }
+            },
+            [{"command": "keep"}] * 5 + [{"command": "drop"}],
+            [{"command": "keep"}] * 5,
+        ),
+    ],
+)
+@pytest.mark.parametrize("batch_size", [1, 2, 3])
+async def test_purge_filtered_event_data(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    event_data: list[dict[str, str]],
+    expected_event_data: list[dict[str, str]],
+    batch_size: int,
+) -> None:
+    """Test historical event data filters are applied during purge."""
+    recorder_mock.exclude_event_types.add(EVENT_CALL_SERVICE)
+
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with session_scope(hass=hass) as session:
+            timestamp = dt_util.utcnow() - timedelta(days=1)
+            event_type = EventTypes(event_type="test")
+            session.add(event_type)
+            session.flush()
+            for data in event_data:
+                shared_data = EventData(shared_data=json.dumps(data))
+                session.add(shared_data)
+                session.flush()
+                session.add(
+                    Events(
+                        event_type_id=event_type.event_type_id,
+                        data_id=shared_data.data_id,
+                        origin_idx=0,
+                        time_fired_ts=timestamp.timestamp(),
+                    )
+                )
+
+    await recorder_mock.async_add_executor_job(_add_db_entries, hass)
+    with session_scope(hass=hass, read_only=True) as session:
+        expected_scan_count = session.query(Events).count() // batch_size + 1
+    with (
+        patch.object(recorder_mock, "max_bind_vars", batch_size),
+        patch.object(
+            purge, "_purge_filtered_event_data", wraps=purge._purge_filtered_event_data
+        ) as scan,
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass, max_number=expected_scan_count)
+
+    assert scan.call_count == expected_scan_count
+    with session_scope(hass=hass, read_only=True) as session:
+        events = (
+            session.query(EventData.shared_data)
+            .join(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("test",))))
+        )
+        assert [
+            json.loads(event_data) for (event_data,) in events
+        ] == expected_event_data
+
+
+async def test_event_data_purge_fixed_snapshot(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test events inserted between pages do not extend the historical scan."""
+    hass.bus.async_fire("snapshot_event", {"command": "drop"})
+    hass.bus.async_fire("unfiltered_event", {"command": "keep"})
+    await async_wait_recording_done(hass)
+    with session_scope(hass=hass, read_only=True) as session:
+        event_count = session.query(Events).count()
+
+    scan_state = EventDataPurgeState()
+    purge_before = dt_util.utcnow() - timedelta(days=10)
+    filters = {"snapshot_event": ((("command", "drop"),),)}
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 1),
+        patch.object(recorder_mock, "exclude_event_data", filters),
+    ):
+        assert not await recorder_mock.async_add_executor_job(
+            purge_old_data, recorder_mock, purge_before, False, True, 15, 20, scan_state
+        )
+    snapshot_max_event_id = scan_state.max_event_id
+    assert snapshot_max_event_id is not None
+
+    hass.bus.async_fire("snapshot_event", {"command": "drop"})
+    await async_wait_recording_done(hass)
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 1),
+        patch.object(recorder_mock, "exclude_event_data", filters),
+    ):
+        for _ in range(event_count):
+            finished = await recorder_mock.async_add_executor_job(
+                purge_old_data,
+                recorder_mock,
+                purge_before,
+                False,
+                True,
+                15,
+                20,
+                scan_state,
+            )
+
+    assert finished
+    assert scan_state.complete
+    assert scan_state.max_event_id == snapshot_max_event_id
+    with session_scope(hass=hass, read_only=True) as session:
+        event = (
+            session.query(Events)
+            .filter(
+                Events.event_type_id.in_(select_event_type_ids(("snapshot_event",)))
+            )
+            .one()
+        )
+        assert event.event_id > snapshot_max_event_id
+
+
+def test_event_data_purge_primary_key_query_plan() -> None:
+    """Test SQLite scans a primary-key page without sorting matching history."""
+    engine = create_engine("sqlite://")
+    with engine.begin() as connection:
+        Base.metadata.create_all(connection)
+        statement = find_event_data_purge_batch(10, 100, 20).compile(
+            dialect=engine.dialect, compile_kwargs={"literal_binds": True}
+        )
+        plan = connection.exec_driver_sql(f"EXPLAIN QUERY PLAN {statement}").all()
+    engine.dispose()
+
+    assert any("SEARCH events USING INTEGER PRIMARY KEY" in row[3] for row in plan)
+    assert all("USE TEMP B-TREE" not in row[3] for row in plan)
+
+
+@pytest.mark.parametrize(
+    ("filter_attribute", "expected_events"),
+    [("include_event_data", 0), ("exclude_event_data", 1)],
+)
+async def test_purge_filtered_event_data_empty_payload(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    filter_attribute: str,
+    expected_events: int,
+) -> None:
+    """Test genuinely empty payloads are distinct from discarded oversized data."""
+    hass.bus.async_fire("empty_event")
+    await async_wait_recording_done(hass)
+    with session_scope(hass=hass, read_only=True) as session:
+        event = (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("empty_event",))))
+            .one()
+        )
+        assert event.data_id is None
+        assert event.event_data is None
+
+    with patch.object(
+        recorder_mock,
+        filter_attribute,
+        {"empty_event": ((("command", "match"),),)},
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("empty_event",))))
+            .count()
+            == expected_events
+        )
+
+
+@pytest.mark.parametrize(
+    ("filter_attribute", "match_value"),
+    [("include_event_data", "keep"), ("exclude_event_data", "drop")],
+)
+async def test_purge_filtered_event_data_shared_payload(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    filter_attribute: str,
+    match_value: str,
+) -> None:
+    """Test filter purging preserves data still used by unrelated events."""
+    hass.bus.async_fire("filtered_event", {"command": "drop"})
+    hass.bus.async_fire("unfiltered_event", {"command": "drop"})
+    await async_wait_recording_done(hass)
+
+    with patch.object(
+        recorder_mock,
+        filter_attribute,
+        {"filtered_event": ((("command", match_value),),)},
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(Events)
+            .filter(
+                Events.event_type_id.in_(select_event_type_ids(("filtered_event",)))
+            )
+            .count()
+            == 0
+        )
+        assert (
+            session.query(EventData)
+            .filter(EventData.shared_data == '{"command":"drop"}')
+            .count()
+            == 1
+        )
+
+    hass.bus.async_fire("unfiltered_event", {"command": "drop"})
+    await async_wait_recording_done(hass)
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(EventData)
+            .join(Events)
+            .filter(
+                Events.event_type_id.in_(select_event_type_ids(("unfiltered_event",)))
+            )
+            .count()
+            == 2
+        )
+
+
+@pytest.mark.parametrize(
+    "error_target",
+    [
+        "homeassistant.components.recorder.purge._purge_batch_data_ids",
+        "sqlalchemy.orm.session.Session.commit",
+    ],
+)
+async def test_purge_filtered_event_data_rollback(
+    hass: HomeAssistant, recorder_mock: Recorder, error_target: str
+) -> None:
+    """Test a failed purge does not advance the scan past rolled-back deletions."""
+    hass.bus.async_fire("test", {"command": "drop"})
+    await async_wait_recording_done(hass)
+    scan_state = EventDataPurgeState()
+    purge_before = dt_util.utcnow() - timedelta(days=10)
+
+    with (
+        patch.object(
+            recorder_mock,
+            "exclude_event_data",
+            {"test": ((("command", "drop"),),)},
+        ),
+        patch(error_target, side_effect=DatabaseError("statement", {}, [])),
+        pytest.raises(DatabaseError),
+    ):
+        await recorder_mock.async_add_executor_job(
+            purge_old_data, recorder_mock, purge_before, False, True, 15, 20, scan_state
+        )
+
+    assert scan_state == EventDataPurgeState()
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("test",))))
+            .count()
+            == 1
+        )
+
+    with patch.object(
+        recorder_mock, "exclude_event_data", {"test": ((("command", "drop"),),)}
+    ):
+        assert await recorder_mock.async_add_executor_job(
+            purge_old_data, recorder_mock, purge_before, False, True, 15, 20, scan_state
+        )
+
+    assert scan_state.complete
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("test",))))
+            .count()
+            == 0
+        )
 
 
 @pytest.mark.parametrize(

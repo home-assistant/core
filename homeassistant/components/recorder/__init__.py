@@ -1,12 +1,16 @@
 """Support for recording details."""
 
 import logging
-from typing import Any
+import math
+from typing import Any, cast
 
 import probatio
 
 from homeassistant.const import (
+    CONF_EVENT_DATA,
     CONF_EXCLUDE,
+    CONF_INCLUDE,
+    CONF_MATCH,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
     EVENT_STATE_CHANGED,
@@ -66,19 +70,55 @@ CONF_DB_RETRY_WAIT = "db_retry_wait"
 CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
+CONF_EVENT_TYPE = "event_type"
 CONF_COMMIT_INTERVAL = "commit_interval"
 
 
-EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+def _validate_event_data_value(value: Any) -> str | bool | int | float:
+    """Validate an exact-match event data value."""
+    if isinstance(value, str):
+        return str(value)
+    if type(value) is float and not math.isfinite(value):
+        raise probatio.Invalid("expected a finite float")
+    if type(value) in (bool, int, float):
+        return cast(str | bool | int | float, value)
+    raise probatio.Invalid("expected a string, boolean, integer, or float")
+
+
+EVENT_DATA_FILTER_SCHEMA = probatio.All(
+    dict,
+    probatio.Length(min=1),
+    {cv.string: _validate_event_data_value},
+)
+
+EVENT_DATA_RULE_SCHEMA = {
+    probatio.Required(CONF_EVENT_TYPE): probatio.All(
+        cv.string, probatio.NotIn([EVENT_STATE_CHANGED])
+    ),
+    probatio.Required(CONF_MATCH): EVENT_DATA_FILTER_SCHEMA,
+}
+
+INCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+    {
+        probatio.Optional(CONF_EVENT_DATA): probatio.All(
+            probatio.EnsureList(), [EVENT_DATA_RULE_SCHEMA]
+        ),
+    }
+)
+
+EXCLUDE_SCHEMA = INCLUDE_SCHEMA.extend(
     {
         probatio.Optional(CONF_EVENT_TYPES): probatio.All(
             probatio.EnsureList(), [cv.string]
-        )
+        ),
     }
 )
 
 FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-    {probatio.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
+    {
+        probatio.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA,
+        probatio.Optional(CONF_INCLUDE, default=INCLUDE_SCHEMA({})): INCLUDE_SCHEMA,
+    }
 )
 
 
@@ -133,6 +173,18 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
+def _compile_event_data_filters(
+    filters: list[dict[str, Any]],
+) -> dict[str, tuple[tuple[tuple[str, object], ...], ...]]:
+    """Compile event data filters for low-overhead event matching."""
+    compiled: dict[str, list[tuple[tuple[str, object], ...]]] = {}
+    for event_data_filter in filters:
+        compiled.setdefault(event_data_filter[CONF_EVENT_TYPE], []).append(
+            tuple(event_data_filter[CONF_MATCH].items())
+        )
+    return {event_type: tuple(rules) for event_type, rules in compiled.items()}
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
@@ -152,6 +204,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if EVENT_STATE_CHANGED in exclude_event_types:
         _LOGGER.error("State change events cannot be excluded, use a filter instead")
         exclude_event_types.remove(EVENT_STATE_CHANGED)
+    include_event_data = _compile_event_data_filters(
+        conf.get(CONF_INCLUDE, {}).get(CONF_EVENT_DATA, [])
+    )
+    exclude_event_data = _compile_event_data_filters(exclude.get(CONF_EVENT_DATA, []))
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -163,6 +219,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_retry_wait=db_retry_wait,
         entity_filter=entity_filter,
         exclude_event_types=exclude_event_types,
+        include_event_data=include_event_data,
+        exclude_event_data=exclude_event_data,
     )
     get_instance.cache_clear()
     entity_registry.async_setup(hass)
