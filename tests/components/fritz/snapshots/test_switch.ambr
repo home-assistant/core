@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_port_forward_test_port_mapping-entry]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_port_forward_test_port_mapping-state]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -55,7 +55,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_port_forward_test_port_mapping_81-entry]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -92,7 +92,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_port_forward_test_port_mapping_81-state]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -111,7 +111,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_wi_fi_guest-entry]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_wi_fi_guest-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -148,7 +148,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_wi_fi_guest-state]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -165,7 +165,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_wi_fi_main_2_4ghz-entry]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_wi_fi_main_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -202,7 +202,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_wi_fi_main_2_4ghz-state]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
@@ -219,7 +219,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_wi_fi_main_5ghz-entry]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_wi_fi_main_5ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -256,7 +256,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.mock_title_wi_fi_main_5ghz-state]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.mock_title_wi_fi_main_5ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -273,7 +273,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.printer_internet_access-entry]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -310,7 +310,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data0-expected_wifi_swicthes0][switch.printer_internet_access-state]
+# name: test_switch_setup[fc_data0-expected_wifi_switches0][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer Internet access',
@@ -323,7 +323,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_port_forward_test_port_mapping-entry]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -360,7 +360,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_port_forward_test_port_mapping-state]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -379,7 +379,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_port_forward_test_port_mapping_81-entry]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -416,7 +416,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_port_forward_test_port_mapping_81-state]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -435,7 +435,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_wi_fi_guest-entry]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_wi_fi_guest-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -472,7 +472,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_wi_fi_guest-state]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -489,7 +489,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_wi_fi_main_2_4ghz-entry]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_wi_fi_main_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -526,7 +526,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_wi_fi_main_2_4ghz-state]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
@@ -543,7 +543,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_wi_fi_main_5ghz-entry]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_wi_fi_main_5ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -580,7 +580,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.mock_title_wi_fi_main_5ghz-state]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.mock_title_wi_fi_main_5ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -597,7 +597,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.printer_internet_access-entry]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -634,7 +634,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data1-expected_wifi_swicthes1][switch.printer_internet_access-state]
+# name: test_switch_setup[fc_data1-expected_wifi_switches1][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer Internet access',
@@ -647,7 +647,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_port_forward_test_port_mapping-entry]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -684,7 +684,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_port_forward_test_port_mapping-state]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -703,7 +703,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_port_forward_test_port_mapping_81-entry]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -740,7 +740,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_port_forward_test_port_mapping_81-state]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -759,7 +759,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_wi_fi_guest-entry]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_wi_fi_guest-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -796,7 +796,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_wi_fi_guest-state]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -813,7 +813,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_wi_fi_main_2_4ghz-entry]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_wi_fi_main_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -850,7 +850,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.mock_title_wi_fi_main_2_4ghz-state]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
@@ -867,7 +867,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.printer_internet_access-entry]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -904,7 +904,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data2-expected_wifi_swicthes2][switch.printer_internet_access-state]
+# name: test_switch_setup[fc_data2-expected_wifi_switches2][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer Internet access',
@@ -917,7 +917,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_port_forward_test_port_mapping-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -954,7 +954,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_port_forward_test_port_mapping-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -973,7 +973,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_port_forward_test_port_mapping_81-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1010,7 +1010,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_port_forward_test_port_mapping_81-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -1029,7 +1029,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_guest-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_guest-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1066,7 +1066,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_guest-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1083,7 +1083,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_main_2_4ghz-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_main_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1120,7 +1120,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_main_2_4ghz-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
@@ -1137,7 +1137,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_main_5ghz-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_main_5ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1174,7 +1174,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_main_5ghz-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_main_5ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1191,7 +1191,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_main_5ghz_high_6ghz-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_main_5ghz_high_6ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1228,7 +1228,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.mock_title_wi_fi_main_5ghz_high_6ghz-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.mock_title_wi_fi_main_5ghz_high_6ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1245,7 +1245,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.printer_internet_access-entry]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1282,7 +1282,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data3-expected_wifi_swicthes3][switch.printer_internet_access-state]
+# name: test_switch_setup[fc_data3-expected_wifi_switches3][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer Internet access',
@@ -1295,7 +1295,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_port_forward_test_port_mapping-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1332,7 +1332,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_port_forward_test_port_mapping-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -1351,7 +1351,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_port_forward_test_port_mapping_81-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1388,7 +1388,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_port_forward_test_port_mapping_81-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -1407,7 +1407,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_guest-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_guest-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1444,7 +1444,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_guest-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1461,7 +1461,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_main_2_4ghz-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_main_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1498,7 +1498,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_main_2_4ghz-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
@@ -1515,7 +1515,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_main_5ghz-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_main_5ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1552,7 +1552,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_main_5ghz-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_main_5ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1569,7 +1569,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_main_5ghz_high_6ghz-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_main_5ghz_high_6ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1606,7 +1606,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.mock_title_wi_fi_main_5ghz_high_6ghz-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.mock_title_wi_fi_main_5ghz_high_6ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1623,7 +1623,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.printer_internet_access-entry]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1660,7 +1660,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data4-expected_wifi_swicthes4][switch.printer_internet_access-state]
+# name: test_switch_setup[fc_data4-expected_wifi_switches4][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer Internet access',
@@ -1673,7 +1673,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_call_deflection_0-entry]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_call_deflection_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1710,7 +1710,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_call_deflection_0-state]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_call_deflection_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'deflection_to_number': '+1234657890',
@@ -1730,7 +1730,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_port_forward_test_port_mapping-entry]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_port_forward_test_port_mapping-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1767,7 +1767,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_port_forward_test_port_mapping-state]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -1786,7 +1786,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_port_forward_test_port_mapping_81-entry]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_port_forward_test_port_mapping_81-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1823,7 +1823,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_port_forward_test_port_mapping_81-state]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'Test Port Mapping',
@@ -1842,7 +1842,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_wi_fi_guest-entry]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_wi_fi_guest-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1879,7 +1879,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_wi_fi_guest-state]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1896,7 +1896,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_wi_fi_main_2_4ghz-entry]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_wi_fi_main_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1933,7 +1933,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.mock_title_wi_fi_main_2_4ghz-state]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
@@ -1950,7 +1950,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.printer_internet_access-entry]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.printer_internet_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1987,7 +1987,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[fc_data5-expected_wifi_swicthes5][switch.printer_internet_access-state]
+# name: test_switch_setup[fc_data5-expected_wifi_switches5][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer Internet access',
