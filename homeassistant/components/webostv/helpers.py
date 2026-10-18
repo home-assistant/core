@@ -13,9 +13,9 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN, LIVE_TV_APP_ID
 
 
-def get_mac_addresses(connection_info: dict[str, Any]) -> list[str]:
+def get_mac_addresses(connection_info: dict[str, Any]) -> dict[str, str]:
     """Return valid MAC addresses reported for the TV's network interfaces."""
-    macs = []
+    macs = {}
     for interface in ("wiredInfo", "wifiInfo"):
         if not (mac := connection_info.get(interface, {}).get("macAddress")):
             continue
@@ -23,8 +23,8 @@ def get_mac_addresses(connection_info: dict[str, Any]) -> list[str]:
             create_magic_packet(mac)
         except ValueError:
             continue
-        macs.append(dr.format_mac(mac))
-    return list(dict.fromkeys(macs))
+        macs[interface] = dr.format_mac(mac)
+    return macs
 
 
 @callback

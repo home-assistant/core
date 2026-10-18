@@ -25,7 +25,13 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from . import WebOsTvConfigEntry
-from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import (
+    CONF_MAC_ADDRESSES,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    WEBOSTV_EXCEPTIONS,
+)
 from .helpers import get_sources
 
 DATA_SCHEMA = probatio.Schema(
@@ -221,6 +227,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        return await self._async_options(user_input)
+
+    async def _async_options(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Show and save the options for the active Wake-on-LAN mode."""
         errors = {}
         if user_input is not None:
             mac = user_input.get(CONF_MAC)
@@ -258,14 +270,32 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 probatio.Optional(
                     CONF_MAC,
                     description={
-                        "suggested_value": self.config_entry.options.get(
-                            CONF_MAC, self.config_entry.data.get(CONF_MAC)
-                        )
+                        "suggested_value": self.config_entry.options.get(CONF_MAC)
                     },
                 ): TextSelector(),
             }
         )
 
+        step_id = "init"
+        placeholders = {}
+        if mac := self.config_entry.options.get(CONF_MAC):
+            step_id = "manual"
+            placeholders = {"mac_address": mac}
+        elif (
+            isinstance(macs := self.config_entry.data.get(CONF_MAC_ADDRESSES), dict)
+            and macs
+        ):
+            step_id = "automatic"
+            placeholders = {
+                "wired_mac": macs.get("wiredInfo", "—"),
+                "wifi_mac": macs.get("wifiInfo", "—"),
+            }
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id=step_id,
+            data_schema=options_schema,
+            errors=errors,
+            description_placeholders=placeholders,
         )
+
+    async_step_automatic = async_step_init
+    async_step_manual = async_step_init

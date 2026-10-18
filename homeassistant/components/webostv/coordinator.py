@@ -46,11 +46,16 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @property
     def mac_addresses(self) -> list[str]:
         """Return the manual MAC address or the discovered addresses."""
-        if mac := self.config_entry.options.get(CONF_MAC) or self.config_entry.data.get(
-            CONF_MAC
-        ):
+        if mac := self.config_entry.options.get(CONF_MAC):
             return [mac]
-        return cast(list[str], self.config_entry.data.get(CONF_MAC_ADDRESSES, []))
+        macs = self.config_entry.data.get(CONF_MAC_ADDRESSES, {})
+        if macs:
+            if isinstance(macs, dict):
+                return list(dict.fromkeys(macs.values()))
+            return cast(list[str], macs)
+        if mac := self.config_entry.data.get(CONF_MAC):
+            return [mac]
+        return []
 
     @override
     async def _async_update_data(self) -> None:
@@ -79,8 +84,8 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from error
         else:
             update_client_key(self.hass, self.config_entry, self.client)
-            if not self.mac_addresses and (
-                macs := get_mac_addresses(self.client.tv_info.connection)
+            if (macs := get_mac_addresses(self.client.tv_info.connection)) and (
+                macs != self.config_entry.data.get(CONF_MAC_ADDRESSES)
             ):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,

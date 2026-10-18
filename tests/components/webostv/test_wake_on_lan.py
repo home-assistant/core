@@ -37,15 +37,21 @@ MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(
-    ("connection_info", "expected_macs"),
+    ("connection_info", "expected_macs", "expected_interfaces", "expected_display"),
     [
         pytest.param(
             {"wiredInfo": {"macAddress": "AA-BB-CC-DD-EE-FF"}},
             [MAC_ADDRESS],
+            {"wiredInfo": MAC_ADDRESS},
+            {"wired_mac": MAC_ADDRESS, "wifi_mac": "—"},
             id="wired",
         ),
         pytest.param(
-            {"wifiInfo": {"macAddress": MAC_ADDRESS}}, [MAC_ADDRESS], id="wifi"
+            {"wifiInfo": {"macAddress": MAC_ADDRESS}},
+            [MAC_ADDRESS],
+            {"wifiInfo": MAC_ADDRESS},
+            {"wired_mac": "—", "wifi_mac": MAC_ADDRESS},
+            id="wifi",
         ),
         pytest.param(
             {
@@ -53,6 +59,8 @@ MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
                 "wifiInfo": {"macAddress": "11:22:33:44:55:66"},
             },
             [MAC_ADDRESS, "11:22:33:44:55:66"],
+            {"wiredInfo": MAC_ADDRESS, "wifiInfo": "11:22:33:44:55:66"},
+            {"wired_mac": MAC_ADDRESS, "wifi_mac": "11:22:33:44:55:66"},
             id="both-interfaces",
         ),
         pytest.param(
@@ -61,6 +69,8 @@ MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
                 "wifiInfo": {"macAddress": MAC_ADDRESS},
             },
             [MAC_ADDRESS],
+            {"wiredInfo": MAC_ADDRESS, "wifiInfo": MAC_ADDRESS},
+            {"wired_mac": MAC_ADDRESS, "wifi_mac": MAC_ADDRESS},
             id="duplicate",
         ),
         pytest.param(
@@ -69,6 +79,8 @@ MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
                 "wifiInfo": {"macAddress": MAC_ADDRESS},
             },
             [MAC_ADDRESS],
+            {"wifiInfo": MAC_ADDRESS},
+            {"wired_mac": "—", "wifi_mac": MAC_ADDRESS},
             id="invalid-wired-address",
         ),
     ],
@@ -80,13 +92,15 @@ async def test_discover_mac_address(
     freezer: FrozenDateTimeFactory,
     connection_info: dict[str, dict[str, str]],
     expected_macs: list[str],
+    expected_interfaces: dict[str, str],
+    expected_display: dict[str, str],
 ) -> None:
     """Discover a MAC on connection and retain it across key changes and reloads."""
     client.is_connected.return_value = False
     client.tv_info.connection = connection_info
     entry = await setup_webostv(hass)
 
-    assert entry.data[CONF_MAC_ADDRESSES] == expected_macs
+    assert entry.data[CONF_MAC_ADDRESSES] == expected_interfaces
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] & (
         MediaPlayerEntityFeature.TURN_ON
     )
@@ -95,7 +109,7 @@ async def test_discover_mac_address(
     client.tv_info.connection = {}
     await mock_scan_interval(hass, freezer)
     assert entry.data[CONF_CLIENT_SECRET] == "updated_key"
-    assert entry.data[CONF_MAC_ADDRESSES] == expected_macs
+    assert entry.data[CONF_MAC_ADDRESSES] == expected_interfaces
 
     client.tv_state.is_on = False
     client.connect.side_effect = TimeoutError
@@ -108,6 +122,10 @@ async def test_discover_mac_address(
         "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     mock_send_magic_packet.assert_called_once_with(*expected_macs)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "automatic"
+    assert result["description_placeholders"] == expected_display
 
 
 @pytest.mark.parametrize(
@@ -133,11 +151,14 @@ async def test_mac_discovery_retry(
     assert not hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] & (
         MediaPlayerEntityFeature.TURN_ON
     )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "init"
+    assert result["description_placeholders"] == {}
 
     client.tv_info.connection = {"wiredInfo": {"macAddress": MAC_ADDRESS}}
     await mock_scan_interval(hass, freezer)
 
-    assert entry.data[CONF_MAC_ADDRESSES] == [MAC_ADDRESS]
+    assert entry.data[CONF_MAC_ADDRESSES] == {"wiredInfo": MAC_ADDRESS}
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] & (
         MediaPlayerEntityFeature.TURN_ON
     )
@@ -165,10 +186,12 @@ async def test_manual_mac_overrides_discovery(
     )
 
     mock_send_magic_packet.assert_called_once_with(manual_mac)
-    assert entry.data[CONF_MAC_ADDRESSES] == [MAC_ADDRESS]
+    assert entry.data[CONF_MAC_ADDRESSES] == {"wiredInfo": MAC_ADDRESS}
 
     mock_send_magic_packet.reset_mock()
     result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "manual"
+    assert result["description_placeholders"] == {"mac_address": manual_mac}
     await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SOURCES: ["Live TV"], CONF_MAC: ""}
     )
@@ -178,17 +201,30 @@ async def test_manual_mac_overrides_discovery(
     )
     mock_send_magic_packet.assert_called_once_with(MAC_ADDRESS)
 
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "automatic"
+    assert result["description_placeholders"] == {
+        "wired_mac": MAC_ADDRESS,
+        "wifi_mac": "—",
+    }
 
+
+@pytest.mark.parametrize(
+    "saved_data",
+    [
+        pytest.param({CONF_MAC: MAC_ADDRESS}, id="single-address"),
+        pytest.param({CONF_MAC_ADDRESSES: [MAC_ADDRESS]}, id="address-list"),
+    ],
+)
 async def test_previously_discovered_mac(
     hass: HomeAssistant,
     client: Mock,
     mock_send_magic_packet: Mock,
+    saved_data: dict[str, str | list[str]],
 ) -> None:
     """Keep using a MAC saved by the previous discovery implementation."""
     entry = await setup_webostv(hass)
-    hass.config_entries.async_update_entry(
-        entry, data={**entry.data, CONF_MAC: MAC_ADDRESS}
-    )
+    hass.config_entries.async_update_entry(entry, data={**entry.data, **saved_data})
     client.is_connected.return_value = False
     client.connect.side_effect = TimeoutError
     await hass.config_entries.async_reload(entry.entry_id)
@@ -198,6 +234,18 @@ async def test_previously_discovered_mac(
         "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     mock_send_magic_packet.assert_called_once_with(MAC_ADDRESS)
+
+    client.connect.side_effect = None
+    client.tv_info.connection = {"wiredInfo": {"macAddress": "11:22:33:44:55:66"}}
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_MAC_ADDRESSES] == {"wiredInfo": "11:22:33:44:55:66"}
+    mock_send_magic_packet.reset_mock()
+    await hass.services.async_call(
+        "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    mock_send_magic_packet.assert_called_once_with("11:22:33:44:55:66")
 
 
 @pytest.mark.parametrize(
@@ -231,7 +279,7 @@ async def test_discovered_mac_preserved(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert entry.data[CONF_MAC_ADDRESSES] == [MAC_ADDRESS]
+    assert entry.data[CONF_MAC_ADDRESSES] == {"wiredInfo": MAC_ADDRESS}
 
 
 async def test_discovered_mac_redacted(
