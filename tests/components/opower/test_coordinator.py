@@ -1573,6 +1573,70 @@ async def test_coordinator_rate_periods_fetch_full_history_once_per_run(
     assert mock_opower_api.async_get_cost_reads.call_count == 4
 
 
+async def test_coordinator_rate_periods_rebuild_again_after_second_delete(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a statistic filled by a backfill is rebuilt again if deleted again.
+
+    Only statistics the full history could not fill are remembered, and a
+    fetch that fails is not remembered at all, so it is retried.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
+    reads = [
+        CostRead(
+            start_time=hour[i],
+            end_time=hour[i] + timedelta(hours=1),
+            consumption=1.0,
+            provided_cost=0.25,
+            read_components=[_read_component("ON_PEAK", 1.0, 0.25)],
+        )
+        for i in range(2)
+    ]
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    account.read_resolution = ReadResolution.BILLING
+    mock_opower_api.async_get_accounts.return_value = [account]
+    mock_opower_api.async_get_cost_reads.return_value = reads
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 1
+
+    on_peak_id = "opower:pge_elec_111111_on_peak_energy_consumption"
+
+    # The full history fetch fails: nothing is remembered, so it is retried
+    get_instance(hass).async_clear_statistics([on_peak_id])
+    await async_wait_recording_done(hass)
+    mock_opower_api.async_get_cost_reads.side_effect = [reads, ApiException("boom", "")]
+    with pytest.raises(ApiException):
+        await coordinator._async_update_data()
+    mock_opower_api.async_get_cost_reads.side_effect = None
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 5
+
+    # Filled now. Deleted again, it is rebuilt again
+    get_instance(hass).async_clear_statistics([on_peak_id])
+    await async_wait_recording_done(hass)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 7
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {on_peak_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert [s["sum"] for s in stats[on_peak_id]] == [1.0, 2.0]
+
+
 async def test_coordinator_rate_periods_skip_empty_periods(
     recorder_mock: Recorder,
     hass: HomeAssistant,

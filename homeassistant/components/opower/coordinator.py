@@ -281,7 +281,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         config_entry: OpowerConfigEntry,
     ) -> None:
         """Initialize the data handler."""
-        # Rate period statistics the full history has been fetched for.
+        # Rate period statistics the full history could not fill this run.
         self._rate_period_backfills: set[str] = set()
         super().__init__(
             hass,
@@ -570,9 +570,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 # A statistic the full history cannot fill, e.g. one deleted
                 # by hand on a utility whose only history at that age does not
                 # add up, would be fetched for on every refresh. Try once per
-                # run of Home Assistant.
+                # run of Home Assistant. Only what stays empty after the
+                # backfill is remembered, so a failed fetch is retried and a
+                # statistic filled now is rebuilt again if deleted later.
                 if set(missing_statistic_ids) - self._rate_period_backfills:
-                    self._rate_period_backfills.update(missing_statistic_ids)
                     # The reads only cover the last few weeks once statistics
                     # exist. A statistic that is not stored yet, e.g. right after
                     # upgrading, for a seasonal period seen for the first time, or
@@ -601,6 +602,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                         # one, is new and not stored, so it is backfilled whole.
                         rate_periods.setdefault(key, rate_period)
                     self._add_rate_period_statistics(backfill_reads, rate_periods, True)
+                    self._rate_period_backfills.update(
+                        metadata["statistic_id"]
+                        for rate_period in rate_periods.values()
+                        for kind, metadata in rate_period.metadata.items()
+                        if rate_period.last_stats_time[kind] is None
+                        and not rate_period.statistics[kind]
+                    )
                 self._add_rate_period_statistics(period_reads, rate_periods, False)
 
             cost_statistics = []
