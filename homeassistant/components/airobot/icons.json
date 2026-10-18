@@ -34,9 +34,6 @@
       },
       "voc": {
         "default": "mdi:air-purifier"
-      },
-      "working_time": {
-        "default": "mdi:clock-outline"
       }
     },
     "switch": {

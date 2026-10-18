@@ -169,9 +169,6 @@
       },
       "voc": {
         "name": "VOC index"
-      },
-      "working_time": {
-        "name": "Working time"
       }
     },
     "switch": {

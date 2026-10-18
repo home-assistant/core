@@ -295,17 +295,6 @@ VU_SENSOR_TYPES: tuple[AirobotVUSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda data: data.heat_recovery_efficiency,
     ),
-    AirobotVUSensorEntityDescription(
-        key="working_time",
-        translation_key="working_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: data.working_time_ms,
-    ),
 )
 
 
