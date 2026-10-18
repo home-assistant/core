@@ -14,7 +14,6 @@ import requests_mock
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.components.plex.const import (
-    CONF_FUZZY_SEARCH,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DOMAIN,
@@ -28,7 +27,7 @@ from homeassistant.components.plex.services import (
     _media_result_info,
     process_plex_payload,
 )
-from homeassistant.const import CONF_URL, Platform
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -436,68 +435,6 @@ async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> 
     assert result.offset == 0
 
 
-async def test_search_service_fuzzy(
-    hass: HomeAssistant,
-    mock_plex_server,
-    requests_mock: requests_mock.Mocker,
-    empty_payload,
-) -> None:
-    """Test the search service tolerates misspelled queries."""
-    url = mock_plex_server.url_in_use
-    requests_mock.get(f"{url}/hubs/search", text=empty_payload)
-
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie", "fuzzy": True},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"]
-    assert result["results"][0]["title"] == "Movie 1"
-    assert all(x["media_type"] == "movie" for x in result["results"])
-
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Completely unrelated words", "fuzzy": True},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"] == []
-
-    # Fuzzy search is off by default
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie"},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"] == []
-
-    # The integration option enables it for calls that don't override it
-    mock_plex_server.options[Platform.MEDIA_PLAYER][CONF_FUZZY_SEARCH] = True
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie"},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"][0]["title"] == "Movie 1"
-
-    # A call can switch it off again
-    result = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH,
-        {"query": "Moovie 1", "media_type": "movie", "fuzzy": False},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["results"] == []
-
-
 async def test_on_deck_service(
     hass: HomeAssistant,
     mock_plex_server,
@@ -559,26 +496,6 @@ async def test_search_service_library_filters(
         return_response=True,
     )
     assert len(result["results"]) == 5
-
-    # Fuzzy matching is not used as a fallback when other filters apply
-    with patch(
-        "plexapi.library.LibrarySection.search",
-        return_value=[],
-        __qualname__="search",
-    ):
-        result = await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH,
-            {
-                "library_name": "Movies",
-                "query": "Moovie 1",
-                "year": 1984,
-                "fuzzy": True,
-            },
-            blocking=True,
-            return_response=True,
-        )
-    assert result["results"] == []
 
 
 async def test_media_result_info_hierarchy(mock_plex_server) -> None:

@@ -29,7 +29,7 @@ from .const import (
 from .errors import MediaNotFound
 from .helpers import get_plex_servers
 from .media_browser import get_proxy_image_url
-from .media_search import find_media, search_media
+from .media_search import search_media
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
@@ -84,7 +84,6 @@ SEARCH_SCHEMA = probatio.All(
             probatio.Optional("year"): int,
             probatio.Optional("filters"): dict,
             probatio.Optional("include_on_deck", default=False): bool,
-            probatio.Optional("fuzzy"): bool,
         }
     ),
     probatio.AtLeastOne("query", "plex_key", "playlist_name", *SEARCH_FILTER_KEYS),
@@ -187,7 +186,6 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     plex_key = data.pop("plex_key", None)
     playlist_name = data.pop("playlist_name", None)
     include_on_deck = data.pop("include_on_deck", False)
-    fuzzy = data.pop("fuzzy", None)
     filters = {**data.pop("filters", {}), **data}
 
     results: list[Any]
@@ -203,13 +201,13 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
         elif filters:
             raise HomeAssistantError("'library_name' is required to use filters")
         else:
-            results = find_media(plex_server, query, media_type, fuzzy=fuzzy)
+            results = [
+                x
+                for x in plex_server.search(query, mediatype=media_type)
+                if hasattr(x, "title") and hasattr(x, "ratingKey")
+            ]
     except NotFound, MediaNotFound:
         results = []
-        fuzzy_enabled = plex_server.option_fuzzy_search if fuzzy is None else fuzzy
-        if fuzzy_enabled and query and library_name and filters == {"title": query}:
-            section = plex_server.library.section(library_name)
-            results = find_media(plex_server, query, media_type, section, fuzzy=True)
 
     infos: list[dict[str, Any]] = []
     for item in results:

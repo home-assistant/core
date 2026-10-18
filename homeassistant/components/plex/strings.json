@@ -61,14 +61,10 @@
     "step": {
       "plex_mp_settings": {
         "data": {
-          "fuzzy_search": "Fuzzy search",
           "ignore_new_shared_users": "Ignore new managed/shared users",
           "ignore_plex_web_clients": "Ignore Plex web clients",
           "monitored_users": "Monitored users",
           "use_episode_art": "Use episode art"
-        },
-        "data_description": {
-          "fuzzy_search": "Find media despite misspellings when you use the search action. The action can override this for a single call."
         },
         "description": "Options for Plex media players"
       }
@@ -137,10 +133,6 @@
         "filters": {
           "description": "Additional Plex library filters as key/value pairs (requires a library).",
           "name": "Filters"
-        },
-        "fuzzy": {
-          "description": "Tolerate misspellings. Overrides the Plex integration's fuzzy search option for this call.",
-          "name": "Fuzzy"
         },
         "include_on_deck": {
           "description": "For shows, include the next on deck episode in an on_deck field. Costs one extra request per show.",

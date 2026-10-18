@@ -135,9 +135,6 @@ search:
       example: '{"genre": "Sci-Fi"}'
       selector:
         object:
-    fuzzy:
-      selector:
-        boolean:
     include_on_deck:
       default: false
       selector:

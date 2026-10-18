@@ -15,7 +15,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex.const import DOMAIN
 from homeassistant.components.plex.errors import MediaNotFound
-from homeassistant.components.plex.media_search import normalize_title, title_score
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -390,12 +389,3 @@ async def test_media_lookups(
             True,
         )
     assert "Must specify 'playlist_name' for this search" in str(excinfo.value)
-
-
-def test_title_score_keeps_non_latin_titles() -> None:
-    """Test titles in other scripts are compared and not reduced to nothing."""
-    query = normalize_title("Шерлок")
-    assert query == "шерлок"
-    assert title_score(query, "Шерлок") == 1.0
-    assert title_score(query, "Шерлок Холмс") > title_score(query, "Мастер")
-    assert normalize_title("Amélie") == "amelie"
