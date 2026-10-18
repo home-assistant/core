@@ -262,4 +262,8 @@ class IpBanManager:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-            await self.hass.async_add_executor_job(self._add_ban, new_ban)
+            try:
+                await self.hass.async_add_executor_job(self._add_ban, new_ban)
+            except OSError as err:
+                # The ban still applies until Home Assistant restarts.
+                _LOGGER.error("Unable to save the ban of %s: %s", remote_addr, err)
