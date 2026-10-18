@@ -365,6 +365,84 @@ async def test_yaml_import_multiple_blocks_merge_devices(
     assert hass.states.get("sensor.third_tank") is None
 
 
+@pytest.mark.parametrize(
+    "blocks",
+    [
+        pytest.param(
+            [
+                {
+                    "platform": "tank_utility",
+                    "email": TEST_EMAIL,
+                    "password": TEST_PASSWORD,
+                    "devices": [MOCK_DEVICE_ID],
+                },
+                {
+                    "platform": "tank_utility",
+                    "email": TEST_EMAIL,
+                    "password": TEST_PASSWORD,
+                },
+            ],
+            id="restricted_then_unrestricted",
+        ),
+        pytest.param(
+            [
+                {
+                    "platform": "tank_utility",
+                    "email": TEST_EMAIL,
+                    "password": TEST_PASSWORD,
+                },
+                {
+                    "platform": "tank_utility",
+                    "email": TEST_EMAIL,
+                    "password": TEST_PASSWORD,
+                    "devices": [MOCK_DEVICE_ID],
+                },
+            ],
+            id="unrestricted_then_restricted",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_token")
+async def test_yaml_import_restricted_and_unrestricted_blocks(
+    hass: HomeAssistant,
+    mock_get_data: MagicMock,
+    blocks: list[dict[str, Any]],
+) -> None:
+    """Test unrestricted YAML block clears device filter regardless of block order."""
+    device_2_data: dict[str, Any] = {
+        "device": {
+            "name": "Second Tank",
+            "address": "456 Other St",
+            "capacity": 250,
+            "fuelType": "propane",
+            "orientation": "vertical",
+        },
+        "status": "ok",
+        "lastReading": {
+            "tank": 42.0,
+            "time": 1600000000,
+            "time_iso": "2020-09-13T12:00:00Z",
+        },
+    }
+    mock_get_data.return_value = {
+        MOCK_DEVICE_ID: dict(DEVICE_DATA),
+        "device_2": device_2_data,
+    }
+
+    assert await async_setup_component(hass, "sensor", {"sensor": blocks})
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+    }
+
+    assert hass.states.get("sensor.my_propane_tank") is not None
+    assert hass.states.get("sensor.second_tank") is not None
+
+
 @pytest.mark.usefixtures("mock_get_data")
 async def test_yaml_import_concurrent_blocks_merge_devices(
     hass: HomeAssistant,

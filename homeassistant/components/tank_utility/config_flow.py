@@ -143,14 +143,30 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
         if existing_entry is not None:
             pending_imports.pop(email, None)
             updates: dict[str, Any] | None = None
-            if CONF_DEVICES in existing_entry.data and imported_devices is not None:
-                updates = {
-                    CONF_DEVICES: list(
-                        dict.fromkeys(
-                            [*existing_entry.data[CONF_DEVICES], *imported_devices]
+            if CONF_DEVICES in existing_entry.data:
+                if imported_devices is not None:
+                    updates = {
+                        CONF_DEVICES: list(
+                            dict.fromkeys(
+                                [
+                                    *existing_entry.data[CONF_DEVICES],
+                                    *imported_devices,
+                                ]
+                            )
                         )
+                    }
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry,
+                        data={
+                            k: v
+                            for k, v in existing_entry.data.items()
+                            if k != CONF_DEVICES
+                        },
                     )
-                }
+                    self.hass.config_entries.async_schedule_reload(
+                        existing_entry.entry_id
+                    )
             self._abort_if_unique_id_configured(updates=updates)
         if self._async_in_progress(
             include_uninitialized=True, match_context={"unique_id": email}
