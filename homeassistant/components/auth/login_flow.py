@@ -459,6 +459,20 @@ class LoginFlowResourceView(LoginFlowBaseView):
         """Do not allow getting status of a flow in progress."""
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
+        """Handle progressing a login flow request."""
+        # Answered before the failed login accounting, as a busy flow is not
+        # a wrong login and must not get the client banned.
+        if flow_id in self._flows_in_progress:
+            return self.json_message(
+                "Flow request already in progress", HTTPStatus.CONFLICT
+            )
+        self._flows_in_progress.add(flow_id)
+        try:
+            return await self._async_post(request, flow_id=flow_id)
+        finally:
+            self._flows_in_progress.discard(flow_id)
+
     @RequestDataValidator(
         probatio.Schema(
             {probatio.Required("client_id"): str},
@@ -466,10 +480,10 @@ class LoginFlowResourceView(LoginFlowBaseView):
         )
     )
     @log_invalid_auth
-    async def post(
+    async def _async_post(
         self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:
-        """Handle progressing a login flow request."""
+        """Progress the login flow."""
         client_id: str = data.pop("client_id")
 
         if not indieauth.verify_client_id(
@@ -482,15 +496,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
             flow = self._flow_mgr.async_get(flow_id)
             if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
                 return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
-            if flow_id in self._flows_in_progress:
-                return self.json_message(
-                    "Flow request already in progress", HTTPStatus.CONFLICT
-                )
-            self._flows_in_progress.add(flow_id)
-            try:
-                result = await self._flow_mgr.async_configure(flow_id, data)
-            finally:
-                self._flows_in_progress.discard(flow_id)
+            result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:

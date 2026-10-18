@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.http.ban import KEY_BAN_MANAGER, KEY_FAILED_LOGIN_ATTEMPTS
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
@@ -385,6 +386,9 @@ async def test_concurrent_requests_cannot_advance_the_same_flow(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
     """Test a second request gets a conflict rather than racing the first one."""
+    assert await async_setup_component(
+        hass, "http", {"http": {"login_attempts_threshold": 1}}
+    )
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
         {"username": "test-user"}
@@ -427,6 +431,9 @@ async def test_concurrent_requests_cannot_advance_the_same_flow(
     assert second.status == HTTPStatus.CONFLICT
     assert first_response.status == HTTPStatus.OK
     assert (await first_response.json())["type"] == "create_entry"
+    # A busy flow is not a failed login, so the client is not banned for it.
+    assert not hass.http.app[KEY_FAILED_LOGIN_ATTEMPTS]
+    assert not hass.http.app[KEY_BAN_MANAGER].ip_bans_lookup
 
 
 @pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
