@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from urllib.error import HTTPError, URLError
 
 from panasonic_viera import SOAPError
+import pytest
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -24,6 +25,7 @@ from homeassistant.components.select import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -88,6 +90,24 @@ async def test_picture_mode_select(
 
     mock_remote.set_picture_mode.assert_called_once_with("Cinema")
     assert hass.states.get(SELECT_ENTITY_ID).state == "Cinema"
+
+
+async def test_picture_mode_select_soap_error_keeps_tv_on(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_remote: Mock
+) -> None:
+    """Test a rejected picture mode change does not change TV availability."""
+    mock_remote.set_picture_mode = Mock(side_effect=SOAPError)
+
+    with pytest.raises(HomeAssistantError, match="Could not set picture mode"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "Cinema"},
+            blocking=True,
+        )
+
+    assert hass.states.get(MEDIA_PLAYER_ENTITY_ID).state != STATE_OFF
+    assert hass.states.get(SELECT_ENTITY_ID).state == MOCK_PICTURE_MODES[1]
 
 
 async def test_picture_mode_select_follows_tv_state(

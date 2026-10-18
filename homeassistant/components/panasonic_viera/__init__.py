@@ -13,7 +13,7 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
@@ -251,7 +251,9 @@ class Remote:
     async def async_select_picture_mode(self, picture_mode: str) -> None:
         """Select the picture mode of the TV."""
         assert self._control is not None
-        result = await self._handle_errors(self._control.set_picture_mode, picture_mode)
+        result = await self._handle_errors(
+            self._control.set_picture_mode, picture_mode, raise_on_soap_error=True
+        )
         if result is not None:
             self.picture_mode = result
 
@@ -307,7 +309,10 @@ class Remote:
         return device_info
 
     async def _handle_errors[_R, *_Ts](
-        self, func: Callable[[*_Ts], _R], *args: *_Ts
+        self,
+        func: Callable[[*_Ts], _R],
+        *args: *_Ts,
+        raise_on_soap_error: bool = False,
     ) -> _R | None:
         """Handle errors from func, set available and reconnect if needed."""
         try:
@@ -320,6 +325,8 @@ class Remote:
             return None
         except (SOAPError, HTTPError) as err:
             _LOGGER.debug("An error occurred: %s", err)
+            if raise_on_soap_error and isinstance(err, SOAPError):
+                raise HomeAssistantError("Could not set picture mode") from err
             self.state = MediaPlayerState.OFF
             self.available = True
             await self.async_create_remote_control()
