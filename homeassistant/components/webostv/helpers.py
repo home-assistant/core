@@ -1,6 +1,6 @@
 """Helper functions for LG webOS TV."""
 
-from typing import Any
+from collections.abc import Mapping
 
 from aiowebostv import WebOsTvState
 from wakeonlan import create_magic_packet
@@ -13,11 +13,13 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN, LIVE_TV_APP_ID
 
 
-def get_mac_addresses(connection_info: dict[str, Any]) -> dict[str, str]:
+def get_mac_addresses(connection_info: Mapping[str, object]) -> dict[str, str]:
     """Return valid MAC addresses reported for the TV's network interfaces."""
     macs = {}
     for interface in ("wiredInfo", "wifiInfo"):
-        if not (mac := connection_info.get(interface, {}).get("macAddress")):
+        if not isinstance(info := connection_info.get(interface), Mapping):
+            continue
+        if not isinstance(mac := info.get("macAddress"), str) or not mac:
             continue
         try:
             create_magic_packet(mac)

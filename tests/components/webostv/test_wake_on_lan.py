@@ -134,13 +134,15 @@ async def test_discover_mac_address(
         pytest.param({}, id="unavailable"),
         pytest.param({"wiredInfo": {}}, id="missing-address"),
         pytest.param({"wiredInfo": {"macAddress": "invalid"}}, id="invalid-address"),
+        pytest.param({"wiredInfo": None}, id="invalid-interface"),
+        pytest.param({"wifiInfo": {"macAddress": 123}}, id="non-string-address"),
     ],
 )
 async def test_mac_discovery_retry(
     hass: HomeAssistant,
     client: Mock,
     freezer: FrozenDateTimeFactory,
-    connection_info: dict[str, dict[str, str]],
+    connection_info: dict[str, object],
 ) -> None:
     """A failed MAC lookup allows setup and is retried on reconnect."""
     client.is_connected.return_value = False
