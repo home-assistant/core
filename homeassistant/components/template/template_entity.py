@@ -611,10 +611,13 @@ class TemplateEntity(AbstractTemplateEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
+        # async_at_start renders immediately when running, restore first so the
+        # rendered templates win.
+        await self.async_restore_last_state()
+
         self._async_setup_templates()
 
         async_at_start(self.hass, self._async_template_startup)
-        await self.async_restore_last_state()
 
     @callback
     @override

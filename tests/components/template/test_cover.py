@@ -1596,6 +1596,9 @@ async def test_restore_state(
         initial_attributes,
     )
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     await async_trigger(hass, "sensor.test_position", "75")
     await async_trigger(hass, "sensor.test_tilt_position", "75")
 

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.template import DOMAIN, entity as abstract_entity
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import SERVICE_RELOAD, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -84,3 +84,47 @@ async def test_reload_stops_entity_action_scripts(
     assert not turn_on_script.is_running
     assert turn_on_script._unloaded
     assert hass.data["light"].get_entity("light.test_light") is None
+
+
+async def test_reload_rendered_value_not_replaced_by_restored_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test templates rendered on reload are not replaced by the restored state."""
+
+    def make_config(brightness: int) -> dict:
+        return {
+            "template": {
+                "light": {
+                    "name": "test_light",
+                    "level": f"{{{{ {brightness} }}}}",
+                    "turn_on": [],
+                    "turn_off": [],
+                    "set_level": [],
+                }
+            }
+        }
+
+    assert await async_setup_component(hass, DOMAIN, make_config(102))
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": "light.test_light"}, blocking=True
+    )
+    state = hass.states.get("light.test_light")
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 102
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=make_config(153),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_light")
+    # The optimistic state is restored, the template result is kept
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 153

@@ -528,6 +528,9 @@ async def test_restore_state(
     )
     assert "plus_two" not in state.attributes
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
     await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, 2)
 

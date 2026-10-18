@@ -1567,6 +1567,9 @@ async def test_entity_restore_bad_states(
         STATE_UNKNOWN,
     )
 
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     next_state = "2"
     await async_trigger(hass, TEST_STATE_SENSOR, next_state)
     await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, next_state)
@@ -1635,6 +1638,9 @@ async def test_restore_state(
         {**restored_attributes, **RESTORE_STATE_SAVED_ATTRIBUTES},
     )
     assert "plus_two" not in state.attributes
+
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     next_state = "2"
     await async_trigger(hass, TEST_STATE_SENSOR, next_state)
