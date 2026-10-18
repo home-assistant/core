@@ -530,7 +530,7 @@ MOCK_WLANCONFIGS_24_5_5HIGH_UNKNOWN_GUEST: dict[str, dict] = {
 
 
 @pytest.mark.parametrize(
-    ("fc_data", "expected_wifi_swicthes"),
+    ("fc_data", "expected_wifi_switches"),
     [
         (
             {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_24_5_GUEST_SAME_SSID},
@@ -589,7 +589,7 @@ async def test_switch_setup(
     fc_class_mock,
     fh_class_mock,
     snapshot: SnapshotAssertion,
-    expected_wifi_swicthes: list[str],
+    expected_wifi_switches: list[str],
 ) -> None:
     """Test setup of Fritz!Tools switches."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -603,7 +603,7 @@ async def test_switch_setup(
 
     assert [
         e for e in entity_registry.entities if e.startswith("switch.mock_title_wi_fi")
-    ] == expected_wifi_swicthes
+    ] == expected_wifi_switches
 
 
 async def test_switch_no_device_conn_type(

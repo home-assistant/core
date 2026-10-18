@@ -46,7 +46,6 @@ def _wifi_naming(wifi_index: int, wifi_count: int) -> str | None:
         # Last Wi-Fi network in the guest network, both bands available
         return "Guest"
 
-    # Cast to correct type for type checker
     if (band := WIFI_BAND.get(wifi_index)) is not None:
         return f"Main {band}"
 
