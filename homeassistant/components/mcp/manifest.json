@@ -1,6 +1,7 @@
 {
   "domain": "mcp",
-  "name": "Model Context Protocol",
+  "name": "Model Context Protocol Client",
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

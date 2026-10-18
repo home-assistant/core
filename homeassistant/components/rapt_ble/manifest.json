@@ -11,6 +11,7 @@
       "manufacturer_id": 17739
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@sairon"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

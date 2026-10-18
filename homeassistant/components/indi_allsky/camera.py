@@ -28,7 +28,7 @@ async def async_setup_entry(
 class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
     """Representation of an INDI Allsky camera."""
 
-    _attr_name = None
+    translation_key = "latest_capture"
 
     def __init__(
         self,

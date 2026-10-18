@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from samsung_exlink import SamsungTVError
+from serialx import SerialException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -77,3 +78,18 @@ async def test_remove_entry_while_loaded(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_samsung_tv.disconnect.assert_awaited_once()
+
+
+async def test_setup_serial_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Retry setup when the serial transport cannot be opened."""
+    with patch(
+        "serialx.open_serial_connection",
+        side_effect=SerialException("Serial proxy is unavailable"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

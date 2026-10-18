@@ -1,6 +1,7 @@
 {
   "domain": "atag",
   "name": "Atag",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@MatsNL"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/atag",

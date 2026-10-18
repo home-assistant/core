@@ -75,6 +75,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting to Denon receiver at {port}"
+    },
     "invalid_tuner_channel": {
       "message": "{media_id} is not a valid tuner preset (A1-G8) or FM frequency in hundredths of MHz (8750-10800; for example, 9930 for 99.30 MHz)."
     },

@@ -59,7 +59,7 @@ async def test_binary_sensors_ink(
         "binary_sensor.hl_l2340dw_low_paper",
         "binary_sensor.hl_l2340dw_output_tray_full",
         "binary_sensor.hl_l2340dw_output_tray_missing",
-        "binary_sensor.hl_l2340dw_output_tray_near_full",
+        "binary_sensor.hl_l2340dw_output_tray_almost_full",
         "binary_sensor.hl_l2340dw_preventive_maintenance_overdue",
         "binary_sensor.hl_l2340dw_service_requested",
     ],

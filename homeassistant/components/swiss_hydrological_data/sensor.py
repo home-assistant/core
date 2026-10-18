@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -53,7 +52,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_STATION): probatio.Coerce(int),
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]
-        ): probatio.All(cv.ensure_list, [probatio.In(CONDITIONS)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(CONDITIONS)]),
     }
 )
 

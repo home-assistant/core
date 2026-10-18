@@ -39,9 +39,17 @@ MEDIA_PLAYER_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 TRIGGER_SCHEMA = probatio.All(
-    probatio.Any(
-        MEDIA_PLAYER_TRIGGER_SCHEMA,
-        entity.TRIGGER_SCHEMA,
+    probatio.TaggedUnion(
+        CONF_TYPE,
+        {
+            "turned_on": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "turned_off": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "buffering": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "idle": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "paused": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "playing": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "changed_states": entity.TRIGGER_SCHEMA,
+        },
     ),
     probatio.Schema(
         {probatio.Required(CONF_DOMAIN): DOMAIN}, extra=probatio.ALLOW_EXTRA

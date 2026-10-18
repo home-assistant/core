@@ -21,6 +21,7 @@ from homeassistant.components.person import (
     ATTR_USER_ID,
     DOMAIN,
 )
+from homeassistant.components.person.const import DATA_PERSON
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_PICTURE,
@@ -1099,7 +1100,7 @@ async def test_ws_list(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
 ) -> None:
     """Test listing via WS."""
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1118,7 +1119,7 @@ async def test_ws_create(
     hass_read_only_user: MockUser,
 ) -> None:
     """Test creating via WS."""
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1150,7 +1151,7 @@ async def test_ws_create_requires_admin(
 ) -> None:
     """Test creating via WS requires admin."""
     hass_admin_user.groups = []
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1175,7 +1176,7 @@ async def test_ws_update(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
 ) -> None:
     """Test updating via WS."""
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
     persons = manager.async_items()
@@ -1228,7 +1229,7 @@ async def test_ws_update_require_admin(
 ) -> None:
     """Test updating via WS requires admin."""
     hass_admin_user.groups = []
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
     original = dict(manager.async_items()[0])
@@ -1257,8 +1258,8 @@ async def test_ws_delete(
     storage_setup,
 ) -> None:
     """Test deleting via WS."""
-    manager = hass.data[DOMAIN][1]
-    entity = hass.data[DOMAIN][2].get_entity("person.tracked_person")
+    manager = hass.data[DATA_PERSON].storage_collection
+    entity = hass.data[DATA_PERSON].entity_component.get_entity("person.tracked_person")
 
     client = await hass_ws_client(hass)
     persons = manager.async_items()
@@ -1290,7 +1291,7 @@ async def test_ws_delete_require_admin(
 ) -> None:
     """Test deleting via WS requires admin."""
     hass_admin_user.groups = []
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1362,7 +1363,7 @@ async def test_update_person_when_user_removed(
     hass: HomeAssistant, storage_setup, hass_read_only_user: MockUser
 ) -> None:
     """Update person when user is removed."""
-    storage_collection = hass.data[DOMAIN][1]
+    storage_collection = hass.data[DATA_PERSON].storage_collection
 
     person = await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_read_only_user.id}
@@ -1378,7 +1379,7 @@ async def test_removing_device_tracker(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, storage_setup
 ) -> None:
     """Test we automatically remove removed device trackers."""
-    storage_collection = hass.data[DOMAIN][1]
+    storage_collection = hass.data[DATA_PERSON].storage_collection
     entry = entity_registry.async_get_or_create(
         "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
     )
@@ -1397,7 +1398,7 @@ async def test_add_user_device_tracker(
     hass: HomeAssistant, storage_setup, hass_read_only_user: MockUser
 ) -> None:
     """Test adding a device tracker to a person tied to a user."""
-    storage_collection = hass.data[DOMAIN][1]
+    storage_collection = hass.data[DATA_PERSON].storage_collection
     pers = await storage_collection.async_create_item(
         {
             "name": "Hello",
@@ -1538,3 +1539,249 @@ async def test_entities_in_person(hass: HomeAssistant) -> None:
         "device_tracker.paulus_iphone",
         "device_tracker.paulus_ipad",
     ]
+
+
+IMAGE_ID = "0123456789abcdef0123456789abcdef"
+IMAGE_URL = f"/api/image/serve/{IMAGE_ID}/512x512"
+
+
+@pytest.fixture
+async def own_profile_setup(
+    hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
+) -> None:
+    """Set up a person linked to a regular user, and an uploaded image."""
+    hass_admin_user.groups = []
+    hass_storage["image"] = {
+        "key": "image",
+        "version": 1,
+        "data": {
+            "items": [
+                {
+                    "id": IMAGE_ID,
+                    "name": "me.png",
+                    "content_type": "image/png",
+                    "filesize": 1234,
+                    "uploaded_at": "2026-09-27T12:00:00+00:00",
+                }
+            ]
+        },
+    }
+    hass_storage[DOMAIN] = {
+        "key": DOMAIN,
+        "version": 2,
+        "data": {
+            "items": [
+                {
+                    "id": "1234",
+                    "name": "tracked person",
+                    "user_id": hass_admin_user.id,
+                    "device_trackers": [DEVICE_TRACKER],
+                }
+            ]
+        },
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+async def test_ws_update_own_profile(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a non-admin user can update their own name and picture."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "person/update_own_profile",
+            "name": "  New name  ",
+            "picture": IMAGE_URL,
+        }
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"]["user_name"] == "New name"
+    assert resp["result"]["person"]["name"] == "New name"
+    assert resp["result"]["person"]["picture"] == IMAGE_URL
+    # Device trackers and the user link are left alone
+    assert resp["result"]["person"]["device_trackers"] == [DEVICE_TRACKER]
+    assert resp["result"]["person"]["user_id"] == hass_admin_user.id
+    assert hass_admin_user.name == "New name"
+
+    state = hass.states.get("person.tracked_person")
+    assert state.name == "New name"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == IMAGE_URL
+    assert state.attributes[ATTR_DEVICE_TRACKERS] == [DEVICE_TRACKER]
+
+    # Remove the picture again
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "picture": None}
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"]["person"]["picture"] is None
+    assert resp["result"]["person"]["name"] == "New name"
+    state = hass.states.get("person.tracked_person")
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+@pytest.mark.parametrize(
+    "picture",
+    [
+        "https://example.com/tracking.png",
+        "/api/image/serve/ffffffffffffffffffffffffffffffff/512x512",
+        f"/api/image/serve/{IMAGE_ID}/512x512/../../etc",
+        f"//example.com/api/image/serve/{IMAGE_ID}/512x512",
+        "/local/me.png",
+    ],
+)
+async def test_ws_update_own_profile_invalid_picture(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    picture: str,
+) -> None:
+    """Test only images uploaded to Home Assistant are accepted."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "person/update_own_profile",
+            "name": "New name",
+            "picture": picture,
+        }
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "invalid_picture"
+    # Nothing is changed when the request is rejected
+    assert hass_admin_user.name == "Mock User"
+    state = hass.states.get("person.tracked_person")
+    assert state.name == "tracked person"
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+async def test_ws_update_own_profile_no_person(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a user without a person can change their name, but not a picture."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "picture": IMAGE_URL}
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "no_person_linked"
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "name": "New name"}
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"] == {"user_name": "New name", "person": None}
+    assert hass_admin_user.name == "New name"
+
+
+async def test_ws_update_own_profile_yaml_person(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a person configured in YAML is not changed."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"id": "1234", "name": "yaml person", "user_id": hass_admin_user.id}},
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "picture": None}
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "person_not_editable"
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "name": "New name"}
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"] == {"user_name": "New name", "person": None}
+    assert hass.states.get("person.yaml_person").name == "yaml person"
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+async def test_ws_update_own_profile_empty_name(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test an empty name is rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "person/update_own_profile", "name": " "})
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    assert hass_admin_user.name == "Mock User"
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+async def test_ws_update_own_profile_only_own_fields(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test other person fields cannot be changed through this command."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "person/update_own_profile",
+            "device_trackers": [DEVICE_TRACKER_2],
+        }
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    state = hass.states.get("person.tracked_person")
+    assert state.attributes[ATTR_DEVICE_TRACKERS] == [DEVICE_TRACKER]
+
+
+async def test_ws_update_own_profile_system_generated_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test system-generated users cannot update a profile."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    system_user = await hass.auth.async_create_system_user("System")
+    refresh_token = await hass.auth.async_create_refresh_token(system_user)
+    client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "name": "New name"}
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "system_generated_user"
+    assert system_user.name == "System"

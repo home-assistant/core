@@ -64,7 +64,14 @@ async def test_duplicate_error(
 ) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

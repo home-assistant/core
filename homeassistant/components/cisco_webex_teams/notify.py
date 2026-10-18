@@ -13,16 +13,19 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "cisco_webex_teams"
+
 CONF_ROOM_ID = "room_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Required(CONF_ROOM_ID): cv.string,
     }
 )
@@ -63,8 +66,8 @@ class CiscoWebexNotificationService(BaseNotificationService):
 
         try:
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ApiError as api_error:
-            _LOGGER.error(
-                "Could not send Cisco Webex notification. Error: %s", api_error
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from api_error
