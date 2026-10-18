@@ -204,7 +204,9 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
+        # The image proxy reads the content type right after this returns.
         if self._cached_image:
+            self._attr_content_type = self._cached_image.content_type
             return self._cached_image.content
         if not (url := self._attr_image_url):
             return None
@@ -214,7 +216,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         # A download for a previous URL must not replace the current image.
         if self._url_generation == generation:
             self._cached_image = image
-            self._attr_content_type = image.content_type
+        self._attr_content_type = image.content_type
         return image.content
 
     @property

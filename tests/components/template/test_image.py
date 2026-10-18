@@ -1786,10 +1786,15 @@ async def test_url_changed_during_download(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    "outdated_status",
+    ("outdated_status", "expected_status", "expected_content_type"),
     [
-        pytest.param(HTTPStatus.OK, id="outdated_succeeds"),
-        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, id="outdated_fails"),
+        pytest.param(HTTPStatus.OK, HTTPStatus.OK, "image/png", id="outdated_succeeds"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "text/plain",
+            id="outdated_fails",
+        ),
     ],
 )
 @respx.mock
@@ -1799,20 +1804,22 @@ async def test_outdated_download_keeps_current_image(
     hass_client: ClientSessionGenerator,
     style: ConfigurationStyle,
     outdated_status: HTTPStatus,
-    imgbytes_jpg: bytes,
+    expected_status: HTTPStatus,
+    expected_content_type: str,
     imgbytes2_jpg: bytes,
 ) -> None:
     """Test a download for a previous URL finishing last keeps the current image."""
     download_started = asyncio.Event()
     release_download = asyncio.Event()
+    outdated_image = _image_bytes("png")
 
     async def _slow_download(request: httpx2.Request) -> httpx2.Response:
         download_started.set()
         await release_download.wait()
         return httpx2.Response(
             outdated_status,
-            content=imgbytes_jpg,
-            headers={"content-type": "image/jpeg"},
+            content=outdated_image,
+            headers={"content-type": "image/png"},
         )
 
     respx.get("http://example.com").mock(side_effect=_slow_download)
@@ -1839,13 +1846,20 @@ async def test_outdated_download_keeps_current_image(
     await download_started.wait()
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example2.com")
     resp = await client.get(f"/api/image_proxy/{TEST_IMAGE.entity_id}")
+    assert resp.content_type == "image/jpeg"
     assert await resp.read() == imgbytes2_jpg
 
     release_download.set()
-    await outdated_request
+    resp = await outdated_request
+    # The outdated image is served with its own content type.
+    assert resp.status == expected_status
+    assert resp.content_type == expected_content_type
 
     entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
     assert entity._cached_image == image.Image("image/jpeg", imgbytes2_jpg)
+    resp = await client.get(f"/api/image_proxy/{TEST_IMAGE.entity_id}")
+    assert resp.content_type == "image/jpeg"
+    assert await resp.read() == imgbytes2_jpg
 
 
 @pytest.mark.parametrize(
