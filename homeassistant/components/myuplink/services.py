@@ -24,7 +24,9 @@ SERVICE_SET_DATAPOINT = "set_datapoint"
 SERVICE_SET_DATAPOINT_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_DATAPOINT_ID): cv.positive_int,
+        probatio.Required(ATTR_DATAPOINT_ID): [
+            probatio.All(cv.positive_int, probatio.Range(min=1, max=99999))
+        ],
         probatio.Required(ATTR_VALUE): cv.string,
     },
 )
