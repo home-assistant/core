@@ -128,11 +128,17 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _show_reconfigure_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         # Only the username is suggested, the secrets have to be entered again.
+        # Entries from the legacy API only hold an API key, without a username.
+        entry_data = self._get_reconfigure_entry().data
+        suggested_values = (
+            {CONF_USERNAME: entry_data[CONF_USERNAME]}
+            if CONF_USERNAME in entry_data
+            else {}
+        )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA,
-                {CONF_USERNAME: self._get_reconfigure_entry().data[CONF_USERNAME]},
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
         )

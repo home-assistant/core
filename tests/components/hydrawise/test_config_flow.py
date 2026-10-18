@@ -417,3 +417,42 @@ async def test_reconfigure_error(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "__new-password__"
+
+
+@pytest.mark.usefixtures("mock_auth")
+async def test_reconfigure_legacy_entry(
+    hass: HomeAssistant,
+    user: User,
+    mock_pydrawise: AsyncMock,
+) -> None:
+    """Test reconfiguring an entry from the legacy API, which has no username."""
+    mock_config_entry = MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={CONF_API_KEY: "abc123"},
+        unique_id=f"hydrawise-{user.customer_id}",
+        version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_pydrawise.get_user.return_value = user
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "__password__",
+            CONF_API_KEY: "__api-key__",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "asdf@asdf.com",
+        CONF_PASSWORD: "__password__",
+        CONF_API_KEY: "__api-key__",
+    }
