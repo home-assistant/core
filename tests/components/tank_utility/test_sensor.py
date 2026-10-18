@@ -12,7 +12,13 @@ from homeassistant.components.tank_utility.const import (
     DOMAIN,
     SENSOR_ATTRS,
 )
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -167,6 +173,43 @@ async def test_sensor_none_value(
     state = hass.states.get("sensor.my_propane_tank")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_get_data")
+async def test_sensor_device_removal_and_reappearance(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_data: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensor availability when a device disappears and reappears."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.my_propane_tank"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "78.4"
+
+    # Device disappears from coordinator data on next refresh
+    mock_get_data.return_value = {}
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Device reappears on subsequent refresh
+    mock_get_data.return_value = {MOCK_DEVICE_ID: dict(DEVICE_DATA)}
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "78.4"
 
 
 @pytest.mark.usefixtures("mock_get_token", "mock_get_data")

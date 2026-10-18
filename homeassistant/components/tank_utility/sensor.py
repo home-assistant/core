@@ -132,6 +132,12 @@ class TankUtilitySensor(
         )
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._device_id in self.coordinator.data
+
+    @property
     def device_data(self) -> dict[str, Any]:
         """Return data for this device from the coordinator."""
         return self.coordinator.data.get(self._device_id, {})

@@ -11,6 +11,8 @@ from homeassistant.components.tank_utility.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -79,3 +81,85 @@ async def test_setup_entry_cannot_connect(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_error_sanitization_and_suppressed_chain(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_data: MagicMock,
+) -> None:
+    """Test coordinator errors do not leak tokens from URLs and suppress cause chain."""
+    token = "secret_token_12345"
+    token_url = f"https://data.tankutility.com/api/devices?token={token}"
+
+    response = requests.Response()
+    response.status_code = requests.codes.internal_server_error
+    response.url = token_url
+    request = requests.PreparedRequest()
+    request.url = token_url
+    response.request = request
+    http_error = requests.exceptions.HTTPError(
+        f"500 Server Error for url: {token_url}",
+        response=response,
+        request=request,
+    )
+    mock_get_data.side_effect = http_error
+
+    coordinator = TankUtilityDataUpdateCoordinator(hass, mock_config_entry)
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert token not in str(exc_info.value)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert str(exc_info.value) == "Error communicating with Tank Utility: HTTP 500"
+
+    # Test 401 Unauthorized suppresses chain and does not leak token
+    auth_response = requests.Response()
+    auth_response.status_code = requests.codes.unauthorized
+    auth_response.url = token_url
+    auth_response.request = request
+    auth_error = requests.exceptions.HTTPError(
+        f"401 Client Error for url: {token_url}",
+        response=auth_response,
+        request=request,
+    )
+    mock_get_data.side_effect = auth_error
+
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert token not in str(exc_info.value)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert str(exc_info.value) == "Invalid credentials"
+
+    # Test RequestException suppresses chain and does not leak token
+    connect_error = requests.exceptions.ConnectTimeout(
+        f"Connection to {token_url} timed out"
+    )
+    mock_get_data.side_effect = connect_error
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert token not in str(exc_info.value)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert (
+        str(exc_info.value) == "Error communicating with Tank Utility: ConnectTimeout"
+    )
+
+    # Test HTTPError without response
+    http_error_no_resp = requests.exceptions.HTTPError(
+        f"HTTP Error for url: {token_url}"
+    )
+    mock_get_data.side_effect = http_error_no_resp
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert token not in str(exc_info.value)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert str(exc_info.value) == "Error communicating with Tank Utility: HTTPError"

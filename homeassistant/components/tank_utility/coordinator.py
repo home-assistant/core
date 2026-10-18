@@ -57,7 +57,16 @@ class TankUtilityDataUpdateCoordinator(
                 err.response is not None
                 and err.response.status_code == requests.codes.unauthorized
             ):
-                raise ConfigEntryAuthFailed("Invalid credentials") from err
-            raise UpdateFailed(f"Error communicating with Tank Utility: {err}") from err
+                raise ConfigEntryAuthFailed("Invalid credentials") from None
+            status = (
+                f"HTTP {err.response.status_code}"
+                if err.response is not None
+                else type(err).__name__
+            )
+            raise UpdateFailed(
+                f"Error communicating with Tank Utility: {status}"
+            ) from None
         except requests.exceptions.RequestException as err:
-            raise UpdateFailed(f"Error communicating with Tank Utility: {err}") from err
+            raise UpdateFailed(
+                f"Error communicating with Tank Utility: {type(err).__name__}"
+            ) from None
