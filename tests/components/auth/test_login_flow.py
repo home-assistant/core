@@ -429,6 +429,7 @@ async def test_concurrent_requests_cannot_advance_the_same_flow(
         first_response = await first
 
     assert second.status == HTTPStatus.CONFLICT
+    assert await second.json() == {"message": "Flow request already in progress"}
     assert first_response.status == HTTPStatus.OK
     assert (await first_response.json())["type"] == "create_entry"
     # A busy flow is not a failed login, so the client is not banned for it.
