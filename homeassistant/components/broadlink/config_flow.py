@@ -36,6 +36,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Broadlink config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     device: blk.Device
 

@@ -1,5 +1,6 @@
 """Tests for Broadlink diagnostics."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -10,12 +11,14 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2026-10-21 12:35:10+00:00")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for a Hysen thermostat."""
+    await hass.config.async_set_time_zone("UTC")
     device = get_device("Guest room")
     mock_api = device.get_mock_api()
     mock_api.get_full_status.return_value = {
