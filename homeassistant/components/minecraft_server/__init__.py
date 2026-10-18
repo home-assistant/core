@@ -109,7 +109,9 @@ async def async_migrate_entry(
                 await api.async_initialize()
             except MinecraftServerAddressError as error:
                 raise ConfigEntryError(
-                    translation_domain=DOMAIN, translation_key="address_lookup_failed"
+                    translation_domain=DOMAIN,
+                    translation_key="address_lookup_failed",
+                    translation_placeholders={"address": address},
                 ) from error
 
         _LOGGER.debug(
