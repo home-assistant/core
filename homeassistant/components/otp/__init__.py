@@ -6,6 +6,8 @@ from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+__all__ = []
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up One-Time Password (OTP) from a config entry."""

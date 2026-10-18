@@ -26,7 +26,6 @@ MISSING_ALL = {
     "llm",
     "logger",
     "network",
-    "otp",
     "person",
     "recovery_mode",
     "shopping_list",
