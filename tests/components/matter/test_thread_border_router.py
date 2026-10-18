@@ -8,27 +8,39 @@ from unittest.mock import MagicMock, patch
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import NullValue
+from freezegun.api import FrozenDateTimeFactory
+from matter_server.client.exceptions import NotConnected
 from matter_server.client.models import device_types
+from matter_server.common.errors import NodeNotExists, NodeNotReady, UnknownError
 from matter_server.common.models import EventType
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from python_otbr_api import tlv_parser
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.matter.thread_border_router import async_store_dataset
+from homeassistant.components.matter import thread_border_router
+from homeassistant.components.matter.thread_border_router import (
+    THREAD_DATASET_READ_ATTEMPTS,
+    THREAD_DATASET_RETRY_DELAY,
+    THREAD_DATASET_SLOW_RETRY_DELAY,
+    async_store_dataset,
+)
 from homeassistant.components.thread import async_add_dataset, dataset_store
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    load_and_parse_node_fixture,
     set_node_attribute,
+    set_node_attribute_and_notify,
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
 
-from tests.components.thread import DATASET_1
+from tests.components.thread import DATASET_1, DATASET_2
 
 
 @pytest.fixture(autouse=True)
@@ -77,6 +89,30 @@ def _dataset_reads(matter_client: MagicMock) -> int:
         )
         for call in matter_client.send_device_command.call_args_list
     )
+
+
+def _endpoint_reads(matter_client: MagicMock, endpoint_id: int) -> int:
+    """Return how often the active dataset of one endpoint was requested."""
+    return sum(
+        call.kwargs.get("endpoint_id") == endpoint_id
+        and isinstance(
+            call.kwargs.get("command"),
+            clusters.ThreadBorderRouterManagement.Commands.GetActiveDatasetRequest,
+        )
+        for call in matter_client.send_device_command.call_args_list
+    )
+
+
+def _with_a_second_router() -> dict[str, Any]:
+    """Return attributes that add the fixture's border router again as endpoint 2."""
+    fixture = load_and_parse_node_fixture("thread_border_router")
+    attributes = {
+        f"2/{path[2:]}": value
+        for path, value in fixture["attributes"].items()
+        if path.startswith("1/")
+    }
+    attributes["0/29/3"] = [1, 2]
+    return attributes
 
 
 def _import_button(hass: HomeAssistant) -> str | None:
@@ -141,6 +177,18 @@ async def known_network_fixture(hass: HomeAssistant) -> None:
 async def imported_network_fixture(hass: HomeAssistant) -> None:
     """Have the store hold the router's network from an earlier import here."""
     await async_add_dataset(hass, "matter", DATASET_1)
+
+
+@pytest.fixture(name="preferred_network")
+async def preferred_network_fixture(hass: HomeAssistant) -> None:
+    """Have a preferred network, so the store skips its discovery task."""
+    await async_add_dataset(hass, "test", DATASET_2)
+    store = await dataset_store.async_get_store(hass)
+    store.preferred_dataset = next(
+        entry.id
+        for entry in store.datasets.values()
+        if entry.extended_pan_id == "1111111122222233"
+    )
 
 
 async def test_border_router_is_not_read_without_a_press(
@@ -496,3 +544,1028 @@ async def test_an_unusable_ext_address_omits_preference_pair(
     kwargs = add_dataset.call_args.kwargs
     assert "preferred_border_agent_id" not in kwargs
     assert "preferred_extended_address" not in kwargs
+
+
+async def test_a_change_during_a_press_is_read_afterwards(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A dataset change while the pressed import is read is read once the import is done."""
+    answer = asyncio.Event()
+    answers = [DATASET_TLV, DATASET_NEWER]
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(answers.pop(0))
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    entry = hass.config_entries.async_entries("matter")[0]
+    press = hass.async_create_background_task(
+        entry.runtime_data.thread_datasets.async_import(node.endpoints[1]), "press"
+    )
+    while _dataset_reads(matter_client) < 1:
+        await asyncio.sleep(0)
+
+    set_node_attribute(node, 1, 1106, 4, 2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        2,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    answer.set()
+    await press
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 2
+    entry_stored = await _stored(hass)
+    assert entry_stored is not None
+    assert entry_stored.tlv == DATASET_NEWER.hex()
+    # Same router on the same network: still paired.
+    assert entry_stored.preferred_border_agent_id == BORDER_AGENT_ID
+
+
+async def test_a_router_that_moves_during_a_press_is_not_paired(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A router whose address changes during a press is not made the preferred one.
+
+    Its answer may belong to the address it had, or to the one it has.
+    """
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(DATASET_TLV)
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    entry = hass.config_entries.async_entries("matter")[0]
+    press = hass.async_create_background_task(
+        entry.runtime_data.thread_datasets.async_import(node.endpoints[1]), "press"
+    )
+    while _dataset_reads(matter_client) < 1:
+        await asyncio.sleep(0)
+
+    set_node_attribute(node, 1, 53, 63, 0x8877665544332211)
+    answer.set()
+    await press
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    stored = await _stored(hass)
+    assert stored is not None
+    assert stored.tlv == DATASET_TLV.hex()
+    assert stored.preferred_border_agent_id is None
+    assert stored.preferred_extended_address is None
+
+
+async def test_the_dataset_is_stored_before_thread_is_set_up(
+    hass: HomeAssistant, matter_client: MagicMock, dataset_response: dict[str, str]
+) -> None:
+    """Setting Thread up runs after the store write, not between the checks and it."""
+    stored_at_setup: list[bool] = []
+    original = thread_border_router.async_ensure_thread_setup
+
+    async def ensure(hass_: HomeAssistant) -> None:
+        stored_at_setup.append(await _stored(hass_) is not None)
+        await original(hass_)
+
+    with patch.object(thread_border_router, "async_ensure_thread_setup", ensure):
+        await setup_integration_with_node_fixture(
+            hass, "thread_border_router", matter_client
+        )
+        await _press_import(hass)
+
+    assert stored_at_setup == [True]
+    assert hass.config_entries.async_entries("thread")
+
+
+async def test_coexists_with_the_otbr_integration(
+    hass: HomeAssistant, matter_client: MagicMock, newer_response: dict[str, str]
+) -> None:
+    """A network the otbr integration owns is updated by a press but not followed.
+
+    It keeps its source and its preferred border agent.
+    """
+    await async_add_dataset(
+        hass,
+        "otbr",
+        DATASET_TLV.hex(),
+        preferred_border_agent_id="aabbccddeeff00112233445566778899",
+        preferred_extended_address="8877665544332211",
+    )
+
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 0
+    await _press_import(hass)
+    assert _dataset_reads(matter_client) == 1
+
+    set_node_attribute(node, 1, 1106, 4, 3)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        3,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 1
+
+    store = await dataset_store.async_get_store(hass)
+    (entry,) = store.datasets.values()
+    assert entry.tlv == DATASET_NEWER.hex()
+    assert entry.source == "otbr"
+    assert entry.preferred_border_agent_id == "aabbccddeeff00112233445566778899"
+    assert entry.preferred_extended_address == "8877665544332211"
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key", "placeholder"),
+    [
+        (
+            NodeNotReady("node not ready"),
+            "thread_dataset_read_failed",
+            "node not ready",
+        ),
+        (UnknownError(), "thread_dataset_read_failed", "UnknownError"),
+        (NotConnected(), "thread_dataset_read_failed", "NotConnected"),
+    ],
+)
+async def test_a_failed_read_fails_the_press(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    error: Exception,
+    translation_key: str,
+    placeholder: str,
+) -> None:
+    """A read the server fails is reported to the user, with the server's reason."""
+    matter_client.send_device_command.side_effect = error
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _press_import(hass)
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"error": placeholder}
+    assert await _stored(hass) is None
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        None,
+        {"dataset": None},
+        {"dataset": "%%%not-base64%%%"},
+        # Non-alphabet characters ahead of a valid value: a lenient decoder
+        # would drop them and import the corrupted remainder.
+        {"dataset": "!" + b64encode(DATASET_TLV).decode()},
+    ],
+)
+async def test_an_unusable_response_fails_the_press(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    response: dict[str, str | None] | None,
+) -> None:
+    """A response without a readable dataset is reported, nothing imported."""
+    matter_client.send_device_command.return_value = response
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _press_import(hass)
+
+    assert exc_info.value.translation_key == "thread_dataset_unusable"
+    assert await _stored(hass) is None
+
+
+async def test_a_dataset_the_store_rejects_fails_the_press(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A dataset the store refuses is reported as unusable."""
+    without_xpan = DATASET_1.replace("02081111111122222222", "")
+    matter_client.send_device_command.return_value = _response(
+        bytes.fromhex(without_xpan)
+    )
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _press_import(hass)
+
+    assert exc_info.value.translation_key == "thread_dataset_unusable"
+    assert await _stored(hass) is None
+
+
+async def test_an_outdated_dataset_fails_the_press(
+    hass: HomeAssistant, matter_client: MagicMock, dataset_response: dict[str, str]
+) -> None:
+    """A press that finds the store holding a newer dataset for the network says so."""
+    await async_add_dataset(hass, "test", DATASET_NEWER.hex())
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _press_import(hass)
+
+    assert exc_info.value.translation_key == "thread_dataset_outdated"
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network")
+@pytest.mark.parametrize(
+    "response",
+    [None, {"dataset": None}, {"dataset": "%%%not-base64%%%"}],
+)
+async def test_an_unusable_response_is_logged_when_following(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    response: dict[str, str | None] | None,
+) -> None:
+    """Following a router, an unusable response is logged and read again on the next change."""
+    matter_client.send_device_command.return_value = response
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 1
+    assert "Could not import the Thread dataset of node 90 endpoint 1" in caplog.text
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_1
+
+    # Not counted as done: an unchanged node update reads again.
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    await trigger_subscription_callback(
+        hass, matter_client, EventType.NODE_UPDATED, node
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 2
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_a_dataset_the_store_rejects_is_logged_when_following(
+    hass: HomeAssistant, matter_client: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Following a router, a dataset the store refuses is logged."""
+    without_xpan = DATASET_1.replace("02081111111122222222", "")
+    matter_client.send_device_command.return_value = _response(
+        bytes.fromhex(without_xpan)
+    )
+
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Could not import the Thread dataset of node 90 endpoint 1:" in caplog.text
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_a_late_extended_pan_id_report_is_read(
+    hass: HomeAssistant, matter_client: MagicMock, newer_response: dict[str, str]
+) -> None:
+    """A router whose network is reported after its timestamp is read on that report."""
+    node = await setup_integration_with_node_fixture(
+        hass,
+        "thread_border_router",
+        matter_client,
+        override_attributes={"1/53/4": None},
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 0
+
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        node,
+        endpoint=1,
+        cluster_id=53,
+        attribute_id=4,
+        value=0x1111111122222222,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 1
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_a_router_that_left_for_an_unknown_network_adds_nothing(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """An answer from a network the store does not hold is not added while following."""
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(bytes.fromhex(DATASET_2))
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done()
+    assert _dataset_reads(matter_client) == 1
+
+    set_node_attribute(node, 1, 53, 4, 0x1111111122222233)
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    store = await dataset_store.async_get_store(hass)
+    assert [entry.extended_pan_id for entry in store.datasets.values()] == [NETWORK]
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_a_dataset_deleted_during_a_read_is_not_restored(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A network deleted while its router was being read stays deleted."""
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(DATASET_NEWER)
+
+    matter_client.send_device_command.side_effect = read
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done()
+    assert _dataset_reads(matter_client) == 1
+
+    store = await dataset_store.async_get_store(hass)
+    entry = await _stored(hass)
+    assert entry is not None
+    store.async_delete(entry.id)
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert await _stored(hass) is None
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_a_network_stored_again_from_another_source_is_not_followed(
+    hass: HomeAssistant, matter_client: MagicMock, newer_response: dict[str, str]
+) -> None:
+    """A network deleted and stored again from elsewhere is no longer followed."""
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 1
+
+    store = await dataset_store.async_get_store(hass)
+    entry = await _stored(hass)
+    assert entry is not None
+    store.async_delete(entry.id)
+    await async_add_dataset(hass, "test", DATASET_1)
+
+    set_node_attribute(node, 1, 1106, 4, 3)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        3,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 1
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.source == "test"
+    assert entry.tlv == DATASET_1
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+@pytest.mark.parametrize("error", [NodeNotReady("node not ready"), NotConnected()])
+async def test_dataset_read_retried_after_node_not_ready(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    error: Exception,
+) -> None:
+    """A read failing on the server or the connection is retried after a delay."""
+    matter_client.send_device_command.side_effect = error
+
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_1
+
+    matter_client.send_device_command.side_effect = None
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_dataset_retry_cancelled_on_unload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading the entry cancels a pending retry."""
+    matter_client.send_device_command.side_effect = NodeNotReady("node not ready")
+
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    reads_before_unload = _dataset_reads(matter_client)
+
+    entry = hass.config_entries.async_entries("matter")[0]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    matter_client.send_device_command.side_effect = None
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _dataset_reads(matter_client) == reads_before_unload
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_endpoint_removal_forgets_import_state(
+    hass: HomeAssistant, matter_client: MagicMock, newer_response: dict[str, str]
+) -> None:
+    """ENDPOINT_REMOVED drops the router's state, so it is read afresh when it returns."""
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    reads = _dataset_reads(matter_client)
+    assert reads == 1
+
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ENDPOINT_REMOVED,
+        data={"node_id": node.node_id, "endpoint_id": 1},
+    )
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=node
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == reads + 1
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_a_read_outlived_by_its_endpoint_stores_nothing(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """An answer arriving after the endpoint was removed is not stored."""
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(DATASET_NEWER)
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done()
+
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ENDPOINT_REMOVED,
+        data={"node_id": node.node_id, "endpoint_id": 1},
+    )
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_1
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_node_removal_forgets_import_state(
+    hass: HomeAssistant, matter_client: MagicMock, newer_response: dict[str, str]
+) -> None:
+    """NODE_REMOVED drops the state of every endpoint of the node."""
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    reads = _dataset_reads(matter_client)
+
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_REMOVED, data=node.node_id
+    )
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_ADDED, data=node
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == reads + 1
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_retry_skipped_when_node_removed_meanwhile(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A pending retry whose node is gone by firing time does nothing."""
+    matter_client.send_device_command.side_effect = NodeNotReady("node not ready")
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    reads = _dataset_reads(matter_client)
+
+    original_get_node = matter_client.get_node.side_effect
+    matter_client.get_node.side_effect = NodeNotExists(node.node_id)
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    matter_client.get_node.side_effect = original_get_node
+
+    assert _dataset_reads(matter_client) == reads
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_retry_rearmed_not_duplicated(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A second failure while a retry is pending replaces the timer."""
+    matter_client.send_device_command.side_effect = NodeNotReady("node not ready")
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # A change while the retry is pending is read, and fails, at once.
+    set_node_attribute(node, 1, 1106, 4, 2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        2,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    reads_while_failing = _dataset_reads(matter_client)
+    assert reads_while_failing == 2
+
+    matter_client.send_device_command.side_effect = None
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == reads_while_failing + 1
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_unchanged_updates_keep_the_retries_of_a_failed_read(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Node updates without a change neither read again nor restart the attempts."""
+    matter_client.send_device_command.side_effect = UnknownError("timed out")
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for reads in range(1, THREAD_DATASET_READ_ATTEMPTS + 1):
+        await trigger_subscription_callback(
+            hass, matter_client, event=EventType.NODE_UPDATED, data=node
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert _dataset_reads(matter_client) == reads
+        if reads < THREAD_DATASET_READ_ATTEMPTS:
+            freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "trying again every 15 minutes" in caplog.text
+
+    # Past the quick attempts, an unchanged update waits for the slow retry.
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=node
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == THREAD_DATASET_READ_ATTEMPTS
+
+    freezer.tick(THREAD_DATASET_SLOW_RETRY_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == THREAD_DATASET_READ_ATTEMPTS + 1
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_server_errors_are_retried_quickly_then_slowly(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A read the server fails is tried a few more times, then logged and tried slowly."""
+    matter_client.send_device_command.side_effect = UnknownError("timed out")
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for _ in range(THREAD_DATASET_READ_ATTEMPTS):
+        freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == THREAD_DATASET_READ_ATTEMPTS
+    assert (
+        "Could not read the Thread dataset of node 90 endpoint 1,"
+        " trying again every 15 minutes: timed out" in caplog.text
+    )
+
+    matter_client.send_device_command.side_effect = None
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    freezer.tick(THREAD_DATASET_SLOW_RETRY_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == THREAD_DATASET_READ_ATTEMPTS + 1
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_each_border_router_endpoint_retries_on_its_own(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A retry reads only its endpoint; a node's other failing router keeps its count."""
+    matter_client.send_device_command.side_effect = UnknownError("timed out")
+    await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client, _with_a_second_router()
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 2
+
+    for _ in range(THREAD_DATASET_READ_ATTEMPTS):
+        freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 2 * THREAD_DATASET_READ_ATTEMPTS
+    for endpoint_id in (1, 2):
+        assert (
+            f"Could not read the Thread dataset of node 90 endpoint {endpoint_id}"
+            in caplog.text
+        )
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_an_unchanged_update_during_the_first_reads_discards_nothing(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A node update while its routers are first read does not re-read them."""
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(DATASET_NEWER)
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client, _with_a_second_router()
+    )
+    await hass.async_block_till_done()
+    assert _dataset_reads(matter_client) == 2
+
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=node
+    )
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 2
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_a_dataset_change_gets_its_own_retries(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A dataset change starts a fresh set of attempts."""
+    matter_client.send_device_command.side_effect = UnknownError("timed out")
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for _ in range(THREAD_DATASET_READ_ATTEMPTS - 2):
+        freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # One attempt left for the old dataset; the new one starts afresh.
+    set_node_attribute(node, 1, 1106, 4, 2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        2,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "Could not read the Thread dataset" not in caplog.text
+
+    matter_client.send_device_command.side_effect = None
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_a_failed_read_overtaken_by_a_change_reads_again_at_once(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A read that fails after a change overtook it is read again straight away."""
+    answer = asyncio.Event()
+    answers: list[Exception | dict[str, str]] = [
+        UnknownError("timed out"),
+        _response(DATASET_NEWER),
+    ]
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        result = answers.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done()
+
+    set_node_attribute(node, 1, 1106, 4, 2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        2,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 2
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_offline_border_router_not_polled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unavailable node is not read, and a pending retry stops on it."""
+    matter_client.send_device_command.side_effect = NodeNotReady("node not ready")
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    reads = _dataset_reads(matter_client)
+
+    node.node_data.available = False
+    freezer.tick(THREAD_DATASET_RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _dataset_reads(matter_client) == reads
+
+    matter_client.send_device_command.side_effect = None
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    node.node_data.available = True
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=node
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_an_unexpected_error_does_not_stop_following(
+    hass: HomeAssistant, matter_client: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A read that fails in an unexpected way is logged and left to the next change."""
+    matter_client.send_device_command.side_effect = RuntimeError("unexpected")
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _dataset_reads(matter_client) == 1
+    assert (
+        "Unexpected error reading the Thread dataset of node 90 endpoint 1"
+        in caplog.text
+    )
+
+    matter_client.send_device_command.side_effect = None
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=node
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 2
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network")
+@pytest.mark.parametrize("extended_pan_id", [-1, 1 << 64])
+async def test_an_out_of_range_extended_pan_id_is_not_followed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    newer_response: dict[str, str],
+    extended_pan_id: int,
+) -> None:
+    """An ExtendedPanId that does not fit 8 bytes neither breaks setup nor is read."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "thread_border_router",
+        matter_client,
+        override_attributes={"1/53/4": extended_pan_id},
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        hass.config_entries.async_entries("matter")[0].state is ConfigEntryState.LOADED
+    )
+    assert _dataset_reads(matter_client) == 0
+
+
+async def test_a_router_without_an_extended_pan_id_is_followed_once_imported(
+    hass: HomeAssistant, matter_client: MagicMock, dataset_response: dict[str, str]
+) -> None:
+    """A router that reports no ExtendedPanId is followed after its button is pressed.
+
+    Network Infrastructure Manager revision 1 does not require Thread Network
+    Diagnostics.
+    """
+    node = await setup_integration_with_node_fixture(
+        hass,
+        "thread_border_router",
+        matter_client,
+        override_attributes={"1/53/4": None},
+    )
+    await _press_import(hass)
+    assert _dataset_reads(matter_client) == 1
+
+    matter_client.send_device_command.return_value = _response(DATASET_NEWER)
+    set_node_attribute(node, 1, 1106, 4, 2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        2,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _dataset_reads(matter_client) == 2
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+
+
+@pytest.mark.usefixtures("imported_network")
+async def test_a_router_that_moves_during_a_follow_read_is_not_paired(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A follow read whose router moves meanwhile refreshes no preferred address.
+
+    The answer may belong to the network the router left.
+    """
+    store = await dataset_store.async_get_store(hass)
+    entry = await _stored(hass)
+    assert entry is not None
+    store.async_set_preferred_border_agent(entry.id, BORDER_AGENT_ID, EXT_ADDRESS_HEX)
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        await answer.wait()
+        return _response(DATASET_NEWER)
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client
+    )
+    await hass.async_block_till_done()
+    assert _dataset_reads(matter_client) == 1
+
+    set_node_attribute(node, 1, 53, 63, 0x8877665544332211)
+    set_node_attribute(node, 1, 53, 4, 0x1111111122222233)
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = await _stored(hass)
+    assert entry is not None
+    assert entry.tlv == DATASET_NEWER.hex()
+    assert entry.preferred_extended_address == EXT_ADDRESS_HEX
+
+
+@pytest.mark.usefixtures("imported_network", "preferred_network")
+async def test_a_change_on_one_endpoint_leaves_a_sibling_retry_alone(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """A change on one border router endpoint does not restart another's retry."""
+    answer = asyncio.Event()
+
+    async def read(**kwargs: Any) -> dict[str, str]:
+        if kwargs["endpoint_id"] == 2:
+            raise UnknownError("timed out")
+        await answer.wait()
+        return _response(DATASET_NEWER)
+
+    matter_client.send_device_command.side_effect = read
+    node = await setup_integration_with_node_fixture(
+        hass, "thread_border_router", matter_client, _with_a_second_router()
+    )
+    await hass.async_block_till_done()
+    assert _endpoint_reads(matter_client, 2) == 1
+
+    # Endpoint 1 changes while it is read, and is read again once it answers.
+    set_node_attribute(node, 1, 1106, 4, 2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+        2,
+        node_id=node.node_id,
+        attribute_path="1/1106/4",
+    )
+    answer.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _endpoint_reads(matter_client, 1) == 2
+    assert _endpoint_reads(matter_client, 2) == 1
