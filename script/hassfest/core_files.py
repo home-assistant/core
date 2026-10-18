@@ -22,7 +22,6 @@ MISSING_ALL = {
     "homeassistant_hardware",
     "input_boolean",
     "input_datetime",
-    "input_number",
     "input_select",
     "input_text",
     "llm",
