@@ -57,20 +57,6 @@
         "name": "RF transmitter"
       }
     },
-    "select": {
-      "day_of_week": {
-        "name": "Day of week",
-        "state": {
-          "friday": "[%key:common::time::friday%]",
-          "monday": "[%key:common::time::monday%]",
-          "saturday": "[%key:common::time::saturday%]",
-          "sunday": "[%key:common::time::sunday%]",
-          "thursday": "[%key:common::time::thursday%]",
-          "tuesday": "[%key:common::time::tuesday%]",
-          "wednesday": "[%key:common::time::wednesday%]"
-        }
-      }
-    },
     "sensor": {
       "light": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
