@@ -32,7 +32,6 @@ MISSING_ALL = {
     "input_select",
     "input_text",
     "llm",
-    "logbook",
     "logger",
     "lovelace",
     "network",
