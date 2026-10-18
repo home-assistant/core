@@ -15,9 +15,10 @@ from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
     Image,
+    ImageContentTypeError,
     ImageEntity,
     ImageEntityStateAttribute,
-    infer_image_type,
+    valid_image_content_type,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
@@ -27,9 +28,11 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from . import validators as tcv
 from .const import CONF_PICTURE, DOMAIN
@@ -217,27 +220,60 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     async def async_dump_cache(self) -> None:
         """Save image data."""
         image_path = self._cache_path()
-        if not self._cached_image:
+        if not self._cached_image or self._attr_image_last_updated is None:
             # Don't let a previous image be restored alongside a newer URL.
             with suppress(FileNotFoundError):
                 await aiofiles.os.remove(image_path)
             return
 
+        # A single-line JSON header ties the bytes to the state they belong to.
+        header = json_bytes(
+            {
+                "image_url": self._attr_image_url,
+                "image_last_updated": self._attr_image_last_updated.isoformat(),
+                "content_type": self._cached_image.content_type,
+            }
+        )
         await aiofiles.os.makedirs(image_path.parent, exist_ok=True)
         async with aiofiles.open(image_path, "wb") as fh:
-            await fh.write(self._cached_image.content)
+            await fh.write(header + b"\n" + self._cached_image.content)
 
     @override
     async def async_get_cached_data(self) -> Image | None:
         try:
             async with aiofiles.open(self._cache_path(), "rb") as fh:
-                image_bytes = await fh.read()
+                data = await fh.read()
         except FileNotFoundError:
             return None
 
-        if (content_type := infer_image_type(image_bytes)) is not None:
-            return Image(content_type=content_type, content=image_bytes)
-        return None
+        header, _, content = data.partition(b"\n")
+        try:
+            metadata = json_loads_object(header)
+            content_type = metadata["content_type"]
+            stored_last_updated = metadata["image_last_updated"]
+            image_url = metadata["image_url"]
+        except ValueError, KeyError:
+            return None
+
+        if not isinstance(content_type, str) or not isinstance(
+            stored_last_updated, str
+        ):
+            return None
+
+        try:
+            content_type = valid_image_content_type(content_type)
+            last_updated = dt_util.parse_datetime(stored_last_updated)
+        except ValueError, ImageContentTypeError:
+            return None
+
+        # Checked after the read, so an update during the await is not overwritten.
+        if (
+            last_updated is None
+            or last_updated != self._attr_image_last_updated
+            or image_url != self._attr_image_url
+        ):
+            return None
+        return Image(content_type=content_type, content=content)
 
     @override
     def restore_cached_data(self, cached_data: Image) -> None:

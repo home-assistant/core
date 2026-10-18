@@ -103,6 +103,28 @@ def _image_bytes(image_format: str) -> bytes:
     return bytes(buf.getbuffer())
 
 
+def _write_cache(
+    images_cache_dir: Path,
+    content: bytes,
+    *,
+    content_type: str = "image/jpeg",
+    image_url: str = "http://example2.com",
+    image_last_updated: str = "2021-07-13T00:00:00+00:00",
+) -> None:
+    """Write a cached image with its metadata header."""
+    images_cache_dir.mkdir(parents=True)
+    header = json_dumps(
+        {
+            "image_url": image_url,
+            "image_last_updated": image_last_updated,
+            "content_type": content_type,
+        }
+    )
+    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(
+        header.encode() + b"\n" + content
+    )
+
+
 async def _assert_state(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -736,10 +758,13 @@ async def test_attributes_template_with_blocked_attributes(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    ("image_format", "content_type"),
+    ("cached_image", "content_type"),
     [
-        pytest.param("jpeg", "image/jpeg", id="jpeg"),
-        pytest.param("png", "image/png", id="png"),
+        pytest.param(_image_bytes("jpeg"), "image/jpeg", id="jpeg"),
+        pytest.param(_image_bytes("png"), "image/png", id="png"),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg"/>', "image/svg+xml", id="svg"
+        ),
     ],
 )
 @respx.mock
@@ -749,14 +774,12 @@ async def test_restore_state(
     hass_client: ClientSessionGenerator,
     style: ConfigurationStyle,
     images_cache_dir: Path,
-    image_format: str,
+    cached_image: bytes,
     content_type: str,
     imgbytes_jpg: bytes,
 ) -> None:
     """Test restoring trigger template image."""
-    cached_image = _image_bytes(image_format)
-    images_cache_dir.mkdir(parents=True)
-    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(cached_image)
+    _write_cache(images_cache_dir, cached_image, content_type=content_type)
 
     respx.get("http://example.com").respond(
         stream=imgbytes_jpg, content_type="image/jpeg"
@@ -935,9 +958,15 @@ async def test_saving_state(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert (
-        images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
-    ).read_bytes() == imgbytes_jpg
+    header, _, content = (
+        (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").read_bytes().partition(b"\n")
+    )
+    assert json_loads_object(header) == {
+        "image_url": "http://example.com",
+        "image_last_updated": "2021-07-13T00:00:00+00:00",
+        "content_type": "image/jpeg",
+    }
+    assert content == imgbytes_jpg
 
 
 @pytest.mark.parametrize(
@@ -1119,9 +1148,8 @@ async def test_stale_cache_removed_at_stop(
     imgbytes_jpg: bytes,
 ) -> None:
     """Test a previous image is not kept when the current image was never fetched."""
-    images_cache_dir.mkdir(parents=True)
+    _write_cache(images_cache_dir, imgbytes_jpg)
     cache_file = images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
-    cache_file.write_bytes(imgbytes_jpg)
 
     await setup_entity(
         hass,
@@ -1139,3 +1167,92 @@ async def test_stale_cache_removed_at_stop(
     await hass.async_block_till_done()
 
     assert not cache_file.exists()
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "cache_file_content",
+    [
+        pytest.param(
+            b'{"image_url":"http://example2.com",'
+            b'"image_last_updated":"2021-07-12T00:00:00+00:00",'
+            b'"content_type":"image/jpeg"}\n',
+            id="different_last_updated",
+        ),
+        pytest.param(
+            b'{"image_url":"http://example3.com",'
+            b'"image_last_updated":"2021-07-13T00:00:00+00:00",'
+            b'"content_type":"image/jpeg"}\n',
+            id="different_url",
+        ),
+        pytest.param(
+            b'{"image_url":"http://example2.com",'
+            b'"image_last_updated":"2021-07-13T00:00:00+00:00",'
+            b'"content_type":"text/plain"}\n',
+            id="invalid_content_type",
+        ),
+        pytest.param(
+            b'{"image_url":"http://example2.com",'
+            b'"image_last_updated":"not a datetime",'
+            b'"content_type":"image/jpeg"}\n',
+            id="invalid_last_updated",
+        ),
+        pytest.param(
+            b'{"image_url":"http://example2.com","content_type":"image/jpeg"}\n',
+            id="missing_key",
+        ),
+        pytest.param(b"", id="no_header"),
+    ],
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_restore_mismatched_cache_not_restored(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    cache_file_content: bytes,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
+) -> None:
+    """Test a cached image that doesn't match the restored state is not used."""
+    images_cache_dir.mkdir(parents=True)
+    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(
+        cache_file_content + imgbytes_jpg
+    )
+    respx.get("http://example2.com").respond(
+        stream=imgbytes2_jpg, content_type="image/jpeg"
+    )
+
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
+    fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    # The restored URL is fetched instead of serving the cached bytes.
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes2_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+    assert respx.get("http://example2.com").call_count == 1
