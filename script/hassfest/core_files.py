@@ -27,7 +27,6 @@ MISSING_ALL = {
     "logger",
     "network",
     "otp",
-    "persistent_notification",
     "person",
     "recorder",
     "recovery_mode",
