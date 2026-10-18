@@ -1,6 +1,7 @@
 {
   "domain": "tessie",
   "name": "Tessie",
+  "categories": ["vehicles_transport.cars_evs", "energy.solar_batteries"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tessie",

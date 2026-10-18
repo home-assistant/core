@@ -1,6 +1,7 @@
 {
   "domain": "leaone",
   "name": "LeaOne",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

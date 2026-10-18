@@ -1,6 +1,7 @@
 {
   "domain": "teslemetry",
   "name": "Teslemetry",
+  "categories": ["vehicles_transport.cars_evs", "energy.solar_batteries"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
   "dependencies": ["application_credentials", "bluetooth_adapters"],
