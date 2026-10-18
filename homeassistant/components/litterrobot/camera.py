@@ -1,6 +1,6 @@
 """Support for Litter-Robot cameras."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools
 import logging
 from pathlib import Path
@@ -18,10 +18,11 @@ from homeassistant.components.camera import (
     WebRTCClientConfiguration,
     WebRTCSendMessage,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -34,8 +35,12 @@ PARALLEL_UPDATES = 1
 
 PLACEHOLDER = Path(__file__).parent / "placeholder.png"
 
-# refresh this far ahead of expiry so a stream never starts without TURN
+# renew the session this far ahead of its expiry so TURN credentials never lapse
 SESSION_REFRESH_MARGIN = timedelta(minutes=5)
+# never renew more often than this, whatever lifetime the API reports
+SESSION_MIN_RENEWAL_DELAY = timedelta(minutes=1)
+# how long to wait before trying again after a failed fetch
+SESSION_RETRY_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_entry(
@@ -107,6 +112,8 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         self._relays: dict[str, CameraSignalingRelay] = {}
         self._cached_session: CameraSession | None = None
         self._refreshing = False
+        self._removed = False
+        self._renew_unsub: CALLBACK_TYPE | None = None
         # the placeholder returned by async_camera_image is a PNG, not the
         # jpeg the base class assumes
         self.content_type = "image/png"
@@ -149,27 +156,72 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
                 "Camera session refreshed (expires %s)",
                 self._cached_session.session_expiration,
             )
+            self._async_schedule_session_renewal()
         except Exception:
             _LOGGER.debug("Failed to refresh camera session", exc_info=True)
+            self._async_schedule_session_attempt(SESSION_RETRY_INTERVAL)
         finally:
             self._refreshing = False
+
+    @callback
+    def _async_schedule_session_renewal(self) -> None:
+        """Renew the cached session shortly before it expires.
+
+        Done on a timer rather than when a client asks for its configuration,
+        which is a synchronous callback that can't wait for a new session: after
+        an idle spell it would hand the browser no TURN servers for that attempt.
+        """
+        if (
+            self._cached_session is None
+            or (expires := self._cached_session.session_expiration) is None
+        ):
+            # the API gave no expiry, so there is nothing to renew ahead of
+            return
+        delay = max(
+            expires - SESSION_REFRESH_MARGIN - dt_util.utcnow(),
+            SESSION_MIN_RENEWAL_DELAY,
+        )
+        self._async_schedule_session_attempt(delay)
+
+    @callback
+    def _async_schedule_session_attempt(self, delay: timedelta) -> None:
+        """Run the next session refresh after delay, replacing any pending one."""
+        self._async_cancel_session_attempt()
+        if self._removed:
+            return
+        self._renew_unsub = async_track_point_in_utc_time(
+            self.hass, self._async_session_attempt_due, dt_util.utcnow() + delay
+        )
+
+    @callback
+    def _async_cancel_session_attempt(self) -> None:
+        """Cancel the pending session refresh, if any."""
+        if self._renew_unsub is not None:
+            self._renew_unsub()
+            self._renew_unsub = None
+
+    @callback
+    def _async_session_attempt_due(self, _now: datetime) -> None:
+        """Refresh the session; the refresh schedules whatever comes next."""
+        self._renew_unsub = None
+        self.hass.async_create_task(self._refresh_cached_session())
 
     @callback
     @override
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration with TURN servers."""
         session = self._cached_session
-        if session and session.session_expiration:
-            remaining = session.session_expiration - dt_util.utcnow()
-            if remaining <= SESSION_REFRESH_MARGIN:
-                if remaining <= timedelta(0):
-                    # expired: withhold rather than hand out stale credentials
-                    _LOGGER.debug("Camera session expired, will refresh in background")
-                    session = None
-                    self._cached_session = None
-                # still valid but close to expiry: keep serving it and top up
-                # in the background, so a stream never starts without TURN
-                self.hass.async_create_task(self._refresh_cached_session())
+        if session is None or (
+            (expires := session.session_expiration) is not None
+            and expires <= dt_util.utcnow()
+        ):
+            # nothing usable: withhold stale credentials, and try again now
+            # rather than wait for the next scheduled attempt
+            if session is not None:
+                _LOGGER.debug("Camera session expired, will refresh in background")
+            session = None
+            self._cached_session = None
+            self.hass.async_create_task(self._refresh_cached_session())
         ice_servers = _build_ice_servers(session) if session else []
         return WebRTCClientConfiguration(
             configuration=RTCConfiguration(ice_servers=ice_servers),
@@ -224,6 +276,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
 
         # Update cached session for fresh TURN creds
         self._cached_session = session
+        self._async_schedule_session_renewal()
         _LOGGER.debug("Started WebRTC session %s", session_id)
 
     @override
@@ -262,6 +315,8 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Close all active relays when the entity is removed."""
+        self._removed = True
+        self._async_cancel_session_attempt()
         for session_id in list(self._relays):
             # awaited, not fire-and-forget: the entity is going away and a
             # scheduled task may never run
