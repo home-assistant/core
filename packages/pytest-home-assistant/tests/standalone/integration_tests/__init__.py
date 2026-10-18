@@ -1,1 +1,1 @@
-"""Package tests."""
+"""Tests for the installed Home Assistant pytest package."""

@@ -259,7 +259,7 @@ class AiohttpClientMockResponse:
 
     @property
     def content_type(self):
-        """Return the response content type."""
+        """Return yarl of URL."""
         return self._headers.get("content-type")
 
     @property
@@ -313,7 +313,10 @@ class AiohttpClientMockResponse:
         """Mock close."""
 
     async def wait_for_close(self):
-        """Mock waiting for the response to close."""
+        """Wait until all requests are done.
+
+        Do nothing as we are mocking.
+        """
 
     @property
     def response(self):
@@ -387,6 +390,9 @@ class MockLongPollSideEffect:
         self.semaphore.release()
 
     def stop(self):
-        """Stop pending and future requests."""
+        """Stop the current request and future ones.
+
+        This avoids an exception if there is someone waiting when exiting test.
+        """
         self.stopping = True
         self.queue_response(exc=ClientError())

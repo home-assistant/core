@@ -1,1 +1,1 @@
-"""Test integrations."""
+"""Custom integrations for standalone package tests."""

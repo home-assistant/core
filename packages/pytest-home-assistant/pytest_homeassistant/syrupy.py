@@ -68,7 +68,7 @@ class FlowResultSnapshot(dict):
 
 
 class IssueRegistryItemSnapshot(dict):
-    """Snapshot representation of an issue registry entry."""
+    """Tiny wrapper to represent an entity registry entry in snapshots."""
 
 
 class StateSnapshot(dict):
@@ -76,7 +76,10 @@ class StateSnapshot(dict):
 
 
 class HomeAssistantSnapshotSerializer(AmberDataSerializer):
-    """Snapshot serializer for Home Assistant objects."""
+    """Home Assistant snapshot serializer for Syrupy.
+
+    Handles special cases for Home Assistant data structures.
+    """
 
     @classmethod
     def _serialize(
@@ -90,7 +93,10 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         path: PropertyPath = (),
         visited: set[Any] | None = None,
     ) -> str:
-        """Prepare snapshot data for serialization."""
+        """Pre-process data before serializing.
+
+        This allows us to handle specific cases for Home Assistant data structures.
+        """
         if isinstance(data, State):
             serializable_data = cls._serializable_state(data)
         elif isinstance(data, ar.AreaEntry):
@@ -285,6 +291,12 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
 
     @classmethod
     def dirname(cls, *, test_location: PyTestLocation) -> str:
-        """Return the snapshot directory."""
+        """Return the directory for the snapshot files.
+
+        Syrupy, by default, uses the `__snapshosts__` directory in the same
+        folder as the test file. For Home Assistant, this is changed to just
+        `snapshots` in the same folder as the test file, to match our `fixtures`
+        folder structure.
+        """
         test_dir = Path(test_location.filepath).parent
         return str(test_dir.joinpath("snapshots"))

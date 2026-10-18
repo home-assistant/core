@@ -186,8 +186,34 @@ async def target_entities(
 
 
 def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
-    """Parametrize entity targets."""
-    # Target resolution is covered centrally; these cases exercise direct and indirect targets.
+    """Parametrize target entities for different target types.
+
+    Meant to be used with target_entities. Each row is a
+    ``(target_config, entity_id, entities_in_target)`` triple.
+
+    Only two representative rows are kept:
+
+    - ``entity`` — a direct ``entity_id`` reference to two standalone entities.
+      This preserves the direct-reference resolution path (state-machine-only,
+      non-registry entities) and a guaranteed multi-entity target, so the
+      all/first/count behavior assertions stay non-vacuous.
+    - ``label-entity`` — a ``label_id`` reference that resolves to three
+      entities: the labeled entity directly and, via label->device expansion,
+      the device-attached entities. This preserves indirect resolution
+      end-to-end plus everything that only fires when excluded entities sit
+      inside the resolved target scope: in-scope cross-domain exclusion (E2),
+      in-scope device_class/feature-filter negatives (E3), and battery's
+      ``primary_entities_only=False`` flag, which only has an observable effect
+      when a categorized entity is reached through device expansion (E1).
+
+    The dropped rows (area, floor, device_id, and the label/area/floor rows
+    that drive the device-attached entity) only varied *how* a target config
+    resolves to an entity set. That resolution is domain-independent machinery
+    covered centrally by ``tests/helpers/test_target.py`` (area->entity,
+    floor->area, area/label/floor->device, direct device incl. child devices,
+    and the ``primary_entities_only`` category asymmetry), so re-exercising it
+    per domain was pure duplication.
+    """
     return [
         (
             {
@@ -278,7 +304,12 @@ def _foreign_names(cls: type) -> set[str]:
 
 
 def _target_slot_validator(cls: type) -> object | None:
-    """Return the target validator for a class."""
+    """Return the ``target`` schema validator for a class, or None if it has none.
+
+    A class exposes a user-configurable target iff its ``_schema`` carries a
+    ``target`` marker. Bespoke or synthesized-target classes (e.g. zone.occupancy_*
+    or the legacy ``_`` platforms) have no such marker.
+    """
     mapping = getattr(getattr(cls, "_schema", None), "schema", None)
     if not isinstance(mapping, dict):
         return None
@@ -428,7 +459,17 @@ def _assert_target_support(
 def assert_triggers_target_support(
     registry: dict[str, type[Trigger]], declaration: dict[str, TargetSupport]
 ) -> None:
-    """Validate declared trigger target support."""
+    """Certify a domain's trigger registry against its target-support declaration.
+
+    ``declaration`` maps every registered trigger key to a ``TargetSupport`` member:
+    ``STANDARD`` (inherits the shared target-resolution machinery unmodified, so the
+    collapsed two-row target axis still certifies it), ``NONE`` (exposes no
+    ``target`` schema slot -- bespoke or synthesized target, e.g. zone.occupancy_*),
+    or ``CUSTOM`` (exposes a ``target`` slot but resolves it with its own machinery,
+    e.g. timer.remaining_time_reached). Battery's ``primary_entities_only=False`` is
+    intentionally not pinned here -- its behavior tests with DIAGNOSTIC fixtures
+    already fail loudly on a silent flip.
+    """
     _assert_target_support(
         registry,
         declaration,
@@ -442,7 +483,10 @@ def assert_triggers_target_support(
 def assert_conditions_target_support(
     registry: dict[str, type[Condition]], declaration: dict[str, TargetSupport]
 ) -> None:
-    """Validate declared condition target support."""
+    """Certify a domain's condition registry against its target-support declaration.
+
+    See assert_triggers_target_support; the same contract on the condition base.
+    """
     _assert_target_support(
         registry,
         declaration,
@@ -1684,7 +1728,7 @@ async def _validate_condition_options(
 
 
 def _get_yaml_fields(automation_key: str, yaml_type: str) -> dict[str, Any]:
-    """Load integration description fields."""
+    """Load a conditions.yaml or triggers.yaml and return the fields for a key."""
     domain, key = automation_key.split(".", 1)
     yaml_path = files("homeassistant.components") / domain / f"{yaml_type}.yaml"
     data = load_yaml_dict(str(yaml_path))

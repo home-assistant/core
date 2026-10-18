@@ -1,4 +1,4 @@
-"""Tests for the pytest plugin."""
+"""Exercise the installed package without a Home Assistant source checkout."""
 
 from importlib import import_module
 from pathlib import Path
@@ -27,7 +27,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_integration(hass: HomeAssistant) -> None:
-    """Test custom integration setup and unload."""
+    """Discover and run a custom integration using the standard fixtures."""
     entry = MockConfigEntry(
         domain="pytest_sample",
         data=await async_load_json_object_fixture(hass, "sample.json", "pytest_sample"),
@@ -40,14 +40,14 @@ async def test_custom_integration(hass: HomeAssistant) -> None:
 
 
 def test_fixture_loader() -> None:
-    """Test fixture loading."""
+    """Load a project's fixtures without Core's tests/__init__.py."""
     assert load_json_object_fixture("sample.json") == {"state": "ready"}
 
 
 def test_shared_configuration(
     hass: HomeAssistant, pytestconfig: pytest.Config, request: pytest.FixtureRequest
 ) -> None:
-    """Test shared configuration paths."""
+    """Default configuration uses a shared path without creating a directory."""
     config_dir = pytestconfig.rootpath / "integration_tests" / "testing_config"
     assert Path(hass.config.config_dir) == config_dir
     assert not config_dir.exists()
@@ -55,7 +55,7 @@ def test_shared_configuration(
 
 
 def test_temporary_configuration(hass_tmp_config_dir: str, tmp_path: Path) -> None:
-    """Test temporary configuration directories."""
+    """Tests can opt into writable configuration outside the installed package."""
     assert Path(hass_tmp_config_dir) == tmp_path
     (Path(hass_tmp_config_dir) / "configuration.yaml").write_text("default_config:\n")
 
@@ -63,7 +63,7 @@ def test_temporary_configuration(hass_tmp_config_dir: str, tmp_path: Path) -> No
 def test_temporary_configuration_copy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest
 ) -> None:
-    """Test configuration copying."""
+    """Opting into a temporary directory copies a configured source."""
     config_dir = tmp_path / "source"
     config_dir.mkdir()
     (config_dir / "configuration.yaml").write_text("default_config:\n")
@@ -77,7 +77,7 @@ def test_temporary_configuration_copy(
 def test_registry_snapshot(
     entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test registry snapshots."""
+    """Use registry fixtures and store snapshots alongside the consuming tests."""
     entity = entity_registry.async_get_or_create(
         "sensor", "pytest_sample", "sample", suggested_object_id="sample"
     )
@@ -87,7 +87,7 @@ def test_registry_snapshot(
 async def test_http_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test HTTP clients."""
+    """Initialize an HTTP client using only the package's declared dependencies."""
     assert await async_setup_component(hass, "api", {})
     client = await hass_client()
     response = await client.get("/api/")
@@ -95,7 +95,7 @@ async def test_http_client(
     assert await response.json() == {"message": "API running."}
 
     class LateView(HomeAssistantView):
-        """Test HTTP view."""
+        """A view registered after the test server starts."""
 
         requires_auth = False
         url = "/api/pytest_sample"
@@ -112,7 +112,7 @@ async def test_http_client(
 
 
 async def test_recorder(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test recorder setup."""
+    """Run recorder fixtures with only declared package dependencies."""
     hass.states.async_set("sensor.pytest_sample", "ready")
     await async_wait_recording_done(hass)
     assert recorder_mock.is_alive()
@@ -139,6 +139,6 @@ async def test_recorder(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     ],
 )
 def test_historical_recorder_schema(schema: str) -> None:
-    """Test historical schema imports."""
+    """Historical schema helpers must not import Core's test tree."""
     module = import_module(get_schema_module_path(schema))
     assert module.Base.metadata.tables
