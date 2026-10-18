@@ -9,12 +9,14 @@ from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC, CONF_UN
 from homeassistant.core import HomeAssistant
 
 from . import WebOsTvConfigEntry
+from .const import CONF_MAC_ADDRESSES
 
 TO_REDACT = {
     CONF_CLIENT_SECRET,
     CONF_UNIQUE_ID,
     CONF_HOST,
     CONF_MAC,
+    CONF_MAC_ADDRESSES,
     "device_id",
     "deviceUUID",
     "icon",

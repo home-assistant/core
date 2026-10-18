@@ -1,21 +1,19 @@
 """Coordinator for the LG webOS TV integration."""
 
 from datetime import timedelta
-from functools import partial
-from typing import override
+from typing import cast, override
 
 from aiowebostv import WebOsClient, WebOsTvPairError, WebOsTvState
-from getmac import get_mac_address
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, WEBOSTV_EXCEPTIONS
+from .const import CONF_MAC_ADDRESSES, DOMAIN, LOGGER, WEBOSTV_EXCEPTIONS
+from .helpers import get_mac_addresses
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -46,11 +44,13 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.turn_on = PluggableAction(self.async_update_listeners)
 
     @property
-    def mac_address(self) -> str | None:
-        """Return the manual MAC address or the discovered address."""
-        return self.config_entry.options.get(CONF_MAC) or self.config_entry.data.get(
+    def mac_addresses(self) -> list[str]:
+        """Return the manual MAC address or the discovered addresses."""
+        if mac := self.config_entry.options.get(CONF_MAC) or self.config_entry.data.get(
             CONF_MAC
-        )
+        ):
+            return [mac]
+        return cast(list[str], self.config_entry.data.get(CONF_MAC_ADDRESSES, []))
 
     @override
     async def _async_update_data(self) -> None:
@@ -63,7 +63,7 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except WEBOSTV_EXCEPTIONS as error:
             if (
                 not self.turn_on
-                and not self.mac_address
+                and not self.mac_addresses
                 and self.config_entry.state is ConfigEntryState.LOADED
             ):
                 raise UpdateFailed(
@@ -79,14 +79,12 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from error
         else:
             update_client_key(self.hass, self.config_entry, self.client)
-            if not self.mac_address and (
-                mac := await self.hass.async_add_executor_job(
-                    partial(get_mac_address, ip=self.config_entry.data[CONF_HOST])
-                )
+            if not self.mac_addresses and (
+                macs := get_mac_addresses(self.client.tv_info.connection)
             ):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
-                    data={**self.config_entry.data, CONF_MAC: format_mac(mac)},
+                    data={**self.config_entry.data, CONF_MAC_ADDRESSES: macs},
                 )
 
     async def async_handle_update(self, tv_state: WebOsTvState) -> None:

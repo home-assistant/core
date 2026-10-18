@@ -1,6 +1,9 @@
 """Helper functions for LG webOS TV."""
 
+from typing import Any
+
 from aiowebostv import WebOsTvState
+from wakeonlan import create_magic_packet
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -8,6 +11,20 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, LIVE_TV_APP_ID
+
+
+def get_mac_addresses(connection_info: dict[str, Any]) -> list[str]:
+    """Return valid MAC addresses reported for the TV's network interfaces."""
+    macs = []
+    for interface in ("wiredInfo", "wifiInfo"):
+        if not (mac := connection_info.get(interface, {}).get("macAddress")):
+            continue
+        try:
+            create_magic_packet(mac)
+        except ValueError:
+            continue
+        macs.append(dr.format_mac(mac))
+    return list(dict.fromkeys(macs))
 
 
 @callback

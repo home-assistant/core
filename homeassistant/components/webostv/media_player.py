@@ -257,7 +257,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.coordinator.turn_on or self.coordinator.mac_address:
+        if self.coordinator.turn_on or self.coordinator.mac_addresses:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -273,8 +273,8 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         """Turn on media player."""
         if self.coordinator.turn_on:
             await self.coordinator.turn_on.async_run(self.hass, self._context)
-        elif mac := self.coordinator.mac_address:
-            await self.hass.async_add_executor_job(send_magic_packet, mac)
+        elif macs := self.coordinator.mac_addresses:
+            await self.hass.async_add_executor_job(send_magic_packet, *macs)
 
     @cmd
     @override
