@@ -206,7 +206,6 @@
 # name: test_cache_diagnostics_trace[absent]
   list([
     dict({
-      'diagnostics': None,
       'message_id': 'msg_cache_diagnostics_1',
       'stats': dict({
         'cache_creation_input_tokens': 0,
@@ -2282,7 +2281,6 @@
 # name: test_token_stats_reported[cumulative_sparse_and_null]
   list([
     dict({
-      'diagnostics': None,
       'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 30,
@@ -2319,7 +2317,6 @@
 # name: test_token_stats_reported[explicit_zero]
   list([
     dict({
-      'diagnostics': None,
       'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 0,
@@ -2355,7 +2352,6 @@
 # name: test_token_stats_reported[initial_usage]
   list([
     dict({
-      'diagnostics': None,
       'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 20,
@@ -2393,7 +2389,6 @@
 # name: test_token_stats_reported[nested_replacement]
   list([
     dict({
-      'diagnostics': None,
       'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 20,

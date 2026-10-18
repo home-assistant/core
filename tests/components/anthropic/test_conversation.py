@@ -860,7 +860,7 @@ async def test_cache_diagnostics_trace(
     diagnostic_events = [
         event["data"]
         for event in trace.async_get_traces()[0].as_dict()["events"]
-        if event["event_type"] == "agent_detail" and "diagnostics" in event["data"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
     ]
     assert len(diagnostic_events) == 1
     assert diagnostic_events[0]["stats"]["stop_reason"] == "end_turn"
@@ -960,11 +960,11 @@ async def test_cache_diagnostics_disabled(
     mock_create_stream: AsyncMock,
     diagnostic_requests: list[MessageCreateParamsStreaming],
 ) -> None:
-    """Omit diagnostics requests and tracing when prompt caching is disabled."""
+    """Keep response metadata when prompt caching is disabled."""
     trace.async_clear_traces()
     mock_create_stream.return_value = [create_content_block(0, ["Hello."])]
 
-    await conversation.async_converse(
+    result = await conversation.async_converse(
         hass, "hello", None, Context(), agent_id=ENTITY_ID
     )
 
@@ -977,6 +977,11 @@ async def test_cache_diagnostics_disabled(
     assert len(usage_events) == 1
     assert "diagnostics" not in usage_events[0]
     assert usage_events[0]["stats"]["stop_reason"] == "end_turn"
+    chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][result.conversation_id]
+    last_content = chat_log.content[-1]
+    assert isinstance(last_content, conversation.AssistantContent)
+    assert isinstance(last_content.native, ContentDetails)
+    assert last_content.native.message_id == "msg_cache_diagnostics_1"
 
 
 @pytest.mark.parametrize(

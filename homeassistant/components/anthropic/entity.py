@@ -523,19 +523,13 @@ class AnthropicDeltaStream:
     Each message could contain multiple blocks of the same type.
     """
 
-    def __init__(
-        self,
-        stream: AsyncStream[MessageStreamEvent],
-        *,
-        trace_cache_diagnostics: bool = True,
-    ) -> None:
+    def __init__(self, stream: AsyncStream[MessageStreamEvent]) -> None:
         """Initialize the delta stream."""
         if not hasattr(stream, "__aiter__"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unexpected_stream_object"
             )
         self._stream: AsyncStream[MessageStreamEvent] = stream
-        self._trace_cache_diagnostics = trace_cache_diagnostics
         self.message_id: str | None = None
         self.stop_reason: StopReason | None = None
         self.tool_args_error: json.JSONDecodeError | None = None
@@ -883,9 +877,7 @@ class AnthropicDeltaStream:
         """Handle RawMessageStopEvent."""
         if self.stop_reason == "end_turn" and not self._has_content:
             self._buffer.append({"role": "assistant", "content": ""})
-        if self._trace_cache_diagnostics and (
-            self._has_content or self.stop_reason == "end_turn"
-        ):
+        if self._has_content or self.stop_reason == "end_turn":
             self._content_details.message_id = self.message_id
         if self._content_details:
             self._content_details.delete_empty()
@@ -899,7 +891,7 @@ class AnthropicDeltaStream:
             return
         token_stats = self._create_token_stats()
         token_stats["message_id"] = self.message_id
-        if self._trace_cache_diagnostics:
+        if self._diagnostics is not None:
             token_stats["diagnostics"] = self._diagnostics
         chat_log.async_trace(token_stats)
 
@@ -1193,10 +1185,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         for iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
-                delta_stream = AnthropicDeltaStream(
-                    stream,
-                    trace_cache_diagnostics="diagnostics" in model_args,
-                )
+                delta_stream = AnthropicDeltaStream(stream)
 
                 try:
                     async with stream:
