@@ -9,6 +9,10 @@ from unittest.mock import Mock
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
@@ -60,10 +64,6 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_capture_events, mock_platform
-from tests.components.recorder.common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
