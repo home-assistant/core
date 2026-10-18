@@ -511,7 +511,7 @@ airgradient==0.10.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.12
+airos==0.6.13
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -741,7 +741,7 @@ boto3==1.42.97
 bring-api==1.1.2
 
 # homeassistant.components.broadlink
-broadlink-async==1.1.0
+broadlink-async==1.1.1
 
 # homeassistant.components.brother
 brother==6.2.0
@@ -1612,7 +1612,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.28.1
+mcp==2.3.0
 
 # homeassistant.components.minecraft_server
 mcstatus==14.2.0
@@ -2051,7 +2051,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.5
+pyElectra==1.2.7
 
 # homeassistant.components.emby
 pyEmby==1.10
@@ -2416,7 +2416,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.6.5
+pylitterbot==2025.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0
@@ -2960,7 +2960,7 @@ qbusmqttapi==1.5.1
 qingping-ble==1.1.6
 
 # homeassistant.components.qnap
-qnapstats==0.4.0
+qnapstats==0.6.2
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
@@ -3244,7 +3244,7 @@ tellcore-py==1.1.3
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.4.0
+teltasync==0.4.1
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
@@ -3255,7 +3255,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.3
+tesla-fleet-api==1.18.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3306,7 +3306,7 @@ togrill-bluetooth==0.9.0
 tololib==1.2.2
 
 # homeassistant.components.tonewinner
-tonewinner-rs232==1.1.0
+tonewinner-rs232==1.3.0
 
 # homeassistant.components.toon
 toonapi==0.3.0
@@ -3354,7 +3354,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.1.2
+uiprotect==23.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

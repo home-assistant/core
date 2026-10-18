@@ -105,8 +105,8 @@ def mock_solaredge_web_api_fixture() -> Generator[AsyncMock]:
         api = mock_web_api_flow.return_value
         mock_web_api_coord.return_value = api
         api.async_get_equipment.return_value = {
-            "7A012345-CA": {"name": "Optimizer 1.1"},
-            "7A012346-CA": {"name": "Optimizer 1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+            "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
         }
         api.async_get_energy_data.return_value = [
             EnergyData(
