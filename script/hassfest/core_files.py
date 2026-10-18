@@ -38,7 +38,6 @@ MISSING_ALL = {
     "network",
     "onboarding",
     "otp",
-    "persistent_notification",
     "person",
     "recorder",
     "recovery_mode",
