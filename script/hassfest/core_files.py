@@ -20,7 +20,6 @@ MISSING_ALL = {
     "energy",
     "group",
     "homeassistant_hardware",
-    "http",
     "input_boolean",
     "input_datetime",
     "input_number",
