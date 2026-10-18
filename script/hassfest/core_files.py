@@ -25,7 +25,6 @@ MISSING_ALL = {
     "input_select",
     "llm",
     "logger",
-    "lovelace",
     "network",
     "otp",
     "persistent_notification",
