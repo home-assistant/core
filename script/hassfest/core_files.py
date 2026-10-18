@@ -24,7 +24,6 @@ MISSING_ALL = {
     "input_datetime",
     "input_select",
     "llm",
-    "logbook",
     "logger",
     "lovelace",
     "network",
