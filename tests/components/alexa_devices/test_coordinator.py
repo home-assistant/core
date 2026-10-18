@@ -18,7 +18,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SN,
+    TEST_DEVICE_2,
+    TEST_DEVICE_2_SN,
+    TEST_NOTIFICATIONS,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -318,3 +324,15 @@ async def test_device_state_sync_on_device_list_change(
 
     # Device list unchanged: no additional resync
     assert sync_mock.await_count == 2
+
+
+async def test_initial_notification_sync_populates_cache(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the initial notification sync populates the coordinator cache."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_amazon_devices_client.on_notification_event.append.assert_called_once()
+    assert mock_config_entry.runtime_data.notifications == TEST_NOTIFICATIONS
