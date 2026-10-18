@@ -109,7 +109,7 @@ class QbusWeatherBinarySensor(QbusEntity, BinarySensorEntity):
             value := state.read_property(self.entity_description.property, None)
         ) is not None:
             self._attr_is_on = (
-                value if isinstance(value, bool) else value.lower() == "true"
+                value if isinstance(value, bool) else str(value).lower() == "true"
             )
 
 
