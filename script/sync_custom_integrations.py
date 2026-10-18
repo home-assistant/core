@@ -297,8 +297,23 @@ def _replace_symlinks(dest: Path) -> None:
     _git("checkout", "--", *links, cwd=dest)
 
 
+class UnsafePathError(RuntimeError):
+    """A repo's owner or repo directory in the copy is a symlink."""
+
+
+def _is_symlinked(root: Path, repo: str) -> bool:
+    """Return True if the owner or repo directory of repo is a symlink.
+
+    Nothing in a repository can create one at that level, but anything else on
+    the machine can; following it would update or delete files outside the copy.
+    """
+    return (root / repo).parent.is_symlink() or (root / repo).is_symlink()
+
+
 def download(root: Path, repo: str, sha: str) -> None:
     """Bring root/repo to sha, updating the clone in place or cloning afresh."""
+    if _is_symlinked(root, repo):
+        raise UnsafePathError(repo)
     dest = root / repo
     if (dest / ".git").is_dir():
         try:
@@ -531,7 +546,7 @@ def main() -> None:
     else:
         for repo in missing:
             repo_dir = root / repo
-            if repo_dir.is_dir():
+            if not _is_symlinked(root, repo) and repo_dir.is_dir():
                 shutil.rmtree(repo_dir)
                 removed.append(repo)
                 if not any(repo_dir.parent.iterdir()):

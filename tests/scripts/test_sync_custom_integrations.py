@@ -12,6 +12,8 @@ from script import sync_custom_integrations
 from script.sync_custom_integrations import (
     LOCK_FILE,
     STATE_FORMAT,
+    UnsafePathError,
+    download,
     ensure_ignored,
     is_repo_slug,
     load_state,
@@ -195,3 +197,57 @@ def test_interrupted_update_leaves_repos_unrecorded(
 
     assert download.call_count == 2
     assert load_state(tmp_path) == ({}, None)
+
+
+@pytest.mark.parametrize(
+    ("link", "target"),
+    [
+        pytest.param("owner", ".", id="owner_symlink"),
+        pytest.param("owner/repo", "repo", id="repo_symlink"),
+    ],
+)
+def test_download_refuses_symlinked_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, link: str, target: str
+) -> None:
+    """Test that a symlinked owner or repo directory is never updated through."""
+    copy = tmp_path / "copy"
+    outside = tmp_path / "outside"
+    (outside / "repo" / ".git").mkdir(parents=True)
+    (copy / link).parent.mkdir(parents=True)
+    (copy / link).symlink_to(outside / target)
+    git = Mock()
+    monkeypatch.setattr(sync_custom_integrations, "_git", git)
+
+    with pytest.raises(UnsafePathError):
+        download(copy, "owner/repo", "2" * 40)
+
+    git.assert_not_called()
+    assert (outside / "repo" / ".git").is_dir()
+
+
+def test_targeted_removal_skips_symlinked_owner(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that removing an unavailable repo never deletes through a symlink."""
+    copy = tmp_path / "copy"
+    copy.mkdir()
+    outside = tmp_path / "outside"
+    (outside / "repo" / ".git").mkdir(parents=True)
+    (copy / "owner").symlink_to(outside)
+    save_state(copy, {"owner/repo": "1" * 40}, None)
+    monkeypatch.setattr(
+        sync_custom_integrations,
+        "_get",
+        Mock(return_value=json.dumps(["owner/repo"]).encode()),
+    )
+    monkeypatch.setattr(sync_custom_integrations, "_token", Mock(return_value="t"))
+    monkeypatch.setattr(
+        sync_custom_integrations, "fetch_heads", Mock(return_value={"owner/repo": None})
+    )
+    monkeypatch.setattr(sync_custom_integrations, "ensure_ignored", Mock())
+    monkeypatch.setattr(sys, "argv", ["sync", "--dest", str(copy), "owner/repo"])
+
+    sync_custom_integrations.main()
+
+    assert (outside / "repo" / ".git").is_dir()
+    assert load_state(copy) == ({}, None)
