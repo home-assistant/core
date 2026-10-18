@@ -547,11 +547,12 @@ class AutoUpdateManager:
     def async_get_install_candidate(self, now: datetime) -> str | None:
         """Return the patch release to install automatically, if any.
 
-        That is the newest patch of the running major that is not skipped,
-        once it waited long enough since it was first seen. An older patch
-        is never installed while a newer one waits; the newer one may fix a
-        regression in it. Never newer than what Supervisor offers now, so
-        rolling back the version file stops a pulled release.
+        That is the newest known patch of the running major, once it waited
+        long enough since it was first seen. Never an older patch while a
+        newer one waits or is skipped; the newer one may fix a regression in
+        it, and the older one may have been pulled. Never newer than what
+        Supervisor offers now, so rolling back the version file stops a
+        pulled release.
         """
         core = self._coordinator.data.core
         if core.version is None or core.version_latest is None:
@@ -563,14 +564,16 @@ class AutoUpdateManager:
             AwesomeVersion(version)
             for version in self._first_seen
             if _major(version) == _major(core.version)
-            and version not in self._skipped
             and running < AwesomeVersion(version) <= offered
         ]
         if not patches:
             return None
 
         newest = str(max(patches))
-        if self._first_seen[newest] + self.settings.delay > now:
+        if (
+            newest in self._skipped
+            or self._first_seen[newest] + self.settings.delay > now
+        ):
             return None
         return newest
 
