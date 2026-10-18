@@ -43,7 +43,6 @@ MISSING_ALL = {
     "shopping_list",
     "ssdp",
     "sun",
-    "system_health",
     "tag",
     "template",
     "timer",
