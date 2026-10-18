@@ -12,6 +12,7 @@ from pyoverkiz.enums import (
 )
 from pyoverkiz.types import StateType as OverkizStateType
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_SPEED,
@@ -21,6 +22,7 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -589,7 +591,8 @@ def _async_keep_deprecated_low_speed_cover(
 ) -> bool:
     """Return if the deprecated low speed cover should still be created.
 
-    Only kept for existing installations, until the user disables it.
+    Only kept for existing installations, until the user disables it and no
+    automation or script uses it anymore.
     """
     issue_id = f"deprecated_low_speed_cover_{device_url}"
 
@@ -603,10 +606,23 @@ def _async_keep_deprecated_low_speed_cover(
         async_delete_issue(hass, DOMAIN, issue_id)
         return False
 
-    if entity_entry.disabled:
+    items = automations_with_entity(hass, entity_id) + scripts_with_entity(
+        hass, entity_id
+    )
+    if entity_entry.disabled and not items:
         entity_registry.async_remove(entity_id)
         async_delete_issue(hass, DOMAIN, issue_id)
         return False
+
+    placeholders = {
+        "entity_id": entity_id,
+        "replacement_entity_id": entity_registry.async_get_entity_id(
+            Platform.COVER, DOMAIN, device_url
+        )
+        or device_url,
+    }
+    if items:
+        placeholders["items"] = "\n".join(f"- `{item}`" for item in items)
 
     async_create_issue(
         hass,
@@ -615,14 +631,10 @@ def _async_keep_deprecated_low_speed_cover(
         breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_low_speed_cover",
-        translation_placeholders={
-            "entity_id": entity_id,
-            "replacement_entity_id": entity_registry.async_get_entity_id(
-                Platform.COVER, DOMAIN, device_url
-            )
-            or device_url,
-        },
+        translation_key=(
+            "deprecated_low_speed_cover_used" if items else "deprecated_low_speed_cover"
+        ),
+        translation_placeholders=placeholders,
     )
     return True
 

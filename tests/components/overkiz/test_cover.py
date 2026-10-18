@@ -39,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -1424,6 +1425,54 @@ async def test_deprecated_low_speed_cover(
         issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID)
         is not None
     ) is entity_kept
+
+
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled"),
+        pytest.param(er.RegistryEntryDisabler.USER, id="disabled"),
+    ],
+)
+async def test_deprecated_low_speed_cover_used(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the deprecated low speed cover is kept while an automation uses it."""
+    entity_registry.async_get_or_create(
+        COVER_DOMAIN,
+        DOMAIN,
+        f"{LOW_SPEED.device_url}_low_speed",
+        suggested_object_id="maple_residence_nursery_shutter_low_speed",
+        disabled_by=disabled_by,
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "alias": "Close shutter slowly",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": {
+                    "action": "cover.close_cover",
+                    "target": {"entity_id": DEPRECATED_LOW_SPEED_ENTITY_ID},
+                },
+            }
+        },
+    )
+
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    assert entity_registry.async_get(DEPRECATED_LOW_SPEED_ENTITY_ID) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_low_speed_cover_used"
+    assert issue.translation_placeholders["items"] == (
+        "- `automation.close_shutter_slowly`"
+    )
 
 
 @pytest.mark.parametrize(
