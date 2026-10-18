@@ -128,6 +128,9 @@ class AuthProvider:
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
 
+    async def async_will_remove_credentials(self, credentials: Credentials) -> None:
+        """Clean up provider owned data before credentials are removed."""
+
     @callback
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None

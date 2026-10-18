@@ -1,5 +1,6 @@
 """Tests for the Home Assistant auth module."""
 
+import asyncio
 from datetime import timedelta
 import time
 from typing import Any
@@ -1426,3 +1427,50 @@ async def test_access_token_from_the_future(mock_hass) -> None:
     with freeze_time(now + timedelta(days=365)):
         rt = manager.async_validate_access_token(access_token)
         assert rt.id == refresh_token.id
+
+
+_EXAMPLE_PROVIDER = "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+
+
+async def test_every_provider_is_initialized(mock_hass: HomeAssistant) -> None:
+    """Test providers are initialized before anybody tries to log in."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize") as mock_initialize:
+        await auth.auth_manager_from_config(
+            mock_hass,
+            [
+                {"type": "insecure_example", "users": []},
+                {"type": "insecure_example", "id": "another", "users": []},
+            ],
+            [],
+        )
+
+    assert mock_initialize.call_count == 2
+
+
+async def test_a_provider_that_cannot_initialize_is_not_fatal(
+    mock_hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a broken provider leaves the other ways into the instance working."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize", side_effect=ValueError("boom")):
+        manager = await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )
+
+    assert "Error initializing auth provider insecure_example" in caplog.text
+    assert len(manager.auth_providers) == 1
+
+
+async def test_provider_initialization_is_not_swallowed_when_cancelled(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test only errors of a provider are logged, not a cancellation."""
+    with (
+        patch(
+            f"{_EXAMPLE_PROVIDER}.async_initialize",
+            side_effect=asyncio.CancelledError,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )
