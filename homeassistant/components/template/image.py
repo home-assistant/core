@@ -220,23 +220,33 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     async def async_dump_cache(self) -> None:
         """Save image data."""
         image_path = self._cache_path()
-        if not self._cached_image or self._attr_image_last_updated is None:
+        if (image := self._cached_image) is None or (
+            last_updated := self._attr_image_last_updated
+        ) is None:
             # Don't let a previous image be restored alongside a newer URL.
             with suppress(FileNotFoundError):
                 await aiofiles.os.remove(image_path)
             return
 
         # A single-line JSON header ties the bytes to the state they belong to.
-        header = json_bytes(
-            {
-                "image_url": self._attr_image_url,
-                "image_last_updated": self._attr_image_last_updated.isoformat(),
-                "content_type": self._cached_image.content_type,
-            }
+        # Built before awaiting so a concurrent update can't mix metadata and content.
+        payload = (
+            json_bytes(
+                {
+                    "image_url": self._attr_image_url,
+                    "image_last_updated": last_updated.isoformat(),
+                    "content_type": image.content_type,
+                }
+            )
+            + b"\n"
+            + image.content
         )
+        tmp_path = image_path.with_suffix(".tmp")
         await aiofiles.os.makedirs(image_path.parent, exist_ok=True)
-        async with aiofiles.open(image_path, "wb") as fh:
-            await fh.write(header + b"\n" + self._cached_image.content)
+        async with aiofiles.open(tmp_path, "wb") as fh:
+            await fh.write(payload)
+        # An interrupted write must never leave a truncated cache file.
+        await aiofiles.os.replace(tmp_path, image_path)
 
     @override
     async def async_get_cached_data(self) -> Image | None:
@@ -247,6 +257,8 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             return None
 
         header, _, content = data.partition(b"\n")
+        if not content:
+            return None
         try:
             metadata = json_loads_object(header)
             content_type = metadata["content_type"]

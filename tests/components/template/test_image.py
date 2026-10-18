@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+import aiofiles.os
 import httpx2
 from PIL import Image
 import pytest
@@ -101,6 +102,9 @@ def _image_bytes(image_format: str) -> bytes:
     buf = BytesIO()
     Image.new("RGB", (1, 1), 100).save(buf, format=image_format)
     return bytes(buf.getbuffer())
+
+
+_CACHED_JPEG = _image_bytes("jpeg")
 
 
 def _write_cache(
@@ -1178,32 +1182,39 @@ async def test_stale_cache_removed_at_stop(
         pytest.param(
             b'{"image_url":"http://example2.com",'
             b'"image_last_updated":"2021-07-12T00:00:00+00:00",'
-            b'"content_type":"image/jpeg"}\n',
+            b'"content_type":"image/jpeg"}\n' + _CACHED_JPEG,
             id="different_last_updated",
         ),
         pytest.param(
             b'{"image_url":"http://example3.com",'
             b'"image_last_updated":"2021-07-13T00:00:00+00:00",'
-            b'"content_type":"image/jpeg"}\n',
+            b'"content_type":"image/jpeg"}\n' + _CACHED_JPEG,
             id="different_url",
         ),
         pytest.param(
             b'{"image_url":"http://example2.com",'
             b'"image_last_updated":"2021-07-13T00:00:00+00:00",'
-            b'"content_type":"text/plain"}\n',
+            b'"content_type":"text/plain"}\n' + _CACHED_JPEG,
             id="invalid_content_type",
         ),
         pytest.param(
             b'{"image_url":"http://example2.com",'
             b'"image_last_updated":"not a datetime",'
-            b'"content_type":"image/jpeg"}\n',
+            b'"content_type":"image/jpeg"}\n' + _CACHED_JPEG,
             id="invalid_last_updated",
         ),
         pytest.param(
-            b'{"image_url":"http://example2.com","content_type":"image/jpeg"}\n',
+            b'{"image_url":"http://example2.com","content_type":"image/jpeg"}\n'
+            + _CACHED_JPEG,
             id="missing_key",
         ),
-        pytest.param(b"", id="no_header"),
+        pytest.param(_CACHED_JPEG, id="no_header"),
+        pytest.param(
+            b'{"image_url":"http://example2.com",'
+            b'"image_last_updated":"2021-07-13T00:00:00+00:00",'
+            b'"content_type":"image/jpeg"}\n',
+            id="empty_content",
+        ),
     ],
 )
 @respx.mock
@@ -1219,9 +1230,7 @@ async def test_restore_mismatched_cache_not_restored(
 ) -> None:
     """Test a cached image that doesn't match the restored state is not used."""
     images_cache_dir.mkdir(parents=True)
-    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(
-        cache_file_content + imgbytes_jpg
-    )
+    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(cache_file_content)
     respx.get("http://example2.com").respond(
         stream=imgbytes2_jpg, content_type="image/jpeg"
     )
@@ -1256,3 +1265,54 @@ async def test_restore_mismatched_cache_not_restored(
         entity_id=TEST_IMAGE.entity_id,
     )
     assert respx.get("http://example2.com").call_count == 1
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_cache_cleared_while_saving(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test the image being saved is not affected by an update during the write."""
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+
+    entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
+    makedirs = aiofiles.os.makedirs
+
+    async def _clear_cache_then_makedirs(*args: Any, **kwargs: Any) -> None:
+        entity._cached_image = None
+        await makedirs(*args, **kwargs)
+
+    with patch("aiofiles.os.makedirs", _clear_cache_then_makedirs):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    cache_file = images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
+    assert list(images_cache_dir.iterdir()) == [cache_file]
+    assert cache_file.read_bytes().partition(b"\n")[2] == imgbytes_jpg
