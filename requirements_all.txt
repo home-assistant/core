@@ -25,7 +25,7 @@ HATasmota==0.10.2
 HueBLE==2.2.3
 
 # homeassistant.components.mastodon
-Mastodon.py==2.2.1
+Mastodon.py==2.3.3
 
 # homeassistant.components.netio
 Netio==2.0.1
@@ -3354,7 +3354,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.2.0
+uiprotect==23.2.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

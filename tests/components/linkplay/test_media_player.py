@@ -33,6 +33,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     CONF_HOST,
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
@@ -126,6 +127,27 @@ async def test_follower_mirrors_leader_media_info(hass: HomeAssistant) -> None:
     # volume and source stay on the follower itself
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.8
     assert state.attributes[ATTR_INPUT_SOURCE] == "Follower"
+
+
+@pytest.mark.parametrize(
+    ("album_art", "has_picture"),
+    [
+        pytest.param("https://example.com/cover.jpg", True, id="url"),
+        pytest.param("", False, id="empty"),
+    ],
+)
+async def test_album_art(
+    hass: HomeAssistant,
+    leader_player: AsyncMock,
+    album_art: str,
+    has_picture: bool,
+) -> None:
+    """Test that empty album art does not set an entity picture."""
+    leader_player.album_art = album_art
+    await async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert (ATTR_ENTITY_PICTURE in state.attributes) is has_picture
 
 
 @pytest.mark.parametrize(

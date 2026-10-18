@@ -62,7 +62,11 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             await self._api.async_initialize()
         except MinecraftServerAddressError as error:
             raise ConfigEntryNotReady(
-                translation_domain=DOMAIN, translation_key="address_lookup_failed"
+                translation_domain=DOMAIN,
+                translation_key="address_lookup_failed",
+                translation_placeholders={
+                    "address": self.config_entry.data[CONF_ADDRESS]
+                },
             ) from error
 
     @override
@@ -75,5 +79,9 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             MinecraftServerNotInitializedError,
         ) as error:
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="data_update_failed"
+                translation_domain=DOMAIN,
+                translation_key="data_update_failed",
+                translation_placeholders={
+                    "address": self.config_entry.data[CONF_ADDRESS]
+                },
             ) from error
