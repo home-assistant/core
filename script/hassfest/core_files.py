@@ -16,7 +16,6 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 MISSING_ALL = {
     "blueprint",
     "configurator",
-    "group",
     "input_boolean",
     "input_select",
     "llm",
