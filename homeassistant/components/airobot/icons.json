@@ -32,7 +32,7 @@
       "supply_fan_rpm": {
         "default": "mdi:fan"
       },
-      "voc": {
+      "voc_index": {
         "default": "mdi:air-purifier"
       }
     },

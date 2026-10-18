@@ -1370,8 +1370,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voc',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_voc',
+    'translation_key': 'voc_index',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_voc_index',
     'unit_of_measurement': None,
   })
 # ---

@@ -228,8 +228,8 @@ VU_SENSOR_TYPES: tuple[AirobotVUSensorEntityDescription, ...] = (
         value_fn=lambda data: data.co2_level,
     ),
     AirobotVUSensorEntityDescription(
-        key="voc",
-        translation_key="voc",
+        key="voc_index",
+        translation_key="voc_index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.voc,
     ),

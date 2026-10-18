@@ -164,7 +164,7 @@
       "supply_fan_rpm": {
         "name": "Supply fan speed"
       },
-      "voc": {
+      "voc_index": {
         "name": "VOC index"
       }
     },
