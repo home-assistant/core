@@ -113,6 +113,9 @@
     },
     "privacy_error": {
       "message": "Data for device \"{device_name}\" is restricted due to privacy settings in the Powerfox app."
+    },
+    "auth_retry": {
+      "message": "Authentication with the Powerfox service temporarily failed. Home Assistant will retry automatically."
     }
   }
 }

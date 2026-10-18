@@ -1,6 +1,7 @@
 """Coordinator for Powerfox integration."""
 
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import override
 
@@ -17,7 +18,7 @@ from powerfox import (
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -29,6 +30,8 @@ class PowerfoxAuthState:
     """Track authentication failures shared by all account coordinators."""
 
     failure_since: datetime | None = None
+    last_verification: datetime | None = None
+    verification_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
     def record_failure(self, now: datetime) -> bool:
         """Record a failure and return whether the grace period has expired."""
@@ -41,6 +44,7 @@ class PowerfoxAuthState:
     def record_success(self) -> None:
         """Reset the investigation after successful authentication."""
         self.failure_since = None
+        self.last_verification = None
 
 
 type PowerfoxCoordinator = (
@@ -83,31 +87,39 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
             now = dt_util.utcnow()
 
             if self.auth_state.record_failure(now):
-                failure_since = self.auth_state.failure_since
+                async with self.auth_state.verification_lock:
+                    failure_since = self.auth_state.failure_since
+                    last_verification = self.auth_state.last_verification
 
-                try:
-                    await self.client.all_devices()
-                except PowerfoxAuthenticationError as auth_err:
-                    if self.auth_state.failure_since == failure_since:
-                        raise ConfigEntryAuthFailed(
-                            translation_domain=DOMAIN,
-                            translation_key="auth_failed",
-                        ) from auth_err
-                except PowerfoxConnectionError:
-                    pass
-                else:
-                    if self.auth_state.failure_since == failure_since:
-                        self.auth_state.record_success()
+                    if (
+                        failure_since is not None
+                        and now - failure_since >= timedelta(minutes=5)
+                        and (
+                            last_verification is None
+                            or now - last_verification >= timedelta(minutes=1)
+                        )
+                    ):
+                        self.auth_state.last_verification = now
+
+                        try:
+                            await self.client.all_devices()
+                        except PowerfoxAuthenticationError:
+                            # Another 401 does not reliably distinguish invalid
+                            # credentials from a temporary Powerfox API issue.
+                            # Keep retrying instead of forcing reauthentication.
+                            pass
+                        except PowerfoxConnectionError:
+                            pass
 
             if self.config_entry.state is not ConfigEntryState.LOADED:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
-                    translation_key="auth_failed",
+                    translation_key="auth_retry",
                 ) from err
 
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="auth_failed",
+                translation_key="auth_retry",
             ) from err
         except PowerfoxConnectionError as err:
             raise UpdateFailed(

@@ -11,7 +11,7 @@ from powerfox import (
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -59,14 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
         devices = await client.all_devices()
     except PowerfoxAuthenticationError as err:
         await client.close()
-        if auth_state.record_failure(dt_util.utcnow()):
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_failed",
-            ) from err
+        auth_state.record_failure(dt_util.utcnow())
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="auth_failed",
+            translation_key="auth_retry",
         ) from err
     except PowerfoxConnectionError as err:
         await client.close()

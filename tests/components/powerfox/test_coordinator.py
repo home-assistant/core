@@ -1,5 +1,6 @@
 """Test the Powerfox data update coordinators."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -10,6 +11,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
@@ -88,11 +90,10 @@ async def test_persistent_authentication_error(
     freezer: FrozenDateTimeFactory,
     method: str,
 ) -> None:
-    """Test persistent authentication errors trigger reauthentication."""
+    """Test persistent authentication errors remain retryable."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Simulate an account-wide authentication failure.
     mock_powerfox_client.device.side_effect = PowerfoxAuthenticationError
     mock_powerfox_client.report.side_effect = PowerfoxAuthenticationError
     mock_powerfox_client.all_devices.side_effect = PowerfoxAuthenticationError
@@ -109,9 +110,9 @@ async def test_persistent_authentication_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    # Even a prolonged HTTP 401 must not force reauthentication.
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.parametrize("method", ["device", "report"])
@@ -226,6 +227,96 @@ async def test_authentication_recheck_connection_error(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_powerfox_client.all_devices.call_count >= 2
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_concurrent_authentication_verification_is_serialized(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test concurrent coordinators perform only one credential verification."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinators = mock_config_entry.runtime_data
+    first, second = coordinators[:2]
+    auth_state = first.auth_state
+
+    # Avoid waiting for the actual five-minute grace period.
+    auth_state.failure_since = dt_util.utcnow() - timedelta(minutes=6)
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def delayed_verification() -> None:
+        started.set()
+        await release.wait()
+        raise PowerfoxConnectionError
+
+    mock_powerfox_client.all_devices.side_effect = delayed_verification
+
+    first._async_fetch_data = AsyncMock(side_effect=PowerfoxAuthenticationError)
+    second._async_fetch_data = AsyncMock(side_effect=PowerfoxAuthenticationError)
+
+    initial_calls = mock_powerfox_client.all_devices.call_count
+
+    first_task = asyncio.create_task(first._async_update_data())
+    await started.wait()
+
+    second_task = asyncio.create_task(second._async_update_data())
+
+    try:
+        await asyncio.sleep(0)
+
+        # The second coordinator must wait rather than call the API.
+        assert mock_powerfox_client.all_devices.call_count == initial_calls + 1
+
+    finally:
+        release.set()
+        results = await asyncio.gather(first_task, second_task, return_exceptions=True)
+
+    assert all(isinstance(result, UpdateFailed) for result in results)
+    assert mock_powerfox_client.all_devices.call_count == initial_calls + 1
+    assert auth_state.last_verification is not None
+
+
+async def test_successful_verification_preserves_authentication_failure(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Successful account verification must not reset a failing device."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data[0]
+    auth_state = coordinator.auth_state
+
+    # Simulate a persistent authentication failure beyond the grace period.
+    failure_since = dt_util.utcnow() - timedelta(minutes=6)
+    auth_state.failure_since = failure_since
+    auth_state.last_verification = None
+
+    # Account verification succeeds, but the device still returns HTTP 401.
+    mock_powerfox_client.all_devices.reset_mock()
+    mock_powerfox_client.all_devices.side_effect = None
+
+    coordinator._async_fetch_data = AsyncMock(side_effect=PowerfoxAuthenticationError)
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    mock_powerfox_client.all_devices.assert_awaited_once()
+
+    # The original failure timestamp must survive account verification.
+    assert auth_state.failure_since == failure_since
+    assert auth_state.last_verification is not None
+
+    # Another device failure within one minute must not verify again.
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    mock_powerfox_client.all_devices.assert_awaited_once()
+    assert auth_state.failure_since == failure_since
 
 
 async def test_coordinators_share_authentication_state(

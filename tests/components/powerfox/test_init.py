@@ -58,10 +58,9 @@ async def test_config_entry_auth_failed(
     freezer: FrozenDateTimeFactory,
     method: str,
 ) -> None:
-    """Test persistent authentication failures trigger reauthentication."""
+    """Test persistent authentication errors keep setup retryable."""
     getattr(mock_powerfox_client, method).side_effect = PowerfoxAuthenticationError
 
-    # Device failures must also fail the account-level authentication check.
     if method == "device":
         mock_powerfox_client.all_devices.side_effect = PowerfoxAuthenticationError
 
@@ -70,20 +69,16 @@ async def test_config_entry_auth_failed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # A single authentication failure must not trigger reauthentication.
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.config_entries.flow.async_progress()
 
-    # Authentication is still failing after the five-minute grace period.
     freezer.tick(timedelta(seconds=310))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    # Persistent HTTP 401 responses must not trigger reauthentication.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_transient_authentication_error_during_setup(
