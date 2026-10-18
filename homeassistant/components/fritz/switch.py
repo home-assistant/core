@@ -68,7 +68,7 @@ async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str
         if (switch_name := _wifi_naming(i, wifi_count)) is None:
             continue
         networks[i] = network_info
-        networks[i]["switch_name"] = switch_name
+        networks[i]["switch_name"] = slugify(switch_name)
 
     LOGGER.debug("WiFi networks list: %s", networks)
     return networks
@@ -98,9 +98,7 @@ async def _migrate_to_new_unique_id(
             description += f" ({WIFI_STANDARD[index]})"
 
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
-        new_unique_id = (
-            f"{avm_wrapper.unique_id}-wi_fi_{slugify(network['switch_name'])}"
-        )
+        new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{network['switch_name']}"
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, old_unique_id
@@ -549,10 +547,10 @@ class FritzBoxWifiSwitch(FritzBoxBaseCoordinatorSwitch):
     ) -> None:
         """Init Fritz Wifi switch."""
         self._network_num = network_num
-        name = f"Wi-Fi {network_data['switch_name']}"
+        key = slugify(f"Wi-Fi {network_data['switch_name']}")
         description = SwitchEntityDescription(
-            key=slugify(name),
-            translation_key=slugify(name),
+            key=key,
+            translation_key=key,
             icon="mdi:wifi",
             entity_registry_enabled_default=avm_wrapper.mesh_role
             is not MeshRoles.SLAVE,
