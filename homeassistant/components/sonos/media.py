@@ -1,6 +1,7 @@
 """Support for media metadata handling."""
 
 import datetime as dt
+import logging
 from typing import Any
 
 from soco.core import (
@@ -13,15 +14,18 @@ from soco.core import (
 )
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.music_library import MusicLibrary
+import yarl
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.network import is_hass_url
 from homeassistant.util import dt as dt_util
 
 from .const import (
     SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
+    SONOS_STATE_STOPPED,
     SONOS_STATE_TRANSITIONING,
     SOURCE_AIRPLAY,
     SOURCE_LINEIN,
@@ -29,6 +33,8 @@ from .const import (
     SOURCE_TV,
 )
 from .helpers import soco_error
+
+_LOGGER = logging.getLogger(__name__)
 
 LINEIN_SOURCES = (MUSIC_SRC_TV, MUSIC_SRC_LINE_IN)
 SOURCE_MAPPING = {
@@ -56,6 +62,8 @@ class SonosMedia:
         """Initialize a SonosMedia."""
         self.hass = hass
         self.soco = soco
+        self.played_hass_media_uri: str | None = None
+        self.transport_uri: str | None = None
         self.play_mode: str | None = None
         self.playback_status: str | None = None
 
@@ -144,6 +152,10 @@ class SonosMedia:
         """Update information about currently playing media using an event payload."""
         new_status = evars["transport_state"]
         state_changed = new_status != self.playback_status
+        # Only included in events when it changes
+        if "av_transport_uri" in evars:
+            self.transport_uri = evars["av_transport_uri"]
+        self.release_finished_hass_media(new_status, self.playback_status is None)
 
         self.play_mode = evars["current_play_mode"]
         self.playback_status = new_status
@@ -190,13 +202,56 @@ class SonosMedia:
         if new_status == SONOS_STATE_TRANSITIONING:
             return
 
+        first_update = self.playback_status is None
         update_position = new_status != self.playback_status
         self.playback_status = new_status
         self.play_mode = self.soco.play_mode
 
         self.set_basic_track_info(update_position=update_position)
 
+        if self.uri and self.is_signed_hass_url(self.uri):
+            self.transport_uri = self.soco.avTransport.GetMediaInfo(
+                [("InstanceID", 0)]
+            )["CurrentURI"]
+            self.release_finished_hass_media(new_status, first_update)
+
         self.write_media_player_states()
+
+    def is_signed_hass_url(self, uri: str) -> bool:
+        """Return if the URI is Home Assistant media with an expiring signature."""
+        return "authSig" in yarl.URL(uri).query and is_hass_url(self.hass, uri)
+
+    @soco_error()
+    def release_finished_hass_media(self, new_status: str, first_update: bool) -> None:
+        """Switch to the queue once signed Home Assistant media has finished.
+
+        Otherwise Sonos fetches the URL again on the next play, when the signature
+        may have expired.
+        """
+        transport_uri = self.transport_uri
+        if not transport_uri or not self.is_signed_hass_url(transport_uri):
+            self.played_hass_media_uri = None
+            return
+
+        if new_status == SONOS_STATE_PLAYING:
+            self.played_hass_media_uri = transport_uri
+            return
+
+        # Sonos reports STOPPED with the new URL before it starts playing it
+        if new_status != SONOS_STATE_STOPPED or (
+            not first_update and transport_uri != self.played_hass_media_uri
+        ):
+            return
+
+        _LOGGER.debug("Releasing finished media on %s", self.soco.ip_address)
+        self.played_hass_media_uri = None
+        self.soco.avTransport.SetAVTransportURI(
+            [
+                ("InstanceID", 0),
+                ("CurrentURI", f"x-rincon-queue:{self.soco.uid}#0"),
+                ("CurrentURIMetaData", ""),
+            ]
+        )
 
     def update_media_position(
         self, position_info: dict[str, int], force_update: bool = False

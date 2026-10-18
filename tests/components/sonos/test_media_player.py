@@ -1,9 +1,9 @@
 """Tests for the Sonos Media Player platform."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Coroutine, Generator
 import logging
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, _Call, call, patch
 
 from freezegun import freeze_time
 import pytest
@@ -1348,6 +1348,114 @@ async def test_state_paused_idle(
 
     state = hass.states.get("media_player.zone_a")
     assert state.state == expected_state
+
+
+HASS_MEDIA_URI = "http://10.0.0.1:8123/media/local/chime.mp3?authSig=abc"
+RELEASE_CALL = call(
+    [
+        ("InstanceID", 0),
+        ("CurrentURI", "x-rincon-queue:RINCON_test#0"),
+        ("CurrentURIMetaData", ""),
+    ]
+)
+
+
+@pytest.mark.parametrize(
+    ("transport_uri", "track_uri", "states", "expected_calls"),
+    [
+        pytest.param(
+            HASS_MEDIA_URI,
+            HASS_MEDIA_URI,
+            ["STOPPED", "PLAYING", "STOPPED"],
+            [RELEASE_CALL],
+            id="finished",
+        ),
+        pytest.param(
+            HASS_MEDIA_URI, HASS_MEDIA_URI, ["STOPPED"], [], id="not_yet_played"
+        ),
+        pytest.param(
+            HASS_MEDIA_URI,
+            HASS_MEDIA_URI,
+            ["PLAYING", "PAUSED_PLAYBACK"],
+            [],
+            id="paused",
+        ),
+        pytest.param(
+            "x-rincon-queue:RINCON_test#0",
+            HASS_MEDIA_URI,
+            ["PLAYING", "STOPPED"],
+            [],
+            id="queue",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/local/chime.mp3",
+            "",
+            ["PLAYING", "STOPPED"],
+            [],
+            id="unsigned",
+        ),
+        pytest.param(
+            "http://10.0.0.2/chime.mp3?authSig=abc",
+            "",
+            ["PLAYING", "STOPPED"],
+            [],
+            id="other_host",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_finished_hass_media(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    no_media_event: SonosMockEvent,
+    transport_uri: str,
+    track_uri: str,
+    states: list[str],
+    expected_calls: list[_Call],
+) -> None:
+    """Test finished signed Home Assistant media is replaced by the queue."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    variables = no_media_event.variables | {"current_track_uri": track_uri}
+    # Speakers only include the transport URI in events when it changes
+    events = [
+        variables | {"transport_state": states[0], "av_transport_uri": transport_uri}
+    ] + [variables | {"transport_state": state} for state in states[1:]]
+    for event_vars in events:
+        event = SonosMockEvent(soco, soco.avTransport, event_vars)
+        soco.avTransport.subscribe.return_value.callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert soco.avTransport.SetAVTransportURI.call_args_list == expected_calls
+
+
+@pytest.mark.parametrize(
+    ("transport_uri", "expected_calls"),
+    [
+        pytest.param(HASS_MEDIA_URI, [RELEASE_CALL], id="stale_transport"),
+        pytest.param("x-rincon-queue:RINCON_test#0", [], id="queue"),
+    ],
+)
+async def test_release_stale_hass_media_on_startup(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    current_track_info: dict[str, Any],
+    transport_uri: str,
+    expected_calls: list[_Call],
+) -> None:
+    """Test signed Home Assistant media left from before a restart is released."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    soco.get_current_transport_info.return_value = {
+        "current_transport_state": "STOPPED"
+    }
+    soco.get_current_track_info.return_value = current_track_info | {
+        "uri": HASS_MEDIA_URI
+    }
+    soco.avTransport.GetMediaInfo.return_value = {"CurrentURI": transport_uri}
+
+    await async_setup_sonos()
+
+    assert soco.avTransport.SetAVTransportURI.call_args_list == expected_calls
 
 
 async def test_play_media_announce(
