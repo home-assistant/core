@@ -302,13 +302,14 @@ async def test_external_usb_first_device(
     entity_registry: er.EntityRegistry,
     mock_dsm_with_usb_no_devices: MagicMock,
     setup_dsm_with_usb: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Synology DSM USB adding a device when none was connected at setup."""
     entity_id = "sensor.nas_meontheinternet_com_usb_disk_1_status"
     entry = setup_dsm_with_usb.mock_entry
-    coordinator = entry.runtime_data.coordinator_central
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is None
 
@@ -319,7 +320,8 @@ async def test_external_usb_first_device(
         )
 
     setup_dsm_with_usb.update.side_effect = _update
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
@@ -334,7 +336,8 @@ async def test_external_usb_first_device(
                 entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
             )
     await hass.async_block_till_done()
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert entry.runtime_data.api.external_usb is None
