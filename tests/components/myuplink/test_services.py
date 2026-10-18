@@ -51,111 +51,6 @@ async def test_services(
     )
 
 
-# @pytest.mark.parametrize(
-#     ("call_arguments", "myuplink_arguments"),
-#     [
-#         (
-#             {ATTR_PROGRAM_ID: 24},
-#             {"programId": 24},
-#         ),
-#         (
-#             {ATTR_PROGRAM_ID: 25, ATTR_DURATION: timedelta(minutes=75)},
-#             {"programId": 25, "duration": [1, 15]},
-#         ),
-#         (
-#             {
-#                 ATTR_PROGRAM_ID: 26,
-#                 ATTR_DURATION: timedelta(minutes=135),
-#                 ATTR_TEMPERATURE: 180,
-#             },
-#             {"programId": 26, "duration": [2, 15], "temperature": 180},
-#         ),
-#     ],
-# )
-# async def test_services_oven(
-#     hass: HomeAssistant,
-#     device_registry: DeviceRegistry,
-#     mock_myuplink_client: MagicMock,
-#     mock_config_entry: MockConfigEntry,
-#     call_arguments: dict,
-#     myuplink_arguments: dict,
-# ) -> None:
-#     """Tests that the custom services are correct for ovens."""
-
-#     await setup_integration(hass, mock_config_entry)
-#     device = device_registry.async_get_device_by_identifier(
-#         (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
-#     )
-#     await hass.services.async_call(
-#         DOMAIN,
-#         SERVICE_SET_PROGRAM_OVEN,
-#         {ATTR_DEVICE_ID: device.id, **call_arguments},
-#         blocking=True,
-#     )
-#     mock_myuplink_client.set_program.assert_called_once_with(
-#         TEST_APPLIANCE, myuplink_arguments
-#     )
-
-
-# async def test_services_with_response(
-#     hass: HomeAssistant,
-#     device_registry: DeviceRegistry,
-#     mock_myuplink_client: MagicMock,
-#     mock_config_entry: MockConfigEntry,
-#     snapshot: SnapshotAssertion,
-# ) -> None:
-#     """Tests that the custom services that returns a response are correct."""
-
-#     await setup_integration(hass, mock_config_entry)
-#     device = device_registry.async_get_device_by_identifier(
-#         (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
-#     )
-#     assert snapshot == await hass.services.async_call(
-#         DOMAIN,
-#         SERVICE_GET_PROGRAMS,
-#         {
-#             ATTR_DEVICE_ID: device.id,
-#         },
-#         blocking=True,
-#         return_response=True,
-#     )
-
-
-# @pytest.mark.parametrize(
-#     ("service", "error"),
-#     [
-#         (SERVICE_SET_PROGRAM, "'Set program' action failed"),
-#         (SERVICE_SET_PROGRAM_OVEN, "'Set program on oven' action failed"),
-#     ],
-# )
-# async def test_service_api_errors(
-#     hass: HomeAssistant,
-#     device_registry: DeviceRegistry,
-#     mock_myuplink_client: MagicMock,
-#     mock_config_entry: MockConfigEntry,
-#     service: str,
-#     error: str,
-# ) -> None:
-#     """Test service api errors."""
-#     await setup_integration(hass, mock_config_entry)
-#     device = device_registry.async_get_device_by_identifier(
-#         (DOMAIN, TEST_APPLIANCE), mock_config_entry.entry_id
-#     )
-
-#     # Test http error
-#     mock_myuplink_client.set_program.side_effect = ClientResponseError(Mock(), Mock())
-#     with pytest.raises(HomeAssistantError, match=error):
-#         await hass.services.async_call(
-#             DOMAIN,
-#             service,
-#             {ATTR_DEVICE_ID: device.id, ATTR_PROGRAM_ID: 1},
-#             blocking=True,
-#         )
-#     mock_myuplink_client.set_program.assert_called_once_with(
-#         TEST_APPLIANCE, {"programId": 1}
-#     )
-
-
 async def test_get_service_api_errors(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
@@ -206,7 +101,7 @@ async def test_service_validation_errors(
     mock_myuplink_client.async_set_device_points.assert_not_called()
 
     # Test invalid device
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+    with pytest.raises(ServiceValidationError, match="Device with ID invalid_device"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_DATAPOINT,
