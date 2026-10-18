@@ -17,7 +17,7 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -35,6 +35,7 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     DEFAULT_COMMUNITY,
+    DEFAULT_PORT,
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
@@ -83,6 +84,25 @@ async def _async_legacy_tracked_dev_ids(hass: HomeAssistant) -> dict[str, str]:
     }
 
 
+@callback
+def _is_migrated_table(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Return True if the table of this YAML block is already migrated."""
+    baseoid = config[CONF_BASEOID]
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data.get(CONF_HOST) != config[CONF_HOST]:
+            continue
+        if entry.data.get(CONF_PORT, DEFAULT_PORT) != config.get(
+            CONF_PORT, DEFAULT_PORT
+        ):
+            continue
+        if any(
+            subentry.data.get(CONF_BASEOID) == baseoid
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
+        ):
+            return True
+    return False
+
+
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
@@ -96,26 +116,50 @@ async def async_setup_scanner(
         data=config,
     )
 
-    if (
-        result["type"] is FlowResultType.ABORT
-        and result["reason"] != "already_configured"
-    ):
+    if result["type"] is FlowResultType.ABORT:
         reason = result["reason"]
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{reason}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{reason}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "SNMP",
-                "host": config[CONF_HOST],
-            },
+        if reason != "already_configured":
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{reason}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{reason}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "SNMP",
+                    "host": config[CONF_HOST],
+                },
+            )
+            return False
+
+        baseoid = config[CONF_BASEOID]
+        issue_id = (
+            "deprecated_yaml_import_issue_multiple_trackers_"
+            f"{config[CONF_HOST]}_{baseoid}"
         )
-        return False
+        if _is_migrated_table(hass, config):
+            # Every block is imported again on a restart, so this one is covered
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+        else:
+            # Another entry owns this agent, so this block was not migrated
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_multiple_trackers",
+                translation_placeholders={
+                    "integration_title": "SNMP",
+                    "host": config[CONF_HOST],
+                    "baseoid": baseoid,
+                },
+            )
+            return False
 
     ir.async_create_issue(
         hass,
@@ -150,7 +194,14 @@ async def async_setup_entry(
     # behaviour of the other router integrations.
     legacy_dev_ids: dict[str, str] = {}
     if entry.source == SOURCE_IMPORT:
-        legacy_dev_ids = await _async_legacy_tracked_dev_ids(hass)
+        tracked_dev_ids = await _async_legacy_tracked_dev_ids(hass)
+        # Once registered, the entity id belongs to the registry, so it is only
+        # reused when the entity is allocated and never re-applied on a reload.
+        legacy_dev_ids = {
+            mac: dev_id
+            for mac, dev_id in tracked_dev_ids.items()
+            if ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac) is None
+        }
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
         _async_setup_subentry(

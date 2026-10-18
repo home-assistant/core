@@ -12,16 +12,25 @@ import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.snmp.const import (
+    CONF_BASEOID,
+    CONF_CONTEXT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    SUBENTRY_TYPE_DEVICE_TRACKER,
+)
 from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
     _async_legacy_tracked_dev_ids,
+    _is_migrated_table,
     async_setup_scanner,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    CONF_HOST,
     CONF_PLATFORM,
+    CONF_PORT,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
@@ -456,6 +465,114 @@ async def test_async_setup_scanner_import(
     assert issue.translation_key == "deprecated_yaml"
 
 
+@pytest.mark.usefixtures("mock_walk")
+async def test_async_setup_scanner_second_table_is_reported(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a second YAML tracker for the same host is not dropped silently."""
+    config = {
+        CONF_PLATFORM: DOMAIN,
+        "host": "192.168.1.1",
+        "baseoid": "1.3.6.1.2.1.4.22.1.2",
+        "community": "public",
+    }
+    assert await async_setup_scanner(hass, config, Mock()) is True
+    await hass.async_block_till_done()
+
+    baseoid = "1.3.6.1.2.1.17.4.3.1.2"
+    assert (
+        await async_setup_scanner(hass, {**config, "baseoid": baseoid}, Mock()) is False
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    issue = issue_registry.async_get_issue(
+        DOMAIN,
+        f"deprecated_yaml_import_issue_multiple_trackers_192.168.1.1_{baseoid}",
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml_import_issue_multiple_trackers"
+    assert issue.translation_placeholders == {
+        "integration_title": "SNMP",
+        "host": "192.168.1.1",
+        "baseoid": baseoid,
+    }
+
+
+@pytest.mark.usefixtures("mock_walk")
+async def test_async_setup_scanner_same_table_is_not_reported(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that re-importing the same table is not reported as a lost tracker."""
+    config = {
+        CONF_PLATFORM: DOMAIN,
+        "host": "192.168.1.1",
+        "baseoid": "1.3.6.1.2.1.4.22.1.2",
+        "community": "public",
+    }
+    issue_id = (
+        "deprecated_yaml_import_issue_multiple_trackers_"
+        "192.168.1.1_1.3.6.1.2.1.4.22.1.2"
+    )
+    assert await async_setup_scanner(hass, config, Mock()) is True
+    await hass.async_block_till_done()
+
+    # A restart re-imports the block, so a stale report has to be cleaned up
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_import_issue_multiple_trackers",
+        translation_placeholders={
+            "integration_title": "SNMP",
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
+        },
+    )
+    assert await async_setup_scanner(hass, config, Mock()) is True
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    ("host", "port"),
+    [
+        pytest.param("192.168.1.2", 161, id="other_host"),
+        pytest.param("192.168.1.1", 1161, id="other_port"),
+    ],
+)
+async def test_is_migrated_table_ignores_other_agents(
+    hass: HomeAssistant, host: str, port: int
+) -> None:
+    """Test that an entry for another agent does not count as migrated."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: host, CONF_PORT: port, CONF_CONTEXT_NAME: ""},
+        subentries_data=[
+            {
+                "data": {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},
+                "subentry_type": SUBENTRY_TYPE_DEVICE_TRACKER,
+                "title": "Device tracker",
+                "unique_id": SUBENTRY_TYPE_DEVICE_TRACKER,
+            }
+        ],
+    ).add_to_hass(hass)
+
+    assert not _is_migrated_table(
+        hass,
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_PORT: 161,
+            CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2",
+        },
+    )
+
+
 async def test_async_setup_scanner_v3_credentials(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -548,6 +665,49 @@ async def test_device_tracker_entity_id_changed_repair(
         "entity_id": LEGACY_ENTITY_ID,
         "new_entity_id": entity_id,
     }
+
+
+@pytest.mark.usefixtures("mock_walk")
+async def test_device_tracker_entity_id_rename_is_not_reported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that renaming a migrated entity is not reported as a lost id."""
+    config = {
+        DEVICE_TRACKER_DOMAIN: {
+            CONF_PLATFORM: "snmp",
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.2",
+            "community": "public",
+        }
+    }
+
+    with patch_yaml_files(_known_devices_named("andrea_phone", MAC)):
+        assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, config)
+        await hass.async_block_till_done()
+
+    legacy_entity_id = "device_tracker.andrea_phone"
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+        == legacy_entity_id
+    )
+
+    entity_registry.async_update_entity(
+        legacy_entity_id, new_entity_id="device_tracker.renamed"
+    )
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch_yaml_files(_known_devices_named("andrea_phone", MAC)):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+        == "device_tracker.renamed"
+    )
+    assert issue_registry.async_get_issue(DOMAIN, f"entity_id_changed_{MAC}") is None
 
 
 async def test_device_tracker_update_empty_data(

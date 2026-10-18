@@ -192,10 +192,11 @@ def _entry_title(data: dict[str, Any]) -> str:
 
 
 def _suggested_credentials(data: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the credentials which may be shown in a form.
+    """Return the credentials without the secrets, for forms and updates.
 
-    The keys and the community string are never sent back to the frontend, so
-    editing an entry only requires retyping those.
+    The keys and the community string are never sent back to the frontend, so a
+    form can not tell an omitted secret from an unchanged one. Leaving them out
+    means an empty field removes the stored value instead of keeping it.
     """
     return {
         key: value
@@ -284,7 +285,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 data = {
-                    **self._user_data,
+                    **_suggested_credentials(self._user_data),
                     **user_input,
                     # Stored for every entry, also when there is none, so the
                     # duplicate check can compare it symmetrically.
@@ -431,8 +432,13 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=title, data=data)
             if entry.update_listeners:
-                # The listener reloads the entry after the update
-                return self.async_update_and_abort(entry, title=title, data=data)
+                # The listener only reloads when the update changed the entry, and
+                # polling stopped on the failure, so an unchanged reauth reloads here
+                changed = entry.title != title or entry.data != data
+                result = self.async_update_and_abort(entry, title=title, data=data)
+                if not changed:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
             # A failed setup never registers the listener, so reload explicitly
             return self.async_update_reload_and_abort(entry, title=title, data=data)
         return None

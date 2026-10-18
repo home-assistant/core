@@ -1319,6 +1319,104 @@ async def test_reauth_flow_updates_credentials(
     assert mock_setup_entry.called
 
 
+async def test_reauth_flow_drops_removed_privacy_key(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test that downgrading to authentication without privacy drops the key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.1.1",
+        data={
+            "host": "192.168.1.1",
+            CONF_PORT: 161,
+            "version": "3",
+            "username": "user",
+            "auth_key": "auth-key",
+            "auth_protocol": "hmac-sha",
+            "priv_key": "priv-key",
+            "priv_protocol": "aes-cfb-128",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "user",
+                "auth_key": "auth-key",
+                "auth_protocol": "hmac-sha",
+                "priv_protocol": "none",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data["priv_protocol"] == "none"
+    assert "priv_key" not in entry.data
+    assert mock_setup_entry.called
+
+
+async def test_reauth_flow_reloads_when_credentials_are_unchanged(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a reauth which changes nothing still reloads the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.1.1",
+        data={
+            "host": "192.168.1.1",
+            CONF_PORT: 161,
+            "version": "3",
+            "username": "user",
+            "auth_key": "auth-key",
+            "auth_protocol": "hmac-sha",
+            "priv_protocol": "none",
+            "context_name": "",
+        },
+    )
+    entry.add_to_hass(hass)
+    listener = AsyncMock()
+    entry.add_update_listener(listener)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            return_value=(None, None, None, [[OctetString("98F")]]),
+        ),
+        patch.object(
+            hass.config_entries, "async_schedule_reload"
+        ) as mock_schedule_reload,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "user",
+                "auth_key": "auth-key",
+                "auth_protocol": "hmac-sha",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    # The update listener does not fire for an unchanged entry
+    assert not listener.called
+    mock_schedule_reload.assert_called_once_with(entry.entry_id)
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) -> None:
     """Test that a v3 flow is not aborted before its context name is known."""
