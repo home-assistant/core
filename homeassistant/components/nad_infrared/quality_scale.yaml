@@ -87,7 +87,10 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      This integration does not raise exceptions.
   icon-translations:
     status: exempt
     comment: |

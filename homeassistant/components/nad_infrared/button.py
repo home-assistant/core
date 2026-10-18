@@ -1,7 +1,4 @@
-"""Button platform for NAD Infrared integration.
-
-Only commands that aren't already exposed by a media player live here.
-"""
+"""Button platform for NAD Infrared integration."""
 
 from dataclasses import dataclass
 from typing import override

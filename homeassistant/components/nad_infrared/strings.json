@@ -316,29 +316,6 @@
       "tuner_tune_up": {
         "name": "Tune up"
       }
-    },
-    "media_player": {
-      "receiver": {
-        "state_attributes": {
-          "source": {
-            "state": {
-              "input_1": "Input 1",
-              "input_2": "Input 2",
-              "input_3": "Input 3",
-              "input_4": "Input 4",
-              "input_5": "Input 5",
-              "input_6": "Input 6",
-              "input_7": "Input 7",
-              "tuner": "Tuner"
-            }
-          }
-        }
-      }
-    }
-  },
-  "exceptions": {
-    "invalid_source": {
-      "message": "Cannot select input source {invalid_source}. Valid sources: {valid_sources}."
     }
   }
 }
