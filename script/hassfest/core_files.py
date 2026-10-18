@@ -40,7 +40,6 @@ MISSING_ALL = {
     "person",
     "recorder",
     "recovery_mode",
-    "script",
     "shopping_list",
     "ssdp",
     "sun",
