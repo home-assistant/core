@@ -37,6 +37,7 @@ def mock_charger() -> Generator[MagicMock]:
         charger.websocket = MagicMock()
         charger.callback = None
         # Status sensors
+        charger.state = "Charging"
         charger.status = "Charging"
         charger.mode = "STA"
         charger.charge_mode = "fast"
