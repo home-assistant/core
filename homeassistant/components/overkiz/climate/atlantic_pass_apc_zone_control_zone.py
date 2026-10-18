@@ -709,6 +709,24 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 await self.async_execute_and_refresh_modes(program_commands)
             return
 
+        # With no side running, the program has no setpoint to change and a
+        # manual one would start a derogation over it.
+        states = self.device.states
+        if (
+            self.active_hvac_mode == HVACMode.HEAT_COOL
+            and states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            != OverkizCommandParam.ON
+            and OverkizCommandParam.INTERNAL_SCHEDULING
+            in (
+                states.get_value(OverkizState.IO_PASS_APC_HEATING_MODE),
+                states.get_value(OverkizState.IO_PASS_APC_COOLING_MODE),
+            )
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="zone_control_side_unknown",
+            )
+
         # A single setpoint applies to the side currently running.
         if (
             self.device_hvac_mode == HVACMode.HEAT_COOL
@@ -726,7 +744,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        hvac_mode = self.hvac_mode
+        # The setpoints are written even when the zone is off.
+        hvac_mode = self.device_hvac_mode
         commands: list[Command] = []
 
         if hvac_mode == HVACMode.HEAT_COOL:
