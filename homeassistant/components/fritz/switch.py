@@ -100,8 +100,7 @@ async def _migrate_to_new_unique_id(
 
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
         new_unique_id = (
-            f"{avm_wrapper.unique_id}-wi_fi_"
-            f"{slugify(_wifi_naming(index, len(networks)))}"
+            f"{avm_wrapper.unique_id}-wi_fi_{slugify(network['switch_name'])}"
         )
 
         entity_id = entity_registry.async_get_entity_id(
