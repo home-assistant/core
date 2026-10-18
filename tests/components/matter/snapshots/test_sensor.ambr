@@ -44272,6 +44272,78 @@
     'state': '2025-01-01T13:58:08+00:00',
   })
 # ---
+# name: test_sensors[thread_border_router][sensor.border_router_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000005A-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.border_router_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000005A-MatterNodeDevice-1-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[thread_border_router][sensor.border_router_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Border Router Thread routing role',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.border_router_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unspecified',
+  })
+# ---
 # name: test_sensors[tp_link_smart_outdoor_plug][sensor.smart_outdoor_plug_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

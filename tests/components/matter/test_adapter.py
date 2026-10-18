@@ -13,7 +13,7 @@ from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import create_node_from_fixture
+from .common import create_node_from_fixture, trigger_subscription_callback
 
 
 def identifier_for(
@@ -146,20 +146,15 @@ async def test_node_added_subscription(
     matter_client: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
-    assert matter_client.subscribe_events.call_count == 5
-    assert (
-        matter_client.subscribe_events.call_args.kwargs["event_filter"]
-        == EventType.NODE_UPDATED
-    )
+    # Five by the adapter, five by the Thread dataset importer.
+    assert matter_client.subscribe_events.call_count == 10
 
-    node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
     node = create_node_from_fixture("mock_onoff_light")
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert not entity_state
 
-    node_added_callback(EventType.NODE_ADDED, node)
-    await hass.async_block_till_done()
+    await trigger_subscription_callback(hass, matter_client, EventType.NODE_ADDED, node)
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
@@ -504,7 +499,8 @@ async def test_bad_node_not_crash_integration(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert matter_client.get_nodes.call_count == 1
+    # Once by the adapter, once by the Thread dataset importer.
+    assert matter_client.get_nodes.call_count == 2
     assert hass.states.get("light.mock_onoff_light") is not None
     assert len(hass.states.async_all("light")) == 1
     assert "Error setting up node" in caplog.text

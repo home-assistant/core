@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
     from .adapter import MatterAdapter
     from .models import MatterEntityInfo
+    from .thread_border_router import ThreadDatasetImporter
 
 
 class MissingNode(HomeAssistantError):
@@ -30,6 +31,7 @@ class MatterEntryData:
 
     adapter: MatterAdapter
     listen_task: asyncio.Task
+    thread_datasets: ThreadDatasetImporter
     ble_proxy: MatterBleProxy | None = None
 
 
