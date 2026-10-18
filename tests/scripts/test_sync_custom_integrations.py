@@ -112,6 +112,22 @@ def test_prune(tmp_path: Path) -> None:
     assert (tmp_path / ".state.json").is_file()
 
 
+def test_prune_skips_files_and_symlinks(tmp_path: Path) -> None:
+    """Test that files and symlinks next to repos are skipped, not removed."""
+    copy = tmp_path / "copy"
+    (copy / "owner" / "gone").mkdir(parents=True)
+    (copy / "owner" / ".DS_Store").write_text("")
+    (tmp_path / "outside").mkdir()
+    (copy / "owner" / "link").symlink_to(tmp_path / "outside")
+
+    removed = prune(copy, set())
+
+    assert removed == ["owner/gone"]
+    assert (copy / "owner" / ".DS_Store").is_file()
+    assert (copy / "owner" / "link").is_symlink()
+    assert (tmp_path / "outside").is_dir()
+
+
 @pytest.mark.parametrize(
     ("dest", "lookalike"),
     [

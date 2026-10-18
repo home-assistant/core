@@ -331,12 +331,18 @@ def download(root: Path, repo: str, sha: str) -> None:
 
 
 def prune(root: Path, wanted: set[str]) -> list[str]:
-    """Remove repo directories (and emptied owners) not in wanted."""
+    """Remove repo directories (and emptied owners) not in wanted.
+
+    Files and symlinks (such as a .DS_Store left by a file manager) are never
+    repos, so they are skipped rather than passed to rmtree.
+    """
     removed = []
     for owner in root.iterdir():
-        if not owner.is_dir() or owner.name.startswith("."):
+        if owner.is_symlink() or not owner.is_dir() or owner.name.startswith("."):
             continue
         for repo_dir in owner.iterdir():
+            if repo_dir.is_symlink() or not repo_dir.is_dir():
+                continue
             repo = f"{owner.name}/{repo_dir.name}"
             if repo not in wanted:
                 shutil.rmtree(repo_dir)
