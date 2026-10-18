@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
@@ -133,24 +133,6 @@ class AbstractTemplateEntity(Entity):
             )
         ) is not None:
             self.device_entry = device_entry
-
-        if self._restore_state_cache_data is not None:
-
-            async def _async_dump_cache_at_stop(*_: Any) -> None:
-                await self.async_dump_cache()
-
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _async_dump_cache_at_stop
-            )
-
-        if self._restore_state_cache_data is not None:
-
-            async def _async_dump_cache_at_stop(*_: Any) -> None:
-                await self.async_dump_cache()
-
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _async_dump_cache_at_stop
-            )
 
     @property
     @abstractmethod
@@ -287,6 +269,21 @@ class AbstractTemplateEntity(Entity):
         """If the attribute is assumed, write the value to the attribute and update the ha state."""
         if self.update_assumed_attribute(option, value):
             self.async_write_ha_state()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register the cache dump at shutdown."""
+        await super().async_added_to_hass()
+        if self._restore_state_cache_data is not None:
+
+            async def _async_dump_cache_at_stop(_: Event) -> None:
+                await self.async_dump_cache()
+
+            self.async_on_remove(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, _async_dump_cache_at_stop
+                )
+            )
 
     @override
     async def async_will_remove_from_hass(self) -> None:

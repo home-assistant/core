@@ -1,9 +1,12 @@
 """The tests for the Template image platform."""
 
+from collections.abc import Generator
 from datetime import UTC, datetime
 from http import HTTPStatus
 from io import BytesIO
+from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import httpx2
 from PIL import Image
@@ -19,17 +22,21 @@ from homeassistant.components.input_text import (
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
 from homeassistant.components.template import DOMAIN
-from homeassistant.components.template.image import DEFAULT_NAME
+from homeassistant.components.template.image import DEFAULT_NAME, ImageExtraStoredData
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     CONF_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import Config
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from .conftest import (
     ConfigurationStyle,
@@ -63,6 +70,16 @@ TEST_IMAGE = TemplatePlatformSetup(
 )
 
 
+@pytest.fixture(autouse=True)
+def images_cache_dir(tmp_path: Path) -> Generator[Path]:
+    """Keep the image cache out of the shared testing config directory."""
+    cache_dir = tmp_path / ".cache"
+    with patch.object(
+        Config, "cache_path", lambda _, *path: str(cache_dir.joinpath(*path))
+    ):
+        yield cache_dir / DOMAIN / "images"
+
+
 @pytest.fixture
 def imgbytes_jpg():
     """Image in RAM for testing."""
@@ -76,6 +93,13 @@ def imgbytes2_jpg():
     """Image in RAM for testing."""
     buf = BytesIO()  # fake image in ram for testing.
     Image.new("RGB", (1, 1), 100).save(buf, format="jpeg")
+    return bytes(buf.getbuffer())
+
+
+def _image_bytes(image_format: str) -> bytes:
+    """Return a 1x1 image in the given format."""
+    buf = BytesIO()
+    Image.new("RGB", (1, 1), 100).save(buf, format=image_format)
     return bytes(buf.getbuffer())
 
 
@@ -711,16 +735,28 @@ async def test_attributes_template_with_blocked_attributes(
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
+@pytest.mark.parametrize(
+    ("image_format", "content_type"),
+    [
+        pytest.param("jpeg", "image/jpeg", id="jpeg"),
+        pytest.param("png", "image/png", id="png"),
+    ],
+)
 @respx.mock
 @pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
 async def test_restore_state(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     style: ConfigurationStyle,
+    images_cache_dir: Path,
+    image_format: str,
+    content_type: str,
     imgbytes_jpg: bytes,
-    imgbytes2_jpg: bytes,
 ) -> None:
     """Test restoring trigger template image."""
+    cached_image = _image_bytes(image_format)
+    images_cache_dir.mkdir(parents=True)
+    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(cached_image)
 
     respx.get("http://example.com").respond(
         stream=imgbytes_jpg, content_type="image/jpeg"
@@ -755,8 +791,9 @@ async def test_restore_state(
         hass,
         hass_client,
         "2021-07-13T00:00:00+00:00",
-        imgbytes2_jpg,
+        cached_image,
         entity_id=TEST_IMAGE.entity_id,
+        expected_content_type=content_type,
     )
 
     await async_trigger(hass, "sensor.test_state", "http://example.com")
@@ -847,6 +884,7 @@ async def test_saving_state(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     style: ConfigurationStyle,
+    images_cache_dir: Path,
     imgbytes_jpg: bytes,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -894,6 +932,13 @@ async def test_saving_state(
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == saved_extra_data
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert (
+        images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
+    ).read_bytes() == imgbytes_jpg
+
 
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -901,27 +946,93 @@ async def test_saving_state(
 @pytest.mark.parametrize(
     ("saved_extra_data"),
     [
-        {
-            "image_last_update": {
-                "__type": "<class 'datetime.datetime'>",
-                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        pytest.param(
+            {
+                "image_last_update": {
+                    "__type": "<class 'datetime.datetime'>",
+                    "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+                },
+                "image_url": "http://example.com",
             },
-            "image_url": "http://example.com",
-        },
-        {
-            "image_last_updated": {
-                "__ty": "<class 'datetime.datetime'>",
-                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            id="missing_image_last_updated",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__ty": "<class 'datetime.datetime'>",
+                    "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+                },
+                "image_url": "http://example.com",
             },
-            "image_url": "http://example.com",
-        },
-        {
-            "image_last_updated": {
-                "__type": "<class 'datetime.datetime'>",
-                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            id="missing_type",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__type": "<class 'datetime.datetime'>",
+                    "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+                },
+                "image_ur": "http://example.com",
             },
-            "image_ur": "http://example.com",
-        },
+            id="missing_image_url",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": "2021-07-13T00:00:00+00:00",
+                "image_url": "http://example.com",
+            },
+            id="image_last_updated_not_dict",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__type": "<class 'str'>",
+                    "isoformat": "2021-07-13T00:00:00+00:00",
+                },
+                "image_url": "http://example.com",
+            },
+            id="unknown_type",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__type": "<class 'datetime.datetime'>",
+                    "isoformat": 123,
+                },
+                "image_url": "http://example.com",
+            },
+            id="isoformat_not_str",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__type": "<class 'datetime.datetime'>",
+                    "isoformat": "not a datetime",
+                },
+                "image_url": "http://example.com",
+            },
+            id="isoformat_unparsable",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__type": "<class 'datetime.datetime'>",
+                    "isoformat": "2021-13-45T00:00:00+00:00",
+                },
+                "image_url": "http://example.com",
+            },
+            id="isoformat_invalid_date",
+        ),
+        pytest.param(
+            {
+                "image_last_updated": {
+                    "__type": "<class 'datetime.datetime'>",
+                    "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+                },
+                "image_url": 5,
+            },
+            id="image_url_not_str",
+        ),
     ],
 )
 @respx.mock
@@ -969,3 +1080,62 @@ async def test_restore_bad_extra_data_does_not_restore(
         entity_id=TEST_IMAGE.entity_id,
     )
     assert respx.get("http://example.com").call_count == 1
+
+
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        pytest.param(
+            ImageExtraStoredData(
+                image_last_updated=datetime(2021, 7, 13, tzinfo=UTC),
+                image_url="http://example.com",
+            ),
+            id="populated",
+        ),
+        pytest.param(
+            ImageExtraStoredData(image_last_updated=None, image_url=None),
+            id="empty",
+        ),
+    ],
+)
+def test_extra_stored_data_round_trip(extra_data: ImageExtraStoredData) -> None:
+    """Test extra stored data survives serialization to restore state."""
+    assert (
+        ImageExtraStoredData.from_dict(
+            json_loads_object(json_dumps(extra_data.as_dict()))
+        )
+        == extra_data
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+async def test_stale_cache_removed_at_stop(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test a previous image is not kept when the current image was never fetched."""
+    images_cache_dir.mkdir(parents=True)
+    cache_file = images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
+    cache_file.write_bytes(imgbytes_jpg)
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert not cache_file.exists()
