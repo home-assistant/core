@@ -250,3 +250,9 @@ from pytest_homeassistant.plugins import (
     verify_cleanup as verify_cleanup,
     wait_for_stop_scripts_after_shutdown as wait_for_stop_scripts_after_shutdown,
 )
+
+
+@pytest.fixture
+def custom_integrations_enabled() -> bool:
+    """Control custom integration loading."""
+    return False
