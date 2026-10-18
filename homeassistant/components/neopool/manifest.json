@@ -1,6 +1,7 @@
 {
   "domain": "neopool",
   "name": "NeoPool",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@svasek"],
   "config_flow": true,
   "dependencies": ["modbus"],
