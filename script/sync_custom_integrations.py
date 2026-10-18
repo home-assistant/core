@@ -177,7 +177,11 @@ def _get(url: str, token: str | None = None, data: bytes | None = None) -> bytes
 
 
 def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
-    """Return default-branch HEAD SHA per repo (None if missing/empty)."""
+    """Return default-branch HEAD SHA per repo (None if missing, empty or private).
+
+    Private repos count as unavailable: the token may still see one that went
+    private, but the anonymous clone cannot fetch it.
+    """
 
     def query(chunk: list[str]) -> dict[str, str | None]:
         parts = []
@@ -185,7 +189,7 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
             owner, name = repo.split("/", 1)
             parts.append(
                 f"r{n}: repository(owner: {json.dumps(owner)}, name: {json.dumps(name)})"
-                " { defaultBranchRef { target { oid } } }"
+                " { isPrivate defaultBranchRef { target { oid } } }"
             )
         payload = json.dumps({"query": "query {" + " ".join(parts) + "}"}).encode()
         body = json.loads(_get(GRAPHQL, token, payload))
@@ -201,7 +205,8 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
         data = body["data"]
         result = {}
         for n, repo in enumerate(chunk):
-            ref = (data.get(f"r{n}") or {}).get("defaultBranchRef")
+            node = data.get(f"r{n}") or {}
+            ref = None if node.get("isPrivate") else node.get("defaultBranchRef")
             result[repo] = ref["target"]["oid"] if ref else None
         return result
 

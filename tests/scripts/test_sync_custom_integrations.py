@@ -15,6 +15,7 @@ from script.sync_custom_integrations import (
     UnsafePathError,
     download,
     ensure_ignored,
+    fetch_heads,
     is_repo_slug,
     load_state,
     prune,
@@ -251,3 +252,29 @@ def test_targeted_removal_skips_symlinked_owner(
 
     assert (outside / "repo" / ".git").is_dir()
     assert load_state(copy) == ({}, None)
+
+
+def test_fetch_heads_treats_private_repos_as_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that private, missing and empty repos have no SHA."""
+    sha = {"target": {"oid": "a" * 40}}
+    response = {
+        "data": {
+            "r0": {"isPrivate": False, "defaultBranchRef": sha},
+            "r1": {"isPrivate": True, "defaultBranchRef": sha},
+            "r2": None,
+            "r3": {"isPrivate": False, "defaultBranchRef": None},
+        },
+        "errors": [{"type": "NOT_FOUND", "path": ["r2"]}],
+    }
+    monkeypatch.setattr(
+        sync_custom_integrations, "_get", Mock(return_value=json.dumps(response))
+    )
+
+    assert fetch_heads(["o/public", "o/private", "o/gone", "o/empty"], "t") == {
+        "o/public": "a" * 40,
+        "o/private": None,
+        "o/gone": None,
+        "o/empty": None,
+    }
