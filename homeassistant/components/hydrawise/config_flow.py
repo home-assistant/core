@@ -77,7 +77,13 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_reauth_form({})
 
         reauth_entry = self._get_reauth_entry()
-        username = reauth_entry.data[CONF_USERNAME]
+        # Entries from the legacy API only hold an API key, so the form asks
+        # for the username as well.
+        if CONF_USERNAME in reauth_entry.data:
+            username = reauth_entry.data[CONF_USERNAME]
+        else:
+            username = user_input[CONF_USERNAME]
+
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
         user_id, errors = await _authenticate(username, password, api_key)
@@ -96,8 +102,13 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        data_schema = (
+            STEP_REAUTH_DATA_SCHEMA
+            if CONF_USERNAME in self._get_reauth_entry().data
+            else STEP_USER_DATA_SCHEMA
+        )
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=data_schema, errors=errors
         )
 
 

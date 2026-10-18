@@ -14,11 +14,13 @@
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "api_key": "[%key:component::hydrawise::config::step::user::data_description::api_key%]",
-          "password": "[%key:component::hydrawise::config::step::user::data_description::password%]"
+          "password": "[%key:component::hydrawise::config::step::user::data_description::password%]",
+          "username": "[%key:component::hydrawise::config::step::user::data_description::username%]"
         },
         "description": "The Hydrawise integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
