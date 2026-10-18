@@ -110,6 +110,11 @@ class AuthProvider:
         """
         raise NotImplementedError
 
+    @callback
+    def async_can_start_login(self, context: AuthFlowContext) -> bool:
+        """Return if the login screen may offer this provider for the context."""
+        return True
+
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
