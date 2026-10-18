@@ -13445,3 +13445,64 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
     # The child in the cleared subentry is removed, the one in the other subentry kept
     assert device_registry.async_get(child_1.id, include_main_devices=False) is None
     assert device_registry.async_get(child_2.id, include_main_devices=False) is not None
+
+
+@pytest.mark.usefixtures("hass")
+async def test_get_or_create_keeps_existing_disabled_by(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by only applies when the device is created."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+
+    # The user enables the device
+    device_registry.async_update_device(device.id, disabled_by=None)
+
+    # The integration sets up the device again
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    assert device.disabled_by is None
+
+
+@pytest.mark.usefixtures("hass")
+async def test_get_or_create_child_keeps_existing_disabled_by(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by only applies when the child device is created."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    assert child_device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+
+    # The user enables the child device
+    device_registry.async_update_child_device(child_device.id, disabled_by=None)
+
+    # The integration sets up the child device again
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    assert child_device.disabled_by is None

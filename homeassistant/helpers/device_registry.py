@@ -2481,6 +2481,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         To create or update a child device, use async_get_or_create_child.
 
         If identifiers overlap with a child device, the method raises.
+
+        disabled_by is only applied on device creation. It doesn't change an existing device
+        otherwise a user enabled device will be disabled on reload.
         """
         # Extract deprecated parameters, and reject any other unexpected keyword
         # argument.
@@ -2804,6 +2807,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "merge_identifiers": identifiers or UNDEFINED,
             }
 
+        if not is_new:
+            disabled_by = UNDEFINED
+
         device = self._async_update_device(
             device.id,
             disabled_by=disabled_by,
@@ -2861,6 +2867,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
+
+        disabled_by is only applied on device creation. It doesn't change an existing device
+        otherwise a user enabled device will be disabled on reload.
         """
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
@@ -3046,6 +3055,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._child_devices[child_device.id] = child_device
 
         self._async_purge_colliding_deleted_devices(child_device, identifiers, set())
+
+        if not is_new:
+            disabled_by = UNDEFINED
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
