@@ -159,7 +159,8 @@ async def _async_refused_mid_change(
 ) -> bool:
     """Refuse a write while the mesh is mid-change; return whether it did.
 
-    Mid-change: the router holds a pending dataset, or a window is open.
+    Mid-change: the router holds a pending dataset, a window is open, or a
+    mesh is arriving.
     """
     try:
         pending = await data.get_pending_dataset_tlvs()
@@ -182,7 +183,7 @@ async def _async_refused_mid_change(
         _send_refusal(connection, msg, "router_dataset_invalid")
         return True
     windows = await async_get_propagation_windows(hass)
-    if remaining := windows.seconds_left(active.extended_pan_id.lower()):
+    if remaining := windows.seconds_in_flight(active.extended_pan_id.lower()):
         _send_refusal(connection, msg, "dataset_propagating", remaining=str(remaining))
         return True
     return False

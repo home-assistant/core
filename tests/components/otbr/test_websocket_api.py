@@ -14,8 +14,8 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 from homeassistant.components import otbr, thread
 from homeassistant.components.otbr import DOMAIN
 from homeassistant.components.otbr.util import (
-    PROPAGATION_WINDOWS_STORAGE_KEY,
-    PROPAGATION_WINDOWS_STORAGE_VERSION,
+    _Migration,
+    _Record,
     async_get_dataset_lock,
     async_get_propagation_windows,
 )
@@ -1070,15 +1070,14 @@ async def test_dataset_write_while_a_change_propagates(
     hass: HomeAssistant,
     otbr_config_entry_thread: None,
     websocket_client: MockHAClientWebSocket,
-    hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     command: str,
 ) -> None:
     """A router on a mesh with a change still propagating is left alone."""
-    hass_storage[PROPAGATION_WINDOWS_STORAGE_KEY] = {
-        "version": PROPAGATION_WINDOWS_STORAGE_VERSION,
-        "data": {"abcd1234abcd1234": dt_util.utcnow().timestamp() + 300},
-    }
+    windows = await async_get_propagation_windows(hass)
+    await windows.async_set(
+        "abcd1234abcd1234", (1, 0), until=dt_util.utcnow().timestamp() + 300
+    )
     with (
         patch(
             "python_otbr_api.OTBR.get_extended_address",
@@ -1128,6 +1127,7 @@ async def test_a_channel_change_records_its_propagation_window(
 
     assert msg["success"]
     windows = await async_get_propagation_windows(hass)
+    assert windows.get("f642646da209b1c0") == (2, 0)
     assert windows.seconds_left("f642646da209b1c0") == 300
 
 
@@ -1300,3 +1300,48 @@ async def test_a_dataset_write_waits_for_the_dataset_lock(
 
     assert not msg["success"]
     pending_read.assert_awaited_once()
+
+
+@pytest.mark.parametrize("command", ["create_network", "set_network", "set_channel"])
+@pytest.mark.usefixtures("otbr_config_entry_thread")
+async def test_dataset_write_while_a_mesh_is_arriving(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    command: str,
+) -> None:
+    """A router on a network another mesh is migrating onto is left alone too.
+
+    That mesh was sent the network as it is; written to now, this router
+    would move the network on before it arrives.
+    """
+    issued = await async_get_propagation_windows(hass)
+    arrives = dt_util.utcnow().timestamp() + 300
+    await issued.async_restore(
+        "1111111122222222",
+        _Record(
+            (1, 0),
+            arrives,
+            _Migration("abcd1234abcd1234", None, arrives, DATASET_CH16.hex()),
+        ),
+    )
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15, extended_pan_id="ABCD1234ABCD1234"
+            ),
+        ),
+        patch("python_otbr_api.OTBR.set_enabled") as set_enabled_mock,
+        patch("python_otbr_api.OTBR.set_pending_dataset_tlvs") as set_pending_mock,
+    ):
+        msg = await _dataset_write(hass, websocket_client, command)
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "dataset_propagating"
+    assert msg["error"]["translation_placeholders"] == {"remaining": "300"}
+    set_enabled_mock.assert_not_called()
+    set_pending_mock.assert_not_called()

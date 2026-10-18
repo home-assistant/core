@@ -21,6 +21,8 @@ from homeassistant.components.otbr import (
 from homeassistant.components.otbr.util import (
     PROPAGATION_WINDOWS_STORAGE_KEY,
     PROPAGATION_WINDOWS_STORAGE_VERSION,
+    _Migration,
+    _Record,
     async_get_propagation_windows,
 )
 from homeassistant.components.thread import dataset_store
@@ -128,18 +130,18 @@ async def test_async_change_channel_records_the_window(
 
     windows = await async_get_propagation_windows(hass)
     assert windows.seconds_left("f642646da209b1c0") == 5 * 300
+    assert windows.get("f642646da209b1c0") == (2, 0)
 
 
 async def test_async_change_channel_refuses_while_a_change_propagates(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
     otbr_config_entry_multipan: str,
 ) -> None:
     """A change still propagating on the mesh refuses another."""
-    hass_storage[PROPAGATION_WINDOWS_STORAGE_KEY] = {
-        "version": PROPAGATION_WINDOWS_STORAGE_VERSION,
-        "data": {"f642646da209b1c0": dt_util.utcnow().timestamp() + 300},
-    }
+    windows = await async_get_propagation_windows(hass)
+    await windows.async_set(
+        "f642646da209b1c0", (2, 0), until=dt_util.utcnow().timestamp() + 300
+    )
 
     with (
         patch("python_otbr_api.OTBR.set_pending_dataset_tlvs") as mock_set_pending,
@@ -150,6 +152,21 @@ async def test_async_change_channel_refuses_while_a_change_propagates(
     assert exc_info.value.translation_key == "dataset_propagating"
     assert exc_info.value.translation_placeholders == {"remaining": "300"}
     mock_set_pending.assert_not_awaited()
+
+
+async def test_a_window_recorded_as_a_bare_deadline_loads(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A record written before the stamps, a deadline per network, is read."""
+    hass_storage[PROPAGATION_WINDOWS_STORAGE_KEY] = {
+        "version": PROPAGATION_WINDOWS_STORAGE_VERSION,
+        "data": {"f642646da209b1c0": dt_util.utcnow().timestamp() + 300},
+    }
+
+    windows = await async_get_propagation_windows(hass)
+
+    assert windows.seconds_left("f642646da209b1c0") == 300
+    assert windows.get("f642646da209b1c0") == (0, 0)
 
 
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
@@ -200,6 +217,14 @@ async def test_an_unanswered_change_the_router_does_not_hold_yet_is_not_stored(
     assert [entry.tlv for entry in store.datasets.values()] == [DATASET_CH16.hex()]
     windows = await async_get_propagation_windows(hass)
     assert windows.seconds_left("f642646da209b1c0") == 5 * 300
+    assert (
+        windows.migration_source("f642646da209b1c0", otbr_config_entry_multipan)
+        == "f642646da209b1c0"
+    )
+    assert (sent := windows.sent("f642646da209b1c0")) is not None
+    moved = tlv_parser.parse_tlv(sent)
+    assert moved[tlv_parser.MeshcopTLVType.CHANNEL].channel == 15
+    assert moved[tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP].seconds == 2
 
 
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
@@ -275,6 +300,8 @@ async def test_an_answered_change_is_stored_as_sent_when_the_router_cannot_be_re
     (stored,) = (tlv_parser.parse_tlv(entry.tlv) for entry in store.datasets.values())
     assert stored[tlv_parser.MeshcopTLVType.CHANNEL].channel == 15
     assert stored[tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP].seconds == 2
+    windows = await async_get_propagation_windows(hass)
+    assert windows.sent("f642646da209b1c0") is None
 
 
 async def test_an_unanswered_change_is_reported_when_the_router_cannot_be_read(
@@ -299,6 +326,8 @@ async def test_an_unanswered_change_is_reported_when_the_router_cannot_be_read(
     assert [entry.tlv for entry in store.datasets.values()] == [DATASET_CH16.hex()]
     windows = await async_get_propagation_windows(hass)
     assert windows.seconds_left("f642646da209b1c0") == 5 * 300
+    assert (sent := windows.sent("f642646da209b1c0")) is not None
+    assert tlv_parser.parse_tlv(sent)[tlv_parser.MeshcopTLVType.CHANNEL].channel == 15
 
 
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
@@ -573,12 +602,12 @@ async def test_a_router_without_an_active_timestamp_is_behind_the_store(
 
 
 @pytest.mark.parametrize(
-    ("api_version", "pending", "window", "stored_channel"),
+    ("api_version", "pending", "window", "stored_channel", "unsettled"),
     [
-        ("0.6.0", None, 5 * 300, 16),
-        ("0.5.0", bytes.fromhex(DATASET_CH16_PENDING), 5 * 300, 15),
-        ("0.5.0", None, 0, 16),
-        (OTBRError("down"), None, 5 * 300, 16),
+        ("0.6.0", None, 5 * 300, 16, True),
+        ("0.5.0", bytes.fromhex(DATASET_CH16_PENDING), 5 * 300, 15, False),
+        ("0.5.0", None, 0, 16, False),
+        (OTBRError("down"), None, 5 * 300, 16, True),
     ],
     ids=["leader_registering", "holds_pending", "holds_none", "unreachable"],
 )
@@ -589,8 +618,13 @@ async def test_a_dropped_change_keeps_its_window_while_it_may_propagate(
     pending: bytes | None,
     window: int,
     stored_channel: int,
+    unsettled: bool,
 ) -> None:
-    """A change whose connection dropped asks the router what it holds."""
+    """A change whose connection dropped asks the router what it holds.
+
+    One that may have landed but is not stored stays on the record to be
+    settled; one shown never to have left leaves no trace there either.
+    """
     with (
         patch(
             "python_otbr_api.OTBR.set_pending_dataset_tlvs",
@@ -607,6 +641,8 @@ async def test_a_dropped_change_keeps_its_window_while_it_may_propagate(
     store = await dataset_store.async_get_store(hass)
     (stored,) = (tlv_parser.parse_tlv(entry.tlv) for entry in store.datasets.values())
     assert stored[tlv_parser.MeshcopTLVType.CHANNEL].channel == stored_channel
+    assert (windows.sent("f642646da209b1c0") is not None) is unsettled
+    assert len(windows.attempted("f642646da209b1c0")) == int(unsettled)
 
 
 @pytest.mark.parametrize(
@@ -685,3 +721,206 @@ async def test_a_same_channel_change_is_stored_with_its_timestamp(
     (stored,) = (tlv_parser.parse_tlv(entry.tlv) for entry in store.datasets.values())
     assert stored[tlv_parser.MeshcopTLVType.CHANNEL].channel == 16
     assert stored[tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP].seconds == 2
+
+
+async def test_async_change_channel_is_stamped_above_a_missed_migration(
+    hass: HomeAssistant, otbr_config_entry_multipan: str
+) -> None:
+    """A change through a router that missed a migration steps above it.
+
+    The router still reports the active dataset the mesh migrated away from;
+    stamped just above that, the change would reuse a stamp the devices that
+    followed the migration have applied, and they would ignore it. The
+    record's floor says what was issued for the network.
+    """
+    issued = await async_get_propagation_windows(hass)
+    await issued.async_set(
+        "f642646da209b1c0", (1004, 0), until=dt_util.utcnow().timestamp() - 1
+    )
+
+    with (
+        patch("python_otbr_api.OTBR.set_pending_dataset_tlvs") as mock_set_pending,
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    sent = tlv_parser.parse_tlv(mock_set_pending.call_args.args[0].hex())
+    assert sent[tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP].seconds == 1005
+    assert sent[tlv_parser.MeshcopTLVType.PENDINGTIMESTAMP].seconds == 1005
+    assert issued.get("f642646da209b1c0") == (1005, 0)
+    assert issued.seconds_in_flight("f642646da209b1c0") == 5 * 300
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_refuses_while_a_mesh_is_arriving(
+    hass: HomeAssistant,
+) -> None:
+    """A channel change waits for a mesh migrating onto this network.
+
+    That mesh was sent the network on its current channel. The migration's
+    record keeps its target and its deadline, which is what says the network
+    is still receiving.
+    """
+    issued = await async_get_propagation_windows(hass)
+    arrives = dt_util.utcnow().timestamp() + 300
+    await issued.async_restore(
+        "1111111122222222",
+        _Record(
+            (1004, 0),
+            arrives,
+            _Migration("f642646da209b1c0", None, arrives, DATASET_CH16.hex()),
+        ),
+    )
+
+    with (
+        patch("python_otbr_api.OTBR.set_pending_dataset_tlvs") as mock_set_pending,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    assert exc_info.value.translation_key == "dataset_propagating"
+    assert exc_info.value.translation_placeholders == {"remaining": "300"}
+    mock_set_pending.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_frees_the_target_of_a_recorded_migration(
+    hass: HomeAssistant,
+) -> None:
+    """A later channel change does not hold the network a migration moved to.
+
+    Through a router that missed the migration, the change moves this
+    network's window, not the migration's own deadline, which has passed:
+    nothing is arriving at the target any more, and it would otherwise be
+    refused writes for the whole delay.
+    """
+    issued = await async_get_propagation_windows(hass)
+    passed = dt_util.utcnow().timestamp() - 1
+    await issued.async_restore(
+        "f642646da209b1c0",
+        _Record(
+            (1004, 0),
+            passed,
+            _Migration("1111111122222222", None, passed, DATASET_CH16.hex()),
+        ),
+    )
+
+    with (
+        patch("python_otbr_api.OTBR.set_pending_dataset_tlvs"),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    assert issued.seconds_in_flight("f642646da209b1c0") == 5 * 300
+    assert issued.seconds_in_flight("1111111122222222") == 0
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_async_change_channel_keeps_a_migration_still_to_be_settled(
+    hass: HomeAssistant,
+) -> None:
+    """A channel change leaves an unanswered migration's record in place.
+
+    The router it was handed to may yet be found on the target, which is
+    what settles it; a change through another router must not forget it,
+    nor hold the target on the record's account.
+    """
+    issued = await async_get_propagation_windows(hass)
+    passed = dt_util.utcnow().timestamp() - 1
+    await issued.async_restore(
+        "f642646da209b1c0",
+        _Record(
+            (1004, 0),
+            passed,
+            _Migration("1111111122222222", "router", passed, DATASET_CH16.hex()),
+        ),
+    )
+
+    with (
+        patch("python_otbr_api.OTBR.set_pending_dataset_tlvs"),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    assert issued.migration_source("1111111122222222", "router") == "f642646da209b1c0"
+    assert issued.seconds_in_flight("1111111122222222") == 0
+
+
+async def test_an_answered_change_settles_one_the_router_never_answered(
+    hass: HomeAssistant, otbr_config_entry_multipan: str
+) -> None:
+    """A change the router answers settles an earlier one it never answered.
+
+    The new pending dataset is built from the router's active dataset, which
+    shows whatever the earlier write did, and the store follows this write.
+    """
+    issued = await async_get_propagation_windows(hass)
+    passed = dt_util.utcnow().timestamp() - 1
+    await issued.async_restore(
+        "f642646da209b1c0",
+        _Record(
+            (2, 0),
+            passed,
+            _Migration(
+                "f642646da209b1c0",
+                otbr_config_entry_multipan,
+                passed,
+                DATASET_CH16_PENDING,
+            ),
+        ),
+    )
+
+    with (
+        patch("python_otbr_api.OTBR.set_pending_dataset_tlvs"),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    assert issued.sent("f642646da209b1c0") is None
+    assert issued.seconds_in_flight("f642646da209b1c0") == 5 * 300
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_an_unanswered_change_leaves_an_unsettled_migration_in_place(
+    hass: HomeAssistant,
+) -> None:
+    """The record of a migration still to be settled is not taken over.
+
+    Its router may yet be found on the target; the change through this
+    router, which missed that migration, cannot be kept as well.
+    """
+    issued = await async_get_propagation_windows(hass)
+    passed = dt_util.utcnow().timestamp() - 1
+    await issued.async_restore(
+        "f642646da209b1c0",
+        _Record(
+            (1004, 0),
+            passed,
+            _Migration("1111111122222222", "router", passed, DATASET_CH16.hex()),
+        ),
+    )
+
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_pending_dataset_tlvs",
+            side_effect=PendingDatasetOutcomeUnknownError("no answer"),
+        ),
+        patch("python_otbr_api.OTBR.get_pending_dataset_tlvs", return_value=None),
+        pytest.raises(HomeAssistantError),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    assert issued.migration_source("1111111122222222", "router") == "f642646da209b1c0"
+    assert issued.sent("f642646da209b1c0") == DATASET_CH16.hex()
