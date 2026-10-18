@@ -1112,8 +1112,9 @@ def test_selectors_offer_translated_values(
     assert select["translation_key"] == translation_key
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_flow_updates_credentials(hass: HomeAssistant) -> None:
+async def test_reconfigure_flow_updates_credentials(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test that the community string of an entry can be changed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1149,11 +1150,12 @@ async def test_reconfigure_flow_updates_credentials(hass: HomeAssistant) -> None
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["community"] == "private"
     assert entry.data[CONF_PORT] == 1161
+    # The entry had no update listener, so it has to be reloaded explicitly
+    assert mock_setup_entry.called
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
     """Test that credentials which do not work are reported and not stored."""
     entry = mock_entry()
@@ -1190,6 +1192,7 @@ async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["community"] == "private"
+    assert mock_setup_entry.called
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1247,8 +1250,9 @@ async def test_reconfigure_flow_suggests_credentials(hass: HomeAssistant) -> Non
     assert get_schema_suggested_value(data_schema, "priv_key") is None
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth_flow_updates_credentials(hass: HomeAssistant) -> None:
+async def test_reauth_flow_updates_credentials(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test that a v3 entry can be reauthenticated with new keys."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1285,6 +1289,7 @@ async def test_reauth_flow_updates_credentials(hass: HomeAssistant) -> None:
     assert result["reason"] == "reauth_successful"
     assert entry.data["auth_key"] == "new-key"
     assert entry.data["host"] == "192.168.1.1"
+    assert mock_setup_entry.called
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
