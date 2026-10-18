@@ -24,7 +24,8 @@ requirements_test.txt @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
-/pylint/ @home-assistant/core
+/packages/pylint-home-assistant/ @home-assistant/core
+/packages/pytest-home-assistant/ @home-assistant/core
 /script/ @home-assistant/core
 
 # Home Assistant Supervisor
@@ -40,7 +41,7 @@ build.json @home-assistant/supervisor
 # Agent Configurations
 AGENTS.md @home-assistant/core
 CLAUDE.md @home-assistant/core
-/.agent/ @home-assistant/core
+/.agents/ @home-assistant/core
 /.claude/ @home-assistant/core
 /.gemini/ @home-assistant/core
 
@@ -370,6 +371,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
+/homeassistant/components/debug_console/ @frenck
+/tests/components/debug_console/ @frenck
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -1231,8 +1234,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/motionblinds_ble/ @LennP @jerrybboy
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
-/homeassistant/components/motionmount/ @laiho-vogels
-/tests/components/motionmount/ @laiho-vogels
+/homeassistant/components/motionmount/ @Wernes-vogels
+/tests/components/motionmount/ @Wernes-vogels
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/mta/ @OnFreund
@@ -1263,6 +1266,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/nanoleaf/ @milanmeu @joostlek @loebi-ch @JaspervRijbroek @jonathanrobichaud4
 /homeassistant/components/nasweb/ @nasWebio
 /tests/components/nasweb/ @nasWebio
+/homeassistant/components/nature_remo/ @tnj
+/tests/components/nature_remo/ @tnj
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /homeassistant/components/neopool/ @svasek
@@ -1354,8 +1359,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/ohmconnect/ @robbiet480
 /homeassistant/components/ohme/ @dan-r
 /tests/components/ohme/ @dan-r
-/homeassistant/components/ollama/ @synesthesiam
-/tests/components/ollama/ @synesthesiam
+/homeassistant/components/ollama/ @home-assistant/core
+/tests/components/ollama/ @home-assistant/core
 /homeassistant/components/ombi/ @larssont
 /homeassistant/components/omie/ @luuuis
 /tests/components/omie/ @luuuis
@@ -2084,8 +2089,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
-/homeassistant/components/voip/ @synesthesiam @jaminh
-/tests/components/voip/ @synesthesiam @jaminh
+/homeassistant/components/voip/ @home-assistant/core @jaminh
+/tests/components/voip/ @home-assistant/core @jaminh
 /homeassistant/components/volkszaehler/ @StefanSchoof
 /tests/components/volkszaehler/ @StefanSchoof
 /homeassistant/components/volumio/ @OnFreund

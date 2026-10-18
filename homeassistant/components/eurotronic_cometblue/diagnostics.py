@@ -4,12 +4,13 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_ADDRESS, CONF_PIN
+from homeassistant.const import CONF_ADDRESS, CONF_PIN, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_TITLE
 from .coordinator import CometBlueConfigEntry
 
-TO_REDACT = {CONF_ADDRESS, CONF_PIN, "unique_id"}
+TO_REDACT = {CONF_ADDRESS, CONF_PIN, CONF_TITLE, CONF_UNIQUE_ID}
 
 
 async def async_get_config_entry_diagnostics(
