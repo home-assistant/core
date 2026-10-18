@@ -17,24 +17,26 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_migrate_device_identifiers(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_fibaro_client: Mock,
 ) -> None:
     """Test migration converts integer Fibaro device identifiers to strings."""
-    config_entry = MockConfigEntry(domain=DOMAIN, version=1)
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, 3)},  # type: ignore[arg-type]
     )
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     migrated_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "3"), config_entry.entry_id
+        (DOMAIN, "3"), mock_config_entry.entry_id
     )
     assert migrated_device is not None
     assert migrated_device.identifiers == {(DOMAIN, "3")}
-    assert config_entry.version == 2
+    assert mock_config_entry.version == 2
 
 
 async def test_unload_integration(
