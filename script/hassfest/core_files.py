@@ -21,7 +21,6 @@ MISSING_ALL = {
     "input_select",
     "llm",
     "network",
-    "otp",
     "person",
     "recovery_mode",
     "shopping_list",
