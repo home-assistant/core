@@ -12,13 +12,27 @@ can detect.
 
 # Setup
 
-This plugin is designed for internal use by Home Assistant Core's CI/CD
-pipeline. It is not intended for external use, such as linting custom
-integration repositories.
+Install the package from a Home Assistant Core checkout:
 
-Plugins are loaded via the `load-plugins` setting in `pyproject.toml`.
-The `init-hook` adds `pylint/plugins` to `sys.path` so these modules
-are importable.
+```shell
+uv pip install ./packages/pylint-home-assistant
+```
+
+Load it using `pylint --load-plugins=pylint_home_assistant` or the
+`load-plugins` setting in your Pylint configuration.
+
+The checkers currently target Home Assistant Core's module names and repository
+layout. Installing the package separately does not add support for custom
+integration layouts.
+
+Within Core, the `init-hook` in the root `pyproject.toml` adds
+`packages/pylint-home-assistant` to `sys.path` to load the checkout's code.
+
+Build a source distribution and wheel from the repository root:
+
+```shell
+uv build packages/pylint-home-assistant
+```
 
 
 # Why not (just) Ruff?

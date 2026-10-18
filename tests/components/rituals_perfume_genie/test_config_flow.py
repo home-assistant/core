@@ -11,11 +11,11 @@ from ritualsgenie import (
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_EMAIL, TEST_PASSWORD
+from .const import TEST_EMAIL, TEST_PASSWORD, TEST_TOKEN
 
 from tests.common import MockConfigEntry
 
@@ -44,6 +44,7 @@ async def test_user_flow_success(
     assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
+        CONF_TOKEN: TEST_TOKEN,
     }
     assert result["result"].unique_id == TEST_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1
@@ -139,6 +140,7 @@ async def test_reauth_flow_success(
     assert result["reason"] == "reauth_successful"
 
     assert mock_config_entry.data[CONF_PASSWORD] == "new_correct_password"
+    assert mock_config_entry.data[CONF_TOKEN] == TEST_TOKEN
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -214,5 +216,6 @@ async def test_reauth_migrated_entry(
     assert mock_config_entry.data == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: "new_correct_password",
+        CONF_TOKEN: TEST_TOKEN,
     }
     assert len(mock_setup_entry.mock_calls) == 1

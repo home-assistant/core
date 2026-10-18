@@ -1,6 +1,7 @@
 {
   "domain": "hassio",
   "name": "Home Assistant Supervisor",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@home-assistant/supervisor"],
   "dependencies": ["http", "repairs"],
   "documentation": "https://www.home-assistant.io/integrations/hassio",
