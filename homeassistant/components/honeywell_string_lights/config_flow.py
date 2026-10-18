@@ -18,6 +18,7 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Honeywell String Lights."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @override
     async def async_step_user(
@@ -51,7 +52,7 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title="Honeywell String Lights",
-                data={CONF_TRANSMITTER: entity_entry.id},
+                data={CONF_TRANSMITTER: entity_entry.entity_id},
             )
 
         return self.async_show_form(

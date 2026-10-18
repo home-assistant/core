@@ -236,6 +236,11 @@ async def test_send_message_exception(
             },
             "Too many actions defined. A maximum of 3 is supported",
         ),
+        (
+            probatio.MultipleInvalid,
+            {ATTR_ACTIONS: [{"action": "copy", "label": "Copy"}]},
+            r"required key not provided at 'actions\[0\]\.value'",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_aiontfy")

@@ -1,5 +1,6 @@
 """Deprecation helpers for Home Assistant."""
 
+from annotationlib import Format, get_annotations
 from collections.abc import Callable
 from contextlib import suppress
 from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
@@ -8,7 +9,17 @@ import inspect
 import logging
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, NamedTuple, Self, cast, overload, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    NamedTuple,
+    Self,
+    cast,
+    get_origin,
+    overload,
+    override,
+)
 from warnings import deprecated as mark_deprecated
 
 from propcache.api import cached_property
@@ -217,7 +228,7 @@ def _print_deprecation_warning(
 def _print_deprecation_warning_internal(
     obj_name: str,
     module_name: str,
-    replacement: str,
+    replacement: str | None,
     description: str,
     verb: str,
     breaks_in_ha_version: str | None,
@@ -241,7 +252,7 @@ def _print_deprecation_warning_internal(
 def _print_deprecation_warning_internal_impl(
     obj_name: str,
     module_name: str,
-    replacement: str,
+    replacement: str | None,
     description: str,
     verb: str,
     breaks_in_ha_version: str | None,
@@ -258,17 +269,23 @@ def _print_deprecation_warning_internal_impl(
         breaks_in = f" It will be removed in HA Core {breaks_in_ha_version}."
     else:
         breaks_in = ""
+    if replacement is None:
+        use_instead = ""
+        please = " Please"
+    else:
+        use_instead = f" Use {replacement} instead"
+        please = ", please"
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         if log_when_no_integration_is_found:
             logger.warning(
-                "The deprecated %s %s was %s.%s Use %s instead",
+                "The deprecated %s %s was %s.%s%s",
                 description,
                 obj_name,
                 verb,
                 breaks_in,
-                replacement,
+                use_instead,
             )
     else:
         if integration_frame.custom_integration:
@@ -278,24 +295,25 @@ def _print_deprecation_warning_internal_impl(
                 module=integration_frame.module,
             )
             logger.warning(
-                ("The deprecated %s %s was %s from %s.%s Use %s instead, please %s"),
+                "The deprecated %s %s was %s from %s.%s%s%s %s",
                 description,
                 obj_name,
                 verb,
                 integration_frame.integration,
                 breaks_in,
-                replacement,
+                use_instead,
+                please,
                 report_issue,
             )
         else:
             logger.warning(
-                "The deprecated %s %s was %s from %s.%s Use %s instead",
+                "The deprecated %s %s was %s from %s.%s%s",
                 description,
                 obj_name,
                 verb,
                 integration_frame.integration,
                 breaks_in,
-                replacement,
+                use_instead,
             )
 
 
@@ -303,7 +321,7 @@ class DeprecatedConstant[T](NamedTuple):
     """Deprecated constant."""
 
     value: T
-    replacement: str
+    replacement: str | None
     breaks_in_ha_version: str | None
 
 
@@ -372,7 +390,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
 
-    if value is None or replacement is None:
+    if value is None:
         msg = (
             f"Value of {_PREFIX_DEPRECATED}{name} is an instance of "
             f"{type(deprecated_const)} but an instance of DeprecatedAlias, "
@@ -457,7 +475,8 @@ class _DeprecatedEntityMember[_T]:
     """Deprecated name of an entity member, forwarding to its replacement.
 
     Declare a DeprecatedEntityProperty and a DeprecatedEntityAttr on the entity base
-    class, annotated Final so type checkers reject subclasses providing them, and
+    class, annotated Final (enforced) so type checkers reject subclasses providing
+    them, and
     call migrate_deprecated_entity_members from the base class' __init_subclass__
     to serve subclasses which still provide the deprecated name at runtime.
 
@@ -483,6 +502,19 @@ class _DeprecatedEntityMember[_T]:
 
     def __set_name__(self, owner: type, name: str) -> None:
         """Store the deprecated name and the domain of the entity base class."""
+        annotation = get_annotations(owner, format=Format.FORWARDREF).get(name)
+        if isinstance(annotation, str):
+            # Stringized by "from __future__ import annotations", not needed since
+            # Python 3.14
+            raise TypeError(
+                f"{owner.__qualname__}.{name} must be annotated Final, remove "
+                "'from __future__ import annotations' so it can be checked"
+            )
+        if annotation is not Final and get_origin(annotation) is not Final:
+            raise TypeError(
+                f"{owner.__qualname__}.{name} must be annotated Final, so type "
+                "checkers reject subclasses still providing the deprecated name"
+            )
         self.name = name
         module = owner.__module__
         # The base class may live in any module of its integration

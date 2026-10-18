@@ -178,7 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Utility Meter from a config entry."""
 
     entity_registry = er.async_get(hass)
@@ -232,25 +232,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, (Platform.SELECT, Platform.SENSOR)
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     platforms_to_unload = [Platform.SENSOR]
     if entry.options.get(CONF_TARIFFS):
         platforms_to_unload.append(Platform.SELECT)
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry,
         platforms_to_unload,
-    ):
-        hass.data[DATA_UTILITY].pop(entry.entry_id)
-
-    return unload_ok
+    )
+    hass.data[DATA_UTILITY].pop(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -282,5 +278,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

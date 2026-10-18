@@ -112,3 +112,76 @@ async def test_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication stores the new password."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"][CONF_EMAIL] == EMAIL
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_EMAIL: EMAIL, CONF_PASSWORD: "new-password"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(CannotAuthenticate, "invalid_auth", id="invalid_auth"),
+        pytest.param(CannotConnect, "cannot_connect", id="cannot_connect"),
+        pytest.param(GenericResponseError, "cannot_connect", id="generic_error"),
+    ],
+)
+async def test_reauth_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    reason: str,
+) -> None:
+    """Test each reauth failure surfaces an error and the flow can recover."""
+    mock_config_entry.add_to_hass(hass)
+    mock_vitesy_client.login.side_effect = side_effect
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": reason}
+
+    mock_vitesy_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth aborts when the credentials belong to another account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_vitesy_client.get_user.return_value = {"id": "other-user"}
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_PASSWORD] == "hunter2"

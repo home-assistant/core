@@ -1,6 +1,7 @@
 {
   "domain": "smarla",
   "name": "Swing2Sleep Smarla",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@explicatis", "@johannes-exp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarla",

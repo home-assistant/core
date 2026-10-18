@@ -358,10 +358,12 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
             ),
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT, multiline=False
-                )
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": CONF_DEVICE_CLASS}
+                ),
             ),
             probatio.Required(CONF_SET_VALUE): selector.ActionSelector(),
         }
@@ -374,26 +376,20 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
 
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(
-                        {
-                            str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_unit_of_measurement",
-                    custom_value=True,
-                    sort=True,
-                ),
-            ),
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
             ),
             probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": CONF_DEVICE_CLASS,
+                        "filter_state_class": CONF_STATE_CLASS,
+                    }
+                ),
+            ),
         }
 
     if domain == Platform.SWITCH:

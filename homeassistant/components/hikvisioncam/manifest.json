@@ -1,6 +1,7 @@
 {
   "domain": "hikvisioncam",
   "name": "Hikvision",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@fbradyirl"],
   "documentation": "https://www.home-assistant.io/integrations/hikvisioncam",
   "iot_class": "local_polling",

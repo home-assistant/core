@@ -61,7 +61,6 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     MIN_THINKING_BUDGET,
-    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
@@ -87,6 +86,80 @@ DEFAULT_CONVERSATION_OPTIONS = {
 DEFAULT_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
 }
+
+
+def get_unsupported_tool_options(
+    capabilities: anthropic.types.ModelCapabilities | None,
+) -> set[str]:
+    """Return configuration options for explicitly unsupported server tools."""
+    unsupported_options: set[str] = set()
+    if capabilities is None:
+        return unsupported_options
+
+    if not capabilities.server_tools.code_execution.supported:
+        unsupported_options.add(CONF_CODE_EXECUTION)
+    if not capabilities.server_tools.web_search.supported:
+        unsupported_options.update(
+            {
+                CONF_WEB_SEARCH,
+                CONF_WEB_SEARCH_MAX_USES,
+                CONF_WEB_SEARCH_USER_LOCATION,
+                CONF_WEB_SEARCH_CITY,
+                CONF_WEB_SEARCH_REGION,
+                CONF_WEB_SEARCH_COUNTRY,
+                CONF_WEB_SEARCH_TIMEZONE,
+            }
+        )
+    return unsupported_options
+
+
+def get_supported_thinking_efforts(
+    capabilities: anthropic.types.ModelCapabilities | None,
+) -> list[str]:
+    """Return the effort values supported by a model."""
+    if capabilities is None or not capabilities.effort.supported:
+        return []
+
+    effort_options: list[str] = []
+    if (
+        capabilities.thinking.types.adaptive.supported
+        and capabilities.thinking.types.disabled.supported
+    ):
+        effort_options.append("none")
+
+    effort = capabilities.effort
+    for value, support in (
+        ("low", effort.low),
+        ("medium", effort.medium),
+        ("high", effort.high),
+        ("xhigh", effort.xhigh),
+        ("max", effort.max),
+    ):
+        if support and support.supported:
+            effort_options.append(value)
+    return effort_options
+
+
+def reconcile_model_options(
+    options: dict[str, Any], model_info: anthropic.types.ModelInfo
+) -> None:
+    """Remove saved options incompatible with the selected model."""
+    capabilities = model_info.capabilities
+    for option in get_unsupported_tool_options(capabilities):
+        options.pop(option, None)
+
+    if (
+        capabilities is None
+        or not capabilities.thinking.supported
+        or capabilities.thinking.types.adaptive.supported
+    ):
+        options.pop(CONF_THINKING_BUDGET, None)
+    if options.get(CONF_THINKING_EFFORT) not in get_supported_thinking_efforts(
+        capabilities
+    ):
+        options.pop(CONF_THINKING_EFFORT, None)
+    if model_info.id.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+        options.pop(CONF_TOOL_SEARCH, None)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -169,6 +242,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         elif self.source == SOURCE_RECONFIGURE:
             step_id = "reconfigure"
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
             data_schema=STEP_USER_DATA_SCHEMA,
@@ -370,6 +444,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         err.message if isinstance(err, anthropic.APIError) else str(err)
                     )
 
+            if not errors and self.model_info.lifecycle == "retired":
+                errors[CONF_CHAT_MODEL] = "model_retired"
+
             if not errors:
                 return await self.async_step_model()
 
@@ -387,6 +464,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage model-specific options."""
         errors: dict[str, str] = {}
+        reconcile_model_options(self.options, self.model_info)
 
         step_schema: VolDictType = {
             probatio.Optional(
@@ -421,32 +499,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 if self.model_info.max_tokens
                 else cv.positive_int
             )
-        else:
-            self.options.pop(CONF_THINKING_BUDGET, None)
 
-        if (
+        if effort_options := get_supported_thinking_efforts(
             self.model_info.capabilities
-            and (effort_capability := self.model_info.capabilities.effort).supported
         ):
-            effort_options: list[str] = []
-            if self.model_info.capabilities.thinking.types.adaptive.supported:
-                if (
-                    model_alias(self.model_info.id)
-                    in THINKING_EFFORT_NONE_SUPPORTED_MODELS
-                ):
-                    effort_options.append("none")
-                elif self.options.get(CONF_THINKING_EFFORT) == "none":
-                    self.options.pop(CONF_THINKING_EFFORT)
-            if effort_capability.low.supported:
-                effort_options.append("low")
-            if effort_capability.medium.supported:
-                effort_options.append("medium")
-            if effort_capability.high.supported:
-                effort_options.append("high")
-            if effort_capability.xhigh and effort_capability.xhigh.supported:
-                effort_options.append("xhigh")
-            if effort_capability.max.supported:
-                effort_options.append("max")
             step_schema[
                 probatio.Optional(
                     CONF_THINKING_EFFORT,
@@ -459,27 +515,38 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
-        else:
-            self.options.pop(CONF_THINKING_EFFORT, None)
+
+        unsupported_tool_options = get_unsupported_tool_options(
+            self.model_info.capabilities
+        )
+
+        if CONF_CODE_EXECUTION not in unsupported_tool_options:
+            step_schema[
+                probatio.Optional(
+                    CONF_CODE_EXECUTION, default=DEFAULT[CONF_CODE_EXECUTION]
+                )
+            ] = bool
+
+        if CONF_WEB_SEARCH not in unsupported_tool_options:
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_WEB_SEARCH,
+                        default=DEFAULT[CONF_WEB_SEARCH],
+                    ): bool,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                    ): cv.positive_int,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                    ): bool,
+                }
+            )
 
         step_schema.update(
             {
-                probatio.Optional(
-                    CONF_CODE_EXECUTION,
-                    default=DEFAULT[CONF_CODE_EXECUTION],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH,
-                    default=DEFAULT[CONF_WEB_SEARCH],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_MAX_USES,
-                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): cv.positive_int,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                ): bool,
                 probatio.Optional(
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],
@@ -496,17 +563,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
-        model = self.options[CONF_CHAT_MODEL]
-
-        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+        if not self.model_info.id.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
             step_schema[
                 probatio.Optional(
                     CONF_TOOL_SEARCH,
                     default=DEFAULT[CONF_TOOL_SEARCH],
                 )
             ] = bool
-        else:
-            self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
             # Currently our schema is always present, but if one day it becomes empty,
@@ -562,6 +625,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 value=model_alias(model_info.id),
             )
             for model_info in coordinator.data or []
+            if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
+            != "retired"
         ]
 
     async def _get_location_data(self) -> dict[str, str]:
