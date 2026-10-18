@@ -1951,7 +1951,15 @@ async def test_flow_preview(
                 "rgb_color": None,
                 "rgbw_color": None,
                 "rgbww_color": None,
-                "supported_color_modes": [ColorMode.COLOR_TEMP],
+                # Supported color modes come from the configuration
+                "supported_color_modes": [
+                    ColorMode.COLOR_TEMP,
+                    ColorMode.HS,
+                    ColorMode.RGB,
+                    ColorMode.RGBW,
+                    ColorMode.RGBWW,
+                    ColorMode.XY,
+                ],
                 "xy_color": None,
             },
         ),

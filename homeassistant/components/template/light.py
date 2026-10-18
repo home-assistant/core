@@ -870,17 +870,25 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         """Restore the extra data."""
         self._attr_is_on = extra_data.is_on
         self._attr_brightness = extra_data.brightness
-        self._attr_color_mode = extra_data.color_mode
+        # Supported color modes are derived from the configured actions
+        if (
+            self._attr_supported_color_modes
+            and len(self._attr_supported_color_modes) > 1
+            and extra_data.color_mode in self._attr_supported_color_modes
+        ):
+            self._attr_color_mode = extra_data.color_mode
         self._attr_color_temp_kelvin = extra_data.color_temp_kelvin
-        self._attr_effect_list = extra_data.effect_list
+        if CONF_EFFECT_LIST in self._config:
+            self._attr_effect_list = extra_data.effect_list
         self._attr_effect = extra_data.effect
         self._attr_hs_color = extra_data.hs_color
-        self._attr_max_color_temp_kelvin = extra_data.max_color_temp_kelvin
-        self._attr_min_color_temp_kelvin = extra_data.min_color_temp_kelvin
+        if CONF_MIN_MIREDS in self._config:
+            self._attr_max_color_temp_kelvin = extra_data.max_color_temp_kelvin
+        if CONF_MAX_MIREDS in self._config:
+            self._attr_min_color_temp_kelvin = extra_data.min_color_temp_kelvin
         self._attr_rgb_color = extra_data.rgb_color
         self._attr_rgbw_color = extra_data.rgbw_color
         self._attr_rgbww_color = extra_data.rgbww_color
-        self._attr_supported_color_modes = extra_data.supported_color_modes
         self._attr_xy_color = extra_data.xy_color
 
 
