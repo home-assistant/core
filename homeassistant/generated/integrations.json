@@ -5816,12 +5816,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "lannouncer": {
-      "name": "LANnouncer",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "lastfm": {
       "name": "Last.fm",
       "integration_type": "service",
@@ -7180,12 +7174,6 @@
         }
       }
     },
-    "msteams": {
-      "name": "Microsoft Teams",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "mta": {
       "name": "MTA New York City Transit",
       "integration_type": "service",
@@ -8446,12 +8434,6 @@
         "energy.meters_monitoring"
       ],
       "supported_by": "opower"
-    },
-    "permobil": {
-      "name": "MyPermobil",
-      "integration_type": "device",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "persang_infrared": {
       "name": "Persang Infrared",
@@ -10842,12 +10824,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "sunweg": {
-      "name": "Sun WEG",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "supervisord": {
       "name": "Supervisord",
       "integration_type": "hub",
@@ -11592,12 +11568,6 @@
             "computers_network.routers_network"
           ],
           "name": "TP-Link Omada"
-        },
-        "tplink_lte": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "TP-Link LTE"
         },
         "tplink_tapo": {
           "integration_type": "virtual",
@@ -12981,12 +12951,6 @@
         "hubs_protocols.smart_home_hubs"
       ],
       "supported_by": "fibaro"
-    },
-    "zengge": {
-      "name": "Zengge",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "zerproc": {
       "name": "Zerproc",
