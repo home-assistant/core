@@ -24,7 +24,6 @@ MISSING_ALL = {
     "frontend",
     "google_assistant",
     "group",
-    "homeassistant",
     "homeassistant_hardware",
     "http",
     "input_boolean",
