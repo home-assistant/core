@@ -6,11 +6,13 @@ from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
 
 from homeassistant.components.powerfox.const import DOMAIN
+from homeassistant.components.powerfox.coordinator import PowerfoxAuthState
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util import dt as dt_util
 
 from . import MOCK_DIRECT_HOST
 
@@ -320,3 +322,40 @@ async def test_reconfigure_exceptions(
     assert len(hass.config_entries.async_entries()) == 1
     assert mock_config_entry.data[CONF_EMAIL] == "new-email@powerfox.test"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.parametrize("flow_type", ["reauth", "reconfigure"])
+async def test_auth_state_reset_after_credentials_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    flow_type: str,
+) -> None:
+    """Test successful credential updates reset authentication investigation."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    state = PowerfoxAuthState()
+    state.record_failure(dt_util.utcnow())
+    hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = state
+
+    if flow_type == "reauth":
+        result = await mock_config_entry.start_reauth_flow(hass)
+        user_input = {CONF_PASSWORD: "new-password"}
+    else:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        user_input = {
+            CONF_EMAIL: "new-email@powerfox.test",
+            CONF_PASSWORD: "new-password",
+        }
+
+    with patch(
+        "homeassistant.components.powerfox.config_flow.Powerfox",
+        autospec=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert state.failure_since is None
