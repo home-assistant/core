@@ -19,7 +19,6 @@ MISSING_ALL = {
     "blueprint",
     "config",
     "configurator",
-    "demo",
     "energy",
     "frontend",
     "group",
