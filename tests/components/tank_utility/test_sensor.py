@@ -1,5 +1,7 @@
 """Tests for the Tank Utility sensor platform."""
 
+import asyncio
+import threading
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -286,6 +288,130 @@ async def test_yaml_import_device_selection(
 
     assert hass.states.get("sensor.my_propane_tank") is not None
     assert hass.states.get("sensor.second_tank") is None
+
+
+@pytest.mark.usefixtures("mock_get_token")
+async def test_yaml_import_multiple_blocks_merge_devices(
+    hass: HomeAssistant,
+    mock_get_data: MagicMock,
+) -> None:
+    """Test multiple YAML blocks for the same account merge device selections."""
+    device_2_data: dict[str, Any] = {
+        "device": {
+            "name": "Second Tank",
+            "address": "456 Other St",
+            "capacity": 250,
+            "fuelType": "propane",
+            "orientation": "vertical",
+        },
+        "status": "ok",
+        "lastReading": {
+            "tank": 42.0,
+            "time": 1600000000,
+            "time_iso": "2020-09-13T12:00:00Z",
+        },
+    }
+    device_3_data: dict[str, Any] = {
+        "device": {
+            "name": "Third Tank",
+            "address": "789 Extra Rd",
+            "capacity": 500,
+            "fuelType": "propane",
+            "orientation": "horizontal",
+        },
+        "status": "ok",
+        "lastReading": {
+            "tank": 88.0,
+            "time": 1600000000,
+            "time_iso": "2020-09-13T12:00:00Z",
+        },
+    }
+    mock_get_data.return_value = {
+        MOCK_DEVICE_ID: dict(DEVICE_DATA),
+        "device_2": device_2_data,
+        "device_3": device_3_data,
+    }
+
+    yaml_multiple_blocks = {
+        "sensor": [
+            {
+                "platform": "tank_utility",
+                "email": TEST_EMAIL,
+                "password": TEST_PASSWORD,
+                "devices": [MOCK_DEVICE_ID],
+            },
+            {
+                "platform": "tank_utility",
+                "email": TEST_EMAIL,
+                "password": TEST_PASSWORD,
+                "devices": ["device_2"],
+            },
+        ]
+    }
+
+    assert await async_setup_component(hass, "sensor", yaml_multiple_blocks)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+        "devices": [MOCK_DEVICE_ID, "device_2"],
+    }
+
+    assert hass.states.get("sensor.my_propane_tank") is not None
+    assert hass.states.get("sensor.second_tank") is not None
+    assert hass.states.get("sensor.third_tank") is None
+
+
+@pytest.mark.usefixtures("mock_get_data")
+async def test_yaml_import_concurrent_blocks_merge_devices(
+    hass: HomeAssistant,
+    mock_get_token: MagicMock,
+) -> None:
+    """Test concurrent YAML imports merge device selections when first is in progress."""
+    in_validation = threading.Event()
+    release_validation = threading.Event()
+
+    def slow_get_token(*args: Any, **kwargs: Any) -> str:
+        in_validation.set()
+        release_validation.wait(timeout=5)
+        return "mock_token"
+
+    mock_get_token.side_effect = slow_get_token
+
+    task_1 = hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={
+                CONF_EMAIL: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+                "devices": [MOCK_DEVICE_ID],
+            },
+        )
+    )
+    while not in_validation.is_set():
+        await asyncio.sleep(0.005)
+
+    result_2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "import"},
+        data={
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+            "devices": ["device_2"],
+        },
+    )
+    assert result_2["type"] is FlowResultType.ABORT
+    assert result_2["reason"] == "already_in_progress"
+
+    release_validation.set()
+    result_1 = await task_1
+
+    assert result_1["type"] is FlowResultType.CREATE_ENTRY
+    assert result_1["data"]["devices"] == [MOCK_DEVICE_ID, "device_2"]
 
 
 @pytest.mark.usefixtures("mock_get_token", "mock_get_data")

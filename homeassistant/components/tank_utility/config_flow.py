@@ -128,9 +128,34 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         email = import_data[CONF_EMAIL].strip().lower()
         password = import_data[CONF_PASSWORD]
+        pending_imports: dict[str, list[str] | None] = self.hass.data.setdefault(
+            DOMAIN, {}
+        )
+        if (imported_devices := import_data.get(CONF_DEVICES)) is not None:
+            if (pending := pending_imports.get(email, [])) is not None:
+                pending_imports[email] = list(
+                    dict.fromkeys([*pending, *imported_devices])
+                )
+        else:
+            pending_imports[email] = None
 
-        await self.async_set_unique_id(email)
-        self._abort_if_unique_id_configured()
+        existing_entry = await self.async_set_unique_id(email, raise_on_progress=False)
+        if existing_entry is not None:
+            pending_imports.pop(email, None)
+            updates: dict[str, Any] | None = None
+            if CONF_DEVICES in existing_entry.data and imported_devices is not None:
+                updates = {
+                    CONF_DEVICES: list(
+                        dict.fromkeys(
+                            [*existing_entry.data[CONF_DEVICES], *imported_devices]
+                        )
+                    )
+                }
+            self._abort_if_unique_id_configured(updates=updates)
+        if self._async_in_progress(
+            include_uninitialized=True, match_context={"unique_id": email}
+        ):
+            return self.async_abort(reason="already_in_progress")
 
         try:
             await self.hass.async_add_executor_job(
@@ -143,13 +168,15 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception importing from YAML")
             return self.async_abort(reason="unknown")
+        finally:
+            devices = pending_imports.pop(email, None)
 
         entry_data: dict[str, Any] = {
             CONF_EMAIL: email,
             CONF_PASSWORD: password,
         }
-        if CONF_DEVICES in import_data:
-            entry_data[CONF_DEVICES] = list(import_data[CONF_DEVICES])
+        if devices is not None:
+            entry_data[CONF_DEVICES] = devices
 
         return self.async_create_entry(
             title=email,

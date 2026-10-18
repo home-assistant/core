@@ -44,15 +44,12 @@ async def async_setup_entry(
     """Set up Tank Utility sensor entities based on a config entry."""
     coordinator = entry.runtime_data
     known_devices: set[str] = set()
-    allowed_devices: set[str] | None = (
-        set(devices) if (devices := entry.data.get(CONF_DEVICES)) is not None else None
-    )
 
     @callback
     def _async_add_new_devices() -> None:
         new_devices = set(coordinator.data) - known_devices
-        if allowed_devices is not None:
-            new_devices &= allowed_devices
+        if (devices := entry.data.get(CONF_DEVICES)) is not None:
+            new_devices &= set(devices)
         if not new_devices:
             return
         known_devices.update(new_devices)
