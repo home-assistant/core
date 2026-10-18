@@ -255,10 +255,17 @@ def _git(*args: str, cwd: Path | None = None) -> str:
 
 
 def _content_in_root(dest: Path, sha: str) -> bool:
-    """Return the content_in_root flag from the root hacs.json at sha, if any."""
+    """Return the content_in_root flag from the root hacs.json at sha, if any.
+
+    Trees are local in a blobless clone, so checking that the file exists needs
+    no network; reading it may, and a failed read must fail the repo rather than
+    quietly select the narrower checkout.
+    """
+    if not _git("ls-tree", "--name-only", sha, "hacs.json", cwd=dest).strip():
+        return False
     try:
         manifest = json.loads(_git("show", f"{sha}:hacs.json", cwd=dest))
-    except RuntimeError, ValueError:
+    except ValueError:
         return False
     return isinstance(manifest, dict) and manifest.get("content_in_root") is True
 

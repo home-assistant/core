@@ -12,7 +12,9 @@ from script import sync_custom_integrations
 from script.sync_custom_integrations import (
     LOCK_FILE,
     STATE_FORMAT,
+    GitError,
     UnsafePathError,
+    _content_in_root,
     download,
     ensure_ignored,
     fetch_heads,
@@ -278,3 +280,35 @@ def test_fetch_heads_treats_private_repos_as_unavailable(
         "o/gone": None,
         "o/empty": None,
     }
+
+
+@pytest.mark.parametrize(
+    ("git_results", "expected"),
+    [
+        pytest.param([""], False, id="no_hacs_json"),
+        pytest.param(["hacs.json\n", "not json"], False, id="invalid_json"),
+        pytest.param(["hacs.json\n", "{}"], False, id="flag_unset"),
+        pytest.param(["hacs.json\n", '{"content_in_root": true}'], True, id="flag_set"),
+    ],
+)
+def test_content_in_root(
+    monkeypatch: pytest.MonkeyPatch, git_results: list[str], expected: bool
+) -> None:
+    """Test reading the content_in_root flag from hacs.json."""
+    monkeypatch.setattr(sync_custom_integrations, "_git", Mock(side_effect=git_results))
+
+    assert _content_in_root(Path("repo"), "a" * 40) is expected
+
+
+def test_content_in_root_read_failure_fails_repo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that a failed read of an existing hacs.json is not taken as no flag."""
+    monkeypatch.setattr(
+        sync_custom_integrations,
+        "_git",
+        Mock(side_effect=["hacs.json\n", GitError("show", "network error")]),
+    )
+
+    with pytest.raises(GitError):
+        _content_in_root(Path("repo"), "a" * 40)
