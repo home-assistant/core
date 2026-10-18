@@ -4439,6 +4439,9 @@
     "haven_iaq": {
       "name": "HAVEN IAQ",
       "integration_type": "device",
+      "categories": [
+        "sensors.air_quality"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
