@@ -15,6 +15,12 @@
           "one_time_password": "One-time password"
         }
       },
+      "reauth_confirm": {
+        "description": "The Electra account is locked out. A new one-time password has been sent to your phone.",
+        "data": {
+          "one_time_password": "One-time password"
+        }
+      },
       "user": {
         "data": {
           "phone_number": "Phone number"
