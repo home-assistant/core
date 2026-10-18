@@ -328,6 +328,7 @@ async def test_reconfigure_exceptions(
 async def test_auth_state_reset_after_credentials_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     flow_type: str,
 ) -> None:
     """Test successful credential updates reset authentication investigation."""

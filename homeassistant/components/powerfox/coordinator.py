@@ -83,17 +83,21 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
             now = dt_util.utcnow()
 
             if self.auth_state.record_failure(now):
+                failure_since = self.auth_state.failure_since
+
                 try:
                     await self.client.all_devices()
                 except PowerfoxAuthenticationError as auth_err:
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="auth_failed",
-                    ) from auth_err
+                    if self.auth_state.failure_since == failure_since:
+                        raise ConfigEntryAuthFailed(
+                            translation_domain=DOMAIN,
+                            translation_key="auth_failed",
+                        ) from auth_err
                 except PowerfoxConnectionError:
                     pass
                 else:
-                    self.auth_state.record_success()
+                    if self.auth_state.failure_since == failure_since:
+                        self.auth_state.record_success()
 
             if self.config_entry.state is not ConfigEntryState.LOADED:
                 raise ConfigEntryNotReady(

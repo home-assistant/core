@@ -9,10 +9,51 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_stale_authentication_verification_does_not_reauthenticate(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delayed verification cannot override a successful update."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data[0]
+    auth_state = coordinator.auth_state
+
+    mock_powerfox_client.device.side_effect = PowerfoxAuthenticationError
+
+    # Establish an existing authentication failure interval.
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    assert auth_state.failure_since is not None
+
+    # Advance beyond the authentication grace period.
+    freezer.tick(timedelta(seconds=310))
+
+    # Simulate another coordinator recovering while verification is pending.
+    async def delayed_authentication_error(*args, **kwargs):
+        auth_state.record_success()
+        raise PowerfoxAuthenticationError
+
+    mock_powerfox_client.all_devices.side_effect = delayed_authentication_error
+
+    # A stale verification must not trigger reauthentication.
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    assert auth_state.failure_since is None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.parametrize("method", ["device", "report"])

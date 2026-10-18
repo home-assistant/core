@@ -123,6 +123,35 @@ async def test_transient_authentication_error_during_setup(
     assert not hass.config_entries.flow.async_progress()
 
 
+async def test_transient_authentication_error_during_first_refresh(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a transient 401 during the first coordinator refresh."""
+    # Device discovery succeeds, but the first data request fails.
+    mock_powerfox_client.device.side_effect = PowerfoxAuthenticationError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The entry must retry instead of requesting new credentials.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
+
+    # The API recovers before Home Assistant retries setup.
+    mock_powerfox_client.device.side_effect = None
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_transient_authentication_error_during_reload(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
