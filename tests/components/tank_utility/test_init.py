@@ -1,6 +1,6 @@
 """Tests for the Tank Utility integration setup and teardown."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -13,6 +13,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .conftest import DEVICE_DATA, MOCK_DEVICE_ID, TEST_EMAIL, TEST_PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -163,3 +165,38 @@ async def test_coordinator_error_sanitization_and_suppressed_chain(
     assert exc_info.value.__cause__ is None
     assert exc_info.value.__suppress_context__ is True
     assert str(exc_info.value) == "Error communicating with Tank Utility: HTTPError"
+
+
+async def test_coordinator_device_detail_token_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test device-detail 401 refreshes expired token and retries with finite timeouts."""
+    with (
+        patch(
+            "tank_utility.device.auth.get_token",
+            side_effect=["expired_token", "fresh_token"],
+        ) as mock_token,
+        patch(
+            "tank_utility.device.get_devices",
+            return_value=[MOCK_DEVICE_ID],
+        ) as mock_devices,
+        patch(
+            "tank_utility.device.get_device_data",
+            side_effect=[
+                _mock_http_error(requests.codes.unauthorized),
+                dict(DEVICE_DATA),
+            ],
+        ) as mock_device_data,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_token.call_count == 2
+    mock_token.assert_any_call(TEST_EMAIL, TEST_PASSWORD, timeout=(10, 30))
+    mock_token.assert_any_call(TEST_EMAIL, TEST_PASSWORD, force=True, timeout=(10, 30))
+    mock_devices.assert_called_once_with("expired_token", timeout=(10, 30))
+    assert mock_device_data.call_count == 2
+    mock_device_data.assert_any_call("expired_token", MOCK_DEVICE_ID, timeout=(10, 30))
+    mock_device_data.assert_any_call("fresh_token", MOCK_DEVICE_ID, timeout=(10, 30))

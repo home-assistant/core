@@ -71,21 +71,20 @@ async def async_setup_platform(
         context={"source": SOURCE_IMPORT},
         data=dict(config),
     )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        reason = result.get("reason", "unknown")
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{reason}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{reason}",
-        )
-        return
+    if result.get("type") is FlowResultType.ABORT:
+        if (reason := result.get("reason")) == "already_in_progress":
+            return
+        if reason != "already_configured":
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{reason}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{reason}",
+            )
+            return
 
     ir.async_create_issue(
         hass,

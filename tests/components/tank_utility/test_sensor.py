@@ -1,5 +1,6 @@
 """Tests for the Tank Utility sensor platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,6 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -308,3 +310,22 @@ async def test_yaml_import_invalid_auth(
     )
     assert issue is not None
     assert issue.issue_domain == DOMAIN
+
+
+async def test_yaml_import_already_in_progress(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test YAML import already in progress creates no repair issue."""
+
+    async def mock_async_init(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        return {"type": FlowResultType.ABORT, "reason": "already_in_progress"}
+
+    monkeypatch.setattr(hass.config_entries.flow, "async_init", mock_async_init)
+
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not issue_registry.issues
