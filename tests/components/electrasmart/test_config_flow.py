@@ -267,15 +267,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     config_entry.add_to_hass(hass)
 
     async with _patch_success(hass):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": config_entry.entry_id,
-                "unique_id": config_entry.unique_id,
-            },
-            data=config_entry.data,
-        )
+        result = await config_entry.start_reauth_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -293,7 +285,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 async def test_reauth_invalid_otp(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test a rejected one-time password during reauthentication."""
+    """Test a rejected one-time password, then a successful retry."""
     config_entry.add_to_hass(hass)
 
     mock_invalid_otp_response = loads(
@@ -312,15 +304,7 @@ async def test_reauth_invalid_otp(
             return_value=mock_invalid_otp_response,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": config_entry.entry_id,
-                "unique_id": config_entry.unique_id,
-            },
-            data=config_entry.data,
-        )
+        result = await config_entry.start_reauth_flow(hass)
 
         assert result["step_id"] == "reauth_confirm"
 
@@ -328,6 +312,18 @@ async def test_reauth_invalid_otp(
             result["flow_id"], {CONF_OTP: "1234"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {CONF_OTP: "invalid_auth"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {CONF_OTP: "invalid_auth"}
+
+        flow_id = result["flow_id"]
+
+    # The user can recover by entering a one-time password that is accepted.
+    async with _patch_success(hass):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {CONF_OTP: "1234"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
