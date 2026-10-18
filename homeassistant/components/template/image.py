@@ -23,17 +23,17 @@ from homeassistant.components.image import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    restore_state,
+)
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.json import json_bytes
-from homeassistant.helpers.restore_state import (
-    STATE_EXPIRATION,
-    ExtraStoredData,
-    RestoreEntity,
-)
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
@@ -84,20 +84,23 @@ IMAGE_CONFIG_ENTRY_SCHEMA = probatio.Schema(
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
-def _prune_image_cache(images_dir: pathlib.Path, expired_before: datetime) -> None:
-    """Delete cache files that weren't written at the last shutdown."""
+def _prune_image_cache(images_dir: pathlib.Path, keep: set[str]) -> None:
+    """Delete cache files that can no longer be restored."""
     try:
-        paths = [
-            path for path in images_dir.iterdir() if path.suffix in (".bin", ".tmp")
-        ]
+        paths = list(images_dir.iterdir())
     except FileNotFoundError:
         return
+    except OSError as err:
+        _LOGGER.warning("Unable to prune image cache %s: %s", images_dir, err)
+        return
 
-    cutoff = expired_before.timestamp()
     for path in paths:
+        if path.suffix not in (".bin", ".tmp") or (
+            path.suffix == ".bin" and path.stem in keep
+        ):
+            continue
         try:
-            if path.stat().st_mtime < cutoff:
-                path.unlink()
+            path.unlink()
         except OSError as err:
             _LOGGER.debug("Unable to prune image cache %s: %s", path, err)
 
@@ -105,17 +108,23 @@ def _prune_image_cache(images_dir: pathlib.Path, expired_before: datetime) -> No
 async def _async_prune_image_cache(hass: HomeAssistant) -> None:
     """Delete cached images of entities that no longer exist, once per start.
 
-    Unregistered entities have no removal hook, so their files are pruned with the
-    same expiration restore state uses. Live entities rewrite their file at every
-    shutdown, so only the first setup after a start can tell them apart.
+    Unregistered entities have no removal hook, so a file is kept as long as restore
+    state could still restore its entity. This runs before the first entities are
+    added, so no cache write can be in progress.
     """
     if hass.data.get(_IMAGE_CACHE_PRUNED):
         return
     hass.data[_IMAGE_CACHE_PRUNED] = True
+    keep = {
+        entry.id
+        for entry in er.async_get(hass).entities.values()
+        if entry.domain == IMAGE_DOMAIN and entry.platform == DOMAIN
+    }
+    keep.update(restore_state.async_get(hass).last_states_by_entity_id)
     await hass.async_add_executor_job(
         _prune_image_cache,
         pathlib.Path(hass.config.cache_path(DOMAIN, IMAGES_DIR)),
-        dt_util.utcnow() - STATE_EXPIRATION,
+        keep,
     )
 
 

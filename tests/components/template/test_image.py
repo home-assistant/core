@@ -56,6 +56,7 @@ from tests.common import (
     MockConfigEntry,
     assert_setup_component,
     async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
 from tests.typing import ClientSessionGenerator
@@ -1596,23 +1597,33 @@ async def test_cache_deleted_with_entity(
 
 
 @pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
-async def test_expired_cache_pruned_once_at_start(
+async def test_orphaned_cache_pruned_once_at_start(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     images_cache_dir: Path,
     imgbytes_jpg: bytes,
 ) -> None:
-    """Test cache files not written at the last shutdown are pruned on first setup."""
+    """Test cache files that can't be restored are pruned on the first setup."""
+    registered = entity_registry.async_get_or_create(
+        image.DOMAIN, DOMAIN, "registered_image"
+    )
+    mock_restore_cache(hass, (State("image.unregistered", "2026-01-01T00:00:00"),))
+
     images_cache_dir.mkdir(parents=True)
-    expired = (dt_util.utcnow() - timedelta(days=8)).timestamp()
-    recent = (dt_util.utcnow() - timedelta(days=6)).timestamp()
-    live = images_cache_dir / "image.live.bin"
-    for path, mtime in (
-        (images_cache_dir / "image.removed.bin", expired),
-        (images_cache_dir / "image.failed_write.tmp", expired),
-        (live, recent),
+    # Files of restorable entities are kept even after a long shutdown.
+    expired = (dt_util.utcnow() - timedelta(days=30)).timestamp()
+    kept = [
+        images_cache_dir / f"{registered.id}.bin",
+        images_cache_dir / "image.unregistered.bin",
+    ]
+    for path in (
+        *kept,
+        images_cache_dir / "0123456789abcdef0123456789abcdef.bin",
+        images_cache_dir / "image.removed.bin",
+        images_cache_dir / "image.failed_write.tmp",
     ):
         path.write_bytes(imgbytes_jpg)
-        os.utime(path, (mtime, mtime))
+        os.utime(path, (expired, expired))
 
     await setup_entity(
         hass,
@@ -1622,10 +1633,11 @@ async def test_expired_cache_pruned_once_at_start(
         config={"url": "{{ 'http://example.com' }}"},
     )
 
-    assert list(images_cache_dir.iterdir()) == [live]
+    assert sorted(images_cache_dir.iterdir()) == sorted(kept)
 
-    # A later setup, such as a reload, must not prune files of live entities.
-    os.utime(live, (expired, expired))
+    # Later setups, such as reloads, don't prune again.
+    orphan = images_cache_dir / "image.removed.bin"
+    orphan.write_bytes(imgbytes_jpg)
     template_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -1640,4 +1652,26 @@ async def test_expired_cache_pruned_once_at_start(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert list(images_cache_dir.iterdir()) == [live]
+    assert sorted(images_cache_dir.iterdir()) == sorted([*kept, orphan])
+
+
+async def test_cache_prune_error_does_not_block_setup(
+    hass: HomeAssistant,
+    images_cache_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unreadable cache directory is logged and the image still loads."""
+    images_cache_dir.parent.mkdir(parents=True)
+    # Listing a file as a directory raises NotADirectoryError, an OSError.
+    images_cache_dir.write_bytes(b"")
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        ConfigurationStyle.MODERN,
+        1,
+        config={"url": "{{ 'http://example.com' }}"},
+    )
+
+    assert hass.states.get(TEST_IMAGE.entity_id) is not None
+    assert "Unable to prune image cache" in caplog.text
