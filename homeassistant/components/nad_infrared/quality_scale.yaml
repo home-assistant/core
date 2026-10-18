@@ -29,10 +29,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: |
-      This integration does not keep runtime data.
+  runtime-data: done
   test-before-configure:
     status: exempt
     comment: |
@@ -87,10 +84,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: |
-      This integration does not raise exceptions.
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |

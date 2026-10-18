@@ -9,11 +9,11 @@ from infrared_protocols.codes.nad.tape import NADTapeCode
 from infrared_protocols.codes.nad.tuner import NADTunerCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import NadIrConfigEntry
 from .const import CONF_DEVICE_TYPE, NADDeviceType
 from .entity import NADCode, NadIrEntity
 
@@ -451,7 +451,7 @@ DEVICE_BUTTONS: dict[NADDeviceType, tuple[NadIrButtonEntityDescription, ...]] = 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NadIrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NAD Infrared buttons from config entry."""
@@ -467,7 +467,7 @@ class NadIrButton(NadIrEntity, ButtonEntity):
     entity_description: NadIrButtonEntityDescription
 
     def __init__(
-        self, entry: ConfigEntry, description: NadIrButtonEntityDescription
+        self, entry: NadIrConfigEntry, description: NadIrButtonEntityDescription
     ) -> None:
         """Initialize NAD Infrared button."""
         super().__init__(entry, unique_id_suffix=description.key)

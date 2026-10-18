@@ -9,6 +9,7 @@ from homeassistant.components.infrared import (
     async_get_emitters,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import (
@@ -73,17 +74,14 @@ class NadIrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Select the emitter for a device type and create the entry."""
         if user_input is not None:
-            # The emitter's entity ID can change, so it is not used as unique ID.
-            self._async_abort_entries_match(
-                {
-                    CONF_DEVICE_TYPE: device_type,
-                    CONF_INFRARED_ENTITY_ID: user_input[CONF_INFRARED_ENTITY_ID],
-                }
-            )
-            return self.async_create_entry(
-                title=DEVICE_NAMES[device_type],
-                data={CONF_DEVICE_TYPE: device_type, **user_input},
-            )
+            # Store the emitter's registry ID rather than its entity ID, so the
+            # entry keeps working when the emitter is renamed.
+            emitter = user_input[CONF_INFRARED_ENTITY_ID]
+            if registry_entry := er.async_get(self.hass).async_get(emitter):
+                emitter = registry_entry.id
+            data = {CONF_DEVICE_TYPE: device_type, CONF_INFRARED_ENTITY_ID: emitter}
+            self._async_abort_entries_match(data)
+            return self.async_create_entry(title=DEVICE_NAMES[device_type], data=data)
 
         return self.async_show_form(
             step_id=device_type.value,

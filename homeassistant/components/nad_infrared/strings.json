@@ -317,5 +317,10 @@
         "name": "Tune up"
       }
     }
+  },
+  "exceptions": {
+    "emitter_not_found": {
+      "message": "The infrared emitter used by this NAD device no longer exists. Remove this device and set it up again with another emitter."
+    }
   }
 }

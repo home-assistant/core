@@ -19,6 +19,7 @@ from homeassistant.components.nad_infrared.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.components.infrared import (
@@ -37,15 +38,21 @@ def device_type(request: pytest.FixtureRequest) -> NADDeviceType:
 
 
 @pytest.fixture
-def mock_config_entry(device_type: NADDeviceType) -> MockConfigEntry:
-    """Return a mock config entry."""
+def mock_config_entry(
+    device_type: NADDeviceType,
+    entity_registry: er.EntityRegistry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> MockConfigEntry:
+    """Return a mock config entry that refers to the emitter by registry ID."""
+    emitter_entry = entity_registry.async_get(MOCK_INFRARED_EMITTER_ENTITY_ID)
+    assert emitter_entry is not None
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
         title=DEVICE_NAMES[device_type],
         data={
             CONF_DEVICE_TYPE: device_type,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_INFRARED_ENTITY_ID: emitter_entry.id,
         },
     )
 
