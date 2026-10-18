@@ -344,6 +344,7 @@ class NestFlowHandler(
             *topic_names,  # Untranslated topic paths
             CREATE_NEW_TOPIC_KEY,
         ]
+        # A previously configured Nest-created topic may no longer be available
         default_topic = self._data.get(CONF_TOPIC_NAME)
         if default_topic not in topics:
             default_topic = next(iter(topics))
@@ -457,6 +458,7 @@ class NestFlowHandler(
         else:
             subscriptions.extend(eligible_subscriptions.subscription_names)
         subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
+        # A previously used subscription may have pointed to a topic that is no longer eligible
         default_subscription = self._data.get(CONF_SUBSCRIPTION_NAME)
         if default_subscription not in subscriptions:
             default_subscription = next(iter(subscriptions))
