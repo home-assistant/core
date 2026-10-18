@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import timedelta
 from http import HTTPStatus
 import re
-import time
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -425,7 +424,6 @@ async def test_event_listener_error(
 
 
 async def _setup_with_token_refresh_on_connect(
-    hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -447,14 +445,6 @@ async def _setup_with_token_refresh_on_connect(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
     assert client.stream_all_events.call_count == 1
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            **config_entry.data,
-            "token": {**config_entry.data["token"], "expires_at": time.time() - 10},
-        },
-    )
     return client.stream_all_events
 
 
@@ -470,6 +460,8 @@ async def _setup_with_token_refresh_on_connect(
 )
 async def test_event_listener_token_refresh_error(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    token_expiration_time: float,
     aioclient_mock: AiohttpClientMocker,
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -479,14 +471,15 @@ async def test_event_listener_token_refresh_error(
 ) -> None:
     """Test the event listener reconnects after a failed token refresh."""
     stream_all_events = await _setup_with_token_refresh_on_connect(
-        hass, client, config_entry, integration_setup
+        client, config_entry, integration_setup
     )
     assert hass.states.get("sensor.washer_door").state == "closed"
 
     aioclient_mock.post(OAUTH2_TOKEN, **token_request_failure)
     await client.add_events([EventStreamInterruptedError()])
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
+    freezer.move_to(dt_util.utc_from_timestamp(token_expiration_time + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert stream_all_events.call_count == 2
@@ -533,6 +526,8 @@ async def test_event_listener_token_refresh_error(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_event_listener_token_refresh_reauth_error(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    token_expiration_time: float,
     aioclient_mock: AiohttpClientMocker,
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -540,7 +535,7 @@ async def test_event_listener_token_refresh_reauth_error(
 ) -> None:
     """Test config entry reloads when the token refresh needs reauth."""
     stream_all_events = await _setup_with_token_refresh_on_connect(
-        hass, client, config_entry, integration_setup
+        client, config_entry, integration_setup
     )
 
     aioclient_mock.post(
@@ -554,7 +549,8 @@ async def test_event_listener_token_refresh_reauth_error(
     ) as mock_schedule_reload:
         await client.add_events([EventStreamInterruptedError()])
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
+        freezer.move_to(dt_util.utc_from_timestamp(token_expiration_time + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         await hass.async_block_till_done()
