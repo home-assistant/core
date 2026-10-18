@@ -136,6 +136,9 @@
       "cancel_boost": {
         "name": "Cancel boost"
       },
+      "import_thread_network": {
+        "name": "Import Thread network"
+      },
       "pause": {
         "name": "[%key:common::action::pause%]"
       },
@@ -793,6 +796,15 @@
     },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
+    },
+    "thread_dataset_read_failed": {
+      "message": "Could not read the Thread dataset of the border router: {error}"
+    },
+    "thread_dataset_unusable": {
+      "message": "The border router returned no usable Thread dataset"
+    },
+    "thread_network_missing": {
+      "message": "The border router has no Thread network"
     }
   },
   "issues": {

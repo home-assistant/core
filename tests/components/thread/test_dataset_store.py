@@ -6,7 +6,6 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import flush_store
-from python_otbr_api.tlv_parser import TLVError
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components.thread import dataset_store, discovery
@@ -82,11 +81,33 @@ DATASET_1_OTHER_SECURITY_POLICY = (
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
-    with pytest.raises(TLVError, match="expected 173 bytes for tag 222, got 2"):
+    with pytest.raises(
+        HomeAssistantError, match="expected 173 bytes for tag 222, got 2"
+    ):
         await dataset_store.async_add_dataset(hass, "source", "DEADBEEF")
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 0
+
+
+async def test_update_dataset(hass: HomeAssistant) -> None:
+    """A known network is updated; an unknown one is not added."""
+    assert (
+        await dataset_store.async_update_dataset(hass, "source", DATASET_1)
+        is dataset_store.DatasetAddResult.DISCARDED
+    )
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 0
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert (
+        await dataset_store.async_update_dataset(
+            hass, "source", DATASET_1_LARGER_TIMESTAMP
+        )
+        is dataset_store.DatasetAddResult.STORED
+    )
+    assert len(store.datasets) == 1
+    assert next(iter(store.datasets.values())).tlv == DATASET_1_LARGER_TIMESTAMP
 
 
 async def test_add_dataset_twice(hass: HomeAssistant) -> None:
@@ -226,16 +247,12 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("dataset", "error"),
-    [
-        (DATASET_1_BAD_CHANNEL, TLVError),
-        (DATASET_1_NO_EXTPANID, HomeAssistantError),
-        (DATASET_1_NO_ACTIVETIMESTAMP, HomeAssistantError),
-    ],
+    "dataset",
+    [DATASET_1_BAD_CHANNEL, DATASET_1_NO_EXTPANID, DATASET_1_NO_ACTIVETIMESTAMP],
 )
-async def test_add_bad_dataset(hass: HomeAssistant, dataset, error) -> None:
+async def test_add_bad_dataset(hass: HomeAssistant, dataset: str) -> None:
     """Test adding a bad dataset."""
-    with pytest.raises(error):
+    with pytest.raises(HomeAssistantError):
         await dataset_store.async_add_dataset(hass, "test", dataset)
 
 
