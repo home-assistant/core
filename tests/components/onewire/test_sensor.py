@@ -11,7 +11,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.components.onewire.sensor import SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -104,3 +105,35 @@ async def test_tai8570_sensors(
 
     assert entity_registry.entities.get("sensor.12_111111111111_pressure") is None
     assert "unreachable sensor /12.111111111111/TAI8570/pressure" in caplog.text
+
+
+@pytest.mark.parametrize("device_id", ["10.111111111111"])
+async def test_sensor_unavailable_on_read_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sensor becomes unavailable when the read fails, and recovers."""
+    entity_id = "sensor.10_111111111111_temperature"
+    setup_owproxy_mock_devices(owproxy, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert hass.states.get(entity_id).state == "25.123"
+
+    # No more injected reads, so the next read raises OWServerProtocolError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert "Error fetching Temperature data" in caplog.text
+
+    owproxy.return_value.read.side_effect = None
+    owproxy.return_value.read.return_value = b"    26.5"
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "26.5"

@@ -1,7 +1,7 @@
 """Tests for the todo integration."""
 
 import dataclasses
-import datetime
+import datetime as dt
 from datetime import timedelta
 from typing import Any
 import zoneinfo
@@ -279,7 +279,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.date(2023, 11, 13),
+                due=dt.date(2023, 11, 13),
             ),
         ),
         (
@@ -291,7 +291,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 17, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 17, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -300,7 +300,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 11, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 11, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -309,7 +309,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 0, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 0, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -598,7 +598,7 @@ async def test_update_todo_item_field_unsupported(
                 uid="1",
                 summary="Item #1",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.date(2023, 11, 13),
+                due=dt.date(2023, 11, 13),
             ),
         ),
         (
@@ -608,7 +608,7 @@ async def test_update_todo_item_field_unsupported(
                 uid="1",
                 summary="Item #1",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -669,22 +669,22 @@ async def test_update_todo_item_extended_fields(
             TodoItem(uid="1", summary="Summary"),
         ),
         (
-            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {ATTR_DUE_DATE: datetime.date(2024, 1, 2)},
-            TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 2)),
+            [TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 1))],
+            {ATTR_DUE_DATE: dt.date(2024, 1, 2)},
+            TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 2)),
         ),
         (
-            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
+            [TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 1))],
             {ATTR_DUE_DATE: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
-            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {ATTR_DUE_DATETIME: datetime.datetime(2024, 1, 1, 10, 0, 0)},
+            [TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 1))],
+            {ATTR_DUE_DATETIME: dt.datetime(2024, 1, 1, 10, 0, 0)},
             TodoItem(
                 uid="1",
                 summary="Summary",
-                due=datetime.datetime(
+                due=dt.datetime(
                     2024, 1, 1, 10, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="America/Regina")
                 ),
             ),
@@ -694,7 +694,7 @@ async def test_update_todo_item_extended_fields(
                 TodoItem(
                     uid="1",
                     summary="Summary",
-                    due=datetime.datetime(2024, 1, 1, 10, 0, 0),
+                    due=dt.datetime(2024, 1, 1, 10, 0, 0),
                 )
             ],
             {ATTR_DUE_DATETIME: None},
@@ -1231,9 +1231,9 @@ def test_serialize_todo_item_matches_asdict() -> None:
         summary="Item #1",
         uid="1",
         status=TodoItemStatus.COMPLETED,
-        due=datetime.date(2023, 11, 17),
+        due=dt.date(2023, 11, 17),
         description="A description",
-        completed=datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+        completed=dt.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE),
     )
     assert serialize_todo_item(item) == dataclasses.asdict(item)
 
@@ -1252,9 +1252,9 @@ def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
 @pytest.mark.parametrize(
     ("item_data", "expected_item_data"),
     [
-        ({"due": datetime.date(2023, 11, 17)}, {"due": "2023-11-17"}),
+        ({"due": dt.date(2023, 11, 17)}, {"due": "2023-11-17"}),
         (
-            {"due": datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE)},
+            {"due": dt.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE)},
             {"due": f"2023-11-17T17:00:00{TEST_OFFSET}"},
         ),
         ({"description": "Some description"}, {"description": "Some description"}),

@@ -1,7 +1,7 @@
 """Test the DHCP discovery integration."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import threading
 from typing import Any, cast
 from unittest.mock import patch
@@ -1293,7 +1293,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
             ],
         ),
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=65))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=65))
         await hass.async_block_till_done()
         device_tracker_watcher.async_stop()
         await hass.async_block_till_done()

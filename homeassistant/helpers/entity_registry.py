@@ -335,8 +335,6 @@ class RegistryEntry:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
             display_dict["hb"] = True
-        if self.has_entity_name:
-            display_dict["hn"] = True
         if name := self.entity_name:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
@@ -389,7 +387,6 @@ class RegistryEntry:
             "disabled_by": self.disabled_by,
             "entity_category": self.entity_category,
             "entity_id": self.entity_id,
-            "has_entity_name": self.has_entity_name,
             "hidden_by": self.hidden_by,
             "icon": self.icon,
             "id": self.id,

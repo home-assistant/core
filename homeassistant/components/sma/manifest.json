@@ -1,6 +1,7 @@
 {
   "domain": "sma",
   "name": "SMA Solar",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@kellerza", "@rklomp", "@erwindouna"],
   "config_flow": true,
   "dhcp": [
