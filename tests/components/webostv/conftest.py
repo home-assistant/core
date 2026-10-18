@@ -19,6 +19,16 @@ from .const import (
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_get_mac_address() -> Generator[Mock]:
+    """Mock MAC address discovery."""
+    with patch(
+        "homeassistant.components.webostv.coordinator.get_mac_address",
+        return_value=None,
+    ) as mock_get_mac:
+        yield mock_get_mac
+
+
 @pytest.fixture
 def mock_send_magic_packet() -> Generator[Mock]:
     """Mock sending Wake-on-LAN packets."""

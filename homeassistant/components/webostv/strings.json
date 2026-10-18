@@ -104,7 +104,7 @@
           "sources": "Sources list"
         },
         "data_description": {
-          "mac": "MAC address of the TV's network connection, used to turn on the TV with Wake-on-LAN. Enable network wake-up in the TV's settings.",
+          "mac": "The TV's MAC address is detected automatically when possible. Enter an address to override it for Wake-on-LAN. Enable network wake-up in the TV's settings.",
           "sources": "List of sources to enable"
         },
         "description": "Select enabled sources and optionally configure Wake-on-LAN.",

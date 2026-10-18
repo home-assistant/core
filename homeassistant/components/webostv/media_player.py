@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import CONF_MAC, EntityStateAttribute
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -257,9 +257,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.coordinator.turn_on or self.coordinator.config_entry.options.get(
-            CONF_MAC
-        ):
+        if self.coordinator.turn_on or self.coordinator.mac_address:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -275,7 +273,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         """Turn on media player."""
         if self.coordinator.turn_on:
             await self.coordinator.turn_on.async_run(self.hass, self._context)
-        elif mac := self.coordinator.config_entry.options.get(CONF_MAC):
+        elif mac := self.coordinator.mac_address:
             await self.hass.async_add_executor_job(send_magic_packet, mac)
 
     @cmd

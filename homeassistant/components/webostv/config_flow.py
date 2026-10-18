@@ -165,7 +165,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 reauth_entry = self._get_reauth_entry()
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data
+                )
 
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
@@ -190,7 +192,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(client.tv_info.hello["deviceUUID"])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
-                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -254,7 +258,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 probatio.Optional(
                     CONF_MAC,
                     description={
-                        "suggested_value": self.config_entry.options.get(CONF_MAC)
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_MAC, self.config_entry.data.get(CONF_MAC)
+                        )
                     },
                 ): TextSelector(),
             }

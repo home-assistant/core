@@ -7,11 +7,13 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.components.webostv.const import CONF_SOURCES
+from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_CLIENT_SECRET,
+    CONF_HOST,
     CONF_MAC,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -21,7 +23,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
-from .const import ENTITY_ID
+from .const import ENTITY_ID, HOST
 from .test_media_player import mock_scan_interval
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -30,9 +32,155 @@ from tests.typing import ClientSessionGenerator
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 
 
+async def test_discover_mac_address(
+    hass: HomeAssistant,
+    client: Mock,
+    mock_get_mac_address: Mock,
+    mock_send_magic_packet: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Discover a MAC on connection and retain it across key changes and reloads."""
+    client.is_connected.return_value = False
+    mock_get_mac_address.return_value = "AA-BB-CC-DD-EE-FF"
+    entry = await setup_webostv(hass)
+
+    assert entry.data[CONF_MAC] == MAC_ADDRESS
+    mock_get_mac_address.assert_called_once_with(ip=HOST)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] & (
+        MediaPlayerEntityFeature.TURN_ON
+    )
+
+    client.client_key = "updated_key"
+    await mock_scan_interval(hass, freezer)
+    assert entry.data[CONF_CLIENT_SECRET] == "updated_key"
+    assert entry.data[CONF_MAC] == MAC_ADDRESS
+
+    client.tv_state.is_on = False
+    client.connect.side_effect = TimeoutError
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await mock_scan_interval(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    await hass.services.async_call(
+        "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    mock_send_magic_packet.assert_called_once_with(MAC_ADDRESS)
+    mock_get_mac_address.assert_called_once_with(ip=HOST)
+
+
+async def test_mac_discovery_retry(
+    hass: HomeAssistant,
+    client: Mock,
+    mock_get_mac_address: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed MAC lookup allows setup and is retried on reconnect."""
+    client.is_connected.return_value = False
+    entry = await setup_webostv(hass)
+
+    assert CONF_MAC not in entry.data
+    assert not hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] & (
+        MediaPlayerEntityFeature.TURN_ON
+    )
+
+    client.is_connected.return_value = True
+    await mock_scan_interval(hass, freezer)
+    mock_get_mac_address.assert_called_once_with(ip=HOST)
+
+    client.is_connected.return_value = False
+    mock_get_mac_address.return_value = MAC_ADDRESS
+    await mock_scan_interval(hass, freezer)
+
+    assert entry.data[CONF_MAC] == MAC_ADDRESS
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] & (
+        MediaPlayerEntityFeature.TURN_ON
+    )
+    assert mock_get_mac_address.call_count == 2
+
+
+async def test_manual_mac_overrides_discovery(
+    hass: HomeAssistant,
+    client: Mock,
+    mock_get_mac_address: Mock,
+    mock_send_magic_packet: Mock,
+) -> None:
+    """Allow overriding a discovered address without additional network lookups."""
+    client.is_connected.return_value = False
+    mock_get_mac_address.return_value = MAC_ADDRESS
+    entry = await setup_webostv(hass)
+    manual_mac = "11:22:33:44:55:66"
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SOURCES: ["Live TV"], CONF_MAC: manual_mac},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_send_magic_packet.assert_called_once_with(manual_mac)
+    mock_get_mac_address.assert_called_once_with(ip=HOST)
+    assert entry.data[CONF_MAC] == MAC_ADDRESS
+
+
+@pytest.mark.parametrize(
+    ("source", "initial_data", "user_input"),
+    [
+        pytest.param(SOURCE_REAUTH, {CONF_HOST: HOST}, {}, id="reauth"),
+        pytest.param(
+            SOURCE_RECONFIGURE, None, {CONF_HOST: "new_host"}, id="reconfigure"
+        ),
+    ],
+)
+async def test_discovered_mac_preserved(
+    hass: HomeAssistant,
+    client: Mock,
+    mock_get_mac_address: Mock,
+    source: str,
+    initial_data: dict[str, str] | None,
+    user_input: dict[str, str],
+) -> None:
+    """Retain the discovered address when reauthenticating or changing hosts."""
+    client.is_connected.return_value = False
+    mock_get_mac_address.return_value = MAC_ADDRESS
+    entry = await setup_webostv(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": entry.entry_id},
+        data=initial_data,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.data[CONF_MAC] == MAC_ADDRESS
+    mock_get_mac_address.assert_called_once_with(ip=HOST)
+
+
+async def test_discovered_mac_redacted(
+    hass: HomeAssistant,
+    client: Mock,
+    mock_get_mac_address: Mock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Redact an automatically discovered MAC from diagnostics."""
+    client.is_connected.return_value = False
+    mock_get_mac_address.return_value = MAC_ADDRESS
+    entry = await setup_webostv(hass)
+    diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert diagnostics["entry"]["data"][CONF_MAC] == "**REDACTED**"
+
+
 async def test_wake_disconnected_tv(
     hass: HomeAssistant,
     client: Mock,
+    mock_get_mac_address: Mock,
     mock_send_magic_packet: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -54,6 +202,8 @@ async def test_wake_disconnected_tv(
         "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     mock_send_magic_packet.assert_called_once_with(MAC_ADDRESS)
+
+    mock_get_mac_address.assert_not_called()
 
     client.connect.side_effect = None
     client.client_key = "updated_key"
