@@ -22,7 +22,6 @@ MISSING_ALL = {
     "config",
     "configurator",
     "demo",
-    "device_automation",
     "energy",
     "ffmpeg",
     "frontend",
