@@ -351,6 +351,8 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     pb.store_for = Mock(side_effect=_store_for)
     pb.get = Mock(side_effect=_get)
     pb.all_devices = _all_devices
+    # The real lookup, over the fake stores.
+    pb.get_device_from_mac = partial(PublicBootstrap.get_device_from_mac, pb)
     return pb
 
 

@@ -849,6 +849,9 @@
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },
+    "not_a_chime": {
+      "message": "{device_name} is not a UniFi Protect chime"
+    },
     "not_authorized": {
       "message": "Not authorized to perform this action on the UniFi Protect controller"
     },
