@@ -3,17 +3,12 @@
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.automation import (
-    ATTR_CUR,
-    ATTR_LAST_TRIGGERED,
-    ATTR_MAX,
-    ATTR_MODE,
-    CONF_ID,
-)
+from homeassistant.components.automation import ATTR_LAST_TRIGGERED
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_MODE, CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.script import ATTR_CUR, ATTR_MAX
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 

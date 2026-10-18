@@ -16,7 +16,6 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 MISSING_ALL = {
     "alexa",
     "auth",
-    "automation",
     "blueprint",
     "cloud",
     "config",
