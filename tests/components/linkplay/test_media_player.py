@@ -133,7 +133,7 @@ async def test_follower_mirrors_leader_media_info(hass: HomeAssistant) -> None:
     ("album_art", "has_picture"),
     [
         pytest.param("https://example.com/cover.jpg", True, id="url"),
-        pytest.param("unknow", False, id="placeholder"),
+        pytest.param("unknow", False, id="placeholder"),  # codespell:ignore unknow
         pytest.param("", False, id="empty"),
     ],
 )

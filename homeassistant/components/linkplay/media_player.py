@@ -369,7 +369,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         player = self._active_player
         if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
             album_art = str(player.album_art)
-            # Devices report missing album art as a placeholder such as "unknow"
+            # Devices report missing album art as a placeholder string
             if album_art.startswith(("http://", "https://")):
                 return album_art
         return None
