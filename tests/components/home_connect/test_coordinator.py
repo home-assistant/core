@@ -474,10 +474,13 @@ async def test_event_listener_token_refresh_error(
         client, config_entry, integration_setup
     )
     assert hass.states.get("sensor.washer_door").state == "closed"
+    # Setup kept the fixture token, so it expires at token_expiration_time
+    assert config_entry.data["token"]["expires_at"] == token_expiration_time
 
     aioclient_mock.post(OAUTH2_TOKEN, **token_request_failure)
     await client.add_events([EventStreamInterruptedError()])
     await hass.async_block_till_done()
+    # Jump to 1 s after the token expires; this also fires the 10 s retry
     freezer.move_to(dt_util.utc_from_timestamp(token_expiration_time + 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -487,6 +490,7 @@ async def test_event_listener_token_refresh_error(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(OAUTH2_TOKEN, json=SERVER_ACCESS_TOKEN)
+    # Fire the next retry (20 s backoff) without moving the clock again
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
 
@@ -537,6 +541,8 @@ async def test_event_listener_token_refresh_reauth_error(
     stream_all_events = await _setup_with_token_refresh_on_connect(
         client, config_entry, integration_setup
     )
+    # Setup kept the fixture token, so it expires at token_expiration_time
+    assert config_entry.data["token"]["expires_at"] == token_expiration_time
 
     aioclient_mock.post(
         OAUTH2_TOKEN,
@@ -549,9 +555,11 @@ async def test_event_listener_token_refresh_reauth_error(
     ) as mock_schedule_reload:
         await client.add_events([EventStreamInterruptedError()])
         await hass.async_block_till_done()
+        # Jump to 1 s after the token expires; this also fires the 10 s retry
         freezer.move_to(dt_util.utc_from_timestamp(token_expiration_time + 1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
+        # Long past any retry delay: the stopped listener must not reconnect
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         await hass.async_block_till_done()
 
