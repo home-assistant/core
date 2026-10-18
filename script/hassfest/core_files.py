@@ -24,7 +24,6 @@ MISSING_ALL = {
     "demo",
     "device_automation",
     "energy",
-    "ffmpeg",
     "frontend",
     "google_assistant",
     "group",
