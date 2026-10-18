@@ -24,7 +24,6 @@ MISSING_ALL = {
     "person",
     "shopping_list",
     "sun",
-    "timer",
     "zone",
 }
 
