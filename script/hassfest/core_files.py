@@ -23,7 +23,6 @@ MISSING_ALL = {
     "input_boolean",
     "input_datetime",
     "input_select",
-    "input_text",
     "llm",
     "logbook",
     "logger",
