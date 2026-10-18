@@ -30,7 +30,6 @@ MISSING_ALL = {
     "input_boolean",
     "input_button",
     "input_datetime",
-    "input_number",
     "input_select",
     "input_text",
     "llm",
