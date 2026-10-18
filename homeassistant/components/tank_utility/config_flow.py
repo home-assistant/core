@@ -132,17 +132,16 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
             DOMAIN, {}
         )
         pending_entry = pending_imports.setdefault(
-            email, {"devices": [], "passwords": []}
+            email, {"devices": [], "passwords": [], "unrestricted": False}
         )
         if password not in pending_entry["passwords"]:
             pending_entry["passwords"].append(password)
         if (imported_devices := import_data.get(CONF_DEVICES)) is not None:
-            if (pending_devices := pending_entry["devices"]) is not None:
-                pending_entry["devices"] = list(
-                    dict.fromkeys([*pending_devices, *imported_devices])
-                )
+            pending_entry["devices"] = list(
+                dict.fromkeys([*pending_entry["devices"], *imported_devices])
+            )
         else:
-            pending_entry["devices"] = None
+            pending_entry["unrestricted"] = True
 
         existing_entry = await self.async_set_unique_id(email, raise_on_progress=False)
         if existing_entry is not None:
@@ -200,14 +199,14 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
                 password = candidate_password
                 break
         finally:
-            devices = pending_imports.pop(email, {}).get("devices")
+            popped = pending_imports.pop(email, {})
 
         entry_data: dict[str, Any] = {
             CONF_EMAIL: email,
             CONF_PASSWORD: password,
         }
-        if devices is not None:
-            entry_data[CONF_DEVICES] = devices
+        if not popped.get("unrestricted"):
+            entry_data[CONF_DEVICES] = popped["devices"]
 
         return self.async_create_entry(
             title=email,
