@@ -428,7 +428,7 @@ async def _setup_with_token_refresh_on_connect(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
-    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> MagicMock:
     """Set up the integration with an event stream that gets a token first.
 
@@ -444,18 +444,7 @@ async def _setup_with_token_refresh_on_connect(
 
     client.stream_all_events = MagicMock(side_effect=stream_all_events)
 
-    def init_side_effect(auth) -> MagicMock:
-        client._auth = auth
-        return client
-
-    config_entry.add_to_hass(hass)
-    with (
-        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
-        patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
-    ):
-        client_mock.side_effect = MagicMock(side_effect=init_side_effect)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
     assert client.stream_all_events.call_count == 1
 
@@ -484,13 +473,13 @@ async def test_event_listener_token_refresh_error(
     aioclient_mock: AiohttpClientMocker,
     client: MagicMock,
     config_entry: MockConfigEntry,
-    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     token_request_failure: dict[str, Any],
 ) -> None:
     """Test the event listener reconnects after a failed token refresh."""
     stream_all_events = await _setup_with_token_refresh_on_connect(
-        hass, client, config_entry, platforms
+        hass, client, config_entry, integration_setup
     )
     assert hass.states.get("sensor.washer_door").state == "closed"
 
@@ -547,11 +536,11 @@ async def test_event_listener_token_refresh_reauth_error(
     aioclient_mock: AiohttpClientMocker,
     client: MagicMock,
     config_entry: MockConfigEntry,
-    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test config entry reloads when the token refresh needs reauth."""
     stream_all_events = await _setup_with_token_refresh_on_connect(
-        hass, client, config_entry, platforms
+        hass, client, config_entry, integration_setup
     )
 
     aioclient_mock.post(
