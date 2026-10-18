@@ -32,6 +32,9 @@ dependencies = [
   "syrupy==6.1.1",
 ]
 
+[project.entry-points.pytest11]
+pytest_homeassistant = "pytest_homeassistant.bootstrap"
+
 [project.optional-dependencies]
 bluetooth = [
   "aiousbwatcher==1.1.2",
