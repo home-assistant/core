@@ -254,7 +254,7 @@
           "name": "Priority"
         },
         "repeat": {
-          "description": "The number of times to play the sound. When set to 0, the sound will be played until the notification is dismissed.",
+          "description": "The number of times to play the sound. When set to 0, the sound will be played until the notification is dismissed. Does not apply to sounds fetched from a URL.",
           "name": "Repeat"
         },
         "sound": {
