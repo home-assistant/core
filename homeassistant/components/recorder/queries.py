@@ -286,6 +286,7 @@ def find_states_to_purge(
         lambda: (
             select(States.state_id, States.attributes_id)
             .filter(States.last_updated_ts < purge_before)
+            .order_by(States.last_updated_ts.asc())
             .limit(max_bind_vars)
         )
     )
