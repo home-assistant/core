@@ -129,6 +129,11 @@ if TYPE_CHECKING:
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
 
+    from .components.infrared.common import (
+        MockInfraredEmitterEntity,
+        MockInfraredReceiverEntity,
+    )
+
 
 pytest.register_assert_rewrite("pytest_homeassistant.common")
 
@@ -2041,6 +2046,40 @@ def mock_recorder_before_hass() -> None:
     Override or parametrize this fixture with a fixture that mocks the recorder,
     in the tests that need to test the recorder.
     """
+
+
+@pytest.fixture(name="init_infrared")
+async def init_infrared_fixture(hass: HomeAssistant) -> None:
+    """Set up the Infrared integration for testing."""
+    from .components.infrared.common import (  # noqa: PLC0415
+        init_infrared_fixture_helper,
+    )
+
+    await init_infrared_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_infrared_emitter_entity")
+async def mock_infrared_emitter_entity_fixture(
+    hass: HomeAssistant, init_infrared: None
+) -> MockInfraredEmitterEntity:
+    """Return a mock infrared emitter entity."""
+    from .components.infrared.common import (  # noqa: PLC0415
+        mock_infrared_emitter_entity_fixture_helper,
+    )
+
+    return await mock_infrared_emitter_entity_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_infrared_receiver_entity")
+async def mock_infrared_receiver_entity_fixture(
+    hass: HomeAssistant, init_infrared: None
+) -> MockInfraredReceiverEntity:
+    """Return a mock infrared receiver entity."""
+    from .components.infrared.common import (  # noqa: PLC0415
+        mock_infrared_receiver_entity_fixture_helper,
+    )
+
+    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(name="macos_adapter")
