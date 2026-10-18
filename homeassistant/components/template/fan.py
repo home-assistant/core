@@ -401,10 +401,34 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     def restore_extra_data(self, extra_data: FanExtraStoredData) -> None:
         """Restore extra state data."""
         self._attr_is_on = extra_data.is_on
-        self._attr_percentage = extra_data.percentage
-        self._attr_preset_mode = extra_data.preset_mode
-        self._attr_oscillating = extra_data.oscillating
-        self._attr_current_direction = extra_data.direction
+        for option, action, attribute, value in (
+            (
+                CONF_PERCENTAGE,
+                CONF_SET_PERCENTAGE_ACTION,
+                "_attr_percentage",
+                extra_data.percentage,
+            ),
+            (
+                CONF_PRESET_MODE,
+                CONF_SET_PRESET_MODE_ACTION,
+                "_attr_preset_mode",
+                extra_data.preset_mode,
+            ),
+            (
+                CONF_OSCILLATING,
+                CONF_SET_OSCILLATING_ACTION,
+                "_attr_oscillating",
+                extra_data.oscillating,
+            ),
+            (
+                CONF_DIRECTION,
+                CONF_SET_DIRECTION_ACTION,
+                "_attr_current_direction",
+                extra_data.direction,
+            ),
+        ):
+            if self.option_restorable(option, action):
+                setattr(self, attribute, value)
 
 
 class StateFanEntity(TemplateEntity, AbstractTemplateFan):

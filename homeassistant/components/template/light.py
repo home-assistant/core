@@ -398,16 +398,8 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     ) -> None:
         """Initialize the features."""
 
-        # Setup state and brightness
-        self.setup_state_template("_attr_is_on", tcv.boolean(self, CONF_STATE))
-        self.setup_template(
-            CONF_LEVEL,
-            "_attr_brightness",
-            tcv.number(self, CONF_LEVEL, 0, 255, int),
-        )
-        self.add_assumed_attribute("_attr_brightness", CONF_LEVEL, CONF_LEVEL_ACTION)
-
-        # Min/Max temperature, set up first as the temperature is validated against it
+        # Min/Max temperature, set up before all other templates as the
+        # temperature is validated against it, even when sharing a template
         self.setup_template(
             CONF_MAX_MIREDS,
             "_attr_max_color_temp_kelvin",
@@ -420,6 +412,15 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             tcv.number(self, CONF_MIN_MIREDS),
             self._update_min_mireds,
         )
+
+        # Setup state and brightness
+        self.setup_state_template("_attr_is_on", tcv.boolean(self, CONF_STATE))
+        self.setup_template(
+            CONF_LEVEL,
+            "_attr_brightness",
+            tcv.number(self, CONF_LEVEL, 0, 255, int),
+        )
+        self.add_assumed_attribute("_attr_brightness", CONF_LEVEL, CONF_LEVEL_ACTION)
 
         # Setup Color temperature
         self.setup_template(

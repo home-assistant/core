@@ -1536,8 +1536,16 @@ async def test_max_mireds_template(
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
+@pytest.mark.parametrize(
+    "extra_config",
+    [
+        pytest.param({}, id="separate_templates"),
+        # Equal templates are rendered together with the first one set up
+        pytest.param({**SET_LEVEL_ACTION, "level": "{{ 120 }}"}, id="shared_template"),
+    ],
+)
 async def test_temperature_validated_against_mireds_templates(
-    hass: HomeAssistant, style: ConfigurationStyle
+    hass: HomeAssistant, style: ConfigurationStyle, extra_config: ConfigType
 ) -> None:
     """Test the temperature is validated against the rendered min/max mireds."""
     await setup_entity(
@@ -1550,6 +1558,7 @@ async def test_temperature_validated_against_mireds_templates(
             # 120 mireds is outside the default range, but inside the configured one
             "temperature": "{{ 120 }}",
             "min_mireds": "{{ 100 }}",
+            **extra_config,
         },
         "{{ true }}",
     )

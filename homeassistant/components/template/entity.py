@@ -312,13 +312,17 @@ class AbstractTemplateEntity(Entity):
     def restore_extra_data(self, extra_data: Any) -> None:
         """Restore extra data from the last state."""
 
-    def option_restorable(self, option: str) -> bool:
+    def option_restorable(self, option: str, action: str | None = None) -> bool:
         """Return if a restored value for an option is updated after restoring.
 
         Without a template or an optimistic action, the restored value would be
-        reported indefinitely.
+        reported indefinitely. Pass the action when it always updates the value.
         """
-        return option in self._config or option in self._assumed_attributes
+        return (
+            option in self._config
+            or option in self._assumed_attributes
+            or (action is not None and action in self._config)
+        )
 
     async def async_restore_last_state(self) -> None:
         """Restore the state from the last state."""

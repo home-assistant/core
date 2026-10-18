@@ -420,7 +420,8 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     def restore_extra_data(self, extra_data: VacuumExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_activity = extra_data.activity
-        self._attr_fan_speed = extra_data.fan_speed
+        if self.option_restorable(CONF_FAN_SPEED):
+            self._attr_fan_speed = extra_data.fan_speed
 
 
 class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):

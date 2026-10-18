@@ -158,8 +158,21 @@ _BASE_CONFIGS: dict[str, dict] = {
         "set_hvac_mode": [],
     },
     "device_tracker": {"latitude": "{{ 10 }}", "longitude": "{{ 20 }}"},
+    "fan": {
+        "state": "{{ true }}",
+        "turn_on": [],
+        "turn_off": [],
+        "percentage": "{{ 50 }}",
+        "set_percentage": [],
+    },
     "light": {"state": "{{ true }}", "turn_on": [], "turn_off": []},
     "sensor": {},
+    "vacuum": {
+        "state": "{{ 'docked' }}",
+        "start": [],
+        "fan_speeds": ["low", "high"],
+        "set_fan_speed": [],
+    },
     "lock": {"state": "{{ 'locked' }}", "lock": [], "unlock": []},
     "weather": {
         "condition": "{{ 'sunny' }}",
@@ -232,6 +245,27 @@ def _config(domain: str, **extra_config: str | list) -> dict:
         pytest.param(
             _config(
                 "light",
+                level="{{ 250 }}",
+                set_level=[],
+                temperature="{{ 250 }}",
+                set_temperature=[],
+                min_mireds="{{ 250 }}",
+            ),
+            _config(
+                "light",
+                level="{{ 200 }}",
+                set_level=[],
+                temperature="{{ 200 }}",
+                set_temperature=[],
+                min_mireds="{{ 153 }}",
+            ),
+            "light.test",
+            {"color_temp_kelvin": 5000},
+            id="light_shared_temperature_template",
+        ),
+        pytest.param(
+            _config(
+                "light",
                 level="{{ 100 }}",
                 set_level=[],
                 rgb="{{ (255, 0, 0) }}",
@@ -271,6 +305,25 @@ def _config(domain: str, **extra_config: str | list) -> dict:
             "lock.test",
             {"code_format": None},
             id="lock_code_format",
+        ),
+        pytest.param(
+            _config(
+                "fan",
+                preset_mode="{{ 'auto' }}",
+                preset_modes=["auto"],
+                set_preset_mode=[],
+            ),
+            _config("fan"),
+            "fan.test",
+            {"percentage": 50, "preset_mode": None},
+            id="fan_preset_mode",
+        ),
+        pytest.param(
+            _config("vacuum", fan_speed="{{ 'low' }}"),
+            _config("vacuum"),
+            "vacuum.test",
+            {"fan_speed": None},
+            id="vacuum_fan_speed",
         ),
         pytest.param(
             _config("weather", ozone="{{ 5 }}", wind_bearing="{{ 180 }}"),
