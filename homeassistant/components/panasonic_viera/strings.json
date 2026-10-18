@@ -26,5 +26,17 @@
         "title": "Set up your TV"
       }
     }
+  },
+  "entity": {
+    "select": {
+      "picture_mode": {
+        "name": "Picture mode"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_source": {
+      "message": "The source {source} is not available on this TV"
+    }
   }
 }

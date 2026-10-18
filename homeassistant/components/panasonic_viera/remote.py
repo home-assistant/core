@@ -8,8 +8,8 @@ from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PanasonicVieraConfigEntry, Remote
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_MODEL_NUMBER,
@@ -18,6 +18,7 @@ from .const import (
     DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
+from .coordinator import PanasonicVieraConfigEntry, PanasonicVieraCoordinator
 
 
 async def async_setup_entry(
@@ -29,22 +30,27 @@ async def async_setup_entry(
 
     config = config_entry.data
 
-    remote = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
 
-    async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info)])
+    async_add_entities([PanasonicVieraRemoteEntity(coordinator, name, device_info)])
 
 
-class PanasonicVieraRemoteEntity(RemoteEntity):
+class PanasonicVieraRemoteEntity(
+    CoordinatorEntity[PanasonicVieraCoordinator], RemoteEntity
+):
     """Representation of a Panasonic Viera TV Remote."""
 
     def __init__(
-        self, remote: Remote, name: str, device_info: dict[str, Any] | None = None
+        self,
+        coordinator: PanasonicVieraCoordinator,
+        name: str,
+        device_info: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the entity."""
-        # Save a reference to the imported class
-        self._remote = remote
+        super().__init__(coordinator)
+        self._remote = coordinator.remote
         self._name = name
         self._device_info = device_info
 
@@ -91,14 +97,17 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._remote.async_turn_on(context=self._context)
+        self.coordinator.async_update_listeners()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._remote.async_turn_off()
+        self.coordinator.async_update_listeners()
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         for cmd in command:
             await self._remote.async_send_key(cmd)
+        self.coordinator.async_update_listeners()

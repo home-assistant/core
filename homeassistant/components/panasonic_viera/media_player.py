@@ -19,8 +19,8 @@ from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PanasonicVieraConfigEntry
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_MODEL_NUMBER,
@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
+from .coordinator import PanasonicVieraConfigEntry, PanasonicVieraCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,15 +43,17 @@ async def async_setup_entry(
 
     config = config_entry.data
 
-    remote = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
 
-    tv_device = PanasonicVieraTVEntity(remote, name, device_info)
+    tv_device = PanasonicVieraTVEntity(coordinator, name, device_info)
     async_add_entities([tv_device])
 
 
-class PanasonicVieraTVEntity(MediaPlayerEntity):
+class PanasonicVieraTVEntity(
+    CoordinatorEntity[PanasonicVieraCoordinator], MediaPlayerEntity
+):
     """Representation of a Panasonic Viera TV."""
 
     _attr_supported_features = (
@@ -80,9 +83,15 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.SELECT_SOURCE
         return features
 
-    def __init__(self, remote, name, device_info) -> None:
+    def __init__(
+        self,
+        coordinator: PanasonicVieraCoordinator,
+        name: str,
+        device_info: dict[str, Any] | None,
+    ) -> None:
         """Initialize the entity."""
-        self._remote = remote
+        super().__init__(coordinator)
+        self._remote = coordinator.remote
         if device_info is not None:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device_info[ATTR_UDN])},
@@ -130,39 +139,41 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         """List of available input sources."""
         return self._remote.source_list or None
 
-    async def async_update(self) -> None:
-        """Retrieve the latest data."""
-        await self._remote.async_update()
-
     @override
     async def async_turn_on(self) -> None:
         """Turn on the media player."""
         await self._remote.async_turn_on(context=self._context)
+        self.coordinator.async_update_listeners()
 
     @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._remote.async_turn_off()
+        self.coordinator.async_update_listeners()
 
     @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._remote.async_send_key(Keys.VOLUME_UP)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._remote.async_send_key(Keys.VOLUME_DOWN)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._remote.async_set_mute(mute)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._remote.async_set_volume(volume)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_media_play_pause(self) -> None:
@@ -173,38 +184,45 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         else:
             await self._remote.async_send_key(Keys.PLAY)
             self._remote.playing = True
+        await self.coordinator.async_refresh()
 
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._remote.async_send_key(Keys.PLAY)
         self._remote.playing = True
+        await self.coordinator.async_refresh()
 
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._remote.async_send_key(Keys.PAUSE)
         self._remote.playing = False
+        await self.coordinator.async_refresh()
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._remote.async_select_source(source)
+        self.coordinator.async_update_listeners()
 
     @override
     async def async_media_stop(self) -> None:
         """Stop playback."""
         await self._remote.async_send_key(Keys.STOP)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_media_next_track(self) -> None:
         """Send the fast forward command."""
         await self._remote.async_send_key(Keys.FAST_FORWARD)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_media_previous_track(self) -> None:
         """Send the rewind command."""
         await self._remote.async_send_key(Keys.REWIND)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_play_media(
@@ -223,7 +241,8 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             return
 
         media_id = async_process_play_media_url(self.hass, media_id)
-        await self._remote.async_play_media(media_type, media_id)
+        await self._remote.async_play_media(MediaType.URL, media_id)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_browse_media(

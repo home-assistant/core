@@ -42,6 +42,8 @@ MOCK_ENCRYPTION_DATA = {
 
 MOCK_INPUTS = ["TV", "HDMI1", "HDMI2"]
 
+MOCK_PICTURE_MODES = ["Dynamic", "Normal", "Cinema"]
+
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,
     ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
@@ -95,6 +97,15 @@ def get_mock_remote(
         mock_remote.get_input.return_value = input_name
 
     mock_remote.set_input = Mock(side_effect=set_input)
+
+    mock_remote.list_picture_modes = Mock(return_value=list(MOCK_PICTURE_MODES))
+    mock_remote.get_picture_mode = Mock(return_value=MOCK_PICTURE_MODES[1])
+
+    def set_picture_mode(picture_mode, timeout=5):
+        mock_remote.get_picture_mode.return_value = picture_mode
+        return picture_mode
+
+    mock_remote.set_picture_mode = Mock(side_effect=set_picture_mode)
 
     return mock_remote
 
