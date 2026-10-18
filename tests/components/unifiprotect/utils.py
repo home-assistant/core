@@ -29,6 +29,7 @@ from uiprotect.data import (
     SmartDetectAudioType,
     SmartDetectObjectType,
     VideoMode,
+    WSAction,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
@@ -913,10 +914,16 @@ def setup_public_chime(ufp: MockUFPFixture) -> None:
     ufp.api.public_bootstrap = pb
 
 
-def public_device_ws_message(public_obj: Mock) -> Mock:
+def public_device_ws_message(
+    public_obj: Mock,
+    *,
+    action: WSAction = WSAction.UPDATE,
+    changed_data: dict[str, Any] | None = None,
+) -> Mock:
     """Build a public devices WS message carrying a public object."""
     msg = Mock()
-    msg.changed_data = {}
+    msg.action = action
+    msg.changed_data = changed_data or {}
     msg.old_obj = None
     msg.new_obj = public_obj
     return msg

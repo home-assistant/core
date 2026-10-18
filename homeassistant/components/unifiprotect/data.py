@@ -25,7 +25,7 @@ from uiprotect.data import (
     WSAction,
     WSSubscriptionMessage,
 )
-from uiprotect.data.public_devices import PublicCamera, PublicLight
+from uiprotect.data.public_devices import PublicCamera, PublicChime, PublicLight
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
@@ -48,6 +48,7 @@ from .const import (
     DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
+    DISPATCH_CHIMES,
     DISPATCH_PUBLIC_ADD,
     DISPATCH_RELAYS,
     DOMAIN,
@@ -162,6 +163,7 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.chime_signal = _async_dispatch_id(entry, DISPATCH_CHIMES)
         self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
@@ -440,6 +442,24 @@ class ProtectData:
                 and new_obj.id in self.api.public_bootstrap.relays
             ):
                 async_dispatcher_send(self._hass, self.relay_signal, new_obj)
+            # A pairing change carries the ring settings that add ring volumes.
+            if isinstance(new_obj, PublicChime) and (
+                message.action is WSAction.ADD
+                or "ringSettings" in message.changed_data
+                or "cameraIds" in message.changed_data
+            ):
+                async_dispatcher_send(self._hass, self.chime_signal, new_obj)
+            # A ring volume waits for its paired camera.
+            if new_obj.model is ModelType.CAMERA and message.action is WSAction.ADD:
+                self._async_offer_chimes()
+
+    @callback
+    def _async_offer_chimes(self) -> None:
+        """Offer every public chime so its missing ring volumes are added."""
+        if not self.api.has_public_bootstrap:
+            return
+        for chime in list(self.api.public_bootstrap.chimes.values()):
+            async_dispatcher_send(self._hass, self.chime_signal, chime)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -554,6 +574,7 @@ class ProtectData:
                     self._async_dispatch_new_public_device(device)
             for relay in list(self.api.public_bootstrap.relays.values()):
                 async_dispatcher_send(self._hass, self.relay_signal, relay)
+            self._async_offer_chimes()
 
     @callback
     def _async_signal_public_doorbell_settings(self) -> None:
@@ -652,6 +673,8 @@ class ProtectData:
                 return
             self._auth_failures = 0
             self._async_process_public_updates()
+            # The refresh replaces cached objects without device frames.
+            self._async_offer_chimes()
             return
         try:
             await self.api.update()
