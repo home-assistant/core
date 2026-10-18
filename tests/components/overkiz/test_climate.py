@@ -1144,3 +1144,35 @@ async def test_zone_control_zone_set_temperature_while_off(
             *ZONE_CONTROL_ZONE_REFRESH_COMMANDS,
         ],
     )
+
+
+async def test_zone_control_zone_set_temperature_without_running_side(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a scheduled zone is not overridden when no side is running."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(
+        hass, freezer, mock_client, "stop", "stop"
+    )
+    await _async_set_zone_program(
+        hass, freezer, mock_client, "internalScheduling", "off"
+    )
+    mock_client.execute_action_group.reset_mock()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {
+                "entity_id": ZONE_CONTROL_ZONE.entity_id,
+                ATTR_TARGET_TEMP_LOW: 19.0,
+                ATTR_TARGET_TEMP_HIGH: 24.0,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "zone_control_side_unknown"
+    mock_client.execute_action_group.assert_not_called()
