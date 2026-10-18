@@ -23,11 +23,7 @@ from homeassistant.components.image import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    restore_state,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -36,14 +32,14 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads_object
 
 from . import validators as tcv
-from .const import CONF_PICTURE, DOMAIN
+from .const import CONF_PICTURE
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
+from .image_cache import image_cache_dir
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     make_template_entity_common_schema,
@@ -56,9 +52,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
-IMAGES_DIR = "images"
-
-_IMAGE_CACHE_PRUNED: HassKey[bool] = HassKey(f"{DOMAIN}_image_cache_pruned")
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=ImageEntityStateAttribute
@@ -84,50 +77,6 @@ IMAGE_CONFIG_ENTRY_SCHEMA = probatio.Schema(
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
-def _prune_image_cache(images_dir: pathlib.Path, keep: set[str]) -> None:
-    """Delete cache files that can no longer be restored."""
-    try:
-        paths = list(images_dir.iterdir())
-    except FileNotFoundError:
-        return
-    except OSError as err:
-        _LOGGER.warning("Unable to prune image cache %s: %s", images_dir, err)
-        return
-
-    for path in paths:
-        if path.suffix not in (".bin", ".tmp") or (
-            path.suffix == ".bin" and path.stem in keep
-        ):
-            continue
-        try:
-            path.unlink()
-        except OSError as err:
-            _LOGGER.debug("Unable to prune image cache %s: %s", path, err)
-
-
-async def _async_prune_image_cache(hass: HomeAssistant) -> None:
-    """Delete cached images of entities that no longer exist, once per start.
-
-    Unregistered entities have no removal hook, so a file is kept as long as restore
-    state could still restore its entity. This runs before the first entities are
-    added, so no cache write can be in progress.
-    """
-    if hass.data.get(_IMAGE_CACHE_PRUNED):
-        return
-    hass.data[_IMAGE_CACHE_PRUNED] = True
-    keep = {
-        entry.id
-        for entry in er.async_get(hass).entities.values()
-        if entry.domain == IMAGE_DOMAIN and entry.platform == DOMAIN
-    }
-    keep.update(restore_state.async_get(hass).last_states_by_entity_id)
-    await hass.async_add_executor_job(
-        _prune_image_cache,
-        pathlib.Path(hass.config.cache_path(DOMAIN, IMAGES_DIR)),
-        keep,
-    )
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -135,7 +84,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template image."""
-    await _async_prune_image_cache(hass)
     await async_setup_template_platform(
         hass,
         IMAGE_DOMAIN,
@@ -153,7 +101,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    await _async_prune_image_cache(hass)
     await async_setup_template_entry(
         hass,
         config_entry,
@@ -239,6 +186,8 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         # Removal and shutdown can both dump the cache, and they share a temp file.
         self._cache_lock = asyncio.Lock()
         self._cache_deleted = False
+        # Counts URL updates, timestamps can repeat.
+        self._url_generation = 0
 
         self.setup_template(CONF_URL, "_url", None, self._update_url)
 
@@ -249,7 +198,18 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
 
         self._attr_image_last_updated = dt_util.utcnow()
         self._cached_image = None
+        self._url_generation += 1
         self._attr_image_url = result
+
+    @override
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        generation = self._url_generation
+        image = await super().async_image()
+        if self._url_generation != generation:
+            # The URL changed during the download, don't keep the old image.
+            self._cached_image = None
+        return image
 
     @property
     @override
@@ -269,9 +229,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     def _cache_path(self) -> pathlib.Path:
         # Restore state follows the registry ID across entity_id changes.
         key = self.registry_entry.id if self.registry_entry else self.entity_id
-        return (
-            pathlib.Path(self.hass.config.cache_path(DOMAIN, IMAGES_DIR)) / f"{key}.bin"
-        )
+        return image_cache_dir(self.hass) / f"{key}.bin"
 
     @override
     async def async_dump_cache(self) -> None:

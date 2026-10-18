@@ -1603,7 +1603,7 @@ async def test_orphaned_cache_pruned_once_at_start(
     images_cache_dir: Path,
     imgbytes_jpg: bytes,
 ) -> None:
-    """Test cache files that can't be restored are pruned on the first setup."""
+    """Test cache files that can't be restored are pruned at integration setup."""
     registered = entity_registry.async_get_or_create(
         image.DOMAIN, DOMAIN, "registered_image"
     )
@@ -1625,13 +1625,9 @@ async def test_orphaned_cache_pruned_once_at_start(
         path.write_bytes(imgbytes_jpg)
         os.utime(path, (expired, expired))
 
-    await setup_entity(
-        hass,
-        TEST_IMAGE,
-        ConfigurationStyle.MODERN,
-        1,
-        config={"url": "{{ 'http://example.com' }}"},
-    )
+    # No template image is configured, the cache is still pruned.
+    assert await setup.async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     assert sorted(images_cache_dir.iterdir()) == sorted(kept)
 
@@ -1675,3 +1671,112 @@ async def test_cache_prune_error_does_not_block_setup(
 
     assert hass.states.get(TEST_IMAGE.entity_id) is not None
     assert "Unable to prune image cache" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "disabled_by", [None, er.RegistryEntryDisabler.USER], ids=["enabled", "disabled"]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_cache_deleted_with_config_entry(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the cached image is deleted when the template helper is deleted."""
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "image",
+            "url": "http://example.com",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id="image.my_template",
+    )
+    entity = hass.data[image.DATA_COMPONENT].get_entity("image.my_template")
+    await entity.async_dump_cache()
+    entity_registry.async_update_entity("image.my_template", disabled_by=disabled_by)
+    await hass.async_block_till_done()
+    assert list(images_cache_dir.iterdir()) == [
+        images_cache_dir / f"{entity_registry.async_get('image.my_template').id}.bin"
+    ]
+
+    await hass.config_entries.async_remove(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert list(images_cache_dir.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_url_changed_during_download(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test an image downloaded for a previous URL is not kept."""
+    download_started = asyncio.Event()
+    release_download = asyncio.Event()
+
+    async def _slow_download(request: httpx2.Request) -> httpx2.Response:
+        download_started.set()
+        await release_download.wait()
+        return httpx2.Response(
+            200, content=imgbytes_jpg, headers={"content-type": "image/jpeg"}
+        )
+
+    respx.get("http://example.com").mock(side_effect=_slow_download)
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+
+    client = await hass_client()
+    # Not tracked by hass, so async_trigger doesn't wait for the paused download.
+    request = asyncio.create_task(
+        client.get(f"/api/image_proxy/{TEST_IMAGE.entity_id}")
+    )
+    await download_started.wait()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example2.com")
+    release_download.set()
+    resp = await request
+
+    # The request still gets the image it asked for.
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == imgbytes_jpg
+    entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
+    assert entity._cached_image is None
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert not (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").exists()
