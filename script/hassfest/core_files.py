@@ -26,7 +26,6 @@ MISSING_ALL = {
     "homeassistant_hardware",
     "http",
     "input_boolean",
-    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
