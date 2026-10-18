@@ -9,10 +9,13 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.service import async_get_config_entry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_admin_service,
+)
 
 from .const import DOMAIN
-from .coordinator import MyUplinkConfigEntry
 
 ATTR_DATAPOINT_ID = "datapoint_id"
 ATTR_VALUE = "value"
@@ -27,12 +30,11 @@ SERVICE_SET_DATAPOINT_SCHEMA = probatio.Schema(
 )
 
 
-async def _get_myuplink_device_id(call: ServiceCall) -> str:
+async def _get_myuplink_device_id(
+    hass: HomeAssistant, device_entry: AnyDeviceEntry
+) -> str:
     """Extract the myUplink device ID from the device identifier."""
 
-    device_reg = dr.async_get(call.hass)
-    device = call.data[ATTR_DEVICE_ID]
-    device_entry = device_reg.async_get(device)
     try:
         myuplink_device_id = next(
             (
@@ -56,12 +58,15 @@ async def _get_myuplink_device_id(call: ServiceCall) -> str:
 async def async_set_datapoint(call: ServiceCall) -> None:
     """Handle the set_datapoint service call."""
 
-    device_id = await _get_myuplink_device_id(call)
     datapoint_id: str = call.data.get(ATTR_DATAPOINT_ID, "")
     value: str = call.data.get(ATTR_VALUE, "")
 
-    entry: MyUplinkConfigEntry = async_get_config_entry(call.hass, DOMAIN, None)
-    api = entry.runtime_data.api
+    device_entry, config_entry = async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+    )
+
+    api = config_entry.runtime_data.api
+    device_id = await _get_myuplink_device_id(call.hass, device_entry)
 
     try:
         await api.async_set_device_points(device_id, data={datapoint_id: str(value)})
@@ -81,7 +86,8 @@ async def async_set_datapoint(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_DATAPOINT,
         async_set_datapoint,
