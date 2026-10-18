@@ -27,7 +27,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -1019,34 +1019,15 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-as
             ),
         )
 
-        self._async_remove_device_updates_handler: CALLBACK_TYPE | None = (
-            self.async_add_listener(self._data_updated)
+        self._async_remove_device_updates_handler = self.async_add_listener(
+            self._data_updated
         )
-        self._async_remove_stop_handler: CALLBACK_TYPE | None = (
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
-        )
-        config_entry.async_on_unload(self._remove_listeners)
-
-    @callback
-    def _remove_device_updates_listener(self) -> None:
-        """Remove the data listener once."""
-        if remove := self._async_remove_device_updates_handler:
-            self._async_remove_device_updates_handler = None
-            remove()
-
-    @callback
-    def _remove_listeners(self) -> None:
-        """Remove listeners owned by this coordinator."""
-        if remove := self._async_remove_stop_handler:
-            self._async_remove_stop_handler = None
-            remove()
-        self._remove_device_updates_listener()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback
     def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
-        self._async_remove_stop_handler = None
-        self._remove_device_updates_listener()
+        self._async_remove_device_updates_handler()
 
     @callback
     def _data_updated(self) -> None:
