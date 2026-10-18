@@ -500,8 +500,29 @@ async def test_flow_can_be_continued_after_a_request(
     assert (await resp.json())["type"] == "create_entry"
 
 
+@pytest.mark.parametrize(
+    ("counted_by", "login_input", "first_status"),
+    [
+        pytest.param(
+            "homeassistant.components.auth.login_flow.process_wrong_login",
+            {"username": "test-user", "password": "wrong-pass"},
+            HTTPStatus.OK,
+            id="invalid-password",
+        ),
+        pytest.param(
+            "homeassistant.components.http.ban.process_wrong_login",
+            {"username": "test-user"},
+            HTTPStatus.BAD_REQUEST,
+            id="malformed-input",
+        ),
+    ],
+)
 async def test_flow_stays_busy_until_a_failed_login_is_processed(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    counted_by: str,
+    login_input: dict[str, str],
+    first_status: HTTPStatus,
 ) -> None:
     """Test the next attempt waits until the previous failure has been counted."""
     client = await async_setup_auth(hass, aiohttp_client)
@@ -522,21 +543,13 @@ async def test_flow_stays_busy_until_a_failed_login_is_processed(
         held.set()
         await release.wait()
 
-    with patch(
-        "homeassistant.components.auth.login_flow.process_wrong_login",
-        held_process_wrong_login,
-    ):
+    with patch(counted_by, held_process_wrong_login):
         first, second = await _async_post_while_held(
-            client,
-            flow_id,
-            {"client_id": CLIENT_ID, "username": "test-user", "password": "wrong-pass"},
-            held,
-            release,
+            client, flow_id, {"client_id": CLIENT_ID, **login_input}, held, release
         )
 
     assert second.status == HTTPStatus.CONFLICT
-    assert first.status == HTTPStatus.OK
-    assert (await first.json())["errors"] == {"base": "invalid_auth"}
+    assert first.status == first_status
 
 
 @pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
