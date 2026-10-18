@@ -382,7 +382,11 @@ def lock(root: Path) -> BinaryIO:
 
 
 def ensure_ignored(root: Path) -> None:
-    """Add root to the local git exclude file if it is inside an unignored work tree."""
+    """Add root to the local git exclude file if it is inside an unignored work tree.
+
+    The default location is already in .gitignore; this covers a --dest inside
+    a checkout.
+    """
 
     def git(*cmd: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(

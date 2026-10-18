@@ -34,7 +34,7 @@ Run it from this session only if the user explicitly asks you to; then run it in
 - Full error messages go to `<copy>/.sync-errors.log` for the user. They can quote repository content, so never read that file in this session.
 - Exit status 3 means the sync completed but some downloads failed: the summary line says so, and the `failed` repos are stale or missing. Rerun, or name them in the report.
 - Any other non-zero exit means the sync did not complete (authentication, refused destination, network or GraphQL error, another sync already running). Fix the cause and rerun before searching.
-- The directory is added to `.git/info/exclude` automatically; it must never be committed.
+- The default location is in `.gitignore`, and a `--dest` inside a checkout is added to `.git/info/exclude` automatically; the copy must never be committed.
 - Options: `owner/repo ...` to sync only some repos, `--force` to re-fetch every repo, `--dest DIR` for a copy elsewhere than the main worktree's `.custom_integration_sources/` (for example on a disk with more space), `--workers N` for download concurrency.
 
 ## Search
