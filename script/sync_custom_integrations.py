@@ -35,8 +35,22 @@ GRAPHQL = "https://api.github.com/graphql"
 BATCH = 50
 RETRIES = 4
 GIT_TIMEOUT = 600
-# Never prompt for credentials (deleted or private repos) or pull LFS objects
-GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_LFS_SKIP_SMUDGE": "1"}
+# Git commands on the copy run without user or system config: a repository's
+# .gitattributes could otherwise select a filter defined there (such as an LFS
+# or git-crypt smudge command), and templates or core.fsmonitor could run
+# programs. Hooks are disabled outright. Proxies set in the environment still
+# apply; clones are anonymous, so no credential helper is needed.
+GIT_ENV = {
+    **os.environ,
+    "GIT_CONFIG_GLOBAL": os.devnull,
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_COUNT": "1",
+    "GIT_CONFIG_KEY_0": "core.hooksPath",
+    "GIT_CONFIG_VALUE_0": os.devnull,
+    # Never prompt for credentials (deleted or private repos) or pull LFS objects
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_LFS_SKIP_SMUDGE": "1",
+}
 # Kept out of the checkout; sparse patterns filter by path, not by content
 BINARY_GLOBS = (
     "*.png",
@@ -300,6 +314,7 @@ def download(root: Path, repo: str, sha: str) -> None:
         _git(
             "clone",
             "--quiet",
+            "--template=",
             "--config",
             "core.symlinks=false",
             "--filter=blob:none",
