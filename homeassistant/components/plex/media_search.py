@@ -1,12 +1,19 @@
 """Helper methods to search for Plex media."""
 
+from difflib import SequenceMatcher
 import logging
+import re
+from typing import TYPE_CHECKING, Any
+import unicodedata
 
 from plexapi.base import PlexObject
 from plexapi.exceptions import BadRequest, NotFound
 from plexapi.library import LibrarySection
 
 from .errors import MediaNotFound
+
+if TYPE_CHECKING:
+    from .server import PlexServer
 
 LEGACY_PARAM_MAPPING = {
     "show_name": "show.title",
@@ -93,3 +100,130 @@ def search_media(
         )
 
     return results[0]
+
+
+FUZZY_MIN_SCORE = 0.6
+FUZZY_LIMIT = 10
+SECTION_TYPE_FOR_MEDIATYPE = {
+    "movie": "movie",
+    "show": "show",
+    "season": "show",
+    "episode": "show",
+    "artist": "artist",
+    "album": "artist",
+    "track": "artist",
+}
+SEARCHABLE_SECTION_TYPES = {"movie", "show", "artist"}
+IGNORED_LEADING_WORDS = {"the", "a", "an"}
+
+
+def normalize_title(text: str) -> str:
+    """Normalize a title for comparison, ignoring case, accents and punctuation."""
+    decomposed = unicodedata.normalize("NFKD", text)
+    stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
+    words = re.sub(r"[\W_]+", " ", stripped.casefold()).split()
+    if len(words) > 1 and words[0] in IGNORED_LEADING_WORDS:
+        words = words[1:]
+    return " ".join(words)
+
+
+def phonetic_key(text: str) -> str:
+    """Reduce a normalized title to a rough sound-alike key."""
+    for pattern, replacement in (
+        (r"ph", "f"),
+        (r"ck|c(?=[aouhlrk]|$)|q", "k"),
+        (r"c", "s"),
+        (r"z", "s"),
+        (r"x", "ks"),
+        (r"y", "i"),
+        (r"(.)\1+", r"\1"),
+        (r"ie\b", "i"),
+        (r"e\b", ""),
+    ):
+        text = re.sub(pattern, replacement, text)
+    return text
+
+
+def title_score(query: str, title: str) -> float:
+    """Return a 0..1 similarity between a normalized query and a title."""
+    normalized = normalize_title(title)
+    if not normalized or not query:
+        return 0.0
+    if normalized == query:
+        return 1.0
+    score = SequenceMatcher(None, query, normalized).ratio()
+    score = max(
+        score,
+        0.95
+        * SequenceMatcher(None, phonetic_key(query), phonetic_key(normalized)).ratio(),
+    )
+    if len(query) >= 4 and query in normalized:
+        score = max(score, 0.85)
+    elif len(normalized) >= 4 and normalized in query:
+        score = max(score, 0.75)
+    return score
+
+
+def fuzzy_search(
+    plex_server: PlexServer,
+    query: str,
+    mediatype: str | None = None,
+    library_section: LibrarySection | None = None,
+    limit: int = FUZZY_LIMIT,
+) -> list[Any]:
+    """Search Plex tolerating misspellings, best match first.
+
+    Uses the Plex server search first. When that finds nothing, titles in the
+    libraries are compared locally so near misses still produce results.
+    """
+    normalized_query = normalize_title(query)
+
+    items: list[Any] = []
+    if library_section is None:
+        items = plex_server.search(query, mediatype=mediatype)
+        items = [x for x in items if hasattr(x, "title") and hasattr(x, "ratingKey")]
+        items.sort(key=lambda x: title_score(normalized_query, x.title), reverse=True)
+        if items and title_score(normalized_query, items[0].title) >= FUZZY_MIN_SCORE:
+            return items
+
+    sections = [library_section] if library_section else plex_server.library.sections()
+    wanted_section_type = SECTION_TYPE_FOR_MEDIATYPE.get(mediatype or "")
+    scored: list[tuple[float, Any]] = []
+    for section in sections:
+        if section.type not in SEARCHABLE_SECTION_TYPES:
+            continue
+        if wanted_section_type and section.type != wanted_section_type:
+            continue
+        candidates = section.search(libtype=mediatype) if mediatype else section.all()
+        scored.extend(
+            (score, candidate)
+            for candidate in candidates
+            if (score := title_score(normalized_query, candidate.title))
+            >= FUZZY_MIN_SCORE
+        )
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    fuzzy_items = [item for _, item in scored[:limit]]
+    seen = {x.ratingKey for x in fuzzy_items}
+    return fuzzy_items + [x for x in items if x.ratingKey not in seen]
+
+
+def find_media(
+    plex_server: PlexServer,
+    query: str,
+    mediatype: str | None = None,
+    library_section: LibrarySection | None = None,
+    fuzzy: bool | None = None,
+) -> list[Any]:
+    """Search Plex by title, using the fuzzy search when enabled.
+
+    When fuzzy is None the Plex integration option decides.
+    """
+    if fuzzy is None:
+        fuzzy = plex_server.option_fuzzy_search
+    if fuzzy:
+        return fuzzy_search(plex_server, query, mediatype, library_section)
+    if library_section is not None:
+        return list(library_section.search(title=query, libtype=mediatype))
+    items = plex_server.search(query, mediatype=mediatype)
+    return [x for x in items if hasattr(x, "title") and hasattr(x, "ratingKey")]

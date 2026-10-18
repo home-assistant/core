@@ -39,6 +39,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
+    CONF_FUZZY_SEARCH,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -389,6 +390,7 @@ class PlexOptionsFlowHandler(OptionsFlow):
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
             ]
+            self.options[MP_DOMAIN][CONF_FUZZY_SEARCH] = user_input[CONF_FUZZY_SEARCH]
             self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
                 CONF_IGNORE_NEW_SHARED_USERS
             ]
@@ -432,6 +434,10 @@ class PlexOptionsFlowHandler(OptionsFlow):
                     probatio.Required(
                         CONF_USE_EPISODE_ART,
                         default=plex_server.option_use_episode_art,
+                    ): bool,
+                    probatio.Required(
+                        CONF_FUZZY_SEARCH,
+                        default=plex_server.option_fuzzy_search,
                     ): bool,
                     probatio.Optional(
                         CONF_MONITORED_USERS, default=default_accounts
