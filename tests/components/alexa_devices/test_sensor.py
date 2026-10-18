@@ -33,7 +33,6 @@ from .const import (
     TEST_DEVICE_2_SN,
     TEST_DEVICE_AQM,
     TEST_DEVICE_AQM_SN,
-    TEST_NOTIFICATIONS,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -75,7 +74,6 @@ async def test_all_entities(
 
     with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-    await _push_notifications(hass, mock_amazon_devices_client, TEST_NOTIFICATIONS)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -249,7 +247,10 @@ async def test_notification_push_updates(
     """Test pushed notification events update alarm, reminder and timer sensors."""
     await setup_integration(hass, mock_config_entry)
 
-    for entity_id in (ALARM_ENTITY_ID, REMINDER_ENTITY_ID, TIMER_ENTITY_ID):
+    # Initial sync only has an alarm with a next occurrence
+    assert (state := hass.states.get(ALARM_ENTITY_ID))
+    assert state.state == "2023-10-01T07:00:00+00:00"
+    for entity_id in (REMINDER_ENTITY_ID, TIMER_ENTITY_ID):
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_UNAVAILABLE
 
@@ -262,7 +263,7 @@ async def test_notification_push_updates(
                     type=NOTIFICATION_ALARM,
                     status="ON",
                     label="Morning Alarm",
-                    next_occurrence=datetime(2023, 10, 1, 7, 0, tzinfo=UTC),
+                    next_occurrence=datetime(2023, 10, 2, 7, 0, tzinfo=UTC),
                 ),
                 NOTIFICATION_REMINDER: AmazonSchedule(
                     type=NOTIFICATION_REMINDER,
@@ -281,7 +282,7 @@ async def test_notification_push_updates(
     )
 
     assert (state := hass.states.get(ALARM_ENTITY_ID))
-    assert state.state == "2023-10-01T07:00:00+00:00"
+    assert state.state == "2023-10-02T07:00:00+00:00"
     assert (state := hass.states.get(REMINDER_ENTITY_ID))
     assert state.state == "2023-10-01T18:30:00+00:00"
     assert (state := hass.states.get(TIMER_ENTITY_ID))
@@ -316,9 +317,6 @@ async def test_notification_push_replaces_cache(
 ) -> None:
     """Test a pushed notification event replaces the previous notifications."""
     await setup_integration(hass, mock_config_entry)
-    await _push_notifications(
-        hass, mock_amazon_devices_client, deepcopy(TEST_NOTIFICATIONS)
-    )
 
     assert (state := hass.states.get(ALARM_ENTITY_ID))
     assert state.state == "2023-10-01T07:00:00+00:00"
