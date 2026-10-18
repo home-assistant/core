@@ -178,11 +178,16 @@ class PendingUpdate(TypedDict):
     from_version: str
     to_version: str
     started: str
+    # Supervisor's Core rollback issues from before; they are not about this one
+    known_rollbacks: list[str]
 
 
-class AutoUpdateHistoryEntry(PendingUpdate):
+class AutoUpdateHistoryEntry(TypedDict):
     """A finished automatic update."""
 
+    from_version: str
+    to_version: str
+    started: str
     finished: str
     result: AutoUpdateResult
 
@@ -363,8 +368,13 @@ class AutoUpdateManager:
     @callback
     def _async_schedule_settle(self) -> None:
         """Settle the restored update as a background task."""
+        # Not started right away: a job event calls this while the jobs
+        # coordinator loops over its subscriptions, and settling unsubscribes
         self._entry.async_create_background_task(
-            self._hass, self._async_settle(), "hassio automatic update result"
+            self._hass,
+            self._async_settle(),
+            "hassio automatic update result",
+            eager_start=False,
         )
 
     @callback
@@ -375,23 +385,35 @@ class AutoUpdateManager:
             self._unsub_settling()
             self._unsub_settling = None
 
-    async def _async_supervisor_rolled_back(self) -> bool | None:
-        """Return if Supervisor rolled Core back, or None if it cannot tell now.
+    async def _async_core_rollbacks(self) -> set[str]:
+        """Return Supervisor's issues about rolling Core back.
 
         Asked directly; hassio's own issue list can be empty after a failed
         refresh, or miss an issue whose suggestions could not be loaded.
         """
+        info = await get_supervisor_client(self._hass).resolution.info()
+        return {
+            issue.uuid.hex
+            for issue in info.issues
+            if issue.type == IssueType.UPDATE_ROLLBACK
+            and issue.context == ContextType.CORE
+        }
+
+    async def _async_supervisor_rolled_back(
+        self, pending: PendingUpdate
+    ) -> bool | None:
+        """Return if Supervisor rolled this update back, or None if unknown.
+
+        The issue carries no version and stays until dismissed, so only one
+        that was not there before the update counts.
+        """
         try:
-            info = await get_supervisor_client(self._hass).resolution.info()
+            rollbacks = await self._async_core_rollbacks()
         except SupervisorError as err:
             _LOGGER.debug("Could not ask Supervisor about a rollback: %s", err)
             return None
 
-        return any(
-            issue.type == IssueType.UPDATE_ROLLBACK
-            and issue.context == ContextType.CORE
-            for issue in info.issues
-        )
+        return bool(rollbacks - set(pending["known_rollbacks"]))
 
     async def _async_settle(self) -> None:
         """Find out how the update restored from the record went.
@@ -422,7 +444,7 @@ class AutoUpdateManager:
                 },
             )
         elif pending["from_version"] == HA_VERSION:
-            rolled_back = await self._async_supervisor_rolled_back()
+            rolled_back = await self._async_supervisor_rolled_back(pending)
             # Settled meanwhile, or Supervisor cannot tell yet
             if self._pending is not pending or rolled_back is None:
                 return
@@ -462,7 +484,9 @@ class AutoUpdateManager:
         self._history = [
             *self._history,
             AutoUpdateHistoryEntry(
-                **pending,
+                from_version=pending["from_version"],
+                to_version=pending["to_version"],
+                started=pending["started"],
                 finished=dt_util.utcnow().isoformat(),
                 result=result,
             ),
@@ -630,11 +654,12 @@ class AutoUpdateManager:
         Only looks at the current state, so it gives the same answer no
         matter what made it run.
         """
-        # The last update is not settled yet; nothing new before it is
+        # Nothing new before the last update is settled
         if self._restored_pending is not None:
             if not self._async_core_update_running():
                 await self._async_settle()
-            return
+            if self._restored_pending is not None:
+                return
 
         now = dt_util.now()
         if (window := _window_start(self.settings, now)) is None:
@@ -675,6 +700,7 @@ class AutoUpdateManager:
                 from_version=HA_VERSION,
                 to_version=version,
                 started=dt_util.utcnow().isoformat(),
+                known_rollbacks=sorted(await self._async_core_rollbacks()),
             )
             await self._store.async_save(self._data_to_save())
 
@@ -719,6 +745,7 @@ class AutoUpdateManager:
                 from_version=HA_VERSION,
                 to_version=version,
                 started=dt_util.utcnow().isoformat(),
+                known_rollbacks=[],
             ),
             AutoUpdateResult.FAILED,
         )
