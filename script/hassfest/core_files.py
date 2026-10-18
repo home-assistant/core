@@ -40,7 +40,6 @@ MISSING_ALL = {
     "sun",
     "tag",
     "timer",
-    "websocket_api",
     "zone",
 }
 
