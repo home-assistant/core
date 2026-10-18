@@ -9,7 +9,8 @@ from aiohttp import ClientResponse, web
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.auth.models import AuthFlowResult
+from homeassistant.auth import AuthManagerFlowManager
+from homeassistant.components.auth import indieauth
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
@@ -399,8 +400,19 @@ async def _async_post_while_held(
     return await first, second
 
 
+@pytest.mark.parametrize(
+    ("owner", "held_name"),
+    [
+        pytest.param(AuthManagerFlowManager, "async_configure", id="running-step"),
+        # A finished flow is gone while its response is built.
+        pytest.param(indieauth, "verify_redirect_uri", id="building-response"),
+    ],
+)
 async def test_concurrent_requests_cannot_advance_the_same_flow(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    owner: object,
+    held_name: str,
 ) -> None:
     """Test a second request gets a conflict rather than racing the first one."""
     client = await async_setup_auth(hass, aiohttp_client)
@@ -416,15 +428,15 @@ async def test_concurrent_requests_cannot_advance_the_same_flow(
 
     held = asyncio.Event()
     release = asyncio.Event()
-    original_configure = hass.auth.login_flow.async_configure
+    original = getattr(owner, held_name)
 
-    async def held_configure(*args: Any, **kwargs: Any) -> AuthFlowResult:
+    async def held_call(*args: Any, **kwargs: Any) -> Any:
         held.set()
         await release.wait()
-        return await original_configure(*args, **kwargs)
+        return await original(*args, **kwargs)
 
     with (
-        patch.object(hass.auth.login_flow, "async_configure", held_configure),
+        patch.object(owner, held_name, held_call),
         patch(
             "homeassistant.components.http.ban.process_wrong_login"
         ) as mock_process_wrong_login,
@@ -443,6 +455,49 @@ async def test_concurrent_requests_cannot_advance_the_same_flow(
     assert (await first.json())["type"] == "create_entry"
     # A busy flow is not a failed login, so the client is not banned for it.
     mock_process_wrong_login.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("first_input", "first_status"),
+    [
+        pytest.param(
+            {"username": "test-user", "password": "wrong-pass"},
+            HTTPStatus.OK,
+            id="invalid-password",
+        ),
+        # The step's schema rejects it, so async_configure raises.
+        pytest.param({"username": "test-user"}, HTTPStatus.BAD_REQUEST, id="raised"),
+    ],
+)
+async def test_flow_can_be_continued_after_a_request(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    first_input: dict[str, str],
+    first_status: HTTPStatus,
+) -> None:
+    """Test a flow is no longer busy once a request has finished."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+
+    resp = await client.post(
+        f"/auth/login_flow/{flow_id}", json={"client_id": CLIENT_ID, **first_input}
+    )
+    assert resp.status == first_status
+
+    resp = await client.post(
+        f"/auth/login_flow/{flow_id}",
+        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+    )
+    assert resp.status == HTTPStatus.OK
+    assert (await resp.json())["type"] == "create_entry"
 
 
 async def test_flow_stays_busy_until_a_failed_login_is_processed(

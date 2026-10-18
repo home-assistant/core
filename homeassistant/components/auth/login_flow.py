@@ -478,30 +478,29 @@ class LoginFlowResourceView(LoginFlowBaseView):
         ):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
+        # Checked before the lookup, as a finished flow is gone while its
+        # response is still being built.
+        if flow_id in self._flows_in_progress:
+            # Raised so log_invalid_auth doesn't count it as a failed login.
+            raise web.HTTPConflict(
+                text=json_dumps({"message": "Flow request already in progress"}),
+                content_type=CONTENT_TYPE_JSON,
+            )
+        self._flows_in_progress.add(flow_id)
         try:
             # do not allow change ip during login flow
             flow = self._flow_mgr.async_get(flow_id)
             if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
                 return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
-            if flow_id in self._flows_in_progress:
-                # Raised so log_invalid_auth doesn't count it as a failed login.
-                raise web.HTTPConflict(
-                    text=json_dumps({"message": "Flow request already in progress"}),
-                    content_type=CONTENT_TYPE_JSON,
-                )
-            self._flows_in_progress.add(flow_id)
-            try:
-                result = await self._flow_mgr.async_configure(flow_id, data)
-                # Includes the failed login accounting, so the next attempt waits for it.
-                return await self._async_flow_result_to_response(
-                    request, client_id, result
-                )
-            finally:
-                self._flows_in_progress.remove(flow_id)
+            result = await self._flow_mgr.async_configure(flow_id, data)
+            # Includes the failed login accounting, so the next attempt waits for it.
+            return await self._async_flow_result_to_response(request, client_id, result)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
+        finally:
+            self._flows_in_progress.remove(flow_id)
 
     async def delete(self, request: web.Request, flow_id: str) -> web.Response:
         """Cancel a flow in progress."""
