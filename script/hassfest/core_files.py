@@ -29,7 +29,6 @@ MISSING_ALL = {
     "recovery_mode",
     "shopping_list",
     "sun",
-    "tag",
     "timer",
     "websocket_api",
     "zone",
