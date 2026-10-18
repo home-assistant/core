@@ -18,7 +18,6 @@ MISSING_ALL = {
     "auth",
     "automation",
     "blueprint",
-    "cloud",
     "config",
     "configurator",
     "demo",
