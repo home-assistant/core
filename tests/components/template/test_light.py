@@ -1542,6 +1542,7 @@ async def test_max_mireds_template(
         pytest.param({}, id="separate_templates"),
         # Equal templates are rendered together with the first one set up
         pytest.param({**SET_LEVEL_ACTION, "level": "{{ 120 }}"}, id="shared_template"),
+        pytest.param({"max_mireds": "{{ 120 }}"}, id="shared_with_bound"),
     ],
 )
 async def test_temperature_validated_against_mireds_templates(

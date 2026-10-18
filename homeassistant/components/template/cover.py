@@ -392,9 +392,14 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     def restore_extra_data(self, extra_data: CoverExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_current_cover_position = extra_data.current_cover_position
-        self._attr_current_cover_tilt_position = extra_data.current_cover_tilt_position
-        self._attr_is_opening = extra_data.is_opening
-        self._attr_is_closing = extra_data.is_closing
+        if self.option_restorable(CONF_TILT):
+            self._attr_current_cover_tilt_position = (
+                extra_data.current_cover_tilt_position
+            )
+        # Only the state template updates the motion
+        if CONF_STATE in self._config:
+            self._attr_is_opening = extra_data.is_opening
+            self._attr_is_closing = extra_data.is_closing
 
 
 class StateCoverEntity(TemplateEntity, AbstractTemplateCover):

@@ -1472,12 +1472,13 @@ async def test_flow_preview(
                 "is_opening": True,
                 "is_closing": False,
             },
-            CoverState.OPENING,
+            # Without a state template the motion is not restored
+            CoverState.OPEN,
             {
                 "current_position": 10,
                 "current_tilt_position": 10,
             },
-            CoverState.OPENING,
+            CoverState.OPEN,
         ),
         (
             CoverState.OPEN,
@@ -1487,12 +1488,13 @@ async def test_flow_preview(
                 "is_opening": False,
                 "is_closing": True,
             },
-            CoverState.CLOSING,
+            # Without a state template the motion is not restored
+            CoverState.OPEN,
             {
                 "current_position": 10,
                 "current_tilt_position": 10,
             },
-            CoverState.CLOSING,
+            CoverState.OPEN,
         ),
         (
             CoverState.OPEN,

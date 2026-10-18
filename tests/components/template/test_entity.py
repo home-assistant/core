@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.cover import CoverState
 from homeassistant.components.light import ColorMode
 from homeassistant.components.template import DOMAIN, entity as abstract_entity
 from homeassistant.const import SERVICE_RELOAD, STATE_ON, STATE_UNAVAILABLE
@@ -152,6 +153,7 @@ async def _restart(hass: HomeAssistant, config: dict) -> None:
 
 
 _BASE_CONFIGS: dict[str, dict] = {
+    "cover": {"open_cover": [], "close_cover": []},
     "climate": {
         "hvac_mode": "{{ 'heat' }}",
         "hvac_modes": "{{ ['off', 'heat'] }}",
@@ -262,6 +264,25 @@ def _config(domain: str, **extra_config: str | list) -> dict:
             "light.test",
             {"color_temp_kelvin": 5000},
             id="light_shared_temperature_template",
+        ),
+        pytest.param(
+            _config(
+                "light",
+                temperature="{{ 500 }}",
+                set_temperature=[],
+                min_mireds="{{ 400 }}",
+                max_mireds="{{ 600 }}",
+            ),
+            _config(
+                "light",
+                temperature="{{ 300 }}",
+                set_temperature=[],
+                min_mireds="{{ 200 }}",
+                max_mireds="{{ 300 }}",
+            ),
+            "light.test",
+            {"color_temp_kelvin": 3333},
+            id="light_temperature_shared_with_bound",
         ),
         pytest.param(
             _config(
@@ -416,3 +437,23 @@ async def test_sensor_incompatible_restored_value(
     await apply_config(hass, _config("sensor", **new_config))
 
     assert hass.states.get("sensor.test").state == expected_state
+
+
+@pytest.mark.parametrize(
+    "apply_config",
+    [pytest.param(_reload, id="reload"), pytest.param(_restart, id="restart")],
+)
+async def test_cover_motion_not_restored_without_state_template(
+    hass: HomeAssistant,
+    apply_config: Callable[[HomeAssistant, dict], Awaitable[None]],
+) -> None:
+    """Test the cover motion is not restored when no state template updates it."""
+    assert await async_setup_component(
+        hass, DOMAIN, _config("cover", state="{{ 'opening' }}")
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.test").state == CoverState.OPENING
+
+    await apply_config(hass, _config("cover", position="{{ 100 }}"))
+
+    assert hass.states.get("cover.test").state == CoverState.OPEN
