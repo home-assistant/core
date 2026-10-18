@@ -13,8 +13,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.http import (  # noqa: F401
-    KEY_ALLOW_CONFIGURED_CORS,
+from homeassistant.helpers.http import (
     KEY_AUTHENTICATED,
     KEY_HASS,
     HomeAssistantView,
@@ -30,7 +29,7 @@ from homeassistant.setup import (
 from homeassistant.util.async_ import create_eager_task
 
 from .config import ConfData, async_get_and_load_store, async_load_config
-from .const import (  # noqa: F401
+from .const import (
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
     CONF_IP_BAN_ENABLED,
@@ -55,13 +54,13 @@ from .const import (  # noqa: F401
     SSL_INTERMEDIATE,
     SSL_MODERN,
 )
-from .decorators import require_admin  # noqa: F401
+from .decorators import require_admin
 from .server import (
     DEFAULT_BIND,
     HassioHTTPConfigView,
-    HomeAssistantHTTP,  # noqa: F401
-    HomeAssistantRequest,  # noqa: F401
-    StaticPathConfig,  # noqa: F401
+    HomeAssistantHTTP,
+    HomeAssistantRequest,
+    StaticPathConfig,
     make_server,
 )
 
@@ -106,6 +105,39 @@ HTTP_SCHEMA: Final = probatio.All(
 CONFIG_SCHEMA: Final = probatio.Schema(
     {DOMAIN: HTTP_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
+
+__all__ = [
+    "CONF_BASE_URL",
+    "CONF_CORS_ORIGINS",
+    "CONF_IP_BAN_ENABLED",
+    "CONF_LOGIN_ATTEMPTS_THRESHOLD",
+    "CONF_SERVER_HOST",
+    "CONF_SERVER_PORT",
+    "CONF_SSL_CERTIFICATE",
+    "CONF_SSL_KEY",
+    "CONF_SSL_PEER_CERTIFICATE",
+    "CONF_SSL_PROFILE",
+    "CONF_TRUSTED_PROXIES",
+    "CONF_USE_X_FORWARDED_FOR",
+    "CONF_USE_X_FRAME_OPTIONS",
+    "CURRENT_SSL_PROFILES",
+    "DEFAULT_CORS",
+    "DOMAIN",
+    "ISSUE_SSL_PROFILE_OUTDATED",
+    "KEY_AUTHENTICATED",
+    "KEY_HASS",
+    "KEY_HASS_REFRESH_TOKEN_ID",
+    "KEY_HASS_USER",
+    "NO_LOGIN_ATTEMPT_THRESHOLD",
+    "SSL_INTERMEDIATE",
+    "SSL_MODERN",
+    "HomeAssistantHTTP",
+    "HomeAssistantRequest",
+    "HomeAssistantView",
+    "StaticPathConfig",
+    "current_request",
+    "require_admin",
+]
 
 
 class ApiConfig:

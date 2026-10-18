@@ -30,7 +30,6 @@ MISSING_ALL = {
     "group",
     "homeassistant",
     "homeassistant_hardware",
-    "http",
     "input_boolean",
     "input_button",
     "input_datetime",
