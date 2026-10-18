@@ -173,18 +173,6 @@ class NestFlowHandler(
         """Reconfigure the Pub/Sub topic and subscription."""
         entry = self._get_reconfigure_entry()
         self._data = {**entry.data}
-        if CONF_CLOUD_PROJECT_ID not in self._data:
-            # Oldest entries did not store the cloud project
-            subscription_name = self._data.get(
-                CONF_SUBSCRIPTION_NAME, self._data.get(CONF_SUBSCRIBER_ID, "")
-            )
-            if not (
-                cloud_project_id := api.cloud_project_from_subscription(
-                    subscription_name
-                )
-            ):
-                return self.async_abort(reason="missing_cloud_project_id")
-            self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
         try:
             implementation = (
                 await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -207,6 +195,18 @@ class NestFlowHandler(
             _LOGGER.debug("Error refreshing token: %s", err)
             return self.async_abort(reason="cannot_connect")
         self._data["token"] = session.token
+        if CONF_CLOUD_PROJECT_ID not in self._data:
+            # Oldest entries did not store the cloud project
+            subscription_name = self._data.get(
+                CONF_SUBSCRIPTION_NAME, self._data.get(CONF_SUBSCRIBER_ID, "")
+            )
+            if not (
+                cloud_project_id := api.cloud_project_from_subscription(
+                    subscription_name
+                )
+            ):
+                return await self.async_step_cloud_project()
+            self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
         return await self.async_step_pubsub_topic()
 
     @override
@@ -256,6 +256,8 @@ class NestFlowHandler(
             self._data[CONF_CLOUD_PROJECT_ID] = user_input[
                 CONF_CLOUD_PROJECT_ID
             ].strip()
+            if self.source == SOURCE_RECONFIGURE:
+                return await self.async_step_pubsub_topic()
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",

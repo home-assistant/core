@@ -2093,9 +2093,21 @@ async def test_reconfigure_missing_cloud_project(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfigure aborts when the cloud project can't be determined."""
+    """Test reconfigure prompts for the cloud project when it can't be determined."""
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_project"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"cloud_project_id": CLOUD_PROJECT_ID}
+    )
+    result = await _async_reconfigure(
+        hass, result, "create_new_topic", "create_new_subscription"
+    )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_cloud_project_id"
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+    assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
+    assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME

@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
 from google_nest_sdm.admin_client import PUBSUB_API_HOST, AdminClient
 from google_nest_sdm.auth import AbstractAuth
-from google_nest_sdm.exceptions import ApiException
+from google_nest_sdm.exceptions import ApiException, ConfigurationException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.core import HomeAssistant
@@ -184,7 +184,7 @@ async def async_delete_subscription(
     _LOGGER.debug("Deleting subscription '%s'", subscription_name)
     try:
         await admin_client.delete_subscription(subscription_name)
-    except ApiException as err:
+    except (ApiException, ConfigurationException) as err:
         _LOGGER.warning(
             (
                 "Unable to delete subscription '%s'; Will be automatically cleaned up"
