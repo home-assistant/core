@@ -24,7 +24,6 @@ from .helpers import (
     VALID_LOG_LEVEL,
     LoggerDomainConfig,
     LoggerSettings,
-    _clear_logger_overwrites,
     set_default_log_level,
     set_log_levels,
 )
@@ -54,7 +53,6 @@ __all__ = [
     "DOMAIN",
     "LOGSEVERITY",
     "SERVICE_SET_LEVEL",
-    "_clear_logger_overwrites",
 ]
 
 
