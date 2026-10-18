@@ -116,6 +116,7 @@ class FakeMcpServer:
             content=[TextContent(type="text", text="OK")]
         )
         self.streamable_http_error: httpx2.Response | Exception | None = None
+        self.sse_error: httpx2.Response | Exception | None = None
         self.list_tools_error: httpx2.Response | Exception | None = None
         self.call_tool_error: httpx2.Response | Exception | None = None
         self._sse_queue: asyncio.Queue[bytes] = asyncio.Queue()
@@ -130,6 +131,10 @@ class FakeMcpServer:
 
     def handle_sse(self, request: httpx2.Request) -> httpx2.Response:
         """Handle an incoming MCP SSE GET connection."""
+        if self.sse_error is not None:
+            if isinstance(self.sse_error, Exception):
+                raise self.sse_error
+            return self.sse_error
         return httpx2.Response(
             200,
             headers={"Content-Type": "text/event-stream"},
@@ -197,16 +202,26 @@ class FakeMcpServer:
 
 @pytest.fixture
 def fake_mcp_server() -> Generator[FakeMcpServer]:
-    """Fixture to mock an MCP server over HTTP using respx."""
+    """Fixture to mock a Streamable HTTP MCP server using respx."""
     server = FakeMcpServer()
+    with respx.mock:
+        respx.post(url__startswith="http://1.1.1.1").mock(
+            side_effect=server.handle_request
+        )
+        yield server
+
+
+@pytest.fixture
+def fake_sse_mcp_server() -> Generator[FakeMcpServer]:
+    """Fixture to mock an SSE MCP server using respx."""
+    server = FakeMcpServer()
+    server.streamable_http_error = httpx2.Response(405)
     with respx.mock:
         respx.post("http://1.1.1.1/messages").mock(
             side_effect=server.handle_sse_message
         )
         respx.get("http://1.1.1.1/sse").mock(side_effect=server.handle_sse)
-        respx.post(url__startswith="http://1.1.1.1").mock(
-            side_effect=server.handle_request
-        )
+        respx.post("http://1.1.1.1/sse").mock(side_effect=server.handle_request)
         yield server
 
 
@@ -300,20 +315,17 @@ async def test_mcp_server_http_transport_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@respx.mock
 async def test_mcp_server_sse_transport_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    fake_sse_mcp_server: FakeMcpServer,
 ) -> None:
     """Test the integration fails to setup if the SSE transport fails.
 
     This exercises the case where the HTTP transport fails with method not
     allowed, indicating an SSE server, then also fails with SSE.
     """
-    respx.post(config_entry.data[CONF_URL]).mock(return_value=httpx2.Response(405))
-    respx.get(config_entry.data[CONF_URL]).mock(
-        side_effect=httpx2.ConnectError("Connection failed")
-    )
+    fake_sse_mcp_server.sse_error = httpx2.ConnectError("Connection failed")
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -322,7 +334,7 @@ async def test_mcp_server_sse_transport_failure(
 async def test_mcp_client_fallback_to_sse_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fake_mcp_server: FakeMcpServer,
+    fake_sse_mcp_server: FakeMcpServer,
     status_code: int,
 ) -> None:
     """Test mcp_client falls back to SSE on some errors.
@@ -330,7 +342,7 @@ async def test_mcp_client_fallback_to_sse_success(
     This exercises the backwards compatibility part of the MCP Transport
     specification.
     """
-    fake_mcp_server.streamable_http_error = httpx2.Response(status_code)
+    fake_sse_mcp_server.streamable_http_error = httpx2.Response(status_code)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -849,14 +861,12 @@ async def test_tool_call_http_error(
         )
 
 
+@pytest.mark.usefixtures("fake_sse_mcp_server")
 async def test_sse_client_does_not_build_ssl_context(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fake_mcp_server: FakeMcpServer,
 ) -> None:
     """Test the SSE transport does not load certificates in the event loop."""
-    fake_mcp_server.streamable_http_error = httpx2.Response(405)
-
     with patch.object(ssl.SSLContext, "load_verify_locations") as mock_load_certs:
         await hass.config_entries.async_setup(config_entry.entry_id)
 
