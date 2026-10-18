@@ -19,7 +19,6 @@ MISSING_ALL = {
     "blueprint",
     "configurator",
     "energy",
-    "frontend",
     "group",
     "homeassistant_hardware",
     "http",
