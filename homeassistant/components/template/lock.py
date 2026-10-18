@@ -321,7 +321,8 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
     @override
     def restore_extra_data(self, extra_data: LockExtraStoredData) -> None:
         """Restore the extra data."""
-        self._attr_code_format = extra_data.code_format
+        if self.option_restorable(CONF_CODE_FORMAT):
+            self._attr_code_format = extra_data.code_format
         self._attr_is_locked = extra_data.is_locked
         self._attr_is_locking = extra_data.is_locking
         self._attr_is_open = extra_data.is_open

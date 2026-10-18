@@ -847,7 +847,7 @@ async def test_this_variable_early_hass_running(
 
 @pytest.mark.parametrize(
     ("count", "config", "state_template"),
-    [(1, {}, "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}")],
+    [(1, {}, "{{ (states.sensor.test_template_sensor.state | int(0)) + 1 }}")],
 )
 @pytest.mark.parametrize(
     "style",
@@ -874,11 +874,11 @@ async def test_self_referencing_sensor_loop(
         (
             {
                 "state": (
-                    "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}"
+                    "{{ (states.sensor.test_template_sensor.state | int(0)) + 1 }}"
                 ),
                 "icon": (
-                    "{% if ((states.sensor.test_template_sensor"
-                    ".state or 0) | int) >= 1 %}mdi:greater"
+                    "{% if (states.sensor.test_template_sensor"
+                    ".state | int(0)) >= 1 %}mdi:greater"
                     "{% else %}mdi:less{% endif %}"
                 ),
             },
@@ -888,16 +888,16 @@ async def test_self_referencing_sensor_loop(
         (
             {
                 "state": (
-                    "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}"
+                    "{{ (states.sensor.test_template_sensor.state | int(0)) + 1 }}"
                 ),
                 "icon": (
-                    "{% if ((states.sensor.test_template_sensor"
-                    ".state or 0) | int) > 3 %}mdi:greater"
+                    "{% if (states.sensor.test_template_sensor"
+                    ".state | int(0)) > 3 %}mdi:greater"
                     "{% else %}mdi:less{% endif %}"
                 ),
                 "picture": (
-                    "{% if ((states.sensor.test_template_sensor"
-                    ".state or 0) | int) >= 1 %}bigpic"
+                    "{% if (states.sensor.test_template_sensor"
+                    ".state | int(0)) >= 1 %}bigpic"
                     "{% else %}smallpic{% endif %}"
                 ),
             },
@@ -923,8 +923,9 @@ async def test_self_referencing_sensor_loop(
                 ),
             },
             (
-                (ATTR_ENTITY_PICTURE, "3"),
-                (ATTR_FRIENDLY_NAME, "3"),
+                # Rendered once when the entity is created, before the loop starts
+                (ATTR_ENTITY_PICTURE, "4"),
+                (ATTR_FRIENDLY_NAME, "4"),
             ),
             1,
         ),

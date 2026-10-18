@@ -312,6 +312,14 @@ class AbstractTemplateEntity(Entity):
     def restore_extra_data(self, extra_data: Any) -> None:
         """Restore extra data from the last state."""
 
+    def option_restorable(self, option: str) -> bool:
+        """Return if a restored value for an option is updated after restoring.
+
+        Without a template or an optimistic action, the restored value would be
+        reported indefinitely.
+        """
+        return option in self._config or option in self._assumed_attributes
+
     async def async_restore_last_state(self) -> None:
         """Restore the state from the last state."""
         if not hasattr(self, "async_get_last_state"):

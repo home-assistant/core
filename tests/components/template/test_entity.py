@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.light import ColorMode
 from homeassistant.components.template import DOMAIN, entity as abstract_entity
-from homeassistant.const import SERVICE_RELOAD, STATE_ON
+from homeassistant.const import SERVICE_RELOAD, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -151,15 +151,31 @@ async def _restart(hass: HomeAssistant, config: dict) -> None:
     await hass.async_block_till_done()
 
 
-def _light_config(**extra_config: str | list) -> dict:
+_BASE_CONFIGS: dict[str, dict] = {
+    "climate": {
+        "hvac_mode": "{{ 'heat' }}",
+        "hvac_modes": "{{ ['off', 'heat'] }}",
+        "set_hvac_mode": [],
+    },
+    "device_tracker": {"latitude": "{{ 10 }}", "longitude": "{{ 20 }}"},
+    "light": {"state": "{{ true }}", "turn_on": [], "turn_off": []},
+    "sensor": {},
+    "lock": {"state": "{{ 'locked' }}", "lock": [], "unlock": []},
+    "weather": {
+        "condition": "{{ 'sunny' }}",
+        "humidity": "{{ 50 }}",
+        "temperature": "{{ 20 }}",
+    },
+}
+
+
+def _config(domain: str, **extra_config: str | list) -> dict:
     return {
         "template": {
-            "light": {
-                "unique_id": "light_1",
-                "default_entity_id": "light.test_light",
-                "state": "{{ true }}",
-                "turn_on": [],
-                "turn_off": [],
+            domain: {
+                "unique_id": "unique_1",
+                "default_entity_id": f"{domain}.test",
+                **_BASE_CONFIGS[domain],
                 **extra_config,
             }
         }
@@ -171,58 +187,121 @@ def _light_config(**extra_config: str | list) -> dict:
     [pytest.param(_reload, id="reload"), pytest.param(_restart, id="restart")],
 )
 @pytest.mark.parametrize(
-    ("old_config", "new_config", "expected_attributes"),
+    ("old_config", "new_config", "entity_id", "expected_attributes"),
     [
         pytest.param(
-            _light_config(name="Old name"),
-            _light_config(name="New name", set_level=[]),
+            _config("light", name="Old name"),
+            _config("light", name="New name", set_level=[]),
+            "light.test",
             {
                 "friendly_name": "New name",
                 "supported_color_modes": [ColorMode.BRIGHTNESS],
                 "color_mode": ColorMode.BRIGHTNESS,
             },
-            id="name_and_color_modes",
+            id="light_name_and_color_modes",
         ),
         pytest.param(
-            _light_config(
+            _config(
+                "light",
                 temperature="{{ 300 }}",
                 set_temperature=[],
                 min_mireds="{{ 200 }}",
             ),
-            _light_config(temperature="{{ 300 }}", set_temperature=[]),
+            _config("light", temperature="{{ 300 }}", set_temperature=[]),
+            "light.test",
             {"max_color_temp_kelvin": 6535},
-            id="color_temp_range",
+            id="light_color_temp_range",
         ),
         pytest.param(
-            _light_config(
+            _config(
+                "light",
                 temperature="{{ 300 }}",
                 set_temperature=[],
                 min_mireds="{{ 200 }}",
             ),
-            _light_config(
+            _config(
+                "light",
                 temperature="{{ 160 }}",
                 set_temperature=[],
                 min_mireds="{{ 153 }}",
             ),
+            "light.test",
             {"max_color_temp_kelvin": 6535, "color_temp_kelvin": 6250},
-            id="color_temp_and_range",
+            id="light_color_temp_and_range",
+        ),
+        pytest.param(
+            _config(
+                "climate", current_temperature="{{ 21 }}", current_humidity="{{ 40 }}"
+            ),
+            _config("climate"),
+            "climate.test",
+            {"current_temperature": None, "current_humidity": None},
+            id="climate_measurements",
+        ),
+        pytest.param(
+            _config("device_tracker", location_accuracy="{{ 5 }}"),
+            _config("device_tracker"),
+            "device_tracker.test",
+            {"gps_accuracy": 0},
+            id="device_tracker_location_accuracy",
+        ),
+        pytest.param(
+            _config("lock", code_format="{{ '\\\\d+' }}"),
+            _config("lock"),
+            "lock.test",
+            {"code_format": None},
+            id="lock_code_format",
+        ),
+        pytest.param(
+            _config("weather", ozone="{{ 5 }}", wind_bearing="{{ 180 }}"),
+            _config("weather"),
+            "weather.test",
+            {"ozone": None, "wind_bearing": None},
+            id="weather_measurements",
         ),
     ],
 )
-async def test_config_derived_values_not_restored(
+async def test_values_without_template_not_restored(
     hass: HomeAssistant,
     apply_config: Callable[[HomeAssistant, dict], Awaitable[None]],
     old_config: dict,
     new_config: dict,
+    entity_id: str,
     expected_attributes: dict,
 ) -> None:
-    """Test values derived from the configuration are not restored."""
+    """Test values that only came from the old configuration are not restored."""
     assert await async_setup_component(hass, DOMAIN, old_config)
     await hass.async_block_till_done()
 
     await apply_config(hass, new_config)
 
-    state = hass.states.get("light.test_light")
-    assert state.state == STATE_ON
+    state = hass.states.get(entity_id)
     for attribute, value in expected_attributes.items():
-        assert state.attributes[attribute] == value
+        assert state.attributes.get(attribute) == value
+
+
+@pytest.mark.parametrize(
+    "apply_config",
+    [pytest.param(_reload, id="reload"), pytest.param(_restart, id="restart")],
+)
+async def test_this_state_is_restored_state(
+    hass: HomeAssistant,
+    apply_config: Callable[[HomeAssistant, dict], Awaitable[None]],
+) -> None:
+    """Test `this` refers to the restored state on the first render."""
+    config = _config(
+        "sensor",
+        state=(
+            "{{ states('sensor.source') if has_value('sensor.source')"
+            " else this.state }}"
+        ),
+    )
+    hass.states.async_set("sensor.source", "42")
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == "42"
+
+    hass.states.async_set("sensor.source", STATE_UNAVAILABLE)
+    await apply_config(hass, config)
+
+    assert hass.states.get("sensor.test").state == "42"

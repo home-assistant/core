@@ -673,18 +673,34 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
     @override
     def restore_extra_data(self, extra_data: WeatherExtraStoredData) -> None:
         """Restore the extra data."""
-        self._attr_native_apparent_temperature = extra_data.last_apparent_temperature
-        self._attr_cloud_coverage = extra_data.last_cloud_coverage
-        self._attr_native_dew_point = extra_data.last_dew_point
-        self._attr_humidity = extra_data.last_humidity
-        self._attr_ozone = extra_data.last_ozone
-        self._attr_native_pressure = extra_data.last_pressure
-        self._attr_native_temperature = extra_data.last_temperature
-        self._attr_uv_index = extra_data.last_uv_index
-        self._attr_native_visibility = extra_data.last_visibility
-        self._attr_wind_bearing = extra_data.last_wind_bearing
-        self._attr_native_wind_gust_speed = extra_data.last_wind_gust_speed
-        self._attr_native_wind_speed = extra_data.last_wind_speed
+        for option, attribute, value in (
+            (
+                CONF_APPARENT_TEMPERATURE,
+                "_attr_native_apparent_temperature",
+                extra_data.last_apparent_temperature,
+            ),
+            (
+                CONF_CLOUD_COVERAGE,
+                "_attr_cloud_coverage",
+                extra_data.last_cloud_coverage,
+            ),
+            (CONF_DEW_POINT, "_attr_native_dew_point", extra_data.last_dew_point),
+            (CONF_HUMIDITY, "_attr_humidity", extra_data.last_humidity),
+            (CONF_OZONE, "_attr_ozone", extra_data.last_ozone),
+            (CONF_PRESSURE, "_attr_native_pressure", extra_data.last_pressure),
+            (CONF_TEMPERATURE, "_attr_native_temperature", extra_data.last_temperature),
+            (CONF_UV_INDEX, "_attr_uv_index", extra_data.last_uv_index),
+            (CONF_VISIBILITY, "_attr_native_visibility", extra_data.last_visibility),
+            (CONF_WIND_BEARING, "_attr_wind_bearing", extra_data.last_wind_bearing),
+            (
+                CONF_WIND_GUST_SPEED,
+                "_attr_native_wind_gust_speed",
+                extra_data.last_wind_gust_speed,
+            ),
+            (CONF_WIND_SPEED, "_attr_native_wind_speed", extra_data.last_wind_speed),
+        ):
+            if self.option_restorable(option):
+                setattr(self, attribute, value)
 
 
 class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
