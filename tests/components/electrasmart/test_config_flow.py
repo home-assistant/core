@@ -301,3 +301,62 @@ async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_already_in_progress(hass: HomeAssistant) -> None:
+    """Test a second DHCP discovery aborts while one is in progress."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.0.2.10",
+            hostname="elrssid123456",
+            macaddress="aabbcc123456",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.0.2.11",
+            hostname="elrssid123457",
+            macaddress="aabbcc123457",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_dhcp_discovery_sets_unique_id(hass: HomeAssistant) -> None:
+    """Test a discovered flow creates an entry with the phone number as ID."""
+    async with _patch_success(hass):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="192.0.2.10",
+                hostname="elrssid123456",
+                macaddress="aabbcc123456",
+            ),
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PHONE_NUMBER: "0521234567"},
+        )
+
+        assert result["step_id"] == CONF_OTP
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_OTP: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "0521234567"

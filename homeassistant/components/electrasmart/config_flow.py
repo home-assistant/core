@@ -36,12 +36,10 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery by DHCP."""
-        # This integration creates one config entry per Electra account and the
-        # account's devices are only known through the cloud API. A device found
-        # on the local network therefore only tells us that no account has been
-        # set up yet: it cannot tell which account the device belongs to.
-        if self._async_current_entries(include_ignore=False):
-            return self.async_abort(reason="already_configured")
+        # A discovered device cannot be attributed to an account: entries are
+        # created per Electra account, and its devices are only known through
+        # the cloud API. Discovery therefore only starts the normal setup flow.
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
     @override
@@ -96,10 +94,8 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._phone_number = user_input[CONF_PHONE_NUMBER]
         self._imei = generate_imei()
 
-        # Check if already configured
-        if self.unique_id is None:
-            await self.async_set_unique_id(self._phone_number)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(self._phone_number)
+        self._abort_if_unique_id_configured()
 
         assert isinstance(self._api, ElectraAPI)
 
