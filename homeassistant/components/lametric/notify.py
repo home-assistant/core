@@ -14,6 +14,7 @@ from demetriek import (
     Sound,
     SoundURL,
 )
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -46,24 +47,19 @@ from .helpers import (
 
 PARALLEL_UPDATES = 1
 
+REPEAT_SCHEMA = probatio.All(probatio.Coerce(int), probatio.Range(min=0))
+
 
 def _coerce_repeat(repeat: Any) -> int:
     """Coerce the sound repeat count, refusing invalid or negative values."""
     try:
-        repeat_int = int(repeat)
-    except (TypeError, ValueError) as err:
+        return REPEAT_SCHEMA(repeat)
+    except probatio.Invalid as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_repeat",
             translation_placeholders={"repeat": str(repeat)},
         ) from err
-    if repeat_int < 0:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_repeat",
-            translation_placeholders={"repeat": str(repeat)},
-        )
-    return repeat_int
 
 
 async def async_setup_entry(
@@ -127,6 +123,10 @@ class LaMetricNotificationService(BaseNotificationService):
         if not (data := kwargs.get(ATTR_DATA)):
             data = {}
 
+        # Validated up front, so an invalid count is refused even when it can
+        # only apply to a fallback sound, or to none at all.
+        repeat = _coerce_repeat(data.get(CONF_REPEAT, 1))
+
         builtin_sound: Sound | None = None
         if CONF_SOUND in data:
             snd: AlarmSound | NotificationSound | None
@@ -141,7 +141,7 @@ class LaMetricNotificationService(BaseNotificationService):
             builtin_sound = Sound(
                 sound=snd,
                 category=None,
-                repeat=_coerce_repeat(data.get(CONF_REPEAT, 1)),
+                repeat=repeat,
             )
 
         # A built-in sound given as well plays when the URL cannot be fetched.

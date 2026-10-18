@@ -152,6 +152,15 @@ async def test_notification_sound_repeat(
 
 
 @pytest.mark.parametrize(
+    "sound_data",
+    [
+        pytest.param({"sound": "positive1"}, id="sound"),
+        # The count is refused even when it cannot apply to the sound at all,
+        # like a URL that has no fallback.
+        pytest.param({"sound_url": "https://example.com/doorbell.mp3"}, id="sound_url"),
+    ],
+)
+@pytest.mark.parametrize(
     "repeat",
     [
         pytest.param(None, id="none"),
@@ -162,6 +171,7 @@ async def test_notification_sound_repeat(
 async def test_notification_invalid_repeat(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
+    sound_data: dict[str, str],
     repeat: int | str | None,
 ) -> None:
     """Test an invalid sound repeat count is refused without calling the device."""
@@ -171,7 +181,7 @@ async def test_notification_invalid_repeat(
             NOTIFY_SERVICE,
             {
                 ATTR_MESSAGE: "Meow!",
-                ATTR_DATA: {"sound": "positive1", "repeat": repeat},
+                ATTR_DATA: {**sound_data, "repeat": repeat},
             },
             blocking=True,
         )
@@ -344,11 +354,17 @@ async def test_notification_unknown_sound_without_audio(
     mock_lametric.notify.assert_not_called()
 
 
+@pytest.mark.parametrize("repeat", [1, 3])
 async def test_notification_sound_url(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
+    repeat: int,
 ) -> None:
-    """Test sending a notification with a sound from a URL, and a fallback."""
+    """Test sending a notification with a sound from a URL, and a fallback.
+
+    The device API cannot repeat a sound fetched from a URL, so the count
+    applies to the fallback only.
+    """
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
@@ -357,6 +373,7 @@ async def test_notification_sound_url(
             ATTR_DATA: {
                 "sound_url": "https://example.com/doorbell.mp3",
                 "sound": "cat",
+                "repeat": repeat,
             },
         },
         blocking=True,
@@ -365,7 +382,7 @@ async def test_notification_sound_url(
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound == SoundURL(
         url="https://example.com/doorbell.mp3",
-        fallback=Sound(sound=NotificationSound.CAT),
+        fallback=Sound(sound=NotificationSound.CAT, repeat=repeat),
     )
 
 

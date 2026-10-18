@@ -339,14 +339,27 @@ async def test_service_message_without_audio(
                 fallback=Sound(sound=NotificationSound.CAT),
             ),
         ),
+        # The device API cannot repeat a sound fetched from a URL, so the
+        # count applies to the fallback only.
+        (
+            {
+                CONF_SOUND_URL: "https://example.com/doorbell.mp3",
+                CONF_SOUND: "cat",
+                CONF_REPEAT: 3,
+            },
+            SoundURL(
+                url="https://example.com/doorbell.mp3",
+                fallback=Sound(sound=NotificationSound.CAT, repeat=3),
+            ),
+        ),
     ],
-    ids=["url", "url_with_fallback"],
+    ids=["url", "url_with_fallback", "url_with_fallback_and_repeat"],
 )
 async def test_service_message_sound_url(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_lametric: MagicMock,
-    data: dict[str, str],
+    data: dict[str, Any],
     expected: SoundURL,
 ) -> None:
     """Test sending a notification with a sound from a URL."""
