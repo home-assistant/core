@@ -133,6 +133,7 @@ if TYPE_CHECKING:
         MockInfraredEmitterEntity,
         MockInfraredReceiverEntity,
     )
+    from .components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 pytest.register_assert_rewrite("pytest_homeassistant.common")
@@ -2046,6 +2047,28 @@ def mock_recorder_before_hass() -> None:
     Override or parametrize this fixture with a fixture that mocks the recorder,
     in the tests that need to test the recorder.
     """
+
+
+@pytest.fixture(name="init_radio_frequency")
+async def init_radio_frequency_fixture(hass: HomeAssistant) -> None:
+    """Set up the Radio Frequency integration for testing."""
+    from .components.radio_frequency.common import (  # noqa: PLC0415
+        init_radio_frequency_fixture_helper,
+    )
+
+    await init_radio_frequency_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_rf_entity")
+async def mock_rf_entity_fixture(
+    hass: HomeAssistant, init_radio_frequency: None
+) -> MockRadioFrequencyEntity:
+    """Return a mock radio frequency entity."""
+    from .components.radio_frequency.common import (  # noqa: PLC0415
+        mock_rf_entity_fixture_helper,
+    )
+
+    return await mock_rf_entity_fixture_helper(hass)
 
 
 @pytest.fixture(name="init_infrared")
