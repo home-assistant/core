@@ -1637,6 +1637,70 @@ async def test_coordinator_rate_periods_rebuild_again_after_second_delete(
     assert [s["sum"] for s in stats[on_peak_id]] == [1.0, 2.0]
 
 
+async def test_coordinator_rate_periods_survive_deleted_account_total(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the periods keep their sums when only an account total is deleted.
+
+    Without the account's consumption statistic the totals start over from
+    the full history. The periods still have their statistics and continue
+    from their own last stored points, so rows the history no longer
+    produces do not sit next to sums that restarted from zero.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
+
+    def read(index: int) -> CostRead:
+        return CostRead(
+            start_time=hour[index],
+            end_time=hour[index] + timedelta(hours=1),
+            consumption=float(index + 1),
+            provided_cost=(index + 1) / 4,
+            read_components=[
+                _read_component("ON_PEAK", float(index + 1), (index + 1) / 4)
+            ],
+        )
+
+    mock_opower_api.async_get_cost_reads.return_value = [read(0), read(1), read(2)]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    total_id = "opower:pge_elec_111111_energy_consumption"
+    on_peak_id = "opower:pge_elec_111111_on_peak_energy_consumption"
+    get_instance(hass).async_clear_statistics([total_id])
+    await async_wait_recording_done(hass)
+
+    # The history no longer contains the first read
+    mock_opower_api.async_get_cost_reads.return_value = [read(1), read(2)]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {total_id, on_peak_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    # The total was rebuilt from what the history still has
+    assert [(s["start"], s["sum"]) for s in stats[total_id]] == [
+        (hour[1].timestamp(), 2.0),
+        (hour[2].timestamp(), 5.0),
+    ]
+    # The period continued from its last stored point, untouched
+    assert [(s["start"], s["sum"]) for s in stats[on_peak_id]] == [
+        (hour[0].timestamp(), 1.0),
+        (hour[1].timestamp(), 3.0),
+        (hour[2].timestamp(), 6.0),
+    ]
+
+
 async def test_coordinator_rate_periods_skip_empty_periods(
     recorder_mock: Recorder,
     hass: HomeAssistant,

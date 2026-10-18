@@ -542,21 +542,27 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 consumption_unit_class,
                 consumption_unit,
             )
-            if last_stats_time is None:
-                # First run: the reads are the full history already.
-                self._add_rate_period_statistics(period_reads, rate_periods, True)
-            else:
-                stored_keys = await get_instance(self.hass).async_add_executor_job(
-                    _stored_rate_period_keys, self.hass, id_prefix, name_prefix
+            stored_keys = await get_instance(self.hass).async_add_executor_job(
+                _stored_rate_period_keys, self.hass, id_prefix, name_prefix
+            )
+            for key in stored_keys - set(rate_periods):
+                rate_periods[key] = _rate_period_statistics(
+                    key,
+                    id_prefix,
+                    name_prefix,
+                    consumption_unit_class,
+                    consumption_unit,
                 )
-                for key in stored_keys - set(rate_periods):
-                    rate_periods[key] = _rate_period_statistics(
-                        key,
-                        id_prefix,
-                        name_prefix,
-                        consumption_unit_class,
-                        consumption_unit,
-                    )
+            if last_stats_time is None:
+                # The totals have no statistics, so the reads are the full
+                # history already. The periods may still have statistics, e.g.
+                # when the user deleted a total, and continue from their own
+                # last stored points. Only what they lack is written whole.
+                if rate_periods:
+                    await self._async_init_rate_period_sums(rate_periods, None)
+                self._add_rate_period_statistics(period_reads, rate_periods, True)
+                self._add_rate_period_statistics(period_reads, rate_periods, False)
+            else:
                 if rate_periods:
                     await self._async_init_rate_period_sums(
                         rate_periods, dt_util.utc_from_timestamp(last_stats_time)
@@ -745,7 +751,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     )
 
     async def _async_init_rate_period_sums(
-        self, rate_periods: dict[str, _RatePeriodStatistics], start: datetime
+        self, rate_periods: dict[str, _RatePeriodStatistics], start: datetime | None
     ) -> None:
         """Continue the rate period sums from the statistics stored at start.
 
@@ -753,17 +759,18 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         point, the same way the totals do: the point at start, else the
         oldest point after start, e.g. for a period first seen after the reads
         at the start of the window, else the last point before start, e.g. a
-        summer-only period seen again after winter. A statistic without any
-        stored point, because it is new or the user deleted it, starts from
-        zero and keeps last_stats_time None so it is backfilled from the full
-        history. The others are not touched: nothing is ever deleted or
-        rewritten on the user's behalf.
+        summer-only period seen again after winter. Without a start, when the
+        totals have no statistics to give one, each continues from its last
+        stored point. A statistic without any stored point, because it is new
+        or the user deleted it, starts from zero and keeps last_stats_time None
+        so it is backfilled from the full history. The others are not touched:
+        nothing is ever deleted or rewritten on the user's behalf.
         """
         statistic_ids = set().union(
             *(rate_period.statistic_ids() for rate_period in rate_periods.values())
         )
         stats: dict[str, list[Any]] = {}
-        for end in (start + timedelta(seconds=1), None):
+        for end in (start + timedelta(seconds=1), None) if start else ():
             stats |= await get_instance(self.hass).async_add_executor_job(
                 statistics_during_period,
                 self.hass,
@@ -785,9 +792,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     last_stat = await get_instance(self.hass).async_add_executor_job(
                         get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
                     )
-                    if (
-                        last_stat
-                        and last_stat[statistic_id][0]["start"] < start.timestamp()
+                    if last_stat and (
+                        start is None
+                        or last_stat[statistic_id][0]["start"] < start.timestamp()
                     ):
                         record = last_stat[statistic_id]
                 if not record:
