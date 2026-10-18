@@ -27,6 +27,7 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -58,6 +59,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         state_fn=lambda api, device: device.state == 4,
+        supported_fn=async_device_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"device_update-{obj_id}",
     ),
 )

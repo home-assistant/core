@@ -23,12 +23,7 @@ from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UnifiDataUpdateCoordinator
-from ..entity import (
-    UnifiEntity,
-    UnifiEntityDescription,
-    async_device_adopted_fn,
-    async_object_adopted_fn,
-)
+from ..entity import UnifiEntity, UnifiEntityDescription, async_device_supported_fn
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -233,9 +228,6 @@ class UnifiEntityLoader:
         """Validate if entity is allowed and supported before creating it."""
         return bool(
             (description.key, obj_id) not in self.known_objects
-            and async_object_adopted_fn(
-                self.hub, description.api_handler_fn(self.hub.api), obj_id
-            )
             and description.allowed_fn(self.hub, obj_id)
             and description.supported_fn(self.hub, obj_id)
         )
@@ -248,7 +240,7 @@ class UnifiEntityLoader:
         seen pending adoption would otherwise stay without entities until
         the integration is reloaded.
         """
-        if not async_device_adopted_fn(self.hub, obj_id):
+        if not async_device_supported_fn(self.hub, obj_id):
             self._devices_pending_adoption.add(obj_id)
             return
 
