@@ -492,6 +492,61 @@ async def test_yaml_import_concurrent_blocks_merge_devices(
     assert result_1["data"]["devices"] == [MOCK_DEVICE_ID, "device_2"]
 
 
+@pytest.mark.usefixtures("mock_get_data")
+async def test_yaml_import_concurrent_mixed_credentials(
+    hass: HomeAssistant,
+    mock_get_token: MagicMock,
+) -> None:
+    """Test concurrent YAML imports succeed when first has stale password and second is valid."""
+    in_validation = threading.Event()
+    release_validation = threading.Event()
+
+    def check_get_token(email: str, password: str, **kwargs: Any) -> str:
+        if password == "stale_password":
+            in_validation.set()
+            release_validation.wait(timeout=5)
+            raise _mock_http_error(requests.codes.unauthorized)
+        return "mock_token"
+
+    mock_get_token.side_effect = check_get_token
+
+    task_1 = hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={
+                CONF_EMAIL: TEST_EMAIL,
+                CONF_PASSWORD: "stale_password",
+                "devices": [MOCK_DEVICE_ID],
+            },
+        )
+    )
+    while not in_validation.is_set():
+        await asyncio.sleep(0.005)
+
+    result_2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "import"},
+        data={
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+            "devices": ["device_2"],
+        },
+    )
+    assert result_2["type"] is FlowResultType.ABORT
+    assert result_2["reason"] == "already_in_progress"
+
+    release_validation.set()
+    result_1 = await task_1
+
+    assert result_1["type"] is FlowResultType.CREATE_ENTRY
+    assert result_1["data"] == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+        "devices": [MOCK_DEVICE_ID, "device_2"],
+    }
+
+
 @pytest.mark.usefixtures("mock_get_token", "mock_get_data")
 async def test_yaml_import_already_configured(
     hass: HomeAssistant,

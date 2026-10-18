@@ -128,16 +128,21 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         email = import_data[CONF_EMAIL].strip().lower()
         password = import_data[CONF_PASSWORD]
-        pending_imports: dict[str, list[str] | None] = self.hass.data.setdefault(
+        pending_imports: dict[str, dict[str, Any]] = self.hass.data.setdefault(
             DOMAIN, {}
         )
+        pending_entry = pending_imports.setdefault(
+            email, {"devices": [], "passwords": []}
+        )
+        if password not in pending_entry["passwords"]:
+            pending_entry["passwords"].append(password)
         if (imported_devices := import_data.get(CONF_DEVICES)) is not None:
-            if (pending := pending_imports.get(email, [])) is not None:
-                pending_imports[email] = list(
-                    dict.fromkeys([*pending, *imported_devices])
+            if (pending_devices := pending_entry["devices"]) is not None:
+                pending_entry["devices"] = list(
+                    dict.fromkeys([*pending_devices, *imported_devices])
                 )
         else:
-            pending_imports[email] = None
+            pending_entry["devices"] = None
 
         existing_entry = await self.async_set_unique_id(email, raise_on_progress=False)
         if existing_entry is not None:
@@ -174,18 +179,28 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_in_progress")
 
         try:
-            await self.hass.async_add_executor_job(
-                _validate_credentials, email, password
-            )
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected exception importing from YAML")
-            return self.async_abort(reason="unknown")
+            passwords: list[str] = pending_entry["passwords"]
+            idx = 0
+            while True:
+                candidate_password = passwords[idx]
+                idx += 1
+                try:
+                    await self.hass.async_add_executor_job(
+                        _validate_credentials, email, candidate_password
+                    )
+                except InvalidAuth:
+                    if idx < len(passwords):
+                        continue
+                    return self.async_abort(reason="invalid_auth")
+                except CannotConnect:
+                    return self.async_abort(reason="cannot_connect")
+                except Exception:  # noqa: BLE001
+                    LOGGER.exception("Unexpected exception importing from YAML")
+                    return self.async_abort(reason="unknown")
+                password = candidate_password
+                break
         finally:
-            devices = pending_imports.pop(email, None)
+            devices = pending_imports.pop(email, {}).get("devices")
 
         entry_data: dict[str, Any] = {
             CONF_EMAIL: email,
