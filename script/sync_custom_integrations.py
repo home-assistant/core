@@ -416,12 +416,19 @@ def ensure_ignored(root: Path) -> None:
     if git("check-ignore", "-q", ".").returncode == 0:
         return
     top = Path(git("rev-parse", "--show-toplevel").stdout.strip())
+    rel = root.relative_to(top).as_posix()
+    if "\n" in rel or "\r" in rel:
+        sys.exit(f"{root!r} contains a line break; choose another --dest")
     exclude = Path(git("rev-parse", "--git-path", "info/exclude").stdout.strip())
     if not exclude.is_absolute():
         exclude = root / exclude
     exclude.parent.mkdir(parents=True, exist_ok=True)
+    # Anchored at both ends, so only pattern characters need escaping; start
+    # on a new line if the file does not end with one
+    rule = "/" + re.sub(r"([\\*?\[])", r"\\\1", rel) + "/\n"
+    existing = exclude.read_bytes() if exclude.exists() else b""
     with exclude.open("a") as fobj:
-        fobj.write(f"/{root.relative_to(top).as_posix()}/\n")
+        fobj.write(rule if not existing or existing.endswith(b"\n") else "\n" + rule)
     print(f"Added {root} to {exclude}", file=sys.stderr)
 
 

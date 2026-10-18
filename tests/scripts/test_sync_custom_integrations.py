@@ -2,12 +2,14 @@
 
 import json
 from pathlib import Path
+import subprocess
 
 import pytest
 
 from script.sync_custom_integrations import (
     LOCK_FILE,
     STATE_FORMAT,
+    ensure_ignored,
     is_repo_slug,
     load_state,
     prune,
@@ -108,3 +110,36 @@ def test_prune(tmp_path: Path) -> None:
     assert not (tmp_path / "drop").exists()
     assert (tmp_path / ".hidden" / "dir").is_dir()
     assert (tmp_path / ".state.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("dest", "lookalike"),
+    [
+        pytest.param("sources[1]", "sources1", id="brackets"),
+        pytest.param("a*b?", "axxbx", id="wildcards"),
+    ],
+)
+def test_ensure_ignored_escapes_and_keeps_own_line(
+    tmp_path: Path, dest: str, lookalike: str
+) -> None:
+    """Test the exclude rule matches only the destination, on its own line."""
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    exclude = tmp_path / ".git" / "info" / "exclude"
+    exclude.write_text("existing-rule")
+    (tmp_path / dest).mkdir()
+    (tmp_path / lookalike).mkdir()
+
+    ensure_ignored(tmp_path / dest)
+
+    def ignored(name: str) -> bool:
+        return (
+            subprocess.run(
+                ["git", "-C", str(tmp_path), "check-ignore", "-q", f"{name}/x"],
+                check=False,
+            ).returncode
+            == 0
+        )
+
+    assert ignored(dest)
+    assert not ignored(lookalike)
+    assert exclude.read_text().splitlines()[0] == "existing-rule"
