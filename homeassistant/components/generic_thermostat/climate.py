@@ -594,6 +594,12 @@ class GenericThermostat(RestoreClimate):
                 )
                 self._cancel_cycle_timer()
                 await self._async_heater_turn_off()
+                if self.cycle_cooldown:
+                    self._check_callback = async_call_later(
+                        self.hass,
+                        self.cycle_cooldown,
+                        self._async_timer_control_heating,
+                    )
                 return
 
             assert self._cur_temp is not None and self._target_temp is not None

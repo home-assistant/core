@@ -1266,6 +1266,78 @@ async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
     assert calls[1].service == SERVICE_TURN_OFF
 
 
+async def test_max_cycle_duration_restarts_after_cooldown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the heater restarts after max cycle duration and cooldown."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+    calls = _setup_switch(hass, False)
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "max_cycle_duration": dt.timedelta(minutes=10),
+                "cycle_cooldown": dt.timedelta(minutes=15),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.services.async_remove(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON)
+    hass.services.async_remove(HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF)
+
+    @callback
+    def handle_switch_call(call: ServiceCall) -> None:
+        """Record and apply the switch service call."""
+        calls.append(call)
+        hass.states.async_set(
+            ENT_SWITCH,
+            STATE_ON if call.service == SERVICE_TURN_ON else STATE_OFF,
+            context=call.context,
+        )
+
+    hass.services.async_register(
+        HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, handle_switch_call
+    )
+    hass.services.async_register(
+        HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, handle_switch_call
+    )
+
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert [call.service for call in calls] == [SERVICE_TURN_ON]
+
+    freezer.move_to(now + dt.timedelta(minutes=10))
+    async_fire_time_changed(hass, now + dt.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert [call.service for call in calls] == [SERVICE_TURN_ON, SERVICE_TURN_OFF]
+
+    freezer.move_to(now + dt.timedelta(minutes=24))
+    async_fire_time_changed(hass, now + dt.timedelta(minutes=24))
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    freezer.move_to(now + dt.timedelta(minutes=25))
+    async_fire_time_changed(hass, now + dt.timedelta(minutes=25))
+    await hass.async_block_till_done()
+    assert [call.service for call in calls] == [
+        SERVICE_TURN_ON,
+        SERVICE_TURN_OFF,
+        SERVICE_TURN_ON,
+    ]
+
+
 async def test_external_toggle_resets_max_cycle(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
