@@ -59,10 +59,10 @@
   },
   "exceptions": {
     "address_lookup_failed": {
-      "message": "Unable to look up the address of the Minecraft server"
+      "message": "Unable to look up the address of the Minecraft server {address}."
     },
     "data_update_failed": {
-      "message": "A connection error occurred while updating the Minecraft server data"
+      "message": "A connection error occurred while updating the Minecraft server data {address}."
     }
   }
 }
