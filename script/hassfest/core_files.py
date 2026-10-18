@@ -50,7 +50,6 @@ MISSING_ALL = {
     "tag",
     "template",
     "timer",
-    "webhook",
     "websocket_api",
     "zeroconf",
     "zone",
