@@ -1612,7 +1612,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.28.1
+mcp==2.3.0
 
 # homeassistant.components.minecraft_server
 mcstatus==14.2.0
@@ -2051,7 +2051,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.5
+pyElectra==1.2.7
 
 # homeassistant.components.emby
 pyEmby==1.10
@@ -2416,7 +2416,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.6.5
+pylitterbot==2025.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0
@@ -2960,7 +2960,7 @@ qbusmqttapi==1.5.1
 qingping-ble==1.1.6
 
 # homeassistant.components.qnap
-qnapstats==0.4.0
+qnapstats==0.6.2
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
@@ -3255,7 +3255,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.3
+tesla-fleet-api==1.18.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
