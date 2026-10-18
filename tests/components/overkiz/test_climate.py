@@ -1226,6 +1226,13 @@ async def test_zone_control_zone_set_temperature_without_running_side(
         pytest.param("eco", "on", 20.0, "derogation_comfort", id="derogation_comfort"),
         pytest.param("comfort", "on", 22.0, "derogation", id="derogation_free"),
         pytest.param("manu", "on", 22.0, "derogation", id="derogation_manual"),
+        # A manual or derogation profile contradicts the schedule: stale
+        pytest.param("manu", "off", 18.0, "schedule_eco", id="stale_manual"),
+        pytest.param(
+            "derogation", "on", 20.0, "derogation_comfort", id="stale_derogation"
+        ),
+        # A stopped side is not a stale profile
+        pytest.param("stop", "off", 18.0, "schedule", id="stopped"),
     ],
 )
 async def test_zone_control_zone_profile_preset(
@@ -1302,3 +1309,75 @@ async def test_zone_control_zone_derogation_preset_not_selectable(
 
     assert exc_info.value.translation_key == "derogation_preset_not_selectable"
     mock_client.execute_action_group.assert_not_called()
+
+
+async def test_zone_control_zone_derogation_preset_already_applied(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the derogation preset the zone is in can be replayed, as a scene does."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "cooling")
+    await _async_set_zone_program(
+        hass, freezer, mock_client, "internalScheduling", "on"
+    )
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ZONE_CONTROL_ZONE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.IO_PASS_APC_COOLING_PROFILE,
+                        "type": 3,
+                        "value": "comfort",
+                    },
+                    {
+                        "name": OverkizState.CORE_COMFORT_COOLING_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": 20.0,
+                    },
+                    {
+                        "name": OverkizState.CORE_ECO_COOLING_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": 18.0,
+                    },
+                    {
+                        "name": OverkizState.CORE_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": 18.0,
+                    },
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "derogation_eco"
+    mock_client.execute_action_group.reset_mock()
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": ZONE_CONTROL_ZONE.entity_id,
+            ATTR_PRESET_MODE: "derogation_eco",
+        },
+        blocking=True,
+    )
+    mock_client.execute_action_group.assert_not_called()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {
+                "entity_id": ZONE_CONTROL_ZONE.entity_id,
+                ATTR_PRESET_MODE: "derogation_comfort",
+            },
+            blocking=True,
+        )

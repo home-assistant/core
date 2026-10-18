@@ -110,7 +110,14 @@ def effective_profile(
         states.get_value(OverkizState.CORE_DEROGATION_ON_OFF) == OverkizCommandParam.ON
     )
 
-    if profile not in (OverkizCommandParam.COMFORT, OverkizCommandParam.ECO):
+    # Stopped, away or driven by an external setpoint: nothing to resolve. A
+    # manual or derogation profile contradicts the schedule, so it is stale.
+    if profile not in (
+        OverkizCommandParam.COMFORT,
+        OverkizCommandParam.ECO,
+        OverkizCommandParam.MANU,
+        OverkizCommandParam.DEROGATION,
+    ):
         return profile, derogation
 
     applied = states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
@@ -536,6 +543,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             return
 
         if preset_mode in DEROGATION_PRESETS:
+            # Restoring a scene replays the preset the zone is already in.
+            if preset_mode == self.preset_mode:
+                return
+
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="derogation_preset_not_selectable",
