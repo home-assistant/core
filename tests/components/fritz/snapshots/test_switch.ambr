@@ -187,12 +187,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 2.4Ghz',
+    'object_id_base': 'Wi-Fi Main 2.4GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 2.4Ghz',
+    'original_name': 'Wi-Fi Main 2.4GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -206,7 +206,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -241,12 +241,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 5Ghz',
+    'object_id_base': 'Wi-Fi Main 5GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 5Ghz',
+    'original_name': 'Wi-Fi Main 5GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -260,7 +260,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -511,12 +511,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 2.4Ghz',
+    'object_id_base': 'Wi-Fi Main 2.4GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 2.4Ghz',
+    'original_name': 'Wi-Fi Main 2.4GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -530,7 +530,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -565,12 +565,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 5Ghz',
+    'object_id_base': 'Wi-Fi Main 5GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 5Ghz',
+    'original_name': 'Wi-Fi Main 5GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -584,7 +584,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -835,12 +835,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 2.4Ghz',
+    'object_id_base': 'Wi-Fi Main 2.4GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 2.4Ghz',
+    'original_name': 'Wi-Fi Main 2.4GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -854,7 +854,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -1105,12 +1105,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 2.4Ghz',
+    'object_id_base': 'Wi-Fi Main 2.4GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 2.4Ghz',
+    'original_name': 'Wi-Fi Main 2.4GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1124,7 +1124,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:12',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -1159,12 +1159,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 5Ghz',
+    'object_id_base': 'Wi-Fi Main 5GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 5Ghz',
+    'original_name': 'Wi-Fi Main 5GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1178,7 +1178,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -1213,12 +1213,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 5Ghz High / 6Ghz',
+    'object_id_base': 'Wi-Fi Main 5GHz High / 6GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 5Ghz High / 6Ghz',
+    'original_name': 'Wi-Fi Main 5GHz High / 6GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1232,7 +1232,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5Ghz High / 6Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 5GHz High / 6GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': False,
       'standard': 'ax',
@@ -1540,12 +1540,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wi-Fi Main 2.4Ghz',
+    'object_id_base': 'Wi-Fi Main 2.4GHz',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi Main 2.4Ghz',
+    'original_name': 'Wi-Fi Main 2.4GHz',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1559,7 +1559,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bssid': '1C:ED:6F:12:34:13',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4Ghz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi Main 2.4GHz',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       'mac_address_control': True,
       'standard': 'ax',

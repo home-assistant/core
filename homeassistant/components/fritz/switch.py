@@ -560,7 +560,6 @@ class FritzBoxWifiSwitch(FritzBoxBaseCoordinatorSwitch):
             is not MeshRoles.SLAVE,
         )
         super().__init__(avm_wrapper, device_friendly_name, description)
-        self._attr_name = name
 
     @override
     async def async_added_to_hass(self) -> None:
