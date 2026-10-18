@@ -583,6 +583,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+# Remove in 2027.5.0 together with OverkizLowSpeedCover and its repair issue
 def _async_keep_deprecated_low_speed_cover(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, device_url: str
 ) -> bool:
