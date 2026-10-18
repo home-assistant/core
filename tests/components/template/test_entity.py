@@ -193,6 +193,20 @@ def _light_config(**extra_config: str | list) -> dict:
             {"max_color_temp_kelvin": 6535},
             id="color_temp_range",
         ),
+        pytest.param(
+            _light_config(
+                temperature="{{ 300 }}",
+                set_temperature=[],
+                min_mireds="{{ 200 }}",
+            ),
+            _light_config(
+                temperature="{{ 160 }}",
+                set_temperature=[],
+                min_mireds="{{ 153 }}",
+            ),
+            {"max_color_temp_kelvin": 6535, "color_temp_kelvin": 6250},
+            id="color_temp_and_range",
+        ),
     ],
 )
 async def test_config_derived_values_not_restored(

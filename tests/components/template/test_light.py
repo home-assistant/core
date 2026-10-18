@@ -1533,6 +1533,33 @@ async def test_max_mireds_template(
     assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
 
 
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_temperature_validated_against_mireds_templates(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test the temperature is validated against the rendered min/max mireds."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        {
+            **ON_OFF_COLOR_TEMP_ACTIONS,
+            # 120 mireds is outside the default range, but inside the configured one
+            "temperature": "{{ 120 }}",
+            "min_mireds": "{{ 100 }}",
+        },
+        "{{ true }}",
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["max_color_temp_kelvin"] == 10000
+    assert state.attributes["color_temp_kelvin"] == 8333
+
+
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
     ("style", "attribute"),

@@ -407,6 +407,20 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         )
         self.add_assumed_attribute("_attr_brightness", CONF_LEVEL, CONF_LEVEL_ACTION)
 
+        # Min/Max temperature, set up first as the temperature is validated against it
+        self.setup_template(
+            CONF_MAX_MIREDS,
+            "_attr_max_color_temp_kelvin",
+            tcv.number(self, CONF_MAX_MIREDS),
+            self._update_max_mireds,
+        )
+        self.setup_template(
+            CONF_MIN_MIREDS,
+            "_attr_min_color_temp_kelvin",
+            tcv.number(self, CONF_MIN_MIREDS),
+            self._update_min_mireds,
+        )
+
         # Setup Color temperature
         self.setup_template(
             CONF_TEMPERATURE,
@@ -472,20 +486,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             ),
         )
         self.add_assumed_attribute("_attr_effect", CONF_EFFECT, CONF_EFFECT_ACTION)
-
-        # Min/Max temperature templates
-        self.setup_template(
-            CONF_MAX_MIREDS,
-            "_attr_max_color_temp_kelvin",
-            tcv.number(self, CONF_MAX_MIREDS),
-            self._update_max_mireds,
-        )
-        self.setup_template(
-            CONF_MIN_MIREDS,
-            "_attr_min_color_temp_kelvin",
-            tcv.number(self, CONF_MIN_MIREDS),
-            self._update_min_mireds,
-        )
 
         # Transition
         self.setup_template(
