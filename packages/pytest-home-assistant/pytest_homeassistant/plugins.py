@@ -710,6 +710,12 @@ def hass_config_dir() -> str:
 
 
 @pytest.fixture
+def custom_integrations_enabled() -> bool:
+    """Control custom integration loading."""
+    return True
+
+
+@pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
     load_registries: bool,
@@ -717,6 +723,7 @@ async def hass(
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_recorder_before_hass: None,
+    custom_integrations_enabled: bool,
 ) -> AsyncGenerator[HomeAssistant]:
     """Create a test instance of Home Assistant."""
 
@@ -743,6 +750,8 @@ async def hass(
     async with async_test_home_assistant(
         loop, load_registries, config_dir=hass_config_dir
     ) as hass:
+        if custom_integrations_enabled:
+            hass.data.pop(loader.DATA_CUSTOM_COMPONENTS, None)
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
@@ -1570,7 +1579,7 @@ def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock]:
 @pytest.fixture
 def enable_custom_integrations(hass: HomeAssistant) -> None:
     """Enable custom integrations defined in the test dir."""
-    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS, None)
 
 
 @pytest.fixture
