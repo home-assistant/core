@@ -1,6 +1,7 @@
 {
   "domain": "mastodon",
   "name": "Mastodon",
+  "categories": ["news_social_media"],
   "codeowners": ["@fabaff", "@andrew-codechimp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mastodon",

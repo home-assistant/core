@@ -1,6 +1,7 @@
 {
   "domain": "isy994",
   "name": "Universal Devices ISY/IoX",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
   "dhcp": [

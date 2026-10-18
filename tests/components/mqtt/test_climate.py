@@ -1399,7 +1399,7 @@ async def test_handle_action_received(
     await mqtt_mock_entry()
 
     # Cycle through valid modes
-    # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
+    # Redefine actions according to https://contributors.home-assistant.io/core/entities/climate/#hvac-actions
     actions = [
         "off",
         "preheating",

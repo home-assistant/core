@@ -237,6 +237,9 @@
     "account_forbidden": {
       "message": "Access to Kamereon account {account_id} was denied by the Renault servers"
     },
+    "authentication_expired": {
+      "message": "The Renault login has expired, re-authenticate the Renault integration"
+    },
     "battery_soc_unavailable": {
       "message": "Battery state of charge data is currently unavailable"
     },

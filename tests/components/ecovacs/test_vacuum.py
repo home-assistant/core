@@ -390,7 +390,7 @@ async def test_raise_segment_changed_issue(
         await notify_and_wait(hass, event_bus, event)
 
     entity_entry = entity_registry.async_get(entity_id)
-    issue_id = f"{vacuum.ISSUE_SEGMENTS_CHANGED}_{entity_entry.id}"
+    issue_id = f"segments_changed_{entity_entry.id}"
     issue = issue_registry.async_get_issue(vacuum.DOMAIN, issue_id)
     assert issue is not None
 
