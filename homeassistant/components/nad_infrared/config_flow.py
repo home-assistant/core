@@ -73,10 +73,13 @@ class NadIrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Select the emitter for a device type and create the entry."""
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{device_type}_{user_input[CONF_INFRARED_ENTITY_ID]}"
+            # The emitter's entity ID can change, so it is not used as unique ID.
+            self._async_abort_entries_match(
+                {
+                    CONF_DEVICE_TYPE: device_type,
+                    CONF_INFRARED_ENTITY_ID: user_input[CONF_INFRARED_ENTITY_ID],
+                }
             )
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=DEVICE_NAMES[device_type],
                 data={CONF_DEVICE_TYPE: device_type, **user_input},

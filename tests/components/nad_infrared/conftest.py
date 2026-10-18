@@ -47,7 +47,6 @@ def mock_config_entry(device_type: NADDeviceType) -> MockConfigEntry:
             CONF_DEVICE_TYPE: device_type,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         },
-        unique_id=f"{device_type}_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 

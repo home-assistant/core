@@ -64,9 +64,7 @@ async def test_user_flow_success(
         CONF_DEVICE_TYPE: device_type,
         CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
     }
-    assert (
-        result["result"].unique_id == f"{device_type}_{MOCK_INFRARED_EMITTER_ENTITY_ID}"
-    )
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -110,10 +108,7 @@ async def test_user_flow_other_device_type_same_emitter(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert (
-        result["result"].unique_id
-        == f"{NADDeviceType.CD_PLAYER}_{MOCK_INFRARED_EMITTER_ENTITY_ID}"
-    )
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("init_infrared")
