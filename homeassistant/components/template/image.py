@@ -1,5 +1,6 @@
 """Support for image which integrates with other components."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -182,6 +183,8 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         """Initialize the features."""
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._has_picture_template = CONF_PICTURE in config
+        # Removal and shutdown can both dump the cache, and they share a temp file.
+        self._cache_lock = asyncio.Lock()
 
         self.setup_template(CONF_URL, "_url", None, self._update_url)
 
@@ -218,6 +221,10 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     @override
     async def async_dump_cache(self) -> None:
         """Save image data."""
+        async with self._cache_lock:
+            await self._async_dump_cache()
+
+    async def _async_dump_cache(self) -> None:
         image_path = self._cache_path()
         if (image := self._cached_image) is None or (
             last_updated := self._attr_image_last_updated

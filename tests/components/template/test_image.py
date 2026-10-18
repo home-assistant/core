@@ -1,5 +1,6 @@
 """The tests for the Template image platform."""
 
+import asyncio
 from collections.abc import Generator
 from datetime import UTC, datetime
 from http import HTTPStatus
@@ -1410,3 +1411,75 @@ async def test_cache_read_error_does_not_block_setup(
         entity_id=TEST_IMAGE.entity_id,
     )
     assert "Unable to read image cache" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_overlapping_cache_dumps(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a second cache dump waits for the one in progress."""
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+
+    entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
+    makedirs = aiofiles.os.makedirs
+    first_dump_started = asyncio.Event()
+    release_first_dump = asyncio.Event()
+    makedirs_calls = 0
+
+    async def _makedirs(*args: Any, **kwargs: Any) -> None:
+        nonlocal makedirs_calls
+        makedirs_calls += 1
+        if makedirs_calls == 1:
+            first_dump_started.set()
+            await release_first_dump.wait()
+        await makedirs(*args, **kwargs)
+
+    with patch("aiofiles.os.makedirs", _makedirs):
+        first_dump = hass.async_create_task(entity.async_dump_cache())
+        await first_dump_started.wait()
+
+        entity._cached_image = image.Image("image/jpeg", imgbytes2_jpg)
+        second_dump = hass.async_create_task(entity.async_dump_cache())
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        # The second dump must not touch the temp file while the first is writing.
+        assert makedirs_calls == 1
+
+        release_first_dump.set()
+        await first_dump
+        await second_dump
+
+    cache_file = images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
+    assert list(images_cache_dir.iterdir()) == [cache_file]
+    assert cache_file.read_bytes().partition(b"\n")[2] == imgbytes2_jpg
+    assert "Unable to save image cache" not in caplog.text
