@@ -68,9 +68,19 @@ def mock_get_token() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_get_data() -> Generator[MagicMock]:
-    """Mock device.get_data."""
-    with patch(
-        "homeassistant.components.tank_utility.coordinator.device.get_data",
-        return_value={MOCK_DEVICE_ID: dict(DEVICE_DATA)},
-    ) as mock:
+    """Mock device.get_data and device.get_device_data."""
+    with (
+        patch(
+            "homeassistant.components.tank_utility.coordinator.auth.get_token",
+            return_value="mock_token",
+        ),
+        patch(
+            "homeassistant.components.tank_utility.coordinator.device.get_data",
+            return_value={MOCK_DEVICE_ID: dict(DEVICE_DATA)},
+        ) as mock,
+        patch(
+            "homeassistant.components.tank_utility.coordinator.device.get_device_data",
+            side_effect=lambda token, dev_id, **kwargs: dict(mock.return_value[dev_id]),
+        ),
+    ):
         yield mock

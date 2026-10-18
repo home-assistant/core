@@ -146,10 +146,10 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(email, raise_on_progress=False)
         if existing_entry is not None:
             pending_imports.pop(email, None)
-            updates: dict[str, Any] | None = None
             if CONF_DEVICES in existing_entry.data:
                 if imported_devices is not None:
-                    updates = {
+                    new_data = {
+                        **existing_entry.data,
                         CONF_DEVICES: list(
                             dict.fromkeys(
                                 [
@@ -157,21 +157,19 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
                                     *imported_devices,
                                 ]
                             )
-                        )
+                        ),
                     }
                 else:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry,
-                        data={
-                            k: v
-                            for k, v in existing_entry.data.items()
-                            if k != CONF_DEVICES
-                        },
-                    )
-                    self.hass.config_entries.async_schedule_reload(
-                        existing_entry.entry_id
-                    )
-            self._abort_if_unique_id_configured(updates=updates)
+                    new_data = {
+                        k: v
+                        for k, v in existing_entry.data.items()
+                        if k != CONF_DEVICES
+                    }
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=new_data
+                )
+                self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+            self._abort_if_unique_id_configured()
         if self._async_in_progress(
             include_uninitialized=True, match_context={"unique_id": email}
         ):

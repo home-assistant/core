@@ -48,8 +48,6 @@ async def async_setup_entry(
     @callback
     def _async_add_new_devices() -> None:
         new_devices = set(coordinator.data) - known_devices
-        if (devices := entry.data.get(CONF_DEVICES)) is not None:
-            new_devices &= set(devices)
         if not new_devices:
             return
         known_devices.update(new_devices)

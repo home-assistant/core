@@ -6,7 +6,7 @@ import requests
 from tank_utility import auth, device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -33,19 +33,32 @@ class TankUtilityDataUpdateCoordinator(
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+    def _get_raw_data(
+        self, email: str, password: str, configured_devices: list[str] | None
+    ) -> dict[str, dict[str, Any]]:
+        """Retrieve raw device data from Tank Utility."""
+        if configured_devices is None:
+            return device.get_data(email, password)
+        token = auth.get_token(email, password)
+        return {
+            dev_id: device.get_device_data(token, dev_id)
+            for dev_id in configured_devices
+        }
+
     def _fetch_data(self) -> dict[str, dict[str, Any]]:
         """Fetch and flatten device data from Tank Utility API."""
         email = self.config_entry.data[CONF_EMAIL]
         password = self.config_entry.data[CONF_PASSWORD]
+        configured_devices: list[str] | None = self.config_entry.data.get(CONF_DEVICES)
         try:
-            raw_data = device.get_data(email, password)
+            raw_data = self._get_raw_data(email, password, configured_devices)
         except requests.exceptions.HTTPError as err:
-            if (
-                err.response is not None
-                and err.response.status_code == requests.codes.bad_request
+            if err.response is not None and err.response.status_code in (
+                requests.codes.bad_request,
+                requests.codes.unauthorized,
             ):
                 auth.get_token(email, password, force=True)
-                raw_data = device.get_data(email, password)
+                raw_data = self._get_raw_data(email, password, configured_devices)
             else:
                 raise
 

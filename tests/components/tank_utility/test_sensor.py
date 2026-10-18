@@ -3,7 +3,7 @@
 import asyncio
 import threading
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -243,28 +243,13 @@ async def test_yaml_import_success(
 @pytest.mark.usefixtures("mock_get_token")
 async def test_yaml_import_device_selection(
     hass: HomeAssistant,
-    mock_get_data: MagicMock,
 ) -> None:
-    """Test YAML import preserves device selection and only enables selected tanks."""
-    device_2_data: dict[str, Any] = {
-        "device": {
-            "name": "Second Tank",
-            "address": "456 Other St",
-            "capacity": 250,
-            "fuelType": "propane",
-            "orientation": "vertical",
-        },
-        "status": "ok",
-        "lastReading": {
-            "tank": 42.0,
-            "time": 1600000000,
-            "time_iso": "2020-09-13T12:00:00Z",
-        },
-    }
-    mock_get_data.return_value = {
-        MOCK_DEVICE_ID: dict(DEVICE_DATA),
-        "device_2": device_2_data,
-    }
+    """Test YAML import only fetches and enables selected tanks, ignoring failing unselected tanks."""
+
+    def fake_get_device_data(token: str, dev_id: str, **kwargs: Any) -> dict[str, Any]:
+        if dev_id == MOCK_DEVICE_ID:
+            return dict(DEVICE_DATA)
+        raise _mock_http_error(requests.codes.not_found)
 
     yaml_with_devices = {
         "sensor": {
@@ -275,9 +260,20 @@ async def test_yaml_import_device_selection(
         }
     }
 
-    assert await async_setup_component(hass, "sensor", yaml_with_devices)
-    await hass.async_block_till_done()
+    with (
+        patch(
+            "homeassistant.components.tank_utility.coordinator.auth.get_token",
+            return_value="mock_token",
+        ),
+        patch(
+            "homeassistant.components.tank_utility.coordinator.device.get_device_data",
+            side_effect=fake_get_device_data,
+        ) as mock_device_data,
+    ):
+        assert await async_setup_component(hass, "sensor", yaml_with_devices)
+        await hass.async_block_till_done()
 
+    mock_device_data.assert_called_once_with("mock_token", MOCK_DEVICE_ID)
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == {
