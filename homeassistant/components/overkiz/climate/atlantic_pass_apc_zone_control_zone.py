@@ -5,7 +5,7 @@ from typing import Any, cast, override
 
 from propcache.api import cached_property
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
-from pyoverkiz.models import Command
+from pyoverkiz.models import Command, States
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -16,13 +16,35 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES
+from homeassistant.exceptions import ServiceValidationError
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..executor import OverkizExecutor
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 
 PRESET_SCHEDULE = "schedule"
 PRESET_MANUAL = "manual"
+PRESET_SCHEDULE_COMFORT = "schedule_comfort"
+PRESET_SCHEDULE_ECO = "schedule_eco"
+PRESET_DEROGATION = "derogation"
+PRESET_DEROGATION_COMFORT = "derogation_comfort"
+PRESET_DEROGATION_ECO = "derogation_eco"
+
+# Presets only showing the profile the zone applies. Selecting a schedule one
+# resumes the time program, a derogation starts when a temperature is set.
+SCHEDULE_PROFILE_PRESETS = (PRESET_SCHEDULE_COMFORT, PRESET_SCHEDULE_ECO)
+DEROGATION_PRESETS = (
+    PRESET_DEROGATION,
+    PRESET_DEROGATION_COMFORT,
+    PRESET_DEROGATION_ECO,
+)
+
+# (schedule preset, derogation preset) of each profile
+OVERKIZ_PROFILE_TO_PRESETS: dict[str, tuple[str, str]] = {
+    OverkizCommandParam.COMFORT: (PRESET_SCHEDULE_COMFORT, PRESET_DEROGATION_COMFORT),
+    OverkizCommandParam.ECO: (PRESET_SCHEDULE_ECO, PRESET_DEROGATION_ECO),
+}
 
 OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.MANU: PRESET_MANUAL,
@@ -68,6 +90,43 @@ COOLING_PROFILE_TO_TARGET_TEMPERATURE_STATE: dict[str, OverkizState] = {
     OverkizCommandParam.COMFORT: OverkizState.CORE_COMFORT_COOLING_TARGET_TEMPERATURE,
     OverkizCommandParam.ECO: OverkizState.CORE_ECO_COOLING_TARGET_TEMPERATURE,
 }
+
+
+def effective_profile(
+    states: States,
+    profile_state: OverkizState,
+    comfort_state: OverkizState,
+    eco_state: OverkizState,
+) -> tuple[str | None, bool]:
+    """Return the profile a zone applies on one side and its derogation.
+
+    The profile state is only refreshed on request and a derogation does not
+    change it, while the applied setpoint is always up to date: it tells eco
+    from comfort when both setpoints differ.
+    """
+
+    profile = cast(str | None, states.get_value(profile_state))
+    derogation = (
+        states.get_value(OverkizState.CORE_DEROGATION_ON_OFF) == OverkizCommandParam.ON
+    )
+
+    if profile not in (OverkizCommandParam.COMFORT, OverkizCommandParam.ECO):
+        return profile, derogation
+
+    applied = states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
+    comfort = states.get_value(comfort_state)
+    eco = states.get_value(eco_state)
+
+    if applied is not None and comfort != eco:
+        if applied == eco:
+            return OverkizCommandParam.ECO, derogation
+        if applied == comfort:
+            return OverkizCommandParam.COMFORT, derogation
+
+    if derogation:
+        return OverkizCommandParam.DEROGATION, True
+
+    return profile, False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -164,7 +223,11 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             self._attr_supported_features = climate_entity_feature
 
         # Those are available and tested presets on Shogun.
-        self._attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
+        self._attr_preset_modes = [
+            *PRESET_MODES_TO_OVERKIZ,
+            *SCHEDULE_PROFILE_PRESETS,
+            *DEROGATION_PRESETS,
+        ]
 
         # Those APC Heating and Cooling probes depends on the
         # zone control device (main probe). Only the base device
@@ -437,9 +500,32 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 is not None
             )
         ):
+            if mode == PRESET_SCHEDULE:
+                return self._schedule_preset_mode(self.zone_control_hvac_action)
+
             return mode
 
         return PRESET_NONE
+
+    def _schedule_preset_mode(self, hvac_action: HVACAction) -> str:
+        """Return the preset showing the profile the zone applies in schedule."""
+
+        profile_to_target_temperature_state = (
+            COOLING_PROFILE_TO_TARGET_TEMPERATURE_STATE
+            if hvac_action == HVACAction.COOLING
+            else HEATING_PROFILE_TO_TARGET_TEMPERATURE_STATE
+        )
+        profile, derogation = effective_profile(
+            self.device.states,
+            HVAC_ACTION_TO_OVERKIZ_PROFILE_STATE[hvac_action],
+            profile_to_target_temperature_state[OverkizCommandParam.COMFORT],
+            profile_to_target_temperature_state[OverkizCommandParam.ECO],
+        )
+
+        if (presets := OVERKIZ_PROFILE_TO_PRESETS.get(cast(str, profile))) is not None:
+            return presets[derogation]
+
+        return PRESET_DEROGATION if derogation else PRESET_SCHEDULE
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -448,6 +534,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             await super().async_set_preset_mode(preset_mode)
             return
+
+        if preset_mode in DEROGATION_PRESETS:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="derogation_preset_not_selectable",
+            )
+
+        if preset_mode in SCHEDULE_PROFILE_PRESETS:
+            preset_mode = PRESET_SCHEDULE
 
         mode = PRESET_MODES_TO_OVERKIZ[preset_mode]
 

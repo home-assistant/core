@@ -998,6 +998,24 @@ async def test_zone_control_zone_batches_commands(
             id="schedule",
         ),
         pytest.param(
+            "schedule_comfort",
+            [
+                ("setPassAPCHeatingMode", ["internalScheduling"]),
+                ("setPassAPCCoolingMode", ["internalScheduling"]),
+                ("setDerogationOnOffState", ["off"]),
+            ],
+            id="schedule_comfort",
+        ),
+        pytest.param(
+            "schedule_eco",
+            [
+                ("setPassAPCHeatingMode", ["internalScheduling"]),
+                ("setPassAPCCoolingMode", ["internalScheduling"]),
+                ("setDerogationOnOffState", ["off"]),
+            ],
+            id="schedule_eco",
+        ),
+        pytest.param(
             "manual",
             [
                 ("setPassAPCHeatingMode", ["manu"]),
@@ -1089,3 +1107,111 @@ async def test_zone_control_zone_derogation_applied_setpoint(
     state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+
+
+@pytest.mark.parametrize(
+    ("operating_mode", "profile_state", "comfort_state", "eco_state"),
+    [
+        pytest.param(
+            "cooling",
+            OverkizState.IO_PASS_APC_COOLING_PROFILE,
+            OverkizState.CORE_COMFORT_COOLING_TARGET_TEMPERATURE,
+            OverkizState.CORE_ECO_COOLING_TARGET_TEMPERATURE,
+            id="cooling",
+        ),
+        pytest.param(
+            "heating",
+            OverkizState.IO_PASS_APC_HEATING_PROFILE,
+            OverkizState.CORE_COMFORT_HEATING_TARGET_TEMPERATURE,
+            OverkizState.CORE_ECO_HEATING_TARGET_TEMPERATURE,
+            id="heating",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("profile", "derogation", "applied", "preset_mode"),
+    [
+        pytest.param("comfort", "off", 20.0, "schedule_comfort", id="comfort"),
+        pytest.param("eco", "off", 18.0, "schedule_eco", id="eco"),
+        # The profile state is not refreshed by a derogation or by the server
+        pytest.param("comfort", "off", 18.0, "schedule_eco", id="stale_profile"),
+        pytest.param("comfort", "on", 18.0, "derogation_eco", id="derogation_eco"),
+        pytest.param("eco", "on", 20.0, "derogation_comfort", id="derogation_comfort"),
+        pytest.param("comfort", "on", 22.0, "derogation", id="derogation_free"),
+        pytest.param("manu", "on", 22.0, "derogation", id="derogation_manual"),
+    ],
+)
+async def test_zone_control_zone_profile_preset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    operating_mode: str,
+    profile_state: OverkizState,
+    comfort_state: OverkizState,
+    eco_state: OverkizState,
+    profile: str,
+    derogation: str,
+    applied: float,
+    preset_mode: str,
+) -> None:
+    """Test the preset shows the profile the zone applies while scheduled."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(
+        hass, freezer, mock_client, operating_mode
+    )
+    await _async_set_zone_program(
+        hass, freezer, mock_client, "internalScheduling", derogation
+    )
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ZONE_CONTROL_ZONE.device_url,
+                device_states=[
+                    {"name": profile_state, "type": 3, "value": profile},
+                    {"name": comfort_state, "type": 2, "value": 20.0},
+                    {"name": eco_state, "type": 2, "value": 18.0},
+                    {
+                        "name": OverkizState.CORE_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": applied,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == preset_mode
+
+
+@pytest.mark.parametrize(
+    "preset_mode", ["derogation", "derogation_comfort", "derogation_eco"]
+)
+async def test_zone_control_zone_derogation_preset_not_selectable(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    preset_mode: str,
+) -> None:
+    """Test a derogation preset only shows the state and cannot be selected."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    mock_client.execute_action_group.reset_mock()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {
+                "entity_id": ZONE_CONTROL_ZONE.entity_id,
+                ATTR_PRESET_MODE: preset_mode,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "derogation_preset_not_selectable"
+    mock_client.execute_action_group.assert_not_called()
