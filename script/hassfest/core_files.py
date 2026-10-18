@@ -31,7 +31,6 @@ MISSING_ALL = {
     "recorder",
     "recovery_mode",
     "shopping_list",
-    "ssdp",
     "sun",
     "tag",
     "timer",
