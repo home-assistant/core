@@ -21,7 +21,6 @@ MISSING_ALL = {
     "group",
     "homeassistant_hardware",
     "input_boolean",
-    "input_datetime",
     "input_select",
     "llm",
     "logger",
