@@ -1,6 +1,6 @@
 """The met component."""
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
@@ -51,3 +51,20 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: MetWeatherConfigEntry
+) -> bool:
+    """Migrate old config entry."""
+    if config_entry.minor_version < 2:
+        data = dict(config_entry.data)
+        data.pop(CONF_NAME, None)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            minor_version=2,
+        )
+
+    return True

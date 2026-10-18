@@ -61,7 +61,6 @@ def mock_http_streamable_client() -> Generator[AsyncMock]:
         mock_streamable_client.return_value.__aenter__.return_value = (
             AsyncMock(),
             AsyncMock(),
-            AsyncMock(),
         )
         yield mock_streamable_client
 
