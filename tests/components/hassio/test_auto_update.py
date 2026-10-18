@@ -659,8 +659,8 @@ async def test_window_crossing_midnight(
             {"2026.10.2": _local(19, 2), "2026.10.3": _local(19, 2)},
             "2026.10.3",
             ["2026.10.3"],
-            ["2026.10.2"],
-            id="skipped_newest",
+            [],
+            id="skipped_newest_waits_for_next",
         ),
     ],
 )
@@ -1205,5 +1205,39 @@ async def test_turned_off_while_saving(
             _local(22, 3, 30),
             first_seen={"2026.10.2": _local(19, 2)},
         )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_withdrawn_then_replacement_skipped(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test skipping the replacement does not bring a withdrawn release back."""
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, version_latest="2026.10.1"
+    )
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, version_latest="2026.10.3"
+    )
+    await _refresh_main_coordinator(hass, freezer)
+    await _call_update_service(hass, "skip")
+
+    assert hass.data[DATA_AUTO_UPDATE].async_is_skipped("2026.10.3")
+
+    freezer.move_to(_local(26, 3, 30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     supervisor_client.homeassistant.update.assert_not_called()
