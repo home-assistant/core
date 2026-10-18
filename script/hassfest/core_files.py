@@ -19,7 +19,6 @@ MISSING_ALL = {
     "configurator",
     "energy",
     "group",
-    "homeassistant_hardware",
     "input_boolean",
     "input_datetime",
     "input_select",
