@@ -238,6 +238,56 @@ async def test_yaml_import_success(
     assert issue.issue_domain == DOMAIN
 
 
+@pytest.mark.usefixtures("mock_get_token")
+async def test_yaml_import_device_selection(
+    hass: HomeAssistant,
+    mock_get_data: MagicMock,
+) -> None:
+    """Test YAML import preserves device selection and only enables selected tanks."""
+    device_2_data: dict[str, Any] = {
+        "device": {
+            "name": "Second Tank",
+            "address": "456 Other St",
+            "capacity": 250,
+            "fuelType": "propane",
+            "orientation": "vertical",
+        },
+        "status": "ok",
+        "lastReading": {
+            "tank": 42.0,
+            "time": 1600000000,
+            "time_iso": "2020-09-13T12:00:00Z",
+        },
+    }
+    mock_get_data.return_value = {
+        MOCK_DEVICE_ID: dict(DEVICE_DATA),
+        "device_2": device_2_data,
+    }
+
+    yaml_with_devices = {
+        "sensor": {
+            "platform": "tank_utility",
+            "email": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "devices": [MOCK_DEVICE_ID],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", yaml_with_devices)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: TEST_PASSWORD,
+        "devices": [MOCK_DEVICE_ID],
+    }
+
+    assert hass.states.get("sensor.my_propane_tank") is not None
+    assert hass.states.get("sensor.second_tank") is None
+
+
 @pytest.mark.usefixtures("mock_get_token", "mock_get_data")
 async def test_yaml_import_already_configured(
     hass: HomeAssistant,

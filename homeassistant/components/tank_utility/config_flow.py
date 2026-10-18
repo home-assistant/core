@@ -8,7 +8,7 @@ import requests
 from tank_utility import auth
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, LOGGER
@@ -144,12 +144,16 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception importing from YAML")
             return self.async_abort(reason="unknown")
 
+        entry_data: dict[str, Any] = {
+            CONF_EMAIL: email,
+            CONF_PASSWORD: password,
+        }
+        if CONF_DEVICES in import_data:
+            entry_data[CONF_DEVICES] = list(import_data[CONF_DEVICES])
+
         return self.async_create_entry(
             title=email,
-            data={
-                CONF_EMAIL: email,
-                CONF_PASSWORD: password,
-            },
+            data=entry_data,
         )
 
 
