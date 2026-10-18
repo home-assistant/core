@@ -287,7 +287,7 @@ async def async_setup_entry(
             ):
                 continue
             if (camera := cameras.get(camera_id)) is None:
-                # Offered again on the next pairing change or public resync.
+                # Offered again when the camera is added.
                 _LOGGER.debug(
                     "Camera %s not found for chime %s ring volume",
                     camera_id,

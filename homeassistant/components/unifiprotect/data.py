@@ -442,14 +442,14 @@ class ProtectData:
                 and new_obj.id in self.api.public_bootstrap.relays
             ):
                 async_dispatcher_send(self._hass, self.relay_signal, new_obj)
-            # A pairing change carries the ring settings that add ring volumes.
+            # Only a pairing change can add ring volumes.
             if isinstance(new_obj, PublicChime) and (
                 message.action is WSAction.ADD
                 or "ringSettings" in message.changed_data
                 or "cameraIds" in message.changed_data
             ):
                 async_dispatcher_send(self._hass, self.chime_signal, new_obj)
-            # A ring volume waits for its paired camera.
+            # Ring volumes skip a paired camera until it is known.
             if new_obj.model is ModelType.CAMERA and message.action is WSAction.ADD:
                 self._async_offer_chimes()
 
