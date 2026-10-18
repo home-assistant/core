@@ -1285,21 +1285,21 @@ async def test_tilt_position_none_value(
     [
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: OverkizCommandParam.LOWSPEED},
             "setClosureAndLinearSpeed",
             [0, OverkizCommandParam.LOWSPEED],
             id="open-low",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: OverkizCommandParam.LOWSPEED},
             "setClosureAndLinearSpeed",
             [100, OverkizCommandParam.LOWSPEED],
             id="close-low",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "low"},
+            {ATTR_POSITION: 35, ATTR_SPEED: OverkizCommandParam.LOWSPEED},
             "setClosureAndLinearSpeed",
             [65, OverkizCommandParam.LOWSPEED],
             id="set-position-low",
@@ -1341,7 +1341,7 @@ async def test_cover_speed(
 
     assert hass.states.get(LOW_SPEED.entity_id).attributes["supported_speeds"] == [
         "default",
-        "low",
+        OverkizCommandParam.LOWSPEED,
     ]
 
     await hass.services.async_call(

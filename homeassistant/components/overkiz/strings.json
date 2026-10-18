@@ -114,7 +114,7 @@
           "speed": {
             "state": {
               "default": "Default",
-              "low": "Low"
+              "lowspeed": "Low speed"
             }
           }
         }
