@@ -312,3 +312,38 @@ def test_content_in_root_read_failure_fails_repo(
 
     with pytest.raises(GitError):
         _content_in_root(Path("repo"), "a" * 40)
+
+
+def test_unchanged_symlinked_repo_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that a symlinked repo is rejected even when its SHA is unchanged."""
+    copy = tmp_path / "copy"
+    (copy / "owner").mkdir(parents=True)
+    outside = tmp_path / "outside"
+    (outside / ".git").mkdir(parents=True)
+    (copy / "owner" / "repo").symlink_to(outside)
+    save_state(copy, {"owner/repo": "1" * 40}, None)
+    monkeypatch.setattr(
+        sync_custom_integrations,
+        "_get",
+        Mock(return_value=json.dumps(["owner/repo"]).encode()),
+    )
+    monkeypatch.setattr(sync_custom_integrations, "_token", Mock(return_value="t"))
+    monkeypatch.setattr(
+        sync_custom_integrations,
+        "fetch_heads",
+        Mock(return_value={"owner/repo": "1" * 40}),
+    )
+    monkeypatch.setattr(sync_custom_integrations, "ensure_ignored", Mock())
+    git = Mock()
+    monkeypatch.setattr(sync_custom_integrations, "_git", git)
+    monkeypatch.setattr(sys, "argv", ["sync", "--dest", str(copy), "owner/repo"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        sync_custom_integrations.main()
+
+    assert exc_info.value.code == sync_custom_integrations.EXIT_PARTIAL
+    git.assert_not_called()
+    assert load_state(copy) == ({}, None)
+    assert (outside / ".git").is_dir()

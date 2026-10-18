@@ -518,9 +518,15 @@ def main() -> None:
     todo = {
         r: sha
         for r, sha in heads.items()
-        # No .git also covers copies made by the earlier tarball-based version
+        # No .git also covers copies made by the earlier tarball-based version;
+        # a symlinked path always goes to download(), which rejects it
         if sha
-        and (args.force or state.get(r) != sha or not (root / r / ".git").is_dir())
+        and (
+            args.force
+            or state.get(r) != sha
+            or _is_symlinked(root, r)
+            or not (root / r / ".git").is_dir()
+        )
     }
     print(f"{len(todo)} to download, {len(missing)} unavailable", file=sys.stderr)
 
