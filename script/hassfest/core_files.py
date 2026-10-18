@@ -21,7 +21,6 @@ MISSING_ALL = {
     "configurator",
     "demo",
     "energy",
-    "frontend",
     "group",
     "homeassistant_hardware",
     "http",
