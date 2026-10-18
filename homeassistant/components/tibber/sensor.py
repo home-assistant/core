@@ -885,6 +885,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
+            self.async_write_ha_state()
             return
         if self.entity_description.key in (
             "accumulatedConsumption",
