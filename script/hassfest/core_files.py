@@ -23,7 +23,6 @@ MISSING_ALL = {
     "configurator",
     "demo",
     "energy",
-    "ffmpeg",
     "frontend",
     "google_assistant",
     "group",
