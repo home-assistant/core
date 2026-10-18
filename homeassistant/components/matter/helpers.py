@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     from .adapter import MatterAdapter
     from .models import MatterEntityInfo
+    from .thread_border_router import ThreadDatasetImporter
 
 
 # Output device types whose named sibling endpoints split into child devices.
@@ -51,6 +52,7 @@ class MatterEntryData:
 
     adapter: MatterAdapter
     listen_task: asyncio.Task
+    thread_datasets: ThreadDatasetImporter
     ble_proxy: MatterBleProxy | None = None
 
 

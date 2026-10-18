@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.custom_clusters import HeimanCluster
@@ -13,9 +13,11 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.const import EntityCategory, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import BORDER_ROUTER_DEVICE_TYPES
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -51,8 +53,47 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         await self.send_device_command(self.entity_description.command())
 
 
+async def _async_require_admin(hass: HomeAssistant, context: Context | None) -> None:
+    """Refuse a press by a user who is not an administrator.
+
+    As for an admin-only action, a press without a user, from an automation,
+    passes.
+    """
+    if context is None or context.user_id is None:
+        return
+    user = await hass.auth.async_get_user(context.user_id)
+    if user is None or not user.is_admin:
+        raise Unauthorized(context=context)
+
+
+class MatterThreadDatasetImportButton(MatterEntity, ButtonEntity):
+    """Button importing a Thread border router's dataset into Home Assistant."""
+
+    @override
+    async def async_press(self) -> None:
+        """Import the dataset, which holds the network key."""
+        await _async_require_admin(self.hass, self._context)
+        entry = cast(MatterConfigEntry, self.platform.config_entry)
+        await entry.runtime_data.thread_datasets.async_import(self._endpoint)
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="ThreadDatasetImportButton",
+            translation_key="import_thread_network",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterThreadDatasetImportButton,
+        required_attributes=(
+            clusters.ThreadBorderRouterManagement.Attributes.ActiveDatasetTimestamp,
+        ),
+        device_type=BORDER_ROUTER_DEVICE_TYPES,
+        # Null while the router has no network; the button stays.
+        allow_none_value=True,
+    ),
     MatterDiscoverySchema(
         platform=Platform.BUTTON,
         entity_description=MatterButtonEntityDescription(

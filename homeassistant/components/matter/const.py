@@ -5,6 +5,7 @@ import logging
 from typing import Final
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
 
 ADDON_SLUG = "core_matter_server"
 
@@ -17,6 +18,12 @@ LOGGER = logging.getLogger(__package__)
 # prefixes to identify device identifier id types
 ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
+
+# Both device types carry the Thread Border Router Management cluster.
+BORDER_ROUTER_DEVICE_TYPES = (
+    device_types.NetworkInfrastructureManager,
+    device_types.ThreadBorderRouter,
+)
 
 FEATUREMAP_ATTRIBUTE_ID = 65532
 CLUSTER_REVISION_ATTRIBUTE_ID = 65533
