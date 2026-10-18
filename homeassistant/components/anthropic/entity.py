@@ -525,7 +525,6 @@ class AnthropicDeltaStream:
 
     def __init__(
         self,
-        chat_log: conversation.ChatLog,
         stream: AsyncStream[MessageStreamEvent],
         *,
         trace_cache_diagnostics: bool = True,
@@ -535,7 +534,6 @@ class AnthropicDeltaStream:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unexpected_stream_object"
             )
-        self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
         self._trace_cache_diagnostics = trace_cache_diagnostics
         self.message_id: str | None = None
@@ -555,6 +553,7 @@ class AnthropicDeltaStream:
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
         self._usage: dict[str, Any] = {}
+        self._diagnostics: dict[str, Any] | None = None
         self._first_block: bool = True
         self._has_content = False
 
@@ -608,17 +607,11 @@ class AnthropicDeltaStream:
     def on_message_start_event(self, message: Message) -> None:
         """Handle RawMessageStartEvent."""
         self.message_id = message.id
-        if self._trace_cache_diagnostics:
-            self._chat_log.async_trace(
-                {
-                    "message_id": message.id,
-                    "diagnostics": message.diagnostics.to_dict(
-                        mode="json", exclude_unset=False
-                    )
-                    if message.diagnostics is not None
-                    else None,
-                }
-            )
+        self._diagnostics = (
+            message.diagnostics.to_dict(mode="json", exclude_unset=False)
+            if message.diagnostics is not None
+            else None
+        )
         self._usage = message.usage.to_dict(mode="json")
         self._first_block = True
         self._has_content = False
@@ -881,7 +874,6 @@ class AnthropicDeltaStream:
     def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
         """Handle RawMessageDeltaEvent."""
         self._usage.update(usage.to_dict(mode="json", exclude_none=True))
-        self._chat_log.async_trace(self._create_token_stats())
         if delta.container is not None:
             self._content_details.container = delta.container
         if delta.stop_reason is not None:
@@ -901,6 +893,16 @@ class AnthropicDeltaStream:
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
 
+    def trace_usage(self, chat_log: conversation.ChatLog) -> None:
+        """Trace accumulated response usage and cache diagnostics."""
+        if not self._usage:
+            return
+        token_stats = self._create_token_stats()
+        token_stats["message_id"] = self.message_id
+        if self._trace_cache_diagnostics:
+            token_stats["diagnostics"] = self._diagnostics
+        chat_log.async_trace(token_stats)
+
     def _create_token_stats(self) -> dict[str, Any]:
         """Create token stats and complete usage for conversation agent tracing."""
         uncached_input_tokens = self._usage.get("input_tokens", 0)
@@ -917,6 +919,7 @@ class AnthropicDeltaStream:
                 "cache_creation_input_tokens": cache_creation_input_tokens,
                 "cached_input_tokens": cached_input_tokens,
                 "output_tokens": self._usage["output_tokens"],
+                "stop_reason": self.stop_reason or "interrupted",
             },
             "usage": self._usage.copy(),
         }
@@ -1191,20 +1194,22 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             try:
                 stream = await client.messages.create(**model_args)
                 delta_stream = AnthropicDeltaStream(
-                    chat_log,
                     stream,
                     trace_cache_diagnostics="diagnostics" in model_args,
                 )
 
-                async with stream:
-                    new_messages, model_args["container"] = _convert_content(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id, delta_stream
-                            )
-                        ]
-                    )
+                try:
+                    async with stream:
+                        new_messages, model_args["container"] = _convert_content(
+                            [
+                                content
+                                async for content in chat_log.async_add_delta_content_stream(
+                                    self.entity_id, delta_stream
+                                )
+                            ]
+                        )
+                finally:
+                    delta_stream.trace_usage(chat_log)
                 cast(list[MessageParam], model_args["messages"]).extend(new_messages)
                 if "diagnostics" in model_args:
                     model_args["diagnostics"] = {

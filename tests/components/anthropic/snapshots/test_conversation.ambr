@@ -208,6 +208,18 @@
     dict({
       'diagnostics': None,
       'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
     }),
   ])
 # ---
@@ -218,6 +230,18 @@
         'cache_miss_reason': None,
       }),
       'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
     }),
   ])
 # ---
@@ -230,6 +254,18 @@
         }),
       }),
       'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
     }),
   ])
 # ---
@@ -243,6 +279,18 @@
         }),
       }),
       'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
     }),
   ])
 # ---
@@ -255,6 +303,18 @@
         }),
       }),
       'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
     }),
   ])
 # ---
@@ -2084,74 +2144,152 @@
     }),
   ])
 # ---
+# name: test_token_stats_cancelled
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 10,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[premature_eof]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 10,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[transport_error_after_start]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 0,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[transport_error_after_usage]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 10,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[transport_error_after_stop_reason]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 12,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 12,
+      }),
+    }),
+  ])
+# ---
 # name: test_token_stats_reported[cumulative_sparse_and_null]
   list([
     dict({
-      'stats': dict({
-        'cache_creation_input_tokens': 30,
-        'cached_input_tokens': 90,
-        'input_tokens': 230,
-        'output_tokens': 20,
-        'uncached_input_tokens': 110,
-      }),
-      'usage': dict({
-        'cache_creation': dict({
-          'ephemeral_1h_input_tokens': 5,
-          'ephemeral_5m_input_tokens': 15,
-        }),
-        'cache_creation_input_tokens': 30,
-        'cache_read_input_tokens': 90,
-        'future_delta_usage': 7,
-        'future_initial_usage': 5,
-        'inference_geo': 'us',
-        'input_tokens': 110,
-        'output_tokens': 20,
-        'output_tokens_details': dict({
-          'thinking_tokens': 8,
-        }),
-        'server_tool_use': dict({
-          'web_fetch_requests': 3,
-          'web_search_requests': 4,
-        }),
-        'service_tier': 'standard',
-      }),
-    }),
-    dict({
-      'stats': dict({
-        'cache_creation_input_tokens': 30,
-        'cached_input_tokens': 90,
-        'input_tokens': 230,
-        'output_tokens': 30,
-        'uncached_input_tokens': 110,
-      }),
-      'usage': dict({
-        'cache_creation': dict({
-          'ephemeral_1h_input_tokens': 5,
-          'ephemeral_5m_input_tokens': 15,
-        }),
-        'cache_creation_input_tokens': 30,
-        'cache_read_input_tokens': 90,
-        'future_delta_usage': 7,
-        'future_initial_usage': 5,
-        'inference_geo': 'us',
-        'input_tokens': 110,
-        'output_tokens': 30,
-        'output_tokens_details': dict({
-          'thinking_tokens': 8,
-        }),
-        'server_tool_use': dict({
-          'web_fetch_requests': 3,
-          'web_search_requests': 4,
-        }),
-        'service_tier': 'standard',
-      }),
-    }),
-    dict({
+      'diagnostics': None,
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 30,
         'cached_input_tokens': 90,
         'input_tokens': 230,
         'output_tokens': 40,
+        'stop_reason': 'end_turn',
         'uncached_input_tokens': 110,
       }),
       'usage': dict({
@@ -2181,11 +2319,14 @@
 # name: test_token_stats_reported[explicit_zero]
   list([
     dict({
+      'diagnostics': None,
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 0,
         'cached_input_tokens': 0,
         'input_tokens': 0,
         'output_tokens': 0,
+        'stop_reason': 'end_turn',
         'uncached_input_tokens': 0,
       }),
       'usage': dict({
@@ -2214,11 +2355,14 @@
 # name: test_token_stats_reported[initial_usage]
   list([
     dict({
+      'diagnostics': None,
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 20,
         'cached_input_tokens': 80,
         'input_tokens': 200,
         'output_tokens': 10,
+        'stop_reason': 'end_turn',
         'uncached_input_tokens': 100,
       }),
       'usage': dict({
@@ -2249,11 +2393,14 @@
 # name: test_token_stats_reported[nested_replacement]
   list([
     dict({
+      'diagnostics': None,
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
       'stats': dict({
         'cache_creation_input_tokens': 20,
         'cached_input_tokens': 80,
         'input_tokens': 200,
         'output_tokens': 10,
+        'stop_reason': 'end_turn',
         'uncached_input_tokens': 100,
       }),
       'usage': dict({

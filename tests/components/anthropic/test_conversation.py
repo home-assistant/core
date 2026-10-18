@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Generator
 from copy import deepcopy
 import datetime as dt
@@ -7,7 +8,7 @@ from pathlib import Path
 from typing import Unpack
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from anthropic import AsyncStream, RateLimitError
+from anthropic import APIConnectionError, AsyncStream, RateLimitError
 from anthropic.types import (
     CacheCreation,
     CacheMissPreviousMessageNotFound,
@@ -154,6 +155,59 @@ def captured_requests(
 
     mock_create_stream.side_effect = capture_request
     return requests
+
+
+@pytest.fixture
+def mock_usage_stream(mock_create_stream: AsyncMock) -> AsyncMock:
+    """Control individual stream events and interruptions."""
+    next_event = AsyncMock()
+    iterator = MagicMock()
+    iterator.__anext__ = next_event
+    stream = MagicMock(spec=AsyncStream)
+    stream.__aenter__.return_value = stream
+    stream.__aiter__.side_effect = lambda: iterator
+    mock_create_stream.side_effect = None
+    mock_create_stream.return_value = stream
+    return next_event
+
+
+@pytest.fixture
+def token_usage_events() -> list[RawMessageStreamEvent]:
+    """Return a started response with cumulative usage updates."""
+    return [
+        RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                id="msg_interrupted",
+                type="message",
+                role="assistant",
+                content=[],
+                model="claude-haiku-5-5",
+                usage=Usage(
+                    input_tokens=100,
+                    cache_creation_input_tokens=20,
+                    cache_read_input_tokens=80,
+                    output_tokens=0,
+                ),
+                diagnostics=Diagnostics(
+                    cache_miss_reason=CacheMissSystemChanged(
+                        type="system_changed", cache_missed_input_tokens=12
+                    )
+                ),
+            ),
+        ),
+        *create_content_block(0, ["ok"]),
+        RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(),
+            usage=MessageDeltaUsage(output_tokens=5),
+        ),
+        RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(),
+            usage=MessageDeltaUsage(output_tokens=10),
+        ),
+    ]
 
 
 @pytest.fixture
@@ -539,11 +593,154 @@ async def test_token_stats_reported(
 
     trace_obj = next(iter(trace.async_get_traces()))
     events = trace_obj.as_dict().get("events", [])
-    assert [
+    usage_events = [
         event["data"]
         for event in events
         if event["event_type"] == "agent_detail" and "stats" in event["data"]
-    ] == snapshot
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == "end_turn"
+    assert usage_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    (
+        "event_slice",
+        "trailing_events",
+        "interruption",
+        "expected_response_type",
+        "expected_stop_reason",
+    ),
+    [
+        pytest.param(
+            slice(1),
+            [],
+            APIConnectionError(request=Request("POST", "https://api.anthropic.com")),
+            intent.IntentResponseType.ERROR,
+            "interrupted",
+            id="transport_error_after_start",
+        ),
+        pytest.param(
+            slice(None),
+            [],
+            APIConnectionError(request=Request("POST", "https://api.anthropic.com")),
+            intent.IntentResponseType.ERROR,
+            "interrupted",
+            id="transport_error_after_usage",
+        ),
+        pytest.param(
+            slice(None),
+            [],
+            StopAsyncIteration(),
+            intent.IntentResponseType.ACTION_DONE,
+            "interrupted",
+            id="premature_eof",
+        ),
+        pytest.param(
+            slice(None),
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="end_turn"),
+                    usage=MessageDeltaUsage(output_tokens=12),
+                ),
+            ],
+            APIConnectionError(request=Request("POST", "https://api.anthropic.com")),
+            intent.IntentResponseType.ERROR,
+            "end_turn",
+            id="transport_error_after_stop_reason",
+        ),
+    ],
+)
+async def test_token_stats_interrupted(
+    hass: HomeAssistant,
+    mock_usage_stream: AsyncMock,
+    token_usage_events: list[RawMessageStreamEvent],
+    event_slice: slice,
+    trailing_events: list[RawMessageStreamEvent],
+    interruption: Exception,
+    expected_response_type: intent.IntentResponseType,
+    expected_stop_reason: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Trace the last known usage once when a response is interrupted."""
+    trace.async_clear_traces()
+    mock_usage_stream.side_effect = [
+        *token_usage_events[event_slice],
+        *trailing_events,
+        interruption,
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is expected_response_type
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == expected_stop_reason
+    assert (
+        usage_events[0]["diagnostics"]["cache_miss_reason"]["type"] == "system_changed"
+    )
+    assert usage_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_cancelled(
+    hass: HomeAssistant,
+    mock_usage_stream: AsyncMock,
+    token_usage_events: list[RawMessageStreamEvent],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Cancellation preserves one summary and still propagates."""
+    trace.async_clear_traces()
+    mock_usage_stream.side_effect = [*token_usage_events, asyncio.CancelledError()]
+
+    with pytest.raises(asyncio.CancelledError):
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=ENTITY_ID
+        )
+
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == "interrupted"
+    assert (
+        usage_events[0]["diagnostics"]["cache_miss_reason"]["type"] == "system_changed"
+    )
+    assert usage_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_missing_message_start(
+    hass: HomeAssistant,
+    mock_usage_stream: AsyncMock,
+) -> None:
+    """Do not fabricate usage when a stream fails before message_start."""
+    trace.async_clear_traces()
+    mock_usage_stream.side_effect = APIConnectionError(
+        request=Request("POST", "https://api.anthropic.com")
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not [
+        event
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail"
+        and {"stats", "usage", "diagnostics", "message_id"}.intersection(event["data"])
+    ]
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -660,11 +857,15 @@ async def test_cache_diagnostics_trace(
     )
 
     assert diagnostic_requests[0]["diagnostics"] == {"previous_message_id": None}
-    assert [
+    diagnostic_events = [
         event["data"]
         for event in trace.async_get_traces()[0].as_dict()["events"]
         if event["event_type"] == "agent_detail" and "diagnostics" in event["data"]
-    ] == snapshot
+    ]
+    assert len(diagnostic_events) == 1
+    assert diagnostic_events[0]["stats"]["stop_reason"] == "end_turn"
+    assert "usage" in diagnostic_events[0]
+    assert diagnostic_events == snapshot
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -709,6 +910,7 @@ async def test_cache_diagnostics_pause_turn(
     diagnostic_requests: list[MessageCreateParamsStreaming],
 ) -> None:
     """Compare each resumed server tool request against its preceding response."""
+    trace.async_clear_traces()
     mock_create_stream.return_value = [
         [
             *create_server_tool_use_block(
@@ -738,6 +940,18 @@ async def test_cache_diagnostics_pause_turn(
         {"previous_message_id": "msg_cache_diagnostics_1"},
         {"previous_message_id": "msg_cache_diagnostics_2"},
     ]
+    usage_events = [
+        event["data"]
+        for conversation_trace in trace.async_get_traces()
+        for event in conversation_trace.as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert [event["stats"]["output_tokens"] for event in usage_events] == [10, 0, 0]
+    assert [event["stats"]["stop_reason"] for event in usage_events] == [
+        "pause_turn",
+        "end_turn",
+        "end_turn",
+    ]
 
 
 @pytest.mark.usefixtures("mock_caching_disabled", "mock_init_component")
@@ -755,11 +969,14 @@ async def test_cache_diagnostics_disabled(
     )
 
     assert "diagnostics" not in diagnostic_requests[0]
-    assert not [
-        event
+    usage_events = [
+        event["data"]
         for event in trace.async_get_traces()[0].as_dict()["events"]
-        if event["event_type"] == "agent_detail" and "diagnostics" in event["data"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
     ]
+    assert len(usage_events) == 1
+    assert "diagnostics" not in usage_events[0]
+    assert usage_events[0]["stats"]["stop_reason"] == "end_turn"
 
 
 @pytest.mark.parametrize(
@@ -857,7 +1074,7 @@ async def test_empty_response_without_completed_turn(
     results = [
         content
         async for content in chat_log.async_add_delta_content_stream(
-            "conversation.claude_conversation", AnthropicDeltaStream(chat_log, stream())
+            "conversation.claude_conversation", AnthropicDeltaStream(stream())
         )
     ]
 
@@ -932,6 +1149,7 @@ async def test_function_call(
     expected_call_tool_args: dict[str, str],
 ) -> None:
     """Test function call from the assistant."""
+    trace.async_clear_traces()
     agent_id = "conversation.claude_conversation"
     context = Context()
 
@@ -976,6 +1194,16 @@ async def test_function_call(
     assert mock_create_stream.call_args_list[1].kwargs["diagnostics"] == {
         "previous_message_id": "msg_1234567890ABCDEFGHIJKLMN"
     }
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 2
+    assert [event["stats"]["stop_reason"] for event in usage_events] == [
+        "tool_use",
+        "end_turn",
+    ]
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
@@ -1243,6 +1471,7 @@ async def test_stop_reason_error(
     error_message: str,
 ) -> None:
     """Test errors for refused, truncated, or stop-sequence responses."""
+    trace.async_clear_traces()
     mock_create_stream.return_value = [
         [
             *create_content_block(0, ["An incomplete response"]),
@@ -1267,6 +1496,13 @@ async def test_stop_reason_error(
     assert result.response.error_code == "unknown"
     assert result.response.speech["plain"]["speech"] == error_message
     mock_create_stream.assert_awaited_once()
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == stop_reason
 
 
 @pytest.mark.usefixtures("mock_config_entry_with_server_tools", "mock_init_component")
