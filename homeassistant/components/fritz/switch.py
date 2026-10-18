@@ -33,30 +33,22 @@ PARALLEL_UPDATES = 5
 WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}
 
 WIFI_BAND = {
-    0: {"band": "2.4Ghz"},
-    1: {"band": "5Ghz"},
-    3: {"band": "5Ghz High / 6Ghz"},
+    1: "2.4Ghz",
+    2: "5Ghz",
+    3: "5Ghz High / 6Ghz",
 }
 
 
-def _wifi_naming(
-    network_info: dict[str, Any], wifi_index: int, wifi_count: int
-) -> str | None:
+def _wifi_naming(wifi_index: int, wifi_count: int) -> str | None:
     """Return a friendly name for a Wi-Fi network."""
 
-    if wifi_index == 2 and wifi_count == 4:
-        # In case of 4 Wi-Fi networks, the 2nd one is used
-        # for internal communication between mesh devices and
-        # should not be named like the others to avoid confusion
-        return None
-
-    if (wifi_index + 1) == wifi_count:
+    if wifi_index == wifi_count:
         # Last Wi-Fi network in the guest network, both bands available
         return "Guest"
 
     # Cast to correct type for type checker
-    if (result := WIFI_BAND.get(wifi_index)) is not None:
-        return f"Main {result['band']}"
+    if (band := WIFI_BAND.get(wifi_index)) is not None:
+        return f"Main {band}"
 
     return None
 
@@ -74,7 +66,7 @@ async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str
     networks: dict[int, dict[str, Any]] = {}
     for i in range(1, wifi_count + 1):
         network_info = await avm_wrapper.async_get_wlan_configuration(i)
-        if (switch_name := _wifi_naming(network_info, i - 1, wifi_count)) is None:
+        if (switch_name := _wifi_naming(i, wifi_count)) is None:
             continue
         networks[i] = network_info
         networks[i]["switch_name"] = switch_name
@@ -109,7 +101,7 @@ async def _migrate_to_new_unique_id(
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
         new_unique_id = (
             f"{avm_wrapper.unique_id}-wi_fi_"
-            f"{slugify(_wifi_naming(network, index - 1, len(networks)))}"
+            f"{slugify(_wifi_naming(index, len(networks)))}"
         )
 
         entity_id = entity_registry.async_get_entity_id(
