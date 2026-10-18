@@ -20,7 +20,6 @@ MISSING_ALL = {
     "input_boolean",
     "input_select",
     "llm",
-    "network",
     "person",
     "shopping_list",
     "sun",
