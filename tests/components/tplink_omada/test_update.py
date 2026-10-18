@@ -19,7 +19,6 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    DATA_COMPONENT,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
@@ -275,6 +274,7 @@ async def test_controller_update_check_failure_does_not_block_setup(
 )
 async def test_controller_update_without_current_version(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
     update_type: str,
@@ -299,8 +299,13 @@ async def test_controller_update_without_current_version(
     assert entity.attributes[ATTR_LATEST_VERSION] == expected_latest_version
     assert "download_url" not in entity.attributes
 
-    controller_entity = hass.data[DATA_COMPONENT].get_entity(entity.entity_id)
-    assert controller_entity.release_notes() is None
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "update/release_notes", "entity_id": entity.entity_id}
+    )
+    result = await client.receive_json()
+    assert result["success"]
+    assert result["result"] is None
 
     device_entity = hass.states.get("update.test_poe_switch_firmware")
     assert device_entity is not None
@@ -340,11 +345,6 @@ async def test_controller_update_without_update_sections(
     assert entity.attributes[ATTR_SUPPORTED_FEATURES] == 0
     assert "download_url" not in entity.attributes
 
-    controller_entity = hass.data[DATA_COMPONENT].get_entity(entity.entity_id)
-    assert controller_entity.release_notes() is None
-    with pytest.raises(HomeAssistantError) as err:
-        await controller_entity.async_install(version=None, backup=False)
-    assert err.value.translation_key == "firmware_update_rejected"
     mock_omada_client.install_controller_firmware.assert_not_awaited()
 
     device_entity = hass.states.get("update.test_poe_switch_firmware")
@@ -376,13 +376,14 @@ async def test_install_controller_firmware_without_latest_version(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity = hass.data[DATA_COMPONENT].get_entity(
-        "update.oc200_test_omada_controller_firmware"
-    )
-    assert entity is not None
     with pytest.raises(HomeAssistantError) as err:
-        await entity.async_install(version=None, backup=False)
-    assert err.value.translation_key == "firmware_update_rejected"
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.oc200_test_omada_controller_firmware"},
+            blocking=True,
+        )
+    assert err.value.translation_key == "no_update_available"
     mock_omada_client.install_controller_firmware.assert_not_awaited()
 
 
@@ -576,21 +577,14 @@ async def test_install_controller_firmware_exceptions(
     mock_omada_client.check_firmware_updates.assert_awaited_once()
 
 
-async def test_install_controller_firmware_rejected_without_hardware(
+async def test_controller_update_without_hardware_does_not_support_install(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test controller firmware installation rejects software-only updates."""
-    entity = hass.data[DATA_COMPONENT].get_entity(
-        "update.oc200_test_omada_controller_firmware"
-    )
+    """Test software-only updates do not expose firmware installation."""
+    entity = hass.states.get("update.oc200_test_omada_controller_firmware")
     assert entity is not None
-
-    with pytest.raises(HomeAssistantError) as err:
-        await entity.async_install(version=None, backup=False)
-
-    assert err.value.translation_key == "firmware_update_rejected"
-    assert err.value.translation_domain == DOMAIN
+    assert not entity.attributes[ATTR_SUPPORTED_FEATURES] & UpdateEntityFeature.INSTALL
 
 
 @pytest.mark.parametrize(
