@@ -28,8 +28,8 @@ from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util import dt as dt_util
 
-from . import DATA_COMPONENT
 from .const import (
+    DATA_COMPONENT,
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
