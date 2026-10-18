@@ -3,9 +3,12 @@
 import json
 from pathlib import Path
 import subprocess
+import sys
+from unittest.mock import Mock
 
 import pytest
 
+from script import sync_custom_integrations
 from script.sync_custom_integrations import (
     LOCK_FILE,
     STATE_FORMAT,
@@ -159,3 +162,36 @@ def test_ensure_ignored_escapes_and_keeps_own_line(
     assert ignored(dest)
     assert not ignored(lookalike)
     assert exclude.read_text().splitlines()[0] == "existing-rule"
+
+
+def test_interrupted_update_leaves_repos_unrecorded(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that an interrupted run never pairs updated files with an old SHA."""
+    for repo in ("a/one", "b/two"):
+        (tmp_path / repo / ".git").mkdir(parents=True)
+    save_state(tmp_path, {"a/one": "1" * 40, "b/two": "1" * 40}, None)
+    monkeypatch.setattr(
+        sync_custom_integrations,
+        "_get",
+        Mock(return_value=json.dumps(["a/one", "b/two"]).encode()),
+    )
+    monkeypatch.setattr(sync_custom_integrations, "_token", Mock(return_value="t"))
+    monkeypatch.setattr(
+        sync_custom_integrations,
+        "fetch_heads",
+        Mock(return_value={"a/one": "2" * 40, "b/two": "2" * 40}),
+    )
+    monkeypatch.setattr(sync_custom_integrations, "ensure_ignored", Mock())
+    # The first repo is updated in place, then the run is interrupted
+    download = Mock(side_effect=[None, KeyboardInterrupt])
+    monkeypatch.setattr(sync_custom_integrations, "download", download)
+    monkeypatch.setattr(
+        sys, "argv", ["sync", "--dest", str(tmp_path), "--workers", "1"]
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        sync_custom_integrations.main()
+
+    assert download.call_count == 2
+    assert load_state(tmp_path) == ({}, None)

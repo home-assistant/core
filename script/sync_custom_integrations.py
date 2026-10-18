@@ -497,6 +497,13 @@ def main() -> None:
     }
     print(f"{len(todo)} to download, {len(missing)} unavailable", file=sys.stderr)
 
+    # Forget the SHAs of repos about to change: checkouts are updated in place,
+    # so an interrupted run must leave them unrecorded (and redone next time)
+    # rather than paired with a SHA their files no longer match
+    for repo in todo:
+        state.pop(repo, None)
+    save_state(root, state, synced_at)
+
     failed = []
     errors = []
     with ThreadPoolExecutor(args.workers) as pool:
