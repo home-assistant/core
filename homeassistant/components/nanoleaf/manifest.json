@@ -1,6 +1,7 @@
 {
   "domain": "nanoleaf",
   "name": "Nanoleaf",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": [
     "@milanmeu",
     "@joostlek",

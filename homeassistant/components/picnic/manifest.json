@@ -1,6 +1,7 @@
 {
   "domain": "picnic",
   "name": "Picnic",
+  "categories": ["productivity_information.shopping_groceries"],
   "codeowners": ["@corneyl", "@codesalatdev"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/picnic",
