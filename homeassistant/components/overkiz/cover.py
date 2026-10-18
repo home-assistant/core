@@ -14,6 +14,7 @@ from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
@@ -23,7 +24,13 @@ from homeassistant.components.cover import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from . import OverkizDataConfigEntry
 from .const import DOMAIN, LOGGER
@@ -36,6 +43,9 @@ _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
 # Default tilt step size (in degrees) used for RTS tilt commands
 _TILT_STEP_SIZE = 5
+
+_SPEED_DEFAULT = "default"
+_SPEED_LOW = "low"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -545,6 +555,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Overkiz covers from a config entry."""
     data = entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     entities: list[OverkizCover] = []
 
@@ -557,11 +568,11 @@ async def async_setup_entry(
                 OverkizCover(device.device_url, data.coordinator, description)
             )
 
-            # Cover platform does not support configuring the speed of the cover
-            # For covers where the speed can be configured, we create a separate entity
             if (
                 OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED
                 in device.definition.commands
+            ) and _async_keep_deprecated_low_speed_cover(
+                hass, entity_registry, device.device_url
             ):
                 entities.append(
                     OverkizLowSpeedCover(
@@ -572,10 +583,54 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+def _async_keep_deprecated_low_speed_cover(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_url: str
+) -> bool:
+    """Return if the deprecated low speed cover should still be created.
+
+    Only kept for existing installations, until the user disables it.
+    """
+    issue_id = f"deprecated_low_speed_cover_{device_url}"
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.COVER, DOMAIN, f"{device_url}_low_speed"
+    )
+    if (
+        entity_id is None
+        or (entity_entry := entity_registry.async_get(entity_id)) is None
+    ):
+        async_delete_issue(hass, DOMAIN, issue_id)
+        return False
+
+    if entity_entry.disabled:
+        entity_registry.async_remove(entity_id)
+        async_delete_issue(hass, DOMAIN, issue_id)
+        return False
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_low_speed_cover",
+        translation_placeholders={
+            "entity_id": entity_id,
+            "replacement_entity_id": entity_registry.async_get_entity_id(
+                Platform.COVER, DOMAIN, device_url
+            )
+            or device_url,
+        },
+    )
+    return True
+
+
 class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     """Representation of an Overkiz Cover."""
 
     entity_description: OverkizCoverDescription
+    _attr_translation_key = "cover"
 
     def __init__(
         self,
@@ -643,6 +698,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             supported_features |= CoverEntityFeature.SET_POSITION
 
         self._attr_supported_features = supported_features
+
+        if self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED):
+            self._attr_supported_speeds = [_SPEED_DEFAULT, _SPEED_LOW]
 
     @property
     @override
@@ -721,6 +779,10 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
+        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+            await self._async_set_cover_position_low_speed(position)
+            return
+
         if self.entity_description.invert_position:
             position = 100 - position
 
@@ -730,12 +792,20 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+            await self._async_set_cover_position_low_speed(100)
+            return
+
         if command := self.entity_description.open_command:
             await self.executor.async_execute_command(command)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+            await self._async_set_cover_position_low_speed(0)
+            return
+
         if command := self.entity_description.close_command:
             await self.executor.async_execute_command(command)
 
@@ -744,6 +814,14 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """Stop the cover."""
         if command := self.entity_description.stop_command:
             await self.executor.async_execute_command(command)
+
+    async def _async_set_cover_position_low_speed(self, position: int) -> None:
+        """Move the cover to a specific position with a low speed."""
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
+            100 - position,
+            OverkizCommandParam.LOWSPEED,
+        )
 
     @property
     @override
@@ -915,7 +993,10 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
 
 class OverkizLowSpeedCover(OverkizCover):
-    """Representation of an Overkiz Low Speed cover."""
+    """Representation of an Overkiz Low Speed cover.
+
+    Deprecated in favor of the speed option on the main cover entity.
+    """
 
     def __init__(
         self,
@@ -928,6 +1009,7 @@ class OverkizLowSpeedCover(OverkizCover):
 
         self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
+        self._attr_supported_speeds = None
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -943,11 +1025,3 @@ class OverkizLowSpeedCover(OverkizCover):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._async_set_cover_position_low_speed(0)
-
-    async def _async_set_cover_position_low_speed(self, position: int) -> None:
-        """Move the cover to a specific position with a low speed."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
-            100 - position,
-            OverkizCommandParam.LOWSPEED,
-        )

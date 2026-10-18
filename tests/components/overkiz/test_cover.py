@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -37,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -58,8 +59,10 @@ AWNING = FixtureDevice(
 LOW_SPEED = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/141613",
-    "cover.nursery_shutter",
+    "cover.maple_residence_nursery_shutter",
 )
+DEPRECATED_LOW_SPEED_ENTITY_ID = "cover.maple_residence_nursery_shutter_low_speed"
+DEPRECATED_LOW_SPEED_ISSUE_ID = f"deprecated_low_speed_cover_{LOW_SPEED.device_url}"
 PERGOLA = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",
     "io://1234-5678-3293/7614902",
@@ -631,13 +634,6 @@ async def test_cover_command_connection_error_raises(
     [
         (SHUTTER, SHUTTER.entity_id, "setClosure", [75], 25),
         (AWNING, AWNING.entity_id, "setDeployment", [80], 80),
-        (
-            LOW_SPEED,
-            "cover.maple_residence_nursery_shutter_low_speed",
-            "setClosureAndLinearSpeed",
-            [65, OverkizCommandParam.LOWSPEED],
-            35,
-        ),
         (DYNAMIC_PERGOLA, DYNAMIC_PERGOLA.entity_id, "setClosure", [60], 40),
         (
             PERGOLA_HORIZONTAL_AWNING,
@@ -657,7 +653,6 @@ async def test_cover_command_connection_error_raises(
     ids=[
         "roller-shutter",
         "awning",
-        "low-speed",
         "dynamic-pergola",
         "pergola-horizontal-awning",
         "dynamic-venetian-blind",
@@ -1285,40 +1280,199 @@ async def test_tilt_position_none_value(
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
 
-async def test_low_speed_cover_open_close(
+@pytest.mark.parametrize(
+    ("service", "service_data", "command_name", "parameters"),
+    [
+        pytest.param(
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "low"},
+            "setClosureAndLinearSpeed",
+            [0, OverkizCommandParam.LOWSPEED],
+            id="open-low",
+        ),
+        pytest.param(
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "low"},
+            "setClosureAndLinearSpeed",
+            [100, OverkizCommandParam.LOWSPEED],
+            id="close-low",
+        ),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 35, ATTR_SPEED: "low"},
+            "setClosureAndLinearSpeed",
+            [65, OverkizCommandParam.LOWSPEED],
+            id="set-position-low",
+        ),
+        pytest.param(
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "default"},
+            "open",
+            None,
+            id="open-default",
+        ),
+        pytest.param(
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "default"},
+            "close",
+            None,
+            id="close-default",
+        ),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 35, ATTR_SPEED: "default"},
+            "setClosure",
+            [65],
+            id="set-position-default",
+        ),
+    ],
+)
+async def test_cover_speed(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    service: str,
+    service_data: dict[str, Any],
+    command_name: str,
+    parameters: list[Any] | None,
+) -> None:
+    """Test the speed option maps to the matching Overkiz command."""
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    assert hass.states.get(LOW_SPEED.entity_id).attributes["supported_speeds"] == [
+        "default",
+        "low",
+    ]
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: LOW_SPEED.entity_id, **service_data},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=LOW_SPEED.device_url,
+        command_name=command_name,
+        parameters=parameters,
+    )
+
+
+async def test_cover_speed_invalid(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
 ) -> None:
-    """Test low speed cover open and close send correct commands."""
+    """Test an unsupported speed is rejected before any command is sent."""
     await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
-    entity_id = "cover.maple_residence_nursery_shutter_low_speed"
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: LOW_SPEED.entity_id, ATTR_SPEED: "fast"},
+            blocking=True,
+        )
+
+    mock_client.execute_action_group.assert_not_awaited()
+
+
+async def test_low_speed_cover_not_created_for_new_installations(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the deprecated low speed cover is not created without a registry entry."""
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    assert entity_registry.async_get(DEPRECATED_LOW_SPEED_ENTITY_ID) is None
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "entity_kept"),
+    [
+        pytest.param(None, True, id="enabled"),
+        pytest.param(er.RegistryEntryDisabler.USER, False, id="disabled"),
+    ],
+)
+async def test_deprecated_low_speed_cover(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    disabled_by: er.RegistryEntryDisabler | None,
+    entity_kept: bool,
+) -> None:
+    """Test the deprecated low speed cover is kept with an issue until disabled."""
+    entity_registry.async_get_or_create(
+        COVER_DOMAIN,
+        DOMAIN,
+        f"{LOW_SPEED.device_url}_low_speed",
+        suggested_object_id="maple_residence_nursery_shutter_low_speed",
+        disabled_by=disabled_by,
+    )
+
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    assert (
+        entity_registry.async_get(DEPRECATED_LOW_SPEED_ENTITY_ID) is not None
+    ) is entity_kept
+    assert (
+        issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID)
+        is not None
+    ) is entity_kept
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "parameters"),
+    [
+        pytest.param(
+            SERVICE_OPEN_COVER, {}, [0, OverkizCommandParam.LOWSPEED], id="open"
+        ),
+        pytest.param(
+            SERVICE_CLOSE_COVER, {}, [100, OverkizCommandParam.LOWSPEED], id="close"
+        ),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 35},
+            [65, OverkizCommandParam.LOWSPEED],
+            id="set-position",
+        ),
+    ],
+)
+async def test_deprecated_low_speed_cover_commands(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    entity_registry: er.EntityRegistry,
+    service: str,
+    service_data: dict[str, Any],
+    parameters: list[Any],
+) -> None:
+    """Test the deprecated low speed cover keeps sending low speed commands."""
+    entity_registry.async_get_or_create(
+        COVER_DOMAIN,
+        DOMAIN,
+        f"{LOW_SPEED.device_url}_low_speed",
+        suggested_object_id="maple_residence_nursery_shutter_low_speed",
+    )
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        service,
+        {ATTR_ENTITY_ID: DEPRECATED_LOW_SPEED_ENTITY_ID, **service_data},
         blocking=True,
     )
+
     assert_command_call(
         mock_client,
         device_url=LOW_SPEED.device_url,
         command_name="setClosureAndLinearSpeed",
-        parameters=[0, OverkizCommandParam.LOWSPEED],
-    )
-
-    mock_client.execute_action_group.reset_mock()
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    assert_command_call(
-        mock_client,
-        device_url=LOW_SPEED.device_url,
-        command_name="setClosureAndLinearSpeed",
-        parameters=[100, OverkizCommandParam.LOWSPEED],
+        parameters=parameters,
     )
 
 

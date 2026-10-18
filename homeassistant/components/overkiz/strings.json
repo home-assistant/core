@@ -108,6 +108,18 @@
         }
       }
     },
+    "cover": {
+      "cover": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "low": "Low"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "memorized_simple_volume": {
         "state": {
@@ -209,6 +221,12 @@
   "exceptions": {
     "unsupported_set_position_and_tilt": {
       "message": "This device does not support setting position and tilt simultaneously."
+    }
+  },
+  "issues": {
+    "deprecated_low_speed_cover": {
+      "description": "The low speed cover `{entity_id}` is deprecated and will be removed. Use the `speed: low` option of the open, close and set position actions on `{replacement_entity_id}` instead.\n\nUpdate your dashboards, automations and scripts to use the main cover entity, then disable `{entity_id}` to have it removed after the next restart.",
+      "title": "Low speed cover entity is deprecated"
     }
   },
   "services": {
