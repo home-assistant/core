@@ -18,6 +18,7 @@ from script.sync_custom_integrations import (
     download,
     ensure_ignored,
     fetch_heads,
+    git_env,
     is_repo_slug,
     load_state,
     prune,
@@ -347,3 +348,15 @@ def test_unchanged_symlinked_repo_is_rejected(
     git.assert_not_called()
     assert load_state(copy) == ({}, None)
     assert (outside / ".git").is_dir()
+
+
+def test_git_env_drops_askpass_helpers() -> None:
+    """Test that inherited askpass helpers never reach git."""
+    env = git_env(
+        {"PATH": "/usr/bin", "GIT_ASKPASS": "/ide/askpass.sh", "SSH_ASKPASS": "x"}
+    )
+
+    assert env["PATH"] == "/usr/bin"
+    assert "GIT_ASKPASS" not in env
+    assert "SSH_ASKPASS" not in env
+    assert env["GIT_TERMINAL_PROMPT"] == "0"

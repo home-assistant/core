@@ -11,7 +11,7 @@ Repos dropped from the HACS list are removed. Requires an authenticated `gh`.
 """
 
 import argparse
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 import fcntl
@@ -35,22 +35,34 @@ GRAPHQL = "https://api.github.com/graphql"
 BATCH = 50
 RETRIES = 4
 GIT_TIMEOUT = 600
-# Git commands on the copy run without user or system config: a repository's
-# .gitattributes could otherwise select a filter defined there (such as an LFS
-# or git-crypt smudge command), and templates or core.fsmonitor could run
-# programs. Hooks are disabled outright. Proxies set in the environment still
-# apply; clones are anonymous, so no credential helper is needed.
-GIT_ENV = {
-    **os.environ,
-    "GIT_CONFIG_GLOBAL": os.devnull,
-    "GIT_CONFIG_NOSYSTEM": "1",
-    "GIT_CONFIG_COUNT": "1",
-    "GIT_CONFIG_KEY_0": "core.hooksPath",
-    "GIT_CONFIG_VALUE_0": os.devnull,
-    # Never prompt for credentials (deleted or private repos) or pull LFS objects
-    "GIT_TERMINAL_PROMPT": "0",
-    "GIT_LFS_SKIP_SMUDGE": "1",
-}
+# Inherited from an IDE terminal (VS Code sets GIT_ASKPASS), these would let
+# git ask for credentials despite GIT_TERMINAL_PROMPT=0
+ASKPASS_VARS = frozenset({"GIT_ASKPASS", "SSH_ASKPASS"})
+
+
+def git_env(environ: Mapping[str, str]) -> dict[str, str]:
+    """Return the environment for git commands on the copy.
+
+    They run without user or system config: a repository's .gitattributes could
+    otherwise select a filter defined there (such as an LFS or git-crypt smudge
+    command), and templates or core.fsmonitor could run programs. Hooks are
+    disabled outright. Proxies set in the environment still apply; clones are
+    anonymous, so no credential helper is needed.
+    """
+    return {
+        **{key: value for key, value in environ.items() if key not in ASKPASS_VARS},
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "core.hooksPath",
+        "GIT_CONFIG_VALUE_0": os.devnull,
+        # Never prompt for credentials (deleted or private repos) or pull LFS objects
+        "GIT_TERMINAL_PROMPT": "0",
+        "GIT_LFS_SKIP_SMUDGE": "1",
+    }
+
+
+GIT_ENV = git_env(os.environ)
 # Kept out of the checkout; sparse patterns filter by path, not by content
 BINARY_GLOBS = (
     "*.png",
