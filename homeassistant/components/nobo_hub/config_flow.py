@@ -3,8 +3,8 @@
 import ipaddress
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pynobo import PynoboConnectionError, nobo
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntryState,
@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -79,9 +79,9 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
         hubs = self._hubs()
         hubs["manual"] = "Manual"
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("device"): vol.In(hubs),
+                probatio.Required("device"): probatio.In(hubs),
             }
         )
         return self.async_show_form(
@@ -187,9 +187,9 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="selected",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "serial_suffix", default=user_input.get("serial_suffix")
                     ): str,
                 }
@@ -244,7 +244,10 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
                         # No-op: IP unchanged and the running integration already
                         # proves it works. Skip the reload to avoid a needless
                         # reconnect.
-                        return self.async_abort(reason="reconfigure_successful")
+                        return self.async_abort(
+                            reason="reconfigure_successful",
+                            translation_domain=HOMEASSISTANT_DOMAIN,
+                        )
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
                         data_updates={CONF_IP_ADDRESS: new_ip},
@@ -253,7 +256,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+                probatio.Schema({probatio.Required(CONF_IP_ADDRESS): str}),
                 user_input or reconfigure_entry.data,
             ),
             errors=errors,
@@ -278,10 +281,12 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SERIAL, default=user_input.get(CONF_SERIAL)): str,
-                    vol.Required(
+                    probatio.Required(
+                        CONF_SERIAL, default=user_input.get(CONF_SERIAL)
+                    ): str,
+                    probatio.Required(
                         CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
                     ): str,
                 }
@@ -326,10 +331,12 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             await hub.close()
 
     @staticmethod
-    def _format_hub(ip, serial_prefix):
+    def _format_hub(ip: str, serial_prefix: str) -> str:
         return f"{serial_prefix}XXX ({ip})"
 
-    def _hubs(self):
+    def _hubs(self) -> dict[str, str]:
+        if TYPE_CHECKING:
+            assert self._discovered_hubs
         return {
             ip: self._format_hub(ip, serial_prefix)
             for ip, serial_prefix in self._discovered_hubs.items()
@@ -348,7 +355,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 class NoboHubConnectError(HomeAssistantError):
     """Error with connecting to Nobø Ecohub."""
 
-    def __init__(self, msg) -> None:
+    def __init__(self, msg: str) -> None:
         """Instantiate error."""
         super().__init__()
         self.msg = msg
@@ -357,7 +364,9 @@ class NoboHubConnectError(HomeAssistantError):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
 
         if user_input is not None:
@@ -370,9 +379,11 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             CONF_OVERRIDE_TYPE, OVERRIDE_TYPE_CONSTANT
         )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_OVERRIDE_TYPE, default=override_type): SelectSelector(
+                probatio.Required(
+                    CONF_OVERRIDE_TYPE, default=override_type
+                ): SelectSelector(
                     SelectSelectorConfig(
                         options=[OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW],
                         translation_key=CONF_OVERRIDE_TYPE,

@@ -36,15 +36,21 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-            data=MOCK_ENTRY,
+            DOMAIN, context={"source": "user"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == URL
         assert result["data"][CONF_URL] == URL
         assert result["data"][CONF_TOKEN] == TOKEN
         assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
+        assert result["result"].unique_id == SERVER_ID
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -54,9 +60,14 @@ async def test_flow_already_configured(
     """Test the server ID is already configured."""
     with patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-            data=MOCK_ENTRY,
+            DOMAIN, context={"source": "user"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -68,13 +79,31 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch("aiosyncthing.system.System.status", side_effect=UnauthorizedError):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-            data=MOCK_ENTRY,
+            DOMAIN, context={"source": "user"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
         )
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"token": "invalid_auth"}
+
+    with (
+        patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
+        patch(
+            "homeassistant.components.syncthing.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -82,10 +111,28 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch("aiosyncthing.system.System.status", side_effect=Exception):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-            data=MOCK_ENTRY,
+            DOMAIN, context={"source": "user"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
         )
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
+        patch(
+            "homeassistant.components.syncthing.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

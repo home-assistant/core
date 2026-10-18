@@ -7,13 +7,14 @@ import pathlib
 from typing import Any, Self, override
 
 import aiofiles
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
     Image,
     ImageEntity,
+    ImageEntityStateAttribute,
     infer_image_type,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,13 +29,14 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
+from . import validators as tcv
 from .const import CONF_PICTURE, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -46,22 +48,26 @@ DEFAULT_NAME = "Template Image"
 GET_IMAGE_TIMEOUT = 10
 IMAGES_DIR = "images"
 
-IMAGE_YAML_SCHEMA = vol.Schema(
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=ImageEntityStateAttribute
+)
+
+IMAGE_YAML_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(
-    make_template_entity_common_modern_attributes_schema(
-        IMAGE_DOMAIN, DEFAULT_NAME
+    make_template_entity_common_schema(
+        IMAGE_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
 
-IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
+IMAGE_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
@@ -162,6 +168,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
     _restore_state_extra_data = ImageExtraStoredData
     _restore_state_properties = ("_attr_image_last_updated",)
     _restore_state_cache_data = bytes

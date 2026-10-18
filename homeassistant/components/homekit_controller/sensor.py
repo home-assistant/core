@@ -308,7 +308,6 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_NODE_CAPABILITIES,
-        name="Thread Capabilities",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_node_capability_to_str,
         device_class=SensorDeviceClass.ENUM,
@@ -324,7 +323,6 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.THREAD_STATUS: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_STATUS,
-        name="Thread Status",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_status_to_str,
         device_class=SensorDeviceClass.ENUM,
@@ -341,7 +339,6 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT,
-        name="Air Purifier Status",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         enum={
@@ -366,7 +363,6 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.WATER_LEVEL: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.WATER_LEVEL,
-        name="Water level",
         translation_key="water_level",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -374,7 +370,6 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: (
         HomeKitSensorEntityDescription(
             key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
-            name="Valve position",
             translation_key="valve_position",
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
@@ -389,11 +384,10 @@ class HomeKitSensor(HomeKitEntity, SensorEntity):
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    @property
     @override
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        full_name = super().name
+    def _homekit_name(self) -> str:
+        """Return the name provided by the HomeKit accessory."""
+        full_name = super()._homekit_name()
         default_name = self.default_name
         if (
             default_name
@@ -599,14 +593,6 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
 
     @property
     @override
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
-
-    @property
-    @override
     def native_value(self) -> str | int | float:
         """Return the current sensor value."""
         if self.entity_description.enum:
@@ -656,12 +642,6 @@ class RSSISensor(HomeKitEntity, SensorEntity):
         """Return if the bluetooth device is available."""
         address = self._accessory.pairing_data["AccessoryAddress"]
         return async_ble_device_from_address(self.hass, address) is not None
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Signal strength"
 
     @property
     @override

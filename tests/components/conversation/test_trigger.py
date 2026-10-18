@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, async_get_agent
 from homeassistant.components.conversation.models import ConversationInput
@@ -522,7 +522,7 @@ async def test_same_sentence_multiple_triggers(
 )
 async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
     """Test that validation fails when sentences contain punctuation."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [
@@ -543,7 +543,7 @@ async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
 )
 async def test_fails_on_empty(hass: HomeAssistant, command: str) -> None:
     """Test that validation fails when sentences are empty."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [
@@ -560,7 +560,7 @@ async def test_fails_on_empty(hass: HomeAssistant, command: str) -> None:
 
 async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
     """Test that validation fails when no sentences are provided."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [
@@ -575,7 +575,7 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
 
 async def test_fails_on_bad_parse(hass: HomeAssistant) -> None:
     """Test that validation fails when sentence is malformed."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [

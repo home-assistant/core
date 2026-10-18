@@ -5,28 +5,36 @@ from unittest.mock import MagicMock
 import pyvera as pv
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import ComponentFactory, new_simple_controller_config
 
 
 async def test_scene(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test function."""
     vera_scene: pv.VeraScene = MagicMock(spec=pv.VeraScene)
     vera_scene.scene_id = 1
     vera_scene.vera_scene_id = vera_scene.scene_id
     vera_scene.name = "dev1"
-    entity_id = "scene.dev1_1"
+    entity_id = "scene.dev1"
 
     await vera_component_factory.configure_component(
         hass=hass,
         controller_config=new_simple_controller_config(scenes=(vera_scene,)),
     )
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "1111_1"
+
     await hass.services.async_call(
         "scene",
         "turn_on",
         {"entity_id": entity_id},
+        blocking=True,
     )
-    await hass.async_block_till_done()
+    vera_scene.activate.assert_called_once()

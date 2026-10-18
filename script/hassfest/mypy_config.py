@@ -31,6 +31,9 @@ HEADER: Final = """
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "platform": "linux",
+    # voluptuous is aliased to probatio at runtime; this stub path re-exports
+    # probatio's types under the voluptuous name for not-yet-migrated integrations.
+    "mypy_path": "stubs",
     "plugins": ", ".join(  # noqa: FLY002
         [
             "pydantic.mypy",
@@ -105,7 +108,6 @@ PLUGIN_CONFIG: Final[dict[str, dict[str, str]]] = {
         "init_forbid_extra": "true",
         "init_typed": "true",
         "warn_required_dynamic_aliases": "true",
-        "warn_untyped_fields": "true",
     }
 }
 

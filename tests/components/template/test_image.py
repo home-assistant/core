@@ -5,7 +5,7 @@ from http import HTTPStatus
 from io import BytesIO
 from typing import Any
 
-import httpx
+import httpx2
 from PIL import Image
 import pytest
 import respx
@@ -19,6 +19,7 @@ from homeassistant.components.input_text import (
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.image import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     CONF_ENTITY_ID,
@@ -33,6 +34,8 @@ from homeassistant.util import dt as dt_util
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_trigger,
     make_test_trigger,
@@ -347,7 +350,7 @@ async def test_template_error(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test handling template error."""
-    respx.get("http://example.com").side_effect = httpx.TimeoutException
+    respx.get("http://example.com").side_effect = httpx2.TimeoutException
 
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -609,9 +612,100 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("image.my_template")
+    template_entity = entity_registry.async_get("image.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_IMAGE,
+        style,
+        {
+            "url": "{{ 'http://example.com' }}",
+        },
+    )
+
+
+@pytest.mark.parametrize("attribute", list(image.ImageEntityStateAttribute))
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: image.ImageEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        0,
+        {
+            "url": "{{ 'http://example.com' }}",
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_IMAGE,
+        style,
+        {
+            "url": "{{ 'http://example.com' }}",
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize("attribute", list(image.ImageEntityStateAttribute))
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: image.ImageEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        {
+            "url": "{{ 'http://example.com' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_IMAGE.entity_id}: {attribute}"
+    assert error in caplog.text
 
 
 @pytest.mark.parametrize(

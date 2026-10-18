@@ -35,8 +35,8 @@ async def test_device_info_registered(
     """Device info from the API should be registered on the device registry."""
     await async_init_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
 
     assert device is not None

@@ -22,7 +22,15 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -40,6 +48,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == CONFIG
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,7 +66,15 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
@@ -72,18 +89,38 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
+async def test_form_error(
+    hass: HomeAssistant,
+    side_effect: Exception | type[Exception],
+    error_message: str,
+) -> None:
     """Test we handle cannot connect."""
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         side_effect=side_effect,
-    ):
+    ) as mock_login:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error_message}
+
+        mock_login.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

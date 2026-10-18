@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -18,9 +18,9 @@ if TYPE_CHECKING:
     from . import CastConfigEntry
 
 CONF_MORE_OPTIONS = "more_options"
-KNOWN_HOSTS_SCHEMA = vol.Schema(
+KNOWN_HOSTS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_KNOWN_HOSTS,
         ): SelectSelector(
             SelectSelectorConfig(custom_value=True, options=[], multiple=True),
@@ -29,15 +29,15 @@ KNOWN_HOSTS_SCHEMA = vol.Schema(
 )
 OPTIONS_SCHEMA = KNOWN_HOSTS_SCHEMA.extend(
     {
-        vol.Required(CONF_MORE_OPTIONS): section(
-            vol.Schema(
+        probatio.Required(CONF_MORE_OPTIONS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_UUID): SelectSelector(
+                    probatio.Optional(CONF_UUID): SelectSelector(
                         SelectSelectorConfig(
                             custom_value=True, options=[], multiple=True
                         ),
                     ),
-                    vol.Optional(CONF_IGNORE_CEC): SelectSelector(
+                    probatio.Optional(CONF_IGNORE_CEC): SelectSelector(
                         SelectSelectorConfig(
                             custom_value=True, options=[], multiple=True
                         ),

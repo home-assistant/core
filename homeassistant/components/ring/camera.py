@@ -10,13 +10,13 @@ from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from ring_doorbell import RingDoorBell
 from ring_doorbell.webrtcstream import RingWebRtcMessage
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
     CameraEntityFeature,
-    RTCIceCandidateInit,
     WebRTCAnswer,
     WebRTCCandidate,
     WebRTCError,

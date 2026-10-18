@@ -1,6 +1,7 @@
 {
   "domain": "discovergy",
   "name": "inexogy",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/discovergy",

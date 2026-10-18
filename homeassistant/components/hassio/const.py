@@ -20,8 +20,7 @@ if TYPE_CHECKING:
         SupervisorInfo,
     )
 
-    from homeassistant.auth.models import User
-
+    from .auto_update import AutoUpdateManager
     from .coordinator import (
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
@@ -90,6 +89,8 @@ EVENT_SUPPORTED_CHANGED = "supported_changed"
 EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
 EVENT_JOB = "job"
+EVENT_STORE_RELOADED = "store_reloaded"
+EVENT_ADDON = "addon"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
 STARTUP_COMPLETE = "complete"
@@ -106,6 +107,7 @@ STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
 JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
     "hassio_jobs_coordinator"
 )
+DATA_AUTO_UPDATE: HassKey[AutoUpdateManager] = HassKey("hassio_auto_update")
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
@@ -152,7 +154,6 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
 )
 DATA_KEY_MOUNTS = "mounts"
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
-DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 ENTRY_DATA_USER = "user"
 
@@ -165,6 +166,19 @@ DEFAULT_UPDATE_OPTIONS = {
     OPTION_ADD_ON_BACKUP_RETAIN_COPIES: 1,
     OPTION_CORE_BACKUP_BEFORE_UPDATE: False,
 }
+
+# Automatic Home Assistant updates. A missing enabled option means the user
+# has not made a choice yet.
+OPTION_CORE_AUTO_UPDATE = "core_auto_update"
+OPTION_CORE_AUTO_UPDATE_DELAY = "core_auto_update_delay"
+OPTION_CORE_AUTO_UPDATE_WINDOW_START = "core_auto_update_window_start"
+OPTION_CORE_AUTO_UPDATE_WINDOW_END = "core_auto_update_window_end"
+OPTION_CORE_AUTO_UPDATE_WEEKDAYS = "core_auto_update_weekdays"
+
+CORE_AUTO_UPDATE_DELAYS = (0, 1, 3, 7, 14)
+DEFAULT_CORE_AUTO_UPDATE_DELAY = 3
+DEFAULT_CORE_AUTO_UPDATE_WINDOW_START = "03:00:00"
+DEFAULT_CORE_AUTO_UPDATE_WINDOW_END = "05:00:00"
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
@@ -183,6 +197,7 @@ ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
 ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
+ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
 ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
@@ -195,16 +210,18 @@ SUPERVISOR_CONTAINER = "hassio_supervisor"
 CONTAINER_STATS = "stats"
 REQUEST_REFRESH_DELAY = 10
 
-HELP_URLS = {
+# Issues offering to uninstall an app, which deletes the app data as well
+APP_REMOVE_URLS = {
     "help_url": "https://www.home-assistant.io/help/",
     "community_url": "https://community.home-assistant.io/",
+    "backup_url": "/config/backup",
 }
 
 EXTRA_PLACEHOLDERS = {
     "issue_mount_mount_failed": {
         "storage_url": "/config/storage",
     },
-    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: APP_REMOVE_URLS,
     ISSUE_KEY_SYSTEM_FREE_SPACE: {
         "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
         "storage_url": "/config/storage",
@@ -212,8 +229,8 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
     },
-    ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
-    ISSUE_KEY_ADDON_DEPRECATED_ARCH: HELP_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED: APP_REMOVE_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH: APP_REMOVE_URLS,
 }
 
 

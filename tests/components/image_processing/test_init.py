@@ -108,7 +108,7 @@ async def test_get_image_from_camera(
 
 
 @patch(
-    "homeassistant.components.image_processing.async_get_image",
+    "homeassistant.components.image_processing.entity.async_get_image",
     side_effect=HomeAssistantError(),
 )
 @pytest.mark.usefixtures("enable_custom_integrations")

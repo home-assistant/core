@@ -485,6 +485,50 @@ async def test_service_switch_update(hass: HomeAssistant, mock_modbus_ha) -> Non
             CONF_SWITCHES: [
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_COMMAND_ON: 0,
+                    CONF_COMMAND_OFF: 1,
+                    CONF_VERIFY: {
+                        CONF_STATE_ON: [0],
+                        CONF_STATE_OFF: [1],
+                    },
+                }
+            ]
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("coil_value", "expected_state"),
+    [
+        (0x00, STATE_ON),
+        (0x01, STATE_OFF),
+    ],
+)
+async def test_switch_verify_coil_inverted(
+    hass: HomeAssistant,
+    mock_modbus_ha: mock.AsyncMock,
+    coil_value: int,
+    expected_state: str,
+) -> None:
+    """Run test for an inverted coil switch, where state_on is 0."""
+    mock_modbus_ha.read_coils.return_value = ReadResult([coil_value])
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {
@@ -508,7 +552,7 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     now = now + timedelta(seconds=2)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 

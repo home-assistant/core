@@ -3,9 +3,9 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import cast, override
+from typing import override
 
-from whois import Domain
+from whoisdomain import Domain
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -41,11 +41,7 @@ def _days_until_expiration(domain: Domain) -> int | None:
     """Calculate days left until domain expires."""
     if domain.expiration_date is None:
         return None
-    # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
-    return cast(
-        int,
-        (domain.expiration_date - dt_util.utcnow().replace(tzinfo=None)).days,
-    )
+    return (domain.expiration_date - dt_util.utcnow().replace(tzinfo=None)).days
 
 
 def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
@@ -113,7 +109,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         translation_key="last_updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda domain: _ensure_timezone(domain.last_updated),
+        value_fn=lambda domain: _ensure_timezone(domain.updated_date),
     ),
     WhoisSensorEntityDescription(
         key="owner",
@@ -207,7 +203,7 @@ class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, int | float | None] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the monitored installation."""
 
         # Only add attributes to the original sensor
@@ -224,8 +220,8 @@ class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
         if name_servers := self.coordinator.data.name_servers:
             attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-        if last_updated := self.coordinator.data.last_updated:
-            attrs[ATTR_UPDATED] = last_updated.isoformat()
+        if updated_date := self.coordinator.data.updated_date:
+            attrs[ATTR_UPDATED] = updated_date.isoformat()
 
         if registrar := self.coordinator.data.registrar:
             attrs[ATTR_REGISTRAR] = registrar

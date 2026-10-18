@@ -66,6 +66,7 @@ from .entity import (
     NetatmoModuleEntity,
     NetatmoRoomEntity,
     NetatmoWeatherModuleEntity,
+    room_device_info,
 )
 from .helper import NetatmoArea
 
@@ -461,6 +462,7 @@ DEVICE_CATEGORY_LEGACY_SENSORS: Final[
 ] = {
     NetatmoDeviceCategory.meter: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.switch: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.dimmer: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.climate: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
 }
 
@@ -469,6 +471,7 @@ DEVICE_CATEGORY_SENSOR_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.meter: CONF_URL_ENERGY,
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
     NetatmoDeviceCategory.switch: CONF_URL_CONTROL,
+    NetatmoDeviceCategory.dimmer: CONF_URL_CONTROL,
 }
 
 
@@ -625,8 +628,10 @@ async def async_setup_entry(
 
         async_add_entities(new_entities)
 
-    async_dispatcher_connect(
-        hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+        )
     )
 
     await add_public_entities(False)
@@ -794,12 +799,11 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
             f"-{self.device.entity_id}"
             f"-{self.entity_description.key}"
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, netatmo_device.parent_id)},
-            name=netatmo_device.device.name,
-            manufacturer=self.device_description[0],
-            model=self.device_description[1],
-            configuration_url=self._attr_configuration_url,
+        # This sensor lives on the room's device, so it must describe the room
+        # rather than the valve it reads, or it renames the room after the valve
+        self._attr_device_info = room_device_info(
+            self.device.home.rooms[netatmo_device.parent_id],
+            netatmo_device.data_handler.parent_device_ids[self.device.home.entity_id],
         )
 
     @callback

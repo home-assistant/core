@@ -1,6 +1,6 @@
 """The binary_sensor tests for the august platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -322,9 +322,11 @@ async def test_doorbell_device_registry(
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
-    await _create_august_with_devices(hass, [doorbell_one])
+    config_entry, _ = await _create_august_with_devices(hass, [doorbell_one])
 
-    reg_device = device_registry.async_get_device(identifiers={("august", "tmt100")})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("august", "tmt100"), config_entry.entry_id
+    )
     assert reg_device == snapshot
 
 
@@ -380,7 +382,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -390,7 +392,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
 
     pubnub.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -400,7 +402,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
 
     # Ensure pubnub status is always preserved
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
     await hass.async_block_till_done()
 
     assert (
@@ -426,7 +428,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
     await hass.async_block_till_done()
     assert (
         states.get(

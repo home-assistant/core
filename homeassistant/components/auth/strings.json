@@ -10,12 +10,6 @@
       "message": "Username \"{new_username}\" is not normalized. Please make sure the username is lowercase and does not contain any whitespace."
     }
   },
-  "issues": {
-    "homeassistant_provider_not_normalized_usernames": {
-      "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}\n\nNormalized usernames are case folded (lower case) and stripped of whitespaces.",
-      "title": "Not normalized usernames detected"
-    }
-  },
   "mfa_setup": {
     "notify": {
       "abort": {
