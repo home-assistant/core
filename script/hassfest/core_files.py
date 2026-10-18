@@ -40,7 +40,6 @@ MISSING_ALL = {
     "otp",
     "persistent_notification",
     "person",
-    "recorder",
     "recovery_mode",
     "script",
     "shopping_list",
