@@ -168,6 +168,11 @@ from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
 
+__all__ = [
+    "DOMAIN",
+    "create_auth_code",
+]
+
 
 @dataclass(slots=True)
 class AuthCodeEntry:
