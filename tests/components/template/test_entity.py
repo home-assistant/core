@@ -305,3 +305,41 @@ async def test_this_state_is_restored_state(
     await apply_config(hass, config)
 
     assert hass.states.get("sensor.test").state == "42"
+
+
+@pytest.mark.parametrize(
+    "apply_config",
+    [pytest.param(_reload, id="reload"), pytest.param(_restart, id="restart")],
+)
+@pytest.mark.parametrize(
+    ("new_config", "expected_state"),
+    [
+        pytest.param(
+            {"state": "{{ 42 }}", "unit_of_measurement": "%"}, "42", id="numeric"
+        ),
+        pytest.param(
+            {
+                "state": "{{ '2026-01-01T00:00:00+00:00' }}",
+                "device_class": "timestamp",
+            },
+            "2026-01-01T00:00:00+00:00",
+            id="timestamp",
+        ),
+    ],
+)
+async def test_sensor_incompatible_restored_value(
+    hass: HomeAssistant,
+    apply_config: Callable[[HomeAssistant, dict], Awaitable[None]],
+    new_config: dict,
+    expected_state: str,
+) -> None:
+    """Test a restored value that does not fit the new configuration is dropped."""
+    assert await async_setup_component(
+        hass, DOMAIN, _config("sensor", state="{{ 'offline' }}")
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == "offline"
+
+    await apply_config(hass, _config("sensor", **new_config))
+
+    assert hass.states.get("sensor.test").state == expected_state
