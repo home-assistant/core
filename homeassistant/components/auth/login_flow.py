@@ -454,7 +454,6 @@ class LoginFlowResourceView(LoginFlowBaseView):
     ) -> None:
         """Initialize the login flow resource view."""
         super().__init__(flow_mgr, store_result)
-        # A concurrent request for the same flow gets a conflict instead of racing.
         self._flows_in_progress: set[str] = set()
 
     async def get(self, request: web.Request) -> web.Response:
@@ -493,14 +492,16 @@ class LoginFlowResourceView(LoginFlowBaseView):
             self._flows_in_progress.add(flow_id)
             try:
                 result = await self._flow_mgr.async_configure(flow_id, data)
+                # Includes the failed login accounting, so the next attempt waits for it.
+                return await self._async_flow_result_to_response(
+                    request, client_id, result
+                )
             finally:
-                self._flows_in_progress.discard(flow_id)
+                self._flows_in_progress.remove(flow_id)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
-
-        return await self._async_flow_result_to_response(request, client_id, result)
 
     async def delete(self, request: web.Request, flow_id: str) -> web.Response:
         """Cancel a flow in progress."""
