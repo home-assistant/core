@@ -502,6 +502,14 @@ class AutoUpdateManager:
         """Return the current settings."""
         return AutoUpdateSettings.from_options(self._entry.options)
 
+    @callback
+    def async_set_enabled(self, enabled: bool) -> None:
+        """Turn automatic updates on or off."""
+        self._hass.config_entries.async_update_entry(
+            self._entry,
+            options={**self._entry.options, OPTION_CORE_AUTO_UPDATE: enabled},
+        )
+
     @property
     def unavailable_reason(self) -> AutoUpdateUnavailableReason | None:
         """Return why automatic updates are unavailable, or None if available."""

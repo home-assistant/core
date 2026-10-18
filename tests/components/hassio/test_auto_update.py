@@ -1807,3 +1807,108 @@ async def test_withdrawn_then_replacement_skipped(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     supervisor_client.homeassistant.update.assert_not_called()
+
+
+AUTO_UPDATE_SWITCH = "switch.home_assistant_core_automatic_updates"
+
+
+@pytest.mark.parametrize(
+    ("options", "state"),
+    [
+        pytest.param({}, "off", id="not_chosen"),
+        pytest.param({"core_auto_update": False}, "off", id="off"),
+        pytest.param({"core_auto_update": True}, "on", id="on"),
+    ],
+)
+async def test_switch_state(
+    hass: HomeAssistant, options: dict[str, Any], state: str
+) -> None:
+    """Test the switch shows whether automatic updates are on."""
+    await _setup_hassio(hass, options)
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == state
+
+
+async def test_switch_pauses_updates(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test turning the switch off pauses automatic updates, and on resumes."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 50),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": AUTO_UPDATE_SWITCH}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.options["core_auto_update"] is False
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "off"
+
+    freezer.move_to(_local(22, 3, 30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    supervisor_client.homeassistant.update.assert_not_called()
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": AUTO_UPDATE_SWITCH}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.options["core_auto_update"] is True
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "on"
+
+    freezer.tick(CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_switch_follows_settings(hass: HomeAssistant) -> None:
+    """Test the switch follows the setting changed elsewhere."""
+    config_entry = await _setup_hassio(hass, {"core_auto_update": True})
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={**config_entry.options, "core_auto_update": False}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "off"
+
+
+async def test_no_switch_on_container(
+    hass: HomeAssistant, supervisor_root_info: AsyncMock
+) -> None:
+    """Test there is no switch where automatic updates are unavailable."""
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
+    )
+    await _setup_hassio(hass, {"core_auto_update": True})
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH) is None
+
+
+async def test_switch_unavailable_on_beta_channel(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test the switch goes unavailable after moving off the stable channel."""
+    await _setup_hassio(hass, {"core_auto_update": True})
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.BETA
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "unavailable"
