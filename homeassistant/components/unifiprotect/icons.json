@@ -154,6 +154,9 @@
       }
     },
     "event": {
+      "alarm": {
+        "default": "mdi:alarm-light"
+      },
       "doorbell": {
         "default": "mdi:doorbell-video"
       },
@@ -162,6 +165,9 @@
       },
       "keyfob": {
         "default": "mdi:remote"
+      },
+      "maintenance": {
+        "default": "mdi:smoke-detector-variant"
       },
       "motion_detection": {
         "default": "mdi:motion-sensor"
