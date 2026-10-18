@@ -34,7 +34,6 @@ MISSING_ALL = {
     "llm",
     "logbook",
     "logger",
-    "lovelace",
     "network",
     "onboarding",
     "otp",
