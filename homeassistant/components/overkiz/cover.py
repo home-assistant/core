@@ -44,8 +44,8 @@ _POSITION_UNKNOWN = 124  # "Unknown position" preset
 # Default tilt step size (in degrees) used for RTS tilt commands
 _TILT_STEP_SIZE = 5
 
-# Speed for the regular commands; other speeds are setClosureAndLinearSpeed params
 _SPEED_DEFAULT = "default"
+_SPEED_LOW = "low"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -700,10 +700,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         self._attr_supported_features = supported_features
 
         if self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED):
-            self._attr_supported_speeds = [
-                _SPEED_DEFAULT,
-                OverkizCommandParam.LOWSPEED,
-            ]
+            self._attr_supported_speeds = [_SPEED_DEFAULT, _SPEED_LOW]
 
     @property
     @override
@@ -782,8 +779,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        if (speed := kwargs.get(ATTR_SPEED, _SPEED_DEFAULT)) != _SPEED_DEFAULT:
-            await self._async_set_cover_position_with_speed(position, speed)
+        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+            await self._async_set_cover_position_low_speed(position)
             return
 
         if self.entity_description.invert_position:
@@ -795,8 +792,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if (speed := kwargs.get(ATTR_SPEED, _SPEED_DEFAULT)) != _SPEED_DEFAULT:
-            await self._async_set_cover_position_with_speed(100, speed)
+        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+            await self._async_set_cover_position_low_speed(100)
             return
 
         if command := self.entity_description.open_command:
@@ -805,8 +802,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if (speed := kwargs.get(ATTR_SPEED, _SPEED_DEFAULT)) != _SPEED_DEFAULT:
-            await self._async_set_cover_position_with_speed(0, speed)
+        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+            await self._async_set_cover_position_low_speed(0)
             return
 
         if command := self.entity_description.close_command:
@@ -818,12 +815,12 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if command := self.entity_description.stop_command:
             await self.executor.async_execute_command(command)
 
-    async def _async_set_cover_position_with_speed(
-        self, position: int, speed: str
-    ) -> None:
-        """Move the cover to a specific position with the given speed."""
+    async def _async_set_cover_position_low_speed(self, position: int) -> None:
+        """Move the cover to a specific position with a low speed."""
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED, 100 - position, speed
+            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
+            100 - position,
+            OverkizCommandParam.LOWSPEED,
         )
 
     @property
@@ -1017,18 +1014,14 @@ class OverkizLowSpeedCover(OverkizCover):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_set_cover_position_with_speed(
-            kwargs[ATTR_POSITION], OverkizCommandParam.LOWSPEED
-        )
+        await self._async_set_cover_position_low_speed(kwargs[ATTR_POSITION])
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._async_set_cover_position_with_speed(
-            100, OverkizCommandParam.LOWSPEED
-        )
+        await self._async_set_cover_position_low_speed(100)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._async_set_cover_position_with_speed(0, OverkizCommandParam.LOWSPEED)
+        await self._async_set_cover_position_low_speed(0)
