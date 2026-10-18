@@ -204,12 +204,18 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
+        if self._cached_image:
+            return self._cached_image.content
+        if not (url := self._attr_image_url):
+            return None
         generation = self._url_generation
-        image = await super().async_image()
-        if self._url_generation != generation:
-            # The URL changed during the download, don't keep the old image.
-            self._cached_image = None
-        return image
+        if (image := await self._async_load_image_from_url(url)) is None:
+            return None
+        # A download for a previous URL must not replace the current image.
+        if self._url_generation == generation:
+            self._cached_image = image
+            self._attr_content_type = image.content_type
+        return image.content
 
     @property
     @override
@@ -296,18 +302,30 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
                 "%s: Unable to save image cache %s: %s", self.entity_id, image_path, err
             )
 
+    async def _async_read_cache_file(self) -> bytes | None:
+        paths = [self._cache_path()]
+        if self.registry_entry is not None:
+            # Restore state moves to the registry ID when a unique_id is added.
+            paths.append(image_cache_dir(self.hass) / f"{self.entity_id}.bin")
+        for image_path in paths:
+            try:
+                async with aiofiles.open(image_path, "rb") as fh:
+                    return await fh.read()
+            except FileNotFoundError:
+                continue
+            except OSError as err:
+                _LOGGER.warning(
+                    "%s: Unable to read image cache %s: %s",
+                    self.entity_id,
+                    image_path,
+                    err,
+                )
+                return None
+        return None
+
     @override
     async def async_get_cached_data(self) -> Image | None:
-        image_path = self._cache_path()
-        try:
-            async with aiofiles.open(image_path, "rb") as fh:
-                data = await fh.read()
-        except FileNotFoundError:
-            return None
-        except OSError as err:
-            _LOGGER.warning(
-                "%s: Unable to read image cache %s: %s", self.entity_id, image_path, err
-            )
+        if (data := await self._async_read_cache_file()) is None:
             return None
 
         header, _, content = data.partition(b"\n")

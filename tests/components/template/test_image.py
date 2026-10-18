@@ -1780,3 +1780,117 @@ async def test_url_changed_during_download(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert not (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").exists()
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "outdated_status",
+    [
+        pytest.param(HTTPStatus.OK, id="outdated_succeeds"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, id="outdated_fails"),
+    ],
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_outdated_download_keeps_current_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    outdated_status: HTTPStatus,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
+) -> None:
+    """Test a download for a previous URL finishing last keeps the current image."""
+    download_started = asyncio.Event()
+    release_download = asyncio.Event()
+
+    async def _slow_download(request: httpx2.Request) -> httpx2.Response:
+        download_started.set()
+        await release_download.wait()
+        return httpx2.Response(
+            outdated_status,
+            content=imgbytes_jpg,
+            headers={"content-type": "image/jpeg"},
+        )
+
+    respx.get("http://example.com").mock(side_effect=_slow_download)
+    respx.get("http://example2.com").respond(
+        stream=imgbytes2_jpg, content_type="image/jpeg"
+    )
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+
+    client = await hass_client()
+    # Not tracked by hass, so async_trigger doesn't wait for the paused download.
+    outdated_request = asyncio.create_task(
+        client.get(f"/api/image_proxy/{TEST_IMAGE.entity_id}")
+    )
+    await download_started.wait()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example2.com")
+    resp = await client.get(f"/api/image_proxy/{TEST_IMAGE.entity_id}")
+    assert await resp.read() == imgbytes2_jpg
+
+    release_download.set()
+    await outdated_request
+
+    entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
+    assert entity._cached_image == image.Image("image/jpeg", imgbytes2_jpg)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_restore_cache_after_unique_id_added(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    imgbytes2_jpg: bytes,
+) -> None:
+    """Test the cache saved under the entity_id is restored once a unique_id is set."""
+    _write_cache(images_cache_dir, imgbytes2_jpg)
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
+    fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "unique_id": "now_registered",
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    assert entity_registry.async_get(TEST_IMAGE.entity_id) is not None
+
+    # example2.com isn't mocked, the image comes from the cache.
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes2_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
