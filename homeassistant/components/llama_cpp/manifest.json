@@ -2,6 +2,7 @@
   "domain": "llama_cpp",
   "name": "llama.cpp",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["conversation"],

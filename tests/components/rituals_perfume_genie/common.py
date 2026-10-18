@@ -58,6 +58,8 @@ class MockDiffuser:
     available: bool = True
     charging: bool = True
     fill: str | None = "90-100%"
+    # A use counter on the cartridge: 200 per percent used, so this is 95%.
+    fill_raw: str = "1000"
     has_battery: bool = True
     has_cartridge: bool = True
     is_on: bool = True
@@ -66,6 +68,7 @@ class MockDiffuser:
     perfume: str = "Ritual of Sakura"
     perfume_amount: int = 2
     room_size_square_meter: int = 60
+    standby_led: bool | None = True
     version: str | None = "4.0"
     firmware_id: int | None = 127
     has_firmware_info: bool = True
@@ -86,11 +89,14 @@ class MockDiffuser:
                 "hash": self.hub_hash,
                 "hublot": self.hublot,
                 "status": 1 if self.available else 0,
+                "attributes": {"ledc": self.standby_led is not None},
                 "attributeValues": {
                     "fanc": "1" if self.is_on else "0",
                     "speedc": str(self.perfume_amount),
                     "roomc": ROOM_SIZES[self.room_size_square_meter],
                     "roomnamec": self.name,
+                    # Inverted: the attribute means "LED disabled".
+                    "ledc": "1" if self.standby_led is False else "0",
                 },
                 "sensors": {
                     "battc": self.has_battery,
@@ -144,7 +150,7 @@ class MockDiffuser:
     def sensor(self, sensor: Sensor) -> RitualsGenieSensor:
         """Return a single sensor reading, as the API would send it."""
         if sensor is Sensor.FILL:
-            return RitualsGenieSensor(title=self.fill, raw="1000")
+            return RitualsGenieSensor(title=self.fill, raw=self.fill_raw)
 
         return RitualsGenieSensor(
             title=self.perfume, raw="048616d0" if self.has_cartridge else "0"

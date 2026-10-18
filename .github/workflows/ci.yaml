@@ -482,6 +482,38 @@ jobs:
         run: |
           uv run --no-project python -m script.gen_copilot_instructions validate
 
+  build-pylint-package:
+    name: Build pylint-home-assistant package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build source distribution and wheel
+        run: uv build packages/pylint-home-assistant --out-dir dist
+      - name: Install wheel in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/package-venv"
+          uv pip install --python "${RUNNER_TEMP}/package-venv/bin/python" dist/*.whl
+      - name: Load installed Pylint plugin outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/package-venv/bin/pylint" \
+            --rcfile=/dev/null --load-plugins=pylint_home_assistant --list-msgs > /dev/null
+
   gen-recorder-db-versions:
     name: Check recorder database versions
     runs-on: ubuntu-26.04
@@ -662,7 +694,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --jobs 0 tests
+          pylint --jobs 0 tests packages/pytest-home-assistant/pytest_homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -724,7 +756,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy --num-workers=4 homeassistant pylint
+          mypy --num-workers=4 homeassistant packages/pylint-home-assistant
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -776,6 +808,30 @@ jobs:
           run: |
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
+
+  build-pytest-package:
+    name: Build pytest-home-assistant package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build source distribution and wheel
+        run: uv build packages/pytest-home-assistant --out-dir dist
 
   prepare-pytest-full:
     name: Split tests for full run

@@ -288,7 +288,9 @@ class HassImportsFormatChecker(BaseChecker):
                 other_parsed := parse_module(other_module)
             ) and other_parsed.module is not None:
                 if (
-                    self.current_package.startswith("tests.components.")
+                    self.current_package.startswith(
+                        ("tests.components.", "pytest_homeassistant.components.")
+                    )
                     and self.current_package.split(".")[2] == other_parsed.domain
                 ):
                     # Ignore check if the component being tested matches

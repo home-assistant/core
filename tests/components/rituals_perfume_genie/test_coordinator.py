@@ -9,9 +9,10 @@ from ritualsgenie import RitualsGenieConnectionError, Sensor
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .common import (
     init_integration,
@@ -87,19 +88,20 @@ async def test_fill_updates_daily(
     assert client.sensor.call_count == 1
 
     diffuser.fill = "50-60%"
+    diffuser.fill_raw = "9000"
     await _tick(hass, freezer, timedelta(hours=23))
 
     assert client.sensor.call_count == 1
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "90-100%"
+    assert state.state == "95"
 
     await _tick(hass, freezer, timedelta(hours=1))
 
     assert client.sensor.call_count == 2
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "50-60%"
+    assert state.state == "55"
 
 
 async def test_fill_updates_on_cartridge_change(
@@ -112,13 +114,14 @@ async def test_fill_updates_on_cartridge_change(
     assert client.sensor.call_count == 1
 
     diffuser.has_cartridge = False
-    diffuser.fill = "Not available"
+    diffuser.fill = "No measurement available"
+    diffuser.fill_raw = "-1"
     await _tick(hass, freezer, timedelta(hours=1))
 
     assert client.sensor.call_count == 2
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "Not available"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_sensors_failure_does_not_block_setup(
@@ -171,6 +174,10 @@ async def test_diffuser_removed_from_account(
         assert state
         assert state.state == STATE_UNAVAILABLE
 
+    error = config_entry.runtime_data.sensors["lot123"].last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_key == "diffuser_not_found"
+
 
 async def test_disabled_sensors_not_fetched(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -215,7 +222,7 @@ async def test_perfume_fetched_for_fill(
 
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "90-100%"
+    assert state.state == "95"
 
 
 async def test_diffuser_offline_sensors_unavailable(

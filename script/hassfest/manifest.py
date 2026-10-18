@@ -18,9 +18,9 @@ from probatio.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
-from script.util import sort_manifest as util_sort_manifest
 
 from .icons import integration_category_keys
+from .manifest_util import sort_manifest as util_sort_manifest
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -416,9 +416,12 @@ def validate_categories(integration: Integration, known_categories: set[str]) ->
             f"Integrations of type {integration.integration_type} can't have categories",
         )
 
+    # Custom integrations only get a warning, so a category that is renamed
+    # or removed in core never breaks an existing repository
+    report = integration.add_error if integration.core else integration.add_warning
     for category in categories:
         if category not in known_categories:
-            integration.add_error(
+            report(
                 "manifest",
                 f"Unknown category `{category}`, "
                 f"see {HOMEASSISTANT_STRINGS_PATH} for the known categories",

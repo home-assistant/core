@@ -6,7 +6,6 @@ import importlib
 from operator import itemgetter
 from pathlib import Path
 import pkgutil
-import re
 import sys
 import tomllib
 from typing import Any
@@ -16,17 +15,10 @@ from packaging.utils import canonicalize_name
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
-
-# Requirements which can't be installed on all systems because they
-# rely on additional system packages. Requirements listed in
-# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt.
-EXCLUDED_REQUIREMENTS_ALL = {
-    "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "beewi-smartclim",  # depends on bluepy
-    "bluepy",
-    "evdev",
-}
+from script.hassfest.requirements_util import (
+    EXCLUDED_REQUIREMENTS_ALL,
+    normalize_package_name,
+)
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
@@ -242,6 +234,12 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
+# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
+# https://github.com/home-assistant/core/issues/185883
+# https://codeberg.org/obi/pysml/issues/33
+# Remove once pysml supports bitstring>=5
+bitstring<5
+
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
@@ -285,8 +283,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "ruff-format",  # it's just ruff
 )
 
-PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
-
 
 def explore_module(package: str, explore_children: bool) -> list[str]:
     """Explore the modules."""
@@ -329,23 +325,6 @@ def gather_recursive_requirements(
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
-
-
-def _normalize_package_name(package_name: str) -> str:
-    """Normalize a package name."""
-    # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return package_name.lower().replace("_", "-").replace(".", "-")
-
-
-def normalize_package_name(requirement: str) -> str:
-    """Return a normalized package name from a requirement string."""
-    # This function is also used in hassfest.
-    match = PACKAGE_REGEX.search(requirement)
-    if not match:
-        return ""
-
-    # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return _normalize_package_name(match.group(1))
 
 
 def comment_requirement(req: str) -> bool:

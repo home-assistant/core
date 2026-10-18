@@ -1,6 +1,7 @@
 {
   "domain": "electrasmart",
   "name": "Electra Smart",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@jafar-atili", "@noamokman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/electrasmart",
