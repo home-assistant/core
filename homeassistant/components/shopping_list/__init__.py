@@ -30,6 +30,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = probatio.Schema({DOMAIN: {}}, extra=probatio.ALLOW_EXTRA)
 
+__all__ = [
+    "DOMAIN",
+    "ShoppingData",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
