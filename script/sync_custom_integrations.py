@@ -121,6 +121,12 @@ def default_dest() -> Path:
     return Path(common_dir).parent / DEST_NAME
 
 
+def _positive_int(value: str) -> int:
+    if not value.isdigit() or int(value) < 1:
+        raise argparse.ArgumentTypeError(f"must be a positive integer: {value!r}")
+    return int(value)
+
+
 def _token() -> str:
     return subprocess.run(
         ["gh", "auth", "token"], check=True, capture_output=True, text=True
@@ -407,7 +413,7 @@ def main() -> None:
         "repos", nargs="*", type=_repo_arg, help="only sync these owner/repo"
     )
     parser.add_argument("--force", action="store_true", help="ignore recorded SHAs")
-    parser.add_argument("--workers", type=int, default=16)
+    parser.add_argument("--workers", type=_positive_int, default=16)
     parser.add_argument(
         "--dest",
         type=Path,
