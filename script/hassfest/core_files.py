@@ -52,7 +52,6 @@ MISSING_ALL = {
     "timer",
     "webhook",
     "websocket_api",
-    "zeroconf",
     "zone",
 }
 
