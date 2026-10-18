@@ -1,6 +1,5 @@
 """Support for image which integrates with other components."""
 
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -224,8 +223,17 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             last_updated := self._attr_image_last_updated
         ) is None:
             # Don't let a previous image be restored alongside a newer URL.
-            with suppress(FileNotFoundError):
+            try:
                 await aiofiles.os.remove(image_path)
+            except FileNotFoundError:
+                pass
+            except OSError as err:
+                _LOGGER.warning(
+                    "%s: Unable to remove image cache %s: %s",
+                    self.entity_id,
+                    image_path,
+                    err,
+                )
             return
 
         # A single-line JSON header ties the bytes to the state they belong to.
@@ -242,18 +250,29 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             + image.content
         )
         tmp_path = image_path.with_suffix(".tmp")
-        await aiofiles.os.makedirs(image_path.parent, exist_ok=True)
-        async with aiofiles.open(tmp_path, "wb") as fh:
-            await fh.write(payload)
-        # An interrupted write must never leave a truncated cache file.
-        await aiofiles.os.replace(tmp_path, image_path)
+        try:
+            await aiofiles.os.makedirs(image_path.parent, exist_ok=True)
+            async with aiofiles.open(tmp_path, "wb") as fh:
+                await fh.write(payload)
+            # An interrupted write must never leave a truncated cache file.
+            await aiofiles.os.replace(tmp_path, image_path)
+        except OSError as err:
+            _LOGGER.warning(
+                "%s: Unable to save image cache %s: %s", self.entity_id, image_path, err
+            )
 
     @override
     async def async_get_cached_data(self) -> Image | None:
+        image_path = self._cache_path()
         try:
-            async with aiofiles.open(self._cache_path(), "rb") as fh:
+            async with aiofiles.open(image_path, "rb") as fh:
                 data = await fh.read()
         except FileNotFoundError:
+            return None
+        except OSError as err:
+            _LOGGER.warning(
+                "%s: Unable to read image cache %s: %s", self.entity_id, image_path, err
+            )
             return None
 
         header, _, content = data.partition(b"\n")

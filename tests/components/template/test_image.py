@@ -1316,3 +1316,97 @@ async def test_cache_cleared_while_saving(
     cache_file = images_cache_dir / f"{TEST_IMAGE.entity_id}.bin"
     assert list(images_cache_dir.iterdir()) == [cache_file]
     assert cache_file.read_bytes().partition(b"\n")[2] == imgbytes_jpg
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_cache_write_error_does_not_block_removal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    imgbytes_jpg: bytes,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed cache write is logged and the entity is still removed."""
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+
+    entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
+    with patch("aiofiles.open", side_effect=OSError("No space left on device")):
+        await entity.async_remove()
+
+    assert hass.states.get(TEST_IMAGE.entity_id) is None
+    assert "Unable to save image cache" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_cache_read_error_does_not_block_setup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    images_cache_dir: Path,
+    imgbytes2_jpg: bytes,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unreadable cache is logged and the restored URL is fetched instead."""
+    # Opening a directory raises IsADirectoryError, an OSError.
+    (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").mkdir(parents=True)
+    respx.get("http://example2.com").respond(
+        stream=imgbytes2_jpg, content_type="image/jpeg"
+    )
+
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
+    fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes2_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+    assert "Unable to read image cache" in caplog.text
