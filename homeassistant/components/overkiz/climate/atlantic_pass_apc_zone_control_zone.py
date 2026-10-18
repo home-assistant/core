@@ -631,7 +631,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        hvac_mode = self.hvac_mode
+        # The setpoints are written even when the zone is off.
+        hvac_mode = self.device_hvac_mode
         commands: list[Command] = []
 
         if hvac_mode == HVACMode.HEAT_COOL:

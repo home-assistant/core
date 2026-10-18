@@ -1089,3 +1089,58 @@ async def test_zone_control_zone_derogation_applied_setpoint(
     state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+
+
+async def test_zone_control_zone_set_temperature_while_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the setpoint of the running side is written while the zone is off."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "cooling")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ZONE_CONTROL_ZONE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_HEATING_ON_OFF,
+                        "type": 3,
+                        "value": "off",
+                    },
+                    {
+                        "name": OverkizState.CORE_COOLING_ON_OFF,
+                        "type": 3,
+                        "value": "off",
+                    },
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    mock_client.execute_action_group.reset_mock()
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 24.0},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=ZONE_CONTROL_ZONE.device_url,
+        commands=[
+            ("setCoolingTargetTemperature", [24.0]),
+            ("setDerogationOnOffState", ["on"]),
+            *ZONE_CONTROL_ZONE_REFRESH_COMMANDS,
+        ],
+    )
