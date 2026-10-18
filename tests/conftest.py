@@ -151,8 +151,6 @@ from pytest_homeassistant.plugins import (
     translation_helper as translation_helper,
 )
 
-pytest_plugins = ["pytest_homeassistant.plugins"]
-
 
 @pytest.fixture
 def custom_integrations_enabled() -> bool:

@@ -116,7 +116,7 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         env:
-          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}
+          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt', 'packages/pytest-home-assistant/pyproject.toml') }}
           HASH_REQUIREMENTS: ${{ hashFiles('requirements.txt') }}
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
