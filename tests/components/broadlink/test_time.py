@@ -24,6 +24,8 @@ async def test_time(
 
     device = get_device("Guest room")
     mock_setup = await device.setup_entry(hass)
+    # Ignore the clock sync done on setup.
+    mock_setup.api.set_time.reset_mock()
 
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id

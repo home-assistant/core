@@ -1,11 +1,19 @@
 """Tests for Broadlink devices."""
 
-from unittest.mock import patch
+import asyncio
+from datetime import timedelta
+from unittest.mock import call, patch
 
 import broadlink_async.exceptions as blke
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.broadlink.const import BROADLINK_DATA, DOMAIN
+from homeassistant.components.broadlink.const import (
+    BROADLINK_DATA,
+    CONF_AUTO_SYNC_TIME,
+    DOMAIN,
+)
 from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
@@ -421,3 +429,171 @@ async def test_device_update_listener(
             .attributes[ATTR_FRIENDLY_NAME]
             .startswith("New Name")
         )
+
+
+AUTO_SYNC_TIME = {CONF_AUTO_SYNC_TIME: True}
+
+
+async def test_thermostat_time_sync(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the thermostat clock is set on setup and every half hour."""
+    await hass.config.async_set_time_zone("Europe/Warsaw")
+    # Sunday 2:30 local time (CEST), half an hour before DST ends.
+    freezer.move_to("2026-10-25 00:30:00+00:00")
+    device = get_device("Guest room")
+
+    mock_setup = await device.setup_entry(
+        hass, mock_entry=device.get_mock_entry(AUTO_SYNC_TIME)
+    )
+
+    mock_setup.api.set_time.assert_awaited_once_with(hour=2, minute=30, second=0, day=7)
+
+    # The clock falls back from 3:00 CEST to 2:00 CET, and is synced right away.
+    freezer.move_to("2026-10-25 01:00:05+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_setup.api.set_time.await_args_list[1] == call(
+        hour=2, minute=0, second=5, day=7
+    )
+
+    await hass.config_entries.async_unload(mock_setup.entry.entry_id)
+    freezer.move_to("2026-10-25 01:30:05+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_setup.api.set_time.await_count == 2
+
+
+async def test_thermostat_time_sync_half_hour_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a 30 minute DST change is synced right away."""
+    await hass.config.async_set_time_zone("Australia/Lord_Howe")
+    # Sunday 1:45 local time (+10:30), before the clock jumps from 2:00 to 2:30.
+    freezer.move_to("2026-10-03 15:15:00+00:00")
+    device = get_device("Guest room")
+
+    mock_setup = await device.setup_entry(
+        hass, mock_entry=device.get_mock_entry(AUTO_SYNC_TIME)
+    )
+    mock_setup.api.set_time.assert_awaited_once_with(hour=1, minute=45, second=0, day=7)
+
+    freezer.move_to("2026-10-03 15:30:05+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_setup.api.set_time.await_args_list[1] == call(
+        hour=2, minute=30, second=5, day=7
+    )
+
+
+async def test_thermostat_time_sync_time_zone_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the thermostat clock is set when the time zone changes."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2026-10-21 12:10:00+00:00")
+    device = get_device("Guest room")
+
+    mock_setup = await device.setup_entry(
+        hass, mock_entry=device.get_mock_entry(AUTO_SYNC_TIME)
+    )
+    mock_setup.api.set_time.assert_awaited_once_with(
+        hour=12, minute=10, second=0, day=3
+    )
+
+    await hass.config.async_update(time_zone="Europe/Warsaw")
+    await hass.async_block_till_done()
+
+    assert mock_setup.api.set_time.await_args_list[1] == call(
+        hour=14, minute=10, second=0, day=3
+    )
+
+
+async def test_thermostat_time_sync_disabled_by_default(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the thermostat clock is left alone unless the user opts in."""
+    device = get_device("Guest room")
+
+    mock_setup = await device.setup_entry(hass)
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_setup.api.set_time.assert_not_awaited()
+
+
+async def test_thermostat_time_sync_enabled_in_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test enabling the option reloads the entry and syncs the clock."""
+    device = get_device("Guest room")
+    mock_setup = await device.setup_entry(hass)
+    mock_setup.api.set_time.assert_not_awaited()
+
+    with patch(DEVICE_FACTORY, return_value=mock_setup.api):
+        result = await hass.config_entries.options.async_init(mock_setup.entry.entry_id)
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_AUTO_SYNC_TIME: True}
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
+    mock_setup.api.set_time.assert_awaited_once()
+
+
+async def test_thermostat_time_sync_does_not_block_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test the setup does not wait for the first clock sync."""
+    device = get_device("Guest room")
+    mock_api = device.get_mock_api()
+    release = asyncio.Event()
+    synced = False
+
+    async def slow_set_time(**kwargs: int) -> None:
+        nonlocal synced
+        await release.wait()
+        synced = True
+
+    mock_api.set_time.side_effect = slow_set_time
+
+    mock_setup = await device.setup_entry(
+        hass, mock_api=mock_api, mock_entry=device.get_mock_entry(AUTO_SYNC_TIME)
+    )
+
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
+    assert not synced
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert synced
+
+
+async def test_thermostat_time_sync_failure(hass: HomeAssistant) -> None:
+    """Test a failure to set the thermostat clock does not fail the setup."""
+    device = get_device("Guest room")
+    mock_api = device.get_mock_api()
+    mock_api.set_time.side_effect = blke.NetworkTimeoutError()
+
+    mock_setup = await device.setup_entry(
+        hass, mock_api=mock_api, mock_entry=device.get_mock_entry(AUTO_SYNC_TIME)
+    )
+
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
+    mock_api.set_time.assert_awaited_once()
+
+
+async def test_time_sync_only_for_thermostats(hass: HomeAssistant) -> None:
+    """Test the clock is not set on devices other than thermostats."""
+    device = get_device("Office")
+
+    mock_setup = await device.setup_entry(
+        hass, mock_entry=device.get_mock_entry(AUTO_SYNC_TIME)
+    )
+
+    mock_setup.api.set_time.assert_not_awaited()

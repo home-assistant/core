@@ -17,8 +17,10 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_REAUTH,
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.core import callback
@@ -26,7 +28,13 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
+from .const import (
+    CONF_AUTO_SYNC_TIME,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEVICE_TYPES,
+    DOMAIN,
+)
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +46,20 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     device: blk.Device
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> BroadlinkOptionsFlow:
+        """Get the options flow for this handler."""
+        return BroadlinkOptionsFlow()
+
+    @classmethod
+    @callback
+    @override
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for thermostats only."""
+        return config_entry.data[CONF_TYPE] in blk.SUPPORTED_TYPES[blk.hysen]
 
     @override
     @callback
@@ -344,3 +366,28 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         device.timeout = entry_data[CONF_TIMEOUT]
         await self.async_set_device(device)
         return await self.async_step_reset()
+
+
+class BroadlinkOptionsFlow(OptionsFlow):
+    """Handle Broadlink options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_AUTO_SYNC_TIME,
+                        default=self.config_entry.options.get(
+                            CONF_AUTO_SYNC_TIME, False
+                        ),
+                    ): bool,
+                }
+            ),
+        )

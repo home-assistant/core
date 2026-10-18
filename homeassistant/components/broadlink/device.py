@@ -15,13 +15,31 @@ from broadlink_async.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    EVENT_CORE_CONFIG_UPDATE,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_change
 
-from .const import BROADLINK_DATA, DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
-from .updater import BroadlinkUpdateManager, get_update_manager
+from .const import (
+    BROADLINK_DATA,
+    CONF_AUTO_SYNC_TIME,
+    DEFAULT_PORT,
+    DOMAIN,
+    DOMAINS_AND_TYPES,
+)
+from .updater import (
+    BroadlinkThermostatUpdateManager,
+    BroadlinkUpdateManager,
+    get_update_manager,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,6 +161,30 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         self.update_manager = update_manager
         self.hass.data[BROADLINK_DATA].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
+
+        # The thermostat runs its schedule off its own clock, which drifts and
+        # does not follow DST. If the user opted in, keep it in sync. Sync on
+        # the hour and half hour so DST changes, including Lord Howe Island's
+        # 30 minute shift, apply at once, and when the time zone changes.
+        if isinstance(
+            update_manager, BroadlinkThermostatUpdateManager
+        ) and config.options.get(CONF_AUTO_SYNC_TIME, False):
+            config.async_create_background_task(
+                self.hass, update_manager.async_auto_sync_time(), "broadlink_time_sync"
+            )
+            self.reset_jobs.append(
+                async_track_time_change(
+                    self.hass,
+                    update_manager.async_auto_sync_time,
+                    minute=[0, 30],
+                    second=5,
+                )
+            )
+            self.reset_jobs.append(
+                self.hass.bus.async_listen(
+                    EVENT_CORE_CONFIG_UPDATE, update_manager.async_auto_sync_time
+                )
+            )
 
         # Forward entry setup to related domains.
         await self.hass.config_entries.async_forward_entry_setups(
