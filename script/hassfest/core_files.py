@@ -22,7 +22,6 @@ MISSING_ALL = {
     "llm",
     "network",
     "person",
-    "recovery_mode",
     "shopping_list",
     "sun",
     "timer",
