@@ -3,8 +3,15 @@
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
-from homeassistant.components import infrared, radio_frequency
+from homeassistant.components import bluetooth, infrared, radio_frequency
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+from pytest_homeassistant.components.bluetooth import (
+    HCI0_SOURCE_ADDRESS,
+    HCI1_SOURCE_ADDRESS,
+    NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
+)
 from pytest_homeassistant.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -13,6 +20,38 @@ from pytest_homeassistant.components.radio_frequency.common import (
     MockRadioFrequencyCommand,
     MockRadioFrequencyEntity,
 )
+
+
+@pytest.fixture
+async def bluetooth_manager(hass: HomeAssistant) -> None:
+    """Set up the Bluetooth manager."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures(
+    "bluetooth_manager",
+    "register_hci0_scanner",
+    "register_hci1_scanner",
+    "register_non_connectable_scanner",
+)
+async def test_bluetooth_scanners(hass: HomeAssistant) -> None:
+    """Test registration of connectable and non-connectable scanners."""
+    scanners = {
+        scanner.source: scanner for scanner in bluetooth.async_current_scanners(hass)
+    }
+    assert scanners[HCI0_SOURCE_ADDRESS].connectable
+    assert scanners[HCI1_SOURCE_ADDRESS].connectable
+    assert not scanners[NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS].connectable
+
+
+@pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
+async def test_bluetooth_macos_adapter(hass: HomeAssistant) -> None:
+    """Test reloading Bluetooth with a mocked macOS adapter."""
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("init_infrared")
