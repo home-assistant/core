@@ -44,7 +44,6 @@ MISSING_ALL = {
     "ssdp",
     "sun",
     "tag",
-    "template",
     "timer",
     "webhook",
     "websocket_api",
