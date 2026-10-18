@@ -344,6 +344,43 @@ async def test_reauth_generate_token_failure_can_be_retried(
     assert result["reason"] == "reauth_successful"
 
 
+async def test_reauth_rejected_phone_number_can_be_retried(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that a phone number the API refuses keeps the confirmation."""
+    config_entry.add_to_hass(hass)
+
+    # The API answers, but refuses to send a code to the number.
+    with patch(
+        "electrasmart.api.ElectraAPI.generate_new_token",
+        return_value={"status": 0, "data": {"res": 1}},
+    ):
+        result = await config_entry.start_reauth_flow(hass)
+
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "invalid_phone_number"}
+
+    # The number the entry already holds is accepted on the next attempt.
+    async with _patch_success(hass):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == CONF_OTP
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_OTP: "1234"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
 async def test_reauth_invalid_otp(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
