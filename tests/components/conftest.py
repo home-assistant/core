@@ -1,7 +1,5 @@
 """Fixtures for component testing."""
 
-# ruff: noqa: PLC0414
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
@@ -56,13 +54,6 @@ from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
 import probatio
 import pytest
-from pytest_homeassistant.plugins import (
-    init_infrared_fixture as init_infrared_fixture,
-    init_radio_frequency_fixture as init_radio_frequency_fixture,
-    mock_infrared_emitter_entity_fixture as mock_infrared_emitter_entity_fixture,
-    mock_infrared_receiver_entity_fixture as mock_infrared_receiver_entity_fixture,
-    mock_rf_entity_fixture as mock_rf_entity_fixture,
-)
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -210,12 +201,6 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     )
 
     return mock_conversation_agent_fixture_helper(hass)
-
-
-# Radio frequency test fixtures
-
-
-# Infrared test fixtures
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
