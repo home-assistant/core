@@ -222,7 +222,6 @@ VU_SENSOR_TYPES: tuple[AirobotVUSensorEntityDescription, ...] = (
     # Air quality
     AirobotVUSensorEntityDescription(
         key="co2_level",
-        translation_key="co2_level",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,

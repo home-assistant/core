@@ -277,7 +277,7 @@
     'state': '45.0',
   })
 # ---
-# name: test_vu_sensors[sensor.airobot_ventilation_co2_level-entry]
+# name: test_vu_sensors[sensor.airobot_ventilation_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -293,7 +293,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.airobot_ventilation_co2_level',
+    'entity_id': 'sensor.airobot_ventilation_carbon_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -301,31 +301,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'CO2 level',
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
-    'original_name': 'CO2 level',
+    'original_name': 'Carbon dioxide',
     'platform': 'airobot',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co2_level',
+    'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_co2_level',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_vu_sensors[sensor.airobot_ventilation_co2_level-state]
+# name: test_vu_sensors[sensor.airobot_ventilation_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airobot Ventilation CO2 level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airobot Ventilation Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.airobot_ventilation_co2_level',
+    'entity_id': 'sensor.airobot_ventilation_carbon_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

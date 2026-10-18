@@ -233,7 +233,7 @@ async def test_vu_identity_rechecked_after_link_drop(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    entity_id = "sensor.airobot_ventilation_co2_level"
+    entity_id = "sensor.airobot_ventilation_carbon_dioxide"
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     # While the link stays up, the identity is not read again

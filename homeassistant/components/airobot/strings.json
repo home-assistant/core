@@ -101,9 +101,6 @@
       "air_temperature": {
         "name": "Air temperature"
       },
-      "co2_level": {
-        "name": "CO2 level"
-      },
       "device_uptime": {
         "name": "Device uptime"
       },
