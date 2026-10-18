@@ -100,6 +100,43 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the account credentials."""
+        if user_input is None:
+            return self._show_reconfigure_form({})
+
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+        api_key = user_input[CONF_API_KEY]
+        unique_id, errors = await _authenticate(username, password, api_key)
+        if errors:
+            return self._show_reconfigure_form(errors)
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_mismatch(reason="wrong_account")
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            title=username,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_API_KEY: api_key,
+            },
+        )
+
+    def _show_reconfigure_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        # Only the username is suggested, the secrets have to be entered again.
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_USERNAME: self._get_reconfigure_entry().data[CONF_USERNAME]},
+            ),
+            errors=errors,
+        )
+
 
 async def _authenticate(
     username: str, password: str, api_key: str
