@@ -200,3 +200,37 @@ async def test_coordinator_device_detail_token_refresh(
     assert mock_device_data.call_count == 2
     mock_device_data.assert_any_call("expired_token", MOCK_DEVICE_ID, timeout=(10, 30))
     mock_device_data.assert_any_call("fresh_token", MOCK_DEVICE_ID, timeout=(10, 30))
+
+
+async def test_coordinator_device_detail_bad_request_token_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test device-detail 400 refreshes cached token and retries."""
+    with (
+        patch(
+            "tank_utility.device.auth.get_token",
+            side_effect=["expired_token", "fresh_token", "fresh_token"],
+        ) as mock_token,
+        patch(
+            "tank_utility.device.get_devices",
+            return_value=[MOCK_DEVICE_ID],
+        ) as mock_devices,
+        patch(
+            "tank_utility.device.get_device_data",
+            side_effect=[
+                _mock_http_error(requests.codes.bad_request),
+                dict(DEVICE_DATA),
+            ],
+        ) as mock_device_data,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_token.call_count == 3
+    mock_token.assert_any_call(TEST_EMAIL, TEST_PASSWORD, force=True)
+    assert mock_devices.call_count == 2
+    assert mock_device_data.call_count == 2
+    mock_device_data.assert_any_call("expired_token", MOCK_DEVICE_ID, timeout=(10, 30))
+    mock_device_data.assert_any_call("fresh_token", MOCK_DEVICE_ID, timeout=(10, 30))

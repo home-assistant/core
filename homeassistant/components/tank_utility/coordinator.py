@@ -3,7 +3,7 @@
 from typing import Any, override
 
 import requests
-from tank_utility import device
+from tank_utility import auth, device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -35,10 +35,20 @@ class TankUtilityDataUpdateCoordinator(
 
     def _fetch_data(self) -> dict[str, dict[str, Any]]:
         """Fetch and flatten device data from Tank Utility API."""
-        raw_data = device.get_data(
-            self.config_entry.data[CONF_EMAIL],
-            self.config_entry.data[CONF_PASSWORD],
-        )
+        email = self.config_entry.data[CONF_EMAIL]
+        password = self.config_entry.data[CONF_PASSWORD]
+        try:
+            raw_data = device.get_data(email, password)
+        except requests.exceptions.HTTPError as err:
+            if (
+                err.response is not None
+                and err.response.status_code == requests.codes.bad_request
+            ):
+                auth.get_token(email, password, force=True)
+                raw_data = device.get_data(email, password)
+            else:
+                raise
+
         flattened: dict[str, dict[str, Any]] = {}
         for dev_id, dev_data in raw_data.items():
             item = dict(dev_data)
