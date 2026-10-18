@@ -247,3 +247,23 @@ class BroadlinkThermostatUpdateManager(BroadlinkUpdateManager[blk.hysen]):
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_full_status)
+
+    async def async_sync_time(self, _now: datetime | None = None) -> None:
+        """Set the device clock to the local time."""
+        now = dt_util.now()
+        try:
+            await self.device.async_request(
+                self.device.api.set_time,
+                hour=now.hour,
+                minute=now.minute,
+                second=now.second,
+                day=now.isoweekday(),
+            )
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.debug(
+                "Failed to set the time on %s (%s at %s): %s",
+                self.device.name,
+                self.device.api.model,
+                self.device.api.host[0],
+                err,
+            )

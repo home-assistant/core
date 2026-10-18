@@ -26,9 +26,14 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_change
 
 from .const import BROADLINK_DATA, DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
-from .updater import BroadlinkUpdateManager, get_update_manager
+from .updater import (
+    BroadlinkThermostatUpdateManager,
+    BroadlinkUpdateManager,
+    get_update_manager,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,6 +155,18 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         self.update_manager = update_manager
         self.hass.data[BROADLINK_DATA].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
+
+        # The thermostat runs its schedule off its own clock, which drifts and
+        # does not follow DST. Sync on the hour so DST changes apply at once.
+        if isinstance(update_manager, BroadlinkThermostatUpdateManager):
+            config.async_create_background_task(
+                self.hass, update_manager.async_sync_time(), "broadlink_time_sync"
+            )
+            self.reset_jobs.append(
+                async_track_time_change(
+                    self.hass, update_manager.async_sync_time, minute=0, second=5
+                )
+            )
 
         # Forward entry setup to related domains.
         await self.hass.config_entries.async_forward_entry_setups(
