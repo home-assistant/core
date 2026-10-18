@@ -1,6 +1,7 @@
 {
   "domain": "teltonika",
   "name": "Teltonika",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@karlbeecken"],
   "config_flow": true,
   "dhcp": [

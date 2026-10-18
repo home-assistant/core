@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserEntity
+from .entity import DiffuserEntity, rituals_action
 
 PARALLEL_UPDATES = 1
 
@@ -67,6 +67,7 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
         return self.entity_description.value_fn(self.hub)
 
     @override
+    @rituals_action
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if not value.is_integer():

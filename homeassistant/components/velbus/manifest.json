@@ -1,6 +1,7 @@
 {
   "domain": "velbus",
   "name": "Velbus",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
   "dependencies": ["usb", "file_upload"],

@@ -1,4 +1,4 @@
-"""Shared LoRaWAN connection registration and vendor discovery."""
+"""The LoRaWAN integration."""
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -7,6 +7,7 @@ from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_lorawan
 
+from . import websocket_api
 from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connection
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
@@ -28,6 +29,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     registry = hass.data[DATA_REGISTRY] = ConnectionRegistry(
         await async_get_lorawan(hass)
     )
+
+    websocket_api.async_setup(hass)
 
     @callback
     def shutdown(event: Event) -> None:

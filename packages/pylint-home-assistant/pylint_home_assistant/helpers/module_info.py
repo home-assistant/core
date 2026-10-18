@@ -7,6 +7,8 @@ _INTEGRATION_ROOT = "homeassistant.components"
 _INTEGRATION_ROOT_DOT = f"{_INTEGRATION_ROOT}."
 _INTEGRATION_TEST_ROOT = "tests.components"
 _INTEGRATION_TEST_ROOT_DOT = f"{_INTEGRATION_TEST_ROOT}."
+_INTEGRATION_TEST_HELPER_ROOT = "pytest_homeassistant.components"
+_INTEGRATION_TEST_HELPER_ROOT_DOT = f"{_INTEGRATION_TEST_HELPER_ROOT}."
 _ROOT_SEGMENT_COUNT = _INTEGRATION_ROOT.count(".") + 1
 _MODULE_REGEX: re.Pattern[str] = re.compile(
     rf"^{re.escape(_INTEGRATION_ROOT)}\.\w+(\.\w+)?$"
@@ -41,6 +43,8 @@ def parse_module(
         root = _INTEGRATION_ROOT
     elif include_test and module_name.startswith(_INTEGRATION_TEST_ROOT_DOT):
         root = _INTEGRATION_TEST_ROOT
+    elif include_test and module_name.startswith(_INTEGRATION_TEST_HELPER_ROOT_DOT):
+        root = _INTEGRATION_TEST_HELPER_ROOT
     else:
         return None
 
