@@ -38,7 +38,6 @@ MISSING_ALL = {
     "shopping_list",
     "ssdp",
     "sun",
-    "tag",
     "timer",
     "websocket_api",
     "zone",
