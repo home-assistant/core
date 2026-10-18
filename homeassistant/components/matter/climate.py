@@ -477,12 +477,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     | ThermostatRunningState.FanStage3
                 ):
                     self._attr_hvac_action = HVACAction.FAN
-                elif self._attr_hvac_mode == HVACMode.OFF:
-                    # the system mode is off
+                elif running_state_value == 0 and self._attr_hvac_mode == HVACMode.OFF:
                     self._attr_hvac_action = HVACAction.OFF
-                else:
-                    # the device is on but no relay is active
+                elif running_state_value == 0:
                     self._attr_hvac_action = HVACAction.IDLE
+                else:
+                    self._attr_hvac_action = HVACAction.OFF
 
     @callback
     def _update_target_temperatures(self) -> None:
