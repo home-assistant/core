@@ -14,10 +14,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from .const import CONF_DEVICE_TYPE, NADDeviceType
+from .const import CONF_DEVICE_TYPE, DOMAIN, NADDeviceType
 from .entity import NadIrEntity
 
 PARALLEL_UPDATES = 1
@@ -140,7 +141,16 @@ class NadIrReceiverMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        await self._send_nad_command(SOURCE_TO_CODE[source])
+        if (code := SOURCE_TO_CODE.get(source)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": source,
+                    "valid_sources": ", ".join(SOURCE_TO_CODE),
+                },
+            )
+        await self._send_nad_command(code)
         self._attr_source = source
         self.async_write_ha_state()
 

@@ -335,5 +335,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_source": {
+      "message": "Cannot select input source {invalid_source}. Valid sources: {valid_sources}."
+    }
   }
 }

@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.nad_infrared.const import NADDeviceType
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
@@ -282,3 +283,27 @@ async def test_amplifier_media_player_sends_correct_code(
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [NADAmplifierCode.ON]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_invalid_source(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Selecting an unknown source raises a validation error and sends nothing."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "input_8"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_source"
+    assert exc_info.value.translation_placeholders == {
+        "invalid_source": "input_8",
+        "valid_sources": (
+            "input_1, input_2, input_3, input_4, input_5, input_6, input_7, tuner"
+        ),
+    }
+    assert mock_infrared_emitter_entity.send_command_calls == []
