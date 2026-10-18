@@ -893,6 +893,7 @@ class AnthropicDeltaStream:
         token_stats["message_id"] = self.message_id
         if self._diagnostics is not None:
             token_stats["diagnostics"] = self._diagnostics
+        LOGGER.debug("Response usage and cache diagnostics: %s", token_stats)
         chat_log.async_trace(token_stats)
 
     def _create_token_stats(self) -> dict[str, Any]:
