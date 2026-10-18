@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 from datetime import timedelta
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from pysnmp.error import PySnmpError
 from pysnmp.proto import errind
@@ -1152,6 +1152,33 @@ async def test_reconfigure_flow_updates_credentials(
     assert entry.data[CONF_PORT] == 1161
     # The entry had no update listener, so it has to be reloaded explicitly
     assert mock_setup_entry.called
+
+
+async def test_reconfigure_flow_uses_update_listener(hass: HomeAssistant) -> None:
+    """Test that a loaded entry is reloaded through its update listener."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    listener = AsyncMock()
+    entry.add_update_listener(listener)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.1", "version": "1"}
+    )
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"community": "private"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["community"] == "private"
+    # The update listener is responsible for reloading the entry
+    assert listener.called
 
 
 async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
