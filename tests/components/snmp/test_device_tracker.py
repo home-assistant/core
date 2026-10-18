@@ -573,6 +573,37 @@ async def test_is_migrated_table_ignores_other_agents(
     )
 
 
+async def test_is_migrated_table_requires_the_default_context(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a table polled through another context is not migrated."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.1",
+            CONF_PORT: 161,
+            CONF_CONTEXT_NAME: "device",
+        },
+        subentries_data=[
+            {
+                "data": {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},
+                "subentry_type": SUBENTRY_TYPE_DEVICE_TRACKER,
+                "title": "Device tracker",
+                "unique_id": SUBENTRY_TYPE_DEVICE_TRACKER,
+            }
+        ],
+    ).add_to_hass(hass)
+
+    assert not _is_migrated_table(
+        hass,
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_PORT: 161,
+            CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2",
+        },
+    )
+
+
 async def test_async_setup_scanner_v3_credentials(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,

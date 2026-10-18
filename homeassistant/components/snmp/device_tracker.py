@@ -33,6 +33,7 @@ from .const import (
     CONF_AUTH_KEY,
     CONF_BASEOID,
     CONF_COMMUNITY,
+    CONF_CONTEXT_NAME,
     CONF_PRIV_KEY,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
@@ -94,6 +95,10 @@ def _is_migrated_table(hass: HomeAssistant, config: ConfigType) -> bool:
         if entry.data.get(CONF_PORT, DEFAULT_PORT) != config.get(
             CONF_PORT, DEFAULT_PORT
         ):
+            continue
+        # An import always targets the empty context, so a table polled through
+        # another context did not migrate this block.
+        if entry.data.get(CONF_CONTEXT_NAME):
             continue
         if any(
             subentry.data.get(CONF_BASEOID) == baseoid
