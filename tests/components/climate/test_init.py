@@ -9,7 +9,13 @@ import probatio
 from propcache.api import cached_property
 import pytest
 
-from homeassistant.components.climate import DOMAIN, ClimateEntity, HVACMode
+from homeassistant.components.climate import (
+    DOMAIN,
+    ClimateEntity,
+    ClimateExtraStoredData,
+    HVACMode,
+    RestoreClimate,
+)
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -40,8 +46,10 @@ from homeassistant.components.climate.services import (
     _async_service_temperature_set,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
+from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -51,7 +59,9 @@ from homeassistant.util.unit_system import (
 from tests.common import (
     MockConfigEntry,
     MockEntity,
+    async_mock_restore_state_shutdown_restart,
     async_mock_service,
+    mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
 
@@ -1538,6 +1548,48 @@ async def test_deprecated_temperature_member_read_reports_the_reader(
     assert f"{__name__}::MigratedClimateEntity" not in caplog.text
 
 
+@pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
+@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
+async def test_deprecated_temperature_member_core_declaration_raises(
+    prefix: str, member: str, native_value: Any
+) -> None:
+    """Test a core integration still declaring a deprecated member raises."""
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "homeassistant.components.test.climate::CoreClimateEntity provides the "
+            f"deprecated {prefix}{member},"
+        ),
+    ):
+        type(
+            "CoreClimateEntity",
+            (MockShimClimateEntity,),
+            {
+                "__module__": "homeassistant.components.test.climate",
+                f"{prefix}{member}": native_value,
+            },
+        )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["homeassistant/components/hue"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_temperature_member_core_read_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test a core integration reading a deprecated member raises."""
+    entity = _migrated_entity("MigratedClimateEntity")
+    entity.hass = hass
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'hue' reads the deprecated "
+            "MigratedClimateEntity.current_temperature"
+        ),
+    ):
+        _ = entity.current_temperature
+
+
 @pytest.mark.parametrize(
     "integration_frame_path",
     [
@@ -1909,3 +1961,413 @@ async def test_migrated_grandparent_property_wins_over_descendant_attributes(
 
     assert getattr(entity, f"native_{member}") is grandparent_value
     assert getattr(entity, member) is grandparent_value
+
+
+class MockRestoreClimate(MockClimateEntity, RestoreClimate):
+    """Mock climate entity restoring its temperatures when added."""
+
+    _attr_min_temp = 4
+    _attr_max_temp = 30
+    restored: ClimateExtraStoredData | None
+
+    def __init__(self, validate_range: bool = False, **values: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(**values)
+        self._validate_range = validate_range
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the temperatures."""
+        await super().async_added_to_hass()
+        self.restored = await self.async_get_last_climate_data(
+            validate_range=self._validate_range
+        )
+
+
+@pytest.mark.parametrize(
+    ("supported_features", "expected"),
+    [
+        pytest.param(
+            ClimateEntityFeature.TARGET_TEMPERATURE,
+            {
+                "native_current_temperature": 21.5,
+                "native_target_temperature": 20,
+                "native_target_temperature_high": None,
+                "native_target_temperature_low": None,
+                "native_temperature_unit": UnitOfTemperature.FAHRENHEIT,
+            },
+            id="target",
+        ),
+        pytest.param(
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+            {
+                "native_current_temperature": 21.5,
+                "native_target_temperature": 20,
+                "native_target_temperature_high": 25,
+                "native_target_temperature_low": 15,
+                "native_temperature_unit": UnitOfTemperature.FAHRENHEIT,
+            },
+            id="range",
+        ),
+    ],
+)
+async def test_restore_climate_save_state(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    register_test_integration: MockConfigEntry,
+    supported_features: ClimateEntityFeature,
+    expected: dict[str, Any],
+) -> None:
+    """Test RestoreClimate stores its temperatures in the native unit."""
+    entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    entity._attr_supported_features = supported_features
+    entity._attr_native_current_temperature = 21.5
+    entity._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    assert hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"] == expected
+
+
+STORED_CELSIUS = {
+    "native_current_temperature": 21.5,
+    "native_target_temperature": 20,
+    "native_target_temperature_high": 25,
+    "native_target_temperature_low": 15,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
+STORED_FAHRENHEIT = {
+    "native_current_temperature": 50,
+    "native_target_temperature": 68,
+    "native_target_temperature_high": 77,
+    "native_target_temperature_low": 59,
+    "native_temperature_unit": UnitOfTemperature.FAHRENHEIT,
+}
+ATTRIBUTES_FAHRENHEIT = {
+    ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 50,
+    ClimateEntityStateAttribute.TARGET_TEMPERATURE: 68,
+    ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 77,
+    ClimateEntityStateAttribute.TARGET_TEMP_LOW: 59,
+}
+
+
+def _restored(
+    current: float | None, target: float | None, high: float | None, low: float | None
+) -> ClimateExtraStoredData:
+    """Return restored climate data in Celsius."""
+    return ClimateExtraStoredData(
+        native_current_temperature=current,
+        native_target_temperature=target,
+        native_target_temperature_high=high,
+        native_target_temperature_low=low,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+    )
+
+
+@pytest.mark.parametrize(
+    ("unit_system", "attributes", "extra_data", "validate_range", "expected"),
+    [
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            STORED_CELSIUS,
+            False,
+            _restored(21.5, 20, 25, 15),
+            id="extra_data",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {**STORED_CELSIUS, "last_active_hvac_mode": HVACMode.COOL},
+            False,
+            _restored(21.5, 20, 25, 15),
+            id="extra_data_with_subclass_fields",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            STORED_FAHRENHEIT,
+            False,
+            _restored(10, 20, 25, 15),
+            id="extra_data_other_native_unit",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {
+                **ATTRIBUTES_FAHRENHEIT,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            STORED_CELSIUS,
+            False,
+            _restored(21.5, 20, 25, 15),
+            id="extra_data_preferred_over_attributes",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                **ATTRIBUTES_FAHRENHEIT,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            None,
+            False,
+            _restored(10, 20, 25, 15),
+            id="attributes_with_unit",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                **ATTRIBUTES_FAHRENHEIT,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            {"native_target_temperature": 21},
+            False,
+            _restored(10, 20, 25, 15),
+            id="attributes_with_incomplete_extra_data",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            ATTRIBUTES_FAHRENHEIT,
+            None,
+            False,
+            _restored(10, 20, 25, 15),
+            id="attributes_without_unit_in_system_unit",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {ClimateEntityStateAttribute.TARGET_TEMPERATURE: 20},
+            None,
+            False,
+            _restored(None, 20, None, None),
+            id="attributes_without_unit_metric",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {**STORED_CELSIUS, "native_temperature_unit": "invalid"},
+            False,
+            None,
+            id="invalid_unit_extra_data",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 20,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+            },
+            None,
+            False,
+            None,
+            id="invalid_unit_attributes",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {
+                **STORED_CELSIUS,
+                "native_current_temperature": 0,
+                "native_target_temperature": "abc",
+                "native_target_temperature_high": [],
+                "native_target_temperature_low": "nan",
+            },
+            False,
+            _restored(0, None, None, None),
+            id="invalid_values",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {
+                **STORED_CELSIUS,
+                "native_current_temperature": "inf",
+                "native_target_temperature": "21.5",
+            },
+            False,
+            _restored(None, 21.5, 25, 15),
+            id="numeric_strings",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {
+                **STORED_CELSIUS,
+                "native_current_temperature": 40,
+                "native_target_temperature": 31,
+                "native_target_temperature_high": 30,
+                "native_target_temperature_low": 3,
+            },
+            False,
+            _restored(40, 31, 30, 3),
+            id="out_of_range_kept",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {
+                **STORED_CELSIUS,
+                "native_current_temperature": 40,
+                "native_target_temperature": 31,
+                "native_target_temperature_high": 30,
+                "native_target_temperature_low": 3,
+            },
+            True,
+            _restored(40, None, 30, None),
+            id="out_of_range_validated",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            {
+                **STORED_CELSIUS,
+                "native_target_temperature": 30.4,
+                "native_target_temperature_high": 30.5,
+                "native_target_temperature_low": 3.4,
+            },
+            True,
+            _restored(21.5, 30, 30, None),
+            id="slightly_out_of_range_clamped",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {ClimateEntityStateAttribute.TARGET_TEMPERATURE: 39},
+            None,
+            False,
+            _restored(
+                None,
+                TemperatureConverter.convert(
+                    39, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                ),
+                None,
+                None,
+            ),
+            id="rounded_attribute",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {ClimateEntityStateAttribute.TARGET_TEMPERATURE: 39},
+            None,
+            True,
+            _restored(None, 4, None, None),
+            id="rounded_attribute_clamped",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {ClimateEntityStateAttribute.TARGET_TEMPERATURE: 38},
+            None,
+            True,
+            _restored(None, None, None, None),
+            id="attribute_out_of_range_validated",
+        ),
+    ],
+)
+async def test_restore_climate_restore_state(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    unit_system: UnitSystem,
+    attributes: dict[str, Any],
+    extra_data: dict[str, Any] | None,
+    validate_range: bool,
+    expected: ClimateExtraStoredData | None,
+) -> None:
+    """Test RestoreClimate restores its temperatures in the native unit."""
+    hass.config.units = unit_system
+    mock_restore_cache_with_extra_data(
+        hass, ((State("climate.test", HVACMode.HEAT, attributes), extra_data),)
+    )
+    entity = MockRestoreClimate(
+        validate_range=validate_range, name="test", entity_id="climate.test"
+    )
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity.restored == expected
+
+
+async def test_restore_climate_overflow(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test RestoreClimate drops temperatures which overflow a float."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("climate.test", HVACMode.HEAT),
+                {
+                    **STORED_CELSIUS,
+                    # Finite in Celsius, but infinite once converted to Fahrenheit
+                    "native_current_temperature": 1e308,
+                    "native_target_temperature": 10**400,
+                },
+            ),
+        ),
+    )
+    entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    entity._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity.restored is not None
+    assert entity.restored.native_current_temperature is None
+    assert entity.restored.native_target_temperature is None
+
+
+async def test_restore_climate_round_trip(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test saved temperatures are restored unchanged on a Fahrenheit system.
+
+    The state attributes are rounded Fahrenheit values, restoring from them
+    would drift the Celsius temperatures across restarts.
+    """
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    entity._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    entity._attr_native_current_temperature = 21.4
+    entity._attr_native_target_temperature = 20.3
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(register_test_integration.entry_id)
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    restored_entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[restored_entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert restored_entity.restored == _restored(21.4, 20.3, 25, 15)
+
+
+async def test_restore_climate_no_last_state(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test RestoreClimate restores nothing without a last state."""
+    entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity.restored is None

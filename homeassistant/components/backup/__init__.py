@@ -123,7 +123,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> None:
     """Set up a config entry."""
     backup_manager: BackupManager = hass.data[DATA_MANAGER]
     coordinator = BackupDataUpdateCoordinator(hass, entry, backup_manager)
@@ -135,12 +135,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback

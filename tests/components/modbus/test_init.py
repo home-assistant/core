@@ -82,6 +82,7 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
+from homeassistant.components.modbus.schemas import CONFIG_SCHEMA
 from homeassistant.components.modbus.validators import (
     check_config,
     duplicate_fan_mode_validator,
@@ -200,6 +201,14 @@ async def test_nan_validator() -> None:
         nan_validator("x15")
     with pytest.raises(probatio.Invalid):
         nan_validator("not a hex string")
+
+
+async def test_tcp_hub_without_host_is_invalid() -> None:
+    """Test the hub type selects the schema that reports the error."""
+    with pytest.raises(
+        probatio.Invalid, match=r"required key not provided at 'modbus\[0\]\.host'"
+    ):
+        CONFIG_SCHEMA({DOMAIN: {CONF_TYPE: TCP, CONF_PORT: 502}})
 
 
 @pytest.mark.parametrize(

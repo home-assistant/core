@@ -56,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MotionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionConfigEntry) -> None:
     """Set up Motionblinds Bluetooth device from a config entry."""
 
     _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
@@ -109,8 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MotionConfigEntry) -> bo
 
     _LOGGER.debug("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
-    return True
-
 
 async def options_update_listener(
     hass: HomeAssistant, entry: MotionConfigEntry
@@ -133,7 +131,7 @@ async def apply_options(hass: HomeAssistant, entry: MotionConfigEntry) -> None:
     await device.set_permanent_connection(permanent_connection)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MotionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MotionConfigEntry) -> None:
     """Unload Motionblinds Bluetooth device from a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -14,7 +14,6 @@ from homeassistant.components.usb import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -24,7 +23,6 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import (
-    DEVICE_CONFLICT_ISSUE_FORMAT,
     ESPHomeManager,
     async_create_api_client,
     async_get_manufacturer_model,
@@ -87,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Set up the esphome component."""
     host: str = entry.data[CONF_HOST]
     password: str | None = entry.data[CONF_PASSWORD]
@@ -117,26 +115,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     )
     await manager.async_start()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Unload an esphome config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data.loaded_platforms
     )
-    if unload_ok:
-        await cleanup_instance(entry)
-    return unload_ok
+    await cleanup_instance(entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Remove an esphome config entry."""
     if bluetooth_mac_address := entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS):
         async_remove_scanner(hass, bluetooth_mac_address.upper())
-    async_delete_issue(
-        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
-    )
     await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()
 
     await _async_clear_dynamic_encryption_key(hass, entry)

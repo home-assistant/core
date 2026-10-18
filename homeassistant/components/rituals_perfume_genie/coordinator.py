@@ -10,14 +10,17 @@ from ritualsgenie import (
     RitualsGenieAuthenticationError,
     RitualsGenieError,
     RitualsGenieHub,
+    RitualsGenieHublot,
     RitualsGenieRateLimitError,
     RitualsGenieSensors,
     Sensor,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -47,12 +50,23 @@ class RitualsRuntimeData:
 def _update_failed(err: RitualsGenieError) -> Exception:
     """Return the exception a coordinator raises for a library error."""
     if isinstance(err, RitualsGenieAuthenticationError):
-        return ConfigEntryAuthFailed(err)
+        return ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        )
 
     if isinstance(err, RitualsGenieRateLimitError):
-        return UpdateFailed(str(err), retry_after=err.retry_after)
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="rate_limited",
+            retry_after=err.retry_after,
+        )
 
-    return UpdateFailed(str(err))
+    # The coordinator logs this message, so the error of the library is kept.
+    return UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+        translation_placeholders={"error": str(err)},
+    )
 
 
 class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
@@ -68,6 +82,7 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
+        self.hardware: dict[str, RitualsGenieHublot] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -83,8 +98,60 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
             hubs = await self.client.hubs()
         except RitualsGenieError as err:
             raise _update_failed(err) from err
+        finally:
+            # A login can succeed while the request after it fails. Keep that
+            # token too, or every setup retry would log in again.
+            self._async_store_token()
+
+        await self._async_update_hardware(hubs)
 
         return {hub.hublot: hub for hub in hubs}
+
+    @callback
+    def _async_store_token(self) -> None:
+        """Store a new token, so a restart doesn't need another login.
+
+        Rituals locks an account after about a dozen logins in an hour, which
+        a few restarts in a row would otherwise get close to. The client logs
+        in by itself; this update runs often enough to pick up any new token.
+        """
+        token = self.client.token
+        if token is None or token == self.config_entry.data.get(CONF_TOKEN):
+            return
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data={**self.config_entry.data, CONF_TOKEN: token}
+        )
+
+    async def _async_update_hardware(self, hubs: list[RitualsGenieHub]) -> None:
+        """Fetch the hardware details of diffusers we don't know yet.
+
+        Only this tells which model a diffuser is. That never changes, so it
+        is fetched once per diffuser. Not worth failing the update over: the
+        next update tries again.
+        """
+        device_registry = dr.async_get(self.hass)
+
+        for hub in hubs:
+            if hub.hublot in self.hardware:
+                continue
+
+            try:
+                hardware = await self.client.hublot(hub.hublot)
+            except RitualsGenieError as err:
+                _LOGGER.debug("Could not fetch the model of %s: %s", hub.hublot, err)
+                continue
+
+            self.hardware[hub.hublot] = hardware
+
+            # A diffuser that is already known gets its model right away.
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, hub.hublot), self.config_entry.entry_id
+            )
+            if device and hardware.device_version:
+                device_registry.async_update_device(
+                    device.id, model=hardware.device_version
+                )
 
 
 class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None]):
@@ -121,7 +188,11 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
     async def _async_update_data(self) -> RitualsGenieSensors | None:
         """Fetch the sensor readings from Rituals."""
         if (hub := self.hubs.data.get(self.hublot)) is None:
-            raise UpdateFailed(f"Diffuser {self.hublot} is no longer on the account")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="diffuser_not_found",
+                translation_placeholders={"hublot": self.hublot},
+            )
 
         client = self.hubs.client
         previous = self.data

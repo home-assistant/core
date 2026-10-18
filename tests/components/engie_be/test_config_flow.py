@@ -7,12 +7,17 @@ from aioengiebelgium import (
     EngieBeCommunicationError,
     EngieBeError,
     EngieBeMfaError,
+    MfaMethod,
 )
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.engie_be.const import CONF_MFA_METHOD, DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.components.engie_be.const import (
+    CONF_MFA_METHOD,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -239,3 +244,110 @@ async def test_jwt_subject_missing_shows_form_error(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_setup_entry.called
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication flow."""
+    mock_engie_client.return_value.subject = SUBJECT
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"][CONF_EMAIL] == EMAIL
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    mock_engie_client.return_value.async_start_authentication.assert_called_once()
+    assert mock_engie_client.return_value.async_start_authentication.call_args.args[
+        :3
+    ] == (EMAIL, "new-password", MfaMethod.SMS)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: EMAIL,
+        CONF_MFA_METHOD: "sms",
+        CONF_ACCESS_TOKEN: "new-access-token",
+        CONF_REFRESH_TOKEN: "new-refresh-token",
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(
+            EngieBeCommunicationError("boom"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            EngieBeAuthenticationError("boom"), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(EngieBeError("boom"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test recoverable errors in the reauthentication flow."""
+    mock_engie_client.return_value.subject = SUBJECT
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_engie_client.return_value.async_start_authentication.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_engie_client.return_value.async_start_authentication.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["step_id"] == "mfa"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "new-access-token"
+
+
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication aborts when signing in to a different account."""
+    mock_engie_client.return_value.subject = "auth0|7a3c9e21b48f5d0261af3d77"
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "access-token"

@@ -11,7 +11,13 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThreemaConfigEntry
-from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
+from .client import (
+    ThreemaAuthError,
+    ThreemaConnectionError,
+    ThreemaNoCreditsError,
+    ThreemaRateLimitError,
+    ThreemaSendError,
+)
 from .const import DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
 PARALLEL_UPDATES = 1
@@ -66,6 +72,16 @@ class ThreemaNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
+            ) from err
+        except ThreemaNoCreditsError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_credits",
+            ) from err
+        except ThreemaRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
             ) from err
         except (ThreemaSendError, ThreemaConnectionError) as err:
             raise HomeAssistantError(

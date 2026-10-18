@@ -1,6 +1,7 @@
 {
   "domain": "ecobee",
   "name": "ecobee",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
