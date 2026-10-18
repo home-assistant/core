@@ -1,15 +1,12 @@
 """The Airobot integration."""
 
-from typing import Any
-
 from modbus_connection import ModbusTcpParams
 from pyairobotmodbus import DEFAULT_PORT, DEFAULT_UNIT_ID
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_DEVICE_TYPE, DEVICE_TYPE_VENTILATION, DOMAIN
 from .coordinator import (
@@ -36,23 +33,6 @@ def _is_ventilation_entry(entry: AirobotConfigEntry) -> bool:
     return entry.data.get(CONF_DEVICE_TYPE) == DEVICE_TYPE_VENTILATION
 
 
-async def _async_migrate_vu_unique_ids(
-    hass: HomeAssistant, entry: AirobotConfigEntry
-) -> None:
-    """Move entities created before the MAC was known to MAC unique IDs."""
-    if (mac := entry.unique_id) is None:
-        return
-    prefix = f"{entry.entry_id}_"
-
-    @callback
-    def _migrate(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
-        if not entity_entry.unique_id.startswith(prefix):
-            return None
-        return {"new_unique_id": f"{mac}_{entity_entry.unique_id.removeprefix(prefix)}"}
-
-    await er.async_migrate_entries(hass, entry.entry_id, _migrate)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> bool:
     """Set up Airobot from a config entry."""
     coordinator: AirobotDataUpdateCoordinator | AirobotVUCoordinator
@@ -72,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> b
                 translation_placeholders={"host": entry.data[CONF_HOST]},
             ) from err
         coordinator = AirobotVUCoordinator(hass, entry, unit)
-        await _async_migrate_vu_unique_ids(hass, entry)
         platforms = VU_PLATFORMS
     else:
         coordinator = AirobotDataUpdateCoordinator(hass, entry)

@@ -650,9 +650,6 @@ async def test_dhcp_discovery_ventilation_manual_duplicate(
         title="Airobot Ventilation",
     )
     vu_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(vu_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -668,12 +665,9 @@ async def test_dhcp_discovery_ventilation_manual_duplicate(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    # The manual entry is upgraded with the discovered MAC so future
-    # IP changes are tracked through the unique ID
-    assert vu_entry.unique_id == "aa:bb:cc:dd:ee:ff"
-    assert vu_entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
-    # Reloaded so its entities move to MAC unique IDs right away
-    assert len(mock_setup_entry.mock_calls) == 2
+    # The manual entry stays keyed by host
+    assert vu_entry.unique_id is None
+    assert CONF_MAC not in vu_entry.data
 
 
 async def test_dhcp_discovery_ventilation_host_of_other_unit(

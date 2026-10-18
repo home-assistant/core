@@ -190,39 +190,6 @@ async def test_vu_unique_ids_fall_back_to_entry_id(
     )
 
 
-async def test_vu_unique_ids_migrate_to_mac(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_vu_client: AsyncMock,
-    mock_vu_config_entry: MockConfigEntry,
-) -> None:
-    """Test entities created before the MAC was known move to MAC unique IDs."""
-    mock_vu_config_entry.add_to_hass(hass)
-    old = entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"{mock_vu_config_entry.entry_id}_co2_level",
-        config_entry=mock_vu_config_entry,
-    )
-    current = entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "aa:bb:cc:dd:ee:ff_voc",
-        config_entry=mock_vu_config_entry,
-    )
-
-    with patch("homeassistant.components.airobot.VU_PLATFORMS", [Platform.SENSOR]):
-        await hass.config_entries.async_setup(mock_vu_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    migrated = entity_registry.async_get(old.entity_id)
-    assert migrated is not None
-    assert migrated.unique_id == "aa:bb:cc:dd:ee:ff_co2_level"
-    unchanged = entity_registry.async_get(current.entity_id)
-    assert unchanged is not None
-    assert unchanged.unique_id == "aa:bb:cc:dd:ee:ff_voc"
-
-
 OTHER_UNIT = AirobotIdentity(serial_number="07654321", mac_address="11:22:33:44:55:66")
 
 
