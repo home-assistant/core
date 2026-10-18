@@ -48,7 +48,6 @@ MISSING_ALL = {
     "sun",
     "system_health",
     "tag",
-    "template",
     "timer",
     "webhook",
     "websocket_api",
