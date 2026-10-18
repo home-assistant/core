@@ -152,3 +152,9 @@ from pytest_homeassistant.plugins import (
 )
 
 pytest_plugins = ["pytest_homeassistant.plugins"]
+
+
+@pytest.fixture
+def custom_integrations_enabled() -> bool:
+    """Control custom integration loading."""
+    return False

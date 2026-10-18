@@ -38,16 +38,7 @@ testpaths = ["tests"]
 ```
 
 The package's HTTP mocks still use respx directly; only its separate pytest
-plugin is disabled. Enable loading your custom integration in `tests/conftest.py`:
-
-```python
-import pytest
-
-
-@pytest.fixture(autouse=True)
-def _enable_custom_integrations(enable_custom_integrations: None) -> None:
-    """Allow loading this project's custom integrations."""
-```
+plugin is disabled. The `hass` fixture enables custom integrations by default.
 
 Tests request fixtures such as `hass` by name and import helpers from
 `pytest_homeassistant`. For example, `tests/test_config_entry.py` can create a
@@ -105,6 +96,8 @@ Replace the old package dependency with `pytest-home-assistant` and change impor
 of `pytest_homeassistant_custom_component` to `pytest_homeassistant`. Existing
 `hass`, `enable_custom_integrations`, registry, HTTP, recorder, and snapshot
 fixtures keep their names.
+The wrapper fixture requesting `enable_custom_integrations` can be removed;
+custom integrations are enabled by default.
 
 ## License
 

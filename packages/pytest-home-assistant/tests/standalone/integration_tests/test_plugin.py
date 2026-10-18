@@ -7,6 +7,7 @@ from aiohttp import web
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant import loader
 from homeassistant.components.recorder import Recorder
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -25,7 +26,6 @@ from pytest_homeassistant.components.recorder.common import (
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_integration(hass: HomeAssistant) -> None:
     """Discover and run a custom integration using the standard fixtures."""
     entry = MockConfigEntry(
@@ -37,6 +37,20 @@ async def test_custom_integration(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.pytest_sample").state == "ready"
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert hass.states.get("sensor.pytest_sample") is None
+
+
+@pytest.mark.usefixtures("recorder_mock", "enable_custom_integrations")
+async def test_enable_custom_integrations(hass: HomeAssistant) -> None:
+    """Test custom integration opt-in compatibility."""
+    integration = await loader.async_get_integration(hass, "pytest_sample")
+    assert not integration.is_built_in
+
+
+@pytest.mark.parametrize("custom_integrations_enabled", [False])
+async def test_disable_custom_integrations(hass: HomeAssistant) -> None:
+    """Test disabling custom integrations."""
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "pytest_sample")
 
 
 def test_fixture_loader() -> None:
