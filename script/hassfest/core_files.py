@@ -22,7 +22,6 @@ MISSING_ALL = {
     "demo",
     "energy",
     "frontend",
-    "google_assistant",
     "group",
     "homeassistant_hardware",
     "http",
