@@ -5,10 +5,9 @@ import ssl
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx2
-from mcp import McpError
+from mcp import MCPError
 from mcp.types import (
     CallToolResult,
-    ErrorData,
     ListToolsResult,
     TextContent,
     Tool,
@@ -222,8 +221,13 @@ async def test_mcp_server_sse_transport_failure(
         ),
         (
             ExceptionGroup(
-                "Some exception group",
-                [McpError(ErrorData(code=500, message="Session terminated"))],
+                "Outer task group",
+                [
+                    ExceptionGroup(
+                        "Inner task group",
+                        [MCPError(500, "Session terminated")],
+                    )
+                ],
             )
         ),
     ],
@@ -847,6 +851,40 @@ async def test_streamable_http_client_closed(
     assert isinstance(http_client, httpx2.AsyncClient)
     assert http_client.headers["User-Agent"] == SERVER_SOFTWARE
     assert http_client.is_closed
+
+
+async def test_streamable_http_post_401_raises_http_status_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a 401 POST response on the streamable HTTP transport triggers reauth."""
+    headers = {
+        "WWW-Authenticate": 'mcp resource_metadata="https://example.com/custom-discovery", scope="read write"'
+    }
+    transport = httpx2.MockTransport(
+        lambda request: httpx2.Response(401, headers=headers)
+    )
+    orig_async_client = httpx2.AsyncClient
+
+    def create_mock_async_client(**kwargs: object) -> httpx2.AsyncClient:
+        return orig_async_client(transport=transport, **kwargs)  # type: ignore[arg-type]
+
+    with patch(
+        "homeassistant.components.mcp.coordinator.httpx2.AsyncClient",
+        side_effect=create_mock_async_client,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow_handler.auth_header is not None
+    assert (
+        flow_handler.auth_header.resource_metadata_url
+        == "https://example.com/custom-discovery"
+    )
 
 
 async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:

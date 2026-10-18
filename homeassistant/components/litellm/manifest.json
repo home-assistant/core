@@ -2,6 +2,7 @@
   "domain": "litellm",
   "name": "LiteLLM",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@luismalves"],
   "config_flow": true,
   "dependencies": ["conversation"],

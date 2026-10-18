@@ -359,7 +359,7 @@ async def test_discovery_matches_connection_stack(
             "network", [replace(DESCRIPTOR, stack=stack_type)]
         )
         assert backend.stack_type == stack_type
-        assert subscribe.call_args.kwargs["brands"] == frozenset({(stack_type, 123)})
+        assert subscribe.call_args.kwargs["brands"] is None
         discover.assert_called_once_with(
             hass,
             stack_type,
