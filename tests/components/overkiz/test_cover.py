@@ -32,11 +32,13 @@ from homeassistant.components.cover import (
 from homeassistant.components.overkiz import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -64,6 +66,15 @@ LOW_SPEED = FixtureDevice(
 )
 DEPRECATED_LOW_SPEED_ENTITY_ID = "cover.maple_residence_nursery_shutter_low_speed"
 DEPRECATED_LOW_SPEED_ISSUE_ID = f"deprecated_low_speed_cover_{LOW_SPEED.device_url}"
+CLOSE_SLOWLY_AUTOMATION = {
+    "id": "close_shutter_slowly",
+    "alias": "Close shutter slowly",
+    "triggers": {"trigger": "event", "event_type": "test_event"},
+    "actions": {
+        "action": "cover.close_cover",
+        "target": {"entity_id": DEPRECATED_LOW_SPEED_ENTITY_ID},
+    },
+}
 PERGOLA = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",
     "io://1234-5678-3293/7614902",
@@ -1340,11 +1351,6 @@ async def test_cover_speed(
     """Test the speed option maps to the matching Overkiz command."""
     await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
 
-    assert hass.states.get(LOW_SPEED.entity_id).attributes["supported_speeds"] == [
-        "default",
-        "low",
-    ]
-
     await hass.services.async_call(
         COVER_DOMAIN,
         service,
@@ -1358,6 +1364,29 @@ async def test_cover_speed(
         command_name=command_name,
         parameters=parameters,
     )
+
+
+async def test_cover_speed_supported(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test only the main cover advertises the speed option."""
+    entity_registry.async_get_or_create(
+        COVER_DOMAIN,
+        DOMAIN,
+        f"{LOW_SPEED.device_url}_low_speed",
+        suggested_object_id="maple_residence_nursery_shutter_low_speed",
+    )
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    state = hass.states.get(LOW_SPEED.entity_id)
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+    assert state.attributes["supported_speeds"] == ["default", "low"]
+
+    state = hass.states.get(DEPRECATED_LOW_SPEED_ENTITY_ID)
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+    assert "supported_speeds" not in state.attributes
 
 
 async def test_cover_speed_invalid(
@@ -1441,7 +1470,7 @@ async def test_deprecated_low_speed_cover_used(
     issue_registry: ir.IssueRegistry,
     disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
-    """Test the deprecated low speed cover is kept while an automation uses it."""
+    """Test the deprecated low speed cover is kept while automations or scripts use it."""
     entity_registry.async_get_or_create(
         COVER_DOMAIN,
         DOMAIN,
@@ -1453,13 +1482,32 @@ async def test_deprecated_low_speed_cover_used(
         hass,
         "automation",
         {
-            "automation": {
-                "alias": "Close shutter slowly",
-                "triggers": {"trigger": "event", "event_type": "test_event"},
-                "actions": {
-                    "action": "cover.close_cover",
-                    "target": {"entity_id": DEPRECATED_LOW_SPEED_ENTITY_ID},
+            "automation": [
+                CLOSE_SLOWLY_AUTOMATION,
+                # Without an ID, the automation can't be linked to the editor
+                {
+                    "alias": "Open shutter slowly",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {
+                        "action": "cover.open_cover",
+                        "target": {"entity_id": DEPRECATED_LOW_SPEED_ENTITY_ID},
+                    },
                 },
+            ]
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "stop_shutter": {
+                    "alias": "Stop shutter",
+                    "sequence": {
+                        "action": "cover.stop_cover",
+                        "target": {"entity_id": DEPRECATED_LOW_SPEED_ENTITY_ID},
+                    },
+                }
             }
         },
     )
@@ -1471,8 +1519,55 @@ async def test_deprecated_low_speed_cover_used(
     assert issue is not None
     assert issue.translation_key == "deprecated_low_speed_cover_used"
     assert issue.translation_placeholders["items"] == (
-        "- `automation.close_shutter_slowly`"
+        "- [Close shutter slowly](/config/automation/edit/close_shutter_slowly)\n"
+        "- `automation.open_shutter_slowly`\n"
+        "- [Stop shutter](/config/script/edit/stop_shutter)"
     )
+
+
+@pytest.mark.parametrize(
+    ("automations", "entity_kept"),
+    [
+        pytest.param([], False, id="unused"),
+        pytest.param([CLOSE_SLOWLY_AUTOMATION], True, id="used"),
+    ],
+)
+async def test_deprecated_low_speed_cover_checked_after_startup(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    automations: list[dict[str, Any]],
+    entity_kept: bool,
+) -> None:
+    """Test usage of the low speed cover is only checked once startup has finished."""
+    entity_registry.async_get_or_create(
+        COVER_DOMAIN,
+        DOMAIN,
+        f"{LOW_SPEED.device_url}_low_speed",
+        suggested_object_id="maple_residence_nursery_shutter_low_speed",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    hass.set_state(CoreState.starting)
+
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    # Automations are only set up after Overkiz, so nothing is decided yet
+    assert entity_registry.async_get(DEPRECATED_LOW_SPEED_ENTITY_ID) is not None
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID) is None
+
+    assert await async_setup_component(hass, "automation", {"automation": automations})
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get(DEPRECATED_LOW_SPEED_ENTITY_ID) is not None
+    ) is entity_kept
+    assert (
+        issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID)
+        is not None
+    ) is entity_kept
 
 
 @pytest.mark.parametrize(

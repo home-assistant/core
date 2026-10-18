@@ -24,7 +24,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -33,6 +33,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
 from .const import DOMAIN, LOGGER
@@ -570,11 +571,10 @@ async def async_setup_entry(
                 OverkizCover(device.device_url, data.coordinator, description)
             )
 
-            if (
+            if device.supports_command(
                 OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED
-                in device.definition.commands
             ) and _async_keep_deprecated_low_speed_cover(
-                hass, entity_registry, device.device_url
+                hass, entry, entity_registry, device.device_url
             ):
                 entities.append(
                     OverkizLowSpeedCover(
@@ -586,14 +586,38 @@ async def async_setup_entry(
 
 
 # Remove in 2027.5.0 together with OverkizLowSpeedCover and its repair issue
+@callback
 def _async_keep_deprecated_low_speed_cover(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_url: str
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_url: str,
 ) -> bool:
     """Return if the deprecated low speed cover should still be created.
 
     Only kept for existing installations, until the user disables it and no
     automation or script uses it anymore.
     """
+    if hass.state is not CoreState.running and entity_registry.async_get_entity_id(
+        Platform.COVER, DOMAIN, f"{device_url}_low_speed"
+    ):
+        # Automations and scripts may not be loaded yet during startup, so an
+        # entity still used by them would wrongly be seen as unused
+        @callback
+        def _async_check_at_started(hass: HomeAssistant) -> None:
+            _async_check_deprecated_low_speed_cover(hass, entity_registry, device_url)
+
+        entry.async_on_unload(async_at_started(hass, _async_check_at_started))
+        return True
+
+    return _async_check_deprecated_low_speed_cover(hass, entity_registry, device_url)
+
+
+@callback
+def _async_check_deprecated_low_speed_cover(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_url: str
+) -> bool:
+    """Update the repair issue and return if the low speed cover is kept."""
     issue_id = f"deprecated_low_speed_cover_{device_url}"
 
     entity_id = entity_registry.async_get_entity_id(
@@ -606,9 +630,23 @@ def _async_keep_deprecated_low_speed_cover(
         async_delete_issue(hass, DOMAIN, issue_id)
         return False
 
-    items = automations_with_entity(hass, entity_id) + scripts_with_entity(
-        hass, entity_id
-    )
+    items: list[str] = []
+    for integration, item_entity_ids in (
+        ("automation", automations_with_entity(hass, entity_id)),
+        ("script", scripts_with_entity(hass, entity_id)),
+    ):
+        for item_entity_id in item_entity_ids:
+            # Only items with a unique ID can be opened in the editor
+            if (
+                item_entry := entity_registry.async_get(item_entity_id)
+            ) and item_entry.unique_id:
+                name = item_entry.name or item_entry.original_name or item_entity_id
+                items.append(
+                    f"- [{name}](/config/{integration}/edit/{item_entry.unique_id})"
+                )
+            else:
+                items.append(f"- `{item_entity_id}`")
+
     if entity_entry.disabled and not items:
         entity_registry.async_remove(entity_id)
         async_delete_issue(hass, DOMAIN, issue_id)
@@ -622,7 +660,7 @@ def _async_keep_deprecated_low_speed_cover(
         or device_url,
     }
     if items:
-        placeholders["items"] = "\n".join(f"- `{item}`" for item in items)
+        placeholders["items"] = "\n".join(items)
 
     async_create_issue(
         hass,
@@ -710,10 +748,11 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         ):
             supported_features |= CoverEntityFeature.SET_POSITION
 
-        self._attr_supported_features = supported_features
-
         if self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED):
+            supported_features |= CoverEntityFeature.SPEED
             self._attr_supported_speeds = [_SPEED_DEFAULT, _SPEED_LOW]
+
+        self._attr_supported_features = supported_features
 
     @property
     @override
@@ -1023,6 +1062,9 @@ class OverkizLowSpeedCover(OverkizCover):
         self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
         self._attr_supported_speeds = None
+        self._attr_supported_features = (
+            self.supported_features & ~CoverEntityFeature.SPEED
+        )
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
