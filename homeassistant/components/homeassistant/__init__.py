@@ -51,7 +51,6 @@ __all__ = [
     "SERVICE_RELOAD_CONFIG_ENTRY",
     "SERVICE_RELOAD_CORE_CONFIG",
     "SERVICE_RELOAD_CUSTOM_TEMPLATES",
-    "ExposedEntities",
     "async_set_stop_handler",
     "async_should_expose",
 ]
