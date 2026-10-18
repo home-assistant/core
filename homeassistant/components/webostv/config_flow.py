@@ -6,16 +6,18 @@ from urllib.parse import urlparse
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import probatio
+from wakeonlan import create_magic_packet
 
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -217,8 +219,17 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
-            return self.async_create_entry(title="", data=options_input)
+            mac = user_input.get(CONF_MAC)
+            try:
+                if mac:
+                    create_magic_packet(mac)
+            except ValueError:
+                errors[CONF_MAC] = "invalid_mac"
+            else:
+                options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
+                if mac:
+                    options_input[CONF_MAC] = dr.format_mac(mac)
+                return self.async_create_entry(title="", data=options_input)
         # Get sources
         sources_list = []
         try:
@@ -240,6 +251,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     CONF_SOURCES,
                     description={"suggested_value": sources},
                 ): cv.multi_select({source: source for source in sources_list}),
+                probatio.Optional(
+                    CONF_MAC,
+                    description={
+                        "suggested_value": self.config_entry.options.get(CONF_MAC)
+                    },
+                ): TextSelector(),
             }
         )
 

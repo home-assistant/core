@@ -94,17 +94,20 @@
   "options": {
     "error": {
       "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]",
-      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]"
+      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]",
+      "invalid_mac": "Enter a valid MAC address."
     },
     "step": {
       "init": {
         "data": {
+          "mac": "MAC address",
           "sources": "Sources list"
         },
         "data_description": {
+          "mac": "MAC address of the TV's network connection, used to turn on the TV with Wake-on-LAN. Enable network wake-up in the TV's settings.",
           "sources": "List of sources to enable"
         },
-        "description": "Select enabled sources",
+        "description": "Select enabled sources and optionally configure Wake-on-LAN.",
         "title": "Options for LG webOS TV"
       }
     }
