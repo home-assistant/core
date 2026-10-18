@@ -44,7 +44,6 @@ MISSING_ALL = {
     "recovery_mode",
     "script",
     "shopping_list",
-    "ssdp",
     "sun",
     "system_health",
     "tag",
