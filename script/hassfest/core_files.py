@@ -18,7 +18,6 @@ MISSING_ALL = {
     "configurator",
     "group",
     "input_boolean",
-    "input_datetime",
     "input_select",
     "llm",
     "network",
