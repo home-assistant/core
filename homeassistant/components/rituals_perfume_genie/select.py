@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry, RitualsHubsCoordinator
-from .entity import DiffuserEntity
+from .entity import DiffuserEntity, rituals_action
 
 PARALLEL_UPDATES = 1
 
@@ -84,6 +84,7 @@ class RitualsSelectEntity(DiffuserEntity, SelectEntity):
         return self.entity_description.current_fn(self.hub)
 
     @override
+    @rituals_action
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(

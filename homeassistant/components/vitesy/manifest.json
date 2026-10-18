@@ -1,6 +1,7 @@
 {
   "domain": "vitesy",
   "name": "Vitesy",
+  "categories": ["climate.air_purifiers_humidifiers"],
   "codeowners": ["@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vitesy",
