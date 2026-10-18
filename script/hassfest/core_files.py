@@ -28,7 +28,6 @@ MISSING_ALL = {
     "network",
     "otp",
     "person",
-    "recorder",
     "recovery_mode",
     "shopping_list",
     "sun",
