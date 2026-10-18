@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from anthropic import AsyncStream, RateLimitError
 from anthropic.types import (
+    CacheCreation,
     CacheMissPreviousMessageNotFound,
     CacheMissSystemChanged,
     CacheMissUnavailable,
@@ -23,12 +24,14 @@ from anthropic.types import (
     EncryptedCodeExecutionResultBlock,
     Message,
     MessageDeltaUsage,
+    OutputTokensDetails,
     PlainTextSource,
     RawMessageDeltaEvent,
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
     ServerToolCaller20260120,
+    ServerToolUsage,
     StopReason,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -405,16 +408,76 @@ async def test_conversation_agent(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "response_usage",
+    [
+        pytest.param([MessageDeltaUsage(output_tokens=10)], id="initial_usage"),
+        pytest.param(
+            [
+                MessageDeltaUsage.model_construct(
+                    input_tokens=110,
+                    cache_creation_input_tokens=30,
+                    cache_read_input_tokens=90,
+                    output_tokens=20,
+                    server_tool_use=ServerToolUsage(
+                        web_fetch_requests=3, web_search_requests=4
+                    ),
+                    output_tokens_details=OutputTokensDetails(thinking_tokens=8),
+                    future_delta_usage=7,
+                ),
+                MessageDeltaUsage(
+                    input_tokens=None,
+                    cache_creation_input_tokens=None,
+                    cache_read_input_tokens=None,
+                    output_tokens=30,
+                    server_tool_use=None,
+                    output_tokens_details=None,
+                ),
+                MessageDeltaUsage(output_tokens=40),
+            ],
+            id="cumulative_sparse_and_null",
+        ),
+        pytest.param(
+            [
+                MessageDeltaUsage(
+                    input_tokens=0,
+                    cache_creation_input_tokens=0,
+                    cache_read_input_tokens=0,
+                    output_tokens=0,
+                    server_tool_use=ServerToolUsage(
+                        web_fetch_requests=0, web_search_requests=0
+                    ),
+                    output_tokens_details=OutputTokensDetails(thinking_tokens=0),
+                )
+            ],
+            id="explicit_zero",
+        ),
+        pytest.param(
+            [
+                MessageDeltaUsage(
+                    output_tokens=10,
+                    server_tool_use=ServerToolUsage(
+                        web_fetch_requests=4, web_search_requests=5
+                    ),
+                    output_tokens_details=OutputTokensDetails(thinking_tokens=9),
+                )
+            ],
+            id="nested_replacement",
+        ),
+    ],
+)
 async def test_token_stats_reported(
     hass: HomeAssistant,
+    response_usage: list[MessageDeltaUsage],
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that cache reads, not cache creation, are reported as cached tokens."""
+    """Trace normalized token counts and accumulated provider usage."""
     trace.async_clear_traces()
 
     async def mock_stream(
         **kwargs: Unpack[MessageCreateParamsStreaming],
     ) -> AsyncIterator[RawMessageStreamEvent]:
-        """Stream a single response carrying distinct cache read and creation usage."""
+        """Stream initial usage followed by cumulative usage updates."""
         yield RawMessageStartEvent(
             type="message_start",
             message=Message(
@@ -423,21 +486,37 @@ async def test_token_stats_reported(
                 content=[],
                 role="assistant",
                 model=kwargs["model"],
-                usage=Usage(
+                usage=Usage.model_construct(
                     input_tokens=100,
-                    output_tokens=0,
+                    output_tokens=6,
                     cache_creation_input_tokens=20,
                     cache_read_input_tokens=80,
+                    cache_creation=CacheCreation(
+                        ephemeral_1h_input_tokens=5,
+                        ephemeral_5m_input_tokens=15,
+                    ),
+                    inference_geo="us",
+                    service_tier="standard",
+                    server_tool_use=ServerToolUsage.model_construct(
+                        web_fetch_requests=2,
+                        web_search_requests=1,
+                        future_server_tool_requests=6,
+                    ),
+                    output_tokens_details=OutputTokensDetails.model_construct(
+                        thinking_tokens=4, future_output_tokens=2
+                    ),
+                    future_initial_usage=5,
                 ),
             ),
         )
         for event in create_content_block(0, ["ok"]):
             yield event
-        yield RawMessageDeltaEvent(
-            type="message_delta",
-            delta=Delta(stop_reason="end_turn", stop_sequence=""),
-            usage=MessageDeltaUsage(output_tokens=10),
-        )
+        for usage in response_usage:
+            yield RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason="end_turn", stop_sequence=""),
+                usage=usage,
+            )
         yield RawMessageStopEvent(type="message_stop")
 
     stream = MagicMock(spec=AsyncStream)
@@ -460,19 +539,11 @@ async def test_token_stats_reported(
 
     trace_obj = next(iter(trace.async_get_traces()))
     events = trace_obj.as_dict().get("events", [])
-    stats = next(
-        event["data"]["stats"]
+    assert [
+        event["data"]
         for event in events
-        if event.get("event_type") == "agent_detail"
-        and event.get("data", {}).get("stats")
-    )
-    # cache_read_input_tokens (80) is the served-from-cache count, distinct from
-    # cache_creation_input_tokens (20); only the read count should surface as cached.
-    assert stats == {
-        "input_tokens": 100,
-        "cached_input_tokens": 80,
-        "output_tokens": 10,
-    }
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ] == snapshot
 
 
 @pytest.mark.usefixtures("mock_init_component")

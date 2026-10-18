@@ -2084,6 +2084,201 @@
     }),
   ])
 # ---
+# name: test_token_stats_reported[cumulative_sparse_and_null]
+  list([
+    dict({
+      'stats': dict({
+        'cache_creation_input_tokens': 30,
+        'cached_input_tokens': 90,
+        'input_tokens': 230,
+        'output_tokens': 20,
+        'uncached_input_tokens': 110,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 30,
+        'cache_read_input_tokens': 90,
+        'future_delta_usage': 7,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 110,
+        'output_tokens': 20,
+        'output_tokens_details': dict({
+          'thinking_tokens': 8,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 3,
+          'web_search_requests': 4,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+    dict({
+      'stats': dict({
+        'cache_creation_input_tokens': 30,
+        'cached_input_tokens': 90,
+        'input_tokens': 230,
+        'output_tokens': 30,
+        'uncached_input_tokens': 110,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 30,
+        'cache_read_input_tokens': 90,
+        'future_delta_usage': 7,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 110,
+        'output_tokens': 30,
+        'output_tokens_details': dict({
+          'thinking_tokens': 8,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 3,
+          'web_search_requests': 4,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+    dict({
+      'stats': dict({
+        'cache_creation_input_tokens': 30,
+        'cached_input_tokens': 90,
+        'input_tokens': 230,
+        'output_tokens': 40,
+        'uncached_input_tokens': 110,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 30,
+        'cache_read_input_tokens': 90,
+        'future_delta_usage': 7,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 110,
+        'output_tokens': 40,
+        'output_tokens_details': dict({
+          'thinking_tokens': 8,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 3,
+          'web_search_requests': 4,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[explicit_zero]
+  list([
+    dict({
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 0,
+        'cache_read_input_tokens': 0,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'output_tokens_details': dict({
+          'thinking_tokens': 0,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 0,
+          'web_search_requests': 0,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[initial_usage]
+  list([
+    dict({
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 100,
+        'output_tokens': 10,
+        'output_tokens_details': dict({
+          'future_output_tokens': 2,
+          'thinking_tokens': 4,
+        }),
+        'server_tool_use': dict({
+          'future_server_tool_requests': 6,
+          'web_fetch_requests': 2,
+          'web_search_requests': 1,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[nested_replacement]
+  list([
+    dict({
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 100,
+        'output_tokens': 10,
+        'output_tokens_details': dict({
+          'thinking_tokens': 9,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 4,
+          'web_search_requests': 5,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
 # name: test_tool_search
   list([
     dict({

@@ -63,7 +63,6 @@ from anthropic.types import (
     ToolSearchToolResultBlock,
     ToolUseBlock,
     ToolUseBlockParam,
-    Usage,
     WebFetchTool20250910Param,
     WebFetchTool20260209Param,
     WebFetchToolResultBlock,
@@ -555,7 +554,7 @@ class AnthropicDeltaStream:
         self._current_tool_args: str = ""
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
-        self._input_usage: Usage | None = None
+        self._usage: dict[str, Any] = {}
         self._first_block: bool = True
         self._has_content = False
 
@@ -620,7 +619,7 @@ class AnthropicDeltaStream:
                     else None,
                 }
             )
-        self._input_usage = message.usage
+        self._usage = message.usage.to_dict(mode="json")
         self._first_block = True
         self._has_content = False
 
@@ -881,7 +880,8 @@ class AnthropicDeltaStream:
 
     def on_message_delta_event(self, delta: Delta, usage: MessageDeltaUsage) -> None:
         """Handle RawMessageDeltaEvent."""
-        self._chat_log.async_trace(self._create_token_stats(self._input_usage, usage))
+        self._usage.update(usage.to_dict(mode="json", exclude_none=True))
+        self._chat_log.async_trace(self._create_token_stats())
         if delta.container is not None:
             self._content_details.container = delta.container
         if delta.stop_reason is not None:
@@ -901,22 +901,24 @@ class AnthropicDeltaStream:
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
 
-    def _create_token_stats(
-        self, input_usage: Usage | None, response_usage: MessageDeltaUsage
-    ) -> dict[str, Any]:
-        """Create token stats for conversation agent tracing."""
-        input_tokens = 0
-        cached_input_tokens = 0
-        if input_usage:
-            input_tokens = input_usage.input_tokens
-            cached_input_tokens = input_usage.cache_read_input_tokens or 0
-        output_tokens = response_usage.output_tokens
+    def _create_token_stats(self) -> dict[str, Any]:
+        """Create token stats and complete usage for conversation agent tracing."""
+        uncached_input_tokens = self._usage.get("input_tokens", 0)
+        cache_creation_input_tokens = (
+            self._usage.get("cache_creation_input_tokens") or 0
+        )
+        cached_input_tokens = self._usage.get("cache_read_input_tokens") or 0
         return {
             "stats": {
-                "input_tokens": input_tokens,
+                "input_tokens": uncached_input_tokens
+                + cache_creation_input_tokens
+                + cached_input_tokens,
+                "uncached_input_tokens": uncached_input_tokens,
+                "cache_creation_input_tokens": cache_creation_input_tokens,
                 "cached_input_tokens": cached_input_tokens,
-                "output_tokens": output_tokens,
-            }
+                "output_tokens": self._usage["output_tokens"],
+            },
+            "usage": self._usage.copy(),
         }
 
 
