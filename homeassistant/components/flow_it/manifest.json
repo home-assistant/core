@@ -1,11 +1,11 @@
 {
-  "domain": "ariaq",
+  "domain": "flow_it",
   "name": "AriaQ",
   "after_dependencies": ["zeroconf"],
   "categories": ["climate.fans_ventilation"],
   "codeowners": ["@albertogeniola"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ariaq",
+  "documentation": "https://www.home-assistant.io/integrations/flow_it",
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",

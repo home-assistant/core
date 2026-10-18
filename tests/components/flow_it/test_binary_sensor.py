@@ -26,7 +26,7 @@ WORRIES_ENTITY_ID = "binary_sensor.001122334455_general_issue"
 @pytest.fixture(autouse=True)
 def binary_sensor_only() -> Generator[None]:
     """Only setup binary sensor platform."""
-    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 

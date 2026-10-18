@@ -169,8 +169,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
-/homeassistant/components/ariaq/ @albertogeniola
-/tests/components/ariaq/ @albertogeniola
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/arve/ @ikalnyi
 /tests/components/arve/ @ikalnyi
@@ -596,6 +594,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
 /tests/components/flo/ @dmulcahey
+/homeassistant/components/flow_it/ @albertogeniola
+/tests/components/flow_it/ @albertogeniola
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
 /homeassistant/components/fluss/ @fluss @Marcello17

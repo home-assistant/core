@@ -97,7 +97,6 @@ homeassistant.components.aquostv.*
 homeassistant.components.aqvify.*
 homeassistant.components.aranet.*
 homeassistant.components.arcam_fmj.*
-homeassistant.components.ariaq.*
 homeassistant.components.arris_tg2492lg.*
 homeassistant.components.aruba.*
 homeassistant.components.arwn.*
@@ -226,6 +225,7 @@ homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit.*
 homeassistant.components.flexit_bacnet.*
+homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
 homeassistant.components.forecast_solar.*

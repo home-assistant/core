@@ -24,7 +24,7 @@ async def test_sensor_setup(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor platform setup and entity registry."""
-    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -44,7 +44,7 @@ async def test_sensor_none_values(
     mock_ariaq.return_value.state.data.mode.pressureIn = None
     mock_ariaq.return_value.state.data.mode.pressureOut = None
 
-    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -68,7 +68,7 @@ async def test_sensor_update(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor state updates via coordinator."""
-    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

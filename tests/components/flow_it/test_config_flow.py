@@ -7,7 +7,7 @@ from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ariaq.const import DOMAIN
+from homeassistant.components.flow_it.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo

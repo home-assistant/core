@@ -30,7 +30,7 @@ async def test_switch_setup(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch platform setup and entity registry."""
-    with patch("homeassistant.components.ariaq.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

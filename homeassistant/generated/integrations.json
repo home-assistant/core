@@ -793,15 +793,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "ariaq": {
-      "name": "AriaQ",
-      "integration_type": "device",
-      "categories": [
-        "climate.fans_ventilation"
-      ],
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "ariston": {
       "name": "Ariston",
       "integration_type": "virtual",
@@ -3401,6 +3392,15 @@
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "flow_it": {
+      "name": "AriaQ",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "flume": {
       "name": "Flume",

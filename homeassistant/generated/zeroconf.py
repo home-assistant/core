@@ -1068,7 +1068,7 @@ ZEROCONF = {
     ],
     "_tbk_vmc._tcp.local.": [
         {
-            "domain": "ariaq",
+            "domain": "flow_it",
         },
     ],
     "_technove-stations._tcp.local.": [

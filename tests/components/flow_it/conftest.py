@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from flow_it_api.models import MachineStatusResponse
 import pytest
 
-from homeassistant.components.ariaq.const import DOMAIN
+from homeassistant.components.flow_it.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_value_fixture
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, load_json_value_fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ariaq.async_setup_entry", return_value=True
+        "homeassistant.components.flow_it.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -26,11 +26,11 @@ def mock_ariaq() -> Generator[AsyncMock]:
     """Mock FlowItVMCMachine for integration tests."""
     with (
         patch(
-            "homeassistant.components.ariaq.FlowItVMCMachine",
+            "homeassistant.components.flow_it.FlowItVMCMachine",
             autospec=True,
         ) as mock,
         patch(
-            "homeassistant.components.ariaq.config_flow.FlowItVMCMachine",
+            "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
             new=mock,
         ),
     ):
