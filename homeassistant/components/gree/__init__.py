@@ -20,6 +20,7 @@ from .coordinator import (
     GreeConfigEntry,
     GreeRuntimeData,
     async_create_and_bind_device,
+    close_socket,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
             raise ConfigEntryNotReady(
                 f"Unable to connect to Gree device at {ip_address}"
             ) from err
+        # Also runs when the rest of the setup fails.
+        entry.async_on_unload(lambda: close_socket(device))
         if device.device_info.mac != entry.unique_id:
             raise ConfigEntryNotReady(
                 f"Gree device at {ip_address} has MAC {device.device_info.mac},"

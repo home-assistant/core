@@ -1,5 +1,6 @@
 """Helper and wrapper classes for Gree module."""
 
+from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -36,9 +37,13 @@ type GreeConfigEntry = ConfigEntry[GreeRuntimeData]
 async def async_create_and_bind_device(ip_address: str) -> Device:
     """Probe the Gree device at the given IP address and bind to it."""
     discovery = Discovery(DISCOVERY_TIMEOUT)
-    devices = await discovery.scan(
-        wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=[IPv4Address(ip_address)]
-    )
+    try:
+        devices = await discovery.scan(
+            wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=[IPv4Address(ip_address)]
+        )
+    finally:
+        # Discovery keeps listening until it is closed.
+        close_socket(discovery)
     device_info = next(
         (info for info in devices if info.ip == ip_address and info.mac), None
     )
@@ -46,8 +51,19 @@ async def async_create_and_bind_device(ip_address: str) -> Device:
         raise DeviceTimeoutError
 
     device = Device(device_info)
-    await device.bind()
+    try:
+        await device.bind()
+    except BaseException:
+        close_socket(device)
+        raise
     return device
+
+
+def close_socket(protocol: Device | Discovery) -> None:
+    """Close the UDP socket of a greeclimate device or discovery."""
+    # close() raises AttributeError when no socket was opened.
+    with suppress(AttributeError):
+        protocol.close()
 
 
 @dataclass

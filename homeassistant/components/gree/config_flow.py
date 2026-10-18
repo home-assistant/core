@@ -13,7 +13,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.util.network import is_ipv4_address
 
 from .const import DISCOVERY_TIMEOUT, DOMAIN
-from .coordinator import async_create_and_bind_device
+from .coordinator import async_create_and_bind_device, close_socket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +83,8 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = "unknown"
                 else:
+                    # The entry binds its own device when it is set up.
+                    close_socket(device)
                     await self.async_set_unique_id(device.device_info.mac)
                     self._abort_if_unique_id_configured()
 

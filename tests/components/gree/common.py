@@ -25,6 +25,11 @@ class FakeDiscovery:
         self.timeout = timeout
         self._listeners = []
         self.scan_count = 0
+        self.closed = False
+
+    def close(self) -> None:
+        """Close the discovery socket."""
+        self.closed = True
 
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""

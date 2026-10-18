@@ -108,6 +108,7 @@ async def test_manual_step_success(
         assert result["title"] == "test-device"
         assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
         assert result["result"].unique_id == "aabbcc112233"
+        mock_device.close.assert_called_once()
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1

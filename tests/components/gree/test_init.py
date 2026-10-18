@@ -2,11 +2,13 @@
 
 from unittest.mock import MagicMock, patch
 
+from greeclimate.discovery import Discovery
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
 
 from homeassistant.components.gree import async_remove_config_entry_device
 from homeassistant.components.gree.const import DOMAIN
+from homeassistant.components.gree.coordinator import close_socket
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -122,8 +124,10 @@ async def test_setup_static_ip_network_error(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
-async def test_setup_static_ip_probes_device(hass: HomeAssistant) -> None:
-    """Test static IP entry probes the device address before binding."""
+async def test_setup_static_ip_probes_device(
+    hass: HomeAssistant, discovery: MagicMock, device: MagicMock
+) -> None:
+    """Test static IP entry probes the device address and closes the probe."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="aabbcc112233",
@@ -137,10 +141,19 @@ async def test_setup_static_ip_probes_device(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.LOADED
     assert len(entry.runtime_data.coordinators) == 1
     assert entry.runtime_data.coordinators[0].device.device_info.mac == "aabbcc112233"
+    assert discovery.return_value.closed
+    device.return_value.close.assert_not_called()
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device.return_value.close.assert_called_once()
 
 
 @patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
-async def test_setup_static_ip_device_not_found(hass: HomeAssistant) -> None:
+async def test_setup_static_ip_device_not_found(
+    hass: HomeAssistant, discovery: MagicMock
+) -> None:
     """Test static IP entry retries when the device does not answer the probe."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -153,6 +166,33 @@ async def test_setup_static_ip_device_not_found(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert discovery.return_value.closed
+
+
+@patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
+async def test_setup_static_ip_bind_failure_closes_device(
+    hass: HomeAssistant, discovery: MagicMock, device: MagicMock
+) -> None:
+    """Test the device socket is closed when binding fails."""
+    device.return_value.bind.side_effect = DeviceTimeoutError
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert discovery.return_value.closed
+    device.return_value.close.assert_called_once()
+
+
+async def test_close_socket_without_socket() -> None:
+    """Test closing a discovery that never opened a socket does not raise."""
+    close_socket(Discovery())
 
 
 @patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
@@ -244,6 +284,7 @@ async def test_setup_static_ip_different_device(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_device.close.assert_called_once()
 
 
 @pytest.mark.parametrize("remove", [False, True])
