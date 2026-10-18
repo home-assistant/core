@@ -30,7 +30,6 @@ MISSING_ALL = {
     "shopping_list",
     "sun",
     "timer",
-    "websocket_api",
     "zone",
 }
 
