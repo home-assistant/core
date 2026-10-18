@@ -1,5 +1,6 @@
 """Tests for the login flow."""
 
+import asyncio
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -378,6 +379,54 @@ async def test_login_exist_user_ip_changes(
     assert resp.status == 400
     response = await resp.json()
     assert response == {"message": "IP address changed"}
+
+
+async def test_concurrent_requests_cannot_advance_the_same_flow(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a second request gets a conflict rather than racing the first one."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {"username": "test-user"}
+    )
+    await hass.auth.async_get_or_create_user(cred)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+
+    first_started = asyncio.Event()
+    release_first = asyncio.Event()
+    original_configure = hass.auth.login_flow.async_configure
+
+    async def slow_configure(*args: Any, **kwargs: Any) -> Any:
+        first_started.set()
+        await release_first.wait()
+        return await original_configure(*args, **kwargs)
+
+    body = {
+        "client_id": CLIENT_ID,
+        "username": "test-user",
+        "password": "test-pass",
+    }
+    with patch.object(hass.auth.login_flow, "async_configure", slow_configure):
+        first = asyncio.create_task(
+            client.post(f"/auth/login_flow/{flow_id}", json=body)
+        )
+        await first_started.wait()
+        second = await client.post(f"/auth/login_flow/{flow_id}", json=body)
+        release_first.set()
+        first_response = await first
+
+    assert second.status == HTTPStatus.CONFLICT
+    assert first_response.status == HTTPStatus.OK
+    assert (await first_response.json())["type"] == "create_entry"
 
 
 @pytest.mark.usefixtures("current_request_with_host")  # Has example.com host

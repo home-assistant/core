@@ -445,6 +445,16 @@ class LoginFlowResourceView(LoginFlowBaseView):
     url = "/auth/login_flow/{flow_id}"
     name = "api:auth:login_flow:resource"
 
+    def __init__(
+        self,
+        flow_mgr: AuthManagerFlowManager,
+        store_result: StoreResultType,
+    ) -> None:
+        """Initialize the login flow resource view."""
+        super().__init__(flow_mgr, store_result)
+        # A concurrent request for the same flow gets a conflict instead of racing.
+        self._flows_in_progress: set[str] = set()
+
     async def get(self, request: web.Request) -> web.Response:
         """Do not allow getting status of a flow in progress."""
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
@@ -472,7 +482,15 @@ class LoginFlowResourceView(LoginFlowBaseView):
             flow = self._flow_mgr.async_get(flow_id)
             if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
                 return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
-            result = await self._flow_mgr.async_configure(flow_id, data)
+            if flow_id in self._flows_in_progress:
+                return self.json_message(
+                    "Flow request already in progress", HTTPStatus.CONFLICT
+                )
+            self._flows_in_progress.add(flow_id)
+            try:
+                result = await self._flow_mgr.async_configure(flow_id, data)
+            finally:
+                self._flows_in_progress.discard(flow_id)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:
