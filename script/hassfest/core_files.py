@@ -32,7 +32,6 @@ MISSING_ALL = {
     "input_datetime",
     "input_number",
     "input_select",
-    "input_text",
     "llm",
     "logbook",
     "logger",
