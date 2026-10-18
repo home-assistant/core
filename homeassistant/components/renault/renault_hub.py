@@ -25,6 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     COOLING_UPDATES_SECONDS,
+    DOMAIN,
     MAX_CALLS_PER_HOURS,
     RenaultConfigurationKeys,
 )
@@ -168,7 +169,8 @@ class RenaultHub:
                 "No valid vehicle details found for account_id: %s", account_id
             )
             raise ConfigEntryNotReady(
-                "Failed to retrieve vehicle details from Renault servers"
+                translation_domain=DOMAIN,
+                translation_key="no_vehicle_details",
             )
 
         num_call_per_scan = len(COORDINATORS) * len(vehicle_links)
