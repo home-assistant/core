@@ -36,7 +36,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MyUplinkConfigEntry
-) -> bool:
+) -> None:
     """Set up myUplink from a config entry."""
 
     implementation = await async_get_config_entry_implementation(hass, config_entry)
@@ -79,12 +79,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback
@@ -124,7 +122,7 @@ async def async_remove_config_entry_device(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: MyUplinkConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     # Use sub(ject) from access_token as unique_id
@@ -142,5 +140,3 @@ async def async_migrate_entry(
             config_entry.version,
             config_entry.minor_version,
         )
-
-    return True

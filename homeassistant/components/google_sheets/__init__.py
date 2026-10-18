@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Sheets from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -39,8 +39,6 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     entry.runtime_data = session
 
-    return True
-
 
 def async_entry_has_scopes(hass: HomeAssistant, entry: GoogleSheetsConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
@@ -49,6 +47,5 @@ def async_entry_has_scopes(hass: HomeAssistant, entry: GoogleSheetsConfigEntry) 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True

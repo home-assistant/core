@@ -17,7 +17,7 @@ from collections.abc import (
 )
 import concurrent.futures
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import enum
 import functools
 import inspect
@@ -149,9 +149,9 @@ class EventStateReportedData(EventStateEventData):
     A state reported event is fired when on state write the state is unchanged.
     """
 
-    last_reported: datetime.datetime
+    last_reported: dt.datetime
     new_state: State
-    old_last_reported: datetime.datetime
+    old_last_reported: dt.datetime
 
 
 # How long to wait until things that run on startup have to finish.
@@ -652,7 +652,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -708,7 +708,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+            "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.5",
@@ -982,7 +982,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -1397,7 +1397,7 @@ class Event(Generic[_DataT]):
         self._cache: dict[str, Any] = {}
 
     @under_cached_property
-    def time_fired(self) -> datetime.datetime:
+    def time_fired(self) -> dt.datetime:
         """Return time fired as a timestamp."""
         return dt_util.utc_from_timestamp(self.time_fired_timestamp)
 
@@ -1876,9 +1876,9 @@ class State:
     """The state of the entity."""
     attributes: ReadOnlyDict[str, Any]
     """Extra information on entity and state"""
-    last_changed: datetime.datetime
+    last_changed: dt.datetime
     """Last time the state was changed."""
-    last_reported: datetime.datetime
+    last_reported: dt.datetime
     """Last time the state was reported.
 
     Note: When the state is set and neither the state nor attributes are
@@ -1892,7 +1892,7 @@ class State:
     When handling a state report event, the last_reported attribute may be
     modified and last_reported from the event data should be used instead.
     """
-    last_updated: datetime.datetime
+    last_updated: dt.datetime
     """Last time the state or attributes were changed."""
     context: Context
     """Context in which the state was created."""
@@ -1917,9 +1917,9 @@ class State:
         entity_id: str,
         state: str,
         attributes: Mapping[str, Any] | None = None,
-        last_changed: datetime.datetime | None = None,
-        last_reported: datetime.datetime | None = None,
-        last_updated: datetime.datetime | None = None,
+        last_changed: dt.datetime | None = None,
+        last_reported: dt.datetime | None = None,
+        last_updated: dt.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
@@ -2023,7 +2023,7 @@ class State:
 
     def as_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    ) -> ReadOnlyDict[str, dt.datetime | Collection[Any]]:
         """Return a ReadOnlyDict representation of the State.
 
         Async friendly.
@@ -2036,7 +2036,7 @@ class State:
     @under_cached_property
     def _as_read_only_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    ) -> ReadOnlyDict[str, dt.datetime | Collection[Any]]:
         """Return a ReadOnlyDict representation of the State."""
         as_dict = self._as_dict
         context = as_dict["context"]

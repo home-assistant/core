@@ -1,6 +1,7 @@
 {
   "domain": "decora_wifi",
   "name": "Leviton Decora Wi-Fi",
+  "categories": ["plugs_switches"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/decora_wifi",

@@ -35,7 +35,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
+from homeassistant.const import ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -411,7 +411,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                 ISSUE_KEY_ADDON_PWNED,
             }:
                 placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
-                    f"/hassio/addon/{issue.reference}"
+                    f"/config/app/{issue.reference}"
                 )
                 addons_list = get_addons_list(self.hass) or []
                 placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
@@ -1123,10 +1123,10 @@ def async_register_addons_in_dev_reg(
             sw_version=addon.version,
             name=addon.name,
             entry_type=dr.DeviceEntryType.SERVICE,
-            configuration_url=f"homeassistant://hassio/addon/{addon.slug}",
+            configuration_url=f"homeassistant://config/app/{addon.slug}",
         )
         if manufacturer := addon_data.repository or addon.url:
-            params[ATTR_MANUFACTURER] = manufacturer
+            params.manufacturer = manufacturer
         dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
 

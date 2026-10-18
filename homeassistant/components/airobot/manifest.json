@@ -1,6 +1,7 @@
 {
   "domain": "airobot",
   "name": "Airobot",
+  "categories": ["climate.fans_ventilation", "climate.thermostats_heating"],
   "codeowners": ["@mettolen", "@dmednis"],
   "config_flow": true,
   "dependencies": ["modbus"],

@@ -1,6 +1,7 @@
 {
   "domain": "ondilo_ico",
   "name": "Ondilo ICO",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@JeromeHXP"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

@@ -33,7 +33,7 @@ def _is_ventilation_entry(entry: AirobotConfigEntry) -> bool:
     return entry.data.get(CONF_DEVICE_TYPE) == DEVICE_TYPE_VENTILATION
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> None:
     """Set up Airobot from a config entry."""
     coordinator: AirobotDataUpdateCoordinator | AirobotVUCoordinator
     if _is_ventilation_entry(entry):
@@ -63,10 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> None:
     """Unload a config entry."""
     platforms = VU_PLATFORMS if _is_ventilation_entry(entry) else THERMOSTAT_PLATFORMS
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)
