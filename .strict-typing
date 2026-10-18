@@ -271,6 +271,7 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.harman_luxury.*
 homeassistant.components.hase_iq.*
+homeassistant.components.haven_iaq.*
 homeassistant.components.hdfury.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
