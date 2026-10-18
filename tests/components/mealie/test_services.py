@@ -36,12 +36,12 @@ from homeassistant.components.mealie.const import (
 )
 from homeassistant.components.mealie.services import (
     SERVICE_DELETE_MEALPLAN,
-    SERVICE_GET_INGREDIENT,
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
     SERVICE_GET_RECIPES,
     SERVICE_GET_SHOPPING_LIST_ITEMS,
     SERVICE_IMPORT_RECIPE,
+    SERVICE_PARSE_INGREDIENT,
     SERVICE_SET_MEALPLAN,
     SERVICE_SET_RANDOM_MEALPLAN,
     SERVICE_UPDATE_MEALPLAN,
@@ -656,7 +656,7 @@ async def test_service_get_shopping_list_items_connection_error(
         pytest.param(IngredientConfidence(average=0.0), id="zero-confidence"),
     ],
 )
-async def test_service_get_ingredient(
+async def test_service_parse_ingredient(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -670,7 +670,7 @@ async def test_service_get_ingredient(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_INGREDIENT,
+        SERVICE_PARSE_INGREDIENT,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             ATTR_INGREDIENT: "1 can acorn squash",
@@ -716,7 +716,7 @@ async def test_service_get_ingredient_parse_failure(
     ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_INGREDIENT,
+            SERVICE_PARSE_INGREDIENT,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_INGREDIENT: "1 can acorn squash",
@@ -744,14 +744,14 @@ async def test_service_get_ingredient_parse_failure(
     ),
     [
         pytest.param(
-            SERVICE_GET_INGREDIENT,
+            SERVICE_PARSE_INGREDIENT,
             {ATTR_INGREDIENT: "1 can acorn squash"},
             "parse_ingredient",
             MealieConnectionError,
             HomeAssistantError,
             "Error connecting to Mealie instance",
             True,
-            id="get-ingredient-connection-error",
+            id="parse-ingredient-connection-error",
         ),
         (
             SERVICE_GET_MEALPLAN,
@@ -895,10 +895,10 @@ async def test_services_connection_error(
     ("service", "payload", "return_response"),
     [
         pytest.param(
-            SERVICE_GET_INGREDIENT,
+            SERVICE_PARSE_INGREDIENT,
             {ATTR_INGREDIENT: "1 can acorn squash"},
             True,
-            id="get-ingredient",
+            id="parse-ingredient",
         ),
         (SERVICE_GET_MEALPLAN, {}, True),
         (SERVICE_GET_RECIPE, {ATTR_RECIPE_ID: "recipe_id"}, True),

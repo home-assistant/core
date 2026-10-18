@@ -150,8 +150,8 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
         }
     ),
 )
-SERVICE_GET_INGREDIENT = "get_ingredient"
-SERVICE_GET_INGREDIENT_SCHEMA = probatio.Schema(
+SERVICE_PARSE_INGREDIENT = "parse_ingredient"
+SERVICE_PARSE_INGREDIENT_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
         probatio.Required(ATTR_INGREDIENT): str,
@@ -389,8 +389,8 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
     return None
 
 
-async def _async_get_ingredient(call: ServiceCall) -> ServiceResponse:
-    """Get an ingredient using the parser."""
+async def _async_parse_ingredient(call: ServiceCall) -> ServiceResponse:
+    """Parse an ingredient using the Mealie parser with the match method chosen in options."""
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -481,9 +481,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_INGREDIENT,
-        _async_get_ingredient,
-        schema=SERVICE_GET_INGREDIENT_SCHEMA,
+        SERVICE_PARSE_INGREDIENT,
+        _async_parse_ingredient,
+        schema=SERVICE_PARSE_INGREDIENT_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     service.async_register_platform_entity_service(
