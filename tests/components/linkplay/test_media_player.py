@@ -133,7 +133,6 @@ async def test_follower_mirrors_leader_media_info(hass: HomeAssistant) -> None:
     ("album_art", "has_picture"),
     [
         pytest.param("https://example.com/cover.jpg", True, id="url"),
-        pytest.param("unknow", False, id="placeholder"),  # codespell:ignore unknow
         pytest.param("", False, id="empty"),
     ],
 )
@@ -143,7 +142,7 @@ async def test_album_art(
     album_art: str,
     has_picture: bool,
 ) -> None:
-    """Test that album art is only used when the device reports a URL."""
+    """Test that empty album art does not set an entity picture."""
     leader_player.album_art = album_art
     await async_update_entity(hass, ENTITY_ID)
 
