@@ -14,26 +14,17 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 # Core integrations that do not define __all__ yet.
 # These need to be fixed; do not add new entries to this list.
 MISSING_ALL = {
-    "auth",
     "blueprint",
     "configurator",
-    "energy",
     "group",
-    "homeassistant_hardware",
     "input_boolean",
-    "input_datetime",
     "input_select",
     "llm",
-    "logger",
     "network",
-    "otp",
     "person",
-    "recovery_mode",
     "shopping_list",
     "sun",
-    "tag",
     "timer",
-    "websocket_api",
     "zone",
 }
 

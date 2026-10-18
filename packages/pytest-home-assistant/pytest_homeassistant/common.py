@@ -47,11 +47,10 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.logger import (
-    DOMAIN as LOGGER_DOMAIN,
-    SERVICE_SET_LEVEL,
-    _clear_logger_overwrites,
-)
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
+
+# pylint: disable-next=home-assistant-component-root-import
+from homeassistant.components.logger.helpers import _clear_logger_overwrites
 from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (

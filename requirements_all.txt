@@ -1290,6 +1290,9 @@ hass-splunk==0.1.4
 # homeassistant.components.conversation
 hassil==3.12.1
 
+# homeassistant.components.haven_iaq
+haveniaq==0.1.0
+
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.2.2
 
@@ -2051,7 +2054,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.7
+pyElectra==1.2.8
 
 # homeassistant.components.emby
 pyEmby==1.10
