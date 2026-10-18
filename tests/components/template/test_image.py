@@ -2,9 +2,10 @@
 
 import asyncio
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from io import BytesIO
+import os
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -1483,3 +1484,160 @@ async def test_overlapping_cache_dumps(
     assert list(images_cache_dir.iterdir()) == [cache_file]
     assert cache_file.read_bytes().partition(b"\n")[2] == imgbytes2_jpg
     assert "Unable to save image cache" not in caplog.text
+
+
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_cache_follows_registry_id_across_rename(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test the cached image is restored after disabling, renaming and re-enabling."""
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "http://example.com")
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "image",
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id="image.my_template",
+    )
+    registry_id = entity_registry.async_get("image.my_template").id
+
+    entity_registry.async_update_entity(
+        "image.my_template", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert list(images_cache_dir.iterdir()) == [images_cache_dir / f"{registry_id}.bin"]
+
+    entity_registry.async_update_entity(
+        "image.my_template", new_entity_id="image.renamed"
+    )
+    entity_registry.async_update_entity("image.renamed", disabled_by=None)
+    # The URL source is gone, so only the cache can provide the image.
+    hass.states.async_remove(TEST_STATE_ENTITY_ID)
+    await hass.config_entries.async_reload(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id="image.renamed",
+    )
+    assert respx.get("http://example.com").call_count == 1
+
+
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_cache_deleted_with_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test the cached image is deleted when the entity is deleted."""
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "image",
+            "url": "http://example.com",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id="image.my_template",
+    )
+    entity = hass.data[image.DATA_COMPONENT].get_entity("image.my_template")
+    await entity.async_dump_cache()
+    assert list(images_cache_dir.iterdir()) == [
+        images_cache_dir / f"{entity_registry.async_get('image.my_template').id}.bin"
+    ]
+
+    entity_registry.async_remove("image.my_template")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("image.my_template") is None
+    assert list(images_cache_dir.iterdir()) == []
+
+
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_expired_cache_pruned_once_at_start(
+    hass: HomeAssistant,
+    images_cache_dir: Path,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test cache files not written at the last shutdown are pruned on first setup."""
+    images_cache_dir.mkdir(parents=True)
+    expired = (dt_util.utcnow() - timedelta(days=8)).timestamp()
+    recent = (dt_util.utcnow() - timedelta(days=6)).timestamp()
+    live = images_cache_dir / "image.live.bin"
+    for path, mtime in (
+        (images_cache_dir / "image.removed.bin", expired),
+        (images_cache_dir / "image.failed_write.tmp", expired),
+        (live, recent),
+    ):
+        path.write_bytes(imgbytes_jpg)
+        os.utime(path, (mtime, mtime))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        ConfigurationStyle.MODERN,
+        1,
+        config={"url": "{{ 'http://example.com' }}"},
+    )
+
+    assert list(images_cache_dir.iterdir()) == [live]
+
+    # A later setup, such as a reload, must not prune files of live entities.
+    os.utime(live, (expired, expired))
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "image",
+            "url": "http://example.com",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert list(images_cache_dir.iterdir()) == [live]
