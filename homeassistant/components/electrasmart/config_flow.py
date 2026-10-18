@@ -181,8 +181,9 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._api is None:
             self._api = ElectraAPI(async_get_clientsession(self.hass))
 
-        if user_input is not None:
-            return await self._validate_one_time_password(user_input, "reauth_confirm")
+        if user_input is None:
+            # Only a confirmation, so that opening the dialog does not send a code.
+            return self.async_show_form(step_id="reauth_confirm")
 
         errors: dict[str, str] = {}
         assert isinstance(self._api, ElectraAPI)
@@ -202,4 +203,8 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors = {"base": "invalid_phone_number"}
 
-        return self._show_setup_form(None, errors, "reauth_confirm")
+        if errors:
+            # Keep the confirmation, so the request can be retried.
+            return self.async_show_form(step_id="reauth_confirm", errors=errors)
+
+        return await self.async_step_one_time_password()
