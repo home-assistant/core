@@ -240,6 +240,9 @@
     "authentication_expired": {
       "message": "The Renault login has expired, re-authenticate the Renault integration"
     },
+    "authentication_failed": {
+      "message": "Failed to log in to the Renault servers, re-authenticate the Renault integration"
+    },
     "battery_soc_unavailable": {
       "message": "Battery state of charge data is currently unavailable"
     },

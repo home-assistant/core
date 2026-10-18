@@ -119,7 +119,10 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
             ) from err
 
         except NotAuthenticatedException as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_expired",
+            ) from err
 
         except KamereonResponseException as err:
             # Other Renault errors.
