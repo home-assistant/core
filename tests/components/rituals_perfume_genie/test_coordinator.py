@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .common import (
     init_integration,
@@ -172,6 +173,10 @@ async def test_diffuser_removed_from_account(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+    error = config_entry.runtime_data.sensors["lot123"].last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_key == "diffuser_not_found"
 
 
 async def test_disabled_sensors_not_fetched(
