@@ -17,7 +17,6 @@ MISSING_ALL = {
     "auth",
     "blueprint",
     "configurator",
-    "energy",
     "group",
     "homeassistant_hardware",
     "input_boolean",
