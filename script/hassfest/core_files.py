@@ -20,7 +20,6 @@ MISSING_ALL = {
     "blueprint",
     "cloud",
     "config",
-    "configurator",
     "demo",
     "device_automation",
     "energy",
