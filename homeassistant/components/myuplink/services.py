@@ -16,6 +16,7 @@ from homeassistant.helpers.service import (
 )
 
 from .const import DOMAIN
+from .coordinator import MyUplinkConfigEntry
 
 ATTR_DATAPOINT_ID = "datapoint_id"
 ATTR_VALUE = "value"
@@ -24,9 +25,9 @@ SERVICE_SET_DATAPOINT = "set_datapoint"
 SERVICE_SET_DATAPOINT_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_DATAPOINT_ID): [
-            probatio.All(cv.positive_int, probatio.Range(min=1, max=99999))
-        ],
+        probatio.Required(ATTR_DATAPOINT_ID): probatio.All(
+            cv.positive_int, probatio.Range(min=1, max=99999)
+        ),
         probatio.Required(ATTR_VALUE): cv.string,
     },
 )
@@ -62,6 +63,7 @@ async def async_set_datapoint(call: ServiceCall) -> None:
 
     datapoint_id: str = call.data.get(ATTR_DATAPOINT_ID, "")
     value: str = call.data.get(ATTR_VALUE, "")
+    config_entry: MyUplinkConfigEntry
 
     device_entry, config_entry = async_get_device_and_config_entry(
         call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
@@ -82,6 +84,8 @@ async def async_set_datapoint(call: ServiceCall) -> None:
                 "value": value,
             },
         ) from err
+
+    await config_entry.runtime_data.async_request_refresh()
 
 
 @callback
