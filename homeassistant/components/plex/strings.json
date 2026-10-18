@@ -68,7 +68,7 @@
           "use_episode_art": "Use episode art"
         },
         "data_description": {
-          "fuzzy_search": "Find media despite misspellings when searching Plex from voice assistants, the media browser and the search action. The search action can override this per call."
+          "fuzzy_search": "Find media despite misspellings when you use the search action. The action can override this for a single call."
         },
         "description": "Options for Plex media players"
       }

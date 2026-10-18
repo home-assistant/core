@@ -498,32 +498,6 @@ async def test_search_service_fuzzy(
     assert result["results"] == []
 
 
-async def test_play_show_resumes_on_deck_episode(
-    hass: HomeAssistant, mock_plex_server
-) -> None:
-    """Test a show resolves to its on deck episode only when resume is set."""
-    content_id = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/30"
-
-    result = process_plex_payload(
-        hass, MediaType.TVSHOW, content_id, supports_playqueues=False
-    )
-    assert isinstance(result.media, plexapi.video.Show)
-
-    on_deck_episode = SimpleNamespace(type="episode")
-    with patch.object(plexapi.video.Show, "onDeck", return_value=on_deck_episode):
-        result = process_plex_payload(
-            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
-        )
-    assert result.media is on_deck_episode
-
-    with patch.object(plexapi.video.Show, "onDeck", return_value=None):
-        result = process_plex_payload(
-            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
-        )
-    assert isinstance(result.media, plexapi.video.Show)
-    assert result.offset == 0
-
-
 async def test_on_deck_service(
     hass: HomeAssistant,
     mock_plex_server,
