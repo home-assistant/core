@@ -311,6 +311,7 @@ async def test_reauth_flow_update_configuration(
             CONF_VERIFY_SSL: True,
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -377,6 +378,7 @@ async def test_reconfigure_flow_update_configuration(
             CONF_VERIFY_SSL: True,
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -432,6 +434,14 @@ async def test_reconfigure_flow_retains_user_input_on_error(
         CONF_PORT: user_input[CONF_PORT],
         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
     }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**user_input, CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(
@@ -644,6 +654,72 @@ async def test_flow_integration_discovery_aborts_on_other_announced_address(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "client_payload", "expected_type", "expected_reason"),
+    [
+        pytest.param(
+            [
+                {
+                    "board_rev": 3,
+                    "device_id": "console-id",
+                    "ip": "192.168.0.1",
+                    "last_seen": 0,
+                    "mac": INTEGRATION_DISCOVERY_INFO["hw_addr"],
+                    "model": "UDMPROMAX",
+                    "name": "Dream Machine Pro Max",
+                    "state": 1,
+                    "type": "udm",
+                    "version": "5.0.16",
+                }
+            ],
+            [],
+            FlowResultType.ABORT,
+            "already_configured",
+            id="managed_console",
+        ),
+        pytest.param(
+            [],
+            [
+                {
+                    "hostname": "cloudkey",
+                    "is_wired": True,
+                    "last_seen": 0,
+                    "mac": INTEGRATION_DISCOVERY_INFO["hw_addr"],
+                    "oui": "Ubiquiti",
+                    "wired_rate_mbps": 1000,
+                }
+            ],
+            FlowResultType.FORM,
+            None,
+            id="console_as_client",
+        ),
+        pytest.param(
+            [{**DEVICES[0], "mac": "e0:63:da:00:00:01"}],
+            [],
+            FlowResultType.FORM,
+            None,
+            id="other_device_same_oui",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_flow_integration_discovery_matches_managed_console(
+    hass: HomeAssistant, expected_type: FlowResultType, expected_reason: str | None
+) -> None:
+    """Test discovery matches a managed console but not clients or other devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "192.168.80.1",
+            "announced_ips": [],
+        },
+    )
+    assert result["type"] is expected_type
+    assert result.get("reason") == expected_reason
 
 
 async def test_flow_integration_discovery_ignores_entry_without_host(

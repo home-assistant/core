@@ -6,24 +6,19 @@ import importlib
 from operator import itemgetter
 from pathlib import Path
 import pkgutil
-import re
 import sys
 import tomllib
 from typing import Any
 
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
+
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
-
-# Requirements which can't be installed on all systems because they
-# rely on additional system packages. Requirements listed in
-# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt.
-EXCLUDED_REQUIREMENTS_ALL = {
-    "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "beewi-smartclim",  # depends on bluepy
-    "bluepy",
-    "evdev",
-}
+from script.hassfest.requirements_util import (
+    EXCLUDED_REQUIREMENTS_ALL,
+    normalize_package_name,
+)
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
@@ -52,8 +47,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
 }
 
 URL_PIN = (
-    "https://developers.home-assistant.io/docs/"
-    "creating_platform_code_review.html#1-requirements"
+    "https://contributors.home-assistant.io/core/integrations/manifest/#requirements"
 )
 
 
@@ -99,19 +93,17 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11,
-# but the version constraints on these requirements are quite
-# loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful
-# for us to pin all these
-# requirements so we can directly link HA versions to these library versions.
-anyio==4.14.2
+# httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
+# version constraints on anyio and h11 are quite loose. Pin them so we can
+# directly link HA versions to these library versions.
+anyio==4.15.1
 h11==0.16.0
-httpcore==1.0.9
 
-# Ensure we have a hyperframe version that works in Python 3.10
-# 5.2.0 fixed a collections abc deprecation
-hyperframe>=5.2.0
+# Many libraries still depend on httpx/httpcore. Those imports are aliased to
+# httpx2/httpcore2 at runtime, but pin the installed packages so a dependency
+# cannot pull in an untested httpx version alongside httpx2.
+httpcore==1.0.9
+httpx==0.28.1
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
@@ -125,7 +117,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.5
+pydantic==2.14.0
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -242,6 +234,25 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
+# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
+# https://github.com/home-assistant/core/issues/185883
+# https://codeberg.org/obi/pysml/issues/33
+# Remove once pysml supports bitstring>=5
+bitstring<5
+
+# graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
+# (used by aioaseko) still imports
+# https://github.com/home-assistant/core/issues/184918
+graphql-core<3.3
+
+# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# https://github.com/home-assistant/core/issues/185645
+# https://github.com/c-ares/c-ares/pull/1256
+pycares==5.0.1
+
+# pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
+pypasser<1.0.0
+
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
 # https://github.com/xolox/python-coloredlogs -> unmaintained
@@ -271,8 +282,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "prettier",
     "ruff-format",  # it's just ruff
 )
-
-PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
 
 def explore_module(package: str, explore_children: bool) -> list[str]:
@@ -318,23 +327,6 @@ def gather_recursive_requirements(
     return reqs
 
 
-def _normalize_package_name(package_name: str) -> str:
-    """Normalize a package name."""
-    # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return package_name.lower().replace("_", "-").replace(".", "-")
-
-
-def normalize_package_name(requirement: str) -> str:
-    """Return a normalized package name from a requirement string."""
-    # This function is also used in hassfest.
-    match = PACKAGE_REGEX.search(requirement)
-    if not match:
-        return ""
-
-    # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return _normalize_package_name(match.group(1))
-
-
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
     return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL
@@ -368,12 +360,44 @@ def gather_modules() -> dict[str, list[str]] | None:
     for value in reqs.values():
         value = sorted(value, key=lambda name: (len(name.split(".")), name))
 
+    if not errors:
+        reqs = merge_requirement_extras(errors, reqs)
+
     if errors:
         print("******* ERROR")
         print("Errors while importing: ", ", ".join(errors))
         return None
 
     return reqs
+
+
+def merge_requirement_extras(
+    errors: list[str], reqs: dict[str, list[str]]
+) -> dict[str, list[str]]:
+    """Merge the requirements of a package into one requirement."""
+    grouped: dict[str, list[str]] = {}
+    for req in reqs:
+        grouped.setdefault(canonicalize_name(Requirement(req).name), []).append(req)
+
+    merged: dict[str, list[str]] = {}
+    for name, group in grouped.items():
+        if len(group) == 1:
+            merged[group[0]] = reqs[group[0]]
+            continue
+        requirements = [Requirement(req) for req in group]
+        if len({(str(req.specifier), str(req.marker)) for req in requirements}) > 1:
+            conflicts = ", ".join(
+                f"{req} ({', '.join(sorted(reqs[req]))})" for req in sorted(group)
+            )
+            errors.append(f"{name}[Conflicting requirements: {conflicts}]")
+            continue
+        requirement = requirements[0]
+        for other in requirements[1:]:
+            requirement.extras |= other.extras
+        merged[str(requirement)] = sorted(
+            {package for req in group for package in reqs[req]}
+        )
+    return merged
 
 
 def gather_entity_platform_requirements() -> set[str]:

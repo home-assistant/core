@@ -24,13 +24,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SimplePushConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SimplePushConfigEntry) -> None:
     """Set up simplepush from a config entry."""
 
     if CONF_API_TOKEN in entry.data:
         entry.runtime_data = Client(api_token=entry.data[CONF_API_TOKEN])
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
+        return
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -42,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimplePushConfigEntry) -
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SimplePushConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SimplePushConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

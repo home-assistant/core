@@ -74,6 +74,7 @@ async def test_flow_successful(hass: HomeAssistant, mock_client: MagicMock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Simplepush"
     assert result["data"] == MOCK_CONFIG
+    assert result["result"].unique_id is None
     mock_client.assert_called_once_with(api_token="token")
     mock_client.return_value.send_task.assert_called_once()
 

@@ -551,6 +551,7 @@ class AnthropicDeltaStream:
         self._content_details.add_citation_detail()
         self._input_usage: Usage | None = None
         self._first_block: bool = True
+        self._has_content = False
 
     def __aiter__(
         self,
@@ -603,11 +604,14 @@ class AnthropicDeltaStream:
         """Handle RawMessageStartEvent."""
         self._input_usage = message.usage
         self._first_block = True
+        self._has_content = False
 
     def on_content_block_start_event(
         self, content_block: ContentBlock, index: int
     ) -> None:
         """Handle RawContentBlockStartEvent."""
+        if not isinstance(content_block, TextBlock) or content_block.text:
+            self._has_content = True
         if isinstance(content_block, ToolUseBlock):
             self.on_tool_use_block(
                 content_block.id,
@@ -781,6 +785,7 @@ class AnthropicDeltaStream:
             }
         )
         self._first_block = True
+        self._has_content = False
 
     def on_content_block_delta_event(self, delta: RawContentBlockDelta) -> None:
         """Handle RawContentBlockDeltaEvent."""
@@ -808,6 +813,7 @@ class AnthropicDeltaStream:
     def on_text_delta(self, text: str) -> None:
         """Handle TextDelta."""
         if text:
+            self._has_content = True
             self._content_details.citation_details[-1].length += len(text)
             self._buffer.append({"content": text})
 
@@ -865,6 +871,8 @@ class AnthropicDeltaStream:
 
     def on_message_stop_event(self) -> None:
         """Handle RawMessageStopEvent."""
+        if self.stop_reason == "end_turn" and not self._has_content:
+            self._buffer.append({"role": "assistant", "content": ""})
         if self._content_details:
             self._content_details.delete_empty()
             self._buffer.append({"native": self._content_details})
@@ -1174,7 +1182,8 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ) from err
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -1192,7 +1201,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 "model_context_window_exceeded",
                 "stop_sequence",
             ) or (stop_reason == "pause_turn" and iteration == max_iterations - 1):
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key={
@@ -1205,7 +1214,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
 
             if delta_stream.tool_args_error is not None:
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="tool_args_parse_error",
@@ -1215,7 +1224,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 continue
 
             if not chat_log.unresponded_tool_results:
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.mark_connection_healthy()
                 break
 
 

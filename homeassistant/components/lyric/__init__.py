@@ -10,6 +10,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import (
     ConfigEntryLyricClient,
@@ -19,13 +20,20 @@ from .api import (
 from .const import DOMAIN
 from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
 from .entity import create_thermostat_device_info
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Honeywell Lyric integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> None:
     """Set up Honeywell Lyric from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -67,9 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

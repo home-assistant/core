@@ -892,6 +892,18 @@ class ZHAGatewayProxy(EventBase):
                 return entity_reference
         return None
 
+    def update_entity_reference(self, entity: ZHAEntity, old_entity_id: str) -> None:
+        """Update the entity_id of the entity reference for a renamed entity."""
+        ieee = entity.entity_data.device_proxy.device.ieee
+        if (entity_refs := self._ha_entity_refs.get(ieee)) is None:
+            return
+        self._ha_entity_refs[ieee] = [
+            e._replace(ha_entity_id=entity.entity_id)
+            if e.ha_entity_id == old_entity_id
+            else e
+            for e in entity_refs
+        ]
+
     def remove_entity_reference(self, entity: ZHAEntity) -> None:
         """Remove entity reference for given entity_id if found."""
         ieee = entity.entity_data.device_proxy.device.ieee
@@ -1292,7 +1304,7 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
 @callback
 def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
-    entity_class: type[ZHAEntity],
+    entity_class: Callable[[EntityData], ZHAEntity],
     entities: list[EntityData],
     **kwargs,
 ) -> None:

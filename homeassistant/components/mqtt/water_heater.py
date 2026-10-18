@@ -188,8 +188,8 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = water_heater.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED
-    _attr_target_temperature_low: float | None = None
-    _attr_target_temperature_high: float | None = None
+    _attr_native_target_temperature_low: float | None = None
+    _attr_native_target_temperature_high: float | None = None
 
     @staticmethod
     @override
@@ -201,7 +201,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_operation_list = config[CONF_MODE_LIST]
-        self._attr_temperature_unit = config.get(
+        self._attr_native_temperature_unit = config.get(
             CONF_TEMPERATURE_UNIT, self.hass.config.units.temperature_unit
         )
         if (min_temp := config.get(CONF_TEMP_MIN)) is not None:
@@ -221,11 +221,11 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             TemperatureConverter.convert(
                 DEFAULT_MIN_TEMP,
                 UnitOfTemperature.FAHRENHEIT,
-                self.temperature_unit,
+                self.native_temperature_unit,
             ),
         )
         if self._topic[CONF_TEMP_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature = init_temp
+            self._attr_native_target_temperature = init_temp
         if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_current_operation = STATE_OFF
 
@@ -295,7 +295,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 msg, CONF_TEMP_STATE_TEMPLATE, "target temperature"
             )
         ) is not UNDEFINED:
-            self._attr_target_temperature = value
+            self._attr_native_target_temperature = value
 
     @callback
     @override
@@ -309,12 +309,12 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         self.add_subscription(
             CONF_CURRENT_TEMP_TOPIC,
             self._handle_current_temperature_received,
-            {"_attr_current_temperature"},
+            {"_attr_native_current_temperature"},
         )
         self.add_subscription(
             CONF_TEMP_STATE_TOPIC,
             self._handle_target_temperature_received,
-            {"_attr_target_temperature"},
+            {"_attr_native_target_temperature"},
         )
 
     @override
@@ -329,7 +329,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         await self._publish(CONF_TEMP_COMMAND_TOPIC, mqtt_payload)
 
         if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
-            self._attr_target_temperature = temperature
+            self._attr_native_target_temperature = temperature
             self.async_write_ha_state()
 
     @override

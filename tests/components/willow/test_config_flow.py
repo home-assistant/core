@@ -1,6 +1,7 @@
 """Test the Willow config flow."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import parse_qs, urlparse
 
@@ -41,6 +42,7 @@ async def _complete_oauth(
     result: dict,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    access_token: str = ACCESS_TOKEN,
 ) -> None:
     """Drive the OAuth2 callback through the token exchange."""
     state = config_entry_oauth2_flow._encode_jwt(
@@ -56,7 +58,7 @@ async def _complete_oauth(
         OAUTH2_TOKEN,
         json={
             "refresh_token": REFRESH_TOKEN,
-            "access_token": ACCESS_TOKEN,
+            "access_token": access_token,
             "token_type": "Bearer",
             "expires_in": 60,
         },
@@ -140,3 +142,67 @@ async def test_profile_errors_abort(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_willow_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reauthenticating the same account updates the entry token."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _complete_oauth(
+        hass, result, hass_client_no_auth, aioclient_mock, "new-access-token"
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "profile", "reason"),
+    [
+        pytest.param(None, {"id": 1337}, "unique_id_mismatch", id="unique_id_mismatch"),
+        pytest.param(WillowAuthError, None, "invalid_auth", id="invalid_auth"),
+        pytest.param(Exception("boom"), None, "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_flow_abort(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_willow_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | Exception | None,
+    profile: dict[str, Any] | None,
+    reason: str,
+) -> None:
+    """Reauth aborts and leaves the entry untouched on a failed profile lookup."""
+    mock_config_entry.add_to_hass(hass)
+    mock_willow_client.get_profile.side_effect = side_effect
+    mock_willow_client.get_profile.return_value = profile
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await _complete_oauth(
+        hass, result, hass_client_no_auth, aioclient_mock, "new-access-token"
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert mock_config_entry.data["token"]["access_token"] == ACCESS_TOKEN

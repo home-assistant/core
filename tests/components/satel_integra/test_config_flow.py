@@ -285,6 +285,15 @@ async def test_zone_temperature_sensor_validation_on_create(
     mock_satel.read_temperature.assert_awaited_once_with(1)
     assert mock_reload_after_entry_update.call_count == 0
 
+    mock_satel.read_temperature.side_effect = None
+    mock_satel.read_temperature.return_value = 21.5
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        MOCK_ZONE_TEMPERATURE_SUBENTRY.data,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_zone_temperature_sensor_validation_requires_loaded_entry(
     hass: HomeAssistant,
@@ -447,6 +456,19 @@ async def test_zone_temperature_sensor_validation_on_reconfigure(
     mock_satel.read_temperature.assert_awaited_once_with(1)
     assert mock_reload_after_entry_update.call_count == 0
 
+    mock_satel.read_temperature.return_value = 21.5
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Backdoor",
+            CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+            CONF_ENABLE_TEMPERATURE_SENSOR: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_zone_temperature_sensor_validation_on_reconfigure_requires_loaded_entry(
     hass: HomeAssistant,
@@ -526,6 +548,12 @@ async def test_cannot_create_same_subentry(
     assert len(mock_config_entry_with_subentries.subentries) == 4
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {**subentry.data, error_field: 2}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_flow_success(

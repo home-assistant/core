@@ -1,5 +1,7 @@
 """Velbus services tests."""
 
+import errno
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
@@ -17,6 +19,7 @@ from homeassistant.components.velbus.const import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import init_integration
 
@@ -162,34 +165,53 @@ async def test_clear_cache(
     )
     assert config_entry.runtime_data.controller.scan.call_count == 2
 
-    # Test with OSError
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(errno.EACCES, id="permission_denied"),
+        pytest.param(errno.EIO, id="io_error"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("service_data", "patch_target", "cache_name"),
+    [
+        pytest.param(
+            {CONF_ADDRESS: 2}, ("os.path.exists", "os.unlink"), "2.p", id="file"
+        ),
+        pytest.param({}, ("os.path.isdir", "shutil.rmtree"), "", id="dir"),
+    ],
+)
+async def test_clear_cache_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    error: int,
+    service_data: dict[str, int],
+    patch_target: tuple[str, str],
+    cache_name: str,
+) -> None:
+    """Test clear_cache raises a translated error when deleting the cache fails."""
+    await init_integration(hass, config_entry)
+
     with (
-        patch("os.path.exists", return_value=True),
-        patch("os.unlink", side_effect=OSError("Boom")),
-        pytest.raises(HomeAssistantError),
+        patch(patch_target[0], return_value=True),
+        patch(patch_target[1], side_effect=OSError(error, os.strerror(error))),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLEAR_CACHE,
-            {
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_ADDRESS: 2,
-            },
+            {CONF_CONFIG_ENTRY: config_entry.entry_id, **service_data},
             blocking=True,
         )
 
-    # Test with OSError on directory removal
-    with (
-        patch("os.path.isdir", return_value=True),
-        patch("shutil.rmtree", side_effect=OSError("Boom")),
-        pytest.raises(HomeAssistantError),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_CLEAR_CACHE,
-            {CONF_CONFIG_ENTRY: config_entry.entry_id},
-            blocking=True,
+    assert exc_info.value.translation_key == "clear_cache_failed"
+    assert exc_info.value.translation_placeholders == {
+        "path": hass.config.path(
+            STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/{cache_name}"
         )
+    }
+    config_entry.runtime_data.controller.scan.assert_not_called()
 
 
 @pytest.mark.parametrize(

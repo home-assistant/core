@@ -44,10 +44,7 @@ async def setup_switch_platform(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SWITCH]),
     ):
         await setup_integration(hass, mock_config_entry)

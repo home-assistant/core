@@ -67,12 +67,10 @@ class AirzoneSystemEntity(AirzoneEntity):
             sw_version=self.get_airzone_value(AZD_FIRMWARE),
         )
         if AZD_WEBSERVER in self.coordinator.data:
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    self.coordinator.hass,
-                    (DOMAIN, f"{entry.entry_id}_ws"),
-                    config_entry_id=entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, f"{entry.entry_id}_ws"),
+                config_entry_id=entry.entry_id,
             )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
@@ -126,12 +124,10 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             name=self.get_airzone_value(AZD_NAME),
         )
         if AZD_WEBSERVER in self.coordinator.data:
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    self.coordinator.hass,
-                    (DOMAIN, f"{entry.entry_id}_ws"),
-                    config_entry_id=entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, f"{entry.entry_id}_ws"),
+                config_entry_id=entry.entry_id,
             )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 

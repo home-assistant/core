@@ -72,7 +72,9 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+                probatio.Optional(
+                    probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
+                ): cv.string,
                 probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
                 probatio.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
                 probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,

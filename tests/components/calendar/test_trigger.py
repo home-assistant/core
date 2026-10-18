@@ -10,7 +10,7 @@ forward exercising the triggers.
 from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -96,7 +96,7 @@ class TriggerFormat:
         raise NotImplementedError
 
     def get_trigger_data(
-        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+        self, entity_id: str, event_type: str, offset: dt.timedelta | None = None
     ) -> dict[str, Any]:
         """Get the trigger configuration data."""
         raise NotImplementedError
@@ -124,7 +124,7 @@ class LegacyTriggerFormat(TriggerFormat):
         return calendar.DOMAIN
 
     def get_trigger_data(
-        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+        self, entity_id: str, event_type: str, offset: dt.timedelta | None = None
     ) -> dict[str, Any]:
         """Get the trigger configuration data."""
         trigger_data: dict[str, Any] = {
@@ -149,7 +149,7 @@ class TargetTriggerFormat(TriggerFormat):
         return f"{calendar.DOMAIN}.{trigger_type}"
 
     def get_trigger_data(
-        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+        self, entity_id: str, event_type: str, offset: dt.timedelta | None = None
     ) -> dict[str, Any]:
         """Get the trigger configuration data."""
         trigger_type = "event_started" if event_type == EVENT_START else "event_ended"
@@ -160,7 +160,7 @@ class TargetTriggerFormat(TriggerFormat):
         if offset:
             options: dict[str, Any] = {}
             # Convert signed offset to offset + offset_type
-            if offset < datetime.timedelta(0):
+            if offset < dt.timedelta(0):
                 options[CONF_OFFSET] = -offset
                 options[CONF_OFFSET_TYPE] = OFFSET_TYPE_BEFORE
             else:
@@ -195,8 +195,8 @@ TEST_AUTOMATION_ACTION = {
 # The trigger sets two alarms: One based on the next event and one
 # to refresh the schedule. The test advances the time an arbitrary
 # amount to trigger either type of event with a small jitter.
-TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(minutes=1)
-TEST_UPDATE_INTERVAL = datetime.timedelta(minutes=7)
+TEST_TIME_ADVANCE_INTERVAL = dt.timedelta(minutes=1)
+TEST_UPDATE_INTERVAL = dt.timedelta(minutes=7)
 
 TARGET_TEST_FIRST_START_CALL_DATA = [
     {
@@ -260,14 +260,14 @@ class FakeSchedule:
         self.hass = hass
         self.freezer = freezer
 
-    async def fire_time(self, trigger_time: datetime.datetime) -> None:
+    async def fire_time(self, trigger_time: dt.datetime) -> None:
         """Fire an alarm and wait."""
         _LOGGER.debug("Firing alarm @ %s", dt_util.as_local(trigger_time))
         self.freezer.move_to(trigger_time)
         async_fire_time_changed(self.hass, trigger_time)
         await self.hass.async_block_till_done()
 
-    async def fire_until(self, end: datetime.datetime) -> None:
+    async def fire_until(self, end: dt.datetime) -> None:
         """Simulate the passage of time by firing alarms until the time is reached."""
 
         current_time = dt_util.as_utc(self.freezer())
@@ -367,7 +367,7 @@ async def create_automation(
     hass: HomeAssistant,
     trigger_format: TriggerFormat,
     event_type: str,
-    offset: datetime.timedelta | None = None,
+    offset: dt.timedelta | None = None,
 ) -> AsyncIterator[None]:
     """Register an automation using the specified trigger format."""
     trigger_data = trigger_format.get_trigger_data(
@@ -428,14 +428,14 @@ async def test_event_start_trigger(
 ) -> None:
     """Test the a calendar trigger based on start time."""
     event_data = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         )
 
     assert calls_data() == [
@@ -448,8 +448,8 @@ async def test_event_start_trigger(
 @pytest.mark.parametrize(
     ("offset_delta"),
     [
-        datetime.timedelta(hours=-1),
-        datetime.timedelta(hours=1),
+        dt.timedelta(hours=-1),
+        dt.timedelta(hours=1),
     ],
 )
 async def test_event_start_trigger_with_offset(
@@ -458,25 +458,25 @@ async def test_event_start_trigger_with_offset(
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     trigger_format: TriggerFormat,
-    offset_delta: datetime.timedelta,
+    offset_delta: dt.timedelta,
 ) -> None:
     """Test the a calendar trigger based on start time with an offset."""
     event_data = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
     )
     async with create_automation(
         hass, trigger_format, EVENT_START, offset=offset_delta
     ):
         # No calls yet
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:55:00+00:00") + offset_delta,
+            dt.datetime.fromisoformat("2022-04-19 11:55:00+00:00") + offset_delta,
         )
         assert len(calls_data()) == 0
 
         # Event has started w/ offset
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
+            dt.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
         )
         assert calls_data() == [
             trigger_format.get_expected_call_data(
@@ -494,19 +494,19 @@ async def test_event_end_trigger(
 ) -> None:
     """Test the a calendar trigger based on end time."""
     event_data = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_END):
         # Event started, nothing should fire yet
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
         )
         assert len(calls_data()) == 0
 
         # Event ends
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
         )
         assert calls_data() == [
             trigger_format.get_expected_call_data(
@@ -518,8 +518,8 @@ async def test_event_end_trigger(
 @pytest.mark.parametrize(
     ("offset_delta"),
     [
-        datetime.timedelta(hours=-1),
-        datetime.timedelta(hours=1),
+        dt.timedelta(hours=-1),
+        dt.timedelta(hours=1),
     ],
 )
 async def test_event_end_trigger_with_offset(
@@ -528,23 +528,23 @@ async def test_event_end_trigger_with_offset(
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     trigger_format: TriggerFormat,
-    offset_delta: datetime.timedelta,
+    offset_delta: dt.timedelta,
 ) -> None:
     """Test the a calendar trigger based on end time with an offset."""
     event_data = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_END, offset=offset_delta):
         # No calls yet
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
+            dt.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
         )
         assert len(calls_data()) == 0
 
         # Event has started w/ offset
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
+            dt.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
         )
         assert calls_data() == [
             trigger_format.get_expected_call_data(
@@ -567,7 +567,7 @@ async def test_calendar_trigger_with_no_events(
     ):
         # No calls, at arbitrary times
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
         )
     assert len(calls_data()) == 0
 
@@ -582,16 +582,16 @@ async def test_multiple_start_events(
     """Test that a trigger fires for multiple events."""
 
     event_data1 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 10:45:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
     )
     event_data2 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
     assert calls_data() == [
         trigger_format.get_expected_call_data(
@@ -613,16 +613,16 @@ async def test_multiple_end_events(
     """Test that a trigger fires for multiple events."""
 
     event_data1 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 10:45:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
     )
     event_data2 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_END):
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
 
     assert calls_data() == [
@@ -645,16 +645,16 @@ async def test_multiple_events_sharing_start_time(
     """Test that a trigger fires for every event sharing a start time."""
 
     event_data1 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     event_data2 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
         )
 
     assert calls_data() == [
@@ -677,16 +677,16 @@ async def test_overlap_events(
     """Test that a trigger fires for events that overlap."""
 
     event_data1 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     event_data2 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
 
     assert calls_data() == [
@@ -751,25 +751,25 @@ async def test_update_next_event(
     """Test detection of a new event after initial trigger is setup."""
 
     event_data1 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         # No calls before event start
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
         )
         assert len(calls_data()) == 0
 
         # Create a new event between now and when the event fires
         event_data2 = test_entity.create_event(
-            start=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
-            end=datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00"),
+            start=dt.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
+            end=dt.datetime.fromisoformat("2022-04-19 11:05:00+00:00"),
         )
 
         # Advance past the end of the events
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
     assert calls_data() == [
         trigger_format.get_expected_call_data(
@@ -791,25 +791,25 @@ async def test_update_missed(
     """Test that new events are missed if they arrive outside the update interval."""
 
     event_data1 = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         # Events are refreshed at t+TEST_UPDATE_INTERVAL minutes. A new event is
         # added, but the next update happens after the event is already over.
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
         )
         assert len(calls_data()) == 0
 
         test_entity.create_event(
-            start=datetime.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
-            end=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
+            start=dt.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
+            end=dt.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
         )
 
         # Only the first event is returned
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
         )
         assert calls_data() == [
             trigger_format.get_expected_call_data(
@@ -823,11 +823,11 @@ async def test_update_missed(
     [
         (
             {
-                "start": datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-                "end": datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+                "start": dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+                "end": dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
                 "summary": "Summary",
             },
-            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
             {
                 "summary": "Summary",
                 "start": "2022-04-19T11:00:00+00:00",
@@ -837,13 +837,13 @@ async def test_update_missed(
         ),
         (
             {
-                "start": datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-                "end": datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+                "start": dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+                "end": dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
                 "summary": "Summary",
                 "description": "Description",
                 "location": "Location",
             },
-            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
             {
                 "summary": "Summary",
                 "start": "2022-04-19T11:00:00+00:00",
@@ -856,10 +856,10 @@ async def test_update_missed(
         (
             {
                 "summary": "Summary",
-                "start": datetime.date.fromisoformat("2022-04-20"),
-                "end": datetime.date.fromisoformat("2022-04-21"),
+                "start": dt.date.fromisoformat("2022-04-20"),
+                "end": dt.date.fromisoformat("2022-04-21"),
             },
-            datetime.datetime.fromisoformat("2022-04-20 00:00:01-06:00"),
+            dt.datetime.fromisoformat("2022-04-20 00:00:01-06:00"),
             {
                 "summary": "Summary",
                 "start": "2022-04-20",
@@ -907,14 +907,14 @@ async def test_trigger_timestamp_window_edge(
     # Exactly at a TEST_UPDATE_INTERVAL boundary the start time,
     # making this excluded from the first window.
     event_data = test_entity.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:14:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:14:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+            dt.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
         assert calls_data() == [
             trigger_format.get_expected_call_data(
@@ -939,26 +939,26 @@ async def test_event_start_trigger_dst(
     # Before DST transition starts
     event1_data = test_entity.create_event(
         summary="Event 1",
-        start=datetime.datetime(2023, 3, 12, 1, 30, tzinfo=tzinfo),
-        end=datetime.datetime(2023, 3, 12, 1, 45, tzinfo=tzinfo),
+        start=dt.datetime(2023, 3, 12, 1, 30, tzinfo=tzinfo),
+        end=dt.datetime(2023, 3, 12, 1, 45, tzinfo=tzinfo),
     )
     # During DST transition (Clocks are turned forward at 2am to 3am)
     event2_data = test_entity.create_event(
         summary="Event 2",
-        start=datetime.datetime(2023, 3, 12, 2, 30, tzinfo=tzinfo),
-        end=datetime.datetime(2023, 3, 12, 2, 45, tzinfo=tzinfo),
+        start=dt.datetime(2023, 3, 12, 2, 30, tzinfo=tzinfo),
+        end=dt.datetime(2023, 3, 12, 2, 45, tzinfo=tzinfo),
     )
     # After DST transition has ended
     event3_data = test_entity.create_event(
         summary="Event 3",
-        start=datetime.datetime(2023, 3, 12, 3, 30, tzinfo=tzinfo),
-        end=datetime.datetime(2023, 3, 12, 3, 45, tzinfo=tzinfo),
+        start=dt.datetime(2023, 3, 12, 3, 30, tzinfo=tzinfo),
+        end=dt.datetime(2023, 3, 12, 3, 45, tzinfo=tzinfo),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2023-03-12 05:00:00-08:00"),
+            dt.datetime.fromisoformat("2023-03-12 05:00:00-08:00"),
         )
 
         assert calls_data() == [
@@ -997,12 +997,12 @@ async def test_config_entry_reload(
         # Ensure the reloaded entity has events upcoming.
         test_entity = test_entities[1]
         event_data = test_entity.create_event(
-            start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-            end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+            start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+            end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
         )
 
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         )
 
     assert calls_data() == [
@@ -1028,7 +1028,7 @@ async def test_config_entry_unload(
         assert await hass.config_entries.async_unload(config_entry.entry_id)
 
         await fake_schedule.fire_until(
-            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         )
 
     assert "Entity does not exist calendar.calendar_2" in caplog.text
@@ -1112,13 +1112,13 @@ async def test_trigger_with_targets(
     calendar_2 = test_entities[1]
 
     calendar_1.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
         summary="Event on Calendar 1",
     )
     calendar_2.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
+        start=dt.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        end=dt.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
         summary="Event on Calendar 2",
     )
 
@@ -1157,19 +1157,19 @@ async def test_trigger_with_targets(
 
     # Advance past first event start
     await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
+        dt.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
     )
     assert calls_data() == first_start_call_data
 
     # Advance past second event start
     await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+        dt.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
     )
     assert calls_data() == first_start_call_data + second_start_call_data
 
     # Advance past first event end
     await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:40:00+00:00")
+        dt.datetime.fromisoformat("2022-04-19 11:40:00+00:00")
     )
     assert (
         calls_data()
@@ -1178,7 +1178,7 @@ async def test_trigger_with_targets(
 
     # Advance past second event end
     await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:50:00+00:00")
+        dt.datetime.fromisoformat("2022-04-19 11:50:00+00:00")
     )
     assert (
         calls_data()
