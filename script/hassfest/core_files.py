@@ -35,7 +35,6 @@ MISSING_ALL = {
     "logger",
     "lovelace",
     "network",
-    "onboarding",
     "otp",
     "persistent_notification",
     "person",
