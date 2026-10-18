@@ -1957,7 +1957,8 @@ async def test_flow_preview(
                 "current_temperature": 35.0,
                 "fan_mode": None,
                 "fan_modes": None,
-                "hvac_action": HVACAction.IDLE,
+                # Not restored without an hvac_action template
+                "hvac_action": None,
                 "hvac_modes": [HVACMode.COOL],
                 "preset_mode": None,
                 "preset_modes": None,

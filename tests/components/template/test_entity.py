@@ -231,12 +231,32 @@ def _config(domain: str, **extra_config: str | list) -> dict:
         ),
         pytest.param(
             _config(
+                "light",
+                level="{{ 100 }}",
+                set_level=[],
+                rgb="{{ (255, 0, 0) }}",
+                set_rgb=[],
+            ),
+            _config("light", rgb="{{ (255, 0, 0) }}", set_rgb=[]),
+            "light.test",
+            {"color_mode": ColorMode.RGB, "brightness": None},
+            id="light_brightness",
+        ),
+        pytest.param(
+            _config(
                 "climate", current_temperature="{{ 21 }}", current_humidity="{{ 40 }}"
             ),
             _config("climate"),
             "climate.test",
             {"current_temperature": None, "current_humidity": None},
             id="climate_measurements",
+        ),
+        pytest.param(
+            _config("climate", hvac_action="{{ 'heating' }}"),
+            _config("climate"),
+            "climate.test",
+            {"hvac_action": None},
+            id="climate_hvac_action",
         ),
         pytest.param(
             _config("device_tracker", location_accuracy="{{ 5 }}"),

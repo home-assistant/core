@@ -869,7 +869,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     def restore_extra_data(self, extra_data: LightExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_is_on = extra_data.is_on
-        self._attr_brightness = extra_data.brightness
         # Supported color modes are derived from the configured actions
         if (
             self._attr_supported_color_modes
@@ -877,19 +876,29 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             and extra_data.color_mode in self._attr_supported_color_modes
         ):
             self._attr_color_mode = extra_data.color_mode
-        self._attr_color_temp_kelvin = extra_data.color_temp_kelvin
-        if CONF_EFFECT_LIST in self._config:
-            self._attr_effect_list = extra_data.effect_list
-        self._attr_effect = extra_data.effect
-        self._attr_hs_color = extra_data.hs_color
-        if CONF_MIN_MIREDS in self._config:
-            self._attr_max_color_temp_kelvin = extra_data.max_color_temp_kelvin
-        if CONF_MAX_MIREDS in self._config:
-            self._attr_min_color_temp_kelvin = extra_data.min_color_temp_kelvin
-        self._attr_rgb_color = extra_data.rgb_color
-        self._attr_rgbw_color = extra_data.rgbw_color
-        self._attr_rgbww_color = extra_data.rgbww_color
-        self._attr_xy_color = extra_data.xy_color
+        for option, attribute, value in (
+            (CONF_LEVEL, "_attr_brightness", extra_data.brightness),
+            (CONF_TEMPERATURE, "_attr_color_temp_kelvin", extra_data.color_temp_kelvin),
+            (CONF_EFFECT_LIST, "_attr_effect_list", extra_data.effect_list),
+            (CONF_EFFECT, "_attr_effect", extra_data.effect),
+            (CONF_HS, "_attr_hs_color", extra_data.hs_color),
+            (
+                CONF_MIN_MIREDS,
+                "_attr_max_color_temp_kelvin",
+                extra_data.max_color_temp_kelvin,
+            ),
+            (
+                CONF_MAX_MIREDS,
+                "_attr_min_color_temp_kelvin",
+                extra_data.min_color_temp_kelvin,
+            ),
+            (CONF_RGB, "_attr_rgb_color", extra_data.rgb_color),
+            (CONF_RGBW, "_attr_rgbw_color", extra_data.rgbw_color),
+            (CONF_RGBWW, "_attr_rgbww_color", extra_data.rgbww_color),
+            (CONF_XY, "_attr_xy_color", extra_data.xy_color),
+        ):
+            if self.option_restorable(option):
+                setattr(self, attribute, value)
 
 
 class StateLightEntity(TemplateEntity, AbstractTemplateLight):

@@ -861,7 +861,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self._attr_native_current_temperature = extra_data.current_temperature
         self._attr_fan_mode = extra_data.fan_mode
         self._attr_fan_modes = extra_data.fan_modes
-        if self.option_restorable(CONF_HVAC_ACTION):
+        # No action updates the assumed hvac_action, it requires its template
+        if CONF_HVAC_ACTION in self._config:
             self._attr_hvac_action = extra_data.hvac_action
         self._attr_hvac_mode = extra_data.hvac_mode
         self._update_hvac_modes(extra_data.hvac_modes or [])
