@@ -1612,7 +1612,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.28.1
+mcp==2.3.0
 
 # homeassistant.components.minecraft_server
 mcstatus==14.2.0
