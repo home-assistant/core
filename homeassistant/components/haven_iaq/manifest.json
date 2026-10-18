@@ -1,6 +1,7 @@
 {
   "domain": "haven_iaq",
   "name": "HAVEN IAQ",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@krhtzoa"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/haven_iaq",
