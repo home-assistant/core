@@ -62,29 +62,6 @@ SIGNAL_SCHEMA = probatio.Schema(
 )
 
 
-def validate_mqtt_infrared_config(config_value: dict[str, Any]) -> ConfigType:
-    """Validate MQTT infrared entity config schema."""
-    schemas: dict[str, VolSchemaType] = {
-        "emitter": EMITTER_SCHEMA,
-        "receiver": RECEIVER_SCHEMA,
-    }
-    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
-    return config
-
-
-def validate_mqtt_infrared_discovery(config_value: dict[str, Any]) -> ConfigType:
-    """Validate MQTT infrared entity discovery schema."""
-    config: ConfigType = DISCOVERY_SCHEMA_MAPPING[config_value[CONF_SCHEMA]](
-        config_value
-    )
-    return config
-
-
-INFRARED_BASE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_SCHEMA): probatio.Any("emitter", "receiver")},
-    extra=probatio.ALLOW_EXTRA,
-)
-
 EMITTER_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_SCHEMA): "emitter",
@@ -110,14 +87,10 @@ DISCOVERY_SCHEMA_MAPPING: dict[str, VolSchemaType] = {
     "receiver": RECEIVER_SCHEMA.extend({}, extra=probatio.REMOVE_EXTRA),
 }
 
-PLATFORM_SCHEMA_MODERN = probatio.All(
-    INFRARED_BASE_SCHEMA,
-    validate_mqtt_infrared_config,
+PLATFORM_SCHEMA_MODERN = probatio.TaggedUnion(
+    CONF_SCHEMA, [EMITTER_SCHEMA, RECEIVER_SCHEMA]
 )
-DISCOVERY_SCHEMA = probatio.All(
-    INFRARED_BASE_SCHEMA,
-    validate_mqtt_infrared_discovery,
-)
+DISCOVERY_SCHEMA = probatio.TaggedUnion(CONF_SCHEMA, DISCOVERY_SCHEMA_MAPPING)
 
 
 async def async_setup_entry(

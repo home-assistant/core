@@ -231,7 +231,7 @@ async def test_number_yaml_attribute_validation(
                 "device_class": "temperature",  # from DPT
                 "unit_of_measurement": "°C",
                 "min": -273.0,
-                "max": 670760.0,
+                "max": 670433.28,
                 "step": 0.01,
             },
         ),

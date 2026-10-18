@@ -139,6 +139,12 @@
     "pm4_crossed_threshold": {
       "trigger": "mdi:blur"
     },
+    "radon_changed": {
+      "trigger": "mdi:radioactive"
+    },
+    "radon_crossed_threshold": {
+      "trigger": "mdi:radioactive"
+    },
     "smoke_cleared": {
       "trigger": "mdi:check-circle"
     },

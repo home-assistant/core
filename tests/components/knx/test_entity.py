@@ -205,6 +205,28 @@ async def test_yaml_entity_device_naming(
     assert states[0].attributes["friendly_name"] == expected_friendly_name
 
 
+async def test_xknx_device_named_after_entity_id(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The xknx device carries the entity_id as name and follows a rename."""
+    await knx.setup_integration(
+        {Platform.SWITCH: {"name": "test", KNX_ADDRESS: "1/1/1"}}
+    )
+    (device,) = knx.xknx.devices
+    assert device.name == "switch.test"
+    assert device.switch.device_name == "switch.test"
+
+    entity_registry.async_update_entity("switch.test", new_entity_id="switch.renamed")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.renamed") is not None
+    (device,) = knx.xknx.devices
+    assert device.name == "switch.renamed"
+    assert device.switch.device_name == "switch.renamed"
+
+
 @pytest.mark.parametrize(
     ("device_id", "expected_identifier"),
     [

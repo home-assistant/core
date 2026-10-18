@@ -11,7 +11,7 @@ from aiowebdav2.exceptions import (
 import pytest
 
 from homeassistant.components.webdav.const import CONF_BACKUP_PATH, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -83,3 +83,20 @@ async def test_error_during_setup(
 
     assert expected_message in caplog.text
     assert config_entry.state is expected_state
+
+
+async def test_auth_error_during_setup_starts_reauth(
+    hass: HomeAssistant,
+    webdav_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an authentication error during setup starts a reauth flow."""
+    webdav_client.check.side_effect = UnauthorizedError("https://webdav.demo")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

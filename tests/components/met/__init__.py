@@ -2,19 +2,23 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.met.const import CONF_TRACK_HOME, DOMAIN
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.components.met.const import (
+    CONF_TRACK_HOME,
+    DEFAULT_NAME,
+    DOMAIN,
+    HOME_LOCATION_NAME,
+)
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 async def init_integration(
-    hass: HomeAssistant, track_home: bool = False
+    hass: HomeAssistant, track_home: bool = False, title: str | None = None
 ) -> MockConfigEntry:
     """Set up the Met integration in Home Assistant."""
     entry_data = {
-        CONF_NAME: "test",
         CONF_LATITUDE: 0,
         CONF_LONGITUDE: 1.0,
         CONF_ELEVATION: 1.0,
@@ -23,7 +27,18 @@ async def init_integration(
     if track_home:
         entry_data = {CONF_TRACK_HOME: True}
 
-    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+        title=(
+            title
+            if title is not None
+            else HOME_LOCATION_NAME
+            if track_home
+            else f"{DEFAULT_NAME} (0, 1.0)"
+        ),
+        minor_version=2,
+    )
     with patch(
         "homeassistant.components.met.coordinator.metno.MetWeatherData.fetching_data",
         return_value=True,

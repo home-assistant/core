@@ -41,7 +41,7 @@ class EntityExtension(BaseTemplateExtension):
         """Get the name of an entity from its entity ID."""
         ent_reg = er.async_get(self.hass)
         if (entry := ent_reg.async_get(entity_id)) is not None:
-            return er.async_get_unprefixed_name(self.hass, entry)
+            return entry.entity_name
 
         # Fall back to state for entities without a unique_id (not in the registry)
         if (state := self.hass.states.get(entity_id)) is not None:
