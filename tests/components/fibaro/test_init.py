@@ -16,6 +16,27 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
+async def test_migrate_device_identifiers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test migration converts integer Fibaro device identifiers to strings."""
+    config_entry = MockConfigEntry(domain=DOMAIN, version=1)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, 3)},  # type: ignore[arg-type]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    migrated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3"), config_entry.entry_id
+    )
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {(DOMAIN, "3")}
+    assert config_entry.version == 2
+
+
 async def test_unload_integration(
     hass: HomeAssistant,
     mock_fibaro_client: Mock,
@@ -59,7 +80,7 @@ async def test_load_integration_links_device_to_hub(
         (DOMAIN, TEST_SERIALNUMBER), mock_config_entry.entry_id
     )
     light_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_light.fibaro_id), mock_config_entry.entry_id
+        (DOMAIN, str(mock_light.fibaro_id)), mock_config_entry.entry_id
     )
     assert hub_device is not None
     assert light_device is not None
@@ -91,10 +112,9 @@ async def test_remove_device(
     with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
         await init_integration(hass, mock_config_entry)
 
-    # The identifiers hold the integer fibaro_id
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, fibaro_id)},
+        identifiers={(DOMAIN, str(fibaro_id))},
     )
     client = await hass_ws_client(hass)
 
