@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant import config_entries
 from homeassistant.components.fjaraskupan.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import COOKER_SERVICE_INFO, COOKER_SERVICE_INFO_DATA
-
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.fixture(name="mock_setup_entry", autouse=True)

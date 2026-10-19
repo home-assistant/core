@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from haveniaq import DeviceInfo, HavenApiError, SensorData
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.haven_iaq.const import DOMAIN
@@ -21,8 +26,6 @@ from . import (
     TEST_SERIAL,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture

@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import (
@@ -33,8 +34,6 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import chat_session, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
