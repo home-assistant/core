@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
+import ifaddr
 import pytest
 from zeroconf import (
     BadTypeInNameException,
@@ -13,7 +14,7 @@ from zeroconf import (
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import network, zeroconf
 from homeassistant.components.zeroconf import discovery
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
@@ -27,7 +28,12 @@ from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    get_system_health_info,
+    mock_integration,
+)
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -265,6 +271,77 @@ async def test_setup_with_defaults(
     mock_zeroconf.assert_called_with(
         interfaces=InterfaceChoice.Default, ip_version=IPVersion.V4Only
     )
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        pytest.param("fd12:3456::10", id="unique_local"),
+        pytest.param("2001:4860::10", id="global"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("platform", "ip_version"),
+    [
+        pytest.param("linux", IPVersion.All, id="linux"),
+        pytest.param("freebsd", IPVersion.V6Only, id="freebsd"),
+        pytest.param("darwin", IPVersion.V6Only, id="darwin"),
+    ],
+)
+async def test_setup_ipv6_only(
+    hass: HomeAssistant,
+    mock_async_zeroconf: MagicMock,
+    mock_zeroconf: MagicMock,
+    address: str,
+    platform: str,
+    ip_version: IPVersion,
+) -> None:
+    """Start discovery and advertise IPv6 without an IPv4 route."""
+    with (
+        patch("homeassistant.components.zeroconf.sys.platform", platform),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[
+                ifaddr.Adapter(
+                    "eth0",
+                    "eth0",
+                    [
+                        ifaddr.IP((address, 0, 0), 64, "eth0"),
+                        ifaddr.IP(("fe80::1234", 0, 2), 64, "eth0"),
+                    ],
+                    index=2,
+                )
+            ],
+        ),
+        patch(
+            "homeassistant.components.network.util.async_get_source_ip",
+            side_effect={"127.0.0.1": "127.0.0.1"}.get,
+        ),
+    ):
+        assert await async_setup_component(hass, "network", {})
+        adapters = await network.async_get_adapters(hass)
+        with patch(
+            "homeassistant.components.network.async_get_loaded_adapters",
+            return_value=adapters,
+        ):
+            assert await async_setup_component(hass, zeroconf.DOMAIN, {})
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
+        await hass.async_block_till_done()
+
+        mock_async_zeroconf.async_register_service.assert_awaited_once()
+        service = mock_async_zeroconf.async_register_service.call_args.args[0]
+        assert service.parsed_addresses() == [address, "fe80::1234"]
+        assert "fe80::1234%2" in mock_zeroconf.call_args.kwargs["interfaces"]
+        assert mock_zeroconf.call_args.kwargs["ip_version"] == ip_version
+
+        assert await async_setup_component(hass, "system_health", {})
+        health = await get_system_health_info(hass, "network")
+        assert health["announce_addresses"] == f"{address}, fe80::1234"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+    mock_async_zeroconf.ha_async_close.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
@@ -994,6 +1071,101 @@ async def test_info_from_service_prefers_ipv4(hass: HomeAssistant) -> None:
     service_info.addresses = ["2001:db8:3333:4444:5555:6666:7777:8888", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
     assert info.host == "192.168.66.12"
+
+
+@pytest.mark.parametrize(
+    ("addresses", "expected"),
+    [
+        pytest.param(["192.168.66.12", "fd12::10"], "fd12::10", id="unique_local"),
+        pytest.param(["192.168.66.12", "2001:4860::10"], "2001:4860::10", id="global"),
+        pytest.param(["fd12::10"], "fd12::10", id="ipv6_only"),
+        pytest.param(["192.168.66.12"], "192.168.66.12", id="ipv4_only"),
+        pytest.param(
+            ["192.168.66.12", "fe80::10", "::"], "192.168.66.12", id="ipv4_fallback"
+        ),
+        pytest.param(
+            ["192.168.66.12", "fd12::11", "fd12::10"], "fd12::11", id="newest_ipv6"
+        ),
+    ],
+)
+async def test_info_from_service_prefers_ipv6(
+    addresses: list[str], expected: str
+) -> None:
+    """Prefer eligible IPv6 addresses without changing the complete address list."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = addresses
+
+    info = zeroconf.info_from_service(service_info, prefer_ipv6=True)
+
+    assert info is not None
+    assert info.host == expected
+    assert info.addresses == addresses
+
+
+@pytest.mark.parametrize(
+    "addresses",
+    [
+        pytest.param([], id="no_addresses"),
+        pytest.param(["fe80::10"], id="link_local"),
+        pytest.param(["::", "0.0.0.0"], id="unspecified"),
+    ],
+)
+async def test_info_from_service_prefers_ipv6_without_eligible_addresses(
+    addresses: list[str],
+) -> None:
+    """IPv6 preference does not make excluded addresses eligible."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = addresses
+
+    assert zeroconf.info_from_service(service_info, prefer_ipv6=True) is None
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize(
+    ("local_addresses", "expected"),
+    [
+        pytest.param(["192.168.1.5"], "192.168.66.12", id="ipv4_only"),
+        pytest.param(["192.168.1.5", "fd12::1"], "192.168.66.12", id="dual_stack"),
+        pytest.param(["fd12::1", "fe80::1"], "fd12::10", id="ipv6_only"),
+        pytest.param(
+            ["127.0.0.1", "fd12::1"], "fd12::10", id="ipv6_with_ipv4_loopback"
+        ),
+        pytest.param(["::1"], "192.168.66.12", id="ipv6_loopback_only"),
+    ],
+)
+async def test_discovery_address_family(
+    hass: HomeAssistant, local_addresses: list[str], expected: str
+) -> None:
+    """Pass the preferred address family through to integration discovery flows."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"_name.{service_type}")
+    service_info.addresses = ["192.168.66.12", "fd12::10"]
+    with (
+        patch(
+            "homeassistant.components.network.async_get_announce_addresses",
+            return_value=local_addresses,
+        ),
+        patch.dict(zc_gen.ZEROCONF, {service_type: [{"domain": "test"}]}, clear=True),
+        patch.object(hass.config_entries.flow, "async_init") as config_flow,
+        patch.object(
+            discovery,
+            "AsyncServiceBrowser",
+            side_effect=lambda *args, **kwargs: service_update_mock(
+                *args, **kwargs, limit_service=service_type
+            ),
+        ),
+        patch.object(discovery, "AsyncServiceInfo", return_value=service_info),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    config_flow.assert_awaited_once()
+    info = config_flow.call_args.kwargs["data"]
+    assert info.host == expected
+    assert info.addresses == ["192.168.66.12", "fd12::10"]
 
 
 async def test_info_from_service_can_return_ipv6(hass: HomeAssistant) -> None:
