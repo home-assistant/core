@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyflic_ble import DeviceType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flic_button import PLATFORMS
 from homeassistant.components.flic_button.const import (
@@ -29,8 +30,6 @@ from . import (
     TEST_SIG_BITS,
     service_info_for_device_type,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

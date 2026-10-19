@@ -12,6 +12,7 @@ from pyflic_ble import (
     PushTwistMode,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flic_button.config_flow import FlicButtonConfigFlow
 from homeassistant.components.flic_button.const import (
@@ -38,8 +39,6 @@ from . import (
     create_flic2_service_info,
     service_info_for_device_type,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

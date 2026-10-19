@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from pyflic_ble import DeviceType
 from pyflic_ble.const import FLIC_SERVICE_UUID, TWIST_SERVICE_UUID
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 # Test Bluetooth addresses (one per supported device type)
 FLIC2_ADDRESS = "AA:BB:CC:DD:EE:F0"

@@ -5,13 +5,12 @@ from unittest.mock import MagicMock
 from bleak import BleakError
 from pyflic_ble import DeviceType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import create_flic2_service_info, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_success(

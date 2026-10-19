@@ -3387,6 +3387,9 @@
     "flic_button": {
       "name": "Flic",
       "integration_type": "device",
+      "categories": [
+        "buttons_remotes"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },

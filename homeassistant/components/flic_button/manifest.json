@@ -11,6 +11,7 @@
       "service_uuid": "00c90000-2cbd-4f2a-a725-5ccd960ffb7d"
     }
   ],
+  "categories": ["buttons_remotes"],
   "codeowners": ["@50ButtonsEach"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

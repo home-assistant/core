@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 from pyflic_ble import DeviceType, FlicProtocolError, PushTwistMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.flic_button.const import CONF_PUSH_TWIST_MODE
@@ -19,12 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
 
 SLOT_1_ENTITY_ID = "number.flic_twist_t12345_slot_1"
 SLOT_3_ENTITY_ID = "number.flic_twist_t12345_slot_3"
