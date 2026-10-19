@@ -123,6 +123,58 @@ async def test_fetch_auth_providers_skips_providers_that_cannot_start_login(
     assert (await resp.json())["providers"] == []
 
 
+async def test_login_flow_refuses_providers_that_cannot_start_login(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a provider left off the login screen can't be started directly."""
+    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+    with patch(
+        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+        ".async_can_start_login",
+        return_value=False,
+    ):
+        resp = await client.post(
+            "/auth/login_flow",
+            json={
+                "client_id": CLIENT_ID,
+                "handler": ["insecure_example", None],
+                "redirect_uri": CLIENT_REDIRECT_URI,
+            },
+        )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert await resp.json() == {"message": "Invalid handler specified"}
+
+
+@pytest.mark.parametrize(
+    ("ip", "expected_status"),
+    [
+        pytest.param("192.168.0.1", HTTPStatus.OK, id="trusted"),
+        pytest.param("1.2.3.4", HTTPStatus.NOT_FOUND, id="untrusted"),
+    ],
+)
+async def test_login_flow_trusted_networks_only_from_trusted_network(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ip: str,
+    expected_status: HTTPStatus,
+) -> None:
+    """Test a trusted networks login can only be started from a trusted network."""
+    client = await async_setup_auth(
+        hass, aiohttp_client, [_TRUSTED_NETWORKS_CONFIG], custom_ip=ip
+    )
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["trusted_networks", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+
+    assert resp.status == expected_status
+
+
 async def test_fetch_auth_providers_onboarding(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
