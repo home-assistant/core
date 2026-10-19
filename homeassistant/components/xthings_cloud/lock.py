@@ -32,7 +32,19 @@ class XthingsCloudLock(XthingsCloudEntity, LockEntity):
     @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
-        return self.device_data["status"].get("locked")
+        status = self.device_data["status"]
+        value = status.get("is_locked")
+
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int):
+            if value == 1:
+                return False
+            if value == 2:
+                return True
+
+        locked = status.get("locked")
+        return locked if isinstance(locked, bool) else None
 
     @property
     @override

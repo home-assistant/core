@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "online": true,
   "status": {
-    "locked": true,
+    "is_locked": 2,
     "jammed": false,
     "battery": 85
   }
