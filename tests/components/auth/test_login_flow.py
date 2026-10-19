@@ -1019,8 +1019,14 @@ async def test_login_flow_limit(
     ] == flow_ids[1:]
 
     # Only one flow is evicted per interval.
-    resp = await client.post("/auth/login_flow", json=payload)
+    with patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post("/auth/login_flow", json=payload)
     assert resp.status == HTTPStatus.TOO_MANY_REQUESTS
+    assert await resp.json() == {"message": "Too many login flows in progress"}
+    # A full limit is no failed login, so retrying clients aren't banned for it.
+    mock_process_wrong_login.assert_not_called()
     assert [
         flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
     ] == flow_ids[1:]

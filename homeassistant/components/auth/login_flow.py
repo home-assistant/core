@@ -89,7 +89,9 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     get_url,
@@ -418,10 +420,12 @@ class LoginFlowIndexView(LoginFlowBaseView):
             return self.json_message(
                 "Handler does not support init", HTTPStatus.BAD_REQUEST
             )
-        except TooManyRequestsError:
-            return self.json_message(
-                "Too many login flows in progress", HTTPStatus.TOO_MANY_REQUESTS
-            )
+        except TooManyRequestsError as err:
+            # Raised so log_invalid_auth doesn't count it as a failed login.
+            raise web.HTTPTooManyRequests(
+                text=json_dumps({"message": "Too many login flows in progress"}),
+                content_type=CONTENT_TYPE_JSON,
+            ) from err
 
         return await self._async_flow_result_to_response(request, client_id, result)
 
