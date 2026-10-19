@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from transmission_rpc.error import (
     TransmissionAuthError,
     TransmissionConnectError,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG_DATA, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -325,6 +324,7 @@ async def test_reauth_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(

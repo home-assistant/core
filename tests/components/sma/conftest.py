@@ -11,13 +11,12 @@ from pysma.const import (
 from pysma.definitions.webconnect import sensor_map
 from pysma.sensor import Sensors
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

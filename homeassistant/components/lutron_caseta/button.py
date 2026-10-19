@@ -27,7 +27,7 @@ async def async_setup_entry(
             hass,
             device,
             data,
-            f"{device_info.get('name')} {button_name}",
+            f"{device_info.name} {button_name}",
             enabled_default,
             device_info,
         )

@@ -13,23 +13,15 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SERVICE_SETALLZONES
+from .const import DATA_BLACKBIRD
 
 _LOGGER = logging.getLogger(__name__)
-
-MEDIA_PLAYER_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
 ZONE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
@@ -37,14 +29,6 @@ SOURCE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
-
-DATA_BLACKBIRD = "blackbird"
-
-ATTR_SOURCE = "source"
-
-BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {probatio.Required(ATTR_SOURCE): cv.string}
-)
 
 
 # Valid zone ids: 1-8
@@ -111,28 +95,6 @@ def setup_platform(
         devices.append(device)
 
     add_entities(devices, True)
-
-    def service_handle(service: ServiceCall) -> None:
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        source = service.data.get(ATTR_SOURCE)
-        if entity_ids:
-            devices = [
-                device
-                for device in hass.data[DATA_BLACKBIRD].values()
-                if device.entity_id in entity_ids
-            ]
-
-        else:
-            devices = hass.data[DATA_BLACKBIRD].values()
-
-        for device in devices:
-            if service.service == SERVICE_SETALLZONES:
-                device.set_all_zones(source)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SETALLZONES, service_handle, schema=BLACKBIRD_SETALLZONES_SCHEMA
-    )
 
 
 class BlackbirdZone(MediaPlayerEntity):

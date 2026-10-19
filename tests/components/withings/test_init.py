@@ -18,6 +18,12 @@ from aiowithings import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_cloud_connection_status,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -37,13 +43,7 @@ from homeassistant.util import dt as dt_util
 from . import call_webhook, prepare_webhook_setup, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_cloud_connection_status,
-)
 from tests.components.cloud import mock_cloud
-from tests.typing import ClientSessionGenerator
 
 
 async def test_data_manager_webhook_subscription(
@@ -157,6 +157,7 @@ async def test_triggering_reauth(
     polling_config_entry: MockConfigEntry,
     error: Exception,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test triggering reauth."""
     await setup_integration(hass, polling_config_entry, False)
@@ -173,6 +174,7 @@ async def test_triggering_reauth(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert "Authentication with Withings failed. Please reauthenticate" in caplog.text
 
 
 @pytest.mark.parametrize(

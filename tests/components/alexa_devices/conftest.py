@@ -6,6 +6,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
@@ -22,8 +23,6 @@ from .const import (
     TEST_USERNAME,
     TEST_VOCAL_RECORD_INITIAL,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

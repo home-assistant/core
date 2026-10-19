@@ -1,7 +1,8 @@
 """The tests for Climate device triggers."""
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -22,8 +23,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(
@@ -406,3 +405,18 @@ async def test_get_trigger_capabilities_temp_humid(
             "type": "positive_time_period_dict",
         },
     ]
+
+
+def test_current_temperature_changed_with_bad_above_is_invalid() -> None:
+    """Test the trigger type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="expected float at 'above'"):
+        device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "climate.test",
+                "type": "current_temperature_changed",
+                "above": "warm",
+            }
+        )

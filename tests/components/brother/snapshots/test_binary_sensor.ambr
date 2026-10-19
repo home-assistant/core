@@ -356,6 +356,57 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.hl_l2340dw_output_tray_almost_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.hl_l2340dw_output_tray_almost_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output tray almost full',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Output tray almost full',
+    'platform': 'brother',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_near_full',
+    'unique_id': '0123456789_output_near_full',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.hl_l2340dw_output_tray_almost_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Output tray almost full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.hl_l2340dw_output_tray_almost_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.hl_l2340dw_output_tray_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -452,57 +503,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hl_l2340dw_output_tray_missing',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.hl_l2340dw_output_tray_near_full-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.hl_l2340dw_output_tray_near_full',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Output tray near full',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Output tray near full',
-    'platform': 'brother',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'output_near_full',
-    'unique_id': '0123456789_output_near_full',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.hl_l2340dw_output_tray_near_full-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Output tray near full',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.hl_l2340dw_output_tray_near_full',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1019,6 +1019,57 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors_ink[binary_sensor.dcp_j562dw_output_tray_almost_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dcp_j562dw_output_tray_almost_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output tray almost full',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Output tray almost full',
+    'platform': 'brother',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_near_full',
+    'unique_id': '9876543210_output_near_full',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors_ink[binary_sensor.dcp_j562dw_output_tray_almost_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DCP-J562DW Output tray almost full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dcp_j562dw_output_tray_almost_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors_ink[binary_sensor.dcp_j562dw_output_tray_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1115,57 +1166,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dcp_j562dw_output_tray_missing',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors_ink[binary_sensor.dcp_j562dw_output_tray_near_full-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dcp_j562dw_output_tray_near_full',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Output tray near full',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Output tray near full',
-    'platform': 'brother',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'output_near_full',
-    'unique_id': '9876543210_output_near_full',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors_ink[binary_sensor.dcp_j562dw_output_tray_near_full-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DCP-J562DW Output tray near full',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dcp_j562dw_output_tray_near_full',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
