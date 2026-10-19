@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_get_forecasts
+  dict({
+    'covered_hours': 1.5,
+    'forecasts': list([
+      dict({
+        'price': 3.8238,
+        'price_excl_gst': 3.325,
+        'schedule': 'short',
+        'start_time': '2026-08-24T15:00:00+00:00',
+        'trading_date': '2026-08-25',
+        'trading_period': 7,
+      }),
+      dict({
+        'price': 1.2604,
+        'price_excl_gst': 1.096,
+        'schedule': 'short',
+        'start_time': '2026-08-24T15:30:00+00:00',
+        'trading_date': '2026-08-25',
+        'trading_period': 8,
+      }),
+      dict({
+        'price': 0.2289,
+        'price_excl_gst': 0.199,
+        'schedule': 'long',
+        'start_time': '2026-08-24T16:00:00+00:00',
+        'trading_date': '2026-08-25',
+        'trading_period': 9,
+      }),
+    ]),
+    'published_at': '2026-08-24T12:03:00+00:00',
+    'unavailable_reason': None,
+  })
+# ---
