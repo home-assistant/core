@@ -13,9 +13,7 @@ from hass_nabucasa.voice_data import TTS_VOICES
 import probatio
 import pytest
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
 from homeassistant.components.cloud.tts import (
     DEFAULT_VOICES,
