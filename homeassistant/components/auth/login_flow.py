@@ -445,9 +445,34 @@ class LoginFlowResourceView(LoginFlowBaseView):
     url = "/auth/login_flow/{flow_id}"
     name = "api:auth:login_flow:resource"
 
+    def __init__(
+        self,
+        flow_mgr: AuthManagerFlowManager,
+        store_result: StoreResultType,
+    ) -> None:
+        """Initialize the login flow resource view."""
+        super().__init__(flow_mgr, store_result)
+        self._flows_in_progress: set[str] = set()
+
     async def get(self, request: web.Request) -> web.Response:
         """Do not allow getting status of a flow in progress."""
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
+
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
+        """Handle progressing a login flow request."""
+        # Checked before the lookup, as a finished flow is gone while its
+        # response is still being built.
+        if flow_id in self._flows_in_progress:
+            return self.json_message(
+                "Flow request already in progress", HTTPStatus.CONFLICT
+            )
+        self._flows_in_progress.add(flow_id)
+        try:
+            # Also covers log_invalid_auth, so the next attempt waits until a
+            # failed login has been counted.
+            return await self._async_post(request, flow_id=flow_id)
+        finally:
+            self._flows_in_progress.remove(flow_id)
 
     @RequestDataValidator(
         probatio.Schema(
@@ -456,10 +481,10 @@ class LoginFlowResourceView(LoginFlowBaseView):
         )
     )
     @log_invalid_auth
-    async def post(
+    async def _async_post(
         self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:
-        """Handle progressing a login flow request."""
+        """Progress the login flow."""
         client_id: str = data.pop("client_id")
 
         if not indieauth.verify_client_id(
