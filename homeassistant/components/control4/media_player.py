@@ -263,7 +263,11 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
         return C4Room(self.runtime_data.director, self._idx)
 
     def _get_device_from_variable(self, var: str) -> int | None:
-        current_device = self.coordinator.data[self._idx][var]
+        if (data := self.coordinator.data) is None:
+            # No poll has succeeded yet, so the room is unavailable and there
+            # is no variable to read until a later poll comes back.
+            return None
+        current_device = data[self._idx][var]
         if current_device == 0:
             return None
 
@@ -283,6 +287,8 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
 
     def _get_media_info(self) -> dict | None:
         """Get the Media Info Dictionary if populated."""
+        if self.coordinator.data is None:
+            return None
         media_info = self.coordinator.data[self._idx][CONTROL4_MEDIA_INFO]
         if "mediainfo" in media_info:
             return media_info["mediainfo"]
@@ -315,6 +321,11 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     @override
     def state(self) -> MediaPlayerState:
         """Return whether this room is on or off."""
+        if self.coordinator.data is None:
+            # A failed first poll leaves the room unavailable. The entity is
+            # still added so it can recover, and entity_picture() reads this
+            # property in that state, so it has to return something.
+            return MediaPlayerState.OFF
 
         if source_state := self._get_current_source_state():
             return source_state

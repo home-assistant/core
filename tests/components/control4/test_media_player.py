@@ -1,8 +1,9 @@
 """Test Control4 Media Player."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyControl4.error_handling import C4Exception
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -17,7 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
@@ -366,3 +367,34 @@ async def test_media_player_turn_off(
 
     mock_c4_room.set_room_off.assert_awaited_once()
     mock_c4_room.set_video_and_audio_source.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director_duplicate_source_names")
+@patch(
+    "homeassistant.components.control4.media_player.update_variables_for_config_entry",
+    autospec=True,
+)
+async def test_media_player_setup_recovers_from_failed_first_poll(
+    mock_update_variables: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_room_off_variables: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a failed first poll leaves the room unavailable, not missing."""
+    mock_update_variables.side_effect = C4Exception("director unavailable")
+    await setup_integration(hass, mock_config_entry)
+
+    # The coordinator has no data yet: the room must still be added, so it can
+    # recover on its own, instead of raising while it remembers its source.
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_update_variables.side_effect = None
+    mock_update_variables.return_value = mock_room_off_variables
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
