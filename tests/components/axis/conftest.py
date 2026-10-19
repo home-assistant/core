@@ -9,6 +9,11 @@ from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.components.axis.const import DOMAIN
@@ -42,9 +47,6 @@ from .const import (
     STREAM_PROFILES_RESPONSE,
     VIEW_AREAS_RESPONSE,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 type RtspStateType = Callable[[bool], None]

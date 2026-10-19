@@ -4,13 +4,12 @@ from unittest.mock import MagicMock
 
 from pyhaseiq import ConnectionFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_client")

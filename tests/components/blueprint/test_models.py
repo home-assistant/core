@@ -6,14 +6,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import get_test_config_dir
 
 from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, errors, models
 from homeassistant.config import _get_annotation
 from homeassistant.core import HomeAssistant
 from homeassistant.util.yaml import Input
 from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass, NodeStrClass
-
-from tests.common import get_test_config_dir
 
 # A real blueprint in the test config dir, loaded from disk by DomainBlueprints.
 BLUEPRINT_PATH = "test_event_sensor.yaml"

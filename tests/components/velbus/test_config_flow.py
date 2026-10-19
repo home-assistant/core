@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import init_integration
 from .const import PORT_SERIAL
-
-from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = UsbServiceInfo(
     device=PORT_SERIAL,

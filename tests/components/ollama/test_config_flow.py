@@ -8,6 +8,7 @@ from unittest.mock import ANY, AsyncMock, patch
 from httpx2 import HTTPError
 from ollama import ResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components import ollama
@@ -16,8 +17,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_MODEL = "test_model:latest"
 
