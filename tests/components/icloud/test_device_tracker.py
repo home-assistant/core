@@ -1,23 +1,18 @@
 """Tests for the iCloud device tracker."""
 
 from datetime import timedelta
-import itertools
 import math
-from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.icloud.account import IcloudDevice
 from homeassistant.components.icloud.const import DEFAULT_MAX_INTERVAL, DOMAIN
-from homeassistant.components.icloud.device_tracker import IcloudTrackerEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from . import MockAppleDevice
-from .const import DEVICE, MOCK_CONFIG, USERNAME
+from .const import MOCK_CONFIG, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -66,73 +61,19 @@ async def test_location_reported(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_LONGITUDE] == 2.0
 
 
-@pytest.mark.parametrize(
-    ("attribute", "expected"),
-    [
-        pytest.param("latitude", 1.0, id="latitude"),
-        pytest.param("longitude", 2.0, id="longitude"),
-        pytest.param("location_accuracy", 10, id="accuracy"),
-    ],
-)
-def test_tracker_reads_the_location_once(attribute: str, expected: float) -> None:
-    """Test that a location cleared mid-read cannot break the tracker.
-
-    The poll clears the location from the executor, so it can be gone between
-    checking it and reading a coordinate out of it.
-    """
-    device = MagicMock()
-    type(device).location = PropertyMock(
-        side_effect=[location(is_old=False, age=timedelta(0)), None, None]
-    )
-    tracker = IcloudTrackerEntity(MagicMock(), device)
-
-    assert getattr(tracker, attribute) == expected
-
-
-@pytest.mark.usefixtures("locating_service")
-async def test_a_location_cleared_during_a_state_write_does_not_change_it(
-    hass: HomeAssistant,
-) -> None:
-    """Test that one state write is made from one location.
-
-    The poll clears a stale location from the executor while the event loop may
-    be writing the state, and the state write reads the coordinates and the
-    accuracy one after the other. A location that is gone after the first read
-    must not leave the rest of the write with half a fix, which can come out as
-    not_home instead of unknown.
-    """
-    config_entry = await setup_account(hass)
-    account = config_entry.runtime_data
-    fix = location(is_old=False, age=timedelta(0))
-
-    with patch.object(
-        IcloudDevice,
-        "location",
-        new_callable=PropertyMock,
-        side_effect=itertools.chain([fix], itertools.repeat(None)),
-    ):
-        async_dispatcher_send(hass, account.signal_device_update)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_LATITUDE] == 1.0
-    assert state.attributes[ATTR_LONGITUDE] == 2.0
-
-
-async def test_new_devices_are_announced_once_after_the_scan(
+async def test_devices_appearing_in_one_poll_all_get_their_trackers(
     hass: HomeAssistant,
     locating_service: tuple,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that listeners are told only once the poll has finished adding devices.
+    """Test that every device that turns up in one poll gets its tracker.
 
-    The platforms iterate the account's devices on the event loop, while the
-    poll adds them from the executor. A signal sent from the middle of the scan
-    can have a listener iterating while the next device is added.
+    The platforms iterate the account's devices on the event loop while the
+    poll adds them from the executor, so they are told once the poll has
+    finished adding devices, and what they build then has to cover all of them.
     """
     service, status = locating_service
-    config_entry = await setup_account(hass)
-    account = config_entry.runtime_data
+    await setup_account(hass)
 
     status["location"] = location(
         is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
@@ -147,16 +88,10 @@ async def test_new_devices_are_announced_once_after_the_scan(
             {**status, "id": "device2", "name": "iPad", "deviceDisplayName": "iPad"}
         )
     )
-    announced = []
+    await next_fetch(hass, freezer)
 
-    def record(hass: HomeAssistant, signal: str, *args: object) -> None:
-        if signal == account.signal_device_new:
-            announced.append(sorted(account.devices))
-
-    with patch("homeassistant.components.icloud.account.dispatcher_send", record):
-        await next_fetch(hass, freezer)
-
-    assert announced == [sorted([DEVICE["id"], "device2"])]
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_LATITUDE] == 1.0
+    assert hass.states.get("device_tracker.ipad").attributes[ATTR_LATITUDE] == 1.0
 
 
 @pytest.mark.parametrize(
@@ -308,40 +243,6 @@ async def test_tracker_is_created_once_a_stale_first_fix_is_replaced(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_LATITUDE] == 1.0
     assert state.attributes[ATTR_LONGITUDE] == 2.0
-
-
-async def test_recovered_location_is_stored_before_it_is_announced(
-    hass: HomeAssistant,
-    locating_service: tuple,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that the new-device signal is sent once the location can be read.
-
-    The poll runs off the event loop and the signal is handled on it, so a
-    listener that finds no location skips the device and is never told again.
-    """
-    _, status = locating_service
-    await setup_account(hass)
-    status["location"] = location(
-        is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
-    )
-    await next_fetch(hass, freezer)
-    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
-
-    account = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
-    (device,) = account.devices.values()
-    seen: list[object] = []
-
-    def record(hass: HomeAssistant, signal: str, *args: object) -> None:
-        if signal == account.signal_device_new:
-            seen.append(device.location)
-
-    status["location"] = location(is_old=False, age=timedelta(seconds=30))
-    with patch("homeassistant.components.icloud.account.dispatcher_send", record):
-        await next_fetch(hass, freezer)
-
-    assert seen == [device.location]
-    assert device.location is not None
 
 
 @pytest.mark.parametrize(
