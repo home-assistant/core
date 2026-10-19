@@ -98,6 +98,7 @@ async def test_flow_api_token_already_configured(hass: HomeAssistant) -> None:
         pytest.param(ApiError(401, ""), "invalid_auth", id="invalid_auth"),
         pytest.param(ApiError(500, ""), "cannot_connect", id="server_error"),
         pytest.param(OSError, "cannot_connect", id="network_error"),
+        pytest.param(ValueError, "unknown", id="unexpected_error"),
     ],
 )
 async def test_flow_error(

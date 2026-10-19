@@ -1,6 +1,7 @@
 """Config flow for simplepush integration."""
 
 from http import HTTPStatus
+import logging
 from typing import Any, override
 
 import probatio
@@ -18,6 +19,8 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_input(api_token: str) -> dict[str, str] | None:
@@ -38,7 +41,7 @@ def validate_input(api_token: str) -> dict[str, str] | None:
         return {"base": "cannot_connect"}
     except Exception:
         _LOGGER.exception("Unexpected exception")
-        errors["base"] = "unknown"
+        return {"base": "unknown"}
     return None
 
 
