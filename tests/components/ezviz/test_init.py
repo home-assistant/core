@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyezvizapi.exceptions import PyEzvizError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import image
 from homeassistant.components.ezviz.const import ATTR_TYPE_CLOUD
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

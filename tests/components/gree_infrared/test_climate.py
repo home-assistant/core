@@ -10,6 +10,24 @@ from infrared_protocols.commands.gree_ac import (
     GreeAcMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -21,6 +39,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -40,20 +60,6 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
 )
 
 _CLIMATE_ENTITY_ID = "climate.gree_ac"
@@ -254,6 +260,67 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
             fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("prior_modes", "service", "power", "expected_state"),
+    [
+        pytest.param(
+            (HVACMode.DRY,), SERVICE_TURN_OFF, False, HVACMode.OFF, id="turn_off"
+        ),
+        pytest.param(
+            (HVACMode.DRY, HVACMode.OFF),
+            SERVICE_TURN_ON,
+            True,
+            HVACMode.DRY,
+            id="turn_on",
+        ),
+    ],
+)
+async def test_turn_on_off_uses_the_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    prior_modes: tuple[HVACMode, ...],
+    service: str,
+    power: bool,
+    expected_state: HVACMode,
+) -> None:
+    """Test turning on or off sends a frame carrying the last active mode.
+
+    Dry is deliberately not the first configured mode, so a turn on that ignored the
+    last active mode would come back in cool.
+    """
+    for hvac_mode in prior_modes:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+            blocking=True,
+        )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=power,
+            mode=GreeAcMode.DRY,
+            temperature=MIN_TEMP,
+            fan=GreeAcFanSpeed.AUTO,
+        ).get_raw_timings()
+    )
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -828,7 +895,10 @@ async def test_supported_features_always_include_target_temperature(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["supported_features"] == (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
 
 

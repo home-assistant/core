@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
@@ -20,8 +21,6 @@ from .const import (
     VEHICLE_DATA,
     VEHICLE_ONLINE,
 )
-
-from tests.common import MockConfigEntry
 
 UID = "abc-123"
 

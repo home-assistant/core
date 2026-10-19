@@ -8,6 +8,12 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from sofar_modbus.modern.device import SofarInverter
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,13 +37,6 @@ from . import (
     MOCK_SERIAL,
     seed_hybrid_inverter,
     seed_pv_inverter,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
 )
 
 

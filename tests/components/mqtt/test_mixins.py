@@ -4,6 +4,17 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_mqtt_message,
+)
+from pytest_homeassistant.components.mqtt.common import (
+    MOCK_NOTIFY_SUBENTRY_DATA,
+    MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
+    MOCK_SUBENTRY_DATA_SET_MIX,
+)
+from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.const import DOMAIN
@@ -22,15 +33,6 @@ from homeassistant.helpers import (
     json,
 )
 from homeassistant.util import slugify
-
-from .common import (
-    MOCK_NOTIFY_SUBENTRY_DATA,
-    MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
-    MOCK_SUBENTRY_DATA_SET_MIX,
-)
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
 
 
 @pytest.mark.parametrize(
@@ -469,6 +471,38 @@ async def test_value_template_fails(
     assert (
         "TypeError: unsupported operand type(s) for *:"
         " 'NoneType' and 'int' rendering template" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                "binary_sensor": {
+                    "name": "Parking brake",
+                    "state_topic": "state-topic",
+                    "default_entity_id": "sensor.park_brake",
+                }
+            }
+        },
+    ],
+)
+async def test_default_entity_id_with_wrong_domain(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a default_entity_id whose domain does not match the entity."""
+    await mqtt_mock_entry()
+
+    # The domain of the entity wins; the user is told about the mismatch
+    assert hass.states.get("binary_sensor.park_brake") is not None
+    assert hass.states.get("sensor.park_brake") is None
+    assert (
+        "The default_entity_id sensor.park_brake of a binary_sensor entity has "
+        "the sensor domain; using binary_sensor.park_brake as the default instead"
+        in caplog.text
     )
 
 

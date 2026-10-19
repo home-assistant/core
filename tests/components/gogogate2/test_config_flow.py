@@ -7,6 +7,7 @@ from ismartgate import GogoGate2Api, ISmartGateApi
 from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.gogogate2.const import (
@@ -34,8 +35,6 @@ from . import (
     _mocked_gogogate_open_door_response,
     _mocked_ismartgate_closed_door_response,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"
 

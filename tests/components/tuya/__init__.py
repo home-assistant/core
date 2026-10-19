@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from tuya_sharing import (
     CustomerApi,
     CustomerDevice,
@@ -19,8 +20,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 DEVICE_MOCKS = sorted(
