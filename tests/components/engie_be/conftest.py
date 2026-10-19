@@ -19,6 +19,7 @@ from aioengiebelgium import (
     bare_ean,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.engie_be.const import (
     CONF_MFA_METHOD,
@@ -26,8 +27,6 @@ from homeassistant.components.engie_be.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
-
-from tests.common import MockConfigEntry
 
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"

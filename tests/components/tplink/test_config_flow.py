@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, patch
 
 from kasa import Module, TimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components import stream
@@ -71,8 +72,6 @@ from .const import (
     MODULE,
     SMALLEST_VALID_JPEG_BYTES,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

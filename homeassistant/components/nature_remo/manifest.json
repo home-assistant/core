@@ -1,6 +1,11 @@
 {
   "domain": "nature_remo",
   "name": "Nature Remo",
+  "categories": [
+    "buttons_remotes",
+    "energy.meters_monitoring",
+    "sensors.temperature_humidity"
+  ],
   "codeowners": ["@tnj"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nature_remo",

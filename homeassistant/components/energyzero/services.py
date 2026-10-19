@@ -94,6 +94,11 @@ def __serialize_prices(
     prices: list[EnergyPrices], start: datetime, end: datetime
 ) -> ServiceResponse:
     """Filter and serialize prices to the requested datetime range."""
+    unique_prices = {
+        time_range: price
+        for price_data in prices
+        for time_range, price in price_data.prices.items()
+    }
     return {
         "prices": [
             {
@@ -102,8 +107,7 @@ def __serialize_prices(
                 "start": str(time_range.start_including),
                 "end": str(time_range.end_excluding),
             }
-            for price_data in prices
-            for time_range, price in price_data.prices.items()
+            for time_range, price in unique_prices.items()
             if time_range.end_excluding > start and time_range.start_including < end
         ]
     }
