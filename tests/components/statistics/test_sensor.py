@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant import config as hass_config
 from homeassistant.components.recorder import Recorder, history
@@ -47,7 +48,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
@@ -492,6 +492,37 @@ async def test_sampling_size_1(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == str(new_mean)
     assert state.attributes.get("buffer_usage_ratio") == round(1 / 1, 2)
+
+
+async def test_scheduled_update_cancelled_on_remove(hass: HomeAssistant) -> None:
+    """Test the scheduled purge update is cancelled when the sensor is removed."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "max_age": {"minutes": 4},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_monitored", "10")
+    await hass.async_block_till_done()
+
+    entity = hass.data["sensor"].get_entity("sensor.test")
+    await entity.async_remove()
+
+    with patch.object(entity, "_async_purge_update_and_schedule") as mock_purge:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+    mock_purge.assert_not_called()
 
 
 async def test_age_limit_expiry(hass: HomeAssistant) -> None:

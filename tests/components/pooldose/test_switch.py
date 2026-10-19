@@ -1,7 +1,9 @@
 """Tests for the Seko PoolDose switch platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pooldose.request_status import RequestStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -12,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -46,8 +48,8 @@ async def test_switches_created(
 @pytest.mark.usefixtures("init_integration")
 async def test_switch_entity_unavailable_no_coordinator_data(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_pooldose_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch entity becomes unavailable when coordinator has no data."""
     # Verify entity has a state initially
@@ -56,9 +58,9 @@ async def test_switch_entity_unavailable_no_coordinator_data(
 
     # Update coordinator data to None
     mock_pooldose_client.instant_values_structured.return_value = (None, None)
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=600))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check entity becomes unavailable
     pause_dosing_state = hass.states.get("switch.pool_device_pause_dosing")
@@ -68,8 +70,8 @@ async def test_switch_entity_unavailable_no_coordinator_data(
 @pytest.mark.usefixtures("init_integration")
 async def test_switch_state_changes(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_pooldose_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch state changes when coordinator updates."""
     # Initial state
@@ -86,9 +88,9 @@ async def test_switch_state_changes(
         updated_data,
     )
 
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=600))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check state changed
     pause_dosing_state = hass.states.get("switch.pool_device_pause_dosing")

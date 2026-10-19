@@ -1,12 +1,13 @@
 """Tests for the INDI Allsky camera platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import IndiAllSkyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -24,8 +25,11 @@ async def test_camera_setup_and_states(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test standard successful setup and entity snapshots using snapshot_platform."""
-    await setup_integration(hass, mock_config_entry)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 @pytest.mark.parametrize(
@@ -46,7 +50,7 @@ async def test_camera_image_and_update(
     mock_indi_allsky_client.fetch_image.return_value = image_bytes
     await setup_integration(hass, mock_config_entry)
 
-    image = await async_get_image(hass, "camera.indi_allsky")
+    image = await async_get_image(hass, "camera.indi_allsky_latest_capture")
     assert image.content == image_bytes
     assert image.content_type == expected_content_type
 
@@ -62,4 +66,4 @@ async def test_camera_image_fetch_failure(
     mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyError("Fetch error")
 
     with pytest.raises(HomeAssistantError, match="Unable to get image"):
-        await async_get_image(hass, "camera.indi_allsky")
+        await async_get_image(hass, "camera.indi_allsky_latest_capture")

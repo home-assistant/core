@@ -80,6 +80,7 @@ async def test_init_town_not_found(
         config_entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_api_timeout(

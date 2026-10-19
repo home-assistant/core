@@ -1,6 +1,7 @@
 """Tests for honeywell config flow."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiosomecomfort
 import pytest
@@ -24,6 +25,15 @@ FAKE_CONFIG = {
 }
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.honeywell.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the config form is shown."""
     result = await hass.config_entries.flow.async_init(
@@ -35,6 +45,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
     client.login.side_effect = aiosomecomfort.device.ConnectionError
@@ -51,7 +62,17 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     )
     assert result["errors"] == {"base": "cannot_connect"}
 
+    client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
+    )
+    await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
     client.login.side_effect = aiosomecomfort.device.AuthError
@@ -68,6 +89,15 @@ async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
         user_input=FAKE_CONFIG,
     )
     assert result["errors"] == {"base": "invalid_auth"}
+
+    client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FAKE_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -176,6 +206,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test an authorization error reauth flow."""
 
@@ -206,6 +237,16 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    client.login.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
 
 @pytest.mark.parametrize(
     "error",
@@ -215,8 +256,9 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         TimeoutError,
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_connnection_error(
-    hass: HomeAssistant, client: MagicMock, error
+    hass: HomeAssistant, client: MagicMock, error: type[Exception]
 ) -> None:
     """Test a connection error reauth flow."""
 
@@ -241,3 +283,13 @@ async def test_reauth_flow_connnection_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    client.login.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"

@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import calendar, llm as llm_component
 from homeassistant.components.calendar import llm as calendar_llm
+from homeassistant.components.calendar.services import SERVICE_GET_EVENTS_SCHEMA
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant, SupportsResponse
 from homeassistant.helpers import entity_registry as er, llm
@@ -62,12 +63,17 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     )
     assert tool is not None
     assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
+    assert tool.title == "Get calendar events"
+    assert tool.integration == calendar.DOMAIN
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
 
     calls = async_mock_service(
         hass,
         domain=calendar.DOMAIN,
         service=calendar.SERVICE_GET_EVENTS,
-        schema=calendar.SERVICE_GET_EVENTS_SCHEMA,
+        schema=SERVICE_GET_EVENTS_SCHEMA,
         response={
             ENTITY_ID: {
                 "events": [

@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -11,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
