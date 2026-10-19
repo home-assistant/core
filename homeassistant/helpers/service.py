@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_SELECTOR,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
@@ -318,6 +319,21 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
             ) from ex
 
+        if isinstance(exclude := target.get(CONF_EXCLUDE), dict) and (
+            CONF_ENTITY_ID in exclude
+        ):
+            try:
+                excluded_entity_ids = entity_registry.async_validate_entity_ids(
+                    entity_registry.async_get(hass),
+                    cv.entity_ids_or_uuids(exclude[CONF_ENTITY_ID]),
+                )
+            except probatio.Invalid as ex:
+                raise HomeAssistantError(
+                    "Template rendered invalid excluded entity IDs: "
+                    f"{exclude[CONF_ENTITY_ID]}"
+                ) from ex
+            target[CONF_EXCLUDE] = {**exclude, CONF_ENTITY_ID: excluded_entity_ids}
+
     service_data = {}
 
     for conf in (CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE):
@@ -370,10 +386,18 @@ async def async_extract_entities[_EntityT: Entity](
     """
     data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
 
-    if data_ent_id == ENTITY_MATCH_ALL:
-        return [entity for entity in entities if entity.available]
-
     target_selection = target_helpers.TargetSelection(service_call.data)
+
+    if data_ent_id == ENTITY_MATCH_ALL:
+        excluded = target_helpers.async_extract_excluded_entity_ids(
+            service_call.hass, target_selection
+        )
+        return [
+            entity
+            for entity in entities
+            if entity.available and entity.entity_id not in excluded
+        ]
+
     referenced = target_helpers.async_extract_referenced_entity_ids(
         service_call.hass, target_selection, expand_group
     )
@@ -724,6 +748,15 @@ async def _resolve_entity_service_call_entities(
     )
 
     entity_candidates = [e for e in entity_candidates if e.available]
+
+    if target_all_entities and (
+        excluded := target_helpers.async_extract_excluded_entity_ids(
+            hass, target_helpers.TargetSelection(call.data)
+        )
+    ):
+        entity_candidates = [
+            e for e in entity_candidates if e.entity_id not in excluded
+        ]
 
     if not target_all_entities:
         assert referenced is not None

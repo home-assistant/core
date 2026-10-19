@@ -54,7 +54,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
             **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
-    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.TARGET_ID_KEYS),
 )
 SCHEMA_RESTART = probatio.Schema(
     {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
