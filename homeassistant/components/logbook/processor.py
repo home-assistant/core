@@ -226,8 +226,8 @@ class EventProcessor:
             query_parent_user_ids: dict[bytes, bytes] | None = None
             if self.action_calls or self.entity_ids or self.device_ids:
                 # Filtered queries exclude parent call_service rows for
-                # unrelated targets, and the action calls query only links
-                # rows of the same context, so child contexts lose user
+                # unrelated targets, and the action calls query does not link
+                # parent state changes, so child contexts lose user
                 # attribution without a pre-pass. all_stmt already includes them.
                 rows = list(rows)
                 query_parent_user_ids = self._fetch_parent_user_ids(

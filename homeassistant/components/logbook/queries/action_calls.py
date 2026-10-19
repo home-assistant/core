@@ -1,6 +1,6 @@
 """Action call queries for logbook."""
 
-from sqlalchemy import lambda_stmt, select
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
@@ -19,11 +19,15 @@ def _select_action_call_context_ids_sub_query(
     end_day: float,
     event_type_ids: tuple[int, ...],
 ) -> Select:
-    """Generate a subquery to find the context ids of the action calls."""
-    inner = select_events_context_id_subquery(
-        start_day, end_day, event_type_ids
+    """Generate a subquery to find the context ids of the action calls and parents."""
+    union = union_all(
+        select_events_context_id_subquery(start_day, end_day, event_type_ids),
+        select(Events.context_parent_id_bin.label("context_id_bin"))
+        .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
+        .where(Events.event_type_id.in_(event_type_ids))
+        .where(Events.context_parent_id_bin.is_not(None)),
     ).subquery()
-    return select(inner.c.context_id_bin).group_by(inner.c.context_id_bin)
+    return select(union.c.context_id_bin).group_by(union.c.context_id_bin)
 
 
 def _apply_action_calls_context_union(
@@ -35,8 +39,8 @@ def _apply_action_calls_context_union(
     """Generate a CTE to find the action call context ids and their linked events.
 
     The linked events are not limited to the time window, so the origin of a
-    context, like the automation run that made the call, is found even when it
-    started before the window.
+    context or its parent, like the automation run or the action that made
+    the call, is found even when it started before the window.
     """
     action_calls_cte: CTE = _select_action_call_context_ids_sub_query(
         start_day, end_day, event_type_ids

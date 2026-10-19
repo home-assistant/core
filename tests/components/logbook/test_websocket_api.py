@@ -3976,6 +3976,54 @@ async def test_get_action_calls_context_older_than_start_time(
     ]
 
 
+async def test_get_action_calls_parent_context_older_than_start_time(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test an action call is described by a parent context from before start_time."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    async_mock_service(hass, "test", "parent")
+    async_mock_service(hass, "test", "child")
+    await async_recorder_block_till_done(hass)
+
+    parent_context = core.Context(user_id=hass_admin_user.id)
+    with freeze_time(now - timedelta(hours=1)):
+        await hass.services.async_call(
+            "test", "parent", blocking=True, context=parent_context
+        )
+    child_context = core.Context(parent_id=parent_context.id)
+    await hass.services.async_call(
+        "test", "child", blocking=True, context=child_context
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_action_calls",
+            "start_time": (now - timedelta(minutes=30)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "when": ANY,
+            "domain": "test",
+            "service": "child",
+            "service_data": {},
+            "context_id": child_context.id,
+            "context_user_id": hass_admin_user.id,
+            "context_event_type": EVENT_CALL_SERVICE,
+            "context_domain": "test",
+            "context_service": "parent",
+        },
+    ]
+
+
 async def test_get_action_calls_future_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
