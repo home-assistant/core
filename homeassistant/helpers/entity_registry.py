@@ -1668,7 +1668,8 @@ class EntityRegistry(BaseRegistry):
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
                 disabled_by = deleted_entity.disabled_by
-                # A stored derived disabled_by can be stale, so derive it again
+                # A stored derived disabled_by can be stale, so reset it to be
+                # derived again below
                 if disabled_by in _DERIVED_DISABLED_BY:
                     disabled_by = None
             # Restore entity_id if it's available
@@ -1730,6 +1731,7 @@ class EntityRegistry(BaseRegistry):
             and config_entry.pref_disable_new_entities
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
+        # Not explicitly disabled, so derive disabled_by
         if disabled_by is None:
             device = (
                 dr.async_get(self.hass).async_get(device_id)
