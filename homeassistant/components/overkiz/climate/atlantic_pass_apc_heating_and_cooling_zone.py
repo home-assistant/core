@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util import dt as dt_util
 
-from ..const import DOMAIN, LOGGER
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 from ..executor import OverkizExecutor
@@ -128,7 +128,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     def current_operating_mode(self) -> HVACMode:
         """Return the actual heating or cooling mode from the main device."""
 
-        operating_mode = OVERKIZ_TO_HVAC_MODE.get(
+        return OVERKIZ_TO_HVAC_MODE.get(
             cast(
                 str,
                 self.main_device.states.get_value(
@@ -137,30 +137,24 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
             ),
             HVACMode.AUTO,
         )
-        
-        return operating_mode
 
     @property
     def current_heating_profile(self) -> str:
         """Return current heating profile."""
 
-        res = cast(
+        return cast(
             str,
             self.device.states.get_value(OverkizState.IO_PASS_APC_HEATING_PROFILE),
         )
-
-        return res
 
     @property
     def current_cooling_profile(self) -> str:
         """Return current cooling profile."""
 
-        res = cast(
+        return cast(
             str,
             self.device.states.get_value(OverkizState.IO_PASS_APC_COOLING_PROFILE),
         )
-
-        return res
 
     async def async_cancel_absence(self) -> None:
         """Cancel absence mode."""
@@ -249,13 +243,12 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         absence_status = self.main_device.states.get_value(
             OverkizState.CORE_ABSENCE_END_DATE_TIME
         )
-        res = (
-            self.main_device.states.get_value(OverkizState.CORE_ABSENCE_END_DATE_TIME)
+
+        return (
+            absence_status
             is not None
         )
 
-      
-        return res
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
