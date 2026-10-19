@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from universal_silabs_flasher.flasher import Zbt2Flasher
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
@@ -29,8 +30,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT2
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="supervisor")

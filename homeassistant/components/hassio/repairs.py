@@ -8,6 +8,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
 import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -88,12 +89,12 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
     def _async_form_for_suggestion(self, suggestion: Suggestion) -> RepairsFlowResult:
         """Return form for suggestion."""
-        return self.async_show_form(
-            step_id=suggestion.key,
-            data_schema=probatio.Schema({}),
-            description_placeholders=self.description_placeholders,
-            last_step=True,
-        )
+        with self._as_step(suggestion.key):
+            return self.async_show_form(
+                data_schema=probatio.Schema({}),
+                description_placeholders=self.description_placeholders,
+                last_step=True,
+            )
 
     async def async_step_init(self, _: None = None) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
@@ -122,12 +123,12 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         # Always show a form for one suggestion to explain to user what's happening
         return self._async_form_for_suggestion(self._suggestions[0])
 
+    @data_entry_flow.flow_step
     async def async_step_fix_menu(self, _: None = None) -> RepairsFlowResult:
         """Show the fix menu."""
         assert self._suggestions
 
         return self.async_show_menu(
-            step_id="fix_menu",
             menu_options=[suggestion.key for suggestion in self._suggestions],
             description_placeholders=self.description_placeholders,
         )

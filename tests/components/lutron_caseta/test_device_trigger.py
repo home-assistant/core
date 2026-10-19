@@ -2,6 +2,11 @@
 
 from pylutron_caseta import BUTTON_STATUS_PRESSED
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -42,12 +47,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import MockBridge, async_setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
 
 MOCK_BUTTON_DEVICES = [
     {

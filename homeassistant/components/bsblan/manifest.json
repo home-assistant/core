@@ -1,6 +1,7 @@
 {
   "domain": "bsblan",
   "name": "BSB-LAN",
+  "categories": ["climate.thermostats_heating", "diy_makers.boards_hardware"],
   "codeowners": ["@liudger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",

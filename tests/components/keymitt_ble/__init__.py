@@ -2,10 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
+
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 DOMAIN = "keymitt_ble"
 

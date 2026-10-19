@@ -37,22 +37,16 @@ async def _async_configure_device(
 ) -> ConfigFlowResult:
     """Configure a working device and finish the flow."""
     with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
-        result = await hass.config_entries.flow.async_configure(
+        return await hass.config_entries.flow.async_configure(
             flow_id, {"host": device.host, "timeout": device.timeout}
         )
-    return await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name}
-    )
 
 
 async def _async_unlock_and_finish(
     hass: HomeAssistant, flow_id: str, device: BroadlinkDevice
 ) -> ConfigFlowResult:
     """Unlock the device and finish the flow."""
-    result = await hass.config_entries.flow.async_configure(flow_id, {"unlock": True})
-    return await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name}
-    )
+    return await hass.config_entries.flow.async_configure(flow_id, {"unlock": True})
 
 
 @pytest.mark.parametrize("device_name", ["Living Room", "Study"])
@@ -105,6 +99,7 @@ async def test_flow_user_falls_back_to_model_as_title(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.model
+    assert result["result"].unique_id == device.mac
 
 
 async def test_flow_user_already_in_progress(hass: HomeAssistant) -> None:
@@ -322,11 +317,6 @@ async def test_flow_auth_authentication_error(hass: HomeAssistant) -> None:
 
     with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["step_id"] == "finish"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": device.name}
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -957,7 +947,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
         "timeout": 10,
         "type": 24374,
     }
-    assert result2["result"].unique_id == "34ea34b43b5a"
+    assert result["result"].unique_id == "34ea34b43b5a"
 
 
 async def test_dhcp_locked_device_without_name_shows_model(

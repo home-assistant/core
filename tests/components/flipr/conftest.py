@@ -5,12 +5,11 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flipr.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 # Data for the mocked object returned via flipr_api client.
 MOCK_DATE_TIME = datetime(2021, 2, 15, 9, 10, 32, tzinfo=dt_util.UTC)

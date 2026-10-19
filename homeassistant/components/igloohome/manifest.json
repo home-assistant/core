@@ -1,6 +1,7 @@
 {
   "domain": "igloohome",
   "name": "igloohome",
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@keithle888"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/igloohome",

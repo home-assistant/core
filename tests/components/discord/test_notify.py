@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import nextcord
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.discord.notify import DiscordNotificationService
 from homeassistant.components.notify import (
@@ -18,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import TARGET_NAME, create_entry, setup_integration
 from .conftest import CONTENT, MESSAGE, TARGET, URL_ATTACHMENT
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_send_message_without_target_logs_error(
