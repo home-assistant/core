@@ -18,11 +18,7 @@ from . import (
     binary_sensor as binary_sensor_pre_import,  # noqa: F401
     sensor as sensor_pre_import,  # noqa: F401
 )
-from .const import (  # noqa: F401  # noqa: F401
-    DOMAIN,
-    STATE_ABOVE_HORIZON,
-    STATE_BELOW_HORIZON,
-)
+from .const import DOMAIN, STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON  # noqa: F401  # noqa: F401
 from .entity import Sun, SunConfigEntry
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]

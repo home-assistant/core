@@ -13,7 +13,12 @@
       "one_time_password": {
         "data": {
           "one_time_password": "One-time password"
-        }
+        },
+        "description": "A one-time password has been sent to your phone."
+      },
+      "reauth_confirm": {
+        "description": "The Electra account is locked out. Request a new one-time password to sign in again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
