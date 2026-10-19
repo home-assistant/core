@@ -64,8 +64,6 @@ PRESET_MODES_TO_OVERKIZ: dict[str, str] = {
 class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Heating and Cooling Zone Control."""
 
-    LOGGER.debug("OVERKIZCUSTOM: AtlanticPassAPCHeatingAndCoolingZone")
-
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_supported_features = (
@@ -81,7 +79,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
     ) -> None:
         """Init method."""
-        LOGGER.debug("OVERKIZCUSTOM: __init__")
 
         super().__init__(device_url, coordinator)
 
@@ -101,7 +98,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        LOGGER.debug("OVERKIZCUSTOM: current_temperature")
 
         res = None
 
@@ -111,14 +107,12 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
                 self.temperature_device.states.get_value(OverkizState.CORE_TEMPERATURE),
             )
 
-        LOGGER.debug("OVERKIZCUSTOM: current_temperature res=%s", res)
         return res
 
     @property
     @override
     def hvac_mode(self) -> HVACMode:
         """Return the HVAC mode exposed by this zone entity."""
-        LOGGER.debug("OVERKIZCUSTOM: hvac_mode")
 
         current_mode = self.current_operating_mode
         if current_mode == HVACMode.COOL:
@@ -128,13 +122,11 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         else:
             res = current_mode
 
-        LOGGER.debug("OVERKIZCUSTOM: hvac_mode res=%s", res)
         return res
 
     @property
     def current_operating_mode(self) -> HVACMode:
         """Return the actual heating or cooling mode from the main device."""
-        LOGGER.debug("OVERKIZCUSTOM: current_operating_mode")
 
         operating_mode = OVERKIZ_TO_HVAC_MODE.get(
             cast(
@@ -145,39 +137,33 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
             ),
             HVACMode.AUTO,
         )
-
-        LOGGER.debug("OVERKIZCUSTOM: current_operating_mode res=%s", operating_mode)
+        
         return operating_mode
 
     @property
     def current_heating_profile(self) -> str:
         """Return current heating profile."""
-        LOGGER.debug("OVERKIZCUSTOM: current_heating_profile")
 
         res = cast(
             str,
             self.device.states.get_value(OverkizState.IO_PASS_APC_HEATING_PROFILE),
         )
 
-        LOGGER.debug("OVERKIZCUSTOM: current_heating_profile res=%s", res)
         return res
 
     @property
     def current_cooling_profile(self) -> str:
         """Return current cooling profile."""
-        LOGGER.debug("OVERKIZCUSTOM: current_cooling_profile")
 
         res = cast(
             str,
             self.device.states.get_value(OverkizState.IO_PASS_APC_COOLING_PROFILE),
         )
 
-        LOGGER.debug("OVERKIZCUSTOM: current_cooling_profile res=%s", res)
         return res
 
     async def async_cancel_absence(self) -> None:
         """Cancel absence mode."""
-        LOGGER.debug("OVERKIZCUSTOM: async_cancel_absence")
 
         zero_date = {
             "month": 0,
@@ -213,7 +199,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_absence_mode(self) -> None:
         """Start absence mode on the main APC device."""
-        LOGGER.debug("OVERKIZCUSTOM: async_set_absence_mode")
 
         now = dt_util.now()
         start_date = {
@@ -260,7 +245,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     def is_absence_mode(self) -> bool:
         """Return whether absence mode is active."""
-        LOGGER.debug("OVERKIZCUSTOM: is_absence_mode")
 
         absence_status = self.main_device.states.get_value(
             OverkizState.CORE_ABSENCE_END_DATE_TIME
@@ -270,17 +254,12 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
             is not None
         )
 
-        LOGGER.debug(
-            "OVERKIZCUSTOM: is_absence_mode absence_status=%s, res=%s",
-            absence_status,
-            res,
-        )
+      
         return res
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        LOGGER.debug("OVERKIZCUSTOM: async_set_preset_mode preset_mode=%s", preset_mode)
 
         if preset_mode == PRESET_AWAY:
             await self.async_set_absence_mode()
@@ -294,7 +273,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_heating_mode(self, mode: str) -> None:
         """Set new heating mode and refresh states."""
-        LOGGER.debug("OVERKIZCUSTOM: async_set_heating_mode mode=%s", mode)
 
         commands = []
 
@@ -345,7 +323,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_cooling_mode(self, mode: str) -> None:
         """Set new cooling mode and refresh states."""
-        LOGGER.debug("OVERKIZCUSTOM: async_set_cooling_mode mode=%s", mode)
 
         commands = []
 
@@ -397,7 +374,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the zone HVAC mode."""
-        LOGGER.debug("OVERKIZCUSTOM: async_set_hvac_mode hvac_mode=%s", hvac_mode)
 
         operating_mode = self.current_operating_mode
 
@@ -409,7 +385,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the active mode for this zone."""
-        LOGGER.debug("OVERKIZCUSTOM: async_turn_off")
 
         await self.async_set_hvac_mode(HVACMode.OFF)
 
@@ -417,7 +392,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        LOGGER.debug("OVERKIZCUSTOM: preset_mode")
 
         current_operating_mode = self.current_operating_mode
 
@@ -442,14 +416,12 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         else:
             res = PRESET_NONE
 
-        LOGGER.debug("OVERKIZCUSTOM: preset_mode res=%s", res)
         return res
 
     @property
     @override
     def target_temperature(self) -> float | None:
         """Return hvac target temperature."""
-        LOGGER.debug("OVERKIZCUSTOM: target_temperature")
 
         if self.hvac_mode == HVACMode.OFF:
             res = None
@@ -459,13 +431,11 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
                 self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE),
             )
 
-        LOGGER.debug("OVERKIZCUSTOM: target_temperature res=%s", res)
         return res
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
-        LOGGER.debug("OVERKIZCUSTOM: async_set_temperature")
 
         commands = []
         commands_main = []
