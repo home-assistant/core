@@ -2,6 +2,7 @@
 
 import probatio
 
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -10,7 +11,7 @@ from homeassistant.components.repairs import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_TOPIC
+from .const import CONF_TOPIC, DOMAIN
 
 
 class TopicProtectedRepairFlow(RepairsFlow):
@@ -18,7 +19,7 @@ class TopicProtectedRepairFlow(RepairsFlow):
 
     def __init__(self, data: dict[str, str]) -> None:
         """Initialize."""
-        self.entity_id = data["entity_id"]
+        self.unique_id = data["unique_id"]
         self.topic = data["topic"]
 
     async def async_step_init(
@@ -33,10 +34,15 @@ class TopicProtectedRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Confirm repair flow."""
         if user_input is not None:
-            er.async_get(self.hass).async_update_entity(
-                self.entity_id,
-                disabled_by=er.RegistryEntryDisabler.USER,
-            )
+            entity_registry = er.async_get(self.hass)
+            # Resolved here since the entity_id may have changed
+            if entity_id := entity_registry.async_get_entity_id(
+                EVENT_DOMAIN, DOMAIN, self.unique_id
+            ):
+                entity_registry.async_update_entity(
+                    entity_id,
+                    disabled_by=er.RegistryEntryDisabler.USER,
+                )
             return self.async_create_entry(data={})
 
         return self.async_show_form(

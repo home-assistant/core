@@ -6,7 +6,7 @@ from omnilogic import LoginException, OmniLogic, OmniLogicException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> None:
     """Set up Omnilogic from a config entry."""
 
     conf = entry.data
@@ -43,8 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) ->
         await api.connect()
         await api.get_telemetry_data()
     except LoginException as error:
-        _LOGGER.error("Login Failed: %s", error)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+        ) from error
     except OmniLogicException as error:
         _LOGGER.debug("OmniLogic API error: %s", error)
         raise ConfigEntryNotReady from error
@@ -61,9 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

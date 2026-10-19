@@ -101,6 +101,9 @@
     }
   },
   "exceptions": {
+    "auto_shut_off_update_failed": {
+      "message": "Failed to update auto shut-off"
+    },
     "valve_action_failed": {
       "message": "Failed to change the valve state"
     }

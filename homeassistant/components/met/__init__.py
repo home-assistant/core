@@ -1,21 +1,23 @@
 """The met component."""
 
-import logging
-
-from homeassistant.const import Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_TRACK_HOME, DEFAULT_HOME_LATITUDE, DEFAULT_HOME_LONGITUDE
+from .const import (
+    CONF_TRACK_HOME,
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+)
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 PLATFORMS = [Platform.WEATHER]
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MetWeatherConfigEntry
-) -> bool:
+) -> None:
     """Set up Met as config entry."""
     # Don't setup if tracking home location and latitude or longitude isn't set.
     # Also, filters out our onboarding default location.
@@ -26,10 +28,10 @@ async def async_setup_entry(
             and hass.config.longitude == DEFAULT_HOME_LONGITUDE
         )
     ):
-        _LOGGER.warning(
-            "Skip setting up met.no integration; No Home location has been set"
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_home_location",
         )
-        return False
 
     coordinator = MetDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()
@@ -43,11 +45,26 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MetWeatherConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: MetWeatherConfigEntry
+) -> bool:
+    """Migrate old config entry."""
+    if config_entry.minor_version < 2:
+        data = dict(config_entry.data)
+        data.pop(CONF_NAME, None)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            minor_version=2,
+        )
+
+    return True

@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DOMAIN
+from .const import DATA_PROFILER, DOMAIN
 
 SERVICE_START = "start"
 SERVICE_MEMORY = "memory"
@@ -69,9 +69,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Register the profiler services."""
     lock = asyncio.Lock()
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    domain_data = hass.data[DOMAIN] = {}
+    domain_data = hass.data[DATA_PROFILER] = {}
 
     async def _async_run_profile(call: ServiceCall) -> None:
         async with lock:

@@ -8,6 +8,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -74,7 +75,10 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 async_get_clientsession(self.hass), str(discovery_info.ip_address)
             )
         except AltruistError:
-            return self.async_abort(reason="no_device_found")
+            return self.async_abort(
+                reason="no_devices_found",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         self.device = client.device
         _LOGGER.debug("Zeroconf device: %s", client.device)

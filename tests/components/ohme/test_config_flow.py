@@ -4,14 +4,13 @@ from unittest.mock import MagicMock
 
 from ohme import ApiException, AuthException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -194,9 +193,7 @@ async def test_reconfigure_form(hass: HomeAssistant, mock_client: MagicMock) -> 
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -233,9 +230,7 @@ async def test_reconfigure_fail(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM

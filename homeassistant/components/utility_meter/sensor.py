@@ -19,9 +19,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    _suggest_report_issue,
-)
+from homeassistant.components.sensor.recorder import _suggest_report_issue  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -36,6 +34,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     State,
+    async_noop,
     callback,
 )
 from homeassistant.helpers import entity_registry as er
@@ -610,8 +609,8 @@ class UtilityMeterSensor(RestoreSensor):
             self._last_reset = last_sensor_data.last_reset
             self._last_valid_state = last_sensor_data.last_valid_state
             if last_sensor_data.status == COLLECTING:
-                # Null lambda to allow cancelling the collection on tariff change
-                self._collecting = lambda: None
+                # No-op to allow cancelling the collection on tariff change
+                self._collecting = async_noop
             # Reconfigure the scheduler from the restored last_reset so that
             # next_reset is not shifted forward on entity restore/rename.
             self._config_scheduler(

@@ -7,7 +7,11 @@ from typing import Any, override
 from httpx2 import HTTPError, InvalidURL, TimeoutException
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -20,6 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CALENDAR_NAME): str,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
+
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {
         probatio.Required(CONF_URL): str,
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -43,31 +54,44 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.data: dict[str, Any] = {}
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the calendar URL."""
+        self.data = dict(self._get_reconfigure_entry().data)
+        return await self.async_step_user()
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step, also used to reconfigure the calendar URL."""
+        data_schema = STEP_USER_DATA_SCHEMA
+        if self.source == SOURCE_RECONFIGURE:
+            data_schema = STEP_RECONFIGURE_DATA_SCHEMA
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(data_schema, self.data),
             )
+
+        user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
+        if self.source != SOURCE_RECONFIGURE:
+            self._async_abort_entries_match(
+                {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
+            )
+        if user_input[CONF_URL] != self.data.get(CONF_URL):
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+        data = {**self.data, **user_input}
+
         errors: dict[str, str] = {}
-        self._async_abort_entries_match(
-            {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
-        )
-        if user_input[CONF_URL].startswith("webcal://"):
-            user_input[CONF_URL] = user_input[CONF_URL].replace(
-                "webcal://", "https://", 1
-            )
-        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-        client = get_async_client(self.hass, verify_ssl=user_input[CONF_VERIFY_SSL])
+        client = get_async_client(self.hass, verify_ssl=data[CONF_VERIFY_SSL])
         try:
-            res = await get_calendar(client, user_input[CONF_URL])
+            res = await get_calendar(client, data[CONF_URL])
             if res.status_code == HTTPStatus.UNAUTHORIZED:
                 www_auth = res.headers.get("www-authenticate", "").lower()
                 if "basic" in www_auth:
-                    self.data = user_input
+                    self.data = data
                     return await self.async_step_auth()
             if res.status_code == HTTPStatus.FORBIDDEN:
                 errors["base"] = "forbidden"
@@ -88,15 +112,14 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 except InvalidIcsException:
                     errors["base"] = "invalid_ics_file"
                 else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_CALENDAR_NAME], data=user_input
-                    )
+                    # Credentials of a URL that no longer asks for them are stale
+                    data.pop(CONF_USERNAME, None)
+                    data.pop(CONF_PASSWORD, None)
+                    return self._async_finish(data)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(data_schema, data),
             errors=errors,
         )
 
@@ -107,7 +130,10 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="auth",
-                data_schema=STEP_AUTH_DATA_SCHEMA,
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_AUTH_DATA_SCHEMA,
+                    {k: v for k, v in self.data.items() if k == CONF_USERNAME},
+                ),
             )
 
         errors: dict[str, str] = {}
@@ -140,13 +166,12 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 except InvalidIcsException:
                     return self.async_abort(reason="invalid_ics_file")
                 else:
-                    return self.async_create_entry(
-                        title=self.data[CONF_CALENDAR_NAME],
-                        data={
+                    return self._async_finish(
+                        {
                             **self.data,
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        },
+                        }
                     )
 
         return self.async_show_form(
@@ -156,3 +181,18 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    def _async_finish(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Create the entry, or replace the data of the reconfigured one."""
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
+            )
+        return self.async_create_entry(title=data[CONF_CALENDAR_NAME], data=data)
+
+
+def _normalize_url(url: str) -> str:
+    """Rewrite a webcal:// URL to https://."""
+    if url.startswith("webcal://"):
+        return url.replace("webcal://", "https://", 1)
+    return url

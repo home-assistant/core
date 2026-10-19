@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN
@@ -16,8 +17,6 @@ from .const import (
     MOCK_FIRMWARE_RELEASE_URL,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 AVAILABLE_UPDATE = {
     "UserInterface1": {

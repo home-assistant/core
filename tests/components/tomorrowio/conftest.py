@@ -4,8 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
-
-from tests.common import load_json_object_fixture
+from pytest_homeassistant.common import load_json_object_fixture
 
 
 @pytest.fixture(name="tomorrowio_config_flow_connect", autouse=True)

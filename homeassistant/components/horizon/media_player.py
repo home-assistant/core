@@ -18,12 +18,14 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import PlatformNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "horizon"
 
 DEFAULT_NAME = "Horizon"
 DEFAULT_PORT = 5900
@@ -157,9 +159,12 @@ class HorizonDevice(MediaPlayerEntity):
             try:
                 self._select_channel(int(media_id))
                 self._attr_state = MediaPlayerState.PLAYING
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except ValueError:
-                _LOGGER.error("Invalid channel: %s", media_id)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_channel",
+                    translation_placeholders={"channel": media_id},
+                ) from err
         else:
             _LOGGER.error(
                 "Invalid media type %s. Supported type: %s",

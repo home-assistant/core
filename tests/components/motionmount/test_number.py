@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import motionmount
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -14,8 +15,6 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 EXTENSION_ENTITY_ID = "number.my_motionmount_extension"
 TURN_ENTITY_ID = "number.my_motionmount_turn"

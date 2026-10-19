@@ -1,13 +1,15 @@
 """The init tests for the nexia platform."""
 
-from unittest.mock import NonCallableMock, patch
+from unittest.mock import MagicMock, NonCallableMock, patch
 
 import aiohttp
 from nexia.home import NexiaHome
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.nexia import _preregister_devices
 from homeassistant.components.nexia.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -15,9 +17,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup_retry_client_os_error(
@@ -29,6 +28,26 @@ async def test_setup_retry_client_os_error(
     patch_nexia_home.login.side_effect = aiohttp.ClientOSError
     config_entry = await setup_integration(hass, patch_nexia_home)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_invalid_credentials(
+    hass: HomeAssistant,
+    patch_nexia_home: NonCallableMock[NexiaHome],
+) -> None:
+    """Verify setup fails and starts reauth on invalid credentials."""
+    patch_nexia_home.login.side_effect = aiohttp.ClientResponseError(
+        MagicMock(), (), status=401
+    )
+    config_entry = await setup_integration(hass, patch_nexia_home)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        config_entry.reason
+        == "Access error from Nexia service, please check credentials"
+    )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 async def test_device_remove_devices(
