@@ -17,7 +17,6 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.timer import (
-    ATTR_DURATION,
     ATTR_FINISHES_AT,
     ATTR_LAST_TRANSITION,
     ATTR_REMAINING,
@@ -36,6 +35,7 @@ from homeassistant.components.timer import (
     Timer,
 )
 from homeassistant.components.timer.const import (
+    ATTR_DURATION,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_CHANGED,
     EVENT_TIMER_FINISHED,

@@ -4,13 +4,13 @@ import pytest
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.timer import (
-    ATTR_DURATION,
     DOMAIN,
     SERVICE_CANCEL,
     SERVICE_PAUSE,
     SERVICE_START,
 )
 from homeassistant.components.timer.const import (
+    ATTR_DURATION,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,

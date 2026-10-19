@@ -110,7 +110,7 @@ async def test_suspend(
     [
         (APIError("Boom"), "command_error"),
         (ClientError("Boom"), "command_error"),
-        (TimeoutError, "command_error"),
+        (TimeoutError(), "command_error"),
         (NotAuthorizedError("HTTP 401"), "invalid_auth"),
     ],
 )

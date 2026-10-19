@@ -567,6 +567,7 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
+    original_filename = filename
     if (
         integration is None
         and "/" in filename
@@ -578,7 +579,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
         integration_dir = _paths.TESTS_DIR / "components" / integration
         if integration_dir.is_dir():
             return integration_dir / "fixtures" / filename
-    return _paths.TESTS_DIR / "fixtures" / filename
+    return _paths.TESTS_DIR / "fixtures" / original_filename
 
 
 @lru_cache
