@@ -12,13 +12,12 @@ from kaco_rs485 import KacoRs485Client
 from kaco_rs485.discovery import scan
 from kaco_rs485.testing import FakeBus, a_bus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_ADDRESSES, MOCK_ENTRY_DATA, MOCK_PORT, MOCK_PORT_DESCRIPTION
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

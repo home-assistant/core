@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import HTTPError
 from requests.models import Response
 from todoist_api_python.api_async import TodoistAPIAsync
@@ -15,8 +16,6 @@ from homeassistant.components.todoist.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"

@@ -3,6 +3,11 @@
 from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485 import BusError
 from kaco_rs485.testing import POWADOR_6400XI, CannedInverter, FakeBus
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
@@ -11,8 +16,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # The library calls an inverter asleep after three consecutive misses.
 CYCLES_UNTIL_DARK = 4

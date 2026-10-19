@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
@@ -125,8 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
     await nws_data.set_station(station)
 
     def async_setup_update_forecast(
-        retry_interval: datetime.timedelta | float,
-        retry_stop: datetime.timedelta | float,
+        retry_interval: dt.timedelta | float,
+        retry_stop: dt.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_forecast() -> None:
             """Retrieve forecast."""
@@ -143,8 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
         return update_forecast
 
     def async_setup_update_forecast_hourly(
-        retry_interval: datetime.timedelta | float,
-        retry_stop: datetime.timedelta | float,
+        retry_interval: dt.timedelta | float,
+        retry_stop: dt.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_forecast_hourly() -> None:
             """Retrieve forecast hourly."""

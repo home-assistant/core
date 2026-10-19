@@ -70,6 +70,12 @@
     "cannot_connect": {
       "message": "Unable to connect to the Nanoleaf device."
     },
+    "effect_not_supported": {
+      "message": "The requested effect is not available on this Nanoleaf device."
+    },
+    "invalid_effect": {
+      "message": "The effect \"{effect}\" is not available on this Nanoleaf device."
+    },
     "invalid_token": {
       "message": "The access token for the Nanoleaf device is invalid. Please reauthenticate."
     }

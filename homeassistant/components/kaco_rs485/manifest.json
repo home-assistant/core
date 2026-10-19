@@ -1,6 +1,7 @@
 {
   "domain": "kaco_rs485",
   "name": "KACO RS485",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@g4bri3lDev"],
   "config_flow": true,
   "dependencies": ["usb"],

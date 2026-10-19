@@ -6,6 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_account import RenaultAccount
 
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import MOCK_ACCOUNT_ID, MOCK_CONFIG, MOCK_VEHICLES
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

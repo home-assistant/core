@@ -3,14 +3,13 @@
 from freezegun.api import FrozenDateTimeFactory
 from kaco_rs485 import BusError
 from kaco_rs485.testing import FakeBus
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
 from homeassistant.components.kaco_rs485.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload_entry(

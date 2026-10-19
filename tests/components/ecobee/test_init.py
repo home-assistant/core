@@ -15,6 +15,7 @@ from pyecobee import (
     ExpiredTokenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Plat
 from homeassistant.core import HomeAssistant
 
 from . import GENERIC_THERMOSTAT_INFO
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _api_key_entry(hass: HomeAssistant) -> MockConfigEntry:

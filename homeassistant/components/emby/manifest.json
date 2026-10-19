@@ -1,6 +1,7 @@
 {
   "domain": "emby",
   "name": "Emby",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@mezz64"],
   "documentation": "https://www.home-assistant.io/integrations/emby",
   "iot_class": "local_push",

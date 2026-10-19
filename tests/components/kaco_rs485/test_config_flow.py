@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 from kaco_rs485 import BusError
 from kaco_rs485.testing import BLUEPLANET, POWADOR_6400XI, CannedInverter, FakeBus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kaco_rs485.const import (
     CONF_ADDRESSES,
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_PORT, MOCK_PORT_DESCRIPTION
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
