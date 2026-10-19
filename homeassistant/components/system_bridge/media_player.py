@@ -16,10 +16,13 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
+
+PARALLEL_UPDATES = 0
 
 STATUS_CHANGING: Final[str] = "CHANGING"
 STATUS_STOPPED: Final[str] = "STOPPED"
@@ -162,7 +165,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         if self._systembridge_data.media.updated_at is None:
             return None
-        return dt.datetime.fromtimestamp(self._systembridge_data.media.updated_at)
+        return dt_util.utc_from_timestamp(self._systembridge_data.media.updated_at)
 
     @property
     @override

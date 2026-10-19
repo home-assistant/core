@@ -55,7 +55,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Service can't be discovered
@@ -82,7 +82,7 @@ rules:
     status: exempt
     comment: only one conversation entity
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:

@@ -1,6 +1,7 @@
 {
   "domain": "elevenlabs",
   "name": "ElevenLabs",
+  "categories": ["ai_voice.speech"],
   "codeowners": ["@sorgfresser"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elevenlabs",

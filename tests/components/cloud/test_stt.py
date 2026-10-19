@@ -10,9 +10,7 @@ from hass_nabucasa import SpeechToTextV2Error
 from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DOMAIN, PREVIEW_FEATURE_STT_V2
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.stt import (

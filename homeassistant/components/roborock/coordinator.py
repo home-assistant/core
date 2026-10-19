@@ -20,7 +20,6 @@ from roborock.roborock_message import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -166,7 +165,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self.properties_api = properties_api
         self.device_info = get_device_info(device)
         if mac := properties_api.network_info.mac:
-            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            self.device_info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt = dt_util.utcnow()
@@ -393,6 +392,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             return await self.properties_api.routines.get_routines()
         except RoborockException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to get routines %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -407,7 +407,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             await self.properties_api.routines.execute_routine(routine_id)
         except RoborockException as err:
-            _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
@@ -690,6 +689,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.MODE,
             RoborockB01Props.CLEAN_PATH_PREFERENCE,
             RoborockB01Props.QUANTITY,
+            RoborockB01Props.REPEAT_STATE,
         ]
 
     @override
@@ -709,7 +709,23 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             )
+        await self.async_refresh_q7_map()
         return data
+
+    async def async_refresh_q7_map(self) -> bool:
+        """Refresh the Q7 map list and map content traits.
+
+        Returns True when the traits were refreshed without errors.
+        Never raises; callers fall back to the cached trait values on failure.
+        """
+        try:
+            await self.api.map.refresh()
+            if self.api.map.current_map_id is not None:
+                await self.api.map_content.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to refresh Q7 map: %s", ex)
+            return False
+        return True
 
 
 class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):

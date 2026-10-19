@@ -352,6 +352,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
         "config_data",
         "unique_id",
         "login_exception",
+        "expected_state",
+        "expected_reason",
     ),
     [
         (
@@ -360,6 +362,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
             CookidooRequestException,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
         ),
         (
             1,
@@ -367,6 +371,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
             CookidooAuthException,
+            ConfigEntryState.MIGRATION_ERROR,
+            f"Authentication failed for {EMAIL}, check your email and password",
         ),
         (
             1,
@@ -374,6 +380,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
             MOCK_CONFIG_ENTRY_MIGRATION,
             "old_ciam_sub_uuid",
             CookidooRequestException,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
         ),
         (
             1,
@@ -381,6 +389,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
             MOCK_CONFIG_ENTRY_MIGRATION,
             "old_ciam_sub_uuid",
             CookidooAuthException,
+            ConfigEntryState.MIGRATION_ERROR,
+            f"Authentication failed for {EMAIL}, check your email and password",
         ),
         (
             1,
@@ -388,6 +398,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
             CookidooParseException,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
         ),
         (
             1,
@@ -395,6 +407,8 @@ async def test_migration_from_partial_duplicate_unique_ids(
             MOCK_CONFIG_ENTRY_MIGRATION,
             "old_ciam_sub_uuid",
             CookidooParseException,
+            ConfigEntryState.SETUP_RETRY,
+            "Failed to connect to server, try again later",
         ),
     ],
 )
@@ -407,8 +421,9 @@ async def test_migration_from_with_error(
     config_data,
     unique_id,
     login_exception: Exception,
+    expected_state: ConfigEntryState,
+    expected_reason: str,
     mock_cookidoo_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test different expected migration paths but with connection issues."""
     # Migration can fail due to connection issues as we have to fetch the uuid
@@ -458,9 +473,8 @@ async def test_migration_from_with_error(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
-    # A handled failure, rather than the exception escaping async_migrate_entry
-    assert "Could not migrate config entry" in caplog.text
+    assert config_entry.state is expected_state
+    assert config_entry.reason == expected_reason
 
     assert entity_registry.async_is_registered(
         entity_registry.entities.get_entity_id(

@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from librouteros.exceptions import ConnectionClosed, LibRouterosError
+from librouteros.exceptions import ConnectionClosed, LibRouterosError, TrapError
 import pytest
 
 from homeassistant.components import mikrotik
@@ -154,6 +154,33 @@ async def test_hub_login_error_starts_reauth(
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    "error",
+    [ConnectionClosed(), OSError(), TimeoutError()],
+    ids=["connection_closed", "os_error", "timeout_error"],
+)
+async def test_hub_connect_error_skips_token_login_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+    error: Exception,
+) -> None:
+    """Test a connection error on plain login doesn't fall back to token login."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Modern RouterOS rejects the legacy token login as invalid credentials
+    with patch(
+        "librouteros.connect",
+        side_effect=[error, TrapError("invalid user name or password (6)")],
+    ) as mock_connect:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_connect.call_count == 1
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_optional_command_error_is_suppressed(

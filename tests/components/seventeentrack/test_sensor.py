@@ -2,14 +2,18 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyseventeentrack.errors import SeventeenTrackError
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import goto_future, init_integration
 from .conftest import DEFAULT_SUMMARY, get_package
 
 from tests.common import MockConfigEntry
+
+IN_TRANSIT_ENTITY_ID = "sensor.17track_in_transit"
 
 
 async def test_full_valid_config(
@@ -87,3 +91,26 @@ async def test_summary_error(
     assert (
         hass.states.get("sensor.seventeentrack_packages_ready_to_be_picked_up") is None
     )
+
+
+async def test_summary_sensor_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the summary sensors are unavailable while the update fails."""
+    await init_integration(hass, mock_config_entry)
+    assert hass.states.get(IN_TRANSIT_ENTITY_ID).state == "0"
+
+    mock_seventeentrack.return_value.profile.summary.side_effect = SeventeenTrackError(
+        "Error"
+    )
+    await goto_future(hass, freezer)
+
+    assert hass.states.get(IN_TRANSIT_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_seventeentrack.return_value.profile.summary.side_effect = None
+    await goto_future(hass, freezer)
+
+    assert hass.states.get(IN_TRANSIT_ENTITY_ID).state == "0"

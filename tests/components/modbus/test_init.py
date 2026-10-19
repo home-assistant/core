@@ -82,6 +82,7 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
+from homeassistant.components.modbus.schemas import CONFIG_SCHEMA
 from homeassistant.components.modbus.validators import (
     check_config,
     duplicate_fan_mode_validator,
@@ -200,6 +201,14 @@ async def test_nan_validator() -> None:
         nan_validator("x15")
     with pytest.raises(probatio.Invalid):
         nan_validator("not a hex string")
+
+
+async def test_tcp_hub_without_host_is_invalid() -> None:
+    """Test the hub type selects the schema that reports the error."""
+    with pytest.raises(
+        probatio.Invalid, match=r"required key not provided at 'modbus\[0\]\.host'"
+    ):
+        CONFIG_SCHEMA({DOMAIN: {CONF_TYPE: TCP, CONF_PORT: 502}})
 
 
 @pytest.mark.parametrize(
@@ -1255,7 +1264,7 @@ async def test_renamed_entity_keeps_polling(
     entity_registry: er.EntityRegistry,
     mock_pymodbus: mock.AsyncMock,
 ) -> None:
-    """Test an entity polls again after a rename, which removes and re-adds it."""
+    """Test an entity keeps polling on its schedule after a rename."""
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
     config = {
         DOMAIN: [
@@ -1284,8 +1293,18 @@ async def test_renamed_entity_keeps_polling(
     entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
     await hass.async_block_till_done()
 
+    assert hass.states.get(entity_id) is None
+    assert hass.states.get(new_entity_id).state == "0"
+
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x2A])
+    # The rename does not schedule an extra update
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(new_entity_id).state == "0"
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(new_entity_id).state == "42"
 

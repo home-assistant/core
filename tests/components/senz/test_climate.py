@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from httpx import RequestError
+from httpx2 import RequestError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

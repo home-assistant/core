@@ -1,6 +1,7 @@
 {
   "domain": "govee_light_local",
   "name": "Govee lights local",
+  "categories": ["lighting"],
   "codeowners": ["@Galorhallen"],
   "config_flow": true,
   "dependencies": ["network"],
