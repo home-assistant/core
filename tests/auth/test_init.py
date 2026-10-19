@@ -32,6 +32,8 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
+from homeassistant.auth.providers import AuthProvider
+from homeassistant.auth.providers.insecure_example import ExampleAuthProvider
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
@@ -375,6 +377,46 @@ async def test_remove_the_last_login_of_the_owner(
         await manager.async_remove_credentials(password)
 
     assert (password in user.credentials) is kept
+
+
+async def test_remove_both_logins_of_the_owner_at_once(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test removing two logins at once can't leave the owner without one."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+        ],
+        [],
+    )
+    owner = await manager.async_create_user("Owner")
+    logins = []
+    for provider_id in (None, "another-provider"):
+        provider = manager.get_auth_provider("insecure_example", provider_id)
+        assert provider is not None
+        credentials = provider.async_create_credentials({"username": "owner"})
+        await manager.async_link_user(owner, credentials)
+        logins.append(credentials)
+
+    async def slow_cleanup(self: AuthProvider, credentials: Credentials) -> None:
+        # Gives the other removal a chance to run before this one is done.
+        await asyncio.sleep(0)
+
+    with patch.object(
+        ExampleAuthProvider, "async_will_remove_credentials", slow_cleanup
+    ):
+        results = await asyncio.gather(
+            *(manager.async_remove_credentials(login) for login in logins),
+            return_exceptions=True,
+        )
+
+    assert sorted(type(result).__name__ for result in results) == [
+        "LastLoginMethodError",
+        "NoneType",
+    ]
+    assert len(owner.credentials) == 1
 
 
 async def test_saving_loading(

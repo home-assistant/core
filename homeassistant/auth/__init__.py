@@ -191,6 +191,9 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
+        # Removals wait for each other, so two can't each count the other's
+        # credentials as the login that is left.
+        self._remove_credentials_lock = asyncio.Lock()
         self._expire_callback: CALLBACK_TYPE | None = None
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
@@ -416,18 +419,21 @@ class AuthManager:
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""
-        # Enforced here to cover every way of removing credentials.
-        if (
-            (user := await self.async_get_user_by_credentials(credentials))
-            and user.is_owner
-            and not self.async_has_other_login_method(user, credentials)
-        ):
-            raise LastLoginMethodError("Unable to remove the last login of the owner")
+        async with self._remove_credentials_lock:
+            # Enforced here to cover every way of removing credentials.
+            if (
+                (user := await self.async_get_user_by_credentials(credentials))
+                and user.is_owner
+                and not self.async_has_other_login_method(user, credentials)
+            ):
+                raise LastLoginMethodError(
+                    "Unable to remove the last login of the owner"
+                )
 
-        if (provider := self._async_get_auth_provider(credentials)) is not None:
-            await provider.async_will_remove_credentials(credentials)
+            if (provider := self._async_get_auth_provider(credentials)) is not None:
+                await provider.async_will_remove_credentials(credentials)
 
-        await self._store.async_remove_credentials(credentials)
+            await self._store.async_remove_credentials(credentials)
 
     @callback
     def async_has_other_login_method(
