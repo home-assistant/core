@@ -110,6 +110,15 @@ async def websocket_delete(
     # if not new, an existing credential exists.
     # Removing the credential will also remove the auth.
     if not credentials.is_new:
+        user = await hass.auth.async_get_user_by_credentials(credentials)
+        # Only the owner may remove a login of the owner.
+        if user is not None and user.is_owner and not connection.user.is_owner:
+            connection.send_error(
+                msg["id"],
+                "cannot_delete_owner_credentials",
+                "Unable to delete the credentials of the owner",
+            )
+            return
         try:
             await hass.auth.async_remove_credentials(credentials)
         except LastLoginMethodError:
