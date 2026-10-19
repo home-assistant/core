@@ -217,19 +217,11 @@ class EngieBeEpexSensorEntityDescription(SensorEntityDescription):
 
     granularity: EpexGranularity
     value_fn: Callable[[EngieBeEpexPriceSensor], float | None]
-    extra_fn: Callable[[EngieBeEpexPriceSensor], dict[str, str] | None]
 
 
 def _epex_slot_value(slot: EpexSlot | None) -> float | None:
     """Return the EUR/kWh value of a slot."""
     return None if slot is None else slot.value_eur_per_kwh
-
-
-def _epex_slot_attributes(slot: EpexSlot | None) -> dict[str, str] | None:
-    """Return the start and end of a slot as attributes."""
-    if slot is None:
-        return None
-    return {"start": slot.start.isoformat(), "end": slot.end.isoformat()}
 
 
 _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
@@ -239,28 +231,24 @@ _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
         granularity=EpexGranularity.HOURLY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
-        extra_fn=lambda entity: None,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_next_hour",
         translation_key="epex_next_hour",
         granularity=EpexGranularity.HOURLY,
         value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
-        extra_fn=lambda entity: None,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_low_today_hour",
         translation_key="epex_low_today_hour",
         granularity=EpexGranularity.HOURLY,
         value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
-        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(min)),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_high_today_hour",
         translation_key="epex_high_today_hour",
         granularity=EpexGranularity.HOURLY,
         value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
-        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(max)),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_current_quarter_hour",
@@ -268,28 +256,24 @@ _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
         granularity=EpexGranularity.QUARTER_HOURLY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
-        extra_fn=lambda entity: None,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_next_quarter_hour",
         translation_key="epex_next_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
         value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
-        extra_fn=lambda entity: None,
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_low_today_quarter_hour",
         translation_key="epex_low_today_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
         value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
-        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(min)),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_high_today_quarter_hour",
         translation_key="epex_high_today_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
         value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
-        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(max)),
     ),
 )
 
@@ -347,9 +331,3 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
     def native_value(self) -> float | None:
         """Return the EPEX day-ahead price."""
         return self.entity_description.value_fn(self)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return the slot attributes."""
-        return self.entity_description.extra_fn(self)

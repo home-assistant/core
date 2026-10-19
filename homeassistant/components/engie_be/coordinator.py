@@ -220,8 +220,8 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
 class EngieBeEpexData:
     """Merged EPEX day-ahead price slots covering today and tomorrow."""
 
-    hourly: tuple[EpexSlot, ...] = ()
-    quarter_hourly: tuple[EpexSlot, ...] = ()
+    hourly: tuple[EpexSlot, ...]
+    quarter_hourly: tuple[EpexSlot, ...]
 
     def slots(self, granularity: EpexGranularity) -> tuple[EpexSlot, ...]:
         """Return the merged slots for one granularity."""
@@ -293,6 +293,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             update_interval=EPEX_SCAN_INTERVAL,
         )
         self.client = client
+        self.data = EngieBeEpexData(hourly=(), quarter_hourly=())
         self._listener_unsub: Callable[[], None] | None = None
 
     @callback
@@ -321,7 +322,11 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
         """Fetch EPEX prices for each day and granularity without full coverage."""
-        data = self.data if self.data is not None else EngieBeEpexData()
+        data = (
+            self.data
+            if self.data is not None
+            else EngieBeEpexData(hourly=(), quarter_hourly=())
+        )
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         tomorrow = today + timedelta(days=1)
         slots = {

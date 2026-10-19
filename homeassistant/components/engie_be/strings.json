@@ -299,48 +299,16 @@
         "name": "EPEX current quarter-hourly price"
       },
       "epex_high_today_hour": {
-        "name": "EPEX highest hour price today",
-        "state_attributes": {
-          "end": {
-            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::end::name%]"
-          },
-          "start": {
-            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::start::name%]"
-          }
-        }
+        "name": "EPEX highest hour price today"
       },
       "epex_high_today_quarter_hour": {
-        "name": "EPEX highest quarter-hourly price today",
-        "state_attributes": {
-          "end": {
-            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::end::name%]"
-          },
-          "start": {
-            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::start::name%]"
-          }
-        }
+        "name": "EPEX highest quarter-hourly price today"
       },
       "epex_low_today_hour": {
-        "name": "EPEX lowest hour price today",
-        "state_attributes": {
-          "end": {
-            "name": "End time"
-          },
-          "start": {
-            "name": "Start time"
-          }
-        }
+        "name": "EPEX lowest hour price today"
       },
       "epex_low_today_quarter_hour": {
-        "name": "EPEX lowest quarter-hourly price today",
-        "state_attributes": {
-          "end": {
-            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::end::name%]"
-          },
-          "start": {
-            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::start::name%]"
-          }
-        }
+        "name": "EPEX lowest quarter-hourly price today"
       },
       "epex_next_hour": {
         "name": "EPEX next hour price"

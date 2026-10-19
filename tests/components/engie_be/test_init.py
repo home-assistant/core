@@ -1143,10 +1143,6 @@ async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
     assert low_entity_id is not None
     low_state = hass.states.get(low_entity_id)
     assert low_state is not None
-    assert (
-        low_state.attributes["start"]
-        == datetime(2026, 10, 4, 0, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
-    )
     binary_entity_id = entity_registry.async_get_entity_id(
         "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
     )
