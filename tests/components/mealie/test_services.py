@@ -16,7 +16,7 @@ from aiomealie import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import (
@@ -51,8 +51,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_service_mealplan(
