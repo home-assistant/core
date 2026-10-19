@@ -98,7 +98,6 @@ __all__ = [
     "ICON_IMPORT",
     "SERVICE_RELOAD",
     "UPDATE_FIELDS",
-    "EntityStateAttribute",
     "Zone",
     "ZoneEntityStateAttribute",
     "ZoneStorageCollection",
