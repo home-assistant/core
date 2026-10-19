@@ -4867,6 +4867,15 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hp_printer": {
+      "name": "HP Printer",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hr_energy_qube": {
       "name": "Qube heat pump",
       "integration_type": "hub",
