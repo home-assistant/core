@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import (
@@ -11,19 +12,28 @@ from renault_api.gigya.exceptions import (
     InvalidCredentialsException,
     PendingTwoFactorAuthenticationException,
 )
-from renault_api.kamereon import models
+from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_session import RenaultSession
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.renault.const import DOMAIN, RenaultConfigurationKeys
+from homeassistant.components.renault.const import (
+    DOMAIN,
+    VEHICLE_LIST_SCAN_INTERVAL,
+    RenaultConfigurationKeys,
+)
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_USER,
     ConfigEntry,
     ConfigEntryState,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -34,7 +44,7 @@ from .const import (
     OTHER_ACCOUNT_ID,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.typing import WebSocketGenerator
 
 # Config data of an entry created before the login token was stored.
@@ -504,3 +514,260 @@ async def test_registry_cleanup(
         device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
         is None
     )
+
+
+ZOE_VIN = "VF1ZOE40VIN"
+CAPTUR_VIN = "VF1CAPTURFUELVIN"
+# Listed in the zoe_40 fixture, without vehicle details.
+MISSING_DETAILS_VIN = "VYSP0100875XXXXXX"
+
+
+def _get_vehicles(*vins: str) -> models.KamereonVehiclesResponse:
+    """Return a vehicle list with the given vehicles."""
+    response: models.KamereonVehiclesResponse = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture("renault/vehicle_zoe_40.json")
+        )
+    )
+    links = [
+        *(response.vehicleLinks or []),
+        *(
+            schemas.KamereonVehiclesResponseSchema.loads(
+                load_fixture("renault/vehicle_captur_fuel.json")
+            ).vehicleLinks
+            or []
+        ),
+    ]
+    response.vehicleLinks = [link for link in links if link.vin in vins]
+    return response
+
+
+@pytest.fixture(name="sensor_platform")
+def override_sensor_platform() -> Generator[None]:
+    """Set up the sensor platform only."""
+    with patch("homeassistant.components.renault.PLATFORMS", [Platform.SENSOR]):
+        yield
+
+
+@pytest.fixture(name="mock_get_vehicles")
+def patch_get_vehicles() -> Generator[AsyncMock]:
+    """Mock the vehicle list, with the Zoe only."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        return_value=_get_vehicles(ZOE_VIN),
+    ) as mock_get_vehicles:
+        yield mock_get_vehicles
+
+
+async def _async_poll_vehicle_list(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Trigger the next vehicle list update."""
+    freezer.tick(VEHICLE_LIST_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+def _vehicle_entities(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: ConfigEntry,
+    vin: str,
+) -> list[er.RegistryEntry]:
+    """Return the entities of a vehicle, after checking its device exists."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), config_entry.entry_id
+    )
+    assert device is not None
+    return er.async_entries_for_device(entity_registry, device.id)
+
+
+@pytest.mark.usefixtures(
+    "patch_renault_account", "fixtures_with_data", "sensor_platform"
+)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_added(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+) -> None:
+    """Test a vehicle added to the account is set up without a reload."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, CAPTUR_VIN), config_entry.entry_id
+        )
+        is None
+    )
+
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, CAPTUR_VIN)
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN, CAPTUR_VIN}
+    entities = _vehicle_entities(
+        device_registry, entity_registry, config_entry, CAPTUR_VIN
+    )
+    assert entities
+    assert all(hass.states.get(entity.entity_id) for entity in entities)
+
+
+@pytest.mark.usefixtures(
+    "patch_renault_account", "fixtures_with_data", "sensor_platform"
+)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_removed(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+) -> None:
+    """Test a vehicle removed from the account is removed without a reload."""
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, CAPTUR_VIN)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    entities = _vehicle_entities(
+        device_registry, entity_registry, config_entry, CAPTUR_VIN
+    )
+    assert entities
+
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN)
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, CAPTUR_VIN), config_entry.entry_id
+        )
+        is None
+    )
+    assert not any(entity_registry.async_get(entity.entity_id) for entity in entities)
+    assert not any(hass.states.get(entity.entity_id) for entity in entities)
+    assert _vehicle_entities(device_registry, entity_registry, config_entry, ZOE_VIN)
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_list_empty(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+) -> None:
+    """Test an empty vehicle list does not remove the vehicles."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_vehicles.return_value = _get_vehicles()
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, ZOE_VIN), config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_missing_details_retried(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+    mock_get_vehicle_details: AsyncMock,
+) -> None:
+    """Test the details of a vehicle are requested again at the next update."""
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, MISSING_DETAILS_VIN)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_get_vehicle_details.await_count == 1
+
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert mock_get_vehicle_details.await_count == 2
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            exceptions.QuotaLimitException(
+                "err.func.wired.overloaded", "You have reached your quota limit"
+            ),
+            id="quota_limit",
+        ),
+        pytest.param(
+            exceptions.KamereonResponseException(
+                "err.func.unknown", "Something went wrong"
+            ),
+            id="kamereon_error",
+        ),
+    ],
+)
+async def test_vehicle_list_error(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+    side_effect: Exception,
+) -> None:
+    """Test an error during the vehicle list update keeps the vehicles."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_vehicles.side_effect = side_effect
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert mock_get_vehicles.await_count == 2
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_list_authentication_expired(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+) -> None:
+    """Test an expired login during the vehicle list update starts a reauth flow."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_vehicles.side_effect = NotAuthenticatedException("Not logged in")
+    await _async_poll_vehicle_list(hass, freezer)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_list_throttled(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+) -> None:
+    """Test the vehicle list is not requested while the hub is throttled."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.renault.renault_hub.RenaultHub.is_throttled",
+        return_value=True,
+    ):
+        await _async_poll_vehicle_list(hass, freezer)
+
+    assert mock_get_vehicles.await_count == 1
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
