@@ -31,6 +31,7 @@ from .auth_util import async_user_not_allowed_do_auth
 from .const import (
     DATA_SUPERVISOR_USER,
     KEY_AUTHENTICATED,
+    KEY_EXPIRED_SIGNED_REQUEST,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     is_supervisor_unix_socket_request,
@@ -107,6 +108,10 @@ def _async_validate_signed_request(hass: HomeAssistant, request: Request) -> boo
         claims = jwt_wrapper.verify_and_decode(
             signature, secret, algorithms=["HS256"], options={"verify_iss": False}
         )
+    except jwt.ExpiredSignatureError:
+        # Only raised for a valid signature, so this is not a login attempt
+        request[KEY_EXPIRED_SIGNED_REQUEST] = True
+        return False
     except jwt.InvalidTokenError:
         return False
 

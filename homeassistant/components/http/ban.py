@@ -28,7 +28,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS, is_supervisor_unix_socket_request
+from .const import (
+    KEY_EXPIRED_SIGNED_REQUEST,
+    KEY_HASS,
+    is_supervisor_unix_socket_request,
+)
 from .view import HomeAssistantView
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -114,6 +118,14 @@ async def process_wrong_login(request: Request) -> None:
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
+    if request.get(KEY_EXPIRED_SIGNED_REQUEST):
+        _LOGGER.debug(
+            "Rejected request with expired signature from %s for %s",
+            request.remote,
+            request.path,
+        )
+        return
+
     hass = request.app[KEY_HASS]
 
     assert request.remote
