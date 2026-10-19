@@ -1,10 +1,11 @@
 """Tests for the LoJack device tracker platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from lojack_api import ApiError
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -12,13 +13,24 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL
+from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 ENTITY_ID = "device_tracker.2021_honda_accord"
+
+
+@pytest.fixture(autouse=True)
+def only_device_tracker_platform():
+    """Only set up the device_tracker platform so snapshots cover one platform."""
+    with patch(
+        f"homeassistant.components.{DOMAIN}.PLATFORMS",
+        [Platform.DEVICE_TRACKER],
+    ):
+        yield
 
 
 async def test_all_entities(
