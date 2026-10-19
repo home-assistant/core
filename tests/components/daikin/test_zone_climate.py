@@ -17,13 +17,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
+from homeassistant.components.daikin.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CONF_HOST,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -36,28 +35,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
-from .conftest import ZoneDevice, configure_zone_device
-
-from tests.common import MockConfigEntry
-
-HOST = "127.0.0.1"
-
-
-async def _async_setup_daikin(
-    hass: HomeAssistant, zone_device: ZoneDevice
-) -> MockConfigEntry:
-    """Set up a Daikin config entry with a mocked library device."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=zone_device.mac,
-        data={CONF_HOST: HOST, KEY_MAC: zone_device.mac},
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
+from .conftest import ZoneDevice, async_setup_daikin, configure_zone_device
 
 
 def _zone_entity_id(
@@ -107,7 +85,7 @@ async def test_setup_entry_adds_zone_climates(
         zone_device, zones=[["-", "0", 0], ["Living", "1", 22], ["Office", "1", 21]]
     )
 
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
 
     assert _zone_entity_id(entity_registry, zone_device, 0) is None
     assert _zone_entity_id(entity_registry, zone_device, 1) is not None
@@ -124,7 +102,7 @@ async def test_setup_entry_skips_zone_climates_without_support(
     zone_device.values["lztemp_h"] = ""
     zone_device.values["lztemp_c"] = ""
 
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
 
     assert _zone_entity_id(entity_registry, zone_device, 0) is None
 
@@ -138,7 +116,7 @@ async def test_setup_entry_handles_missing_zone_temperature_key(
     configure_zone_device(zone_device, zones=[["Living", "1", 22]])
     zone_device.values.pop("lztemp_h")
 
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
 
     assert _zone_entity_id(entity_registry, zone_device, 0) is None
     main_entity_id = entity_registry.async_get_entity_id(
@@ -167,7 +145,7 @@ async def test_zone_climate_sets_temperature_for_active_mode(
         zones=[["Living", "0", 22], ["Office", "1", 21]],
         mode=mode,
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -191,7 +169,7 @@ async def test_zone_climate_rejects_out_of_range_temperature(
         zones=[["Living", "1", 22]],
         target_temperature=22,
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
 
@@ -212,7 +190,7 @@ async def test_zone_climate_unavailable_without_target_temperature(
         zones=[["Living", "1", 22]],
         target_temperature=None,
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
 
@@ -228,7 +206,7 @@ async def test_zone_climate_zone_inactive_after_setup(
 ) -> None:
     """Inactive zones raise a translated error during service calls."""
     configure_zone_device(zone_device, zones=[["Living", "1", 22]])
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
     zone_device.zones[0][0] = "-"
@@ -249,7 +227,7 @@ async def test_zone_climate_zone_missing_after_setup(
         zone_device,
         zones=[["Living", "1", 22], ["Office", "1", 22]],
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 1)
     assert entity_id is not None
     zone_device.zones = [["Living", "1", 22]]
@@ -267,7 +245,7 @@ async def test_zone_climate_parameters_unavailable(
 ) -> None:
     """Missing zone parameter lists make the zone entity unavailable."""
     configure_zone_device(zone_device, zones=[["Living", "1", 22]])
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
     zone_device.values["lztemp_h"] = ""
@@ -286,7 +264,7 @@ async def test_zone_climate_rejects_main_mode_change(
 ) -> None:
     """Changing the main HVAC mode through a zone climate is blocked."""
     configure_zone_device(zone_device, zones=[["Living", "1", 22]])
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
 
@@ -317,7 +295,7 @@ async def test_zone_climate_set_temperature_requires_heat_or_cool(
         zones=[["Living", "1", 22]],
         mode="auto",
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
 
@@ -351,7 +329,7 @@ async def test_zone_climate_properties(
         heating_values="20",
         cooling_values="18",
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
 
@@ -468,7 +446,7 @@ async def test_zone_climate_power_controls(
         zone_device.zones[zone_id][1] = value
 
     zone_device.set_zone.side_effect = set_zone
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     climate_entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     switch_entity_id = _zone_switch_entity_id(entity_registry, zone_device, 0)
     assert climate_entity_id is not None
@@ -508,7 +486,7 @@ async def test_zone_switch_updates_zone_climate(
         zone_device.zones[zone_id][1] = value
 
     zone_device.set_zone.side_effect = set_zone
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     climate_entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     switch_entity_id = _zone_switch_entity_id(entity_registry, zone_device, 0)
     assert climate_entity_id is not None
@@ -559,7 +537,7 @@ async def test_zone_climate_target_temperature_inactive_mode(
         heating_values="bad",
         cooling_values="19",
     )
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
 
@@ -577,7 +555,7 @@ async def test_zone_climate_set_zone_failed(
 ) -> None:
     """Service call surfaces backend zone update errors."""
     configure_zone_device(zone_device, zones=[["Living", "1", 22]])
-    await _async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
     zone_device.set_zone = AsyncMock(side_effect=NotImplementedError)
