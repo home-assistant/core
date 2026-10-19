@@ -1,6 +1,10 @@
 {
   "domain": "lunatone",
   "name": "Lunatone",
+  "categories": [
+    "lighting.lighting_systems",
+    "hubs_protocols.building_automation"
+  ],
   "codeowners": ["@MoonDevLT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lunatone",

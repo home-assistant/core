@@ -49,6 +49,7 @@ async def test_unsupported_utility_fix_flow(
     assert issue is not None
     assert issue.translation_key == "unsupported_utility"
     assert issue.is_fixable is True
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.data == {
         "entry_id": mock_config_entry.entry_id,
         "utility": "Unsupported Utility",

@@ -1,6 +1,7 @@
 {
   "domain": "lidarr",
   "name": "Lidarr",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lidarr",

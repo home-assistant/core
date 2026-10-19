@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import get_instance, history
@@ -13,8 +14,6 @@ from homeassistant.components.recorder.db_schema import States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
-
-from .common import async_wait_recording_done
 
 from tests.typing import RecorderInstanceContextManager
 

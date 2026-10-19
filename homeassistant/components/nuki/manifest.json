@@ -1,6 +1,7 @@
 {
   "domain": "nuki",
   "name": "Nuki Bridge",
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@pschmitt", "@pvizeli", "@pree"],
   "config_flow": true,
   "dependencies": ["webhook"],

@@ -108,6 +108,10 @@ async def test_repair_created_for_cloud_disabled_predictive_mode(
     assert issue is not None
     assert issue.data.get("entry_id") == mock_config_entry.entry_id
 
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
 
 async def test_repair_auto_resolves_when_cloud_is_re_enabled(
     hass: HomeAssistant,

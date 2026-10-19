@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from . import dashboard, resources, websocket
-from .const import (  # noqa: F401
+from .const import (
     CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
@@ -34,13 +34,11 @@ from .const import (  # noqa: F401
     DASHBOARD_BASE_CREATE_FIELDS,
     DEFAULT_ICON,
     DOMAIN,
-    EVENT_LOVELACE_UPDATED,
     LOVELACE_CONFIG_FILE,
     LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
-    RESOURCE_RELOAD_SERVICE_SCHEMA,
     RESOURCE_SCHEMA,
     RESOURCE_UPDATE_FIELDS,
     SERVICE_RELOAD_RESOURCES,
@@ -48,9 +46,21 @@ from .const import (  # noqa: F401
     STORAGE_DASHBOARD_UPDATE_FIELDS,
 )
 from .services import async_setup_services
-from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "CONF_ICON",
+    "CONF_REQUIRE_ADMIN",
+    "CONF_SHOW_IN_SIDEBAR",
+    "CONF_TITLE",
+    "CONF_URL_PATH",
+    "DOMAIN",
+    "LOVELACE_DATA",
+    "MODE_STORAGE",
+    "SERVICE_RELOAD_RESOURCES",
+    "LovelaceData",
+]
 
 
 def _validate_url_slug(value: Any) -> str:

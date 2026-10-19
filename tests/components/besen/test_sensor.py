@@ -63,6 +63,7 @@ async def test_sensor_state(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_updates_from_client(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
 ) -> None:
@@ -109,6 +110,14 @@ async def test_sensor_updates_from_client(
     assert state.state == "idle"
     assert (state := hass.states.get("sensor.garage_current_state")) is not None
     assert state.state == "ready_to_charge"
+
+    publish_besen_state(
+        mock_besen_client,
+        charger_state(charge=ChargeStatus(charging_status="Scheduled")),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(CHARGING_STATUS_ENTITY_ID) == snapshot
 
 
 async def test_sensor_unknown_value(
