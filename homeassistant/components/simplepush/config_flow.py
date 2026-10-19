@@ -20,7 +20,7 @@ from .const import (
 )
 
 
-def validate_input(api_token: str) -> dict[str, str] | None:
+def validate_input(api_token: str) -> dict[str, str]:
     """Send a test task to your own devices."""
     try:
         Client(api_token=api_token).send_task(
@@ -39,7 +39,7 @@ def validate_input(api_token: str) -> dict[str, str] | None:
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
-    return None
+    return {}
 
 
 def validate_legacy_input(entry: dict[str, str]) -> dict[str, str] | None:
@@ -79,7 +79,7 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Set up the current Simplepush app with an API token."""
-        errors: dict[str, str] | None = None
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(
                 {CONF_API_TOKEN: user_input[CONF_API_TOKEN]}
