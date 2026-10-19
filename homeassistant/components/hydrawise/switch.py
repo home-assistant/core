@@ -96,6 +96,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
         self._attr_is_on = True
         self.async_write_ha_state()
+        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     @exception_handler
@@ -104,6 +105,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
         self._attr_is_on = False
         self.async_write_ha_state()
+        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     def _update_attrs(self) -> None:

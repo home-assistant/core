@@ -64,12 +64,18 @@ class HydrawiseValve(HydrawiseEntity, ValveEntity):
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self.coordinator.api.start_zone(self.zone)
+        self._attr_is_closed = False
+        self.async_write_ha_state()
+        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     @exception_handler
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self.coordinator.api.stop_zone(self.zone)
+        self._attr_is_closed = True
+        self.async_write_ha_state()
+        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     def _update_attrs(self) -> None:

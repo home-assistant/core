@@ -4,12 +4,16 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pydrawise import APIError
 from pydrawise.schema import Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.hydrawise.const import DEFAULT_WATERING_TIME
+from homeassistant.components.hydrawise.const import (
+    COMMAND_REFRESH_INTERVAL,
+    DEFAULT_WATERING_TIME,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_switches(
@@ -136,3 +140,25 @@ async def test_switch_api_error(
         )
 
     assert exc_info.value.translation_key == "command_error"
+
+
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_switch_refresh_after_command(
+    hass: HomeAssistant,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a switch command schedules a refresh."""
+    refreshes = mock_pydrawise.get_user.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "switch.zone_one_manual_watering"},
+        blocking=True,
+    )
+    freezer.tick(COMMAND_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_pydrawise.get_user.call_count == refreshes + 1

@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
+from freezegun.api import FrozenDateTimeFactory
 from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Zone
 import pytest
@@ -12,6 +13,7 @@ import pytest
 from homeassistant.components.hydrawise.const import (
     ATTR_DURATION,
     ATTR_UNTIL,
+    COMMAND_REFRESH_INTERVAL,
     DOMAIN,
     SERVICE_RESUME,
     SERVICE_START_WATERING,
@@ -21,7 +23,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_start_watering(
@@ -137,3 +139,35 @@ async def test_service_api_error(
         )
 
     assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (SERVICE_START_WATERING, {}),
+        (SERVICE_SUSPEND, {ATTR_UNTIL: datetime(2026, 1, 1, 0, 0, 0)}),
+        (SERVICE_RESUME, {}),
+    ],
+)
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_service_refresh_after_command(
+    hass: HomeAssistant,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test the services schedule a refresh."""
+    refreshes = mock_pydrawise.get_user.call_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "binary_sensor.zone_one_watering", **service_data},
+        blocking=True,
+    )
+    freezer.tick(COMMAND_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_pydrawise.get_user.call_count == refreshes + 1
