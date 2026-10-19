@@ -246,7 +246,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
         return absence_status is not None
 
-
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
