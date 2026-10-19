@@ -85,6 +85,7 @@ async def test_ac_set_fan_mode(
 ) -> None:
     """Test climate set fan mode."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -109,6 +110,7 @@ async def test_ac_set_hvac_mode_off(
 ) -> None:
     """Test setting AC HVAC mode to off."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -155,6 +157,7 @@ async def test_ac_set_hvac_mode(
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -180,6 +183,7 @@ async def test_ac_set_hvac_mode_turns_on(
     """Test setting AC HVAC mode turns on the device if it is off."""
 
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -223,6 +227,7 @@ async def test_ac_set_hvac_mode_auto_uses_aicomfort(
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -258,6 +263,7 @@ async def test_ac_set_hvac_mode_auto_prefers_auto_when_aicomfort_supported(
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -292,6 +298,7 @@ async def test_ac_set_hvac_mode_auto_turns_on_uses_aicomfort(
     )
 
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -334,6 +341,7 @@ async def test_ac_set_temperature_and_hvac_mode_auto_uses_aicomfort(
     )
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -420,6 +428,7 @@ async def test_ac_set_hvac_mode_fan(
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
 
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -447,6 +456,7 @@ async def test_ac_set_temperature(
 ) -> None:
     """Test setting AC temperature."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -471,6 +481,7 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
 ) -> None:
     """Test setting AC temperature and HVAC mode while off."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -521,6 +532,7 @@ async def test_ac_set_temperature_and_hvac_mode(
     """Test setting AC temperature and HVAC mode."""
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -559,6 +571,7 @@ async def test_ac_set_temperature_and_hvac_mode_off(
     """Test setting AC temperature and HVAC mode OFF."""
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -604,6 +617,7 @@ async def test_ac_toggle_power(
 ) -> None:
     """Test toggling AC power."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -633,6 +647,7 @@ async def test_ac_set_swing_mode(
         ["fixed"],
     )
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
