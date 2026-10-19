@@ -84,6 +84,8 @@ async def async_setup_entry(
                 manufacturer=MANUFACTURER,
                 model=controller.hardware.model.description,
                 name=controller.name,
+                serial_number=controller.hardware.serial_number or None,
+                sw_version=controller.software_version or None,
             )
 
     # Register the controllers known at setup before the platforms construct
