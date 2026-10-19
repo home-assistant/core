@@ -490,6 +490,81 @@ async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
 
+async def test_wrong_login_is_counted_before_the_reverse_dns_lookup(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a wrong login is counted and banned before the slow host lookup."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 1)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)("200.201.202.204")
+    manager = app[KEY_BAN_MANAGER]
+    seen_during_lookup: list[tuple[int, bool]] = []
+
+    def gethostbyaddr(ip_addr: str) -> tuple[str, list[str], list[str]]:
+        seen_during_lookup.append(
+            (
+                app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip],
+                remote_ip in manager.ip_bans_lookup,
+            )
+        )
+        return ("example.com", [], [])
+
+    with (
+        patch("homeassistant.components.http.ban.gethostbyaddr", gethostbyaddr),
+        patch("homeassistant.components.http.ban.open", mock_open(), create=True),
+    ):
+        client = await aiohttp_client(app)
+        resp = await client.get("/example")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert seen_during_lookup == [(1, True)]
+
+
+async def test_ban_applies_when_the_ban_file_cannot_be_written(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing ban file write still bans and reports the attempt."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 1)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)("200.201.202.204")
+
+    with patch(
+        "homeassistant.components.http.ban.open",
+        side_effect=OSError("Read-only file system"),
+        create=True,
+    ):
+        client = await aiohttp_client(app)
+        resp = await client.get("/example")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
+    assert (
+        "Unable to save the ban of 200.201.202.204: Read-only file system"
+        in caplog.text
+    )
+    notifications = async_get_persistent_notifications(hass)
+    assert "http-login" in notifications
+    assert "ip-ban" in notifications
+
+
 async def test_single_ban_file_entry(
     hass: HomeAssistant,
 ) -> None:

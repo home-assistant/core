@@ -205,7 +205,13 @@ async def test_mop_drying_sensor_deprecated(
     await hass.async_block_till_done()
 
     assert hass.states.get(MOP_DRYING_ENTITY_ID).state == "off"
-    assert (DOMAIN, MOP_DRYING_ISSUE_ID) in issue_registry.issues
+    issue = issue_registry.async_get_issue(DOMAIN, MOP_DRYING_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_roborock_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, MOP_DRYING_ISSUE_ID) is None
 
 
 @pytest.mark.parametrize(
