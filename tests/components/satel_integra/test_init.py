@@ -253,7 +253,7 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection status callbacks are unsubscribed on unload."""
-    unsubscribe_callbacks = [MagicMock() for _ in range(4)]
+    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(4)]
     mock_satel.add_connection_status_callback.side_effect = unsubscribe_callbacks
 
     await setup_integration(hass, mock_config_entry)
