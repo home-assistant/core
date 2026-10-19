@@ -45,7 +45,7 @@ def reset_auth_state(hass: HomeAssistant, entry_id: str) -> None:
         state.record_success()
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> bool:
     """Set up Powerfox from a config entry."""
     client = Powerfox(
         username=entry.data[CONF_EMAIL],
@@ -98,11 +98,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> bool:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
