@@ -2,6 +2,7 @@
   "domain": "slimproto",
   "name": "SlimProto (Squeezebox players)",
   "after_dependencies": ["media_source"],
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@marcelveldt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slimproto",

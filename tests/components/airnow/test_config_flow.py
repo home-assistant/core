@@ -205,3 +205,59 @@ async def test_config_migration(
     assert config_entry.version == 3
     assert CONF_RADIUS not in config_entry.data
     assert CONF_RADIUS not in config_entry.options
+
+
+@pytest.mark.usefixtures("setup_airnow")
+async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test reauthentication."""
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == {
+        CONF_API_KEY: "new_key",
+        CONF_LATITUDE: 34.053718,
+        CONF_LONGITUDE: -118.244842,
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(InvalidKeyError, "invalid_auth", id="invalid_auth"),
+        pytest.param(AirNowError, "cannot_connect", id="cannot_connect"),
+        pytest.param(EmptyResponseError, "invalid_location", id="invalid_location"),
+        pytest.param(RuntimeError, "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("setup_airnow")
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_get: AsyncMock,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    result = await config_entry.start_reauth_flow(hass)
+
+    mock_api_get.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_api_get.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_API_KEY] == "new_key"

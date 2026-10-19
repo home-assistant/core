@@ -1,7 +1,7 @@
 """Test for Roborock init."""
 
 import asyncio
-import datetime
+import datetime as dt
 import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -425,7 +425,7 @@ async def test_update_unavailability_threshold(
     )
 
     # Move forward in time less than the threshold
-    freezer.tick(datetime.timedelta(seconds=90))
+    freezer.tick(dt.timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -444,7 +444,7 @@ async def test_update_unavailability_threshold(
     assert state.state == expected_state
 
     # Move forward in time to exceed the threshold
-    freezer.tick(datetime.timedelta(minutes=3))
+    freezer.tick(dt.timedelta(minutes=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -456,7 +456,7 @@ async def test_update_unavailability_threshold(
     # Now restore normal update behavior and refresh.
     fake_vacuum.v1_properties.status.refresh.side_effect = None
 
-    freezer.tick(datetime.timedelta(seconds=45))
+    freezer.tick(dt.timedelta(seconds=45))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

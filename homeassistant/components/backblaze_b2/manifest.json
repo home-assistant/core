@@ -1,6 +1,7 @@
 {
   "domain": "backblaze_b2",
   "name": "Backblaze B2",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@ElCruncharino"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/backblaze_b2",

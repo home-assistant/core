@@ -24,13 +24,11 @@ from homeassistant.components.demo.media_player import AbstractDemoPlayer
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
-from homeassistant.components.google_assistant import (
+from homeassistant.components.google_assistant import const, smart_home as sh, trait
+from homeassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
-    const,
-    smart_home as sh,
-    trait,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,

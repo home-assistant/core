@@ -4,8 +4,12 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.timer import STATUS_ACTIVE, STATUS_IDLE, STATUS_PAUSED
 from homeassistant.components.timer.condition import CONDITIONS
+from homeassistant.components.timer.const import (
+    STATUS_ACTIVE,
+    STATUS_IDLE,
+    STATUS_PAUSED,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (

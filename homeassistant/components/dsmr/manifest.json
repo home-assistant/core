@@ -1,6 +1,7 @@
 {
   "domain": "dsmr",
   "name": "DSMR Smart Meter",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@Robbie1221"],
   "config_flow": true,
   "dependencies": ["usb"],

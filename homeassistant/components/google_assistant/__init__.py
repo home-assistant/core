@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     CONF_ALIASES,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
@@ -26,13 +26,10 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
-    EVENT_QUERY_RECEIVED,
     SOURCE_CLOUD,
 )
 from .http import GoogleAssistantView, GoogleConfig
 from .services import async_setup_services
-
-from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
 
@@ -56,6 +53,12 @@ GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "CONF_ROOM_HINT",
+    "DOMAIN",
+    "SOURCE_CLOUD",
+]
 
 
 def _check_report_state(data):

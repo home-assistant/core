@@ -12,6 +12,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+REQUEST_SCHEME = "https"
+REQUEST_NETLOC = "homeassistant.example"
+
 
 @pytest.fixture
 def mock_session():
@@ -29,70 +32,283 @@ def mock_session():
 
 def test_client_id_scheme() -> None:
     """Test we enforce valid scheme."""
-    assert indieauth._parse_client_id("http://ex.com/")
-    assert indieauth._parse_client_id("https://ex.com/")
+    assert indieauth._parse_client_id(
+        "http://ex.com/", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
+    assert indieauth._parse_client_id(
+        "https://ex.com/", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
 
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("ftp://ex.com")
+        indieauth._parse_client_id(
+            "ftp://ex.com", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+        )
 
 
 def test_client_id_path() -> None:
     """Test we enforce valid path."""
-    assert indieauth._parse_client_id("http://ex.com").path == "/"
-    assert indieauth._parse_client_id("http://ex.com/hello").path == "/hello"
     assert (
-        indieauth._parse_client_id("http://ex.com/hello/.world").path == "/hello/.world"
+        indieauth._parse_client_id(
+            "http://ex.com",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        ).path
+        == "/"
     )
     assert (
-        indieauth._parse_client_id("http://ex.com/hello./.world").path
+        indieauth._parse_client_id(
+            "http://ex.com/hello",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        ).path
+        == "/hello"
+    )
+    assert (
+        indieauth._parse_client_id(
+            "http://ex.com/hello/.world",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        ).path
+        == "/hello/.world"
+    )
+    assert (
+        indieauth._parse_client_id(
+            "http://ex.com/hello./.world",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        ).path
         == "/hello./.world"
     )
 
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("http://ex.com/.")
+        indieauth._parse_client_id(
+            "http://ex.com/.",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
 
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("http://ex.com/hello/./yo")
+        indieauth._parse_client_id(
+            "http://ex.com/hello/./yo",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
 
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("http://ex.com/hello/../yo")
+        indieauth._parse_client_id(
+            "http://ex.com/hello/../yo",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
 
 
 def test_client_id_fragment() -> None:
     """Test we enforce valid fragment."""
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("http://ex.com/#yoo")
+        indieauth._parse_client_id(
+            "http://ex.com/#yoo",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
 
 
 def test_client_id_user_pass() -> None:
     """Test we enforce valid username/password."""
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("http://user@ex.com/")
+        indieauth._parse_client_id(
+            "http://user@ex.com/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
 
     with pytest.raises(ValueError):
-        indieauth._parse_client_id("http://user:pass@ex.com/")
+        indieauth._parse_client_id(
+            "http://user:pass@ex.com/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
 
 
 def test_client_id_hostname() -> None:
     """Test we enforce valid hostname."""
-    assert indieauth._parse_client_id("http://www.home-assistant.io/")
-    assert indieauth._parse_client_id("http://[::1]")
-    assert indieauth._parse_client_id("http://127.0.0.1")
-    assert indieauth._parse_client_id("http://10.0.0.0")
-    assert indieauth._parse_client_id("http://10.255.255.255")
-    assert indieauth._parse_client_id("http://172.16.0.0")
-    assert indieauth._parse_client_id("http://172.31.255.255")
-    assert indieauth._parse_client_id("http://192.168.0.0")
-    assert indieauth._parse_client_id("http://192.168.255.255")
+    assert indieauth._parse_client_id(
+        "http://www.home-assistant.io/",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://[::1]", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
+    assert indieauth._parse_client_id(
+        "http://[::1]:8123/",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://[fe80::1]:8123/",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://127.0.0.1", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
+    assert indieauth._parse_client_id(
+        "http://10.0.0.0", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+    )
+    assert indieauth._parse_client_id(
+        "http://10.255.255.255",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://172.16.0.0",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://172.31.255.255",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://192.168.0.0",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
+    assert indieauth._parse_client_id(
+        "http://192.168.255.255",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
 
     with pytest.raises(ValueError):
-        assert indieauth._parse_client_id("http://255.255.255.255/")
+        assert indieauth._parse_client_id(
+            "http://255.255.255.255/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
     with pytest.raises(ValueError):
-        assert indieauth._parse_client_id("http://11.0.0.0/")
+        assert indieauth._parse_client_id(
+            "http://11.0.0.0/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
     with pytest.raises(ValueError):
-        assert indieauth._parse_client_id("http://172.32.0.0/")
+        assert indieauth._parse_client_id(
+            "http://172.32.0.0/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
     with pytest.raises(ValueError):
-        assert indieauth._parse_client_id("http://192.167.0.0/")
+        assert indieauth._parse_client_id(
+            "http://192.167.0.0/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id(
+            "http://8.8.8.8:8123/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id(
+            "http://[2001:db8::1]/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id(
+            "http://[2001:db8::1]:8123/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id(
+            "http://", request_scheme=REQUEST_SCHEME, request_netloc=REQUEST_NETLOC
+        )
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id(
+            "https:///callback",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id(
+            "http://:8123/",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
+        )
+
+
+@pytest.mark.parametrize(
+    ("client_id", "request_scheme", "request_netloc"),
+    [
+        pytest.param("http://[2001:db8::1]/", "http", "[2001:db8::1]", id="ipv6"),
+        pytest.param(
+            "http://[2001:db8::1]/", "http", "[2001:DB8::1]", id="ipv6-uppercase"
+        ),
+        pytest.param("http://100.64.1.1/", "http", "100.64.1.1", id="tailscale"),
+        pytest.param(
+            "http://192.168.1.10:8123/", "http", "192.168.1.10:8123", id="private"
+        ),
+        pytest.param(
+            "http://100.64.1.1/", "http", "100.64.1.1:80", id="http-default-port"
+        ),
+        pytest.param(
+            "https://[2001:db8::1]/",
+            "https",
+            "[2001:db8::1]:443",
+            id="https-default-port",
+        ),
+        pytest.param(
+            "http://100.64.1.1:80/", "http", "100.64.1.1", id="client-id-default-port"
+        ),
+        pytest.param(
+            "http://[2001:db8::1]/", "http", "[2001:db8:0:0::1]", id="ipv6-notation"
+        ),
+        pytest.param(
+            "https://203.0.113.5:8443/", "https", "203.0.113.5:8443", id="port"
+        ),
+    ],
+)
+def test_client_id_request_origin_allowed(
+    client_id: str, request_scheme: str, request_netloc: str
+) -> None:
+    """Test a public IP is allowed when it matches the request origin."""
+    assert indieauth.verify_client_id(
+        client_id, request_scheme=request_scheme, request_netloc=request_netloc
+    )
+
+
+@pytest.mark.parametrize(
+    ("client_id", "request_scheme", "request_netloc"),
+    [
+        pytest.param("http://[2001:db8::1]/", "http", "[2001:db8::2]", id="host"),
+        pytest.param("http://100.64.1.1/", "https", "100.64.1.1", id="scheme"),
+        pytest.param("http://203.0.113.5:8443/", "http", "203.0.113.5:9000", id="port"),
+        pytest.param(
+            "http://100.64.1.1/", "http", "100.64.1.1:443", id="other-default-port"
+        ),
+        pytest.param(
+            "https://100.64.1.1/", "https", "100.64.1.1:80", id="https-port-80"
+        ),
+        pytest.param("http://100.64.1.1/", "http", "100.64.1.1:abc", id="invalid-port"),
+        pytest.param("http://100.64.1.1/", "http", "user@100.64.1.1", id="username"),
+        pytest.param(
+            "http://100.64.1.1:0/", "http", "100.64.1.1", id="client-id-port-0"
+        ),
+        pytest.param("http://100.64.1.1/", "http", "100.64.1.1:0", id="request-port-0"),
+        pytest.param("http://100.64.1.1/", "http", "ha.example.com", id="domain"),
+    ],
+)
+def test_client_id_request_origin_mismatch(
+    client_id: str, request_scheme: str, request_netloc: str
+) -> None:
+    """Test a public IP is rejected when it does not match the request origin."""
+    assert not indieauth.verify_client_id(
+        client_id, request_scheme=request_scheme, request_netloc=request_netloc
+    )
 
 
 def test_parse_url_lowercase_host() -> None:
@@ -113,23 +329,39 @@ def test_parse_url_path() -> None:
 async def test_verify_redirect_uri() -> None:
     """Test that we verify redirect uri correctly."""
     assert await indieauth.verify_redirect_uri(
-        None, "http://ex.com", "http://ex.com/callback"
+        None,
+        "http://ex.com",
+        "http://ex.com/callback",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
     with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
         # Different domain
         assert not await indieauth.verify_redirect_uri(
-            None, "http://ex.com", "http://different.com/callback"
+            None,
+            "http://ex.com",
+            "http://different.com/callback",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
         )
 
         # Different scheme
         assert not await indieauth.verify_redirect_uri(
-            None, "http://ex.com", "https://ex.com/callback"
+            None,
+            "http://ex.com",
+            "https://ex.com/callback",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
         )
 
         # Different subdomain
         assert not await indieauth.verify_redirect_uri(
-            None, "https://sub1.ex.com", "https://sub2.ex.com/callback"
+            None,
+            "https://sub1.ex.com",
+            "https://sub2.ex.com/callback",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
         )
 
 
@@ -376,7 +608,11 @@ async def test_fetch_redirect_uris_metadata_document_invalid(
 
     assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
     assert not await indieauth.verify_redirect_uri(
-        hass, "https://example.com/client", "https://other.com/callback"
+        hass,
+        "https://example.com/client",
+        "https://other.com/callback",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
 
@@ -397,18 +633,30 @@ async def test_verify_redirect_uri_metadata_document(
     )
 
     assert await indieauth.verify_redirect_uri(
-        hass, client_id, "https://other.com/callback"
+        hass,
+        client_id,
+        "https://other.com/callback",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
     assert not await indieauth.verify_redirect_uri(
-        hass, client_id, "https://other.com/not-listed"
+        hass,
+        client_id,
+        "https://other.com/not-listed",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
 
 async def test_verify_redirect_uri_unparsable(hass: HomeAssistant) -> None:
     """Test an unparsable requested redirect uri is rejected without raising."""
     assert not await indieauth.verify_redirect_uri(
-        hass, "https://example.com/client", "https://["
+        hass,
+        "https://example.com/client",
+        "https://[",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
 
@@ -466,9 +714,20 @@ async def test_verify_redirect_uri_metadata_loopback(
         json={"client_id": client_id, "redirect_uris": [registered_uri]},
     )
 
-    assert not await indieauth.verify_redirect_uri(hass, client_id, redirect_uri)
+    assert not await indieauth.verify_redirect_uri(
+        hass,
+        client_id,
+        redirect_uri,
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
+    )
     assert await indieauth.verify_redirect_uri(
-        hass, client_id, redirect_uri, allow_loopback_port_change=True
+        hass,
+        client_id,
+        redirect_uri,
+        allow_loopback_port_change=True,
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
 
@@ -598,7 +857,12 @@ async def test_verify_redirect_uri_metadata_loopback_rejected(
     )
 
     assert not await indieauth.verify_redirect_uri(
-        hass, client_id, redirect_uri, allow_loopback_port_change=True
+        hass,
+        client_id,
+        redirect_uri,
+        allow_loopback_port_change=True,
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
 
@@ -680,7 +944,11 @@ async def test_fetch_redirect_uris_metadata_document_http_scheme(
 
     assert await indieauth.fetch_redirect_uris(hass, client_id) == []
     assert not await indieauth.verify_redirect_uri(
-        hass, client_id, "https://other.com/callback"
+        hass,
+        client_id,
+        "https://other.com/callback",
+        request_scheme=REQUEST_SCHEME,
+        request_netloc=REQUEST_NETLOC,
     )
 
 
@@ -801,15 +1069,27 @@ async def test_verify_redirect_uri_android_ios(client_id) -> None:
     """Test that we verify redirect uri correctly for Android/iOS."""
     with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
         assert await indieauth.verify_redirect_uri(
-            None, client_id, "homeassistant://auth-callback"
+            None,
+            client_id,
+            "homeassistant://auth-callback",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
         )
 
         assert not await indieauth.verify_redirect_uri(
-            None, client_id, "homeassistant://something-else"
+            None,
+            client_id,
+            "homeassistant://something-else",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
         )
 
         assert not await indieauth.verify_redirect_uri(
-            None, "https://incorrect.com", "homeassistant://auth-callback"
+            None,
+            "https://incorrect.com",
+            "homeassistant://auth-callback",
+            request_scheme=REQUEST_SCHEME,
+            request_netloc=REQUEST_NETLOC,
         )
 
         if client_id == "https://home-assistant.io/android":
@@ -817,20 +1097,28 @@ async def test_verify_redirect_uri_android_ios(client_id) -> None:
                 None,
                 client_id,
                 "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+                request_scheme=REQUEST_SCHEME,
+                request_netloc=REQUEST_NETLOC,
             )
             assert await indieauth.verify_redirect_uri(
                 None,
                 client_id,
                 "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
+                request_scheme=REQUEST_SCHEME,
+                request_netloc=REQUEST_NETLOC,
             )
         else:
             assert not await indieauth.verify_redirect_uri(
                 None,
                 client_id,
                 "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+                request_scheme=REQUEST_SCHEME,
+                request_netloc=REQUEST_NETLOC,
             )
             assert not await indieauth.verify_redirect_uri(
                 None,
                 client_id,
                 "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
+                request_scheme=REQUEST_SCHEME,
+                request_netloc=REQUEST_NETLOC,
             )

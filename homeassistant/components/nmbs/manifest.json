@@ -1,6 +1,7 @@
 {
   "domain": "nmbs",
   "name": "NMBS",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nmbs",
