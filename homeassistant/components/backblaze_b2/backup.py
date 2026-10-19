@@ -170,6 +170,7 @@ class BackblazeBackupAgent(BackupAgent):
         self._all_files_cache_expiration: float = 0.0
         self._backup_list_cache: dict[str, AgentBackup] = {}
         self._backup_list_cache_expiration: float = 0.0
+        self._backup_list_cache_generation = 0
 
         self._all_files_cache_lock = asyncio.Lock()
         self._backup_list_cache_lock = asyncio.Lock()
@@ -286,7 +287,7 @@ class BackblazeBackupAgent(BackupAgent):
                 "Metadata file upload finished for %s", prefixed_metadata_filename
             )
             _LOGGER.debug("Backup upload complete: %s", prefixed_tar_filename)
-            self._invalidate_caches(
+            await self._invalidate_caches(
                 backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
             )
         except B2Error:
@@ -406,7 +407,7 @@ class BackblazeBackupAgent(BackupAgent):
 
         await self._hass.async_add_executor_job(_delete_backup_files)
 
-        self._invalidate_caches(
+        await self._invalidate_caches(
             backup_id,
             file.file_name,
             metadata_file.file_name,
@@ -473,6 +474,8 @@ class BackblazeBackupAgent(BackupAgent):
                 _LOGGER.debug("Returning backup %s from cache", backup_id)
                 return backup
 
+        cache_generation = self._backup_list_cache_generation
+
         file, metadata_file_version = await self._find_file_and_metadata_version_by_id(
             backup_id
         )
@@ -499,7 +502,10 @@ class BackblazeBackupAgent(BackupAgent):
         )
         backup = _create_backup_from_metadata(metadata_content, file)
 
-        if self._is_cache_valid(self._backup_list_cache_expiration):
+        if (
+            self._backup_list_cache_generation == cache_generation
+            and self._is_cache_valid(self._backup_list_cache_expiration)
+        ):
             self._backup_list_cache[backup.backup_id] = backup
 
         return backup
@@ -674,7 +680,7 @@ class BackblazeBackupAgent(BackupAgent):
         )
         return _create_backup_from_metadata(metadata_content, found_backup_file)
 
-    def _invalidate_caches(
+    async def _invalidate_caches(
         self,
         backup_id: str,
         tar_filename: str,
@@ -691,17 +697,32 @@ class BackblazeBackupAgent(BackupAgent):
             remove_files: If True, remove specific files from cache;
                 if False, expire entire cache
         """
-        if remove_files:
-            if self._is_cache_valid(self._all_files_cache_expiration):
-                self._all_files_cache.pop(tar_filename, None)
-                if metadata_filename:
-                    self._all_files_cache.pop(metadata_filename, None)
+        # A list refresh holds the backup list lock from before its listing
+        # until it publishes the mapping, so taking the same locks here keeps
+        # the invalidation from landing between a refresh start and its
+        # publish, where its pop would miss the fresh mapping and the refresh
+        # would resurrect deleted entries or hide uploaded ones.
+        async with self._backup_list_cache_lock, self._all_files_cache_lock:
+            # Voids the cache write of any get suspended since before this
+            # invalidation, so it cannot repopulate a removed entry.
+            self._backup_list_cache_generation += 1
+            if remove_files:
+                if self._is_cache_valid(self._all_files_cache_expiration):
+                    # Rebuild the mapping instead of popping in place: an in-flight
+                    # ID search can still be iterating the old dict while suspended
+                    # on a metadata download.
+                    removed_names = (tar_filename, metadata_filename)
+                    self._all_files_cache = {
+                        file_name: file_version
+                        for file_name, file_version in self._all_files_cache.items()
+                        if file_name not in removed_names
+                    }
 
-            if self._is_cache_valid(self._backup_list_cache_expiration):
-                self._backup_list_cache.pop(backup_id, None)
-        else:
-            # For uploads, we can't easily add new FileVersion
-            # objects without API calls,
-            # so we expire the entire cache for simplicity
-            self._all_files_cache_expiration = 0.0
-            self._backup_list_cache_expiration = 0.0
+                if self._is_cache_valid(self._backup_list_cache_expiration):
+                    self._backup_list_cache.pop(backup_id, None)
+            else:
+                # For uploads, we can't easily add new FileVersion
+                # objects without API calls,
+                # so we expire the entire cache for simplicity
+                self._all_files_cache_expiration = 0.0
+                self._backup_list_cache_expiration = 0.0
