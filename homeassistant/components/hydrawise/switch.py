@@ -110,4 +110,8 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
+        # Keep the state of a command until the controller has picked it up,
+        # the API keeps reporting the old state until then.
+        if self.coordinator.command_pending(self.controller):
+            return
         self._attr_is_on = self.entity_description.value_fn(self.zone)
