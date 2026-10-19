@@ -244,10 +244,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
             OverkizState.CORE_ABSENCE_END_DATE_TIME
         )
 
-        return (
-            absence_status
-            is not None
-        )
+        return absence_status is not None
 
 
     @override
