@@ -10,6 +10,7 @@ from aiohttp import web
 import pytest
 from pytest_homeassistant import _paths
 from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.plugins import evict_faked_translations
 import pytest_socket
 
 from homeassistant import loader
@@ -19,7 +20,7 @@ from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from .common import MockModule, mock_integration
-from .conftest import HASocketBlockedError, evict_faked_translations
+from .conftest import HASocketBlockedError
 from .typing import ClientSessionGenerator
 
 

@@ -2069,6 +2069,7 @@ def mock_recorder_before_hass() -> None:
     """
 
 
+# Radio frequency test fixtures
 @pytest.fixture(name="init_radio_frequency")
 async def init_radio_frequency_fixture(hass: HomeAssistant) -> None:
     """Set up the Radio Frequency integration for testing."""
@@ -2087,6 +2088,7 @@ async def mock_rf_entity_fixture(
     return await mock_rf_entity_fixture_helper(hass)
 
 
+# Infrared test fixtures
 @pytest.fixture(name="init_infrared")
 async def init_infrared_fixture(hass: HomeAssistant) -> None:
     """Set up the Infrared integration for testing."""
