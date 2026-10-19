@@ -293,7 +293,7 @@
       "name": "Import recipe"
     },
     "parse_ingredient": {
-      "description": "Parse an ingredient from Mealie using the recognition method set within options, attempting to find matches in your food items and identify quantities and units.",
+      "description": "Parses an ingredient from Mealie using the recognition method set within options, attempting to find matches in your food items and identify quantities and units.",
       "fields": {
         "config_entry_id": {
           "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
