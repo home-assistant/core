@@ -6,6 +6,7 @@ import datetime as dt
 from http import HTTPStatus
 import logging
 from operator import attrgetter
+import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
@@ -50,7 +51,6 @@ from homeassistant.components.cloud.const import (
     DOMAIN,
 )
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant.helpers import GoogleEntity  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
@@ -60,6 +60,7 @@ from homeassistant.loader import async_get_loaded_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
+from homeassistant.util.logging import HomeAssistantLogFormatter
 
 from tests.components.google_assistant import MockConfig
 
@@ -2781,6 +2782,8 @@ async def test_cloud_events_auto_login_push(
     assert event["event"] == {"type": "login"}
 
 
+# Pin the log timestamp offset so the snapshot does not depend on the host timezone
+@patch.object(HomeAssistantLogFormatter, "converter", time.gmtime)
 @patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package(
@@ -2823,12 +2826,6 @@ async def test_download_support_package(
 
     assert await async_setup_component(hass, "system_health", {})
 
-    # Register custom themes so the support package surfaces them
-    hass.data[DATA_THEMES] = {
-        "midnight": {"primary-color": "#000000"},
-        "solarized-dark": {"primary-color": "#002b36"},
-    }
-
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
         hexmock.return_value = "12345678901234567890"
         assert await async_setup_component(
@@ -2866,10 +2863,7 @@ async def test_download_support_package(
     )
 
     now = dt_util.utcnow()
-    # The logging is done with local time according to the system timezone. Set the
-    # fake time to 12:00 local time
-    tz = now.astimezone().tzinfo
-    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=dt.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -2881,6 +2875,11 @@ async def test_download_support_package(
     cloud_client = await hass_client()
     with (
         patch.object(hass.config, "config_dir", new="config"),
+        # Custom themes so the support package surfaces them
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_theme_names",
+            return_value=["midnight", "solarized-dark"],
+        ),
         patch(
             "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
             return_value={
@@ -2912,6 +2911,8 @@ async def test_download_support_package(
     assert await req.text() == snapshot
 
 
+# Pin the log timestamp offset so the snapshot does not depend on the host timezone
+@patch.object(HomeAssistantLogFormatter, "converter", time.gmtime)
 @patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_custom_components_error(
@@ -2984,8 +2985,7 @@ async def test_download_support_package_custom_components_error(
     )
 
     now = dt_util.utcnow()
-    tz = now.astimezone().tzinfo
-    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=dt.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -3032,6 +3032,8 @@ async def test_download_support_package_custom_components_error(
     assert await req.text() == snapshot
 
 
+# Pin the log timestamp offset so the snapshot does not depend on the host timezone
+@patch.object(HomeAssistantLogFormatter, "converter", time.gmtime)
 @patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_integration_load_error(
@@ -3107,8 +3109,7 @@ async def test_download_support_package_integration_load_error(
     )
 
     now = dt_util.utcnow()
-    tz = now.astimezone().tzinfo
-    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=dt.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
