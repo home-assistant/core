@@ -67,10 +67,7 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     def async_refresh_after_command(self, controller: Controller) -> None:
         """Refresh until the controller has picked up a command."""
         self._pending_commands[controller.id] = utcnow()
-        # Keep a refresh that is already scheduled, so a burst of commands
-        # can't keep pushing it back.
-        if self._command_refresh_unsub is None:
-            self._schedule_command_refresh()
+        self._schedule_command_refresh()
 
     @callback
     def command_pending(self, controller: Controller) -> bool:
@@ -80,6 +77,11 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     @callback
     def _schedule_command_refresh(self) -> None:
         """Schedule the next refresh while a command is pending."""
+        # Keep a refresh that is already scheduled: a burst of commands can't
+        # keep pushing it back, and a command sent while a refresh is running
+        # doesn't start a second chain of refreshes.
+        if self._command_refresh_unsub is not None:
+            return
         self._command_refresh_unsub = async_call_later(
             self.hass, COMMAND_REFRESH_INTERVAL, self._async_refresh_after_command
         )

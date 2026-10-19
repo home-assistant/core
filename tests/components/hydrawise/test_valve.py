@@ -193,6 +193,29 @@ async def test_burst_of_commands_keeps_scheduled_refresh(
     mock_refresh.assert_called_once()
 
 
+async def test_command_during_refresh_keeps_one_refresh_chain(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    controller: Controller,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a command sent while a refresh runs doesn't start a second chain."""
+    coordinator = mock_added_config_entry.runtime_data.main
+
+    async def refresh_with_command() -> None:
+        # Another command arrives while this refresh is still running.
+        coordinator.async_refresh_after_command(controller)
+
+    with patch.object(
+        coordinator, "async_request_refresh", side_effect=refresh_with_command
+    ) as mock_refresh:
+        await _open_zone_one(hass)
+        await _tick(hass, freezer)
+        await _tick(hass, freezer)
+
+    assert mock_refresh.call_count == 2
+
+
 async def test_no_refresh_after_command_once_unloaded(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
