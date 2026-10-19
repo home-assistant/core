@@ -104,7 +104,9 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool | 
         self.async_set_updated_data(update_data)
 
 
-class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
+class SatelIntegraOutputsCoordinator(
+    SatelIntegraBaseCoordinator[dict[int, bool | None]]
+):
     """DataUpdateCoordinator to handle output updates."""
 
     def __init__(
@@ -115,12 +117,25 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
 
         self.data = {}
 
-    @callback
-    def outputs_update_callback(self, status: dict[int, int]) -> None:
-        """Update output objects as per notification from the alarm."""
-        _LOGGER.debug("Outputs callback, status: %s", status)
+    @override
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        super().setup()
+        self.config_entry.async_on_unload(
+            self.client.controller.add_output_changed_callback(
+                self.outputs_update_callback
+            )
+        )
 
-        update_data = {output: value == 1 for output, value in status.items()}
+    @callback
+    def outputs_update_callback(self) -> None:
+        """Update output objects as per notification from the alarm."""
+        output_states = self.client.controller.state.outputs
+        update_data = {
+            output: output_state.active
+            for output, output_state in output_states.items()
+        }
+        _LOGGER.debug("Outputs callback, status: %s", update_data)
 
         self.async_set_updated_data(update_data)
 
