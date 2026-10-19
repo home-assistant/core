@@ -20,10 +20,6 @@ from aiohasupervisor.models.mounts import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from pytest_homeassistant.components.hassio.common import (
-    MOCK_REPOSITORIES,
-    MOCK_STORE_ADDONS,
-)
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio import DOMAIN, get_addons_info
@@ -32,6 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
