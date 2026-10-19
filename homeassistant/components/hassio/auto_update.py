@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from enum import StrEnum
-from typing import Any, Self, TypedDict
+from typing import Any, Self, TypedDict, override
 
 from aiohasupervisor.models import UpdateChannel
 from awesomeversion import AwesomeVersion
@@ -32,6 +32,7 @@ from .coordinator import HassioMainDataUpdateCoordinator
 
 STORAGE_KEY = "hassio.auto_update"
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
 
 # Options are stored as text, so store times the way the settings read them
 _time_string = probatio.All(cv.time, time.isoformat)
@@ -117,6 +118,30 @@ class AutoUpdateStoreData(TypedDict):
     """Stored data for automatic Home Assistant updates."""
 
     first_seen: dict[str, str]
+    skipped: list[str]
+
+
+class _AutoUpdateStore(Store[AutoUpdateStoreData]):
+    """Store for automatic Home Assistant updates."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the store."""
+        super().__init__(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
+
+    @override
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_minor_version < 2:
+            # Version 1.2 adds the versions skipped for automatic updates
+            old_data["skipped"] = []
+        return old_data
 
 
 def _major(version: str) -> tuple[int, int]:
@@ -138,10 +163,9 @@ class AutoUpdateManager:
         self._hass = hass
         self._entry = entry
         self._coordinator = coordinator
-        self._store: Store[AutoUpdateStoreData] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY
-        )
+        self._store = _AutoUpdateStore(hass)
         self._first_seen: dict[str, datetime] = {}
+        self._skipped: set[str] = set()
 
     async def async_setup(self) -> None:
         """Load the stored data and start tracking offered versions."""
@@ -150,6 +174,7 @@ class AutoUpdateManager:
                 version: datetime.fromisoformat(first_seen)
                 for version, first_seen in data["first_seen"].items()
             }
+            self._skipped = set(data["skipped"])
 
         self._async_record_offered_version()
         self._entry.async_on_unload(
@@ -177,6 +202,32 @@ class AutoUpdateManager:
         return self._first_seen.get(version)
 
     @callback
+    def async_is_skipped(self, version: str) -> bool:
+        """Return if a version must not be installed automatically."""
+        return version in self._skipped
+
+    @callback
+    def async_skip_version(self, version: str) -> None:
+        """Never install a version automatically.
+
+        The update entity forgets a skipped version once a newer one is
+        offered. Automatic updates may still pick that older patch, so they
+        keep their own list.
+        """
+        if version in self._skipped:
+            return
+        self._skipped.add(version)
+        self._async_save()
+
+    @callback
+    def async_unskip_version(self, version: str) -> None:
+        """Allow a skipped version to be installed automatically again."""
+        if version not in self._skipped:
+            return
+        self._skipped.discard(version)
+        self._async_save()
+
+    @callback
     def _async_record_offered_version(self) -> None:
         """Record when a version is first offered, and forget old majors.
 
@@ -201,13 +252,24 @@ class AutoUpdateManager:
             if _major(version) < running_major:
                 del self._first_seen[version]
                 changed = True
+        for version in list(self._skipped):
+            if _major(version) < running_major:
+                self._skipped.discard(version)
+                changed = True
 
-        # Save right away as an entry task; unload waits for it, so a reload
-        # cannot read the store before the first-seen time is written.
         if changed:
-            self._entry.async_create_task(
-                self._hass, self._store.async_save(self._data_to_save())
-            )
+            self._async_save()
+
+    @callback
+    def _async_save(self) -> None:
+        """Save the data.
+
+        Saved right away as an entry task; unload waits for it, so a reload
+        cannot read the store before the change is written.
+        """
+        self._entry.async_create_task(
+            self._hass, self._store.async_save(self._data_to_save())
+        )
 
     @callback
     def _data_to_save(self) -> AutoUpdateStoreData:
@@ -216,5 +278,6 @@ class AutoUpdateManager:
             "first_seen": {
                 version: first_seen.isoformat()
                 for version, first_seen in self._first_seen.items()
-            }
+            },
+            "skipped": sorted(self._skipped),
         }

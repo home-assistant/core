@@ -1247,7 +1247,7 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 0x4129,
                 0x109A,
             ],
-            "0,10.60,0.00,10.57",
+            "None,10.60,0.00,10.57",
         ),
         (
             {
@@ -1263,7 +1263,7 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 0x0000,
                 0x000A,
             ],
-            "0,10.00",
+            "None,10.00",
         ),
         (
             {
