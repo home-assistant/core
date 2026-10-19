@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -297,24 +297,22 @@ class HpPrinterConsumableSensor(HpPrinterEntity, SensorEntity):
             f"_{description.key}"
         )
 
-        self._update_from_consumable()
-
-    def _update_from_consumable(self) -> None:
-        """Read this entity's consumable from the latest coordinator data."""
-        consumable = self.coordinator.data.consumables.get(self._consumable_id)
-        self._consumable_reported = consumable is not None
-        if consumable is not None:
-            self._attr_native_value = self.entity_description.value_fn(consumable)
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_from_consumable()
-        super()._handle_coordinator_update()
+    @property
+    def consumable(self) -> HpConsumable:
+        """Return this entity's consumable from the latest coordinator data."""
+        return self.coordinator.data.consumables[self._consumable_id]
 
     @property
     @override
     def available(self) -> bool:
         """Return True when the consumable is still reported by the printer."""
-        return super().available and self._consumable_reported
+        return (
+            super().available
+            and self._consumable_id in self.coordinator.data.consumables
+        )
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the current value of the sensor."""
+        return self.entity_description.value_fn(self.consumable)
