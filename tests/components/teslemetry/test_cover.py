@@ -5,7 +5,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry,mock_restore_cache_with_extra_data
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
