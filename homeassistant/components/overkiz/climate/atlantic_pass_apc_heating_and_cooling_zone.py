@@ -95,7 +95,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         self.client = coordinator.client
 
     @property
-    @override
     def current_native_temperature(self) -> float | None:
         """Return the current temperature."""
 
@@ -408,7 +407,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         return res
 
     @property
-    @override
     def target_native_temperature(self) -> float | None:
         """Return hvac target temperature."""
 
