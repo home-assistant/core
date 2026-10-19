@@ -101,6 +101,7 @@ class KNXModule:
         )
         self.telegrams = Telegrams(
             hass=hass,
+            config_entry_id=entry.entry_id,
             xknx=self.xknx,
             project=self.project,
             config=cast(KNXConfigEntryOptions, entry.options),

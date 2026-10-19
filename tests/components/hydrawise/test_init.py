@@ -1,7 +1,7 @@
 """Tests for the Hydrawise integration."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -256,3 +257,19 @@ async def test_zones_of_one_controller_go_missing(
 
     assert hass.states.get("binary_sensor.zone_one_watering") is not None
     assert "KeyError" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_pydrawise")
+async def test_setup_uses_shared_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the integration passes Home Assistant's client session along."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("pydrawise.auth.HybridAuth", autospec=True) as mock_hybrid_auth:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_hybrid_auth.call_args.kwargs["session"] is async_get_clientsession(hass)

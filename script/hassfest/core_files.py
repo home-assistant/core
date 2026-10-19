@@ -15,9 +15,7 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 # These need to be fixed; do not add new entries to this list.
 MISSING_ALL = {
     "configurator",
-    "input_boolean",
     "llm",
-    "sun",
 }
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")

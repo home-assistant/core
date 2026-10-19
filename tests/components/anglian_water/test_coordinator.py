@@ -306,6 +306,7 @@ async def test_coordinator_consent_required_error(
     mock_anglian_water_client: AsyncMock,
 ) -> None:
     """Test the coordinator maps consent errors to UpdateFailed and creates a repair issue."""
+    mock_config_entry.add_to_hass(hass)
     coordinator = AnglianWaterUpdateCoordinator(
         hass, mock_anglian_water_client, mock_config_entry
     )
@@ -317,7 +318,9 @@ async def test_coordinator_consent_required_error(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "consent_required"
     assert exc_info.value.retry_after == 900.0
-    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     mock_anglian_water_client.update.side_effect = None
     await coordinator._async_update_data()
