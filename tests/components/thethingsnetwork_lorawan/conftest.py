@@ -5,10 +5,9 @@ from unittest.mock import Mock, patch
 
 from lorawan_connection.backend.tts import TTSConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
