@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 from pyforeca import ForecaAuthError, ForecaConnectionError
 import pytest
 
-from homeassistant.components.foreca.const import SUBENTRY_TYPE_LOCATION
+from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
@@ -39,20 +40,15 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_retries_on_rejected_key(
+async def test_setup_fails_on_rejected_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
 ) -> None:
-    """Test a rejected API key retries rather than starting a flow.
-
-    There is no reauthentication step yet, and raising ConfigEntryAuthFailed
-    without one makes Home Assistant start a flow that cannot be handled.
-    """
+    """Test a rejected API key fails setup instead of retrying."""
     mock_foreca_client.current.side_effect = ForecaAuthError
     await init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert hass.config_entries.flow.async_progress() == []
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_documented_request_budget(
@@ -97,3 +93,23 @@ async def test_added_location_gets_an_entity(
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all("weather")) == 2
+
+
+@pytest.mark.usefixtures("mock_foreca_client")
+async def test_removed_location_loses_its_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing a location removes its device and weather entity."""
+    await init_integration(hass, mock_config_entry)
+    subentry_id = next(iter(mock_config_entry.subentries))
+    identifier = (DOMAIN, subentry_id)
+    entry_id = mock_config_entry.entry_id
+    assert device_registry.async_get_device_by_identifier(identifier, entry_id)
+
+    hass.config_entries.async_remove_subentry(mock_config_entry, subentry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device_by_identifier(identifier, entry_id) is None
+    assert hass.states.async_all("weather") == []

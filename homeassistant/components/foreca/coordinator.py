@@ -8,6 +8,7 @@ from pyforeca import (
     CurrentWeather,
     DailyForecast,
     ForecaApiClient,
+    ForecaAuthError,
     ForecaError,
     HourlyForecast,
     format_location,
@@ -16,6 +17,7 @@ from pyforeca import (
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -77,6 +79,10 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             daily = await self.client.forecast_daily(
                 self.location, periods=DAILY_PERIODS, dataset="full"
             )
+        except ForecaAuthError as err:
+            raise ConfigEntryAuthFailed(
+                f"The Foreca API rejected the API key: {err}"
+            ) from err
         except ForecaError as err:
             raise UpdateFailed(
                 f"Error communicating with the Foreca API: {err}"

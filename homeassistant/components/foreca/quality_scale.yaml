@@ -65,13 +65,13 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: The integration has a fixed single service per config entry.
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: The weather entity is primary data and needs no category.
-  entity-device-class: done
+  entity-device-class:
+    status: exempt
+    comment: The weather platform does not support device classes.
   entity-disabled-by-default:
     status: exempt
     comment: The integration has a single always-useful entity.
@@ -84,9 +84,7 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration has no cases where raising a repair issue is needed.
-  stale-devices:
-    status: exempt
-    comment: The integration has a fixed single service per config entry.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
