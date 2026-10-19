@@ -79,19 +79,22 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
         online=True,
         device=mock_device,
         status=HpPrinterStatus(device_status="inpowersave"),
-        consumables=[
-            _ink("C", "Cyan", "1", 40.0),
-            HpConsumable(
-                consumable_id="CMYK",
-                consumable_type="printhead",
-                state="ok",
-                brand="HP",
-                station="0",
-            ),
-            _ink("K", "Black", "4", 80.0, pages_remaining=550),
-            _ink("M", "Magenta", "2", 40.0),
-            _ink("Y", "Yellow", "3", 40.0),
-        ],
+        consumables={
+            consumable.consumable_id: consumable
+            for consumable in (
+                _ink("C", "Cyan", "1", 40.0),
+                HpConsumable(
+                    consumable_id="CMYK",
+                    consumable_type="printhead",
+                    state="ok",
+                    brand="HP",
+                    station="0",
+                ),
+                _ink("K", "Black", "4", 80.0, pages_remaining=550),
+                _ink("M", "Magenta", "2", 40.0),
+                _ink("Y", "Yellow", "3", 40.0),
+            )
+        },
         printer_usage=HpPrinterUsage(
             total_impressions=875,
             monochrome_impressions=226,

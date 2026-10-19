@@ -24,25 +24,31 @@
         "name": "Black level"
       },
       "black_pages_remaining": {
-        "name": "Black pages remaining"
+        "name": "Black pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "color_pages": {
-        "name": "Printed color pages"
+        "name": "Printed color pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "copied_pages": {
-        "name": "Copied pages"
+        "name": "Copied pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "cyan_level": {
         "name": "Cyan level"
       },
       "cyan_pages_remaining": {
-        "name": "Cyan pages remaining"
+        "name": "Cyan pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "duplex_sheets": {
-        "name": "Printed double-sided sheets"
+        "name": "Printed double-sided sheets",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::simplex_sheets::unit_of_measurement%]"
       },
       "faxed_pages": {
-        "name": "Faxed pages"
+        "name": "Faxed pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "jams": {
         "name": "Paper jams"
@@ -51,25 +57,31 @@
         "name": "Magenta level"
       },
       "magenta_pages_remaining": {
-        "name": "Magenta pages remaining"
+        "name": "Magenta pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "mispicks": {
         "name": "Paper mispicks"
       },
       "monochrome_pages": {
-        "name": "Printed black and white pages"
+        "name": "Printed black and white pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "scanned_adf_pages": {
-        "name": "Scanned pages from document feeder"
+        "name": "Scanned pages from document feeder",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "scanned_duplex_sheets": {
-        "name": "Scanned double-sided sheets"
+        "name": "Scanned double-sided sheets",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::simplex_sheets::unit_of_measurement%]"
       },
       "scanned_flatbed_pages": {
-        "name": "Scanned pages from glass"
+        "name": "Scanned pages from glass",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "scanned_pages": {
-        "name": "Scanned pages"
+        "name": "Scanned pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "scanner_jams": {
         "name": "Scanner jams"
@@ -78,7 +90,8 @@
         "name": "Scanner mispicks"
       },
       "simplex_sheets": {
-        "name": "Printed single-sided sheets"
+        "name": "Printed single-sided sheets",
+        "unit_of_measurement": "sheets"
       },
       "status": {
         "name": "Status",
@@ -94,19 +107,22 @@
         }
       },
       "total_pages": {
-        "name": "Printed pages"
+        "name": "Printed pages",
+        "unit_of_measurement": "pages"
       },
       "tri_color_level": {
         "name": "Tri-color level"
       },
       "tri_color_pages_remaining": {
-        "name": "Tri-color pages remaining"
+        "name": "Tri-color pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "yellow_level": {
         "name": "Yellow level"
       },
       "yellow_pages_remaining": {
-        "name": "Yellow pages remaining"
+        "name": "Yellow pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       }
     }
   },

@@ -52,6 +52,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="total_pages",
         translation_key="total_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.printer_usage.total_impressions if data.printer_usage else None
         ),
@@ -60,6 +61,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="monochrome_pages",
         translation_key="monochrome_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.printer_usage.monochrome_impressions if data.printer_usage else None
         ),
@@ -68,6 +70,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="color_pages",
         translation_key="color_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.printer_usage.color_impressions if data.printer_usage else None
         ),
@@ -76,6 +79,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="simplex_sheets",
         translation_key="simplex_sheets",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.printer_usage.simplex_sheets if data.printer_usage else None
@@ -85,6 +89,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="duplex_sheets",
         translation_key="duplex_sheets",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.printer_usage.duplex_sheets if data.printer_usage else None
@@ -113,6 +118,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="scanned_pages",
         translation_key="scanned_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.scanner_usage.scan_images if data.scanner_usage else None
         ),
@@ -121,6 +127,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="scanned_adf_pages",
         translation_key="scanned_adf_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.scanner_usage.adf_images if data.scanner_usage else None
@@ -130,6 +137,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="scanned_flatbed_pages",
         translation_key="scanned_flatbed_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.scanner_usage.flatbed_images if data.scanner_usage else None
@@ -139,6 +147,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="scanned_duplex_sheets",
         translation_key="scanned_duplex_sheets",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: (
             data.scanner_usage.duplex_sheets if data.scanner_usage else None
@@ -168,6 +177,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="copied_pages",
         translation_key="copied_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.copy_usage.total_impressions if data.copy_usage else None
         ),
@@ -176,6 +186,7 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="faxed_pages",
         translation_key="faxed_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.fax_usage.total_impressions if data.fax_usage else None
         ),
@@ -218,7 +229,7 @@ async def async_setup_entry(
             if description.always_create or description.value_fn(data) is not None
         } | {
             f"{consumable.consumable_id}_{description.key}"
-            for consumable in data.consumables
+            for consumable in data.consumables.values()
             if consumable.color is not None
             for description in CONSUMABLE_SENSORS
             if description.value_fn(consumable) is not None
@@ -233,7 +244,7 @@ async def async_setup_entry(
             ]
             consumables_list: list[SensorEntity] = [
                 HpPrinterConsumableSensor(coordinator, consumable, consumable_desc)
-                for consumable in data.consumables
+                for consumable in data.consumables.values()
                 for consumable_desc in CONSUMABLE_SENSORS
                 if f"{consumable.consumable_id}_{consumable_desc.key}" in new_sensors
             ]
@@ -290,14 +301,7 @@ class HpPrinterConsumableSensor(HpPrinterEntity, SensorEntity):
 
     def _update_from_consumable(self) -> None:
         """Read this entity's consumable from the latest coordinator data."""
-        consumable = next(
-            (
-                consumable
-                for consumable in self.coordinator.data.consumables
-                if consumable.consumable_id == self._consumable_id
-            ),
-            None,
-        )
+        consumable = self.coordinator.data.consumables.get(self._consumable_id)
         self._consumable_reported = consumable is not None
         if consumable is not None:
             self._attr_native_value = self.entity_description.value_fn(consumable)

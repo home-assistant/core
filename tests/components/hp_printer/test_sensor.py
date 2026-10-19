@@ -110,11 +110,11 @@ async def test_consumable_removed(
 
     mock_hp_printer.update.return_value = replace(
         mock_data,
-        consumables=[
-            consumable
-            for consumable in mock_data.consumables
-            if consumable.consumable_id != "C"
-        ],
+        consumables={
+            consumable_id: consumable
+            for consumable_id, consumable in mock_data.consumables.items()
+            if consumable_id != "C"
+        },
     )
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
