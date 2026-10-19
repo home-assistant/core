@@ -66,6 +66,16 @@ EVENT_RECURRENCE_RANGE = "recurrence_range"
 EVENT_RRULE = "rrule"
 EVENT_STATUS = "status"
 
+# Home Assistant extensions to the rfc5545 fields
+EVENT_ALTERNATE_DATES: Final = "alternate_dates"
+
+
+class CalendarEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for calendar entities."""
+
+    SUPPORTED_ALTERNATE_CALENDARS = "supported_alternate_calendars"
+
+
 # Service call fields
 EVENT_START_DATE = "start_date"
 EVENT_END_DATE = "end_date"

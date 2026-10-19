@@ -11,7 +11,7 @@ import probatio
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import LIST_EVENT_FIELDS
+from .const import EVENT_ALTERNATE_DATES, LIST_EVENT_FIELDS
 
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
@@ -155,12 +155,21 @@ def empty_as_none(value: str | None) -> str | None:
     return value or None
 
 
-def event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+def _alternate_date_dict(alternate_date: dict[str, Any]) -> dict[str, Any]:
+    """Return an alternate date in its serialized form."""
+    return {**alternate_date, "metadata": alternate_date.get("metadata") or {}}
+
+
+def event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
-    result: dict[str, str] = {}
+    result: dict[str, Any] = {}
     for name, value in obj:
         if isinstance(value, (dt.datetime, dt.date)):
             result[name] = value.isoformat()
+        elif name == EVENT_ALTERNATE_DATES and value is not None:
+            result[name] = [_alternate_date_dict(item) for item in value]
+        elif name == "metadata" and isinstance(value, dict):
+            result[name] = value
         elif value is not None:
             result[name] = str(value)
     return result
@@ -174,6 +183,9 @@ def api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
             result[name] = {"dateTime": dt_util.as_local(value).isoformat()}
         elif isinstance(value, dt.date):
             result[name] = {"date": value.isoformat()}
+        elif name == EVENT_ALTERNATE_DATES:
+            if value is not None:
+                result[name] = [_alternate_date_dict(item) for item in value]
         else:
             result[name] = value
     return result

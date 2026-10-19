@@ -20,11 +20,14 @@ from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
+from .alternate_calendar import AlternateDate
 from .const import (
     DOMAIN,
+    EVENT_ALTERNATE_DATES,
     EVENT_LISTENER_DEBOUNCE_COOLDOWN,
     EVENT_RRULE,
     EVENT_SUMMARY,
+    CalendarEntityCapabilityAttribute,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
 )
@@ -50,6 +53,19 @@ CALENDAR_EVENT_SCHEMA = probatio.Schema(
             probatio.Required("end"): probatio.Any(cv.date, cv.datetime),
             probatio.Required(EVENT_SUMMARY): cv.string,
             probatio.Optional(EVENT_RRULE): validate_rrule,
+            probatio.Optional(EVENT_ALTERNATE_DATES): probatio.Any(
+                None,
+                [
+                    probatio.Schema(
+                        {
+                            probatio.Required("calendar_type"): cv.string,
+                            probatio.Required("display_name"): cv.string,
+                            probatio.Required("date_str"): cv.string,
+                            probatio.Optional("metadata"): dict,
+                        }
+                    )
+                ],
+            ),
         },
         has_same_type("start", "end"),
         has_timezone("start", "end"),
@@ -74,6 +90,7 @@ class CalendarEvent:
     recurrence_id: str | None = None
     rrule: str | None = None
     status: CalendarEventStatus | None = None
+    alternate_dates: list[AlternateDate] | None = None
 
     @property
     def start_datetime_local(self) -> dt.datetime:
@@ -133,7 +150,10 @@ class CalendarEntity(Entity):
     entity_description: CalendarEntityDescription
 
     _entity_component_unrecorded_attributes = frozenset(
-        {CalendarEntityStateAttribute.DESCRIPTION}
+        {
+            CalendarEntityStateAttribute.DESCRIPTION,
+            CalendarEntityCapabilityAttribute.SUPPORTED_ALTERNATE_CALENDARS,
+        }
     )
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
@@ -178,6 +198,19 @@ class CalendarEntity(Entity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         raise NotImplementedError
+
+    @final
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any] | None:
+        """Return the entity capability attributes."""
+        if supported := self.supported_alternate_calendars:
+            return {
+                CalendarEntityCapabilityAttribute.SUPPORTED_ALTERNATE_CALENDARS: (
+                    supported
+                )
+            }
+        return None
 
     @final
     @property
@@ -419,3 +452,8 @@ class CalendarEntity(Entity):
     ) -> None:
         """Delete an event on the calendar."""
         raise NotImplementedError
+
+    @property
+    def supported_alternate_calendars(self) -> list[str]:
+        """Return the alternate calendar types supported by this entity."""
+        return []

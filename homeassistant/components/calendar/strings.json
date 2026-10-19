@@ -50,6 +50,11 @@
       }
     }
   },
+  "exceptions": {
+    "unknown_alternate_calendar": {
+      "message": "Unknown alternate calendar: {calendar_type}"
+    }
+  },
   "issues": {
     "deprecated_service_calendar_list_events": {
       "fix_flow": {

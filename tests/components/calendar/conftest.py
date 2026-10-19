@@ -14,6 +14,11 @@ from homeassistant.components.calendar import (
     CalendarEntityDescription,
     CalendarEvent,
 )
+from homeassistant.components.calendar.alternate_calendar import (
+    AlternateCalendarProvider,
+    AlternateCalendarRegistry,
+    AlternateDate,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -30,6 +35,43 @@ from tests.common import (
 )
 
 TEST_DOMAIN = "test"
+
+HIJRI_CALENDAR_TYPE = "hijri"
+CHINESE_CALENDAR_TYPE = "chinese"
+
+
+class MockHijriProvider(AlternateCalendarProvider):
+    """Mock Hijri calendar provider for testing."""
+
+    calendar_type = HIJRI_CALENDAR_TYPE
+    _display_format = "Hijri date for {}"
+    _metadata: dict[str, Any] | None = {"era": "AH"}
+
+    def convert_date(self, gregorian_date: dt.date) -> AlternateDate:
+        """Convert a Gregorian date to an alternate date."""
+        return AlternateDate(
+            calendar_type=self.calendar_type,
+            display_name=self._display_format.format(gregorian_date.isoformat()),
+            date_str=gregorian_date.isoformat(),
+            metadata=self._metadata,
+        )
+
+
+class MockChineseProvider(MockHijriProvider):
+    """Mock Chinese calendar provider for testing."""
+
+    calendar_type = CHINESE_CALENDAR_TYPE
+    _display_format = "Chinese date"
+    _metadata = None
+
+
+@pytest.fixture(name="registry")
+def registry_fixture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> type[AlternateCalendarRegistry]:
+    """Return the alternate calendar registry with an isolated provider map."""
+    monkeypatch.setattr(AlternateCalendarRegistry, "_providers", {})
+    return AlternateCalendarRegistry
 
 
 @pytest.fixture
