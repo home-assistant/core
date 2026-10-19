@@ -109,6 +109,13 @@ async def test_firmware_update_required(
         "firmware_update_required_test-device-id",
     )
     assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "firmware_update_required_test-device-id"
+    )
 
 
 async def test_update_refresh_token(

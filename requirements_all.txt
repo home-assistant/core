@@ -698,7 +698,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.8
+blebox-uniapi==2.5.9
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1497,7 +1497,7 @@ knocki==0.4.2
 knx-frontend==2026.10.5.160528
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.14.0
+knx-telegram-store[sqlite,postgres]==0.15.2
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -2757,7 +2757,7 @@ python-gitlab==1.6.0
 python-google-drive-api==0.2.0
 
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.7
+python-google-weather-api==0.0.8
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
@@ -3357,7 +3357,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.3.0
+uiprotect==23.5.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

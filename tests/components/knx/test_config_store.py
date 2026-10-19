@@ -743,11 +743,21 @@ async def test_load_skips_invalid_entity_config(
         DOMAIN, f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{Platform.SWITCH}"
     )
     assert issue is not None
+    assert issue.config_entry_id == knx.mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
         "platform": Platform.SWITCH,
         "entities": f"- {INVALID_SWITCH_UID}",
     }
+
+    await hass.config_entries.async_remove(knx.mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{Platform.SWITCH}"
+        )
+        is None
+    )
 
 
 async def test_load_skips_invalid_expose_and_time_server_config(
@@ -771,12 +781,14 @@ async def test_load_skips_invalid_expose_and_time_server_config(
         DOMAIN, REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR
     )
     assert expose_issue is not None
+    assert expose_issue.config_entry_id == knx.mock_config_entry.entry_id
     assert expose_issue.severity is ir.IssueSeverity.ERROR
     assert expose_issue.translation_placeholders == {"entities": "- light.invalid"}
     time_server_issue = issue_registry.async_get_issue(
         DOMAIN, REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR
     )
     assert time_server_issue is not None
+    assert time_server_issue.config_entry_id == knx.mock_config_entry.entry_id
     assert time_server_issue.severity is ir.IssueSeverity.ERROR
 
     # invalid configs stay in storage so they can be corrected
@@ -786,6 +798,19 @@ async def test_load_skips_invalid_expose_and_time_server_config(
         "time": {"write": "6/6/6"},
         "date": {"state": "6/6/7"},
     }
+
+    await hass.config_entries.async_remove(knx.mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR)
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR
+        )
+        is None
+    )
 
 
 async def test_get_entity_configs_wrong_type(

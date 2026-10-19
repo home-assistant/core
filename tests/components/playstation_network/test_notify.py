@@ -167,7 +167,15 @@ async def test_notify_skip_forbidden(
     state = hass.states.get("notify.testuser_group_publicuniversalfriend")
     assert state is None
 
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
+    )
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
     )
 
