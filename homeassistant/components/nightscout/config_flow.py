@@ -17,7 +17,10 @@ from .utils import hash_from_url
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_URL): str, probatio.Optional(CONF_API_KEY): str}
+    {
+        probatio.Required(CONF_URL): str,
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
+    }
 )
 
 

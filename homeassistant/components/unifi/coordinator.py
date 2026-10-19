@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from .hub.hub import UnifiHub
 
 POLL_INTERVAL = timedelta(seconds=10)
+IDLE_POLL_INTERVAL = timedelta(minutes=10)
 
 
 class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
@@ -68,6 +69,11 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     type(self._handler).__name__,
                 )
             raise UpdateFailed(str(err)) from err
+
+        if self.update_interval is not None:
+            self.update_interval = (
+                POLL_INTERVAL if self._handler.items() else IDLE_POLL_INTERVAL
+            )
 
     @callback
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:

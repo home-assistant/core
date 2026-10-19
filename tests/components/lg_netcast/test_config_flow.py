@@ -52,6 +52,21 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {CONF_HOST: "invalid_host"}
 
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: IP_ADDRESS},
+        )
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "authorize"
+
+        with patch(
+            "homeassistant.components.lg_netcast.async_setup_entry", return_value=True
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_ACCESS_TOKEN: FAKE_PIN}
+            )
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_host(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
@@ -198,6 +213,17 @@ async def test_invalid_session_id(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "authorize"
         assert result2["errors"] is not None
         assert result2["errors"]["base"] == "cannot_connect"
+
+    with (
+        _patch_lg_netcast(),
+        patch(
+            "homeassistant.components.lg_netcast.async_setup_entry", return_value=True
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: FAKE_PIN}
+        )
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_display_access_token_aborted(hass: HomeAssistant) -> None:

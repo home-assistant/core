@@ -152,11 +152,19 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
         translation_key="entering_region",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
+    SENSOR_MAP["thermometry"]: BinarySensorEntityDescription(
+        key="temperature_alarm",
+        translation_key="temperature_alarm",
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
 }
 
-# pyhik uses videoloss as a connection watchdog, not a user-facing event, so a
-# leaked entry gets no entity and no unknown-sensor warning.
-IGNORED_SENSOR_TYPES: frozenset[str] = frozenset({SENSOR_MAP["videoloss"]})
+# pyhik uses videoloss as a connection watchdog and does not parse duration
+# (ongoing events) packets, so neither is a user-facing event: a leaked entry
+# gets no entity and no unknown-sensor warning.
+IGNORED_SENSOR_TYPES: frozenset[str] = frozenset(
+    {SENSOR_MAP["videoloss"], SENSOR_MAP["duration"]}
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,10 +179,10 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_NAME): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_CUSTOMIZE, default={}): probatio.Schema(
             {cv.string: CUSTOMIZE_SCHEMA}
         ),
@@ -316,12 +324,6 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return true if the device's event stream is connected."""
-        return self._camera.stream_connected
-
-    @property
-    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_sensor_attributes()[0]
@@ -332,19 +334,3 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         """Return the state attributes."""
         attrs = self._get_sensor_attributes()
         return {ATTR_LAST_TRIP_TIME: attrs[3]}
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callback when entity is added."""
-        await super().async_added_to_hass()
-
-        # Register callback with pyhik
-        self._camera.add_update_callback(self._update_callback, self._callback_id)
-
-    def _update_callback(self, msg: str) -> None:
-        """Update the sensor's state when callback is triggered.
-
-        This is called from pyhik's event stream thread, so we use
-        schedule_update_ha_state which is thread-safe.
-        """
-        self.schedule_update_ha_state()

@@ -1,5 +1,7 @@
 """Fixtures for component testing."""
 
+# ruff: noqa: PLC0414
+
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
@@ -54,12 +56,18 @@ from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
 import probatio
 import pytest
+from pytest_homeassistant.plugins import (
+    init_infrared_fixture as init_infrared_fixture,
+    mock_infrared_emitter_entity_fixture as mock_infrared_emitter_entity_fixture,
+    mock_infrared_receiver_entity_fixture as mock_infrared_receiver_entity_fixture,
+)
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
+    ConfigSubentryFlowManager,
     FlowResult,
     OptionsFlowManager,
 )
@@ -95,7 +103,6 @@ if TYPE_CHECKING:
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
-    from .infrared.common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
     from .light.common import MockLight
     from .radio_frequency.common import MockRadioFrequencyEntity
     from .sensor.common import MockSensor
@@ -164,9 +171,7 @@ def mock_tts_init_cache_dir_fixture(
 @pytest.fixture(name="init_tts_cache_dir_side_effect")
 def init_tts_cache_dir_side_effect_fixture() -> Any:
     """Return the cache dir."""
-    from .tts.common import (  # noqa: PLC0415
-        init_tts_cache_dir_side_effect_fixture_helper,
-    )
+    from .tts.common import init_tts_cache_dir_side_effect_fixture_helper  # noqa: PLC0415
 
     return init_tts_cache_dir_side_effect_fixture_helper()
 
@@ -197,9 +202,7 @@ def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
 @pytest.fixture(name="mock_conversation_agent")
 def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     """Mock a conversation agent."""
-    from .conversation.common import (  # noqa: PLC0415
-        mock_conversation_agent_fixture_helper,
-    )
+    from .conversation.common import mock_conversation_agent_fixture_helper  # noqa: PLC0415
 
     return mock_conversation_agent_fixture_helper(hass)
 
@@ -208,9 +211,7 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
 @pytest.fixture(name="init_radio_frequency")
 async def init_radio_frequency_fixture(hass: HomeAssistant) -> None:
     """Set up the Radio Frequency integration for testing."""
-    from .radio_frequency.common import (  # noqa: PLC0415
-        init_radio_frequency_fixture_helper,
-    )
+    from .radio_frequency.common import init_radio_frequency_fixture_helper  # noqa: PLC0415
 
     await init_radio_frequency_fixture_helper(hass)
 
@@ -223,39 +224,6 @@ async def mock_rf_entity_fixture(
     from .radio_frequency.common import mock_rf_entity_fixture_helper  # noqa: PLC0415
 
     return await mock_rf_entity_fixture_helper(hass)
-
-
-# Infrared test fixtures
-@pytest.fixture(name="init_infrared")
-async def init_infrared_fixture(hass: HomeAssistant) -> None:
-    """Set up the Infrared integration for testing."""
-    from .infrared.common import init_infrared_fixture_helper  # noqa: PLC0415
-
-    await init_infrared_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_infrared_emitter_entity")
-async def mock_infrared_emitter_entity_fixture(
-    hass: HomeAssistant, init_infrared: None
-) -> MockInfraredEmitterEntity:
-    """Return a mock infrared emitter entity."""
-    from .infrared.common import (  # noqa: PLC0415
-        mock_infrared_emitter_entity_fixture_helper,
-    )
-
-    return await mock_infrared_emitter_entity_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_infrared_receiver_entity")
-async def mock_infrared_receiver_entity_fixture(
-    hass: HomeAssistant, init_infrared: None
-) -> MockInfraredReceiverEntity:
-    """Return a mock infrared receiver entity."""
-    from .infrared.common import (  # noqa: PLC0415
-        mock_infrared_receiver_entity_fixture_helper,
-    )
-
-    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
@@ -1013,6 +981,45 @@ async def _validate_translation(
     )
 
 
+async def _validate_abort_translation_not_duplicated(
+    hass: HomeAssistant,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+    category: str,
+    component: str,
+    translation_domain: str,
+    key: str,
+    *,
+    shared_category: str | None = None,
+    shared_key: str | None = None,
+) -> None:
+    """Raise if an integration duplicates an abort translated by another domain.
+
+    A local translation with different wording is kept, since the integration
+    may raise the same reason itself to show its own wording.
+    """
+    if component in ignore_translations_for_mock_domains:
+        return
+    full_key = f"component.{component}.{category}.{key}"
+    translations = await async_get_translations(hass, "en", category, [component])
+    if (translation := translations.get(full_key)) is None:
+        return
+    shared_category = shared_category or category
+    shared_translations = await async_get_translations(
+        hass, "en", shared_category, [translation_domain]
+    )
+    if translation == shared_translations.get(
+        f"component.{translation_domain}.{shared_category}.{shared_key or key}"
+    ):
+        translation_errors[full_key] = (
+            f"Translation `{category}.{key}` of {component} duplicates the one of "
+            f"{translation_domain}, which translates this abort. Please remove it "
+            f"from homeassistant/components/{component}/strings.json and pass "
+            f'translation_domain="{translation_domain}" wherever {component} '
+            "raises this reason itself"
+        )
+
+
 @pytest.fixture
 def ignore_missing_translations() -> str | list[str]:
     """Ignore specific missing translations.
@@ -1147,6 +1154,27 @@ async def _check_config_flow_result_translations(
             **(issue.translation_placeholders or {}),
             **(description_placeholders or {}),
         }
+    elif isinstance(manager, ConfigSubentryFlowManager):
+        # Subentry flows are only checked for duplicated shared abort translations
+        if (
+            result["type"] is FlowResultType.ABORT
+            and (abort_domain := result.get("translation_domain")) is not None
+            and (entry := flow.hass.config_entries.async_get_entry(flow.handler[0]))
+            and abort_domain != entry.domain
+        ):
+            # The frontend resolves a shared subentry abort from the config section
+            await _validate_abort_translation_not_duplicated(
+                flow.hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                "config_subentries",
+                entry.domain,
+                abort_domain,
+                f"{flow.handler[1]}.abort.{result['reason']}",
+                shared_category="config",
+                shared_key=f"abort.{result['reason']}",
+            )
+        return
     else:
         return
 
@@ -1181,11 +1209,22 @@ async def _check_config_flow_result_translations(
         return
 
     if result["type"] is FlowResultType.ABORT:
+        abort_domain = result.get("translation_domain")
+        if abort_domain is not None and abort_domain != integration:
+            await _validate_abort_translation_not_duplicated(
+                flow.hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                category,
+                integration,
+                abort_domain,
+                f"{key_prefix}abort.{result['reason']}",
+            )
         # We don't need translations for a discovery flow which immediately
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
             return
-        if (abort_domain := result.get("translation_domain")) is not None:
+        if abort_domain is not None:
             integration = abort_domain
         await _validate_translation(
             flow.hass,
@@ -1330,6 +1369,8 @@ async def check_translations(
 
     Current checks:
     - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
+    - data entry flow aborts translated by another domain are not duplicated locally
+      (also for ConfigSubentryFlow)
     - issue registry entries
     - action (service) exceptions
     """

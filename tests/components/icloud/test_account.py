@@ -1,24 +1,47 @@
 """Tests for the iCloud account."""
 
-from unittest.mock import MagicMock, Mock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from pyicloud.const import AppleAuthError
+from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
+    PyiCloudAcceptTermsException,
+    PyiCloudAPIResponseException,
+    PyiCloudConnectionException,
+    PyiCloudFailedLoginException,
+)
+from pyicloud.services.findmyiphone import AppleDevice
 import pytest
+from requests import Response
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
+    ATTR_OWNER_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
+    DEFAULT_MAX_INTERVAL,
+    DEVICE_STATUS,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 
-from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
+from .const import (
+    DEVICE,
+    MEMBER_1_FULL_NAME,
+    MEMBER_1_PERSON_ID,
+    MOCK_CONFIG,
+    USER_INFO,
+    USERNAME,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_store")
@@ -135,7 +158,41 @@ def mock_icloud_service_fixture():
         service_instance.requires_2fa = False
 
         service_mock.return_value = service_instance
-        yield service_instance
+        yield service_mock
+
+
+async def test_setup_connection_error(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test a transport failure during setup asks for a retry."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=PyiCloudConnectionException(reason="Connection error"),
+        ),
+        pytest.raises(ConfigEntryNotReady) as err,
+    ):
+        account.setup()
+
+    assert err.value.translation_key == "cannot_connect"
 
 
 async def test_setup_success_with_devices(
@@ -170,7 +227,971 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
-    # An active locate must be requested on every poll (pyicloud >= 2.3.0
-    # only locates at service creation, so the account has to ask for it)
-    assert mock_icloud_service.devices.refresh_calls == [True]
+    # The account polls devices itself, so pyicloud's own Find My monitor is disabled.
+    assert mock_icloud_service.call_args.kwargs["refresh_interval"] is None
+    # The FindMyiPhoneServiceManager constructor just located every device, so
+    # the first update must read that fresh data without a second active locate.
+    assert mock_icloud_service.return_value.devices.refresh_calls == []
     assert "device1" in account.devices
+
+    # Later updates request a fresh GPS fix on every poll.
+    with patch.object(account, "_schedule_next_fetch"):
+        account.update_devices()
+    assert mock_icloud_service.return_value.devices.refresh_calls == [True]
+
+
+async def test_a_failed_locate_does_not_cost_the_poll(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    mock_icloud_service: MagicMock,
+) -> None:
+    """Test that the devices are still read when the locate request fails.
+
+    Locating is best effort. iCloud still holds whichever fixes it had, and
+    reading those beats leaving the account with nothing at all until the
+    next poll comes round.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+    service = mock_icloud_service.return_value
+
+    with patch.object(account, "_schedule_next_fetch"):
+        await hass.async_add_executor_job(account.setup)
+
+        # A later poll asks for a locate, and iCloud refuses it.
+        service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+        await hass.async_add_executor_job(account.update_devices)
+
+    service.devices.refresh.assert_called_once_with(locate=True)
+    # An error ending the poll early would have left the two minute retry
+    # interval in place; reading the devices recomputes it.
+    assert account.fetch_interval != 2
+    assert "device1" in account.devices
+
+
+async def test_a_rejected_session_on_locate_reaches_the_caller(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    mock_icloud_service: MagicMock,
+) -> None:
+    """Test that a locate refused for authentication is not treated as best effort.
+
+    Only a failure to locate is swallowed. A rejected session is what the
+    caller acts on, by logging in again or asking the user, so it has to be
+    raised instead of leaving every later poll to fail the same way.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+    service = mock_icloud_service.return_value
+
+    with patch.object(account, "_schedule_next_fetch"):
+        await hass.async_add_executor_job(account.setup)
+
+        service.devices.refresh = Mock(
+            side_effect=PyiCloudFailedLoginException("rejected")
+        )
+        with pytest.raises(PyiCloudFailedLoginException):
+            await hass.async_add_executor_job(account.update_devices)
+
+
+async def test_a_poll_with_no_devices_still_schedules_the_next_one(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    mock_icloud_service: MagicMock,
+) -> None:
+    """Test that an empty device list is not indexed after a failed locate.
+
+    Carrying on past a failed locate reaches the pending-device check with
+    whatever iCloud had, which can be nothing. Indexing that ends the poll
+    before it arms the next one, leaving the account stopped.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+    service = mock_icloud_service.return_value
+
+    with patch.object(account, "_schedule_next_fetch") as schedule:
+        await hass.async_add_executor_job(account.setup)
+        schedule.reset_mock()
+
+        service.devices = MockDevicesContainer(USER_INFO, [])
+        service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+        await hass.async_add_executor_job(account.update_devices)
+
+    schedule.assert_called_once()
+
+
+class FakeAppleDevice:
+    """A device that reports status through pyicloud's own implementation.
+
+    Reusing AppleDevice.status keeps these tests honest about how iCloud data
+    actually reaches the integration: it reports every requested field, using
+    None for the ones the payload omits, so a stand-in that raised KeyError
+    would be testing a case that cannot happen.
+    """
+
+    # Bound to pyicloud's implementation, which only reads _content.
+    status = AppleDevice.status
+
+    def __init__(self, content: dict) -> None:
+        """Store the payload iCloud would have returned."""
+        self._content = content
+
+    def __getitem__(self, key):
+        """Proxy into the raw payload, as AppleDevice does."""
+        return self._content[key]
+
+
+class MockDevicesWithLocation(MockDevicesContainer):
+    """Devices container whose single device reports a location."""
+
+    def refresh(self, locate: bool = True) -> None:
+        """Match the FindMyiPhone service interface."""
+
+
+class StrictAppleDevice(MockAppleDevice):
+    """Mock device that reports its payload the way the real one does.
+
+    AppleDevice.status() answers every requested field, using None for the
+    ones iCloud left out, while __getitem__ reads self._content[key] directly
+    and raises for them.
+    """
+
+    def status(self, key):
+        """Return the requested fields, filling in the missing ones."""
+        return {field: self._status.get(field) for field in key} | {
+            field: value for field, value in self._status.items() if field not in key
+        }
+
+    def __getitem__(self, key):
+        """Index the raw payload without normalising a missing key."""
+        return self._status[key]
+
+
+def _located_device_status(battery_level: float) -> dict:
+    """Return a device status carrying a usable location."""
+    return {
+        **DEVICE,
+        "batteryLevel": battery_level,
+        "location": {
+            "latitude": 1.0,
+            "longitude": 2.0,
+            "horizontalAccuracy": 10,
+        },
+    }
+
+
+@pytest.fixture(name="polling_service")
+def mock_polling_service_fixture():
+    """Mock a service whose device can change between fetches."""
+    status = _located_device_status(0.8)
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service_instance = MagicMock()
+        service_instance.requires_2fa = False
+        service_instance.devices = MockDevicesWithLocation(
+            USER_INFO, [FakeAppleDevice(status)]
+        )
+        service_mock.return_value = service_instance
+        yield service_instance, status
+
+
+async def test_polling_survives_authentication_error(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a failing fetch does not stop the account from polling."""
+    service, status = polling_service
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+    # A transient failure used to escape the timer callback, after which no
+    # further fetch was ever scheduled.
+    service.authenticate.side_effect = ConnectionError("boom")
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The account recovers and the next fetch still happens.
+    service.authenticate.side_effect = None
+    status["batteryLevel"] = 0.5
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "50"
+
+
+async def test_failed_login_is_not_retried_under_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a rejected login is left for the user to fix.
+
+    The account still has to keep its fetch timer, which is only armed once
+    update_devices() completes, so it used to sit loaded with no timer at all.
+    But retrying the login while the user is already being asked to log in
+    either adds failed attempts against their account or quietly succeeds and
+    strands the repair they were shown. Finishing that flow reloads the entry,
+    which is what recovers the account.
+    """
+    del polling_service  # only the patched service class is needed here
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloudFailedLoginException("nope"),
+    ) as service:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.runtime_data.api is None
+        assert [
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == "reauth"
+        ]
+        attempts = service.call_count
+
+        freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # The timer fired, but it did not try to log in again.
+        assert service.call_count == attempts
+
+    assert hass.states.get("sensor.iphone_battery") is None
+
+
+async def test_terms_acceptance_starts_reauth(hass: HomeAssistant) -> None:
+    """Test that a login waiting on new terms asks the user to act.
+
+    Only the config flow can accept them, so the account has to stay loaded
+    with its fetch timer running while the reauth flow it started is open.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=PyiCloudAcceptTermsException("Terms not accepted"),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
+        assert config_entry.runtime_data.api is None
+        assert [
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == "reauth"
+        ]
+
+
+async def test_device_without_identity_is_skipped(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a device with no id is skipped rather than stored.
+
+    pyicloud reports every requested field, using None for the ones iCloud
+    left out, so an unusable device arrives looking like any other rather
+    than raising on access.
+    """
+    _, status = polling_service
+    status["id"] = None
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Nothing is stored under a None identity, so no entity is built from one.
+    assert config_entry.runtime_data.devices == {}
+    assert hass.states.get("sensor.iphone_battery") is None
+
+    # A later poll picks the device up once iCloud reports it properly.
+    status["id"] = "device1"
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+
+async def test_pending_check_ignores_a_skipped_device(hass: HomeAssistant) -> None:
+    """Test that the pending-device retry does not read a device that was skipped.
+
+    The first device iCloud lists has no id and is still loading, so it is
+    skipped. Reading its status for the pending check would schedule a retry
+    for a device that was never stored, when the one that was is online.
+    """
+    skipped = {**_located_device_status(0.8), "id": None, "deviceStatus": "203"}
+    online = _located_device_status(0.8)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service_instance = MagicMock()
+        service_instance.requires_2fa = False
+        service_instance.devices = MockDevicesWithLocation(
+            USER_INFO, [StrictAppleDevice(skipped), StrictAppleDevice(online)]
+        )
+        service_mock.return_value = service_instance
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    assert list(account.devices) == ["device1"]
+    # A pending first device would have shortened the interval to 15 seconds.
+    assert account.fetch_interval != 0.25
+
+
+async def test_polling_resumes_after_2fa_challenge(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that polling continues across a 2FA challenge.
+
+    update_devices() returns early while a code is outstanding, which used to
+    leave nothing to schedule the fetch that would notice it had been entered.
+    """
+    service, status = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+    # iCloud starts asking for a verification code.
+    service.requires_2fa = True
+    status["batteryLevel"] = 0.6
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+    # The user enters the code; polling has to pick up again on its own.
+    service.requires_2fa = False
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "60"
+
+
+async def test_rejected_credentials_ask_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a rejected login starts reauth instead of retrying forever."""
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudFailedLoginException("rejected")
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The user is asked to log in again rather than the session being retried
+    # every couple of minutes indefinitely.
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_2fa_challenge_keeps_session_for_reauth(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a 2FA challenge while polling keeps the session.
+
+    async_step_reauth reuses this session to send and validate the code and
+    sends a None api back to the password form instead, so a challenge must
+    not clear it.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.requires_2fa = True
+    service.authenticate.side_effect = PyiCloudFailedLoginException("2FA required")
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.runtime_data.api is not None
+
+
+async def test_2fa_exception_while_polling_asks_for_a_code(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a 2FA challenge raised while polling asks the user to log in.
+
+    authenticate() raises out of the MFA options request before requires_2fa is
+    set, so the exception is the only signal that a code is what is missing.
+    Without it the challenge fell through to the transient handling and was
+    retried every couple of minutes without ever asking the user.
+
+    The session cannot carry the code while requires_2fa is unset, because that
+    property is what async_step_reauth reads to open code entry. Keeping it
+    would walk the flow past code entry and finish reauthentication with the
+    challenge still outstanding, so it is dropped and the password is asked
+    for: the login that follows re-issues the challenge with requires_2fa set.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.requires_2fa = False
+    # Pinned: an unset MagicMock is truthy, which parks the flow on the
+    # trusted-device form and hides where it really goes.
+    service.requires_2sa = False
+    service.authenticate.side_effect = PyiCloud2FARequiredException(
+        USERNAME, Mock(spec=Response)
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    # The flow waits on the user rather than completing without the code.
+    assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
+    assert config_entry.runtime_data.api is None
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        AppleAuthError.TWO_FACTOR_REQUIRED,
+        AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        AppleAuthError.FIND_MY_REAUTH_REQUIRED,
+    ],
+)
+async def test_auth_status_while_polling_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+    status: AppleAuthError,
+) -> None:
+    """Test that an authentication status while polling starts reauth.
+
+    pyicloud only raises a dedicated exception for a 409 carrying an hsa2 body,
+    so every other rejection arrives as a plain PyiCloudAPIResponseException and
+    the status has to be inspected rather than the exception type.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Authentication required for Account.", status
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_other_api_error_while_polling_keeps_retrying(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a non-authentication API error keeps the loop retrying.
+
+    Reauthenticating cannot fix a server-side failure, so it has to be treated
+    as transient and the next fetch still scheduled.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Service temporarily unavailable", 503
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    # The session is kept and the loop keeps going rather than parking.
+    assert config_entry.runtime_data.api is not None
+
+    service.authenticate.side_effect = None
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert service.authenticate.call_count > 1
+
+
+async def test_family_device_after_setup_time_2fa(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an account challenged during setup still builds its devices.
+
+    setup() returns before reading the account's owner and family names when
+    iCloud asks for a verification code, and keep_alive() only runs a full
+    setup again when there is no session at all. The names therefore have to
+    be filled in by the poll that follows the challenge, or a family device
+    can never be built.
+    """
+    service, status = polling_service
+    status["prsId"] = MEMBER_1_PERSON_ID
+    service.requires_2fa = True
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery") is None
+
+    # The user enters the code.
+    service.requires_2fa = False
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.iphone_battery")
+    assert state is not None
+    assert state.state == "80"
+    assert state.attributes[ATTR_OWNER_NAME] == MEMBER_1_FULL_NAME
+
+
+async def test_account_with_no_devices_keeps_polling(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an empty device response does not kill the account.
+
+    iCloud answers with no devices while an account is still settling, and
+    the status of the first device was read without checking there was one.
+    """
+    service, status = polling_service
+    service.devices = MockDevicesWithLocation(USER_INFO, [])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.iphone_battery") is None
+
+    # The devices show up on a later poll.
+    service.devices = MockDevicesWithLocation(USER_INFO, [FakeAppleDevice(status)])
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+
+async def test_rejected_session_on_device_refresh_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a session rejected while reading the devices reaches the user.
+
+    Refreshing the devices is where a stored session is usually turned down,
+    and that request was handled as an unknown error: retried every couple of
+    minutes with nothing ever shown to the user.
+    """
+    service, _ = polling_service
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudFailedLoginException("rejected")
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_auth_status_on_first_device_refresh_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an authentication status on the first fetch reaches the user.
+
+    iCloud reports most rejections as an API response carrying the status
+    rather than as a dedicated exception, and the first device refresh runs
+    inside setup(), where an unhandled one would leave a dead entry.
+    """
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException(
+            "Authentication required for Account.", AppleAuthError.LOGIN_TOKEN_EXPIRED
+        )
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_rejected_session_on_first_device_refresh_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+) -> None:
+    """Test that a session rejected on the first fetch reaches the user.
+
+    The exceptions pyicloud raises for a rejection, as opposed to a status on a
+    plain response, end up in setup() as well, where an unhandled one would
+    leave a dead entry.
+    """
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudFailedLoginException("rejected")
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_other_api_error_on_first_device_refresh_is_not_a_rejection(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+) -> None:
+    """Test that an error that is not about authentication does not ask for a login.
+
+    Only a status that says the session has to be established again is a reason
+    to send the user to the password; anything else is iCloud failing, and the
+    user cannot fix that by logging in.
+    """
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException("Service unavailable", 503)
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is not ConfigEntryState.LOADED
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_auth_status_on_device_refresh_while_polling_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a status from reading the devices while polling starts reauth.
+
+    A rejected session is usually turned down when the devices are read rather
+    than when logging in, and as a plain response carrying the status, so it
+    is the status that has to be inspected to tell it from an outage.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException(
+            "Authentication required for Account.", AppleAuthError.LOGIN_TOKEN_EXPIRED
+        )
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_a_failed_setup_retry_keeps_the_account_polling(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a poll that cannot rebuild the session still arms the next one.
+
+    With no session and nobody being asked to log in, a poll builds the service
+    again. Whatever that raises must not escape into the event loop, which
+    would stop the account polling for good; it is logged and retried.
+
+    keep_alive() is called directly with no reauth flow reported pending: the
+    calendar and Reminders coordinators start one of their own for an account
+    with no session, at a point that depends on timing, and a poll leaves the
+    login to the user once one is outstanding.
+    """
+    del polling_service  # only the patched service class is needed here
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    account.api = None
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=Exception("boom"),
+        ),
+        patch.object(account, "_schedule_next_fetch") as schedule,
+        patch.object(account, "_reauth_pending", return_value=False),
+    ):
+        await hass.async_add_executor_job(account.keep_alive)
+
+    assert "Error setting up iCloud account, will retry" in caplog.text
+    assert account.api is None
+    schedule.assert_called_once()
+
+    # The next poll builds the session once iCloud lets it.
+    with (
+        patch.object(account, "_schedule_next_fetch"),
+        patch.object(account, "_reauth_pending", return_value=False),
+    ):
+        await hass.async_add_executor_job(account.keep_alive)
+
+    assert account.api is not None
+
+
+async def test_device_without_a_status_keeps_the_account_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a device iCloud reports no status for does not end setup.
+
+    The pending-device check read the field straight off the payload, which
+    raises for a device that does not carry it. update_devices() runs inside
+    setup() before any timer is armed, so that left the entry loaded and never
+    polling again.
+    """
+    status = _located_device_status(0.8)
+    del status[DEVICE_STATUS]
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service_instance = MagicMock()
+        service_instance.requires_2fa = False
+        service_instance.devices = MockDevicesWithLocation(
+            USER_INFO, [StrictAppleDevice(status)]
+        )
+        service_mock.return_value = service_instance
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
+
+        # The fetch timer is armed at the end of update_devices(), so reaching
+        # a second fetch is what says the first one ran to the end.
+        service_instance.authenticate.reset_mock()
+        freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert service_instance.authenticate.called

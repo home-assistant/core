@@ -48,10 +48,12 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Optional(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
-                probatio.Optional(CONF_EVENT_HUB_CON_STRING): cv.string,
+                probatio.Optional(
+                    probatio.Secret(CONF_EVENT_HUB_CON_STRING)
+                ): cv.string,
                 probatio.Optional(CONF_EVENT_HUB_NAMESPACE): cv.string,
                 probatio.Optional(CONF_EVENT_HUB_SAS_POLICY): cv.string,
-                probatio.Optional(CONF_EVENT_HUB_SAS_KEY): cv.string,
+                probatio.Optional(probatio.Secret(CONF_EVENT_HUB_SAS_KEY)): cv.string,
                 probatio.Optional(CONF_SEND_INTERVAL): cv.positive_int,
                 probatio.Optional(CONF_MAX_DELAY): cv.positive_int,
                 probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
@@ -94,7 +96,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AzureEventHubConfigEntry
-) -> bool:
+) -> None:
     """Do the setup based on the config entry and the filter from yaml."""
     hub = AzureEventHub(
         hass,
@@ -109,7 +111,6 @@ async def async_setup_entry(
     entry.async_on_unload(hub.async_stop)
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hub.async_start()
-    return True
 
 
 async def async_update_listener(
@@ -121,9 +122,8 @@ async def async_update_listener(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AzureEventHubConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True
 
 
 class AzureEventHub:

@@ -1,13 +1,16 @@
 """The tests for Select device actions."""
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.select import DOMAIN
-from homeassistant.components.select.device_action import async_get_action_capabilities
+from homeassistant.components.select.device_action import (
+    async_get_action_capabilities,
+    async_validate_action_config,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -513,3 +516,17 @@ async def test_get_action_capabilities_legacy(
     config["type"] = "select_last"
     capabilities = await async_get_action_capabilities(hass, config)
     assert capabilities == {}
+
+
+async def test_select_option_without_option_is_invalid(hass: HomeAssistant) -> None:
+    """Test the action type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'option'"):
+        await async_validate_action_config(
+            hass,
+            {
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "select.test",
+                "type": "select_option",
+            },
+        )

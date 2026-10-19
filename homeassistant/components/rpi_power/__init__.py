@@ -14,7 +14,7 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 type RpiPowerConfigEntry = ConfigEntry[UnderVoltage]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RpiPowerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RpiPowerConfigEntry) -> None:
     """Set up Raspberry Pi Power Supply Checker from a config entry."""
 
     if (client := await hass.async_add_executor_job(new_under_voltage)) is None:
@@ -26,9 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RpiPowerConfigEntry) -> 
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RpiPowerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RpiPowerConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

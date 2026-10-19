@@ -1,6 +1,6 @@
 """The tests for the IPMA weather component."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -183,7 +183,7 @@ async def test_forecast_subscription(
 
     assert forecast1 == snapshot
 
-    freezer.tick(MIN_TIME_BETWEEN_UPDATES + datetime.timedelta(seconds=1))
+    freezer.tick(MIN_TIME_BETWEEN_UPDATES + dt.timedelta(seconds=1))
     await hass.async_block_till_done()
     msg = await client.receive_json()
 

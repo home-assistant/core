@@ -1,6 +1,7 @@
 {
   "domain": "bitcoin",
   "name": "Bitcoin",
+  "categories": ["finance"],
   "codeowners": ["@Nihvel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bitcoin",
