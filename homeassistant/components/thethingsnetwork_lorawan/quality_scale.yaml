@@ -11,16 +11,16 @@ rules:
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
-  dependency-transparency: todo
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: No actions are registered.
   docs-conditions:
     status: exempt
     comment: No conditions are registered.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: No triggers are registered.
@@ -44,8 +44,8 @@ rules:
     status: exempt
     comment: No entity actions or service actions are registered.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable:
     status: exempt
     comment: Device integrations own devices and entities.
@@ -61,13 +61,13 @@ rules:
     comment: Device integrations own devices and entities.
   discovery: todo
   discovery-update-info: todo
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Device integrations own devices and entities.
