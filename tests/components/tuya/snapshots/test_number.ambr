@@ -1573,7 +1573,7 @@
     'state': '28.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_1_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1592,7 +1592,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_1',
+    'entity_id': 'number.jie_hashui_fa_channel_1_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1600,26 +1600,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 1',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 1',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_1',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_1_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1627,14 +1627,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_1',
+    'entity_id': 'number.jie_hashui_fa_channel_1_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_2_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1653,7 +1653,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_2',
+    'entity_id': 'number.jie_hashui_fa_channel_2_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1661,26 +1661,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 2',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 2',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_2',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_2_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1688,14 +1688,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_2',
+    'entity_id': 'number.jie_hashui_fa_channel_2_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_3_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1714,7 +1714,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_3',
+    'entity_id': 'number.jie_hashui_fa_channel_3_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1722,26 +1722,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 3',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 3',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_3',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_3_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1749,14 +1749,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_3',
+    'entity_id': 'number.jie_hashui_fa_channel_3_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_4_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1775,7 +1775,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_4',
+    'entity_id': 'number.jie_hashui_fa_channel_4_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1783,26 +1783,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 4',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 4',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_4',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_4_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1810,14 +1810,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_4',
+    'entity_id': 'number.jie_hashui_fa_channel_4_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_5_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1836,7 +1836,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_5',
+    'entity_id': 'number.jie_hashui_fa_channel_5_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1844,26 +1844,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 5',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 5',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_5',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_5_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1871,14 +1871,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_5',
+    'entity_id': 'number.jie_hashui_fa_channel_5_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_6_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1897,7 +1897,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_6',
+    'entity_id': 'number.jie_hashui_fa_channel_6_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1905,26 +1905,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 6',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 6',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_6',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_6_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1932,14 +1932,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_6',
+    'entity_id': 'number.jie_hashui_fa_channel_6_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_7_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1958,7 +1958,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_7',
+    'entity_id': 'number.jie_hashui_fa_channel_7_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1966,26 +1966,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 7',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 7',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_7',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_7_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 7',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 7 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -1993,14 +1993,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_7',
+    'entity_id': 'number.jie_hashui_fa_channel_7_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_8_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2019,7 +2019,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_8',
+    'entity_id': 'number.jie_hashui_fa_channel_8_irrigation_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2027,26 +2027,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Irrigation duration 8',
+    'object_id_base': 'Irrigation duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 8',
+    'original_name': 'Irrigation duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_irrigation_duration',
+    'translation_key': 'irrigation_duration',
     'unique_id': 'tuya.cijerqyssiwrf7deqzkfscountdown_8',
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_channel_8_irrigation_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Irrigation duration 8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 8 Irrigation duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -2054,7 +2054,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_8',
+    'entity_id': 'number.jie_hashui_fa_channel_8_irrigation_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

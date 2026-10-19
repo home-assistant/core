@@ -3,19 +3,18 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from httpx import ConnectError, HTTPStatusError, Request, Response
+from httpx2 import ConnectError, HTTPStatusError, Request, Response
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 from pythonxbox.api.provider.achievements.models import AchievementResponse
 from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-)
 
 PRESENCE_INTERVAL = 30
 TRUE_TOTAL = 43

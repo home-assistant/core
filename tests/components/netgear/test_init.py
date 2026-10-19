@@ -3,6 +3,8 @@
 from unittest.mock import Mock, patch
 
 from pynetgear import Device
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.netgear.const import DOMAIN
 from homeassistant.const import (
@@ -15,9 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 SERIAL = "5ER1AL0000001"
 HOST = "10.0.0.1"

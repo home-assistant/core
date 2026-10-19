@@ -657,7 +657,7 @@ async def ignore_config_flow(
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "config_entries/get",
-        probatio.Optional("type_filter"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("type_filter"): probatio.All(probatio.EnsureList(), [str]),
         probatio.Optional("domain"): str,
     }
 )
@@ -677,7 +677,7 @@ async def config_entries_get(
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "config_entries/subscribe",
-        probatio.Optional("type_filter"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("type_filter"): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 @websocket_api.async_response

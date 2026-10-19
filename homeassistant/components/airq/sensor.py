@@ -23,7 +23,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQConfigEntry, AirQCoordinator
-from .const import ACTIVITY_BECQUEREL_PER_CUBIC_METER
+from .const import (
+    ACTIVITY_BECQUEREL_PER_CUBIC_METER,
+    LENGTH_MICROMETER,
+    PARTICLE_COUNT_PER_100_MILLILITER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,6 +281,48 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("ph3"),
     ),
     AirQEntityDescription(
+        key="cnt0_3",
+        translation_key="particle_count_0_3",
+        native_unit_of_measurement=PARTICLE_COUNT_PER_100_MILLILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cnt0_3"),
+    ),
+    AirQEntityDescription(
+        key="cnt0_5",
+        translation_key="particle_count_0_5",
+        native_unit_of_measurement=PARTICLE_COUNT_PER_100_MILLILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cnt0_5"),
+    ),
+    AirQEntityDescription(
+        key="cnt1",
+        translation_key="particle_count_1",
+        native_unit_of_measurement=PARTICLE_COUNT_PER_100_MILLILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cnt1"),
+    ),
+    AirQEntityDescription(
+        key="cnt2_5",
+        translation_key="particle_count_2_5",
+        native_unit_of_measurement=PARTICLE_COUNT_PER_100_MILLILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cnt2_5"),
+    ),
+    AirQEntityDescription(
+        key="cnt5",
+        translation_key="particle_count_5",
+        native_unit_of_measurement=PARTICLE_COUNT_PER_100_MILLILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cnt5"),
+    ),
+    AirQEntityDescription(
+        key="cnt10",
+        translation_key="particle_count_10",
+        native_unit_of_measurement=PARTICLE_COUNT_PER_100_MILLILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cnt10"),
+    ),
+    AirQEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
@@ -296,6 +342,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("pm10"),
+    ),
+    AirQEntityDescription(
+        key="TypPS",
+        translation_key="typical_particle_size",
+        native_unit_of_measurement=LENGTH_MICROMETER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("TypPS"),
     ),
     AirQEntityDescription(
         key="pressure",

@@ -1,6 +1,7 @@
 {
   "domain": "subaru",
   "name": "Subaru",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@G-Two", "@jpettitt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/subaru",
@@ -8,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["stdiomask", "subarulink"],
   "quality_scale": "bronze",
-  "requirements": ["subarulink==0.7.19"]
+  "requirements": ["subarulink==0.7.21"]
 }

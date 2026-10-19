@@ -7,6 +7,7 @@ import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
 
@@ -15,14 +16,10 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.components.vicare.types import ViCareData, ViCareDevice
-from homeassistant.components.vicare.utils import get_device_serial
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MODULE, setup_integration
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @dataclass
@@ -41,6 +38,9 @@ class MockPyViCare:
 
     def __init__(self, fixtures: list[Fixture]) -> None:
         """Init devices from json dumps, sharing one service per gateway."""
+        self.loadViaGateway = Mock()
+        self.setCacheDuration = Mock()
+        self.initWithExternalOAuth = Mock()
         self.devices = []
         self.services: dict[str, MockViCareService] = {}
         for idx, fixture in enumerate(fixtures):
@@ -81,16 +81,6 @@ class MockPyViCare:
                 roles=[],
             ),
         ]
-
-    def as_vicare_data(self) -> ViCareData:
-        """Convert to ViCareData as returned by _setup_vicare_api."""
-        devices = []
-        for device in self.devices:
-            api = device.asAutoDetectDevice()
-            devices.append(
-                ViCareDevice(config=device, api=api, serial=get_device_serial(api))
-            )
-        return ViCareData(client=self, devices=devices)
 
 
 class MockViCareService:
@@ -178,10 +168,7 @@ async def mock_vicare_gas_boiler(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -201,10 +188,7 @@ async def mock_vicare_room_sensors(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
     ):
         await setup_integration(hass, mock_config_entry)
 

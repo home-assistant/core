@@ -64,7 +64,7 @@ def _setup_entry(
     return flume_auth, flume_devices, http_session
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> None:
     """Set up flume from a config entry."""
 
     flume_auth, flume_devices, http_session = await hass.async_add_executor_job(
@@ -83,10 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> None:
     """Unload a config entry."""
     entry.runtime_data.http_session.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

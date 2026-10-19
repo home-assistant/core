@@ -32,7 +32,7 @@ AUTH_SCHEMA = probatio.Schema(
         probatio.Required(
             CONF_USERNAME, default=DEFAULT_USERNAME
         ): selector.TextSelector(),
-        probatio.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -114,6 +114,8 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except SFRBoxAuthenticationError:
                 errors["base"] = "invalid_auth"
+            except SFRBoxError:
+                errors["base"] = "cannot_connect"
             else:
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(

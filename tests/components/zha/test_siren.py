@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import ANY, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from zha.application.platforms.siren import SirenLevel, WarningMode
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from zigpy.device import Device
@@ -30,8 +31,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -86,7 +85,7 @@ async def test_siren(
     # turn on from HA
     with (
         patch(
-            "zigpy.device.Device.request",
+            "zigpy.device.ZigbeeDevice.request",
             return_value=[0x00, zcl_f.Status.SUCCESS],
         ),
         patch(
@@ -120,7 +119,7 @@ async def test_siren(
     # turn off from HA
     with (
         patch(
-            "zigpy.device.Device.request",
+            "zigpy.device.ZigbeeDevice.request",
             return_value=[0x01, zcl_f.Status.SUCCESS],
         ),
         patch(
@@ -154,7 +153,7 @@ async def test_siren(
     # turn on from HA
     with (
         patch(
-            "zigpy.device.Device.request",
+            "zigpy.device.ZigbeeDevice.request",
             return_value=[0x00, zcl_f.Status.SUCCESS],
         ),
         patch(

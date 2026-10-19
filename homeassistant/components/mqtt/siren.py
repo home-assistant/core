@@ -71,7 +71,7 @@ STATE = "state"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        probatio.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
+        probatio.Optional(CONF_AVAILABLE_TONES): probatio.EnsureList(),
         probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         probatio.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),

@@ -71,7 +71,7 @@ INFLUXDB_V1_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -102,7 +102,7 @@ INFLUXDB_V2_SCHEMA = probatio.Schema(
                 type=TextSelectorType.TEXT,
             ),
         ),
-        probatio.Required(CONF_TOKEN): TextSelector(
+        probatio.Required(probatio.Secret(CONF_TOKEN)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             ),

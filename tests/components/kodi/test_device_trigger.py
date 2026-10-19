@@ -1,6 +1,7 @@
 """The tests for Kodi device triggers."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -11,8 +12,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture

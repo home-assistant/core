@@ -5,15 +5,14 @@ from unittest.mock import AsyncMock, patch
 
 from pyfirefly.models import About, Account, Bill, Budget, Category, Currency
 import pytest
-
-from homeassistant.components.firefly_iii.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_value_fixture,
 )
+
+from homeassistant.components.firefly_iii.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 
 MOCK_TEST_CONFIG = {
     CONF_URL: "https://127.0.0.1:8080/",
