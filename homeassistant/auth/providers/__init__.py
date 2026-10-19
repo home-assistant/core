@@ -105,6 +105,11 @@ class AuthProvider:
         """
         raise NotImplementedError
 
+    @callback
+    def async_can_start_login(self, context: AuthFlowContext) -> bool:
+        """Return if the login screen may offer this provider for the context."""
+        return True
+
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -122,6 +127,9 @@ class AuthProvider:
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
+
+    async def async_will_remove_credentials(self, credentials: Credentials) -> None:
+        """Clean up provider owned data before credentials are removed."""
 
     @callback
     def async_validate_refresh_token(

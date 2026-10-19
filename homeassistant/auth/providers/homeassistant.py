@@ -338,6 +338,7 @@ class HassAuthProvider(AuthProvider):
         """Get extra info for this credential."""
         return UserMeta(name=credentials.data["username"], is_active=True)
 
+    @override
     async def async_will_remove_credentials(self, credentials: Credentials) -> None:
         """When credentials get removed, also remove the auth."""
         if self.data is None:

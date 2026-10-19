@@ -204,6 +204,18 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     @callback
     @override
+    def async_can_start_login(self, context: AuthFlowContext) -> bool:
+        """Return if the request comes from a trusted network."""
+        if (ip_addr := context.get("ip_address")) is None:
+            return False
+        try:
+            self.async_validate_access(ip_addr)
+        except InvalidAuthError:
+            return False
+        return True
+
+    @callback
+    @override
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None
     ) -> None:

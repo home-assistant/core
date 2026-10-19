@@ -5,6 +5,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
+import logging
 import time
 from typing import Any, cast, override
 
@@ -26,7 +27,8 @@ from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRA
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowContext, AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
-from .providers.homeassistant import HassAuthProvider
+
+_LOGGER = logging.getLogger(__name__)
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
@@ -72,14 +74,21 @@ async def auth_manager_from_config(
         key = (provider.type, provider.id)
         provider_hash[key] = provider
 
-        if isinstance(provider, HassAuthProvider):
-            # Can be removed in 2026.7 with the legacy mode of
-            # homeassistant auth provider.
-            # We need to initialize the provider to create the repair
-            # if needed as otherwise the provider will be initialized
-            # on first use, which could be rare as users don't
-            # frequently change auth settings
-            await provider.async_initialize()
+    # A broken provider must not take every other way into the instance with it.
+    results = await asyncio.gather(
+        *(provider.async_initialize() for provider in providers),
+        return_exceptions=True,
+    )
+    for provider, result in zip(providers, results, strict=True):
+        if isinstance(result, Exception):
+            _LOGGER.error(
+                "Error initializing auth provider %s: %s",
+                provider.type,
+                result,
+                exc_info=result,
+            )
+        elif isinstance(result, BaseException):
+            raise result
 
     if module_configs:
         modules = await asyncio.gather(
@@ -394,9 +403,7 @@ class AuthManager:
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""
-        provider = self._async_get_auth_provider(credentials)
-
-        if provider is not None and hasattr(provider, "async_will_remove_credentials"):
+        if (provider := self._async_get_auth_provider(credentials)) is not None:
             await provider.async_will_remove_credentials(credentials)
 
         await self._store.async_remove_credentials(credentials)

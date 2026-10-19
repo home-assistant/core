@@ -107,6 +107,22 @@ async def test_fetch_auth_providers_trusted_network(
     assert (await resp.json())["providers"] == expected
 
 
+async def test_fetch_auth_providers_skips_providers_that_cannot_start_login(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a provider that cannot be used right now is left off the list."""
+    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+    with patch(
+        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+        ".async_can_start_login",
+        return_value=False,
+    ):
+        resp = await client.get("/auth/providers")
+
+    assert resp.status == HTTPStatus.OK
+    assert (await resp.json())["providers"] == []
+
+
 async def test_fetch_auth_providers_onboarding(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
