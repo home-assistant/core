@@ -54,46 +54,51 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
+def _normalize_ip_range(host: str) -> str | None:
+    """Return the host unchanged if it is a valid IP range."""
+    try:
+        start, end = host.split("-", 1)
+        if "." not in end:
+            ip_1, ip_2, ip_3, _ = start.split(".", 3)
+            end = f"{ip_1}.{ip_2}.{ip_3}.{end}"
+        summarize_address_range(ip_address(start), ip_address(end))
+    except ValueError:
+        return None
+    return host
+
+
+def _normalize_host(host: str) -> str | None:
+    """Normalize an IP range, a single IP address or an IP network."""
+    ip_range = _normalize_ip_range(host)
+    if ip_range is not None:
+        return ip_range
+    try:
+        return str(ip_address(host))
+    except ValueError:
+        pass
+    try:
+        return str(ip_network(host))
+    except ValueError:
+        return None
+
+
 def _normalize_ips_and_network(hosts: list[str]) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
     normalized_hosts = []
-
     for host in sorted(hosts):
-        try:
-            start, end = host.split("-", 1)
-            if "." not in end:
-                ip_1, ip_2, ip_3, _ = start.split(".", 3)
-                end = f"{ip_1}.{ip_2}.{ip_3}.{end}"
-            summarize_address_range(ip_address(start), ip_address(end))
-        except ValueError:
-            pass
-        else:
-            normalized_hosts.append(host)
-            continue
-
-        try:
-            normalized_hosts.append(str(ip_address(host)))
-        except ValueError:
-            pass
-        else:
-            continue
-
-        try:
-            normalized_hosts.append(str(ip_network(host)))
-        except ValueError:
+        normalized = _normalize_host(host)
+        if normalized is None:
             return None
-
+        normalized_hosts.append(normalized)
     return normalized_hosts
 
 
 def _is_valid_mac(mac_address: str) -> bool:
     """Check if a mac address is valid."""
-    is_valid_mac = re.fullmatch(
-        r"[0-9A-F]{12}", string=mac_address, flags=re.IGNORECASE
+    return (
+        re.fullmatch(r"[0-9A-F]{12}", string=mac_address, flags=re.IGNORECASE)
+        is not None
     )
-    if is_valid_mac is not None:
-        return True
-    return False
 
 
 def _normalize_mac_addresses(mac_addresses: list[str]) -> list[str] | None:
@@ -196,23 +201,28 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
-        errors = {}
-        if user_input is not None:
-            errors = normalize_input(user_input)
-            self.options.update(user_input)
+        if user_input is None:
+            return await self._async_show_init_form()
 
-            if not errors:
-                title_hosts = ", ".join(self.options[CONF_HOSTS_LIST])
-                return self.async_create_entry(
-                    title=f"Nmap Tracker {title_hosts}", data=self.options
-                )
+        errors = normalize_input(user_input)
+        self.options.update(user_input)
+        if errors:
+            return await self._async_show_init_form(errors)
 
+        title_hosts = ", ".join(self.options[CONF_HOSTS_LIST])
+        return self.async_create_entry(
+            title=f"Nmap Tracker {title_hosts}", data=self.options
+        )
+
+    async def _async_show_init_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="init",
             data_schema=await _async_build_schema_with_user_input(
                 self.hass, self.options, True
             ),
-            errors=errors,
+            errors=errors or {},
         )
 
 
@@ -231,36 +241,41 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input is not None:
-            if not self._async_is_unique_host_list(user_input):
-                return self.async_abort(reason="already_configured")
+        if user_input is None:
+            return await self._async_show_user_form()
 
-            errors = normalize_input(user_input)
-            self.options.update(user_input)
+        if not self._async_is_unique_host_list(user_input):
+            return self.async_abort(reason="already_configured")
 
-            if not errors:
-                title_hosts = ", ".join(user_input[CONF_HOSTS_LIST])
-                return self.async_create_entry(
-                    title=f"Nmap Tracker {title_hosts}",
-                    data={},
-                    options=user_input,
-                )
+        errors = normalize_input(user_input)
+        self.options.update(user_input)
+        if errors:
+            return await self._async_show_user_form(errors)
 
+        title_hosts = ", ".join(user_input[CONF_HOSTS_LIST])
+        return self.async_create_entry(
+            title=f"Nmap Tracker {title_hosts}",
+            data={},
+            options=user_input,
+        )
+
+    async def _async_show_user_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="user",
             data_schema=await _async_build_schema_with_user_input(
                 self.hass, self.options, False
             ),
-            errors=errors,
+            errors=errors or {},
         )
 
     def _async_is_unique_host_list(self, user_input: dict[str, Any]) -> bool:
         hosts = _normalize_ips_and_network(user_input[CONF_HOSTS_LIST])
-        for entry in self._async_current_entries():
-            if _normalize_ips_and_network(entry.options[CONF_HOSTS_LIST]) == hosts:
-                return False
-        return True
+        return all(
+            _normalize_ips_and_network(entry.options[CONF_HOSTS_LIST]) != hosts
+            for entry in self._async_current_entries()
+        )
 
     @staticmethod
     @callback
