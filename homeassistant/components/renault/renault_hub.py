@@ -253,7 +253,7 @@ class RenaultHub:
         if {link.vin for link in vehicle_links if link.vin} == set(self._vehicles):
             return
         assert self._config_entry is not None
-        self._config_entry.async_create_task(
+        self._config_entry.async_create_background_task(
             self._hass,
             self._async_update_vehicles(vehicle_links),
             "renault_update_vehicles",

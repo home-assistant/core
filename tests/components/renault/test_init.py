@@ -565,7 +565,7 @@ async def _async_poll_vehicle_list(
     """Trigger the next vehicle list update."""
     freezer.tick(VEHICLE_LIST_SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def _vehicle_entities(
