@@ -10,9 +10,10 @@ from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
@@ -27,8 +28,7 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-
-type PanasonicVieraConfigEntry = ConfigEntry[Remote]
+from .coordinator import PanasonicVieraConfigEntry, PanasonicVieraCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SELECT]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -91,7 +91,7 @@ async def async_setup_entry(
     remote = Remote(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
-    config_entry.runtime_data = remote
+    config_entry.runtime_data = PanasonicVieraCoordinator(hass, config_entry, remote)
 
     # Add device_info to older config entries
     if ATTR_DEVICE_INFO not in config or config[ATTR_DEVICE_INFO] is None:
@@ -157,6 +157,10 @@ class Remote:
         # None until probed, an empty list when the TV does not support it.
         self.source_list: list[str] | None = None
         self.source: str | None = None
+        # Picture mode selection also relies on the PAC service of the TV.
+        # None until probed, an empty list when the TV does not support it.
+        self.picture_mode_list: list[str] | None = None
+        self.picture_mode: str | None = None
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
@@ -197,6 +201,7 @@ class Remote:
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
         self._update_source()
+        self._update_picture_mode()
 
     def _update_source(self) -> None:
         """Retrieve the available inputs and the current one, if supported."""
@@ -209,13 +214,48 @@ class Remote:
                 _LOGGER.debug("Input selection is not supported by the TV")
                 self.source_list = []
         if self.source_list:
-            self.source = self._control.get_input()
+            try:
+                self.source = self._control.get_input()
+            except SOAPError as err:
+                _LOGGER.debug("Could not retrieve the current input: %s", err)
+                self.source = None
+
+    def _update_picture_mode(self) -> None:
+        """Retrieve the current picture mode, if supported."""
+        assert self._control is not None
+        if self.picture_mode_list == []:
+            return
+        try:
+            self.picture_mode = self._control.get_picture_mode()
+        except SOAPError as err:
+            _LOGGER.debug("Could not retrieve the picture mode: %s", err)
+            self.picture_mode = None
+            if self.picture_mode_list is None:
+                self.picture_mode_list = []
+            return
+        if self.picture_mode_list is None:
+            self.picture_mode_list = self._control.list_picture_modes()
 
     async def async_select_source(self, source: str) -> None:
         """Select the input of the TV."""
         assert self._control is not None
+        if source not in (self.source_list or []):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": source},
+            )
         await self._handle_errors(self._control.set_input, source)
         self.source = source
+
+    async def async_select_picture_mode(self, picture_mode: str) -> None:
+        """Select the picture mode of the TV."""
+        assert self._control is not None
+        result = await self._handle_errors(
+            self._control.set_picture_mode, picture_mode, raise_on_soap_error=True
+        )
+        if result is not None:
+            self.picture_mode = result
 
     async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""
@@ -269,7 +309,10 @@ class Remote:
         return device_info
 
     async def _handle_errors[_R, *_Ts](
-        self, func: Callable[[*_Ts], _R], *args: *_Ts
+        self,
+        func: Callable[[*_Ts], _R],
+        *args: *_Ts,
+        raise_on_soap_error: bool = False,
     ) -> _R | None:
         """Handle errors from func, set available and reconnect if needed."""
         try:
@@ -282,6 +325,8 @@ class Remote:
             return None
         except (SOAPError, HTTPError) as err:
             _LOGGER.debug("An error occurred: %s", err)
+            if raise_on_soap_error and isinstance(err, SOAPError):
+                raise HomeAssistantError("Could not set picture mode") from err
             self.state = MediaPlayerState.OFF
             self.available = True
             await self.async_create_remote_control()
