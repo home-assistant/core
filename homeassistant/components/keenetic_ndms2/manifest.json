@@ -1,6 +1,10 @@
 {
   "domain": "keenetic_ndms2",
   "name": "Keenetic NDMS2 Router",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@foxel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",

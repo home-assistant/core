@@ -31,11 +31,7 @@ from homeassistant.generated.recorder_database_versions import (
     SUPPORTED_DATABASE_VERSIONS,
 )
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.recorder import (  # noqa: F401
-    DATA_INSTANCE,
-    get_instance,
-    session_scope,
-)
+from homeassistant.helpers.recorder import DATA_INSTANCE, get_instance, session_scope  # noqa: F401
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect

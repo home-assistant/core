@@ -56,7 +56,7 @@ runs:
         RUNNER_OS: ${{ runner.os }}
         RUNNER_ARCH: ${{ runner.arch }}
         PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
-        HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt', 'homeassistant/package_constraints.txt') }}
+        HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt', 'homeassistant/package_constraints.txt', 'packages/pytest-home-assistant/pyproject.toml') }}
       run: |
         partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
         echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
@@ -102,7 +102,7 @@ runs:
         python --version
         uv pip install -r requirements.txt
         uv pip install -r requirements_all.txt -r requirements_test.txt
-        uv pip install -e . --config-settings editable_mode=compat
+        uv pip install -e . -e packages/pytest-home-assistant --config-settings editable_mode=compat
     - name: Prune uv cache
       if: inputs.save == 'true' && steps.cache-venv.outputs.cache-hit != 'true'
       shell: bash

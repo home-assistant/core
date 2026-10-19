@@ -25,10 +25,12 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
@@ -59,7 +61,7 @@ def mock_config_entry(
             "api_key": "bla",
         },
         version=2,
-        minor_version=7,
+        minor_version=8,
         subentries_data=[
             ConfigSubentryData(
                 data=mock_conversation_subentry_data,
@@ -71,6 +73,12 @@ def mock_config_entry(
                 data=RECOMMENDED_AI_TASK_OPTIONS,
                 subentry_type="ai_task_data",
                 title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=RECOMMENDED_EVALUATION_OPTIONS,
+                subentry_type="ai_task_evaluate",
+                title=DEFAULT_EVALUATION_NAME,
                 unique_id=None,
             ),
             ConfigSubentryData(

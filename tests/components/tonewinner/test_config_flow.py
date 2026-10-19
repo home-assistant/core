@@ -13,11 +13,13 @@ from tests.common import MockConfigEntry
 
 
 def _mock_receiver(model: str | None = "AT-500") -> MagicMock:
-    """Return a mock receiver that answers info queries."""
+    """Return a mock receiver whose probe reports the given model."""
     mock_receiver = MagicMock()
     mock_receiver.connect = AsyncMock()
     mock_receiver.disconnect = AsyncMock()
-    mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    mock_receiver.probe = AsyncMock(
+        return_value=None if model is None else MagicMock(model=model)
+    )
     return mock_receiver
 
 
@@ -50,7 +52,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     }
     assert len(mock_setup_entry.mock_calls) == 1
     mock_receiver.connect.assert_awaited_once()
-    mock_receiver.query_info.assert_awaited_once()
+    mock_receiver.probe.assert_awaited_once()
     mock_receiver.disconnect.assert_awaited_once()
 
 
