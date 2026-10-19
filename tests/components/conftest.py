@@ -1,5 +1,7 @@
 """Fixtures for component testing."""
 
+# ruff: noqa: PLC0414
+
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
@@ -54,6 +56,11 @@ from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
 import probatio
 import pytest
+from pytest_homeassistant.plugins import (
+    init_infrared_fixture as init_infrared_fixture,
+    mock_infrared_emitter_entity_fixture as mock_infrared_emitter_entity_fixture,
+    mock_infrared_receiver_entity_fixture as mock_infrared_receiver_entity_fixture,
+)
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -96,7 +103,6 @@ if TYPE_CHECKING:
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
-    from .infrared.common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
     from .light.common import MockLight
     from .radio_frequency.common import MockRadioFrequencyEntity
     from .sensor.common import MockSensor
@@ -218,35 +224,6 @@ async def mock_rf_entity_fixture(
     from .radio_frequency.common import mock_rf_entity_fixture_helper  # noqa: PLC0415
 
     return await mock_rf_entity_fixture_helper(hass)
-
-
-# Infrared test fixtures
-@pytest.fixture(name="init_infrared")
-async def init_infrared_fixture(hass: HomeAssistant) -> None:
-    """Set up the Infrared integration for testing."""
-    from .infrared.common import init_infrared_fixture_helper  # noqa: PLC0415
-
-    await init_infrared_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_infrared_emitter_entity")
-async def mock_infrared_emitter_entity_fixture(
-    hass: HomeAssistant, init_infrared: None
-) -> MockInfraredEmitterEntity:
-    """Return a mock infrared emitter entity."""
-    from .infrared.common import mock_infrared_emitter_entity_fixture_helper  # noqa: PLC0415
-
-    return await mock_infrared_emitter_entity_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_infrared_receiver_entity")
-async def mock_infrared_receiver_entity_fixture(
-    hass: HomeAssistant, init_infrared: None
-) -> MockInfraredReceiverEntity:
-    """Return a mock infrared receiver entity."""
-    from .infrared.common import mock_infrared_receiver_entity_fixture_helper  # noqa: PLC0415
-
-    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
