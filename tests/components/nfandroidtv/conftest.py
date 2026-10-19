@@ -35,6 +35,10 @@ def mock_notifications_android_tv() -> Generator[MagicMock]:
             "homeassistant.components.nfandroidtv.config_flow.Notifications",
             new=mock_client,
         ),
+        patch(
+            "homeassistant.components.nfandroidtv.notify.Notifications",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.cls = mock_client

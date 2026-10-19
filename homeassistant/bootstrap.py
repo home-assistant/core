@@ -25,6 +25,7 @@ import yarl
 
 from . import (
     block_async_io,
+    block_shared_serial,
     config as conf_util,
     config_entries,
     core,
@@ -116,7 +117,7 @@ with contextlib.suppress(ImportError):
     from anyio._backends import _asyncio  # noqa: F401
 
 with contextlib.suppress(ImportError):
-    # httpx will import trio if it is installed which does
+    # httpcore2 will import trio if it is installed which does
     # blocking I/O in the event loop. We want to avoid that.
     import trio  # noqa: F401
 
@@ -349,12 +350,16 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     block_async_io.enable()
+    block_shared_serial.enable()
 
     if not (recovery_mode := runtime_config.recovery_mode):
         config_dict = None
         basic_setup_success = False
 
-        await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
+        if previous_version := await hass.async_add_executor_job(
+            conf_util.process_ha_config_upgrade, hass
+        ):
+            hass.data[conf_util.DATA_PREVIOUS_VERSION] = previous_version
 
         try:
             config_dict = await conf_util.async_hass_config_yaml(hass)
@@ -474,25 +479,29 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
+    load_tasks: list[asyncio.Future[Any]] = [
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
+        create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+        create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
+    ]
     try:
-        await asyncio.gather(
-            create_eager_task(get_internal_store_manager(hass).async_initialize()),
-            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
-            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-            create_eager_task(template.async_load_custom_templates(hass)),
-            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
-            create_eager_task(hass.config_entries.async_initialize()),
-            create_eager_task(async_get_system_info(hass)),
-            create_eager_task(condition.async_setup(hass)),
-            create_eager_task(trigger.async_setup(hass)),
-        )
+        await asyncio.gather(*load_tasks)
     except UnsupportedStorageVersionError as err:
+        for task in load_tasks:
+            task.cancel()
+
         # If we're already in recovery mode, we don't want to handle the exception
         # and activate recovery mode again, as that would lead to an infinite loop.
         if recovery:
@@ -624,7 +633,7 @@ async def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args

@@ -105,7 +105,7 @@ async def test_humidifier_services(
         ) as mock_turn_on,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
@@ -167,7 +167,7 @@ async def test_exception_handling_humidifier_service(
 
     with patch(patch_target, new=AsyncMock(side_effect=exception)):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -208,7 +208,7 @@ async def test_evaporative_humidifier_services(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
@@ -253,7 +253,7 @@ async def test_evaporative_humidifier_services_with_exception(
         new=AsyncMock(side_effect=SwitchbotOperationError("Operation failed")),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             HomeAssistantError,

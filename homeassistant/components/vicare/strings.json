@@ -679,6 +679,18 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Unable to communicate with the ViCare API"
+    },
+    "circulation_mode_not_supported": {
+      "message": "Circulation mode {mode} is not supported by this device, supported modes: {modes}"
+    },
+    "circulation_schedule_not_set": {
+      "message": "Unable to set the circulation schedule: {error}"
+    },
+    "circulation_schedule_not_supported": {
+      "message": "This device does not support a domestic hot water circulation schedule"
+    },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"
     },
@@ -698,7 +710,54 @@
       "title": "Update your API client in the Viessmann Developer Portal"
     }
   },
+  "selector": {
+    "circulation_mode": {
+      "options": {
+        "cycles_5_10": "5/10 cycles",
+        "cycles_5_25": "5/25 cycles",
+        "on": "[%key:common::state::on%]"
+      }
+    }
+  },
   "services": {
+    "get_circulation_schedule": {
+      "description": "Gets the domestic hot water circulation pump schedule.",
+      "name": "Get circulation schedule"
+    },
+    "set_circulation_schedule": {
+      "description": "Sets the domestic hot water circulation pump schedule.",
+      "fields": {
+        "friday": {
+          "description": "[%key:component::vicare::services::set_circulation_schedule::fields::monday::description%]",
+          "name": "[%key:common::time::friday%]"
+        },
+        "monday": {
+          "description": "Circulation slots for this day. Each slot has a from and to time on a 10-minute grid (use 00:00 or 24:00 as end time for the end of the day) and a circulation mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::monday%]"
+        },
+        "saturday": {
+          "description": "[%key:component::vicare::services::set_circulation_schedule::fields::monday::description%]",
+          "name": "[%key:common::time::saturday%]"
+        },
+        "sunday": {
+          "description": "[%key:component::vicare::services::set_circulation_schedule::fields::monday::description%]",
+          "name": "[%key:common::time::sunday%]"
+        },
+        "thursday": {
+          "description": "[%key:component::vicare::services::set_circulation_schedule::fields::monday::description%]",
+          "name": "[%key:common::time::thursday%]"
+        },
+        "tuesday": {
+          "description": "[%key:component::vicare::services::set_circulation_schedule::fields::monday::description%]",
+          "name": "[%key:common::time::tuesday%]"
+        },
+        "wednesday": {
+          "description": "[%key:component::vicare::services::set_circulation_schedule::fields::monday::description%]",
+          "name": "[%key:common::time::wednesday%]"
+        }
+      },
+      "name": "Set circulation schedule"
+    },
     "set_vicare_mode": {
       "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {

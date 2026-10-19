@@ -1,5 +1,6 @@
 """Tests for the Marketplace repositories."""
 
+from asyncio import CancelledError, Future, sleep
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -19,6 +20,7 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from yarl import URL
 
+from homeassistant import loader
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL, UrlManager
 from homeassistant.components.marketplace.base import (
     MarketplaceManager,
@@ -52,7 +54,7 @@ from homeassistant.components.marketplace.repositories.plugin import PluginRepos
 from homeassistant.components.marketplace.repositories.theme import ThemeRepository
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.loader import IntegrationNotLoaded
 
 from . import (
@@ -65,11 +67,25 @@ from . import (
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import WebSocketGenerator
 
 RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
+
+
+@pytest.fixture
+def _isolated_translations(
+    disable_translations_once: None, hass: HomeAssistant
+) -> None:
+    """Isolate data created before the shared translation fixture is disabled."""
+    cache = translation._async_get_translations_cache(hass)
+    cache.cache_data = translation._TranslationsCacheData({}, {})
 
 
 def _tree(*paths: tuple[str, bool]) -> list[GitHubGitTreeEntryModel]:
@@ -1146,6 +1162,7 @@ async def test_update_repository(
     assert repository.data.installed_version == category_test_data["version_update"]
 
 
+@pytest.mark.usefixtures("_isolated_translations")
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_uninstall_repository(
     hass: HomeAssistant,
@@ -1171,6 +1188,9 @@ async def test_uninstall_repository(
 
     assert _installed_files(config_dir)
 
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
@@ -1180,6 +1200,150 @@ async def test_uninstall_repository(
     assert repository.data.installed is False
     assert marketplace.repositories.list_installed == []
     assert _installed_files(config_dir) == []
+    assert bool(
+        translation.async_get_cached_translations(hass, "en", "title", "example")
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
+    assert bool(
+        await translation.async_get_translations(hass, "en", "title", {"example"})
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("config_flow", [False, True], ids=["yaml", "config_flow"])
+@pytest.mark.parametrize(
+    ("old_files", "new_files", "old_title", "new_title"),
+    [
+        pytest.param({}, {}, "Old name", "New name", id="manifest_title"),
+        pytest.param(
+            {"translations/en.json": {"title": "Old title"}},
+            {"translations/en.json": {"title": "New title"}},
+            "Old title",
+            "New title",
+            id="updated_translations",
+        ),
+        pytest.param(
+            {},
+            {"translations/en.json": {"title": "New title"}},
+            "Old name",
+            "New title",
+            id="added_translations",
+        ),
+        pytest.param(
+            {"translations/en.json": {"title": "Old title"}},
+            {},
+            "Old title",
+            "New name",
+            id="removed_translations",
+        ),
+    ],
+)
+async def test_update_integration_translations(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    monkeypatch: pytest.MonkeyPatch,
+    config_flow: bool,
+    old_files: dict[str, dict[str, str]],
+    new_files: dict[str, dict[str, str]],
+    old_title: str,
+    new_title: str,
+) -> None:
+    """Updated files and manifest metadata replace previously cached translations."""
+    monkeypatch.delitem(sys.modules, "custom_components", raising=False)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    assert isinstance(repository, IntegrationRepository)
+    check_content = repository.async_check_written_content
+    name, files = "Old name", old_files
+
+    async def check_content_with_translations() -> None:
+        path = Path(repository.localpath)
+        manifest_path = path / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest.update(name=name, config_flow=config_flow)
+        manifest_path.write_text(json.dumps(manifest))
+        repository.data.config_flow = config_flow
+        for filename, content in files.items():
+            file = path / filename
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text(json.dumps(content))
+        await check_content()
+
+    with patch.object(
+        repository, "async_check_written_content", check_content_with_translations
+    ):
+        await repository.async_install_repository(ref="1.0.0")
+        assert await translation.async_get_translations(
+            hass, "en", "title", {"example"}
+        ) == {"component.example.title": old_title}
+        loaded = await loader.async_get_integration(hass, "example")
+
+        name, files = "New name", new_files
+        await repository.async_install_repository(ref="2.0.0")
+
+    assert await loader.async_get_integration(hass, "example") is loaded
+    assert await translation.async_get_translations(
+        hass, "en", "title", {"example"}
+    ) == {"component.example.title": new_title}
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+async def test_translation_invalidation_during_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+) -> None:
+    """Translation requests wait for discovery instead of returning stale strings."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    scan: Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        reload_task = hass.async_create_task(getattr(repository, hook)())
+        await sleep(0)
+        cached_during_scan = translation.async_get_cached_translations(
+            hass, "en", "title", "example"
+        )
+        request = hass.async_create_task(
+            translation.async_get_translations(hass, "en", "title", {"example"})
+        )
+        await sleep(0)
+        request_finished_during_scan = request.done()
+
+    scan.set_result({})
+    await reload_task
+    result = await request
+
+    assert not cached_during_scan
+    assert not request_finished_during_scan
+    assert not result
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+@pytest.mark.parametrize("error", [OSError, CancelledError])
+async def test_translation_invalidation_after_failed_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+    error: type[BaseException],
+) -> None:
+    """Changed resources invalidate translations even when discovery fails."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    with (
+        patch("homeassistant.loader._get_custom_components", side_effect=error),
+        pytest.raises(error),
+    ):
+        await getattr(repository, hook)()
+
+    assert not translation.async_get_cached_translations(hass, "en", "title", "example")
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+    assert not await translation.async_get_translations(
+        hass, "en", "title", {"example"}
+    )
 
 
 @pytest.mark.parametrize("github_token", [None])

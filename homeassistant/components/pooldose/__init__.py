@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> None:
     """Migrate old entry."""
     # Version 1.1 -> 1.2: Migrate entity unique IDs
     # - ofa_orp_value -> ofa_orp_time
@@ -51,10 +51,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -
 
         hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> None:
     """Set up Seko PoolDose from a config entry."""
     # Get host from config entry data (connection-critical configuration)
     host = entry.data[CONF_HOST]
@@ -90,9 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> None:
     """Unload the Seko PoolDose entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

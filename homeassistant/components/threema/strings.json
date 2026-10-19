@@ -89,6 +89,12 @@
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
+    "no_credits": {
+      "message": "The Threema Gateway account has no credits left."
+    },
+    "rate_limited": {
+      "message": "The Threema Gateway rate limit was exceeded. Try again later."
+    },
     "send_error": {
       "message": "Error sending message: {error}"
     }

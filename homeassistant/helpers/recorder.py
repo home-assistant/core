@@ -54,9 +54,7 @@ def async_initialize_recorder(hass: HomeAssistant) -> None:
     registers the basic recorder websocket API which is used by frontend to determine
     if the recorder is migrating the database.
     """
-    from homeassistant.components.recorder.basic_websocket_api import (  # noqa: PLC0415
-        async_setup,
-    )
+    from homeassistant.components.recorder.basic_websocket_api import async_setup  # noqa: PLC0415
 
     hass.data[DATA_RECORDER] = RecorderData()
     async_setup(hass)

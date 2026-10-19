@@ -33,7 +33,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: TraccarServerConfigEntry
-) -> bool:
+) -> None:
     """Set up Traccar Server from a config entry."""
     if CONF_API_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -82,14 +82,12 @@ async def async_setup_entry(
         name="Traccar Server subscription",
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TraccarServerConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_reload_entry(
@@ -99,7 +97,7 @@ async def async_reload_entry(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version < 2:
@@ -108,4 +106,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.pop(CONF_USERNAME, None)
         data.pop(CONF_PASSWORD, None)
         hass.config_entries.async_update_entry(entry, data=data, version=2)
-    return True

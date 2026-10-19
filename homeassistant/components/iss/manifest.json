@@ -1,6 +1,7 @@
 {
   "domain": "iss",
   "name": "International Space Station (ISS)",
+  "categories": ["vehicles_transport.flights"],
   "codeowners": ["@DurgNomis-drol"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iss",
