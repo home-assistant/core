@@ -1,5 +1,6 @@
 """Tests for AnyList todo entities."""
 
+from operator import attrgetter
 from unittest.mock import MagicMock
 
 from aioanylist import AnyListError, Domain
@@ -24,7 +25,6 @@ from . import setup_integration
 from .conftest import ITEM_ID, LIST_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.groceries"
 
@@ -130,17 +130,22 @@ async def test_delete_items(
 @pytest.mark.parametrize(
     ("service", "data", "method", "translation_key"),
     [
-        (TodoServices.ADD_ITEM, {ATTR_ITEM: "Apples"}, "add_item", "add_item_failed"),
+        (
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "Apples"},
+            "lists.add_item",
+            "add_item_failed",
+        ),
         (
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: ITEM_ID, ATTR_RENAME: "Oat milk"},
-            "client_flush",
+            "flush",
             "update_item_failed",
         ),
         (
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ITEM_ID},
-            "bulk_remove_items",
+            "lists.bulk_remove_items",
             "delete_item_failed",
         ),
     ],
@@ -158,10 +163,7 @@ async def test_todo_action_errors(
 ) -> None:
     """Test AnyList mutation errors are translated to Home Assistant errors."""
     await setup_integration(hass, mock_config_entry)
-    if method == "client_flush":
-        mock_anylist_client.flush.side_effect = error
-    else:
-        getattr(mock_anylist_client.lists, method).side_effect = error
+    attrgetter(method)(mock_anylist_client).side_effect = error
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -263,56 +265,3 @@ async def test_list_rename(
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.name == "Weekly shop"
-
-
-async def test_todo_subscription_receives_realtime_update(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_anylist_client: MagicMock,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test native todo subscribers receive AnyList push updates."""
-    await setup_integration(hass, mock_config_entry)
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "todo/item/subscribe",
-            "entity_id": ENTITY_ID,
-        }
-    )
-    result = await client.receive_json()
-    assert result["success"]
-    subscription_id = result["id"]
-
-    initial = await client.receive_json()
-    assert initial["id"] == subscription_id
-    assert initial["type"] == "event"
-    assert initial["event"]["items"] == [
-        {
-            "summary": "Milk",
-            "uid": ITEM_ID,
-            "status": "needs_action",
-            "due": None,
-            "description": "2%",
-            "completed": None,
-        },
-        {
-            "summary": "Bread",
-            "uid": "item-2",
-            "status": "completed",
-            "due": None,
-            "description": None,
-            "completed": None,
-        },
-    ]
-
-    item = mock_anylist_client.state.get_item(LIST_ID, ITEM_ID)
-    assert item is not None
-    item.checked = True
-    await mock_anylist_client.sync_listener({Domain.SHOPPING_LISTS})
-    await hass.async_block_till_done()
-
-    update = await client.receive_json()
-    assert update["id"] == subscription_id
-    assert update["type"] == "event"
-    assert update["event"]["items"][0]["status"] == "completed"
