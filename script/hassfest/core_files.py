@@ -16,7 +16,6 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 MISSING_ALL = {
     "configurator",
     "input_boolean",
-    "input_select",
     "llm",
     "person",
     "sun",
