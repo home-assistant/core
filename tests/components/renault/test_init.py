@@ -758,8 +758,10 @@ async def test_vehicle_list_throttled(
     config_entry: ConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_get_vehicles: AsyncMock,
+    mock_get_vehicle_details: AsyncMock,
 ) -> None:
-    """Test the vehicle list is not requested while the hub is throttled."""
+    """Test the Renault servers are not called while the hub is throttled."""
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, MISSING_DETAILS_VIN)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -770,4 +772,5 @@ async def test_vehicle_list_throttled(
         await _async_poll_vehicle_list(hass, freezer)
 
     assert mock_get_vehicles.await_count == 1
+    assert mock_get_vehicle_details.await_count == 1
     assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}

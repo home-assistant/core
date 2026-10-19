@@ -250,6 +250,9 @@ class RenaultHub:
         self, vehicle_links: list[KamereonVehiclesLink]
     ) -> None:
         """Add and remove vehicles when the vehicle list changes."""
+        # Listeners are also called with the previous list while throttled.
+        if self.is_throttled():
+            return
         if {link.vin for link in vehicle_links if link.vin} == set(self._vehicles):
             return
         assert self._config_entry is not None
