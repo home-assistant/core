@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
@@ -145,6 +146,44 @@ SENSORS = [
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key="outdoorair",
+        translation_key="outdoor_air_temp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="lockoutstatuscode",
+        translation_key="lockout_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="lastfault",
+        translation_key="last_fault",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="load_tank_temp",
+        translation_key="load_tank_temp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="hotwatertemp",
+        translation_key="hot_water_temp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="dhwsetpoint",
+        translation_key="hot_water_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
 
@@ -158,6 +197,8 @@ async def async_setup_entry(
         WaterFurnaceSensor(device_data.realtime, description)
         for device_data in config_entry.runtime_data.values()
         for description in SENSORS
+        # Hardware-specific fields are only attributes when the unit has them.
+        if hasattr(device_data.realtime.data, description.key)
     )
 
 
