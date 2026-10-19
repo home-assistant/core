@@ -42,6 +42,9 @@
     "import_recipe": {
       "service": "mdi:map-search"
     },
+    "parse_ingredient": {
+      "service": "mdi:food-apple"
+    },
     "set_mealplan": {
       "service": "mdi:food"
     },

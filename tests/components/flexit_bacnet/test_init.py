@@ -1,6 +1,7 @@
 """Tests for the Flexit Nordic (BACnet) __init__."""
 
 from flexit_bacnet import DecodingError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flexit_bacnet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -8,8 +9,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 async def test_loading_and_unloading_config_entry(

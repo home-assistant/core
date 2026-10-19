@@ -5,14 +5,14 @@ from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -66,3 +66,33 @@ async def test_sensor_memory_missing(
     state = hass.states.get("sensor.hostname_memory_used")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_memory_free_uses_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test free memory counts reclaimable cache, not only unused memory."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        memory=replace(
+            FIXTURE_MEMORY,
+            virtual=replace(
+                FIXTURE_MEMORY.virtual,
+                free=1_500_000_000,
+                available=73_000_000_000,
+            ),
+        ),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (state := hass.states.get("sensor.hostname_memory_free"))
+    assert state.state == "73.0"

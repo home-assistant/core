@@ -5,12 +5,7 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import (
-    CONF_EXCLUDE,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
-    EVENT_STATE_CHANGED,
-)
+from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -34,16 +29,15 @@ from . import (
     entity_registry,
     websocket_api,
 )
-from .const import (  # noqa: F401
+from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,
-    INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_METHODS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
 from .core import Recorder
-from .entity_options import is_entity_recorded  # noqa: F401
+from .entity_options import is_entity_recorded
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
 from .util import get_instance
@@ -83,6 +77,17 @@ FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
 
 
 ALLOW_IN_MEMORY_DB = False
+
+__all__ = [
+    "CONF_DB_URL",
+    "DEFAULT_DB_FILE",
+    "DEFAULT_URL",
+    "DOMAIN",
+    "Recorder",
+    "SupportedDialect",
+    "get_instance",
+    "is_entity_recorded",
+]
 
 
 def validate_db_url(db_url: str) -> Any:

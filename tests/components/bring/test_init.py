@@ -11,6 +11,11 @@ from bring_api import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import (
@@ -22,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 async def setup_integration(

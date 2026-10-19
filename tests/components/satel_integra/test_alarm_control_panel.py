@@ -4,6 +4,12 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from satel_integra.satel_integra import AlarmState
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,13 +38,6 @@ from . import (
     get_monitor_callbacks,
     setup_integration,
     trigger_connection_status_update,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    snapshot_platform,
 )
 
 

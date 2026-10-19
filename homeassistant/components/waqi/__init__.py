@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Set up World Air Quality Index (WAQI) from a config entry."""
 
     client = WAQIClient(session=async_get_clientsession(hass))
@@ -48,17 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_update_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Update entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:

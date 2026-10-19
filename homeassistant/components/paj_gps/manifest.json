@@ -1,6 +1,7 @@
 {
   "domain": "paj_gps",
   "name": "PAJ GPS",
+  "categories": ["presence_location.trackers"],
   "codeowners": ["@skipperro"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/paj_gps",

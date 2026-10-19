@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohttp
 from doorbirdpy import DoorBird
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.doorbird.const import (
@@ -25,8 +26,6 @@ from . import (
     mock_not_found_exception,
     mock_unauthorized_exception,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:
@@ -525,7 +524,19 @@ async def test_form_user_doorbird_unknown_exception(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("user_input", "expected_events"),
+    [
+        pytest.param(
+            "eventa,   eventc,    eventq", ["eventa", "eventc", "eventq"], id="events"
+        ),
+        pytest.param("", [], id="cleared"),
+        pytest.param("eventa, ,eventc,", ["eventa", "eventc"], id="empty_entries"),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant, user_input: str, expected_events: list[str]
+) -> None:
     """Test config flow options."""
 
     config_entry = MockConfigEntry(
@@ -545,11 +556,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_EVENTS: "eventa,   eventc,    eventq"}
+            result["flow_id"], user_input={CONF_EVENTS: user_input}
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_EVENTS: ["eventa", "eventc", "eventq"]}
+        assert config_entry.options == {CONF_EVENTS: expected_events}
 
 
 async def test_reauth(hass: HomeAssistant) -> None:

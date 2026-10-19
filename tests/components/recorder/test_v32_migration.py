@@ -7,6 +7,13 @@ import sys
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_drop_index,
+    async_wait_recording_done,
+    get_patched_live_version,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -19,19 +26,11 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.util import dt as dt_util
 
-from .common import (
-    async_drop_index,
-    async_wait_recording_done,
-    get_patched_live_version,
-)
 from .conftest import instrument_migration
 
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
-
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE_30 = "tests.components.recorder.db_schema_30"
-SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
+SCHEMA_MODULE_30 = "pytest_homeassistant.components.recorder.db_schema_30"
+SCHEMA_MODULE_32 = "pytest_homeassistant.components.recorder.db_schema_32"
 
 
 def _create_engine_test(

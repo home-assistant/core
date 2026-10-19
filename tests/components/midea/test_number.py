@@ -11,6 +11,7 @@ from midealocal.devices.ed import DeviceAttributes as EDAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
 from midealocal.exceptions import SocketException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -29,8 +30,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _c2_device() -> DummyDevice:

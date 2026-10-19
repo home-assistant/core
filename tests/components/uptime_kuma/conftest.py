@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pythonkuma import MonitorType, UptimeKumaMonitor, UptimeKumaVersion
 from pythonkuma.models import MonitorStatus
 from pythonkuma.update import LatestRelease
@@ -11,8 +12,6 @@ from pythonkuma.update import LatestRelease
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-
-from tests.common import MockConfigEntry
 
 ADDON_SERVICE_INFO = HassioServiceInfo(
     config={
