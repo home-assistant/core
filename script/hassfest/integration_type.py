@@ -58,7 +58,6 @@ MISSING_INTEGRATION_TYPE = {
     "scrape",
     "shopping_list",
     "sql",
-    "sunweg",
     "systemmonitor",
     "tasmota",
     "traccar",

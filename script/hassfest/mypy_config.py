@@ -108,7 +108,6 @@ PLUGIN_CONFIG: Final[dict[str, dict[str, str]]] = {
         "init_forbid_extra": "true",
         "init_typed": "true",
         "warn_required_dynamic_aliases": "true",
-        "warn_untyped_fields": "true",
     }
 }
 

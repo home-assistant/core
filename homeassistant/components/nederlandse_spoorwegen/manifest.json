@@ -1,6 +1,7 @@
 {
   "domain": "nederlandse_spoorwegen",
   "name": "Nederlandse Spoorwegen (NS)",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@YarmoM", "@heindrichpaul"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nederlandse_spoorwegen",

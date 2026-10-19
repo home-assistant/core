@@ -1,9 +1,19 @@
 """Base classes for Rituals Perfume Genie diffuser entities."""
 
-from typing import override
+from collections.abc import Callable, Coroutine
+from typing import Any, Concatenate, override
 
-from ritualsgenie import RitualsGenieHub, RitualsGenieHublot, Sensor
+from ritualsgenie import (
+    RitualsGenieAuthenticationError,
+    RitualsGenieConnectionError,
+    RitualsGenieError,
+    RitualsGenieHub,
+    RitualsGenieHublot,
+    RitualsGenieRateLimitError,
+    Sensor,
+)
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -12,6 +22,43 @@ from .const import DOMAIN
 from .coordinator import RitualsHubsCoordinator, RitualsSensorsCoordinator
 
 MANUFACTURER = "Rituals Cosmetics"
+
+
+def rituals_action[_DiffuserEntityT: DiffuserEntity, **_P](
+    func: Callable[Concatenate[_DiffuserEntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_DiffuserEntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate an action on a diffuser, to raise its errors translated.
+
+    Rejected credentials start a reauthentication right away, instead of
+    waiting for the next update to find out.
+    """
+
+    async def handler(
+        self: _DiffuserEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except RitualsGenieAuthenticationError as err:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+        except RitualsGenieRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="rate_limited"
+            ) from err
+        except RitualsGenieConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="communication_error"
+            ) from err
+        except RitualsGenieError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    return handler
 
 
 def _device_info(
