@@ -4,14 +4,13 @@ import json
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from requests.exceptions import RequestException
 
 from homeassistant.components.tado.const import DOMAIN
 from homeassistant.components.tado.services import TadoService, TadoServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 @pytest.mark.usefixtures("init_integration")

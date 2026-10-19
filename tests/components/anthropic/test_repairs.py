@@ -16,6 +16,12 @@ from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo, ModelLine
 from httpx2 import Request, Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
@@ -50,10 +56,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import model_list
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 WEB_SEARCH_OPTIONS = {
     CONF_WEB_SEARCH: True,

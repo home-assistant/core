@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
@@ -37,8 +38,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
 from . import MockRestData
-
-from tests.common import MockConfigEntry
 
 
 async def test_entry_and_subentry(

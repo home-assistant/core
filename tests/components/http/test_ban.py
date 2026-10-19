@@ -11,6 +11,8 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
+from pytest_homeassistant.common import async_get_persistent_notifications
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import http
 from homeassistant.components.http import DOMAIN
@@ -27,9 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_persistent_notifications
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]

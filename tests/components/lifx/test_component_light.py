@@ -6,6 +6,11 @@ from unittest.mock import MagicMock, call, patch
 
 from lifx import HSBK, CeilingLight, Device, LifxError
 import pytest
+from pytest_homeassistant.common import (
+    async_mock_restore_state_shutdown_restart,
+    async_mock_service,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import (
@@ -49,12 +54,6 @@ from .helpers import (
     create_mock_matrix_light,
     create_reference_ceiling_light,
     create_reference_mirror_light,
-)
-
-from tests.common import (
-    async_mock_restore_state_shutdown_restart,
-    async_mock_service,
-    mock_restore_cache_with_extra_data,
 )
 
 CEILING_KEYS = ("uplight", "downlight")

@@ -7,6 +7,7 @@ from lojack_api import LoJackClient
 from lojack_api.device import Vehicle
 from lojack_api.models import Location
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lojack.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -28,8 +29,6 @@ from .const import (
     TEST_VIN,
     TEST_YEAR,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

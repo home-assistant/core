@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yalexs_ble import AuthError, DoorStatus, LockInfo, LockState, LockStatus
 
 from homeassistant import config_entries
@@ -26,8 +27,6 @@ from . import (
     SAME_LOCAL_NAME_DISCOVERY_INFO,
     YALE_ACCESS_LOCK_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _get_mock_push_lock():

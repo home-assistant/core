@@ -7,6 +7,7 @@ from chip.clusters import Objects as clusters
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import CoverEntityFeature, CoverState
@@ -20,8 +21,6 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def trigger_subscription_callback_debounced(

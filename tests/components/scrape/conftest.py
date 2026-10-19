@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_TIMEOUT,
@@ -30,8 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MockRestData
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

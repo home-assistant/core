@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
@@ -77,9 +79,6 @@ from .conftest import (
     TEST_USE_HTTPS,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 pytestmark = pytest.mark.usefixtures("reolink_host", "reolink_platforms")
 

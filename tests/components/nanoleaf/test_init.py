@@ -4,11 +4,10 @@ from unittest.mock import AsyncMock
 
 from aionanoleaf2 import InvalidToken, Unavailable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_without_event_support(

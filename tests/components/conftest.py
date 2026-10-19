@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import QualityScaleStatus, get_quality_scale
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -48,8 +49,6 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
-from tests.common import QualityScaleStatus, get_quality_scale
-
 if TYPE_CHECKING:
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
@@ -57,7 +56,7 @@ if TYPE_CHECKING:
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
 
-pytest.register_assert_rewrite("tests.components.common")
+pytest.register_assert_rewrite("pytest_homeassistant.components.common")
 
 # Regex for accessing the integration name from the test path
 RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")

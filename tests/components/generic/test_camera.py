@@ -10,6 +10,8 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 import respx
 
 from homeassistant.components.camera import (
@@ -36,9 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def help_setup_mock_config_entry(

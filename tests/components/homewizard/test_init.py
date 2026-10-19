@@ -7,6 +7,7 @@ import weakref
 from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.homewizard import get_main_device
 from homeassistant.components.homewizard.const import (
@@ -17,8 +18,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_v1(

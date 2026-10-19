@@ -3,6 +3,8 @@
 from asyncio import Event, sleep
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
@@ -18,8 +20,6 @@ from . import (
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

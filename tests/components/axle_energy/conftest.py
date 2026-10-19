@@ -6,10 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 from aioaxlevpp import AxleStatus, GridEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
