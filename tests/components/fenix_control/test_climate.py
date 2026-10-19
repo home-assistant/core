@@ -106,6 +106,77 @@ async def test_set_temperature(
     [
         (HVACMode.OFF, PresetMode.OFF),
         (HVACMode.AUTO, PresetMode.PROGRAM),
+    ],
+)
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    hvac_mode: HVACMode,
+    preset_mode: PresetMode,
+) -> None:
+    """Test the HVAC mode is applied after the temperature, which selects manual."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_target_temperature.assert_awaited_once_with(DEVICE_ID, 21.5)
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, preset_mode)
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == hvac_mode
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_heat_mode(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test heat needs no extra command, the temperature already selects manual."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 21.5,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    mock_fenix_client.set_target_temperature.assert_awaited_once_with(DEVICE_ID, 21.5)
+    mock_fenix_client.set_preset_mode.assert_not_called()
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_unsupported_hvac_mode(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test an unsupported HVAC mode is rejected before any command is sent."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 21.5,
+                ATTR_HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "unsupported_hvac_mode"
+    mock_fenix_client.set_target_temperature.assert_not_called()
+    mock_fenix_client.set_preset_mode.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("hvac_mode", "preset_mode"),
+    [
+        (HVACMode.OFF, PresetMode.OFF),
+        (HVACMode.AUTO, PresetMode.PROGRAM),
         (HVACMode.HEAT, PresetMode.MANUAL),
     ],
 )

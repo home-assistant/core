@@ -6,6 +6,7 @@ from typing import Any, override
 from pyfenixcontrol import Device, FenixControlError, HvacState, PresetMode
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_HOME,
@@ -146,6 +147,13 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature; this switches the thermostat to manual."""
         temperature: float = kwargs[ATTR_TEMPERATURE]
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None and hvac_mode not in self.hvac_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_hvac_mode",
+                translation_placeholders={"hvac_mode": hvac_mode},
+            )
         try:
             await self.coordinator.client.set_target_temperature(
                 self._device_id, temperature
@@ -158,6 +166,9 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         self._update_device(
             target_temperature=temperature, preset_mode=int(PresetMode.MANUAL)
         )
+        # The temperature command already selects manual (heat) mode
+        if hvac_mode is not None and hvac_mode != HVACMode.HEAT:
+            await self.async_set_hvac_mode(hvac_mode)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

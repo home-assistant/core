@@ -47,6 +47,9 @@
     "set_temperature_failed": {
       "message": "Failed to set the target temperature."
     },
+    "unsupported_hvac_mode": {
+      "message": "The HVAC mode {hvac_mode} is not supported."
+    },
     "update_failed": {
       "message": "Failed to fetch the thermostat states from the cloud."
     }
