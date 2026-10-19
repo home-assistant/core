@@ -810,6 +810,29 @@ async def test_vehicle_list_authentication_expired(
 
 @pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_details_authentication_expired(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+    mock_get_vehicle_details: AsyncMock,
+) -> None:
+    """Test an expired login while requesting new vehicle details starts a reauth flow."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, MISSING_DETAILS_VIN)
+    mock_get_vehicle_details.side_effect = NotAuthenticatedException("Not logged in")
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_vehicle_list_throttled(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

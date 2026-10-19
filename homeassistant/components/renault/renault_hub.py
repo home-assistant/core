@@ -282,19 +282,18 @@ class RenaultHub:
                         await coordinator.async_shutdown()
                 self._async_update_scan_interval()
 
-            new_vehicle_links = await _filter_vehicles_with_details(
-                self._account,
-                [
-                    link
-                    for link in vehicle_links
-                    if link.vin and link.vin not in self._vehicles
-                ],
-            )
-            if not new_vehicle_links:
-                return
             try:
-                await self._async_add_vehicles(new_vehicle_links)
-            except ConfigEntryAuthFailed:
+                new_vehicle_links = await _filter_vehicles_with_details(
+                    self._account,
+                    [
+                        link
+                        for link in vehicle_links
+                        if link.vin and link.vin not in self._vehicles
+                    ],
+                )
+                if new_vehicle_links:
+                    await self._async_add_vehicles(new_vehicle_links)
+            except ConfigEntryAuthFailed, NotAuthenticatedException:
                 self._config_entry.async_start_reauth(self._hass)
 
     @callback
