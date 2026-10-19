@@ -13,17 +13,13 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import run_cycles
+from . import CYCLES_UNTIL_DARK, run_cycles
 
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Only set up the sensor platform."""
     return [Platform.SENSOR]
-
-
-# The library calls an inverter asleep after three consecutive misses.
-CYCLES_UNTIL_DARK = 4
 
 
 def _entity_id(

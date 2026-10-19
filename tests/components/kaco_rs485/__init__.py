@@ -15,6 +15,9 @@ from homeassistant.core import HomeAssistant
 MOCK_PORT = "/dev/ttyUSB0"
 MOCK_PORT_DESCRIPTION = "AtomS3 Lite RS485 (RS-485)"
 
+# The library calls an inverter asleep after three consecutive misses.
+CYCLES_UNTIL_DARK = 4
+
 # 6400xi at 1 and 2, 8000xi at 4 — the layout the captured frames came from.
 MOCK_ADDRESSES = [1, 2, 4]
 
