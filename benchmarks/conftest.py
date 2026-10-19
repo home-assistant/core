@@ -22,7 +22,10 @@ async def hass() -> AsyncGenerator[HomeAssistant]:
     synchronously from within the running loop.
     """
     async with async_test_home_assistant() as hass:
-        yield hass
+        try:
+            yield hass
+        finally:
+            await hass.async_stop(force=True)
 
 
 @pytest.fixture
