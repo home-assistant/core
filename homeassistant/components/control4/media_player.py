@@ -243,10 +243,16 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
         """Remember the source the room is playing.
 
         The director resets the room's source variables when the room is turned
-        off, so the last source has to be kept here to start it again.
+        off, so the last source has to be kept here to start it again. Rooms
+        that do not report media info are tracked by their current video device.
         """
-        if (source_id := self._get_current_playing_device_id()) in self._sources:
-            self._last_source_id = source_id
+        for source_id in (
+            self._get_current_playing_device_id(),
+            self._get_current_video_device_id(),
+        ):
+            if source_id in self._sources:
+                self._last_source_id = source_id
+                return
 
     def _create_api_object(self) -> C4Room:
         """Create a pyControl4 device object.

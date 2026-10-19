@@ -222,6 +222,53 @@ async def test_media_player_last_source_follows_playing_source(
     "mock_c4_director_duplicate_source_names",
     "mock_room_off_update_variables",
 )
+async def test_media_player_last_source_falls_back_to_video_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_room: MagicMock,
+    mock_room_off_variables: dict,
+) -> None:
+    """Test that a room without media info is tracked by its video device."""
+    mock_room_off_variables[1]["POWER_STATE"] = True
+    mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 101
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 101
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": "media_player.living_room"},
+        blocking=True,
+    )
+
+    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(101)
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account", "mock_c4_director", "mock_room_off_update_variables"
+)
+async def test_media_player_last_source_ignores_unknown_video_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_room_off_variables: dict,
+) -> None:
+    """Test that a video device that is not a room source is not remembered."""
+    mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 999
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] is None
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director_duplicate_source_names",
+    "mock_room_off_update_variables",
+)
 async def test_media_player_turn_on_restores_last_source(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
