@@ -473,6 +473,67 @@ async def test_concurrent_requests_cannot_advance_the_same_flow(
     mock_process_wrong_login.assert_not_called()
 
 
+async def test_busy_flow_is_turned_away_before_its_body_is_read(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a request for a busy flow gets a conflict without waiting for its body.
+
+    Otherwise a request could hold back its body until the attempt in progress
+    got its address banned, and then still advance the flow.
+    """
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+
+    held = asyncio.Event()
+    release = asyncio.Event()
+    original_configure = hass.auth.login_flow.async_configure
+
+    async def held_configure(*args: Any, **kwargs: Any) -> Any:
+        held.set()
+        await release.wait()
+        return await original_configure(*args, **kwargs)
+
+    with patch.object(hass.auth.login_flow, "async_configure", held_configure):
+        first = asyncio.create_task(
+            client.post(
+                f"/auth/login_flow/{flow_id}",
+                json={
+                    "client_id": CLIENT_ID,
+                    "username": "test-user",
+                    "password": "test-pass",
+                },
+            )
+        )
+        await held.wait()
+
+        # Sent by hand, as the test client only reads a response once its whole
+        # body is sent. The body announced here never comes.
+        reader, writer = await asyncio.open_connection(
+            client.server.host, client.server.port
+        )
+        writer.write(
+            f"POST /auth/login_flow/{flow_id} HTTP/1.1\r\n"
+            f"Host: {client.server.host}:{client.server.port}\r\n"
+            "Content-Type: application/json\r\n"
+            "Content-Length: 100\r\n\r\n".encode()
+        )
+        status_line = await reader.readline()
+        writer.close()
+
+        release.set()
+        await first
+
+    assert status_line.startswith(b"HTTP/1.1 409")
+
+
 @pytest.mark.parametrize(
     ("first_input", "first_status"),
     [

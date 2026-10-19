@@ -89,9 +89,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     get_url,
@@ -443,6 +441,23 @@ class LoginFlowResourceView(LoginFlowBaseView):
         """Do not allow getting status of a flow in progress."""
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
+        """Handle progressing a login flow request."""
+        # Checked before the lookup, as a finished flow is gone while its
+        # response is still being built.
+        if flow_id in self._flows_in_progress:
+            return self.json_message(
+                "Flow request already in progress", HTTPStatus.CONFLICT
+            )
+        self._flows_in_progress.add(flow_id)
+        try:
+            # Outside the body validation and log_invalid_auth, so a request for a
+            # busy flow is turned away before its body is read and isn't counted
+            # as a failed login.
+            return await self._async_post(request, flow_id=flow_id)
+        finally:
+            self._flows_in_progress.remove(flow_id)
+
     @RequestDataValidator(
         probatio.Schema(
             {probatio.Required("client_id"): str},
@@ -450,10 +465,10 @@ class LoginFlowResourceView(LoginFlowBaseView):
         )
     )
     @log_invalid_auth
-    async def post(
+    async def _async_post(
         self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:
-        """Handle progressing a login flow request."""
+        """Progress the login flow."""
         client_id: str = data.pop("client_id")
 
         if not indieauth.verify_client_id(
@@ -461,28 +476,18 @@ class LoginFlowResourceView(LoginFlowBaseView):
         ):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
-        # Checked before the lookup, as a finished flow is gone while its
-        # response is still being built.
-        if flow_id in self._flows_in_progress:
-            # Raised so log_invalid_auth doesn't count it as a failed login.
-            raise web.HTTPConflict(
-                text=json_dumps({"message": "Flow request already in progress"}),
-                content_type=CONTENT_TYPE_JSON,
-            )
-        self._flows_in_progress.add(flow_id)
         try:
             # do not allow change ip during login flow
             flow = self._flow_mgr.async_get(flow_id)
             if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
                 return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
             result = await self._flow_mgr.async_configure(flow_id, data)
-            return await self._async_flow_result_to_response(request, client_id, result)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
-        finally:
-            self._flows_in_progress.remove(flow_id)
+
+        return await self._async_flow_result_to_response(request, client_id, result)
 
     async def delete(self, request: web.Request, flow_id: str) -> web.Response:
         """Cancel a flow in progress."""
