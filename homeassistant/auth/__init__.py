@@ -345,6 +345,8 @@ class AuthManager:
         if linked_user is not None:
             raise ValueError("Credential is already linked to a user")
         # Enforced here to cover every way of linking credentials.
+        if user.system_generated:
+            raise ValueError("Unable to link credentials to a system generated user")
         if (
             provider := self._async_get_auth_provider(credentials)
         ) is not None and not self.async_can_link_credentials(user, provider):
