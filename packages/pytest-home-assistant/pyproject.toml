@@ -17,7 +17,6 @@ authors = [
 # Dependency pins are synchronized by script.gen_requirements_all.
 dependencies = [
   "homeassistant",
-  "aiohasupervisor==0.7.0",
   "bleak-retry-connector==4.7.1",
   "freezegun==1.5.5",
   "paho-mqtt==2.1.0",

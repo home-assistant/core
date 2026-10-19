@@ -59,10 +59,6 @@ async def test_config_entry(hass: HomeAssistant) -> None:
 
 Run your tests with `pytest`.
 
-Supervisor tests can request `supervisor_client`, `addon_manager`, and fixtures
-such as `addon_not_installed`, `install_addon`, and `start_addon`. These provide
-mocked Supervisor responses without connecting to a running Supervisor.
-
 Use `@pytest.mark.usefixtures("entity_registry_enabled_by_default")` when a test
 needs entities that are normally disabled in the entity registry.
 
@@ -90,8 +86,6 @@ shared configuration if it exists, or provides an empty temporary directory.
 | `pytest_homeassistant.components.common` | Shared assertions for entities, platforms, and integration behavior. |
 | `pytest_homeassistant.components.bluetooth` | Bluetooth device, advertisement, and scanner test helpers. |
 | `pytest_homeassistant.components.mqtt.common` | MQTT client mocks, message helpers, and shared assertions. |
-| `pytest_homeassistant.components.hassio.common` | Supervisor add-on mocks and response helpers. |
-| `pytest_homeassistant.components.hassio.fixtures` | Supervisor client, discovery, add-on management, and response fixtures. |
 | `pytest_homeassistant.components.recorder.common` | Recorder setup, database, and history test helpers. |
 | `pytest_homeassistant.components.diagnostics` | Helpers for requesting integration and device diagnostics. |
 | `pytest_homeassistant.components.repairs` | Helpers for listing repair issues and starting and completing repair flows. |
