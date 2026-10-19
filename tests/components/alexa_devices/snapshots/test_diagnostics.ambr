@@ -12,12 +12,34 @@
     }),
     'device family': 'mine',
     'device type': 'echo',
+    'features': dict({
+      'temperatureSensor': dict({
+        '': dict({
+          'friendly_name': None,
+          'maximum_value': None,
+          'minimum_value': None,
+          'precision': None,
+          'properties': list([
+            'temperature',
+          ]),
+          'raw_configuration': dict({
+          }),
+          'supported_modes': list([
+          ]),
+          'supported_operations': list([
+          ]),
+          'unit_of_measure': None,
+        }),
+      }),
+    }),
     'online': True,
     'sensors': dict({
       'dnd': dict({
         'error': False,
         'error_msg': None,
         'error_type': None,
+        'feature_name': '',
+        'instance': '',
         'name': 'dnd',
         'scale': None,
         'time_of_sample': None,
@@ -27,6 +49,8 @@
         'error': False,
         'error_msg': None,
         'error_type': None,
+        'feature_name': 'temperatureSensor',
+        'instance': '',
         'name': 'temperature',
         'scale': 'CELSIUS',
         'time_of_sample': None,
@@ -53,12 +77,34 @@
           }),
           'device family': 'mine',
           'device type': 'echo',
+          'features': dict({
+            'temperatureSensor': dict({
+              '': dict({
+                'friendly_name': None,
+                'maximum_value': None,
+                'minimum_value': None,
+                'precision': None,
+                'properties': list([
+                  'temperature',
+                ]),
+                'raw_configuration': dict({
+                }),
+                'supported_modes': list([
+                ]),
+                'supported_operations': list([
+                ]),
+                'unit_of_measure': None,
+              }),
+            }),
+          }),
           'online': True,
           'sensors': dict({
             'dnd': dict({
               'error': False,
               'error_msg': None,
               'error_type': None,
+              'feature_name': '',
+              'instance': '',
               'name': 'dnd',
               'scale': None,
               'time_of_sample': None,
@@ -68,6 +114,8 @@
               'error': False,
               'error_msg': None,
               'error_type': None,
+              'feature_name': 'temperatureSensor',
+              'instance': '',
               'name': 'temperature',
               'scale': 'CELSIUS',
               'time_of_sample': None,

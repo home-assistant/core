@@ -140,17 +140,18 @@ async def test_device_removed_and_readded(
 
 
 @pytest.mark.parametrize(
-    ("sensor", "api_value", "scale", "state_value", "unit"),
+    ("sensor", "feature_name", "api_value", "scale", "state_value", "unit"),
     [
         (
             "temperature",
+            "temperatureSensor",
             "86",
             "FAHRENHEIT",
             "30.0",  # State machine converts to °C
             "°C",  # State machine converts to °C
         ),
-        ("temperature", "22.5", "CELSIUS", "22.5", "°C"),
-        ("illuminance", "800", None, "800", "lx"),
+        ("temperature", "temperatureSensor", "22.5", "CELSIUS", "22.5", "°C"),
+        ("illuminance", "lightSensor", "800", None, "800", "lx"),
     ],
 )
 async def test_unit_of_measurement(
@@ -159,6 +160,7 @@ async def test_unit_of_measurement(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sensor: str,
+    feature_name: str,
     api_value: Any,
     scale: str | None,
     state_value: Any,
@@ -178,6 +180,8 @@ async def test_unit_of_measurement(
             error_msg=None,
             error_type=None,
             scale=scale,
+            feature_name=feature_name,
+            instance="",
         )
     }
 
@@ -208,6 +212,8 @@ async def test_sensor_unavailable(
             error_msg=None,
             error_type=None,
             scale=None,
+            feature_name="lightSensor",
+            instance="",
         )
     }
 
