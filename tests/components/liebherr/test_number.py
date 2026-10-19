@@ -15,6 +15,7 @@ from pyliebherrhomeapi import (
 )
 from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -31,8 +32,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

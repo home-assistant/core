@@ -1,6 +1,7 @@
 """The event tests for the yale."""
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -12,8 +13,6 @@ from .mocks import (
     _mock_doorbell_from_fixture,
     _mock_lock_from_fixture,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_create_doorbell(hass: HomeAssistant) -> None:

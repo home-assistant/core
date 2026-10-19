@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock
 import aiohttp
 from lunatone_rest_api_client.models.info import Tier
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,6 @@ from . import (
     build_info_data,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

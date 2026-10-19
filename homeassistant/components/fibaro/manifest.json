@@ -1,6 +1,7 @@
 {
   "domain": "fibaro",
   "name": "Fibaro",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@rappenze"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fibaro",

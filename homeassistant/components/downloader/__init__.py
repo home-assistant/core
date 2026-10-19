@@ -20,7 +20,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Listen for download events to download files."""
     download_path = entry.data[CONF_DOWNLOAD_DIR]
 
@@ -37,5 +37,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="download_path_not_found",
             translation_placeholders={"path": download_path},
         )
-
-    return True

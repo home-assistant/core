@@ -1,6 +1,7 @@
 {
   "domain": "orvibo",
   "name": "Orvibo",
+  "categories": ["plugs_switches"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/orvibo",

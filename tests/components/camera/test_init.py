@@ -10,6 +10,11 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 from aiohttp import hdrs
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera, async_register_webrtc_provider
@@ -35,9 +40,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_jpeg
-
-from tests.common import async_fire_time_changed, setup_test_component_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="image_mock_url")
@@ -895,7 +897,9 @@ async def test_use_stream_for_stills(
             "homeassistant.components.demo.camera.DemoCamera.stream_source",
             return_value="rtsp://some_source",
         ) as mock_stream_source,
-        patch("homeassistant.components.camera.create_stream") as mock_create_stream,
+        patch(
+            "homeassistant.components.camera.entity.create_stream"
+        ) as mock_create_stream,
         patch(
             "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
             return_value=True,

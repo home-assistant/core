@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from subarulink import SubaruException
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -24,8 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_API, MOCK_API_FETCH, advance_time_to_next_fetch
-
-from tests.common import MockConfigEntry
 
 MOCK_API_LOCK = f"{MOCK_API}lock"
 MOCK_API_UNLOCK = f"{MOCK_API}unlock"
