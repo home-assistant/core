@@ -60,8 +60,8 @@ async def async_get_config_entry_diagnostics(
             "battery_control_modes": [
                 control_mode.to_dict()
                 for control_mode in (
-                    entry.runtime_data.battery_control_coordinator.data.values()
-                )
+                    entry.runtime_data.battery_control_coordinator.data or {}
+                ).values()
             ],
         },
         TO_REDACT,
