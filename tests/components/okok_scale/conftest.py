@@ -76,6 +76,4 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=OKOK_F0_SERVICE_INFO.address,
         data={},
-        version=1,
-        minor_version=2,
     )
