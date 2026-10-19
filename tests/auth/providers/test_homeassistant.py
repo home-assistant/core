@@ -8,7 +8,9 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, auth_store
+from homeassistant.auth.models import User
 from homeassistant.auth.providers import (
+    InvalidStepUpError,
     auth_provider_from_config,
     homeassistant as hass_auth,
 )
@@ -264,3 +266,59 @@ async def test_change_username_not_normalized(
         hass_auth.InvalidUsername, match='Username "TEST-user " is not normalized'
     ):
         data.change_username("test-user", "TEST-user ")
+
+
+async def _signed_in_user(
+    hass: HomeAssistant, data: hass_auth.Data
+) -> tuple[hass_auth.HassAuthProvider, User]:
+    """Return a provider and a user who signed in with a password."""
+    data.add_auth("hello", "test-pass")
+    await data.async_save()
+
+    manager = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
+    provider = manager.auth_providers[0]
+    assert isinstance(provider, hass_auth.HassAuthProvider)
+    credentials = await provider.async_get_or_create_credentials({"username": "hello"})
+    return provider, await manager.async_get_or_create_user(credentials)
+
+
+async def test_verify_step_up_accepts_the_current_password(
+    hass: HomeAssistant, data: hass_auth.Data
+) -> None:
+    """Test a signed in user can prove who they are with their password."""
+    provider, user = await _signed_in_user(hass, data)
+
+    assert provider.async_get_username(user) == "hello"
+    await provider.async_verify_step_up(user, {"password": "test-pass"}, None)
+
+
+@pytest.mark.parametrize(
+    "step_up_data",
+    [
+        pytest.param({"password": "wrong-pass"}, id="wrong"),
+        pytest.param({"password": ""}, id="empty"),
+        pytest.param({}, id="missing"),
+    ],
+)
+async def test_verify_step_up_rejects_a_wrong_password(
+    hass: HomeAssistant, data: hass_auth.Data, step_up_data: dict[str, str]
+) -> None:
+    """Test only the current password verifies the user again."""
+    provider, user = await _signed_in_user(hass, data)
+
+    with pytest.raises(InvalidStepUpError):
+        await provider.async_verify_step_up(user, step_up_data, None)
+
+
+async def test_verify_step_up_needs_a_credential_of_this_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test an account without a password login cannot be verified with one."""
+    manager = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
+    provider = manager.auth_providers[0]
+    assert isinstance(provider, hass_auth.HassAuthProvider)
+    user = await manager.async_create_user("Alice")
+
+    assert provider.async_get_username(user) is None
+    with pytest.raises(InvalidStepUpError):
+        await provider.async_verify_step_up(user, {"password": "test-pass"}, None)
