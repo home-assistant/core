@@ -17,7 +17,6 @@ MISSING_ALL = {
     "configurator",
     "input_boolean",
     "llm",
-    "sun",
 }
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
