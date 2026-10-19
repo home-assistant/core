@@ -22,10 +22,10 @@ LIBRARY_SIZE = "sensor.documents_size"
 
 
 @pytest.mark.freeze_time("2026-10-15 10:00:00+00:00")
+@pytest.mark.usefixtures("mock_seafile_client")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_seafile_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,

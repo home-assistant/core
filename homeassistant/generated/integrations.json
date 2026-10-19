@@ -9829,6 +9829,9 @@
     "seafile": {
       "name": "Seafile",
       "integration_type": "service",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },

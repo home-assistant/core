@@ -19,9 +19,9 @@ from .conftest import SUBENTRY_ID
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_seafile_client")
 async def test_setup_and_unload(
     hass: HomeAssistant,
-    mock_seafile_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a config entry loads and unloads cleanly."""
@@ -77,9 +77,9 @@ async def test_setup_failure(
     assert mock_config_entry.state is state
 
 
+@pytest.mark.usefixtures("mock_seafile_client")
 async def test_remove_library(
     hass: HomeAssistant,
-    mock_seafile_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,

@@ -82,6 +82,7 @@ async def test_full_flow(hass: HomeAssistant, mock_seafile_client: AsyncMock) ->
     kwargs = mock_seafile_client.get_auth_token.call_args.kwargs
     assert len(kwargs["device_id"]) == 40
     assert kwargs["device_name"] == f"Home Assistant ({hass.config.location_name})"
+    mock_seafile_client.logout_device.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -214,6 +215,20 @@ async def test_token_revoked_after_connection_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == f"seafile.example.com:443_{ACCOUNT_EMAIL}"
     assert result["data"][CONF_TOKEN] == TOKEN
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_token_revoked_when_flow_cancelled(
+    hass: HomeAssistant, mock_seafile_client: AsyncMock
+) -> None:
+    """Test the token is revoked when the flow is cancelled at the libraries step."""
+    flow_id = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
+    assert result["step_id"] == "libraries"
+
+    hass.config_entries.flow.async_abort(flow_id)
+    await hass.async_block_till_done()
+    mock_seafile_client.logout_device.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

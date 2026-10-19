@@ -31,7 +31,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -98,6 +97,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the flow."""
         self._user_input: dict[str, Any] = {}
+        self._client: Seafile | None = None
         self._token: str | None = None
         self._libraries: list[Library] = []
 
@@ -105,7 +105,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str], otp: str | None = None
     ) -> ConfigFlowResult | None:
         """Log in and continue, or record an error and return None."""
-        client = Seafile(
+        self._client = client = Seafile(
             self._user_input[CONF_URL],
             session=async_get_clientsession(
                 self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
@@ -132,14 +132,10 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_revoke_token(client)
             errors["base"] = "cannot_connect"
         else:
-            try:
-                await self.async_set_unique_id(
-                    _unique_id(self._user_input[CONF_URL], account.email)
-                )
-                self._abort_if_unique_id_configured()
-            except AbortFlow:
-                await self._async_revoke_token(client)
-                raise
+            await self.async_set_unique_id(
+                _unique_id(self._user_input[CONF_URL], account.email)
+            )
+            self._abort_if_unique_id_configured()
             return await self.async_step_libraries()
         return None
 
@@ -150,6 +146,13 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         self._token = None
         with suppress(SeafileError):
             await client.logout_device()
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Revoke the token when the flow ends without creating the entry."""
+        if self._token is not None and self._client is not None:
+            self.hass.async_create_task(self._async_revoke_token(self._client))
 
     @override
     async def async_step_user(
@@ -187,12 +190,15 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         """Let the user pick the libraries to add."""
         if user_input is not None:
             names = {library.id: library.name for library in self._libraries}
-            assert self._token is not None
+            token = self._token
+            assert token is not None
+            # The entry owns the token now, so async_remove must not revoke it.
+            self._token = None
             return self.async_create_entry(
                 title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
                 data={
                     CONF_URL: self._user_input[CONF_URL],
-                    CONF_TOKEN: self._token,
+                    CONF_TOKEN: token,
                     CONF_VERIFY_SSL: self._user_input[CONF_VERIFY_SSL],
                 },
                 subentries=[
