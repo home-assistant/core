@@ -67,7 +67,9 @@ async def test_camera(
 
     entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_fluent"
     assert hass.states.get(entity_id).state == CameraState.IDLE
-    assert get_camera_from_entity_id(hass, entity_id).supports_two_way_audio
+    assert get_camera_from_entity_id(
+        hass, entity_id
+    ).camera_entity_capabilities.two_way_audio
 
     # check getting a image from the camera
     reolink_host.get_snapshot.return_value = b"image"

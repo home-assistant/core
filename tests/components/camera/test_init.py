@@ -1039,7 +1039,7 @@ async def _test_capabilities(
         camera_obj = get_camera_from_entity_id(hass, entity_id)
         capabilities = camera_obj.camera_capabilities
         assert capabilities == camera.CameraCapabilities(
-            expected_types, supports_two_way_audio=two_way_audio
+            expected_types, two_way_audio=two_way_audio
         )
 
         # Request capabilities through WebSocket
@@ -1054,7 +1054,7 @@ async def _test_capabilities(
         assert msg["success"]
         assert msg["result"] == {
             "frontend_stream_types": ANY,
-            "supports_two_way_audio": two_way_audio,
+            "two_way_audio": two_way_audio,
         }
         assert sorted(msg["result"]["frontend_stream_types"]) == sorted(expected_types)
 
@@ -1102,8 +1102,9 @@ async def test_camera_capabilities_two_way_audio_hls(
 ) -> None:
     """Test two way audio is only reported for HLS cameras with a WebRTC provider."""
     cam = get_camera_from_entity_id(hass, "camera.demo_camera")
-    cam._attr_supports_two_way_audio = True
-    cam._invalidate_camera_capabilities_cache()
+    cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
+        two_way_audio=True
+    )
 
     await _test_capabilities(
         hass,
@@ -1123,8 +1124,9 @@ async def test_camera_capabilities_two_way_audio_native_webrtc(
 ) -> None:
     """Test two way audio is reported for native WebRTC cameras."""
     cam = get_camera_from_entity_id(hass, "camera.async")
-    cam._attr_supports_two_way_audio = True
-    cam._invalidate_camera_capabilities_cache()
+    cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
+        two_way_audio=True
+    )
 
     await _test_capabilities(
         hass,
