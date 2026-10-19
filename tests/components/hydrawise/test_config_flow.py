@@ -256,6 +256,45 @@ async def test_reauth_wrong_account(
     assert mock_config_entry.data[CONF_PASSWORD] == "bad-password"
 
 
+@pytest.mark.usefixtures("mock_auth")
+async def test_reauth_legacy_entry(
+    hass: HomeAssistant,
+    user: User,
+    mock_pydrawise: AsyncMock,
+) -> None:
+    """Test reauthenticating an entry from the legacy API, which has no username."""
+    mock_config_entry = MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={CONF_API_KEY: "abc123"},
+        unique_id=f"hydrawise-{user.customer_id}",
+        version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    assert CONF_USERNAME in result["data_schema"].schema
+
+    mock_pydrawise.get_user.return_value = user
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "__password__",
+            CONF_API_KEY: "__api-key__",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "asdf@asdf.com",
+        CONF_PASSWORD: "__password__",
+        CONF_API_KEY: "__api-key__",
+    }
+
+
 async def test_reauth_fails(
     hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock, user: User
 ) -> None:
