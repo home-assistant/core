@@ -1,6 +1,5 @@
 """Config flow for the Trimlight integration."""
 
-from dataclasses import dataclass
 from typing import Any, override
 
 from aiotrimlight import (
@@ -22,22 +21,14 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import CONF_DID, DOMAIN
 
 
-@dataclass(frozen=True, slots=True)
-class _TrimlightDiscoveryData:
-    """Discovered Trimlight controller data."""
-
-    host: str
-    did: str
-    mac: str
-    name: str
-
-
 class TrimlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trimlight."""
 
     VERSION = 1
 
-    _discovery: _TrimlightDiscoveryData
+    _host: str
+    _mac: str
+    _name: str
 
     @override
     async def async_step_user(
@@ -59,7 +50,7 @@ class TrimlightConfigFlow(ConfigFlow, domain=DOMAIN):
         host = discovery_info.host
         mac = format_mac(discovery.mac_address)
         await self.async_set_unique_id(discovery.did)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_MAC: mac})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         client = TrimlightClient(host, async_get_clientsession(self.hass))
         try:
@@ -70,29 +61,23 @@ class TrimlightConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_response")
 
         service_name = discovery_info.name.removesuffix(f".{discovery_info.type}")
-        name = discovery.name or service_name
-        self._discovery = _TrimlightDiscoveryData(
-            host=host,
-            did=discovery.did,
-            mac=mac,
-            name=name,
-        )
-        self.context["title_placeholders"] = {"name": name}
+        self._host = host
+        self._mac = mac
+        self._name = discovery.name or service_name
+        self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovered Trimlight controller."""
-        discovery = self._discovery
-
         if user_input is not None:
             return self.async_create_entry(
-                title=discovery.name,
+                title=self._name,
                 data={
-                    CONF_HOST: discovery.host,
-                    CONF_DID: discovery.did,
-                    CONF_MAC: discovery.mac,
+                    CONF_HOST: self._host,
+                    CONF_DID: self.unique_id,
+                    CONF_MAC: self._mac,
                 },
             )
 
@@ -100,7 +85,7 @@ class TrimlightConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                "host": discovery.host,
-                "name": discovery.name,
+                "host": self._host,
+                "name": self._name,
             },
         )

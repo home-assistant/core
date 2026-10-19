@@ -21,9 +21,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: No integration-specific triggers are provided.
-  entity-event-setup:
-    status: exempt
-    comment: Entities do not explicitly subscribe to events.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -32,41 +30,65 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage: todo
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters:
+    status: exempt
+    comment: Setup only requires confirming the discovered controller.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The controller does not require authentication.
+  test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
-  discovery: todo
-  discovery-update-info: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration manages one fixed device per config entry.
+  entity-category:
+    status: exempt
+    comment: The light entity provides the main device function.
+  entity-device-class:
+    status: exempt
+    comment: Light entities do not support device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration only provides a primary light entity.
+  entity-translations:
+    status: exempt
+    comment: The light entity uses the device name.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The light entity uses the default platform icon.
+  reconfiguration-flow:
+    status: exempt
+    comment: The config flow has no user-configurable settings.
+  repair-issues:
+    status: exempt
+    comment: This integration has no known issues that require repair.
+  stale-devices:
+    status: exempt
+    comment: This integration manages one fixed device per config entry.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo
