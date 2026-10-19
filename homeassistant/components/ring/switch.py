@@ -11,10 +11,12 @@ from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import (
     DeprecatedInfo,
@@ -34,6 +36,40 @@ PARALLEL_UPDATES = 1
 IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k != 2}
 
 
+def _in_home_chime_exists(device: RingDoorBell) -> bool:
+    """Return True if the doorbell has an in-home chime."""
+    if device.family != "doorbots":
+        return False
+    try:
+        return device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT
+    except KeyError as ex:
+        _LOGGER.debug(
+            "Unknown doorbell chime type %s; skipping in-home chime for %s",
+            ex,
+            device.device_api_id,
+        )
+        return False
+
+
+def _in_home_chime_is_on(device: RingDoorBell) -> bool | None:
+    """Return if the in-home chime is enabled; None when the chime type is unknown."""
+    try:
+        return device.existing_doorbell_type_enabled or False
+    except KeyError:
+        return None
+
+
+async def _async_set_in_home_chime_enabled(device: RingDoorBell, enabled: bool) -> None:
+    """Enable or disable the in-home chime."""
+    try:
+        await device.async_set_existing_doorbell_type_enabled(enabled)
+    except KeyError as ex:
+        _LOGGER.debug("In-home chime type unknown for %s", device.device_api_id)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="chime_type_unknown"
+        ) from ex
+
+
 @dataclass(frozen=True, kw_only=True)
 class RingSwitchEntityDescription(
     SwitchEntityDescription,
@@ -46,7 +82,7 @@ class RingSwitchEntityDescription(
     unique_id_fn: Callable[[Self, RingDeviceT], str] = lambda self, device: (
         f"{device.device_api_id}-{self.key}"
     )
-    is_on_fn: Callable[[RingDeviceT], bool]
+    is_on_fn: Callable[[RingDeviceT], bool | None]
     turn_on_fn: Callable[[RingDeviceT], Coroutine[Any, Any, None]]
     turn_off_fn: Callable[[RingDeviceT], Coroutine[Any, Any, None]]
 
@@ -66,15 +102,10 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
     RingSwitchEntityDescription[RingDoorBell](
         key="in_home_chime",
         translation_key="in_home_chime",
-        exists_fn=lambda device: (
-            device.family == "doorbots"
-            and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT
-        ),
-        is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
-        turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
-        turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(
-            False
-        ),
+        exists_fn=_in_home_chime_exists,
+        is_on_fn=_in_home_chime_is_on,
+        turn_on_fn=lambda device: _async_set_in_home_chime_enabled(device, True),
+        turn_off_fn=lambda device: _async_set_in_home_chime_enabled(device, False),
     ),
     RingSwitchEntityDescription[RingDoorBell](
         key="motion_detection",

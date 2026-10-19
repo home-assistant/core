@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from xiaomi_ble import (
     XiaomiBluetoothDeviceData as DeviceData,
     XiaomiCloudBLEDevice,
@@ -24,8 +25,6 @@ from . import (
     YLKG07YL_SERVICE_INFO,
     make_advertisement,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
@@ -757,6 +756,7 @@ async def test_async_step_user_short_payload_then_full(hass: HomeAssistant) -> N
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
     assert result3["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
+    assert result3["result"].unique_id == "A4:C1:38:56:53:84"
 
 
 async def test_async_step_user_with_found_devices_v4_encryption(

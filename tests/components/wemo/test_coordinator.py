@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import _Call, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import pywemo
 from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
@@ -20,8 +21,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import MOCK_FIRMWARE_VERSION, MOCK_HOST, MOCK_SERIAL_NUMBER
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture

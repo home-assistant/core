@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -26,8 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import async_next_update
-
-from tests.common import MockConfigEntry
 
 AZIMUTH_SENSOR = "sensor.roof_azimuth"
 DECLINATION_SENSOR = "sensor.roof_declination"

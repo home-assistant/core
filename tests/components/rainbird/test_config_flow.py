@@ -6,6 +6,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.rainbird import DOMAIN
@@ -29,9 +34,6 @@ from .conftest import (
     mock_json_response,
     mock_response,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 @pytest.fixture(name="responses")
@@ -180,6 +182,7 @@ async def test_multiple_config_entries(
     result = await complete_flow(hass)
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert dict(result.get("result").data) == expected_config_entry
+    assert result["result"].unique_id == MAC_ADDRESS_UNIQUE_ID
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2

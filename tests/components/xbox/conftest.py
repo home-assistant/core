@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
@@ -26,8 +27,6 @@ from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -191,6 +190,13 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.titlehub.get_title_info.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
         )
+
+        def get_title_info_by_xuid(xuid: str, _: str) -> TitleHubResponse:
+            return TitleHubResponse(
+                **load_json_object_fixture(f"titlehub_titleinfo_{xuid}.json", DOMAIN)
+            )
+
+        client.titlehub.get_title_info_by_xuid.side_effect = get_title_info_by_xuid
         client.titlehub.get_title_history.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titlehistory.json", DOMAIN)
         )

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from forecast_solar import ForecastSolarConnectionError, Plane
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -26,8 +27,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import async_next_update
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

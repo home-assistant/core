@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_convert_code_interpreter[custom_function]
+  list([
+    dict({
+      'arguments': '{"code":"print(1)"}',
+      'call_id': 'ci_A',
+      'name': 'code_interpreter',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'ci_A',
+      'output': '{"data":{"container_id":"cntr_A","output":null,"status":"completed"},"error":false}',
+      'type': 'function_call_output',
+    }),
+  ])
+# ---
+# name: test_convert_code_interpreter[failed]
+  list([
+    dict({
+      'code': 'raise ValueError()',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'logs': 'ValueError',
+          'type': 'logs',
+        }),
+      ]),
+      'status': 'failed',
+      'type': 'code_interpreter_call',
+    }),
+  ])
+# ---
+# name: test_convert_code_interpreter[image]
+  list([
+    dict({
+      'code': 'plt.show()',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': list([
+        dict({
+          'type': 'image',
+          'url': 'https://example.com/plot.png',
+        }),
+      ]),
+      'status': 'completed',
+      'type': 'code_interpreter_call',
+    }),
+  ])
+# ---
+# name: test_convert_code_interpreter[incomplete]
+  list([
+    dict({
+      'code': 'print(1)',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': None,
+      'status': 'incomplete',
+      'type': 'code_interpreter_call',
+    }),
+  ])
+# ---
+# name: test_convert_code_interpreter[no_output]
+  list([
+    dict({
+      'code': None,
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': None,
+      'status': 'completed',
+      'type': 'code_interpreter_call',
+    }),
+  ])
+# ---

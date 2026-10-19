@@ -3,7 +3,8 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN, SERVICE_DOCK, SERVICE_START_MOWING, LawnMowerEntityFeature
+from . import SERVICE_DOCK, SERVICE_START_MOWING, LawnMowerEntityFeature
+from .const import DOMAIN
 
 INTENT_LANW_MOWER_START_MOWING = "HassLawnMowerStartMowing"
 INTENT_LANW_MOWER_DOCK = "HassLawnMowerDock"

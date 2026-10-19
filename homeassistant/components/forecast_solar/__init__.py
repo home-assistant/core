@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry."""
 
     if entry.version == 1:
@@ -91,8 +91,6 @@ async def async_migrate_entry(
         new_options.pop(CONF_MODULES_POWER, None)
 
         hass.config_entries.async_update_entry(entry, options=new_options, version=3)
-
-    return True
 
 
 @callback
@@ -147,7 +145,7 @@ def _async_track_sensor_renames(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Set up Forecast.Solar from a config entry."""
     plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
     if not plane_subentries:
@@ -172,8 +170,6 @@ async def async_setup_entry(
     entry.async_on_unload(_async_reload_on_forecast_change(hass, entry))
     if CONF_LATITUDE not in entry.data:
         _async_refresh_on_home_move(hass, entry)
-
-    return True
 
 
 @callback
@@ -275,6 +271,6 @@ def _async_reload_on_forecast_change(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
