@@ -133,10 +133,11 @@ class AuthManagerFlowManager(
     ) -> LoginFlow[Any]:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
-        if not auth_provider:
-            raise KeyError(f"Unknown auth provider {handler_key}")
-        # The login screen doesn't offer it, so it can't be started directly either.
-        if not auth_provider.async_can_start_login(context or AuthFlowContext()):
+        # Not offered on the login screen is answered like not configured, so
+        # it doesn't reveal which providers are set up.
+        if not auth_provider or not auth_provider.async_can_start_login(
+            context or AuthFlowContext()
+        ):
             raise UnknownHandler
         return await auth_provider.async_login_flow(context)
 

@@ -146,22 +146,12 @@ async def test_login_flow_refuses_providers_that_cannot_start_login(
     assert await resp.json() == {"message": "Invalid handler specified"}
 
 
-@pytest.mark.parametrize(
-    ("ip", "expected_status"),
-    [
-        pytest.param("192.168.0.1", HTTPStatus.OK, id="trusted"),
-        pytest.param("1.2.3.4", HTTPStatus.NOT_FOUND, id="untrusted"),
-    ],
-)
-async def test_login_flow_trusted_networks_only_from_trusted_network(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    ip: str,
-    expected_status: HTTPStatus,
+async def test_login_flow_trusted_networks_from_trusted_network(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
-    """Test a trusted networks login can only be started from a trusted network."""
+    """Test a trusted networks login can be started from a trusted network."""
     client = await async_setup_auth(
-        hass, aiohttp_client, [_TRUSTED_NETWORKS_CONFIG], custom_ip=ip
+        hass, aiohttp_client, [_TRUSTED_NETWORKS_CONFIG], custom_ip="192.168.0.1"
     )
     resp = await client.post(
         "/auth/login_flow",
@@ -172,7 +162,36 @@ async def test_login_flow_trusted_networks_only_from_trusted_network(
         },
     )
 
-    assert resp.status == expected_status
+    assert resp.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    "provider_configs",
+    [
+        pytest.param([_TRUSTED_NETWORKS_CONFIG], id="untrusted-network"),
+        pytest.param(BASE_CONFIG, id="not-configured"),
+    ],
+)
+async def test_login_flow_hides_unavailable_trusted_networks(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    provider_configs: list[dict[str, Any]],
+) -> None:
+    """Test trusted networks from outside is answered like it isn't configured."""
+    client = await async_setup_auth(
+        hass, aiohttp_client, provider_configs, custom_ip="1.2.3.4"
+    )
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["trusted_networks", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert await resp.json() == {"message": "Invalid handler specified"}
 
 
 async def test_fetch_auth_providers_onboarding(
