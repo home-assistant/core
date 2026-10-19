@@ -19,7 +19,7 @@ DEFAULT_TITLE: Final = "ecosmart"
 SPOT_SCAN_INTERVAL: Final = timedelta(seconds=300)
 
 #: How far ahead the forecast action asks for: the API's own maximum. The
-#: published schedules usually reach far less, which the response reports.
+#: published schedules usually reach far less.
 FORECAST_HOURS: Final = 168
 
 #: Cents per kilowatt hour: the unit New Zealand power bills are written in.

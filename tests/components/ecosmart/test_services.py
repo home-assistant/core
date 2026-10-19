@@ -82,20 +82,13 @@ async def test_get_forecasts_empty(
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an empty forecast is a valid answer that says why it is empty."""
+    """Test an empty forecast is a valid answer, not an error."""
     mock_ecosmart_client.forecast.return_value = load_forecast("forecast_empty.json")
     await setup_integration(hass, mock_config_entry)
 
     response = await _get_forecasts(hass, mock_config_entry.entry_id)
 
-    assert response == {
-        "published_at": None,
-        "covered_hours": 0.0,
-        "unavailable_reason": (
-            "No WITS forecast is published for this grid exit point yet."
-        ),
-        "forecasts": [],
-    }
+    assert response == {"forecasts": []}
 
 
 async def test_get_forecasts_negative_price(
@@ -118,9 +111,6 @@ async def test_get_forecasts_negative_price(
     assert response["forecasts"] == [
         {
             "start_time": "2026-08-24T15:00:00+00:00",
-            "trading_date": "2026-08-25",
-            "trading_period": 7,
-            "schedule": "short",
             "price": -7.636,
             "price_excl_gst": -6.64,
         }

@@ -7,7 +7,6 @@ from aioecosmart import (
     EcosmartError,
     EcosmartRateLimitError,
     Forecast,
-    Schedule,
 )
 import probatio
 
@@ -29,8 +28,6 @@ from .coordinator import EcosmartConfigEntry, EcosmartCoordinator, retry_delay
 
 SERVICE_GET_FORECASTS: Final = "get_forecasts"
 ATTR_ICP: Final = "icp"
-
-SCHEDULE_NAMES: Final = {Schedule.SHORT: "short", Schedule.LONG: "long"}
 
 GET_FORECASTS_SCHEMA = probatio.Schema(
     {
@@ -77,22 +74,12 @@ def _serialize(forecast: Forecast) -> ServiceResponse:
     points: list[JsonValueType] = [
         {
             "start_time": point.starts_at.isoformat(),
-            "trading_date": point.trading_date.isoformat(),
-            "trading_period": point.trading_period,
-            "schedule": SCHEDULE_NAMES[point.schedule],
             "price": point.price_cents_per_kwh_incl_gst,
             "price_excl_gst": point.price_cents_per_kwh,
         }
         for point in forecast.points
     ]
-    return {
-        "published_at": (
-            forecast.published_at.isoformat() if forecast.published_at else None
-        ),
-        "covered_hours": forecast.covered_hours,
-        "unavailable_reason": forecast.unavailable_reason,
-        "forecasts": points,
-    }
+    return {"forecasts": points}
 
 
 async def _async_get_forecasts(call: ServiceCall) -> ServiceResponse:
