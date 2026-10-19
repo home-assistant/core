@@ -35,6 +35,8 @@ from . import (
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
+    deny_charge_cutoff,
+    refuse_battery_config_mask,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
@@ -414,6 +416,52 @@ async def test_derived_cutoff_soc(
             next(d for d in SENSOR_DESCRIPTIONS if d.key == key).value_fn(device)
             == expected
         )
+
+
+@pytest.mark.parametrize(
+    "hide_charge_cutoff",
+    [
+        pytest.param(deny_charge_cutoff, id="mask_denies"),
+        pytest.param(refuse_battery_config_mask, id="no_mask"),
+    ],
+)
+async def test_charge_cutoff_needs_a_declaring_mask(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hide_charge_cutoff: Callable[[MockModbusUnit], None],
+) -> None:
+    """Test a hybrid gets no charge cut-off unless its mask declares it."""
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    hide_charge_cutoff(unit)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc"
+        )
+        is None
+    )
+    # The rest of the battery config does not need the mask.
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_on_grid_discharge_cutoff_soc"
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(

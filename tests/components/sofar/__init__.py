@@ -1,5 +1,6 @@
 """Tests for the Sofar integration."""
 
+from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
 
 from homeassistant.components.sofar.const import (
@@ -77,6 +78,16 @@ def serve_meter_energy(unit: MockModbusUnit) -> None:
     unit.holding[0x0683] = 0xFFFF  # 0x0680-0x068F
     unit.holding[0x0682] = 0x000F  # 0x0690-0x0693
     unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
+
+
+def deny_charge_cutoff(unit: MockModbusUnit) -> None:
+    """Seed a battery config mask that leaves out 0x105B."""
+    unit.holding[0x1042] = 0x0000
+
+
+def refuse_battery_config_mask(unit: MockModbusUnit) -> None:
+    """Seed a model that publishes no battery config mask."""
+    unit.fail_read(0x1040, ModbusError("illegal data address"))
 
 
 def declare_pv_in_masks(unit: MockModbusUnit) -> None:
