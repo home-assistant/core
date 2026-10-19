@@ -34,9 +34,8 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import SofarEntityDescription
 from .helpers import create_modbus_params
-from .sensor import SENSOR_DESCRIPTIONS, TOTAL_SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,11 +73,7 @@ def _async_remove_denied_meter_energy(
     if METER_ENERGY in served:
         return
     registry = er.async_get(hass)
-    descriptions: tuple[SofarEntityDescription, ...] = (
-        *SENSOR_DESCRIPTIONS,
-        *TOTAL_SENSOR_DESCRIPTIONS,
-    )
-    for description in descriptions:
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         if description.component != METER_ENERGY:
             continue
         entity_id = registry.async_get_entity_id(
