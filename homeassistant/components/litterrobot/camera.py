@@ -118,6 +118,9 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         )
         Camera.__init__(self)
         self._relays: dict[str, CameraSignalingRelay] = {}
+        # sessions whose relay has started; _relays also holds offers that are
+        # still connecting, which are not streaming yet
+        self._started: set[str] = set()
         self._cached_session: CameraSession | None = None
         self._refreshing = False
         # the placeholder returned by async_camera_image is a PNG, not the
@@ -262,8 +265,8 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         # keep the session the relay started with; the next viewer reuses its
         # TURN credentials until it expires
         self._cached_session = session
-        self._attr_is_streaming = True
-        self.async_write_ha_state()
+        self._started.add(session_id)
+        self._update_streaming()
         _LOGGER.debug("Started WebRTC session %s", session_id)
 
     @override
@@ -290,6 +293,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         if relay := self._relays.pop(session_id, None):
             _LOGGER.debug("Closing WebRTC session %s", session_id)
             self.hass.async_create_task(relay.close())
+            self._started.discard(session_id)
             self._update_streaming()
         super().close_webrtc_session(session_id)
 
@@ -301,12 +305,13 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         if relay := self._relays.pop(session_id, None):
             _LOGGER.debug("Closing WebRTC session %s", session_id)
             await relay.close()
+            self._started.discard(session_id)
             self._update_streaming()
         super().close_webrtc_session(session_id)
 
     def _update_streaming(self) -> None:
         """Report streaming only while a viewer is connected."""
-        self._attr_is_streaming = bool(self._relays)
+        self._attr_is_streaming = bool(self._started)
         self.async_write_ha_state()
 
     @override

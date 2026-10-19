@@ -657,3 +657,56 @@ async def test_unloading_closes_open_relays(
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     relay.close.assert_awaited_once()
+
+
+async def test_streaming_follows_started_sessions_not_pending_offers(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """With overlapping viewers, only a started session counts as streaming."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    state = lambda: hass.states.get(CAMERA_ENTITY_ID).state  # noqa: E731
+
+    first = MagicMock()
+    first.start = AsyncMock(return_value=CameraSession.from_response(MOCK_SESSION_DATA))
+    first.close = AsyncMock()
+    with patch(
+        "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+        return_value=first,
+    ):
+        await entity.async_handle_async_webrtc_offer("v=0\r\n", "a", MagicMock())
+    assert state() == "streaming"
+
+    # viewer B is still negotiating when viewer A leaves
+    fail_b = asyncio.Event()
+
+    async def start_b(offer_sdp, on_answer, on_candidate):
+        await fail_b.wait()
+        raise CameraStreamException("refused")
+
+    second = MagicMock()
+    second.start = AsyncMock(side_effect=start_b)
+    second.close = AsyncMock()
+    with patch(
+        "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+        return_value=second,
+    ):
+        pending = asyncio.ensure_future(
+            entity.async_handle_async_webrtc_offer("v=0\r\n", "b", MagicMock())
+        )
+        await asyncio.sleep(0)
+        entity.close_webrtc_session("a")
+        # block_till_done would wait for the pending offer; let the close run
+        await asyncio.sleep(0)
+        # B has not started, so nothing is streaming
+        assert state() == "idle"
+
+        fail_b.set()
+        with pytest.raises(HomeAssistantError):
+            await pending
+    assert state() == "idle"
