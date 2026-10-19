@@ -15,7 +15,6 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 # These need to be fixed; do not add new entries to this list.
 MISSING_ALL = {
     "configurator",
-    "group",
     "input_boolean",
     "input_select",
     "llm",
