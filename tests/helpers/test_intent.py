@@ -974,6 +974,72 @@ async def test_service_handler_device_classes(
         )
 
 
+async def test_service_handler_failure_reported_for_failed_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test a failed service call is reported for its own entity."""
+    hass.states.async_set(
+        "switch.bedroom", "off", attributes={"device_class": "outlet"}
+    )
+    hass.states.async_set(
+        "switch.living_room", "off", attributes={"device_class": "outlet"}
+    )
+    living_room_done = asyncio.Event()
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Fail for the bedroom, after the living room call has finished."""
+        if call.data["entity_id"] == "switch.bedroom":
+            await living_room_done.wait()
+            raise HomeAssistantError("Failed")
+        living_room_done.set()
+
+    hass.services.async_register("switch", "turn_on", mock_service)
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            "TestType",
+            "switch",
+            "turn_on",
+            device_classes={switch.SwitchDeviceClass},
+        ),
+    )
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"device_class": {"value": "outlet"}},
+    )
+
+    # The calls finish in the opposite order to the entities
+    assert [target.id for target in result.success_results] == ["switch.living_room"]
+    assert [target.id for target in result.failed_results] == ["switch.bedroom"]
+
+
+async def test_service_handler_cancelled_call_propagates(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled service call cancels the intent instead of succeeding."""
+    hass.states.async_set("light.kitchen", "off")
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Cancel the service call."""
+        raise asyncio.CancelledError
+
+    hass.services.async_register("light", "turn_on", mock_service)
+    intent.async_register(
+        hass, intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"name": {"value": "kitchen"}},
+        )
+
+
 async def test_service_handler_matched_states_uses_updated_state(
     hass: HomeAssistant,
 ) -> None:

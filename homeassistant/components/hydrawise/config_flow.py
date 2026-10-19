@@ -77,7 +77,13 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_reauth_form({})
 
         reauth_entry = self._get_reauth_entry()
-        username = reauth_entry.data[CONF_USERNAME]
+        # Entries from the legacy API only hold an API key, so the form asks
+        # for the username as well.
+        if CONF_USERNAME in reauth_entry.data:
+            username = reauth_entry.data[CONF_USERNAME]
+        else:
+            username = user_input[CONF_USERNAME]
+
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
         user_id, errors = await _authenticate(username, password, api_key)
@@ -96,8 +102,56 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        data_schema = (
+            STEP_REAUTH_DATA_SCHEMA
+            if CONF_USERNAME in self._get_reauth_entry().data
+            else STEP_USER_DATA_SCHEMA
+        )
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the account credentials."""
+        if user_input is None:
+            return self._show_reconfigure_form({})
+
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+        api_key = user_input[CONF_API_KEY]
+        unique_id, errors = await _authenticate(username, password, api_key)
+        if errors:
+            return self._show_reconfigure_form(errors)
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_mismatch(reason="wrong_account")
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            title=username,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_API_KEY: api_key,
+            },
+        )
+
+    def _show_reconfigure_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        # Only the username is suggested, the secrets have to be entered again.
+        # Entries from the legacy API only hold an API key, without a username.
+        entry_data = self._get_reconfigure_entry().data
+        suggested_values = (
+            {CONF_USERNAME: entry_data[CONF_USERNAME]}
+            if CONF_USERNAME in entry_data
+            else {}
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, suggested_values
+            ),
+            errors=errors,
         )
 
 

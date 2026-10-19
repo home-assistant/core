@@ -6,13 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-    DEFAULT_VERIFY_SSL,
-)
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,

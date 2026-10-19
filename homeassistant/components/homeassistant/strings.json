@@ -283,6 +283,18 @@
       "description": "Scales, toothbrushes, sleep and fitness tracking, glucose monitoring and baby care.",
       "name": "Health & wellbeing"
     },
+    "helpers": {
+      "description": "Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+      "name": "Helpers",
+      "subcategory": {
+        "calculate_value": {
+          "name": "Calculate a value"
+        },
+        "store_value": {
+          "name": "Store a value"
+        }
+      }
+    },
     "hubs_protocols": {
       "description": "Smart home hubs and radio protocols that each bring in many kinds of devices.",
       "name": "Hubs & protocols",

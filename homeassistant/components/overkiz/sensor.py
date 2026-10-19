@@ -48,7 +48,6 @@ class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
     native_value: Callable[[OverkizStateType], StateType] | None = None
-    zero_is_valid: bool = False
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
@@ -454,7 +453,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_ERROR_CODE,
         name="Error code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        zero_is_valid=True,
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
@@ -597,19 +595,8 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if (
-            state is None
-            or state.value is None
-            # It seems that in some cases we return `None` if state.value is falsy.
-            # This is probably incorrect and should be fixed in a follow up PR.
-            # To ensure measurement sensors do not get an `unknown` state on
-            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or (
-                self.state_class != SensorStateClass.MEASUREMENT
-                and not state.value
-                and not (self.entity_description.zero_is_valid and state.value == 0)
-            )
-        ):
+        # Empty strings are not valid enum options, but 0 is a valid value
+        if state is None or state.value is None or state.value == "":
             return None
 
         # Transform the value with a lambda function
@@ -625,15 +612,11 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if (
-            not (default_unit := self.entity_description.native_unit_of_measurement)
-            or not (state := self.device.states.get(self.entity_description.key))
-            or not state.value
-        ):
+        if not (default_unit := self.entity_description.native_unit_of_measurement):
             return default_unit
 
         attrs = self.device.attributes
-        if (unit := attrs.get(f"{state.name}MeasuredValueType")) and (
+        if (unit := attrs.get(f"{self.entity_description.key}MeasuredValueType")) and (
             unit_value := unit.value_as_str
         ):
             return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)

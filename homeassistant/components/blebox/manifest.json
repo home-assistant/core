@@ -1,6 +1,11 @@
 {
   "domain": "blebox",
   "name": "BleBox devices",
+  "categories": [
+    "plugs_switches",
+    "blinds_curtains",
+    "lighting.led_strips_controllers"
+  ],
   "codeowners": ["@bbx-a", "@swistakm", "@bkobus-bbx"],
   "config_flow": true,
   "dhcp": [

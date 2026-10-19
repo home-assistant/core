@@ -3,13 +3,12 @@
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from .common import async_wait_recording_done
 
 from tests.common import get_system_health_info
 from tests.typing import RecorderInstanceGenerator

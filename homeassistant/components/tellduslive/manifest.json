@@ -1,6 +1,7 @@
 {
   "domain": "tellduslive",
   "name": "Telldus Live",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@fredrike"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tellduslive",

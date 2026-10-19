@@ -1,6 +1,7 @@
 """The tests for Trafikcerket Camera recorder."""
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from pytrafikverket import CameraInfoModel
 
 from homeassistant.components.recorder import Recorder
@@ -9,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.components.recorder.common import async_wait_recording_done
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

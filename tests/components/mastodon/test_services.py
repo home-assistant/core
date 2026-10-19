@@ -19,6 +19,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_ACCOUNT_NAME,
     ATTR_ATTRIBUTION_DOMAINS,
     ATTR_AVATAR,
+    ATTR_AVATAR_DESCRIPTION,
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
@@ -31,6 +32,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_FOCUS_X,
     ATTR_FOCUS_Y,
     ATTR_HEADER,
+    ATTR_HEADER_DESCRIPTION,
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
@@ -1323,6 +1325,14 @@ async def test_service_entry_availability(
                 ).resolve(),
                 ATTR_HEADER_MIME_TYPE: "image/jpeg",
             },
+        ),
+        (
+            {ATTR_AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."},
+            {ATTR_AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."},
+        ),
+        (
+            {ATTR_HEADER_DESCRIPTION: "Mountain landscape at sunset."},
+            {ATTR_HEADER_DESCRIPTION: "Mountain landscape at sunset."},
         ),
     ],
 )

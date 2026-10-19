@@ -610,8 +610,8 @@ async def test_import_config_entry(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.from_config_entry")
     assert state is not None
-    assert state.attributes[zone.ATTR_LATITUDE] == 1
-    assert state.attributes[zone.ATTR_LONGITUDE] == 2
+    assert state.attributes[ATTR_LATITUDE] == 1
+    assert state.attributes[ATTR_LONGITUDE] == 2
     assert state.attributes[zone.ATTR_RADIUS] == 3
     assert state.attributes[zone.ATTR_PASSIVE] is False
     assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"

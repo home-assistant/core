@@ -137,3 +137,8 @@ async def test_sensor_unavailable_on_read_error(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "26.5"
+    assert (
+        "homeassistant.components.onewire.entity",
+        logging.INFO,
+        "Fetching Temperature data recovered",
+    ) in caplog.record_tuples
