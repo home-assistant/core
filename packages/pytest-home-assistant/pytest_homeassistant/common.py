@@ -194,7 +194,9 @@ def threadsafe_coroutine_factory(func):
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(_paths.TESTS_DIR, "testing_config", *add_path)
+    return os.path.join(
+        _paths.CONFIG_DIR or _paths.TESTS_DIR / "testing_config", *add_path
+    )
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -565,6 +567,7 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
+    original_filename = filename
     if (
         integration is None
         and "/" in filename
@@ -572,10 +575,11 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
     ):
         integration, filename = filename.split("/", 1)
 
-    if integration is None:
-        return _paths.TESTS_DIR.joinpath("fixtures", filename)
-
-    return _paths.TESTS_DIR.joinpath("components", integration, "fixtures", filename)
+    if integration is not None:
+        integration_dir = _paths.TESTS_DIR / "components" / integration
+        if integration_dir.is_dir():
+            return integration_dir / "fixtures" / filename
+    return _paths.TESTS_DIR / "fixtures" / original_filename
 
 
 @lru_cache
