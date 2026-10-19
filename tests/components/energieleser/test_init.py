@@ -10,6 +10,7 @@ from energieleser import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.components.energieleser.coordinator import SCAN_INTERVAL
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_energieleser_client")
@@ -113,6 +112,7 @@ async def test_meter_locked_repair_issue(
     issue_id = f"pin_locked_{mock_stromleser_config_entry.entry_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_stromleser_config_entry.entry_id
     assert issue.translation_key == "meter_locked"
     assert (
         issue.learn_more_url
@@ -130,14 +130,39 @@ async def test_meter_locked_repair_issue(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_meter_locked_repair_issue_removed_on_unload(
+async def test_meter_locked_repair_issue_kept_on_reload(
     hass: HomeAssistant,
     mock_energieleser_client: AsyncMock,
     mock_locked_stromleser_device: StromleserOneDevice,
     mock_stromleser_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test repair issue is deleted when entry is unloaded."""
+    """Test reloading keeps the repair issue and its ignore."""
+    mock_energieleser_client.get_device.return_value = mock_locked_stromleser_device
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"pin_locked_{mock_stromleser_config_entry.entry_id}"
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    assert await hass.config_entries.async_reload(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+
+async def test_meter_locked_repair_issue_removed_with_entry(
+    hass: HomeAssistant,
+    mock_energieleser_client: AsyncMock,
+    mock_locked_stromleser_device: StromleserOneDevice,
+    mock_stromleser_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue is deleted when the entry is removed."""
     mock_energieleser_client.get_device.return_value = mock_locked_stromleser_device
     mock_stromleser_config_entry.add_to_hass(hass)
 
@@ -147,7 +172,7 @@ async def test_meter_locked_repair_issue_removed_on_unload(
     issue_id = f"pin_locked_{mock_stromleser_config_entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    assert await hass.config_entries.async_unload(mock_stromleser_config_entry.entry_id)
+    await hass.config_entries.async_remove(mock_stromleser_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

@@ -31,6 +31,7 @@ from mozart_api.models import (
     VolumeState,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bang_olufsen.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -59,8 +60,6 @@ from .const import (
     TEST_SOUND_MODE_2,
     TEST_SOUND_MODE_NAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

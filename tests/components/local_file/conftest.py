@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.local_file.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -31,7 +30,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     To override the config, tests can be marked with:
     @pytest.mark.parametrize("get_config", [{...}])
     """
-    return {CONF_NAME: DEFAULT_NAME, CONF_FILE_PATH: "mock.file"}
+    return {CONF_FILE_PATH: "mock.file"}
 
 
 @pytest.fixture(name="loaded_entry")
@@ -42,6 +41,7 @@ async def load_integration(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
+        title=DEFAULT_NAME,
         options=get_config,
         entry_id="1",
     )

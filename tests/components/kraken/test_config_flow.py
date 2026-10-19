@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -11,8 +13,6 @@ from .const import (
     TICKER_INFORMATION_RESPONSE,
     TRADEABLE_ASSET_PAIR_RESPONSE,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:

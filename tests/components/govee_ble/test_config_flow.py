@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+
 from homeassistant import config_entries
 from homeassistant.components.govee_ble.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,9 +16,6 @@ from . import (
     GVH5177_SERVICE_INFO,
     NOT_GOVEE_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_async_step_bluetooth_h5055(hass: HomeAssistant) -> None:
@@ -38,6 +38,7 @@ async def test_async_step_bluetooth_h5055(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_DEVICE_TYPE: "H5055"}
+    assert result2["result"].unique_id == "C0:A3:C7:0A:5C:77"
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

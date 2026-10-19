@@ -15,10 +15,9 @@ from opendisplay import (
     SecurityConfig,
     SystemConfig,
 )
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_ble_device
 
 OPENDISPLAY_MANUFACTURER_ID = 9286  # 0x2446
 
@@ -112,6 +111,8 @@ DEVICE_CONFIG = GlobalConfig(
         custom_string_2="custom two",
         custom_string_3="custom three",
     ),
+    # Raw bytes of config packets the parser does not recognise; must be redacted.
+    unparsed_tail=b"\xde\xad\xbe\xef",
 )
 
 

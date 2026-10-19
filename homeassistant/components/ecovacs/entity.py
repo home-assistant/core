@@ -48,19 +48,22 @@ class EcovacsEntity[CapabilityEntityT](Entity):
         info = DeviceInfo(
             identifiers={(DOMAIN, device_info["did"])},
             manufacturer="Ecovacs",
-            sw_version=self._device.fw_version,
             serial_number=device_info["name"],
             model_id=device_info["class"],
         )
 
         if nick := device_info.get("nick"):
-            info["name"] = nick
+            info.name = nick
 
         if model := device_info.get("deviceName"):
-            info["model"] = model
+            info.model = model
+
+        # Unset until reported, so a stored version isn't cleared on startup
+        if fw_version := self._device.fw_version:
+            info.sw_version = fw_version
 
         if mac := self._device.mac:
-            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
         return info
 

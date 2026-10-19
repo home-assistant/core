@@ -12,7 +12,7 @@ from aiowebdav2.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .helpers import async_create_client, async_ensure_path_exists
@@ -22,7 +22,7 @@ type WebDavConfigEntry = ConfigEntry[Client]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> None:
     """Set up WebDAV from a config entry."""
     client = async_create_client(
         hass=hass,
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
     try:
         result = await client.check()
     except UnauthorizedError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_username_password",
         ) from err
@@ -69,9 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
             listener()
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> None:
     """Unload a WebDAV config entry."""
-    return True

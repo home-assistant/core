@@ -1,27 +1,20 @@
 """Allow users to set and activate scenes."""
 
-import functools as ft
 import importlib
 import logging
-from typing import Any, Final, final, override
+from typing import Any, Final
 
 import probatio
 
-from homeassistant.components.light import ATTR_TRANSITION  # noqa: F401
+from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    CONF_PLATFORM,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import DATA_COMPONENT, DOMAIN
+from .entity import BaseScene, Scene
 from .services import async_setup_services
 
 STATES: Final = "states"
@@ -62,6 +55,16 @@ PLATFORM_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "ATTR_TRANSITION",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "SERVICE_TURN_ON",
+    "STATES",
+    "BaseScene",
+    "Scene",
+]
+
 # mypy: disallow-any-generics
 
 
@@ -92,70 +95,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-class BaseScene(RestoreEntity):
-    """Base type for scenes."""
-
-    _attr_should_poll = False
-    __last_activated: str | None = None
-
-    @property
-    @final
-    @override
-    def state(self) -> str | None:
-        """Return the state of the scene."""
-        if self.__last_activated is None:
-            return None
-        return self.__last_activated
-
-    @final
-    def _record_activation(self) -> None:
-        run_callback_threadsafe(self.hass.loop, self._async_record_activation).result()
-
-    @final
-    @callback
-    def _async_record_activation(self) -> None:
-        """Update the activation timestamp."""
-        self.__last_activated = dt_util.utcnow().isoformat()
-
-    @override
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the scene is added to hass."""
-        await super().async_internal_added_to_hass()
-        state = await self.async_get_last_state()
-        if (
-            state is not None
-            and state.state is not None
-            and state.state != STATE_UNAVAILABLE
-        ):
-            self.__last_activated = state.state
-
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene."""
-        raise NotImplementedError
-
-    def activate(self, **kwargs: Any) -> None:
-        """Activate scene. Try to get entities into requested state."""
-        raise NotImplementedError
-
-    async def async_activate(self, **kwargs: Any) -> None:
-        """Activate scene. Try to get entities into requested state."""
-        task = self.hass.async_add_executor_job(ft.partial(self.activate, **kwargs))
-        if task:
-            await task
-
-
-class Scene(BaseScene):
-    """A scene is a group of entities and the states we want them to be."""
-
-    @final
-    @override
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene.
-
-        Should not be overridden, handle setting last press timestamp.
-        """
-        self._async_record_activation()
-        self.async_write_ha_state()
-        await self.async_activate(**kwargs)

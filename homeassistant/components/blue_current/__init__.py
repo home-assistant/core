@@ -55,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: BlueCurrentConfigEntry
-) -> bool:
+) -> None:
     """Set up Blue Current as a config entry."""
     client = Client()
     api_token = config_entry.data[CONF_API_TOKEN]
@@ -75,15 +75,13 @@ async def async_setup_entry(
     config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: BlueCurrentConfigEntry
-) -> bool:
+) -> None:
     """Unload the Blue Current config entry."""
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 class Connector:

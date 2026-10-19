@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from canary.model import SensorType
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.canary.const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -12,8 +13,6 @@ from homeassistant.components.canary.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_PASSWORD: "test-password",

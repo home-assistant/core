@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.rympro.config_flow import (
@@ -13,8 +14,6 @@ from homeassistant.components.rympro.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_DATA = {
     CONF_EMAIL: "test-email",
@@ -70,6 +69,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DATA[CONF_EMAIL]
     assert result2["data"] == TEST_DATA
+    assert result2["result"].unique_id == TEST_DATA[CONF_UNIQUE_ID]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

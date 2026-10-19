@@ -10,6 +10,8 @@ from pynordpool import (
     NordPoolError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nordpool.const import DOMAIN
@@ -24,9 +26,6 @@ from homeassistant.components.nordpool.services import (
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SERVICE_DATA = {
     ATTR_CONFIG_ENTRY: "to_replace",

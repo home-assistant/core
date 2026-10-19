@@ -83,14 +83,20 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 fresh_devices = await self._device_manager.async_get_devices()
         except TimeoutError as err:
-            raise UpdateFailed(f"Timeout while fetching data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_timeout",
+            ) from err
         except InvalidAppIdOrSecretException as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
-            raise UpdateFailed(f"Error fetching Imou devices: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="fetch_devices_failed",
+            ) from err
 
         fresh_by_key = {
             imou_device_identifier(device): device for device in fresh_devices
@@ -104,14 +110,20 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 await self._device_manager.async_update_devices_status(devices)
         except TimeoutError as err:
-            raise UpdateFailed(f"Timeout while fetching data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_timeout",
+            ) from err
         except InvalidAppIdOrSecretException as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
-            raise UpdateFailed(f"Error updating Imou devices: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_devices_failed",
+            ) from err
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account.

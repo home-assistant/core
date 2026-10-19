@@ -59,6 +59,7 @@ class OneWireHub:
 
     owproxy: OWServerStatelessProxy
     devices: list[OWDeviceDescription]
+    present_device_ids: set[str]
     _version: str | None = None
     _last_scan_success = True
 
@@ -82,6 +83,7 @@ class OneWireHub:
                 await self.owproxy.read(OWServerCommonPath.VERSION)
             ).decode()
         self.devices = await _discover_devices(self.owproxy)
+        self.present_device_ids = {device.id for device in self.devices}
 
     async def initialize(self) -> None:
         """Initialize a config entry."""
@@ -93,21 +95,24 @@ class OneWireHub:
         """Populate the device registry."""
         device_registry = dr.async_get(self._hass)
         for device in devices:
-            device.device_info["sw_version"] = self._version
+            device.device_info.sw_version = self._version
             if device.parent_id is not None:
                 # Devices are ordered parents-first, so a device's parent is
                 # already registered by the time we reach the device.
-                device.device_info["via_device_id"] = (
-                    dr.async_get_device_id_by_identifier(
-                        self._hass,
-                        (DOMAIN, device.parent_id),
-                        config_entry_id=self._config_entry.entry_id,
-                    )
+                device.device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                    self._hass,
+                    (DOMAIN, device.parent_id),
+                    config_entry_id=self._config_entry.entry_id,
                 )
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 **device.device_info,
             )
+
+    @callback
+    def forget_device(self, device_id: str) -> None:
+        """Forget a removed device, so that it is added again if reconnected."""
+        self.devices = [device for device in self.devices if device.id != device_id]
 
     def schedule_scan_for_new_devices(self) -> None:
         """Schedule a regular scan of the bus for new devices."""
@@ -129,13 +134,15 @@ class OneWireHub:
         if not self._last_scan_success:
             self._last_scan_success = True
             _LOGGER.info("Scanning for new devices recovered")
+        self.present_device_ids = {device.id for device in devices}
         existing_device_ids = [device.id for device in self.devices]
         new_devices = [
             device for device in devices if device.id not in existing_device_ids
         ]
         if new_devices:
             self.devices.extend(new_devices)
-            self._populate_device_registry(new_devices)
+            # Include known devices, to restore links to a re-added parent
+            self._populate_device_registry(devices)
             async_dispatcher_send(
                 self._hass, SIGNAL_NEW_DEVICE_CONNECTED, self, new_devices
             )

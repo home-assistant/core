@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -40,8 +41,6 @@ from .const import (
     MOCK_MODEL,
     MOCK_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -556,6 +555,17 @@ async def test_ssdp_auth_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    mock_victron_hub.return_value.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: "test-password",
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_disconnect_error_ignored(
     hass: HomeAssistant, mock_victron_hub: MagicMock
@@ -601,6 +611,18 @@ async def test_user_flow_missing_installation_id(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_victron_hub.return_value.installation_id = MOCK_INSTALLATION_ID
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_victron_hub")
@@ -1242,6 +1264,17 @@ async def test_ssdp_token_pairing_request_error(
     assert result["step_id"] == "ssdp_token_pairing"
     assert result["errors"] == {"base": error}
 
+    mock_victron_hub.return_value.connect.side_effect = None
+    with patch(
+        "homeassistant.components.victron_gx.config_flow.request_pairing_token",
+        return_value=PairingToken("token/homeassistant/test", "password"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("exception", "error"),
@@ -1290,3 +1323,14 @@ async def test_ssdp_token_pairing_validation_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ssdp_token_pairing"
     assert result["errors"] == {"base": error}
+
+    mock_victron_hub.return_value.connect.side_effect = None
+    with patch(
+        "homeassistant.components.victron_gx.config_flow.request_pairing_token",
+        return_value=PairingToken("token/homeassistant/test", "password"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

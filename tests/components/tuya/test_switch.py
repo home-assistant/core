@@ -1,12 +1,16 @@
 """Test Tuya switch platform."""
 
+import re
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
+from tuya_sharing.exceptions import ApiRequestException
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -15,11 +19,10 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -134,6 +137,49 @@ async def test_action(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, expected_commands
     )
+
+
+@pytest.mark.usefixtures("no_quirk")
+@pytest.mark.parametrize("mock_device_code", ["cz_PGEkBctAbtzKOZng"])
+@pytest.mark.parametrize(
+    ("side_effect", "expected_message"),
+    [
+        pytest.param(
+            ApiRequestException(error_code="-9999999", error_message="sign invalid"),
+            "The Tuya cloud rejected the command",
+            id="rejected",
+        ),
+        pytest.param(
+            requests.exceptions.ConnectionError,
+            "Failed to send the command to the Tuya cloud",
+            id="connection_error",
+        ),
+        pytest.param(
+            requests.exceptions.Timeout,
+            "Failed to send the command to the Tuya cloud",
+            id="timeout",
+        ),
+    ],
+)
+async def test_action_error(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    side_effect: Exception,
+    expected_message: str,
+) -> None:
+    """Test errors while sending a command are raised as Home Assistant errors."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    mock_manager.send_commands.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError, match=re.escape(expected_message)):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.din_socket"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
