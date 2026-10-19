@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any, cast, override
 
 import bcrypt
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, MfaLoginFlow
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -23,12 +23,12 @@ STORAGE_KEY = "auth_provider.homeassistant"
 def _disallow_id(conf: dict[str, Any]) -> dict[str, Any]:
     """Disallow ID in config."""
     if CONF_ID in conf:
-        raise vol.Invalid("ID is not allowed for the homeassistant auth provider.")
+        raise probatio.Invalid("ID is not allowed for the homeassistant auth provider.")
 
     return conf
 
 
-CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
+CONFIG_SCHEMA = probatio.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
 
 
 @callback
@@ -338,6 +338,7 @@ class HassAuthProvider(AuthProvider):
         """Get extra info for this credential."""
         return UserMeta(name=credentials.data["username"], is_active=True)
 
+    @override
     async def async_will_remove_credentials(self, credentials: Credentials) -> None:
         """When credentials get removed, also remove the auth."""
         if self.data is None:
@@ -352,7 +353,7 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class HassLoginFlow(LoginFlow[HassAuthProvider]):
+class HassLoginFlow(MfaLoginFlow[HassAuthProvider]):
     """Handler for the login flow."""
 
     @override
@@ -376,10 +377,10 @@ class HassLoginFlow(LoginFlow[HassAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("username"): str,
-                    vol.Required("password"): str,
+                    probatio.Required("username"): str,
+                    probatio.Required("password"): str,
                 }
             ),
             errors=errors,

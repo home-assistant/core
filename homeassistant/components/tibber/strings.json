@@ -5,7 +5,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The connected account does not match {title}. Sign in with the same Tibber account and try again."
     },
     "step": {
@@ -159,12 +158,6 @@
       "peak_hour_time": {
         "name": "Time of max hour consumption"
       },
-      "power": {
-        "name": "Power"
-      },
-      "power_factor": {
-        "name": "Power factor"
-      },
       "power_flow_battery": {
         "name": "Battery power"
       },
@@ -191,9 +184,6 @@
       },
       "range_remaining": {
         "name": "Estimated remaining driving range"
-      },
-      "signal_strength": {
-        "name": "Signal strength"
       },
       "storage_available_energy": {
         "name": "Available energy"

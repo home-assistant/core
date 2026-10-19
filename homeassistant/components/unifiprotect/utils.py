@@ -16,7 +16,11 @@ from uiprotect.data import (
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
-from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicDoorbellSettings,
+    PublicLight,
+)
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
@@ -109,6 +113,16 @@ def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
 
 
 @callback
+def async_get_doorbell_settings_public(
+    api: ProtectApiClient,
+) -> PublicDoorbellSettings:
+    """Return the public NVR doorbell settings, empty when the NVR has none."""
+    if (nvr := api.public_bootstrap.nvr) is None or nvr.doorbell_settings is None:
+        return PublicDoorbellSettings()
+    return nvr.doorbell_settings
+
+
+@callback
 def async_entry_is_public_only(entry: UFPConfigEntry) -> bool:
     """Return whether an entry uses the public-API-only (API-key) mode.
 
@@ -134,6 +148,7 @@ def async_create_api_client(
             public_api_session=async_create_clientsession(hass),
             devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
             ignore_unadopted=False,
+            override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         )
 
     return _async_create_full_client(hass, entry)

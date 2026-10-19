@@ -27,7 +27,16 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("identifier", "expected_name"),
+    [
+        pytest.param("123456", "Airthings Wave Plus (2930123456)", id="identifier"),
+        pytest.param("", "Airthings Wave Plus", id="no_identifier"),
+    ],
+)
+async def test_bluetooth_discovery(
+    hass: HomeAssistant, identifier: str, expected_name: str
+) -> None:
     """Test discovery via bluetooth with a valid device."""
     wave_plus_device = AirthingsDeviceType.WAVE_PLUS
     with (
@@ -37,7 +46,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
                 manufacturer="Airthings AS",
                 model=wave_plus_device,
                 name="Airthings Wave Plus",
-                identifier="123456",
+                identifier=identifier,
             )
         ),
     ):
@@ -49,9 +58,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    assert result["description_placeholders"] == {
-        "name": "Airthings Wave Plus (2930123456)"
-    }
+    assert result["description_placeholders"] == {"name": expected_name}
 
     with patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
@@ -59,10 +66,44 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airthings Wave Plus (2930123456)"
+    assert result["title"] == expected_name
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
     assert result["data"] == {DEVICE_MODEL: wave_plus_device.value}
     assert result["result"].data == {DEVICE_MODEL: wave_plus_device.value}
+
+
+async def test_user_setup_device_added_while_form_open(hass: HomeAssistant) -> None:
+    """Test picking a device that was configured while the form was open aborts."""
+    with (
+        patch(
+            "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+            return_value=[WAVE_SERVICE_INFO],
+        ),
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO),
+        patch_airthings_ble(
+            AirthingsDevice(
+                manufacturer="Airthings AS",
+                model=AirthingsDeviceType.WAVE_PLUS,
+                name="Airthings Wave Plus",
+                identifier="123456",
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+
+    MockConfigEntry(domain=DOMAIN, unique_id=WAVE_SERVICE_INFO.address).add_to_hass(
+        hass
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ADDRESS: WAVE_SERVICE_INFO.address}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:

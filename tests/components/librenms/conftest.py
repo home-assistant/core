@@ -58,7 +58,7 @@ async def mock_librenms(
     """Mock the LibreNMS API."""
     with (
         patch(
-            "homeassistant.components.librenms.coordinator.Librenms", autospec=True
+            "homeassistant.components.librenms.Librenms", autospec=True
         ) as mock_librenms,
         patch(
             "homeassistant.components.librenms.config_flow.Librenms", new=mock_librenms

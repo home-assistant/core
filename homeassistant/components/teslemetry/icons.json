@@ -7,6 +7,18 @@
           "on": "mdi:home-battery"
         }
       },
+      "bluetooth": {
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth"
+        }
+      },
+      "bluetooth_session": {
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth-connect"
+        }
+      },
       "cellular": {
         "state": {
           "off": "mdi:signal-cellular-outline",
@@ -137,6 +149,12 @@
     "button": {
       "boombox": {
         "default": "mdi:volume-high"
+      },
+      "disable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug-off"
+      },
+      "enable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug"
       },
       "enable_keyless_driving": {
         "default": "mdi:car-key"
@@ -487,9 +505,6 @@
           "r": "mdi:alpha-r"
         }
       },
-      "energy_left": {
-        "default": "mdi:battery"
-      },
       "energy_remaining": {
         "default": "mdi:battery-medium"
       },
@@ -724,9 +739,6 @@
       },
       "total_home_usage": {
         "default": "mdi:home-lightning-bolt"
-      },
-      "total_pack_energy": {
-        "default": "mdi:battery-high"
       },
       "total_solar_production": {
         "default": "mdi:solar-power-variant"

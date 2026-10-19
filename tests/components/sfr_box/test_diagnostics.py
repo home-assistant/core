@@ -14,14 +14,17 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures(
-    "dsl_get_info", "ftth_get_info", "system_get_info", "wan_get_info"
+    "dsl_get_info", "ftth_get_info", "system_get_info", "voip_get_info", "wan_get_info"
 )
 
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.sfr_box.PLATFORMS", []):
+    with (
+        patch("homeassistant.components.sfr_box.PLATFORMS", []),
+        patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
+    ):
         yield
 
 
@@ -31,7 +34,7 @@ def override_platforms() -> Generator[None]:
 )
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry_with_auth: ConfigEntry,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     system_get_info: SystemInfo,
@@ -40,7 +43,7 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     system_get_info.net_infra = net_infra
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
     await hass.async_block_till_done()
 
     with patch(
@@ -48,6 +51,8 @@ async def test_entry_diagnostics(
         return_value=None,
     ):
         assert (
-            await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+            await get_diagnostics_for_config_entry(
+                hass, hass_client, config_entry_with_auth
+            )
             == snapshot
         )

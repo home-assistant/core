@@ -48,6 +48,25 @@ async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> N
     assert not hass.services.has_service(DOMAIN, "get_test")
 
 
+async def test_reload_without_domain_config(
+    hass: HomeAssistant, setup_component: ComponentSetup
+) -> None:
+    """Verify reload removes all commands when the domain key is gone."""
+    await setup_component()
+
+    assert hass.services.has_service(DOMAIN, "get_test")
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert not hass.services.has_service(DOMAIN, "get_test")
+    assert hass.services.has_service(DOMAIN, SERVICE_RELOAD)
+
+
 async def test_setup_tests(
     hass: HomeAssistant, setup_component: ComponentSetup
 ) -> None:

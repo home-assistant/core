@@ -9,9 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, json
+from homeassistant.helpers import device_registry as dr, entity_registry as er, json
 from homeassistant.util import json as json_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
@@ -44,6 +45,43 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
+    [
+        pytest.param("zndb_qxlwffgv8avf5rrw", 20, 0, id="multi_channel"),
+        pytest.param("zndb_uqzhc4bx5zqwpg2m", 0, 6, id="single_channel"),
+    ],
+)
+async def test_indexed_phase_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    expected_children: int,
+    expected_parent_phase_entities: int,
+) -> None:
+    """Test indexed phase sensors only move to child devices for multi-channel meters."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert parent is not None
+    assert (
+        len(dr.async_entries_for_parent_device(device_registry, parent.id))
+        == expected_children
+    )
+    assert (
+        sum(
+            "phase_s" in entry.unique_id
+            for entry in er.async_entries_for_device(entity_registry, parent.id)
+        )
+        == expected_parent_phase_entities
+    )
 
 
 @pytest.mark.parametrize(

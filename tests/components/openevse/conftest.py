@@ -37,6 +37,7 @@ def mock_charger() -> Generator[MagicMock]:
         charger.websocket = MagicMock()
         charger.callback = None
         # Status sensors
+        charger.state = "Charging"
         charger.status = "Charging"
         charger.mode = "STA"
         charger.charge_mode = "fast"
@@ -96,6 +97,9 @@ def mock_charger() -> Generator[MagicMock]:
         charger.shaper_active = False
         charger.has_limit = False
         charger.mqtt_connected = False
+        charger.get_override_state = AsyncMock(return_value="auto")
+        charger.set_override = AsyncMock()
+        charger.clear_override = AsyncMock()
         yield charger
 
 

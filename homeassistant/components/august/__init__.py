@@ -14,8 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestBaseError,
 )
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -31,7 +30,7 @@ from .util import async_create_august_clientsession
 type AugustConfigEntry = ConfigEntry[AugustData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
     """Set up August from a config entry."""
     # Check if this is a legacy config entry that needs migration to OAuth
     if "auth_implementation" not in entry.data:
@@ -44,21 +43,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestBaseError:
+        raise
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
     except (
         AugustApiAIOHTTPError,
-        OAuth2TokenRequestError,
         ClientError,
         CannotConnect,
     ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
@@ -66,9 +63,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> N
     ir.async_delete_issue(hass, DOMAIN, "yale_brand_migration")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_setup_august(

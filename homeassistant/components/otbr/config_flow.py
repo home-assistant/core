@@ -5,10 +5,10 @@ import logging
 from typing import TYPE_CHECKING, cast, override
 
 import aiohttp
+import probatio
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
-import voluptuous as vol
 import yarl
 
 from homeassistant.components.hassio import AddonError, AddonManager
@@ -182,7 +182,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_URL: url},
                 )
 
-        data_schema = vol.Schema({CONF_URL: str})
+        data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )

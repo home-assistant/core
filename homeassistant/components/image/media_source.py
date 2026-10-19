@@ -5,6 +5,7 @@ from typing import cast, override
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     BrowseMediaSource,
+    MediaImage,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
@@ -13,6 +14,7 @@ from homeassistant.components.media_source import (
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
 
+from . import _async_get_image
 from .const import DATA_COMPONENT, DOMAIN
 
 
@@ -42,6 +44,17 @@ class ImageMediaSource(MediaSource):
         return PlayMedia(
             f"/api/image_proxy_stream/{image.entity_id}", image.content_type
         )
+
+    @override
+    async def async_get_media_image(self, item: MediaSourceItem) -> MediaImage:
+        """Return the current image of the entity."""
+        image = self.hass.data[DATA_COMPONENT].get_entity(item.identifier)
+
+        if not image:
+            raise Unresolvable(f"Could not resolve media item: {item.identifier}")
+
+        snapshot = await _async_get_image(image, timeout=10)
+        return MediaImage(snapshot.content, snapshot.content_type)
 
     @override
     async def async_browse_media(

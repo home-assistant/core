@@ -13,12 +13,7 @@ from onedrive_personal_sdk.exceptions import (
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -44,7 +39,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Set up OneDrive from a config entry."""
     client, get_access_token = await _get_onedrive_client(hass, entry)
 
@@ -82,12 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Unload a OneDrive config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _get_onedrive_client(
@@ -99,16 +92,7 @@ async def _get_onedrive_client(
     session = OAuth2Session(hass, entry, implementation)
 
     # Refresh up front, so a failure surfaces here instead of from inside the client
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="connection_error"
-        ) from err
+    await session.async_ensure_token_valid()
 
     async def get_access_token() -> str:
         await session.async_ensure_token_valid()

@@ -7,8 +7,8 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzServiceError,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.services import (

@@ -36,7 +36,7 @@ async def test_setup_config(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ) as mock_setup:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -62,7 +62,7 @@ async def test_setup_no_data_fails_with_recovery(
 
     mocker = MockRestData("test_scrape_sensor_no_data")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -113,7 +113,7 @@ async def test_setup_config_no_sensors(
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -216,7 +216,7 @@ async def test_migrate_from_future(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=get_data,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -287,7 +287,7 @@ async def test_migrate_from_version_1_to_2(
     )
     with (
         patch(
-            "homeassistant.components.rest.RestData",
+            "homeassistant.components.rest.util.RestData",
             return_value=get_data,
         ),
         patch("homeassistant.components.scrape.ConfigSubentry", MockConfigSubentry),
@@ -318,12 +318,8 @@ async def test_migrate_from_version_1_to_2(
             unique_id=None,
         ),
     }
-    assert device.config_entries == {"01JZN04ZJ9BQXXGXDS05WS7D6P"}
-    assert device.config_entries_subentries == {
-        "01JZN04ZJ9BQXXGXDS05WS7D6P": {
-            "01JZQ1G63X2DX66GZ9ZTFY9PEH",
-        },
-    }
+    assert device.config_entry_id == "01JZN04ZJ9BQXXGXDS05WS7D6P"
+    assert device.config_subentry_id == "01JZQ1G63X2DX66GZ9ZTFY9PEH"
     assert entity.config_entry_id == config_entry.entry_id
     assert entity.config_subentry_id == "01JZQ1G63X2DX66GZ9ZTFY9PEH"
 
@@ -369,7 +365,7 @@ async def test_migrate_from_version_2_to_3(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=get_data,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

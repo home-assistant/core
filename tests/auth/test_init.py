@@ -1,14 +1,17 @@
 """Tests for the Home Assistant auth module."""
 
+import asyncio
 from datetime import timedelta
+from ipaddress import ip_address
+from pathlib import Path
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import jwt
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -43,7 +46,7 @@ def mock_hass(hass: HomeAssistant) -> HomeAssistant:
 
 async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
     """Test get auth providers."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -84,7 +87,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
 
 async def test_auth_manager_from_config_auth_modules(mock_hass) -> None:
     """Test get auth modules."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -578,6 +581,17 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
         await manager.async_deactivate_user(owner)
 
 
+async def test_cannot_remove_owner(mock_hass: HomeAssistant) -> None:
+    """Test that we cannot remove the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    owner = MockUser(is_owner=True).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_remove_user(owner)
+
+    assert await manager.async_get_user(owner.id) is owner
+
+
 async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:
     """Test that deactivating a user removes their refresh tokens."""
     manager = await auth.auth_manager_from_config(hass, [], [])
@@ -869,6 +883,92 @@ async def test_login_with_auth_module(mock_hass) -> None:
     assert step["result"].id == "mock-id"
 
 
+async def test_login_command_line_with_auth_module(mock_hass: HomeAssistant) -> None:
+    """Test the command line provider asks for an enabled auth module."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {
+                "type": "command_line",
+                "command": str(
+                    Path(__file__).parent / "providers/test_command_line_cmd.sh"
+                ),
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="command_line",
+            auth_provider_id=None,
+            data={"username": "good-user"},
+            is_new=False,
+        )
+    )
+
+    step = await manager.login_flow.async_init(("command_line", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "good-user", "password": "good-pass"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
+    assert step["step_id"] == "mfa"
+
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"pin": "test-pin"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["result"].id == "mock-id"
+
+
+async def test_login_trusted_networks_skips_auth_module(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test a provider without an MFA login flow does not ask for auth modules."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [{"type": "trusted_networks", "trusted_networks": ["192.168.0.1"]}],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="trusted_networks",
+            auth_provider_id=None,
+            data={"user_id": "mock-user"},
+            is_new=False,
+        )
+    )
+    assert await manager.async_get_enabled_mfa(user)
+
+    step = await manager.login_flow.async_init(
+        ("trusted_networks", None), context={"ip_address": ip_address("192.168.0.1")}
+    )
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"user": "mock-user"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["result"].id == "mock-id"
+
+
 async def test_login_with_multi_auth_module(mock_hass) -> None:
     """Test login as existing user with multiple auth modules."""
     manager = await auth.auth_manager_from_config(
@@ -1119,6 +1219,22 @@ async def test_async_remove_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def test_async_remove_user_revokes_refresh_tokens(hass: HomeAssistant) -> None:
+    """Test removing a user revokes its refresh tokens."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser(is_owner=False).add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    access_token = manager.async_create_access_token(refresh_token)
+    revoked = Mock()
+    manager.async_register_revoke_token_callback(refresh_token.id, revoked)
+
+    await manager.async_remove_user(user)
+
+    revoked.assert_called_once_with()
+    assert manager.async_get_refresh_token(refresh_token.id) is None
+    assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_async_remove_user_fail_if_remove_credential_fails(
@@ -1399,3 +1515,50 @@ async def test_access_token_from_the_future(mock_hass) -> None:
     with freeze_time(now + timedelta(days=365)):
         rt = manager.async_validate_access_token(access_token)
         assert rt.id == refresh_token.id
+
+
+_EXAMPLE_PROVIDER = "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+
+
+async def test_every_provider_is_initialized(mock_hass: HomeAssistant) -> None:
+    """Test providers are initialized before anybody tries to log in."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize") as mock_initialize:
+        await auth.auth_manager_from_config(
+            mock_hass,
+            [
+                {"type": "insecure_example", "users": []},
+                {"type": "insecure_example", "id": "another", "users": []},
+            ],
+            [],
+        )
+
+    assert mock_initialize.call_count == 2
+
+
+async def test_a_provider_that_cannot_initialize_is_not_fatal(
+    mock_hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a broken provider leaves the other ways into the instance working."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize", side_effect=ValueError("boom")):
+        manager = await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )
+
+    assert "Error initializing auth provider insecure_example" in caplog.text
+    assert len(manager.auth_providers) == 1
+
+
+async def test_provider_initialization_is_not_swallowed_when_cancelled(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test only errors of a provider are logged, not a cancellation."""
+    with (
+        patch(
+            f"{_EXAMPLE_PROVIDER}.async_initialize",
+            side_effect=asyncio.CancelledError,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )

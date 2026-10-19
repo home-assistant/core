@@ -1,6 +1,7 @@
 {
   "domain": "modern_forms",
   "name": "Modern Forms",
+  "categories": ["climate.fans_ventilation", "lighting.bulbs_lamps"],
   "codeowners": ["@wonderslug"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/modern_forms",

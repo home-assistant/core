@@ -12,15 +12,10 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from google_nest_sdm.admin_client import (
-    DEFAULT_TOPIC_IAM_POLICY,
-    AdminClient,
-    EligibleSubscriptions,
-    EligibleTopics,
-)
+from google_nest_sdm.admin_client import DEFAULT_TOPIC_IAM_POLICY, AdminClient
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.structure import Structure
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -109,8 +104,6 @@ class NestFlowHandler(
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
         self._admin_client: AdminClient | None = None
-        self._eligible_topics: EligibleTopics | None = None
-        self._eligible_subscriptions: EligibleSubscriptions | None = None
 
     @property
     @override
@@ -215,9 +208,9 @@ class NestFlowHandler(
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CLOUD_PROJECT_ID): str,
+                    probatio.Required(CONF_CLOUD_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -247,9 +240,9 @@ class NestFlowHandler(
 
         return self.async_show_form(
             step_id="device_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROJECT_ID): str,
+                    probatio.Required(CONF_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -289,23 +282,22 @@ class NestFlowHandler(
                 self._data[CONF_TOPIC_NAME] = topic_name
                 return await self.async_step_pubsub_topic_confirm()
 
-        device_access_project_id = self._data[CONF_PROJECT_ID]
         try:
-            eligible_topics = await self._admin_client.list_eligible_topics(
-                device_access_project_id=device_access_project_id
+            topic_names = await self._admin_client.list_topics(
+                f"projects/{cloud_project_id}"
             )
         except ApiException as err:
             _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
             return self.async_abort(reason="pubsub_api_error")
         topics = [
-            *eligible_topics.topic_names,  # Untranslated topic paths
+            *topic_names,  # Untranslated topic paths
             CREATE_NEW_TOPIC_KEY,
         ]
         return self.async_show_form(
             step_id="pubsub_topic",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_TOPIC_NAME, default=next(iter(topics))
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -410,9 +402,9 @@ class NestFlowHandler(
         subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
         return self.async_show_form(
             step_id="pubsub_subscription",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SUBSCRIPTION_NAME,
                         default=next(iter(subscriptions)),
                     ): SelectSelector(

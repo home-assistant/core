@@ -39,11 +39,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Volvo integration."""
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> None:
     """Set up Volvo from a config entry."""
 
     api = await _async_auth_and_create_api(hass, entry)
@@ -77,12 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_auth_and_create_api(

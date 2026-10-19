@@ -39,7 +39,7 @@ def image_only() -> Generator[None]:
 def mock_getrandbits():
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1312,
     ):
         yield
@@ -111,7 +111,7 @@ async def test_load_image_from_url(
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("image.testaccount1_main_capsule"))
     assert state.state == "2013-12-13T12:13:42+00:00"
