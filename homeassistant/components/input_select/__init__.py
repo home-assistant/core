@@ -30,12 +30,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
-    CONF_INITIAL,
-    DATA_INPUT_SELECT,
-    DOMAIN,
-    SERVICE_SET_OPTIONS,
-)
+from .const import CONF_INITIAL, DATA_INPUT_SELECT, DOMAIN, SERVICE_SET_OPTIONS  # noqa: F401
 from .entity import InputSelect
 from .services import async_setup_services
 
