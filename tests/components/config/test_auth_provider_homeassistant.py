@@ -400,29 +400,33 @@ async def test_delete_owner_credentials(
 
 
 @pytest.mark.parametrize(
-    ("caller", "expected_success"),
+    ("caller", "other_usernames", "expected_success"),
     [
-        pytest.param("admin", False, id="admin"),
-        pytest.param("owner", True, id="owner"),
+        pytest.param("admin", ["owner"], False, id="admin"),
+        pytest.param("owner", ["owner"], True, id="owner-with-another-login"),
+        pytest.param("owner", [], False, id="owner-without-another-login"),
     ],
 )
-async def test_delete_owner_credentials_with_another_login(
+async def test_delete_owner_credentials_by_caller(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_owner_user: MockUser,
     hass_admin_user: MockUser,
     auth_provider: prov_ha.HassAuthProvider,
     caller: str,
+    other_usernames: list[str],
     expected_success: bool,
 ) -> None:
-    """Test only the owner may remove an owner's password they don't depend on."""
+    """Test only the owner may remove an owner's password, if they have another login."""
     other_provider = await auth_provider_from_config(
         hass, hass.auth._store, {"type": "insecure_example", "users": []}
     )
     hass.auth._providers[(other_provider.type, other_provider.id)] = other_provider
-    await hass.auth.async_link_user(
-        hass_owner_user, other_provider.async_create_credentials({"username": "owner"})
-    )
+    for username in other_usernames:
+        await hass.auth.async_link_user(
+            hass_owner_user,
+            other_provider.async_create_credentials({"username": username}),
+        )
     await auth_provider.async_add_auth("owner-user", "owner-pass")
     password = await auth_provider.async_get_or_create_credentials(
         {"username": "owner-user"}
@@ -447,6 +451,11 @@ async def test_delete_owner_credentials_with_another_login(
     result = await client.receive_json()
     assert result["success"] is expected_success, result
     assert (password in hass_owner_user.credentials) is not expected_success
+    assert auth_provider.data is not None
+    assert (
+        any(entry["username"] == "owner-user" for entry in auth_provider.data.users)
+        is not expected_success
+    )
 
 
 async def test_delete_requires_admin(
