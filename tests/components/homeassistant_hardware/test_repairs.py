@@ -37,6 +37,7 @@ async def test_create_and_delete_multi_pan_migration_issue(
     assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
     assert issue.translation_placeholders == {"hardware_name": "Test HW"}
     assert issue.data == {"entry_id": entry.entry_id}
+    assert issue.config_entry_id == entry.entry_id
     assert issue.is_fixable
     assert issue.severity is ir.IssueSeverity.WARNING
 

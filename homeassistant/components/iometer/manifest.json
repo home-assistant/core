@@ -1,6 +1,7 @@
 {
   "domain": "iometer",
   "name": "IOmeter",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@jukrebs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iometer",

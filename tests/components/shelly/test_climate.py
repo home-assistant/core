@@ -857,7 +857,7 @@ async def test_device_not_calibrated(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test to create an issue when the device is not calibrated."""
-    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
+    entry = await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
     mock_block_device.mock_online()
@@ -873,9 +873,12 @@ async def test_device_not_calibrated(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+    assert (
+        issue := issue_registry.async_get_issue(
+            domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+        )
     )
+    assert issue.config_entry_id == entry.entry_id
 
     # The device has been calibrated
     monkeypatch.setattr(

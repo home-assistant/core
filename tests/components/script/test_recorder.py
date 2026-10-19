@@ -1,6 +1,7 @@
 """The tests for script recorder."""
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import script
 from homeassistant.components.recorder import Recorder
@@ -17,7 +18,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture

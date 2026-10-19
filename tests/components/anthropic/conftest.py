@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime as dt
-from typing import Unpack
+from typing import Literal, Unpack
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from anthropic import AsyncStream
@@ -11,6 +11,7 @@ from anthropic.types import (
     Container,
     Message,
     MessageDeltaUsage,
+    ModelInfo,
     RawContentBlockStartEvent,
     RawMessageDeltaEvent,
     RawMessageStartEvent,
@@ -83,18 +84,38 @@ def mock_config_entry_with_assist(
 
 
 @pytest.fixture
-async def mock_init_component(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> AsyncGenerator[None]:
-    """Initialize integration."""
+def mock_model_list() -> Generator[AsyncMock]:
+    """Mock the catalogue with the API's lifecycle filtering."""
+
+    def models_list(
+        *,
+        lifecycle: list[Literal["active", "deprecated", "retired"]] | None = None,
+        timeout: float = 10.0,
+    ) -> AsyncPage[ModelInfo]:
+        """Return models matching the requested lifecycle stages."""
+        lifecycles = lifecycle if lifecycle is not None else ["active", "deprecated"]
+        return AsyncPage(
+            data=[model for model in model_list if model.lifecycle in lifecycles],
+            has_more=False,
+        )
+
     with patch(
         "anthropic.resources.models.AsyncModels.list",
         new_callable=AsyncMock,
-        return_value=AsyncPage(data=model_list),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield
+        side_effect=models_list,
+    ) as mock_list:
+        yield mock_list
+
+
+@pytest.fixture
+async def mock_init_component(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+) -> None:
+    """Initialize integration."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)

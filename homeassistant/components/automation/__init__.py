@@ -3,21 +3,7 @@
 from typing import Any
 
 from homeassistant.components import websocket_api
-from homeassistant.const import (  # noqa: F401
-    ATTR_AREA_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
-    ATTR_MODE,
-    ATTR_NAME,
-    CONF_ACTIONS,
-    CONF_ALIAS,
-    CONF_CONDITIONS,
-    CONF_ID,
-    CONF_MODE,
-    CONF_PATH,
-    CONF_TRIGGERS,
-    CONF_VARIABLES,
+from homeassistant.const import (
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -26,18 +12,9 @@ from homeassistant.const import (  # noqa: F401
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.script import (  # noqa: F401
-    ATTR_CUR,
-    ATTR_MAX,
-    CONF_MAX,
-    CONF_MAX_EXCEEDED,
-    Script,
-    ScriptRunResult,
-    script_stack_cv,
-)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_SOURCE,
     DATA_COMPONENT,
     DOMAIN,
@@ -45,11 +22,7 @@ from .const import (  # noqa: F401
     EVENT_AUTOMATION_TRIGGERED,
     LOGGER,
 )
-from .entity import (  # noqa: F401
-    AutomationEntity,
-    BaseAutomationEntity,
-    UnavailableAutomationEntity,
-)
+from .entity import AutomationEntity, BaseAutomationEntity, UnavailableAutomationEntity
 from .helpers import async_get_blueprints
 from .services import async_setup_services
 from .util import async_process_config
@@ -58,6 +31,33 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 ATTR_LAST_TRIGGERED = "last_triggered"
+
+__all__ = [
+    "ATTR_SOURCE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "EVENT_AUTOMATION_RELOADED",
+    "EVENT_AUTOMATION_TRIGGERED",
+    "SERVICE_RELOAD",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "AutomationEntity",
+    "BaseAutomationEntity",
+    "UnavailableAutomationEntity",
+    "areas_in_automation",
+    "automations_with_area",
+    "automations_with_blueprint",
+    "automations_with_device",
+    "automations_with_entity",
+    "automations_with_floor",
+    "automations_with_label",
+    "blueprint_in_automation",
+    "devices_in_automation",
+    "entities_in_automation",
+    "floors_in_automation",
+    "labels_in_automation",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:

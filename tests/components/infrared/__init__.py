@@ -1,4 +1,6 @@
-"""Tests for the Infrared integration."""
+"""Tests for the infrared integration."""
 
-EMITTER_ENTITY_ID = "infrared.test_ir_emitter"
-RECEIVER_ENTITY_ID = "infrared.test_ir_receiver"
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID as RECEIVER_ENTITY_ID,
+)

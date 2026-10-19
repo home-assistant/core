@@ -1,13 +1,17 @@
 """Test the Teslemetry Diagnostics."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.teslemetry.const import (
+    CONF_VIN,
+    DOMAIN,
+    SUBENTRY_TYPE_VEHICLE,
+)
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.diagnostics import (
     SOURCE_COMMAND,
@@ -15,15 +19,16 @@ from homeassistant.components.teslemetry.diagnostics import (
     SOURCE_POLLING,
     SOURCE_STREAMING,
 )
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import JsonObjectType
 
-from . import reload_platform, setup_platform
+from . import mock_config_entry, reload_platform, setup_platform
 from .const import METADATA, METADATA_LEGACY, PRODUCTS, PRODUCTS_MODERN
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -239,3 +244,65 @@ async def test_diagnostics_enabled_entity_source(
 
     entities = diag["vehicles"][0]["entities"]
     assert entities[registry_entry.entity_id] == SOURCE_ENABLED
+
+
+VIN = "LRW3F7EK4NC700000"
+ADDRESS = "AA:BB:CC:DD:EE:FF"
+
+
+def _entry_with_ble() -> MockConfigEntry:
+    """Return a config entry whose vehicle subentry is Bluetooth paired."""
+    entry = mock_config_entry()
+    return MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                unique_id=VIN,
+                title="Test",
+                data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
+            )
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    ("ble_device", "key_error"),
+    [
+        pytest.param(MagicMock(), None, id="in_range"),
+        pytest.param(None, None, id="out_of_range"),
+        pytest.param(MagicMock(), OSError("disk gone"), id="key_load_failed"),
+    ],
+)
+async def test_diagnostics_bluetooth(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+    ble_device: MagicMock | None,
+    key_error: Exception | None,
+) -> None:
+    """Test the Bluetooth diagnostics of a paired vehicle."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock(side_effect=key_error)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert diag["vehicles"][0]["bluetooth"] == snapshot

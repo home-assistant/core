@@ -36,9 +36,7 @@ from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import (
     DATA_PENDING_AUTO_LOGIN,
     DEFAULT_EXPOSED_DOMAINS,
@@ -46,9 +44,7 @@ from homeassistant.components.cloud.const import (
 )
 from homeassistant.components.cloud.http_api import validate_language_voice
 from homeassistant.components.frontend import DATA_THEMES
-from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
-    GoogleEntity,
-)
+from homeassistant.components.google_assistant.helpers import GoogleEntity  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
