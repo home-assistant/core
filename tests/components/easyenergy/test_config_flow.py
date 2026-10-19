@@ -3,13 +3,12 @@
 from unittest.mock import MagicMock, patch
 
 from easyenergy import EasyEnergyConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(

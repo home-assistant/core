@@ -8,6 +8,8 @@ from unittest.mock import patch
 from aiohttp import ClientResponse, web
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, CLIENT_REDIRECT_URI
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.auth import AuthManagerFlowManager
 from homeassistant.components.auth import indieauth
@@ -16,9 +18,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from . import BASE_CONFIG, async_setup_auth
-
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
-from tests.typing import ClientSessionGenerator
 
 _TRUSTED_NETWORKS_CONFIG = {
     "type": "trusted_networks",

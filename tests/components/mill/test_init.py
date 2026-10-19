@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import mill
 from homeassistant.components.mill import DOMAIN
 from homeassistant.components.mill.coordinator import MillDataUpdateCoordinator
@@ -10,8 +12,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_with_cloud_config(

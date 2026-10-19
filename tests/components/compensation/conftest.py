@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.compensation.const import (
     CONF_COMPENSATED_VALUE,
@@ -17,8 +18,6 @@ from homeassistant.components.compensation.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

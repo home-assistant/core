@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from apyhiveapi.helper import hive_exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USERNAME = "username@home-assistant.com"
 UPDATED_USERNAME = "updated_username@home-assistant.com"

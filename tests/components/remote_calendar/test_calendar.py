@@ -7,6 +7,7 @@ import textwrap
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import respx
 from syrupy.assertion import SnapshotAssertion
 
@@ -22,8 +23,6 @@ from .conftest import (
     GetEventsFn,
     event_fields,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test data files with known calendars from various sources. You can add a new file
 # in the testdata directory and add it will be parsed and tested.

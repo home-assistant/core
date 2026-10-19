@@ -1,6 +1,7 @@
 """Test the Compensation integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.compensation.const import (
     CONF_COMPENSATED_VALUE,
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "sensor.my_compensation"
 

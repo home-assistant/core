@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.rachio.const import (
@@ -19,8 +20,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _mock_rachio_return_value(get=None, info=None):

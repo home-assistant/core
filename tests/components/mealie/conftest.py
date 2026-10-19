@@ -16,11 +16,10 @@ from aiomealie import (
 )
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
-
-from tests.common import MockConfigEntry, load_fixture
 
 SHOPPING_LIST_ID = "list-id-1"
 SHOPPING_ITEM_NOTE = "Shopping Item 1"

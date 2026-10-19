@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.eheimdigital.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,9 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_dynamic_entities(

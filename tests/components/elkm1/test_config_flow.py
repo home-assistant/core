@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from elkm1_lib.discovery import ElkSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.elkm1.const import CONF_AUTO_CONFIGURE, DOMAIN
@@ -32,8 +33,6 @@ from . import (
     _patch_elk,
     mock_elk,
 )
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     MOCK_IP_ADDRESS, "", dr.format_mac(MOCK_MAC).replace(":", "")
