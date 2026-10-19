@@ -7,6 +7,7 @@ from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -67,8 +68,6 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @dataclass
@@ -321,7 +320,13 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "arm_profiles"):
+    for attr in (
+        *_PUBLIC_STORE_ATTRS.values(),
+        "arm_profiles",
+        "speakers",
+        "link_stations",
+        "bridges",
+    ):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None

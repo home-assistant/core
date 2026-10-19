@@ -5,13 +5,15 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from ritualsgenie import RitualsGenieConnectionError, Sensor
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .common import (
     init_integration,
@@ -21,8 +23,6 @@ from .common import (
     mock_diffuser_v1_battery_cartridge,
     mock_diffuser_v2_no_battery_no_cartridge,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def _tick(
@@ -87,19 +87,20 @@ async def test_fill_updates_daily(
     assert client.sensor.call_count == 1
 
     diffuser.fill = "50-60%"
+    diffuser.fill_raw = "9000"
     await _tick(hass, freezer, timedelta(hours=23))
 
     assert client.sensor.call_count == 1
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "90-100%"
+    assert state.state == "95"
 
     await _tick(hass, freezer, timedelta(hours=1))
 
     assert client.sensor.call_count == 2
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "50-60%"
+    assert state.state == "55"
 
 
 async def test_fill_updates_on_cartridge_change(
@@ -112,13 +113,14 @@ async def test_fill_updates_on_cartridge_change(
     assert client.sensor.call_count == 1
 
     diffuser.has_cartridge = False
-    diffuser.fill = "Not available"
+    diffuser.fill = "No measurement available"
+    diffuser.fill_raw = "-1"
     await _tick(hass, freezer, timedelta(hours=1))
 
     assert client.sensor.call_count == 2
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "Not available"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_sensors_failure_does_not_block_setup(
@@ -171,6 +173,10 @@ async def test_diffuser_removed_from_account(
         assert state
         assert state.state == STATE_UNAVAILABLE
 
+    error = config_entry.runtime_data.sensors["lot123"].last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_key == "diffuser_not_found"
+
 
 async def test_disabled_sensors_not_fetched(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -215,7 +221,7 @@ async def test_perfume_fetched_for_fill(
 
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == "90-100%"
+    assert state.state == "95"
 
 
 async def test_diffuser_offline_sensors_unavailable(
@@ -253,3 +259,61 @@ async def test_hubs_failure_sensors_unavailable(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+
+async def test_model_fetched_once(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the model of each diffuser is fetched only once."""
+    config_entry = mock_config_entry(unique_id="id_123_model_once")
+    client = await init_integration(
+        hass,
+        config_entry,
+        [
+            mock_diffuser_v1_battery_cartridge(),
+            mock_diffuser_v2_no_battery_no_cartridge(),
+        ],
+    )
+    assert client.hublot.call_count == 2
+
+    await _tick(hass, freezer, timedelta(minutes=5))
+    await _tick(hass, freezer, timedelta(minutes=5))
+
+    assert client.hublot.call_count == 2
+
+
+async def test_model_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a failing model lookup keeps the known model, and is retried."""
+    config_entry = mock_config_entry(unique_id="id_123_model_failure")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "lot123")},
+        model="The Perfume Genie 2.0",
+    )
+    client = mock_client([mock_diffuser("lot123", model="Genie 3.0")])
+    hardware = client.hublot.side_effect
+    client.hublot.side_effect = RitualsGenieConnectionError
+
+    with patch(
+        "homeassistant.components.rituals_perfume_genie.RitualsGenie",
+        return_value=client,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get(device.id)
+    assert device
+    assert device.model == "The Perfume Genie 2.0"
+
+    client.hublot.side_effect = hardware
+    await _tick(hass, freezer, timedelta(minutes=5))
+
+    device = device_registry.async_get(device.id)
+    assert device
+    assert device.model == "Genie 3.0"

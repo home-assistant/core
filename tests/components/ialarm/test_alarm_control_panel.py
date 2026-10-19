@@ -5,12 +5,13 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyasyncialarm import IAlarm
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-    SCAN_INTERVAL,
     AlarmControlPanelState,
 )
+from homeassistant.components.ialarm.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
@@ -20,8 +21,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "alarm_control_panel.ialarm"
 

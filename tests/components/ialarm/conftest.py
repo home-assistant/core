@@ -6,11 +6,10 @@ from uuid import uuid4
 
 from pyasyncialarm import IAlarm
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ialarm.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 TEST_MAC = "00:00:54:12:34:56"
 

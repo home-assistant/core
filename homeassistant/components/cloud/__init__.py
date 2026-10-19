@@ -178,6 +178,22 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "DOMAIN",
+    "CloudConnectionState",
+    "CloudNotAvailable",
+    "CloudNotConnected",
+    "async_active_subscription",
+    "async_create_cloudhook",
+    "async_delete_cloudhook",
+    "async_get_or_create_cloudhook",
+    "async_is_connected",
+    "async_is_logged_in",
+    "async_listen_cloudhook_change",
+    "async_listen_connection_change",
+    "async_remote_ui_url",
+]
+
 
 class CloudNotAvailable(HomeAssistantError):
     """Raised when an action requires the cloud but it's not available."""

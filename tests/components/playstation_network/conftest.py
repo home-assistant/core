@@ -13,11 +13,10 @@ from psnawp_api.models.trophies import (
     TrophyTitle,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-
-from tests.common import MockConfigEntry
 
 NPSSO_TOKEN: str = "npsso-token"
 NPSSO_TOKEN_INVALID_JSON: str = "{'npsso': 'npsso-token'"

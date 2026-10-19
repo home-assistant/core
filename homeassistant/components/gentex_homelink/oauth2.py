@@ -1,7 +1,6 @@
 """API for homelink bound to Home Assistant OAuth."""
 
-import time
-from typing import override
+from typing import cast, override
 
 from aiohttp import ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
@@ -9,64 +8,30 @@ from homelink.settings import COGNITO_CLIENT_ID
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.oauth2 import async_token_request
 
-from .const import OAUTH2_TOKEN_URL
+from .const import OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL
 
 
-class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
-    """Base class to abstract OAuth2 authentication."""
+class HomeLinkOAuth2Implementation(
+    config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce
+):
+    """HomeLink OAuth2 implementation."""
 
     def __init__(self, hass: HomeAssistant, domain: str) -> None:
-        """Initialize the SRP Auth implementation."""
-
-        self.hass = hass
-        self._domain = domain
-        self.client_id = COGNITO_CLIENT_ID
+        """Initialize the HomeLink OAuth2 implementation."""
+        super().__init__(
+            hass,
+            domain,
+            COGNITO_CLIENT_ID,
+            OAUTH2_AUTHORIZE_URL,
+            OAUTH2_TOKEN_URL,
+        )
 
     @property
     @override
     def name(self) -> str:
         """Name of the implementation."""
-        return "SRPAuth"
-
-    @property
-    @override
-    def domain(self) -> str:
-        """Domain that is providing the implementation."""
-        return self._domain
-
-    @override
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
-        """Left intentionally blank because the auth is handled by SRP."""
-        return ""
-
-    @override
-    async def async_resolve_external_data(self, external_data) -> dict:
-        """Format the token from the source appropriately for HomeAssistant."""
-        tokens = external_data["tokens"]
-        return {
-            "access_token": tokens["AuthenticationResult"]["AccessToken"],
-            "refresh_token": tokens["AuthenticationResult"]["RefreshToken"],
-            "token_type": tokens["AuthenticationResult"]["TokenType"],
-            "expires_in": tokens["AuthenticationResult"]["ExpiresIn"],
-            "expires_at": (time.time() + tokens["AuthenticationResult"]["ExpiresIn"]),
-        }
-
-    @override
-    async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
-        new_token = await async_token_request(
-            self.hass,
-            OAUTH2_TOKEN_URL,
-            {
-                "grant_type": "refresh_token",
-                "client_id": self.client_id,
-                "refresh_token": token["refresh_token"],
-            },
-            domain=self.domain,
-        )
-        return {**token, **new_token}
+        return "HomeLink"
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
@@ -85,4 +50,4 @@ class AsyncConfigEntryAuth(AbstractAuth):
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token["access_token"]
+        return cast(str, self._oauth_session.token["access_token"])

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, _patch, patch
 from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.sofar.config_flow import (
@@ -43,8 +44,6 @@ from . import (
     declare_pv_in_masks,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 # A recognized prefix with no model in sofar-modbus's own table.
 _UNMODELED_SERIAL = "SA1XXES100XX"

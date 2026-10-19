@@ -10,6 +10,19 @@ from unittest.mock import AsyncMock, Mock, call as mock_call, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockUser,
+    RegistryEntryWithDefaults,
+    async_mock_service,
+    mock_area_registry,
+    mock_device_registry,
+    mock_integration,
+    mock_registry,
+)
 from pytest_unordered import unordered
 
 # To prevent circular import when running just this file
@@ -55,20 +68,6 @@ from homeassistant.loader import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockUser,
-    RegistryEntryWithDefaults,
-    async_mock_service,
-    mock_area_registry,
-    mock_device_registry,
-    mock_integration,
-    mock_registry,
-)
 
 SUPPORT_A = 1
 SUPPORT_B = 2

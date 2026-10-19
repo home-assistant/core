@@ -14,13 +14,12 @@ from aidot.const import (
 )
 from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.core import callback
 
 from .const import TEST_DEVICE1, TEST_DEVICE_LIST, TEST_EMAIL, TEST_LOGIN_RESP
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

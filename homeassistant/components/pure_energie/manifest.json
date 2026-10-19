@@ -1,6 +1,7 @@
 {
   "domain": "pure_energie",
   "name": "Pure Energie",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pure_energie",
