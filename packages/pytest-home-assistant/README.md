@@ -12,7 +12,8 @@ Install the package into your custom integration's virtual environment:
 uv pip install pytest-home-assistant
 ```
 
-The package installs the matching Home Assistant version. Upgrade them together.
+Use the package release that matches your Home Assistant version. Upgrade them
+together.
 The plugin loads automatically. Do not install it together with
 `pytest-homeassistant-custom-component`, which supplies overlapping fixtures.
 
@@ -57,6 +58,9 @@ async def test_config_entry(hass: HomeAssistant) -> None:
 ```
 
 Run your tests with `pytest`.
+
+Use `@pytest.mark.usefixtures("entity_registry_enabled_by_default")` when a test
+needs entities that are normally disabled in the entity registry.
 
 ## Test data and configuration
 

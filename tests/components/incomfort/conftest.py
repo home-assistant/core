@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from incomfortclient import DisplayCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     "host": "192.168.1.12",

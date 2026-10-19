@@ -5,14 +5,13 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from transmission_rpc.session import Session, SessionStats
 from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.transmission.const import DOMAIN
 
 from . import MOCK_CONFIG_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

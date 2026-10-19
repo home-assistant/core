@@ -250,6 +250,9 @@ aioeafm==0.1.2
 # homeassistant.components.rainforest_eagle
 aioeagle==1.1.1
 
+# homeassistant.components.ecosmart
+aioecosmart==0.1.0
+
 # homeassistant.components.ecowitt
 aioecowitt==2026.6.0
 

@@ -2560,6 +2560,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "ecosmart": {
+      "name": "ecosmart",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ecospar": {
       "name": "EcoSpar",
       "integration_type": "virtual",
@@ -10184,6 +10190,9 @@
     "skoda": {
       "name": "\u0160koda",
       "integration_type": "device",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

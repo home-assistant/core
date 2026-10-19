@@ -1,6 +1,7 @@
 """The tests for Z-Wave JS logbook."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import CommandClass
 
 from homeassistant.components.zwave_js.const import (
@@ -13,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 

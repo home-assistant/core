@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import weather
 from homeassistant.components.demo.weather import WEATHER_UPDATE_INTERVAL
@@ -21,8 +22,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture

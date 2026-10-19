@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant) -> None:

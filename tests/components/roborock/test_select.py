@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
@@ -29,8 +30,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

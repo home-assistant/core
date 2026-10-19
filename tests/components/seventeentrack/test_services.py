@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.seventeentrack import DOMAIN
@@ -23,8 +24,6 @@ from .conftest import (
     PACKAGE_TRACKING_NUMBER_KEY,
     get_package,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_packages_from_list(

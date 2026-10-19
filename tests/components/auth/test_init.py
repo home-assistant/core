@@ -11,6 +11,8 @@ from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 from multidict import MultiDict
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import (
@@ -26,9 +28,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
-
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import AsyncMock, create_autospec, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from ritualsgenie import (
     RitualsGenie,
     RitualsGenieHub,
@@ -18,8 +19,6 @@ from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ROOM_SIZES = {15: "1", 30: "2", 60: "3", 100: "4"}
 SENSOR_FIELDS = {
