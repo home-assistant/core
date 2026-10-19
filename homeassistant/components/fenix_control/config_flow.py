@@ -23,9 +23,6 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
-)
 
 
 class FenixControlConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -86,12 +83,12 @@ class FenixControlConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the new password."""
+        """Ask for the e-mail address and the new password."""
         reauth_entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
             user_id, errors = await self._async_get_user_id(
-                reauth_entry.data[CONF_EMAIL], user_input[CONF_PASSWORD]
+                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
             if user_id:
                 await self.async_set_unique_id(user_id)
@@ -102,7 +99,9 @@ class FenixControlConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_REAUTH_DATA_SCHEMA,
-            description_placeholders={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_EMAIL: (user_input or reauth_entry.data)[CONF_EMAIL]},
+            ),
             errors=errors,
         )

@@ -10,7 +10,7 @@ from pyfenixcontrol import (
 import pytest
 
 from homeassistant.components.fenix_control.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -97,24 +97,42 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_fenix_client", "mock_setup_entry")
+def _suggested_email(result: ConfigFlowResult) -> str:
+    """Return the e-mail address pre-filled in a form."""
+    key = next(key for key in result["data_schema"].schema if key == CONF_EMAIL)
+    return key.description["suggested_value"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "email",
+    [
+        pytest.param(EMAIL, id="same_email"),
+        pytest.param("new@example.com", id="changed_email"),
+    ],
+)
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fenix_client: MagicMock,
+    email: str,
 ) -> None:
-    """Test reauthentication with a new password."""
+    """Test reauthentication with a new password and possibly a new e-mail."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert _suggested_email(result) == EMAIL
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-password"}
+        result["flow_id"], {CONF_EMAIL: email, CONF_PASSWORD: "new-password"}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data == {CONF_EMAIL: EMAIL, CONF_PASSWORD: "new-password"}
+    assert mock_config_entry.data == {CONF_EMAIL: email, CONF_PASSWORD: "new-password"}
+    assert mock_config_entry.unique_id == USER_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -132,15 +150,17 @@ async def test_reauth_flow_errors(
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "wrong"}
+        result["flow_id"], {CONF_EMAIL: "typo@example.com", CONF_PASSWORD: "wrong"}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    # The form keeps the e-mail address that was entered
+    assert _suggested_email(result) == "typo@example.com"
 
     mock_fenix_client.get_user_id.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-password"}
+        result["flow_id"], {CONF_EMAIL: EMAIL, CONF_PASSWORD: "new-password"}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -160,9 +180,10 @@ async def test_reauth_flow_wrong_account(
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-password"}
+        result["flow_id"],
+        {CONF_EMAIL: "other@example.com", CONF_PASSWORD: "new-password"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
-    assert mock_config_entry.data[CONF_PASSWORD] == PASSWORD
+    assert mock_config_entry.data == {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
