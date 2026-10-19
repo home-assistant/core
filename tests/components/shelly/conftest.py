@@ -504,16 +504,42 @@ MOCK_LEDSTRIP_CONFIG = {
     }
 }
 
-MOCK_LEDSTRIP_STATUS = {
-    "ledstrip:0": {
-        "id": 0,
-        "on": False,
-        "brightness": 36,
-        "effect": "rainbow",
-        "speed": 33,
-        "reverse": True,
-    }
+MOCK_LEDSTRIP_STATUS_RAINBOW = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "rainbow",
+    "speed": 33,
+    "reverse": True,
 }
+MOCK_LEDSTRIP_STATUS_AURORA = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "bg_rgb": [0, 0, 0],
+    "effect": "aurora",
+    "palette": "ocean",
+    "speed": 50,
+    "intensity": 50,
+}
+MOCK_LEDSTRIP_STATUS_BLINK = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "blink",
+    "rgb": [127, 172, 255],
+    "bg_rgb": [171, 171, 171],
+    "speed": 50,
+    "intensity": 65,
+}
+MOCK_LEDSTRIP_STATUS_SOLID = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "solid",
+    "rgb": [255, 81, 68],
+}
+MOCK_LEDSTRIP_STATUS = {"ledstrip:0": MOCK_LEDSTRIP_STATUS_RAINBOW}
 
 MOCK_SCRIPTS = [
     """"

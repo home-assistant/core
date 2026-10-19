@@ -35,7 +35,9 @@ from . import (
     register_device,
     register_entity,
 )
-from .conftest import MOCK_LEDSTRIP_STATUS
+from .conftest import MOCK_LEDSTRIP_STATUS_AURORA, MOCK_LEDSTRIP_STATUS_RAINBOW
+
+LEDSTRIP_ENTITY_ID = f"{SELECT_DOMAIN}.test_name_ledstrip_0_effect_palette"
 
 
 @pytest.fixture(autouse=True)
@@ -341,20 +343,6 @@ async def test_rpc_cury_mode_select(
     assert state.state == "none"
 
 
-LEDSTRIP_ENTITY_ID = f"{SELECT_DOMAIN}.test_name_ledstrip_0_effect_palette"
-LEDSTRIP_STATUS_AURORA = {
-    "id": 0,
-    "on": False,
-    "brightness": 36,
-    "bg_rgb": [0, 0, 0],
-    "effect": "aurora",
-    "palette": "ocean",
-    "speed": 50,
-    "intensity": 50,
-}
-LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
-
-
 async def test_rpc_ledstrip_palette_select(
     hass: HomeAssistant,
     mock_ledstrip_rpc_device: Mock,
@@ -364,7 +352,7 @@ async def test_rpc_ledstrip_palette_select(
 ) -> None:
     """Test RPC LED strip effect palette select."""
     monkeypatch.setitem(
-        mock_ledstrip_rpc_device.status, "ledstrip:0", LEDSTRIP_STATUS_AURORA
+        mock_ledstrip_rpc_device.status, "ledstrip:0", MOCK_LEDSTRIP_STATUS_AURORA
     )
 
     await init_integration(hass, 4)
@@ -397,8 +385,8 @@ async def test_rpc_ledstrip_palette_select(
 @pytest.mark.parametrize(
     ("ledstrip_status", "expected_state"),
     [
-        (LEDSTRIP_STATUS_AURORA, "ocean"),
-        (LEDSTRIP_STATUS_RAINBOW, STATE_UNAVAILABLE),
+        (MOCK_LEDSTRIP_STATUS_AURORA, "ocean"),
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, STATE_UNAVAILABLE),
     ],
 )
 async def test_rpc_ledstrip_palette_select_availability(
