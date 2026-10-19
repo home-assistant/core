@@ -5555,14 +5555,28 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "kaco_modbus": {
-      "name": "KACO Modbus",
-      "integration_type": "device",
-      "categories": [
-        "energy.solar_batteries"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+    "kaco": {
+      "name": "KACO new energy",
+      "integrations": {
+        "kaco_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO Modbus"
+        },
+        "kaco_rs485": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO RS485"
+        }
+      }
     },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
