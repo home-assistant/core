@@ -1,29 +1,83 @@
 """Tests for init methods."""
 
-from unittest.mock import AsyncMock
-
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.flipr import DOMAIN
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
-from . import setup_integration
 
-
-async def test_unload_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_flipr_client: AsyncMock,
+async def test_flipr_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test unload entry."""
+    """Test the Flipr configuration entry loading/unloading handles the repair."""
+    config_entry_1 = MockConfigEntry(
+        title="Example 1",
+        domain=DOMAIN,
+        version=2,
+    )
+    config_entry_1.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_1.state is ConfigEntryState.LOADED
 
-    mock_flipr_client.search_all_ids.return_value = {
-        "flipr": ["myfliprid"],
-        "hub": ["hubid"],
-    }
+    # Add a second one
+    config_entry_2 = MockConfigEntry(
+        title="Example 2",
+        domain=DOMAIN,
+        version=2,
+    )
+    config_entry_2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_2.entry_id)
+    await hass.async_block_till_done()
 
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert config_entry_2.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    # Add an ignored entry
+    config_entry_3 = MockConfigEntry(
+        source=SOURCE_IGNORE,
+        domain=DOMAIN,
+        version=2,
+    )
+    config_entry_3.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_3.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_3.state is ConfigEntryState.NOT_LOADED
+
+    # Add a disabled entry
+    config_entry_4 = MockConfigEntry(
+        disabled_by=ConfigEntryDisabler.USER,
+        domain=DOMAIN,
+        version=2,
+    )
+    config_entry_4.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_4.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_4.state is ConfigEntryState.NOT_LOADED
+
+    # Remove the first one
+    await hass.config_entries.async_remove(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_2.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
+
+    # Remove the second one
+    await hass.config_entries.async_remove(config_entry_2.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_2.state is ConfigEntryState.NOT_LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is None
+
+    # Check the ignored and disabled entries are removed
+    assert not hass.config_entries.async_entries(DOMAIN)

@@ -249,7 +249,6 @@ FLOWS = {
         "fjaraskupan",
         "flexit",
         "flexit_bacnet",
-        "flipr",
         "flo",
         "flow_it",
         "flume",
