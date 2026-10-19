@@ -343,6 +343,27 @@ async def test_link_one_credential_per_provider(mock_hass: HomeAssistant) -> Non
     ] == [(None, "alice"), ("another-provider", "alice")]
 
 
+async def test_link_one_credential_of_an_unconfigured_provider(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test the limit also holds for credentials of a provider that isn't set up."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = await manager.async_create_user("Alice")
+    first = Credentials(
+        auth_provider_type="removed", auth_provider_id=None, data={"id": "1"}
+    )
+    await manager.async_link_user(user, first)
+
+    with pytest.raises(auth.CredentialsExistError):
+        await manager.async_link_user(
+            user,
+            Credentials(
+                auth_provider_type="removed", auth_provider_id=None, data={"id": "2"}
+            ),
+        )
+    assert user.credentials == [first]
+
+
 async def test_link_credentials_to_a_system_generated_user(
     mock_hass: HomeAssistant,
 ) -> None:

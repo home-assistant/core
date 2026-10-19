@@ -353,9 +353,9 @@ class AuthManager:
             raise CredentialsLinkError(
                 "Unable to link credentials to a system generated user"
             )
-        if (
-            provider := self._async_get_auth_provider(credentials)
-        ) is not None and not self.async_can_link_credentials(user, provider):
+        if self._async_has_credentials_of(
+            user, credentials.auth_provider_type, credentials.auth_provider_id
+        ):
             raise CredentialsExistError(
                 "User already has credentials for this provider"
             )
@@ -367,9 +367,18 @@ class AuthManager:
         self, user: models.User, provider: AuthProvider
     ) -> bool:
         """Return if credentials of the auth provider can be linked to the user."""
-        return not user.system_generated and not any(
-            credential.auth_provider_type == provider.type
-            and credential.auth_provider_id == provider.id
+        return not user.system_generated and not self._async_has_credentials_of(
+            user, provider.type, provider.id
+        )
+
+    @callback
+    def _async_has_credentials_of(
+        self, user: models.User, provider_type: str, provider_id: str | None
+    ) -> bool:
+        """Return if the user has credentials of an auth provider."""
+        return any(
+            credential.auth_provider_type == provider_type
+            and credential.auth_provider_id == provider_id
             for credential in user.credentials
         )
 
