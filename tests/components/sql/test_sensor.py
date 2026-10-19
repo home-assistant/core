@@ -8,11 +8,6 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    assert_platform_setup_creates_issue,
-    async_fire_time_changed,
-)
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
@@ -54,6 +49,12 @@ from . import (
     YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
     YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
     init_integration,
+)
+
+from tests.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
 )
 
 

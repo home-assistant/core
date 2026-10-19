@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from open_meteo import OpenMeteoConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -12,6 +11,8 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

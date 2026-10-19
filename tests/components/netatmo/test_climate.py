@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 
 from probatio.error import MultipleInvalid
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -55,6 +54,8 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_entity(

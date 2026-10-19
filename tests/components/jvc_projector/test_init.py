@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
-from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.jvc_projector.const import DOMAIN
@@ -15,6 +14,8 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.issue_registry import IssueRegistry
 
 from . import MOCK_MAC
+
+from tests.common import MockConfigEntry
 
 
 async def test_init(

@@ -5,12 +5,6 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import probatio
 import pytest
-from pytest_homeassistant.common import (
-    MockEntityPlatform,
-    MockUser,
-    async_mock_service,
-    setup_test_component_platform,
-)
 
 from homeassistant import core
 from homeassistant.components import light
@@ -31,6 +25,13 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
 from .common import MockLight
+
+from tests.common import (
+    MockEntityPlatform,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
 
 orig_Profiles = light.Profiles
 

@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -31,6 +30,8 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_version")

@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
@@ -25,6 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.components.usb import patch_scanned_serial_ports
 
 

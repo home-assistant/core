@@ -7,7 +7,6 @@ from unittest.mock import patch
 import aiohttp
 from multidict import CIMultiDict
 import pytest
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from yarl import URL
 
 from homeassistant.components.rest_command import DOMAIN
@@ -22,6 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL, ComponentSetup
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> None:

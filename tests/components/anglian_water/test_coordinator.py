@@ -11,7 +11,6 @@ from pyanglianwater.exceptions import (
 )
 from pyanglianwater.meter import SmartMeter
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,6 +30,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import ACCOUNT_NUMBER, CONSENT_REQUIRED_ISSUE_ID
+
+from tests.common import MockConfigEntry
 
 
 async def test_coordinator_first_run(
