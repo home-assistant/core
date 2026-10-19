@@ -761,6 +761,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hase_iq/ @bbayszczak
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/haven_iaq/ @krhtzoa
+/tests/components/haven_iaq/ @krhtzoa
 /homeassistant/components/hdfury/ @glenndehaan
 /tests/components/hdfury/ @glenndehaan
 /homeassistant/components/hdmi_cec/ @inytar

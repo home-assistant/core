@@ -181,7 +181,7 @@ class ConfigEntryState(Enum):
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
-        obj._recoverable = recoverable  # noqa: SLF001
+        obj._recoverable = recoverable
         return obj
 
     @property

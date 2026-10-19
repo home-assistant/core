@@ -1836,9 +1836,7 @@ async def async_test_recorder(
     from homeassistant.components import recorder  # noqa: PLC0415
     from homeassistant.components.recorder import migration  # noqa: PLC0415
 
-    from .components.recorder.common import (  # noqa: PLC0415
-        async_recorder_block_till_done,
-    )
+    from .components.recorder.common import async_recorder_block_till_done  # noqa: PLC0415
     from .patch_recorder import real_session_scope  # noqa: PLC0415
 
     if TYPE_CHECKING:
@@ -2043,6 +2041,78 @@ def mock_recorder_before_hass() -> None:
     """
 
 
+@pytest.fixture(name="macos_adapter")
+def macos_adapter() -> Generator[None]:
+    """Fixture that mocks the macos adapter."""
+    from .components.bluetooth import patch_bleak_backend_type  # noqa: PLC0415
+
+    with (
+        patch_bleak_backend_type(),
+        patch(
+            "homeassistant.components.bluetooth.platform.system",
+            return_value="Darwin",
+        ),
+        patch(
+            "habluetooth.scanner.platform.system",
+            return_value="Darwin",
+        ),
+        patch(
+            "bluetooth_adapters.systems.platform.system",
+            return_value="Darwin",
+        ),
+        patch("habluetooth.scanner.SYSTEM", "Darwin"),
+    ):
+        yield
+
+
+@pytest.fixture
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an hci0 scanner."""
+    from homeassistant.components import bluetooth  # noqa: PLC0415
+
+    from .components.bluetooth import HCI0_SOURCE_ADDRESS, FakeScanner  # noqa: PLC0415
+
+    hci0_scanner = FakeScanner(HCI0_SOURCE_ADDRESS, "hci0")
+    hci0_scanner.connectable = True
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, connection_slots=5)
+    yield
+    cancel()
+    bluetooth.async_remove_scanner(hass, hci0_scanner.source)
+
+
+@pytest.fixture
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an hci1 scanner."""
+    from homeassistant.components import bluetooth  # noqa: PLC0415
+
+    from .components.bluetooth import HCI1_SOURCE_ADDRESS, FakeScanner  # noqa: PLC0415
+
+    hci1_scanner = FakeScanner(HCI1_SOURCE_ADDRESS, "hci1")
+    hci1_scanner.connectable = True
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, connection_slots=5)
+    yield
+    cancel()
+    bluetooth.async_remove_scanner(hass, hci1_scanner.source)
+
+
+@pytest.fixture
+def register_non_connectable_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an non connectable remote scanner."""
+    from habluetooth import BaseHaRemoteScanner  # noqa: PLC0415
+
+    from homeassistant.components import bluetooth  # noqa: PLC0415
+
+    from .components.bluetooth import NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS  # noqa: PLC0415
+
+    remote_scanner = BaseHaRemoteScanner(
+        NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS, "non connectable", None, False
+    )
+    cancel = bluetooth.async_register_scanner(hass, remote_scanner)
+    yield
+    cancel()
+    bluetooth.async_remove_scanner(hass, remote_scanner.source)
+
+
 @pytest.fixture(name="enable_bluetooth")
 async def mock_enable_bluetooth(
     hass: HomeAssistant,
@@ -2103,10 +2173,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     # Late imports to avoid loading bleak unless we need it
 
-    from habluetooth import (  # noqa: PLC0415
-        manager as bluetooth_manager,
-        scanner as bluetooth_scanner,
-    )
+    from habluetooth import manager as bluetooth_manager, scanner as bluetooth_scanner  # noqa: PLC0415
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
