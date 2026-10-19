@@ -5,13 +5,16 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
 from homeassistant.loader import async_get_integration
-
-from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 async def test_extract_frame_integration(

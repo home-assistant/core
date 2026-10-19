@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shopping_list import NoMatchingShoppingListItem
@@ -30,9 +32,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import intent, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 def assert_shopping_list_data(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:

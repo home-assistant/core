@@ -11,6 +11,12 @@ from pyenphase.const import PHASENAMES, PhaseNames
 from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 from pyenphase.models.meters import CtType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import (
@@ -29,13 +35,6 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import setup_integration
 from .conftest import _load_json_2_meter_data, _load_json_2_production_data
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.parametrize(

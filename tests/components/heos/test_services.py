@@ -2,6 +2,7 @@
 
 from pyheos import CommandAuthenticationError, HeosError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.heos.const import (
     ATTR_PASSWORD,
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry
 
 
 async def test_sign_in(

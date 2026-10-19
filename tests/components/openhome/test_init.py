@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -12,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import setup_integration
 from .conftest import HOST
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "media_player.friendly_name"
 

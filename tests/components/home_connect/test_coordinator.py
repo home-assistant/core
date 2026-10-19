@@ -39,6 +39,7 @@ from aiohomeconnect.model.program import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
@@ -68,8 +69,6 @@ from homeassistant.core import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 INITIAL_FETCH_CLIENT_METHODS = [
     "get_settings",

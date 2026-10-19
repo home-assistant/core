@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Controller, User, Zone
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hydrawise.const import DOMAIN, MAIN_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("side_effect", [ClientError, APIError("unavailable")])

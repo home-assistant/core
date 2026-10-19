@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiodns.error import DNSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dnsip.config_flow import DATA_SCHEMA
@@ -24,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import RetrieveDNS
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:

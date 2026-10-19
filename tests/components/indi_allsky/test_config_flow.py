@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.indi_allsky.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.components.indi_allsky.util import get_ssl_context, normalize
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

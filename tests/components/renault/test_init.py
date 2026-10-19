@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import (
     GigyaException,
@@ -32,9 +34,6 @@ from .const import (
     MOCK_LOGIN_TOKEN,
     OTHER_ACCOUNT_ID,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 # Config data of an entry created before the login token was stored.
 MOCK_CONFIG_NO_TOKEN = {

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aionanoleaf2 import InvalidToken, Unauthorized, Unavailable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nanoleaf.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_NAME = "Canvas ADF9"
 TEST_HOST = "192.168.0.100"

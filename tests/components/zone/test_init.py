@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import setup
 from homeassistant.components import device_tracker, zone
@@ -21,9 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture

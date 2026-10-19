@@ -9,6 +9,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from hass_nabucasa import SpeechToTextV2Error
 from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
-
-from tests.typing import ClientSessionGenerator
 
 ENTITY_ID = "stt.home_assistant_cloud"
 

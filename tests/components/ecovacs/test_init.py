@@ -9,6 +9,7 @@ from deebot_client.exceptions import (
 )
 from deebot_client.models import AccountCredentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
@@ -26,8 +27,6 @@ from .const import (
     VALID_ENTRY_DATA_CLOUD,
     VALID_ENTRY_DATA_SELF_HOSTED,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures(

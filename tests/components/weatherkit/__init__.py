@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 from apple_weatherkit import DataSetType
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.weatherkit.const import (
     CONF_KEY_ID,
@@ -14,8 +15,6 @@ from homeassistant.components.weatherkit.const import (
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 EXAMPLE_CONFIG_DATA = {
     CONF_LATITUDE: 35.4690101707532,

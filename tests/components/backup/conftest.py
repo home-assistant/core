@@ -7,12 +7,11 @@ import shutil
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_fixture_path
 
 
 @pytest.fixture

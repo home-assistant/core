@@ -8,6 +8,7 @@ import httpx2
 from openai import PermissionDeniedError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.openai_conversation import DOMAIN
@@ -24,8 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
 
 from . import create_image_gen_call_item, create_message_item, create_reasoning_item
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")
