@@ -1,13 +1,13 @@
 """Tests for HTML5 Websocket API."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.html5.websocket_api import WS_TYPE_APPKEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_CONF_PUB_KEY
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_websocket_appkey(

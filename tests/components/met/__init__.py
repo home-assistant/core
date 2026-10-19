@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.met.const import (
     CONF_TRACK_HOME,
     DEFAULT_NAME,
@@ -10,8 +12,6 @@ from homeassistant.components.met.const import (
 )
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(

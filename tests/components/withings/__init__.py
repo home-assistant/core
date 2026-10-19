@@ -8,17 +8,16 @@ from urllib.parse import urlparse
 from aiohttp.test_utils import TestClient
 from aiowithings import Activity, Device, Goals, MeasurementGroup, SleepSummary, Workout
 from freezegun.api import FrozenDateTimeFactory
-
-from homeassistant.components.webhook import async_generate_url
-from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.webhook import async_generate_url
+from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 
 
 @dataclass

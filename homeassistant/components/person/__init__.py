@@ -14,22 +14,7 @@ from homeassistant.components.image_upload import (
     DOMAIN as IMAGE_UPLOAD_DOMAIN,
     ImageStorageCollection,
 )
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    ATTR_GPS_ACCURACY,
-    ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_NAME,
-    CONF_ID,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
-    SERVICE_RELOAD,
-    STATE_HOME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    EntityStateAttribute,
-)
+from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_ID, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -41,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
+from .const import (
     CONF_DEVICE_TRACKERS,
     CONF_PICTURE,
     CONF_USER_ID,
@@ -88,6 +73,19 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "ATTR_USER_ID",
+    "DOMAIN",
+    "SERVICE_RELOAD",
+    "Person",
+    "PersonEntityStateAttribute",
+    "PersonStorageCollection",
+    "async_add_user_device_tracker",
+    "async_create_person",
+    "entities_in_person",
+    "persons_with_entity",
+]
 
 
 async def async_create_person(

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import AsyncMock, create_autospec, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from ritualsgenie import (
     RitualsGenie,
     RitualsGenieHub,
@@ -18,8 +19,6 @@ from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ROOM_SIZES = {15: "1", 30: "2", 60: "3", 100: "4"}
 SENSOR_FIELDS = {
@@ -68,6 +67,7 @@ class MockDiffuser:
     perfume: str = "Ritual of Sakura"
     perfume_amount: int = 2
     room_size_square_meter: int = 60
+    has_square_meters: bool = True
     standby_led: bool | None = True
     version: str | None = "4.0"
     firmware_id: int | None = 127
@@ -89,11 +89,15 @@ class MockDiffuser:
                 "hash": self.hub_hash,
                 "hublot": self.hublot,
                 "status": 1 if self.available else 0,
-                "attributes": {"ledc": self.standby_led is not None},
+                "attributes": {
+                    "ledc": self.standby_led is not None,
+                    "squaremeterc": self.has_square_meters,
+                },
                 "attributeValues": {
                     "fanc": "1" if self.is_on else "0",
                     "speedc": str(self.perfume_amount),
                     "roomc": ROOM_SIZES[self.room_size_square_meter],
+                    "squaremeterc": str(self.room_size_square_meter),
                     "roomnamec": self.name,
                     # Inverted: the attribute means "LED disabled".
                     "ledc": "1" if self.standby_led is False else "0",

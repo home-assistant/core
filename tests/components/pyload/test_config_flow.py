@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_USER
@@ -21,8 +22,6 @@ from .conftest import (
     USER_INPUT,
     USER_INPUT_API_KEY,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("user_input", [USER_INPUT, USER_INPUT_API_KEY])

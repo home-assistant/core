@@ -26,6 +26,11 @@ from aiohomeconnect.model.program import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.home_connect.const import (
@@ -53,8 +58,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
 from . import create_event_message, create_operation_state_status
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_HC_APP = "Dishwasher"
 

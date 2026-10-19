@@ -15,9 +15,7 @@ import logging
 from numbers import Number
 import os
 import re
-from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
-    _GLOBAL_DEFAULT_TIMEOUT,
-)
+from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore[attr-defined]  # private, not in typeshed
 import threading
 from typing import Any, cast
 from urllib.parse import urlparse

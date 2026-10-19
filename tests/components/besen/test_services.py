@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from besen.exceptions import CommandFailed
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.besen.services import BesenService, BesenServiceArgument
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.garage_charge"
 START = "2026-10-01T22:00:00+00:00"

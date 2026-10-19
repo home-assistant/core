@@ -9,6 +9,8 @@ from music_assistant_models.dashboard import DashboardDevice
 from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
@@ -29,9 +31,6 @@ from .common import (
     setup_integration_from_fixtures,
     trigger_subscription_callback,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_remove_config_entry_device(

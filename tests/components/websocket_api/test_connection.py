@@ -7,14 +7,13 @@ from unittest.mock import Mock, patch
 from aiohttp.test_utils import make_mocked_request
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.redact import REDACTED
-
-from tests.common import MockUser
 
 
 @pytest.mark.parametrize(
