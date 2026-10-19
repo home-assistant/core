@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -77,6 +77,19 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         """Initialize the thermostat."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
+        self._last_on_mode = HVACMode.AUTO
+        self._remember_on_mode()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Track the last HVAC mode in which the thermostat was on."""
+        super()._handle_coordinator_update()
+        self._remember_on_mode()
+
+    def _remember_on_mode(self) -> None:
+        if (mode := self.hvac_mode) != HVACMode.OFF:
+            self._last_on_mode = mode
 
     @property
     @override
@@ -136,12 +149,14 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         if self.device.holiday_active:
             # A holiday is set for the whole installation and locks the controls
             return ClimateEntityFeature(0)
+        features = (
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
         if self.device.preset_mode == PresetMode.MANUAL:
-            return (
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.PRESET_MODE
-            )
-        return ClimateEntityFeature.PRESET_MODE
+            return features | ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -182,6 +197,11 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         await self._async_set_preset_mode(
             HVAC_MODE_TO_PRESET_MODE[hvac_mode], "set_hvac_mode_failed"
         )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on in the last used HVAC mode, the weekly program if unknown."""
+        await self.async_set_hvac_mode(self._last_on_mode)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:

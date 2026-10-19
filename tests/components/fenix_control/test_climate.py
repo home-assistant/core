@@ -29,6 +29,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -42,6 +44,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 ENTITY_ID = "climate.home_living_room"
 
+OFF_DEVICE = dataclasses.replace(DEVICE, preset_mode=int(PresetMode.OFF))
 HOLIDAY_DEVICE = dataclasses.replace(
     DEVICE,
     preset_mode=int(PresetMode.HOLIDAYS),
@@ -227,6 +230,72 @@ async def test_set_hvac_mode(
 
     mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, preset_mode)
     assert hass.states.get(ENTITY_ID).state == hvac_mode
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("last_mode", "expected_mode"),
+    [
+        pytest.param(PresetMode.MANUAL, PresetMode.MANUAL, id="heat"),
+        pytest.param(PresetMode.PROGRAM, PresetMode.PROGRAM, id="auto"),
+        pytest.param(PresetMode.DEFROST, PresetMode.PROGRAM, id="preset"),
+    ],
+)
+async def test_turn_on_restores_last_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    last_mode: PresetMode,
+    expected_mode: PresetMode,
+) -> None:
+    """Test turning on restores the last HVAC mode in which it was on."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, preset_mode=last_mode),
+    )
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, expected_mode)
+
+
+async def test_turn_on_defaults_to_program(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fenix_client: MagicMock,
+) -> None:
+    """Test turning on a thermostat that was off since startup starts the program."""
+    mock_fenix_client.get_devices.return_value = [OFF_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.PROGRAM
+    )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.AUTO
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_off(hass: HomeAssistant, mock_fenix_client: MagicMock) -> None:
+    """Test turning off switches the thermostat off."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.OFF
+    )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
 
 
 @pytest.mark.usefixtures("init_integration")
