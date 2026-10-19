@@ -2926,8 +2926,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
             )
 
-        name = self._resolve_device_info_name(config_entry, device_info)
         domain = config_entry.domain
+        name = self._resolve_device_info_name(config_entry, device_info)
         identifiers = device_info.identifiers
         parent_device_id = device_info.parent_device_id
         suggested_area = device_info.suggested_area
