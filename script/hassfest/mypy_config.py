@@ -232,7 +232,7 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         mypy_config.add_section(strict_section)
         for key in STRICT_SETTINGS:
             mypy_config.set(strict_section, key, "true")
-        if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
+        if strict_module in reexport_modules:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
     for reexport_module in sorted(reexport_modules.difference(strict_modules)):
