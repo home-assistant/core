@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 BINARY_SENSOR_ENTITY_ID = "binary_sensor.bedroom_kid_1_buttonon"
 BUTTON_ENTITY_ID = "button.bedroom_kid_1_buttonon"
