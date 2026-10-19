@@ -108,9 +108,6 @@
       },
       "stars": {
         "name": "Stars"
-      },
-      "wind_direction": {
-        "name": "Wind direction"
       }
     }
   },

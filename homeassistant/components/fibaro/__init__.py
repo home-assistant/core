@@ -183,7 +183,7 @@ class FibaroController:
             manufacturer = None
 
         self._device_infos[main_device.fibaro_id] = DeviceInfo(
-            identifiers={(DOMAIN, main_device.fibaro_id)},
+            identifiers={(DOMAIN, str(main_device.fibaro_id))},
             manufacturer=manufacturer,
             name=main_device.name,
         )
@@ -191,7 +191,7 @@ class FibaroController:
     def link_main_devices_to_hub(self, via_device_id: str) -> None:
         """Link all main devices to the hub via device."""
         for device_info in self._device_infos.values():
-            device_info["via_device_id"] = via_device_id
+            device_info.via_device_id = via_device_id
 
     def get_device_info(self, device: DeviceModel) -> DeviceInfo:
         """Get the device info by fibaro device id."""
@@ -203,7 +203,7 @@ class FibaroController:
 
     def get_all_device_identifiers(self) -> list[set[tuple[str, str]]]:
         """Get all identifiers of fibaro integration."""
-        return [device["identifiers"] for device in self._device_infos.values()]
+        return [{(DOMAIN, str(fibaro_id))} for fibaro_id in self._device_infos]
 
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id."""
@@ -306,7 +306,7 @@ def init_controller(data: Mapping[str, Any]) -> FibaroController:
     return FibaroController(client, info, data[CONF_IMPORT_PLUGINS])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
     """Set up the Fibaro Component.
 
     The unique id of the config entry is the serial number of the home center.
@@ -340,16 +340,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+
+async def async_migrate_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
+    """Migrate device identifiers to use string Fibaro IDs."""
+    if entry.version == 1:
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            # Convert second identifier from int to string
+            # This fixes the device registry entry, it allows only string
+            new_identifiers = {
+                (DOMAIN, str(identifier[1])) if identifier[0] == DOMAIN else identifier
+                for identifier in device_entry.identifiers
+            }
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers=new_identifiers
+            )
+
+        hass.config_entries.async_update_entry(entry, version=2)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("Shutting down Fibaro connection")
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    entry.runtime_data.disconnect()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        entry.runtime_data.disconnect()
 
 
 async def async_remove_config_entry_device(

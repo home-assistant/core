@@ -4,7 +4,7 @@ from http import HTTPStatus
 from io import BytesIO
 from typing import Any
 
-import httpx
+import httpx2
 from PIL import Image
 import pytest
 import respx
@@ -337,7 +337,7 @@ async def test_template_error(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test handling template error."""
-    respx.get("http://example.com").side_effect = httpx.TimeoutException
+    respx.get("http://example.com").side_effect = httpx2.TimeoutException
 
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(

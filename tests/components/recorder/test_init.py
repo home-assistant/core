@@ -11,6 +11,19 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recorder,
+    async_wait_recording_done,
+    convert_pending_states_to_meta,
+    corrupt_db_file,
+    db_event_data_to_native,
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    run_information_with_session,
+)
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -80,20 +93,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from .common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recorder,
-    async_wait_recording_done,
-    convert_pending_states_to_meta,
-    corrupt_db_file,
-    db_event_data_to_native,
-    db_event_to_native,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    run_information_with_session,
-)
 
 from tests.common import (
     MockEntity,
@@ -2727,10 +2726,7 @@ async def test_commit_before_commits_pending_writes(
         recorder.CONF_COMMIT_INTERVAL: 60,
     }
 
-    recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = await async_setup_recorder_instance(hass, config)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()
