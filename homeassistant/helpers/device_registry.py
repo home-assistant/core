@@ -372,7 +372,10 @@ class DeviceInfoError(HomeAssistantError):
     """Raised when device info is invalid."""
 
     def __init__(
-        self, domain: str, device_info: Mapping[str, Any], message: str
+        self,
+        domain: str,
+        device_info: ChildDeviceInfo | Mapping[str, Any],
+        message: str,
     ) -> None:
         """Initialize error."""
         super().__init__(
@@ -2862,6 +2865,51 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
+        return self._async_get_or_create_child(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=disabled_by,
+            device_info=ChildDeviceInfo(
+                identifiers=identifiers,
+                name=name,
+                parent_device_id=parent_device_id,
+                suggested_area=suggested_area,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            ),
+        )
+
+    @callback
+    def async_get_or_create_child_from_device_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get or create the child device described by a child device info."""
+        return self._async_get_or_create_child(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=disabled_by,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_child(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get or create the child device described by a child device info."""
+        identifiers = device_info.identifiers
+        name = device_info.name
+        parent_device_id = device_info.parent_device_id
+        suggested_area = device_info.suggested_area
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -2877,23 +2925,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
             )
 
-        if translation_key:
+        if isinstance(translation_key := device_info.translation_key, str) and (
+            translation_key
+        ):
+            translation_placeholders = device_info.translation_placeholders
             name = self._resolve_translated_name(
-                config_entry, translation_key, translation_placeholders
+                config_entry,
+                translation_key,
+                None
+                if translation_placeholders is UNDEFINED
+                else translation_placeholders,
             )
-
-        # Reconstruct a child device info dict from the arguments, used for error
-        # reporting and conversion of an existing device to a child device.
-        device_info: dict[str, Any] = {
-            key: val
-            for key, val in (
-                ("identifiers", identifiers),
-                ("name", name),
-                ("parent_device_id", parent_device_id),
-                ("suggested_area", suggested_area),
-            )
-            if val is not UNDEFINED
-        }
 
         domain = config_entry.domain
 
@@ -3069,7 +3111,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device: DeviceEntry,
         parent: DeviceEntry,
         config_entry: ConfigEntry,
-        device_info: Mapping[str, Any],
+        device_info: ChildDeviceInfo,
     ) -> None:
         """Validate converting a device to a child device.
 
@@ -4100,7 +4142,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         matched_device: DeviceEntry | None,
         config_entry: ConfigEntry,
-        device_info: Mapping[str, Any],
+        device_info: ChildDeviceInfo | Mapping[str, Any],
         identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]],
     ) -> None:
