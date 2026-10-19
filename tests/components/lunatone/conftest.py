@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from lunatone_rest_api_client import Device, Devices, Sensor, Sensors
 from lunatone_rest_api_client.models import ScanData, ScanLineData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
 from . import BASE_URL, UUID, build_devices_data, build_info_data, build_sensors_data
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    mock_integration,
+)
 
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
@@ -24,8 +30,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockConfigEntry, MockModule, MockUser, mock_integration
 
 
 @pytest.fixture(autouse=True)

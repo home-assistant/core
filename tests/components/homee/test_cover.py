@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from websockets import frames
 from websockets.exceptions import ConnectionClosed
@@ -39,8 +40,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

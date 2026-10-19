@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_SOURCE_DIC = {
     "1": "one",

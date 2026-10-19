@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import load_fixture
 from pytradfri.const import ATTR_DEVICE_STATE, ATTR_LIGHT_CONTROL, ATTR_REACHABLE_STATE
 from pytradfri.device import Device
 
@@ -30,8 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
-
-from tests.common import load_fixture
 
 
 @pytest.fixture(scope="module")

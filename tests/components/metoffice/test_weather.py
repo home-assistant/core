@@ -7,6 +7,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 import requests_mock
 from requests_mock.adapter import _Matcher
 from syrupy.assertion import SnapshotAssertion
@@ -28,13 +34,6 @@ from .const import (
     TEST_COORDINATES_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
