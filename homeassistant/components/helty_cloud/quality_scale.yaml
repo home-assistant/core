@@ -53,7 +53,10 @@ rules:
     comment: The integration talks to a cloud service, not to a network device.
   discovery:
     status: exempt
-    comment: The panel exposes no local service to discover.
+    comment: |
+      The panel exposes no local service to discover.
+      DHCP discovery is not possible: the panel uses the default `espressif`
+      hostname and a MAC address in a generic Espressif OUI.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
