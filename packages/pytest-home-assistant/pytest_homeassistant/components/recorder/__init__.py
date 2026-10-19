@@ -1,1 +1,1 @@
-"""Helpers and historical schemas for Recorder tests."""
+"""Recorder helpers."""

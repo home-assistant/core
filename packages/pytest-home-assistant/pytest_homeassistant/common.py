@@ -1,4 +1,4 @@
-"""Shared helpers for testing Home Assistant integrations."""
+"""Home Assistant test helpers."""
 
 import asyncio
 from collections.abc import (

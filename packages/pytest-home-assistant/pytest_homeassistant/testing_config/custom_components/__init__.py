@@ -1,1 +1,1 @@
-"""Custom integrations used by test helpers."""
+"""Custom test integrations."""

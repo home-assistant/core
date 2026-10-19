@@ -1,4 +1,4 @@
-"""Fixtures for testing Supervisor integrations."""
+"""Supervisor fixtures."""
 
 from collections.abc import Generator
 from ipaddress import IPv4Address, IPv4Network

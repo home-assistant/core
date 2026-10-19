@@ -1,4 +1,4 @@
-"""Helpers for retrieving integration and device diagnostics."""
+"""Diagnostic helpers."""
 
 from http import HTTPStatus
 from typing import cast

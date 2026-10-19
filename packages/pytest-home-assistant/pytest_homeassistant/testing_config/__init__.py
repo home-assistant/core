@@ -1,1 +1,1 @@
-"""Configuration resources for Home Assistant tests."""
+"""Test configuration resources."""

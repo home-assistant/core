@@ -1,4 +1,4 @@
-"""Known test exceptions excluded from uncaught-exception checks."""
+"""Uncaught exception exclusions."""
 
 IGNORE_UNCAUGHT_EXCEPTIONS = [
     (

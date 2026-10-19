@@ -1,4 +1,4 @@
-"""Shared pytest fixtures and hooks for Home Assistant integrations."""
+"""Home Assistant pytest fixtures and hooks."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence

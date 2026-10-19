@@ -1,1 +1,1 @@
-"""Helpers for testing MQTT integrations."""
+"""MQTT helpers."""

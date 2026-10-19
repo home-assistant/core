@@ -1,3 +1,3 @@
-"""Shared constants for Supervisor tests."""
+"""Supervisor helpers."""
 
 SUPERVISOR_TOKEN = "123456"

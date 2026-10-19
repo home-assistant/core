@@ -1,4 +1,4 @@
-"""Helpers for mocking Supervisor add-ons and responses."""
+"""Supervisor helpers."""
 
 from dataclasses import fields
 import logging

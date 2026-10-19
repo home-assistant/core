@@ -1,4 +1,4 @@
-"""Home Assistant pytest fixtures and test helpers."""
+"""Home Assistant pytest helpers."""
 
 import pytest
 

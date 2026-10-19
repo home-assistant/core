@@ -1,4 +1,8 @@
-"""Historical Recorder models for migration tests."""
+"""Models for SQLAlchemy.
+
+This file contains the model definitions for schema version 28.
+It is used to test the schema migration logic.
+"""
 
 from datetime import datetime, timedelta
 import json

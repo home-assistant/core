@@ -1,4 +1,4 @@
-"""Common test tools for the Infrared integration."""
+"""Infrared helpers."""
 
 from infrared_protocols.commands import Command as InfraredCommand
 

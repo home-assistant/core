@@ -1,4 +1,10 @@
-"""Historical Recorder models for migration tests."""
+"""Models for SQLAlchemy.
+
+This file contains the model definitions for schema version 16,
+used by Home Assistant Core 2021.6.0, which was the initial version
+to include long term statistics.
+It is used to test the schema migration logic.
+"""
 
 import json
 import logging

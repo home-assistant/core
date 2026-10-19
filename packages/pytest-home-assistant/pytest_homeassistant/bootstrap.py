@@ -1,4 +1,4 @@
-"""Register Home Assistant fixtures and initialize test paths."""
+"""Pytest plugin registration."""
 
 import pytest
 

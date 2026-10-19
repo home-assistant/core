@@ -1,4 +1,4 @@
-"""Resolve test resource locations."""
+"""Test resource paths."""
 
 from pathlib import Path
 

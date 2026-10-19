@@ -1,4 +1,4 @@
-"""Shared assertions for entities, conditions, and triggers."""
+"""Shared integration helpers."""
 
 from collections.abc import Iterable
 import copy
