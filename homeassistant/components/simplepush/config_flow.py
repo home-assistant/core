@@ -84,9 +84,7 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the current Simplepush app with an API token."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {CONF_API_TOKEN: user_input[CONF_API_TOKEN]}
-            )
+            self._async_abort_entries_match(user_input)
 
             if not (
                 errors := await self.hass.async_add_executor_job(
