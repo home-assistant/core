@@ -133,11 +133,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
     ) -> None:
         """Create or delete the issue for an unsupported connectivity mode."""
         mode = get_connectivity_mode(data.sensors.get("connectivity_mode"))
-        if (
-            mode is None
-            or self.hass.config_entries.async_get_entry(self.config_entry.entry_id)
-            is None
-        ):
+        if mode is None or self._shutdown_requested:
             return
 
         issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{self.config_entry.entry_id}"

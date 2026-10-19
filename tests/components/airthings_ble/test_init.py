@@ -971,3 +971,67 @@ async def test_connectivity_mode_issue_not_created_after_remove(
 
     assert _issues(issue_registry) == {}
     assert "Unexpected error" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("current_mode", "stale_mode", "issues"),
+    [
+        pytest.param("Bluetooth", "SmartLink", set(), id="stale_smartlink"),
+        pytest.param(
+            "SmartLink",
+            "Bluetooth",
+            {"connectivity_smartlink"},
+            id="stale_bluetooth",
+        ),
+    ],
+)
+async def test_connectivity_mode_issue_ignores_read_after_reload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    current_mode: str,
+    stale_mode: str,
+    issues: set[str],
+) -> None:
+    """Test a read that finishes after a reload does not override the new read."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, current_mode
+    )
+    read_started = asyncio.Event()
+    finish_read = asyncio.Event()
+    reads = 0
+
+    async def read(*args: object) -> AirthingsDevice:
+        nonlocal reads
+        reads += 1
+        if reads == 1:
+            read_started.set()
+            await finish_read.wait()
+            return _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, stale_mode)
+        return _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, current_mode)
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_airthings_ble(side_effect=read),
+    ):
+        update = hass.async_create_task(
+            hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: "sensor.airthings_corentium_home_2_123456_battery"},
+                blocking=True,
+            )
+        )
+        await read_started.wait()
+        try:
+            await hass.config_entries.async_reload(entry.entry_id)
+
+            assert entry.state is ConfigEntryState.LOADED
+            assert reads == 2
+            assert set(_issues(issue_registry).values()) == issues
+        finally:
+            finish_read.set()
+            await update
+            await hass.async_block_till_done()
+
+    assert set(_issues(issue_registry).values()) == issues
