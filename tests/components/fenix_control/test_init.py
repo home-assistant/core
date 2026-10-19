@@ -34,6 +34,12 @@ async def test_setup_and_unload(
     mock_fenix_client.trigger_installation_update.assert_awaited_once_with(
         INSTALLATION_ID
     )
+    # The device states are read after the update trigger
+    assert [call[0] for call in mock_fenix_client.mock_calls] == [
+        "get_installations",
+        "trigger_installation_update",
+        "get_devices",
+    ]
 
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()

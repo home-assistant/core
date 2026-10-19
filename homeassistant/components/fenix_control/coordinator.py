@@ -53,6 +53,9 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
         """Fetch the state of all thermostats."""
         try:
             installations = await self.client.get_installations()
+            for installation in installations:
+                await self._trigger_installation_update(installation.id)
+            # Read the devices last so the snapshot is as fresh as possible
             devices = await self.client.get_devices(installations)
         except FenixControlAuthError as err:
             raise ConfigEntryAuthFailed(
@@ -62,9 +65,6 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
-
-        for installation_id in {device.installation_id for device in devices}:
-            await self._trigger_installation_update(installation_id)
 
         return FenixControlData(devices={device.id: device for device in devices})
 
