@@ -9864,6 +9864,9 @@
     "sensecap_lorawan": {
       "name": "SenseCAP",
       "integration_type": "hub",
+      "categories": [
+        "sensors"
+      ],
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true

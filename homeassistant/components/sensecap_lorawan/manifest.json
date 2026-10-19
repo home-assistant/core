@@ -1,6 +1,7 @@
 {
   "domain": "sensecap_lorawan",
   "name": "SenseCAP",
+  "categories": ["sensors"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["lorawan"],
