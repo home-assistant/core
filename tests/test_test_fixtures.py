@@ -93,6 +93,14 @@ async def test_custom_integrations_disabled(hass: HomeAssistant) -> None:
         await loader.async_get_integration(hass, "test_package")
 
 
+@pytest.mark.parametrize("custom_integrations_enabled", [True])
+async def test_custom_integrations_enabled(hass: HomeAssistant) -> None:
+    """Load a custom integration using the enabling policy."""
+    integration = await loader.async_get_integration(hass, "test_package")
+    assert not integration.is_built_in
+    assert await async_setup_component(hass, "test_package", {})
+
+
 def register_view(hass: HomeAssistant) -> None:
     """Register a view."""
 
