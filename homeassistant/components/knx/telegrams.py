@@ -167,6 +167,14 @@ class Telegrams:
         """Return whether the telegram store is still being initialized."""
         return self.store is None and self._uninitialized_store is not None
 
+    async def async_wait_for_store(self, timeout: float) -> None:
+        """Wait up to ``timeout`` seconds for the background initialization to end.
+
+        The initialization is not cancelled when the time is up.
+        """
+        if self._store_init_task is not None:
+            await asyncio.wait({self._store_init_task}, timeout=timeout)
+
     @callback
     def async_start(self) -> None:
         """Initialize the telegram store in the background.
