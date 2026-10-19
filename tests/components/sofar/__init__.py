@@ -97,3 +97,9 @@ def seed_hybrid_inverter(
     unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%
     unit.holding[0x0612] = 515  # battery_voltage_3 -> 51.5 V
     unit.holding[0x0616] = 85  # battery_capacity_3 -> 85%
+    unit.holding[0x104D] = 73  # depth of discharge -> 27% on-grid cut-off
+    unit.holding[0x104E] = 90  # end of discharge -> 10% off-grid cut-off
+    unit.holding[0x1052] = 5  # EPS buffer -> 15% off-grid recovery
+    unit.holding[0x1042] = 0x0800  # 0x105B, the charge cut-off, is served
+    unit.holding[0x1043] = 0x000F
+    unit.holding[0x105B] = 95  # charge cut-off -> 95%
