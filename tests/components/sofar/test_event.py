@@ -15,6 +15,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
+from pytest_homeassistant.components.common import arm_trigger
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -302,6 +303,14 @@ async def test_entry_logged_during_failed_read_fires_after_it(
     """Test a failed read neither replays old entries nor loses new ones."""
     unit = mock_connection.for_unit(1)
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    calls: list[str] = []
+    await arm_trigger(
+        hass,
+        "event.received",
+        {"event_type": ["grid_overfrequency"]},
+        {"entity_id": ENTITY_ID},
+        calls,
+    )
     _seed_log(unit, GRID_OVER_VOLTAGE)
     await _poll(hass, freezer)
     unit.fail_read(FAULT_LOG_REGISTER, ModbusError("busy"))
@@ -317,3 +326,5 @@ async def test_entry_logged_during_failed_read_fires_after_it(
         ("grid_over_voltage", 1, "2026-10-09T17:01:23-07:00"),
         ("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00"),
     ]
+    # The first fault after recovery still runs its automation.
+    assert calls == [ENTITY_ID]

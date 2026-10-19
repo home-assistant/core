@@ -99,13 +99,14 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Fire one event per log entry not seen before."""
+        # Triggers skip a change from unavailable; recover first.
+        super()._handle_coordinator_update()
         # A failed read says nothing about what the log holds.
         if self.available:
             if self._known is None:
                 self._remember(self._logged())
             else:
                 self._fire_new_entries(self._known)
-        super()._handle_coordinator_update()
 
     def _logged(self) -> set[EntryKey]:
         """Return every entry the log holds now."""
