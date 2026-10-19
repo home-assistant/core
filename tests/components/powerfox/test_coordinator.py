@@ -1,15 +1,18 @@
 """Test the Powerfox data update coordinators."""
 
 import asyncio
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
 
+from homeassistant.components.powerfox.const import DOMAIN
+from homeassistant.components.powerfox.coordinator import PowerfoxAuthState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -431,3 +434,62 @@ async def test_single_device_authentication_failure_does_not_reauthenticate(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_persistent_auth_failure_threshold() -> None:
+    """Test the shared authentication state reaches the 30-minute threshold."""
+    state = PowerfoxAuthState()
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+
+    state.record_failure(start)
+
+    assert not state.has_persistent_failure(start + timedelta(minutes=29))
+    assert not state.has_persistent_failure(start + timedelta(minutes=29, seconds=59))
+    assert state.has_persistent_failure(start + timedelta(minutes=30))
+
+    state.record_success()
+
+    assert not state.has_persistent_failure(start + timedelta(minutes=31))
+
+
+async def test_persistent_auth_failure_repair_issue(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a persistent authentication error creates and clears a repair issue."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data[0]
+    issue_id = f"persistent_auth_failure_{mock_config_entry.entry_id}"
+
+    mock_powerfox_client.device.side_effect = PowerfoxAuthenticationError
+
+    # Start the authentication failure interval.
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    # No repair issue before the 30-minute threshold.
+    freezer.tick(timedelta(minutes=29, seconds=59))
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+
+    # The next authentication error reaches the threshold.
+    freezer.tick(timedelta(seconds=1))
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+
+    # Restore the original successful device response.
+    mock_powerfox_client.device.side_effect = None
+
+    await coordinator._async_update_data()
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert coordinator.auth_state.failure_since is None

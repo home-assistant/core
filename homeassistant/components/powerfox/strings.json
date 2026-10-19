@@ -117,5 +117,11 @@
     "privacy_error": {
       "message": "Data for device \"{device_name}\" is restricted due to privacy settings in the Powerfox app."
     }
+  },
+  "issues": {
+    "persistent_auth_failure": {
+      "title": "Powerfox authentication errors persist",
+      "description": "Powerfox has returned authentication errors for at least 30 minutes. Home Assistant will continue retrying automatically because temporary Powerfox API problems can also cause authentication errors.\n\nIf the problem persists, check your Powerfox account credentials and update them in the integration settings if necessary.\n\nThis warning will disappear automatically when Powerfox successfully provides measurement data again."
+    }
   }
 }

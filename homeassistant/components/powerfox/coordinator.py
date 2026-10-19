@@ -19,6 +19,7 @@ from powerfox import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -41,8 +42,14 @@ class PowerfoxAuthState:
 
         return now - self.failure_since >= timedelta(minutes=5)
 
+    def has_persistent_failure(self, now: datetime) -> bool:
+        """Return whether authentication has failed for at least 30 minutes."""
+        return self.failure_since is not None and now - self.failure_since >= timedelta(
+            minutes=30
+        )
+
     def record_success(self) -> None:
-        """Reset the investigation after successful authentication."""
+        """Reset the investigation after successful data retrieval."""
         self.failure_since = None
         self.last_verification = None
 
@@ -111,6 +118,16 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
                         except PowerfoxConnectionError:
                             pass
 
+            if self.auth_state.has_persistent_failure(now):
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id=f"persistent_auth_failure_{self.config_entry.entry_id}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="persistent_auth_failure",
+                )
+
             if self.config_entry.state is not ConfigEntryState.LOADED:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
@@ -140,6 +157,11 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
             ) from err
         else:
             self.auth_state.record_success()
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"persistent_auth_failure_{self.config_entry.entry_id}",
+            )
             return data
 
     async def _async_fetch_data(self) -> T:

@@ -12,6 +12,7 @@ from powerfox import (
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -44,6 +45,12 @@ def reset_auth_state(hass: HomeAssistant, entry_id: str) -> None:
     if state := states.get(entry_id):
         state.record_success()
 
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        f"persistent_auth_failure_{entry_id}",
+    )
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> bool:
     """Set up Powerfox from a config entry."""
@@ -59,7 +66,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
         devices = await client.all_devices()
     except PowerfoxAuthenticationError as err:
         await client.close()
-        auth_state.record_failure(dt_util.utcnow())
+        now = dt_util.utcnow()
+        auth_state.record_failure(now)
+
+        if auth_state.has_persistent_failure(now):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id=f"persistent_auth_failure_{entry.entry_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="persistent_auth_failure",
+            )
+
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_retry",
@@ -70,8 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="connection_error",
         ) from err
-
-    auth_state.record_success()
 
     coordinators: list[
         PowerfoxDataUpdateCoordinator | PowerfoxReportDataUpdateCoordinator
@@ -113,3 +130,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) ->
     # pylint: disable-next=home-assistant-use-runtime-data
     states: dict[str, PowerfoxAuthState] = hass.data.get(DOMAIN, {})
     states.pop(entry.entry_id, None)
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        f"persistent_auth_failure_{entry.entry_id}",
+    )
