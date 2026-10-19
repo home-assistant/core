@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from roborock import (
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
@@ -35,9 +37,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, MockDeviceManagerContext
 from .mock_data import ROBOROCK_RRUID, USER_EMAIL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 
 async def test_unload_entry(
