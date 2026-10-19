@@ -14,6 +14,7 @@ from kaco_rs485.testing import FakeBus, a_bus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.kaco_rs485 import PLATFORMS
 from homeassistant.components.kaco_rs485.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -93,7 +94,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Platforms to set up; test modules override this."""
-    return [Platform.BINARY_SENSOR, Platform.SENSOR]
+    return PLATFORMS
 
 
 @pytest.fixture
