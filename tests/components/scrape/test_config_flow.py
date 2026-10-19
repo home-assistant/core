@@ -6,12 +6,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-)
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.schema import DEFAULT_METHOD  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.scrape import DOMAIN
 from homeassistant.components.scrape.const import (
     CONF_ADDITIONAL,

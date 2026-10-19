@@ -150,9 +150,7 @@ def mock_tts_init_cache_dir_fixture(
 @pytest.fixture(name="init_tts_cache_dir_side_effect")
 def init_tts_cache_dir_side_effect_fixture() -> Any:
     """Return the cache dir."""
-    from .tts.common import (  # noqa: PLC0415
-        init_tts_cache_dir_side_effect_fixture_helper,
-    )
+    from .tts.common import init_tts_cache_dir_side_effect_fixture_helper  # noqa: PLC0415
 
     return init_tts_cache_dir_side_effect_fixture_helper()
 
@@ -183,9 +181,7 @@ def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
 @pytest.fixture(name="mock_conversation_agent")
 def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     """Mock a conversation agent."""
-    from .conversation.common import (  # noqa: PLC0415
-        mock_conversation_agent_fixture_helper,
-    )
+    from .conversation.common import mock_conversation_agent_fixture_helper  # noqa: PLC0415
 
     return mock_conversation_agent_fixture_helper(hass)
 

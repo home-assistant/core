@@ -1,1 +1,1 @@
-"""Compatibility imports for the Home Assistant pytest helpers."""
+"""Tests for the Bluetooth integration."""
