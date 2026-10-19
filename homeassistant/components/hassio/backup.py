@@ -23,6 +23,7 @@ from aiohasupervisor.models import (
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 
 from homeassistant.components.backup import (
+    DATA_MANAGER,
     AddonErrorData,
     AddonInfo,
     AgentBackup,
@@ -296,7 +297,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             raise HomeAssistantError(
                 "Cannot create a backup with database but without Home Assistant"
             )
-        manager = async_get_backup_manager(self._hass)
+        manager = self._hass.data[DATA_MANAGER]
 
         include_addons_set: supervisor_backups.AddonSet | set[str] | None = None
         if include_all_addons:
@@ -517,7 +518,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         suggested_filename: str,
     ) -> WrittenBackup:
         """Receive a backup."""
-        manager = async_get_backup_manager(self._hass)
+        manager = self._hass.data[DATA_MANAGER]
 
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
@@ -570,7 +571,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         restore_homeassistant: bool,
     ) -> None:
         """Restore a backup."""
-        manager = async_get_backup_manager(self._hass)
+        manager = self._hass.data[DATA_MANAGER]
         # The backup manager has already checked that the backup exists so we don't
         # need to catch BackupNotFound here.
         backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
@@ -810,7 +811,7 @@ async def backup_addon_before_update(
     installed_version: str | None,
 ) -> None:
     """Prepare for updating an add-on."""
-    backup_manager = async_get_backup_manager(hass)
+    backup_manager = hass.data[DATA_MANAGER]
     client = get_supervisor_client(hass)
 
     # Use the password from automatic settings if available
