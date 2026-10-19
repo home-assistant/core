@@ -433,7 +433,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.seafile
-aioseafile==0.1.0
+aioseafile==0.1.1
 
 # homeassistant.components.shelly
 aioshelly==13.35.0
