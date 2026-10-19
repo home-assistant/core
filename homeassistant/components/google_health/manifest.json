@@ -1,6 +1,7 @@
 {
   "domain": "google_health",
   "name": "Google Health",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],

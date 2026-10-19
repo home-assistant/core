@@ -1,10 +1,16 @@
 """Support for Peblar numbers."""
 
-from typing import override
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any, override
+
+from peblar import Peblar, PeblarSetUserConfiguration, PeblarUserConfiguration
 
 from homeassistant.components.number import (
     NumberDeviceClass,
+    NumberEntity,
     NumberEntityDescription,
+    NumberMode,
     RestoreNumber,
 )
 from homeassistant.const import (
@@ -12,15 +18,71 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
     UnitOfElectricCurrent,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PeblarConfigEntry, PeblarDataUpdateCoordinator
+from .const import SOLAR_CUSTOM_POWER_MAXIMUM, SOLAR_CUSTOM_POWER_MINIMUM
+from .coordinator import (
+    PeblarConfigEntry,
+    PeblarDataUpdateCoordinator,
+    PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
+)
 from .entity import PeblarEntity
-from .helpers import peblar_exception_handler
+from .helpers import peblar_exception_handler, supports_custom_solar
 
 PARALLEL_UPDATES = 1
+
+
+@dataclass(frozen=True, kw_only=True)
+class PeblarUserConfigNumberEntityDescription(NumberEntityDescription):
+    """Class describing Peblar number entities (user config coordinator)."""
+
+    has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
+    set_fn: Callable[[Peblar, int], Awaitable[Any]]
+    value_fn: Callable[[PeblarUserConfiguration], int | None]
+
+
+# Both settings are a power on the grid connection, where negative is power
+# going out to it. The charger's own web interface takes them typed rather
+# than dragged, and so does this: a slider spanning 200 kW is no way to ask
+# for a threshold of -1300 W.
+USER_CONFIG_DESCRIPTIONS = [
+    PeblarUserConfigNumberEntityDescription(
+        key="solar_charging_custom_power_threshold",
+        translation_key="solar_charging_custom_power_threshold",
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+        native_max_value=SOLAR_CUSTOM_POWER_MAXIMUM,
+        native_min_value=SOLAR_CUSTOM_POWER_MINIMUM,
+        native_step=1,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        has_fn=lambda x: supports_custom_solar(x.user_configuration_coordinator.data),
+        set_fn=lambda peblar, value: peblar.update_user_configuration(
+            PeblarSetUserConfiguration(solar_charging_custom_power_threshold=value)
+        ),
+        value_fn=lambda x: x.solar_charging_custom_power_threshold,
+    ),
+    PeblarUserConfigNumberEntityDescription(
+        key="solar_charging_custom_power_target",
+        translation_key="solar_charging_custom_power_target",
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+        native_max_value=SOLAR_CUSTOM_POWER_MAXIMUM,
+        native_min_value=SOLAR_CUSTOM_POWER_MINIMUM,
+        native_step=1,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        has_fn=lambda x: supports_custom_solar(x.user_configuration_coordinator.data),
+        set_fn=lambda peblar, value: peblar.update_user_configuration(
+            PeblarSetUserConfiguration(solar_charging_custom_power_target=value)
+        ),
+        value_fn=lambda x: x.solar_charging_custom_power_target,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -34,9 +96,40 @@ async def async_setup_entry(
             PeblarChargeCurrentLimitNumberEntity(
                 entry=entry,
                 coordinator=entry.runtime_data.data_coordinator,
-            )
+            ),
+            *[
+                PeblarUserConfigNumberEntity(
+                    entry=entry,
+                    coordinator=entry.runtime_data.user_configuration_coordinator,
+                    description=description,
+                )
+                for description in USER_CONFIG_DESCRIPTIONS
+                if description.has_fn(entry.runtime_data)
+            ],
         ]
     )
+
+
+class PeblarUserConfigNumberEntity(
+    PeblarEntity[PeblarUserConfigurationDataUpdateCoordinator],
+    NumberEntity,
+):
+    """Defines a Peblar number entity backed by the user configuration."""
+
+    entity_description: PeblarUserConfigNumberEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return the number value."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+    @peblar_exception_handler
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Change to the new number value."""
+        await self.entity_description.set_fn(self.coordinator.peblar, int(value))
+        await self.coordinator.async_request_refresh()
 
 
 class PeblarChargeCurrentLimitNumberEntity(

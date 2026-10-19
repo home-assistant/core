@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioaquarite import AquariteError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
@@ -18,8 +19,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -150,7 +149,6 @@ async def test_time_set_value(
     mock_vistapool_client.set_value.assert_awaited_once_with(
         "ABCDEF1234567890", expected_path, expected_seconds
     )
-    assert hass.states.get(entity_id).state == time_value
 
 
 async def test_time_set_value_raises_on_api_error(

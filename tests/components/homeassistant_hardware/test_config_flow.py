@@ -14,7 +14,15 @@ from ha_silabs_firmware_client import (
     FirmwareUpdateClient,
 )
 import pytest
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
+from pytest_homeassistant.common import (
+    ANY,
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.homeassistant_hardware.const import (
@@ -30,6 +38,7 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
 )
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -44,15 +53,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import (
-    ANY,
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-
 TEST_DOMAIN = "test_firmware_domain"
 TEST_DEVICE = "/dev/SomeDevice123"
 TEST_HARDWARE_NAME = "Some Hardware Name"
@@ -65,7 +65,7 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     @staticmethod
     @callback
@@ -129,7 +129,7 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
 class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
     """Options flow for `test_firmware_domain`."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
@@ -336,9 +336,7 @@ def mock_firmware_info(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient",
             return_value=mock_update_client,
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware",
             side_effect=mock_flash_firmware,

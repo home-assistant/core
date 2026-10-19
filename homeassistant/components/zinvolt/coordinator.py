@@ -6,11 +6,12 @@ import logging
 from typing import override
 
 from zinvolt import ZinvoltClient
-from zinvolt.exceptions import ZinvoltError
+from zinvolt.exceptions import ZinvoltAuthenticationError, ZinvoltError
 from zinvolt.models import Battery, BatteryState, Unit, UnitType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -66,6 +67,10 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
         """Set up the Zinvolt integration."""
         try:
             units = await self.client.get_units(self.battery.identifier)
+        except ZinvoltAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed", translation_domain=DOMAIN
@@ -87,6 +92,10 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
                 )
                 for unit_serial_number in self.battery_units
             }
+        except ZinvoltAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed",

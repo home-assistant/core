@@ -105,6 +105,7 @@ SENSOR_DESCRIPTIONS: dict[str, ImouSensorEntityDescription] = {
         key="switch_cnt",
         translation_key="switch_cnt",
         state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "use_electricity": ImouSensorEntityDescription(
         key="use_electricity",
@@ -119,6 +120,7 @@ SENSOR_DESCRIPTIONS: dict[str, ImouSensorEntityDescription] = {
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

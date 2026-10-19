@@ -357,24 +357,25 @@
 # name: test_sensors[sensor.erics273_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'achievements': None,
-      'developer': None,
+      'achievements': '57 / 121',
+      'developer': 'Mojang Studios',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.11144.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.6a2c9c4f-1a34-4a3f-9a2e-0f3a5a07a6bd',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Now playing',
-      'gamerscore': None,
-      'genres': None,
-      'min_age': None,
-      'platform': None,
-      'progress': None,
-      'publisher': None,
-      'release_date': None,
-      'short_description': None,
+      'gamerscore': '1105 / 2500',
+      'genres': 'Action & adventure, Family & kids',
+      'min_age': 7,
+      'platform': 'Xbox One',
+      'progress': '44 %',
+      'publisher': 'Xbox Game Studios',
+      'release_date': datetime.date(2017, 9, 19),
+      'short_description': 'Explore infinite worlds and build everything from the simplest of homes to the grandest of castles.',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_now_playing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Minecraft',
   })
 # ---
 # name: test_sensors[sensor.erics273_party_join_restrictions-entry]
@@ -484,7 +485,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Last seen 17h ago: Home',
+    'state': 'Minecraft',
   })
 # ---
 # name: test_sensors[sensor.gsr_ae_followers-entry]

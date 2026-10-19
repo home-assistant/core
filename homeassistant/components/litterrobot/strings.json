@@ -309,6 +309,9 @@
     "invalid_credentials": {
       "message": "Invalid credentials. Please check your username and password, then try again"
     },
+    "migration_cannot_connect": {
+      "message": "Unable to connect to the Whisker API to migrate the configuration"
+    },
     "update_failed": {
       "message": "Unable to update {entity_id}"
     }

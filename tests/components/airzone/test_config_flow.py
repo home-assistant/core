@@ -10,6 +10,7 @@ from aioairzone.exceptions import (
     InvalidSystem,
     SystemOutOfRange,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airzone.config_flow import short_mac
@@ -30,8 +31,6 @@ from .util import (
     HVAC_WEBSERVER_MOCK,
     USER_INPUT,
 )
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="airzone",
@@ -220,6 +219,24 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.airzone.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.validate",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:

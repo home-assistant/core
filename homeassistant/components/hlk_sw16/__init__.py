@@ -39,7 +39,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 cv.string: probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): cv.string,
-                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
                         probatio.Required(CONF_SWITCHES): probatio.Schema(
                             {RELAY_ID: SWITCH_SCHEMA}
                         ),
@@ -71,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> None:
     """Set up the HLK-SW16 switch."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -111,10 +113,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
 
     _LOGGER.debug("Connected to HLK-SW16 device: %s", address)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> None:
     """Unload a config entry."""
     entry.runtime_data.stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

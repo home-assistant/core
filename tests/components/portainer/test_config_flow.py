@@ -9,6 +9,7 @@ from pyportainer.exceptions import (
 )
 from pyportainer.models.portainer import PortainerSystemStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -16,9 +17,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_TEST_CONFIG
-
-from tests.common import MockConfigEntry
+from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
 
 MOCK_USER_SETUP = {
     CONF_URL: "https://127.0.0.1:9000/",
@@ -52,6 +51,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
+    assert result["result"].unique_id == TEST_INSTANCE_ID
 
 
 @pytest.mark.parametrize(

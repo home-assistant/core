@@ -9,6 +9,7 @@ import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import DEGREE, PERCENTAGE, UnitOfTemperature
 from homeassistant.helpers import selector
 from homeassistant.util import yaml as yaml_util
 
@@ -44,28 +45,39 @@ def test_invalid_base_schema(schema) -> None:
         selector.validate_selector(schema)
 
 
-def test_allowed_context_keys_not_shared_between_instances() -> None:
-    """Test allowed_context_keys is isolated between selector instances."""
+@pytest.mark.parametrize(
+    "selector_class",
+    [
+        pytest.param(selector.Selector, id="base"),
+        pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.MediaSelector, id="media"),
+        pytest.param(selector.StateSelector, id="state"),
+        pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
+    ],
+)
+def test_allowed_context_keys_read_only(
+    selector_class: type[selector.Selector],
+) -> None:
+    """Test allowed_context_keys cannot be modified."""
+    with pytest.raises(RuntimeError, match="Cannot modify ReadOnlyDict"):
+        selector_class.allowed_context_keys["some_key"] = frozenset()
 
-    class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
-        """Test selector config class."""
 
-    class TestSelector(selector.Selector):
-        """Test selector used to verify instance isolation."""
-
-        CONFIG_SCHEMA = selector.make_selector_config_schema({})
-
-        selector_type = "test"
-
-        def __call__(self, data: Any) -> Any:
-            """Validate the passed selection."""
-            return data
-
-    test_selector = TestSelector(TestSelectorConfig())
-    other_selector = TestSelector(TestSelectorConfig())
-    test_selector.allowed_context_keys["some_key"] = set()
-    assert test_selector.allowed_context_keys
-    assert not other_selector.allowed_context_keys
+@pytest.mark.parametrize(
+    "selector_class",
+    [
+        pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.MediaSelector, id="media"),
+        pytest.param(selector.StateSelector, id="state"),
+        pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
+    ],
+)
+def test_allowed_context_keys_values_immutable(
+    selector_class: type[selector.Selector],
+) -> None:
+    """Test allowed_context_keys values cannot be modified."""
+    for allowed_types in selector_class.allowed_context_keys.values():
+        assert isinstance(allowed_types, frozenset)
 
 
 def _test_selector(
@@ -1394,6 +1406,33 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("object", schema, valid_selections, invalid_selections)
 
 
+@pytest.mark.parametrize(
+    "default",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(False, id="false"),
+        pytest.param("", id="empty-string"),
+        pytest.param([], id="empty-list"),
+        pytest.param({}, id="empty-dict"),
+    ],
+)
+def test_object_selector_field_default(default: object) -> None:
+    """Test object selector field default."""
+    validated = selector.validate_selector(
+        {
+            "object": {
+                "fields": {
+                    "field": {
+                        "selector": {"text": {}},
+                        "default": default,
+                    }
+                }
+            }
+        }
+    )
+    assert validated["object"]["fields"]["field"]["default"] == default
+
+
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
@@ -1408,6 +1447,7 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
                 "selector": selector.NumberSelector(
                     selector.NumberSelectorConfig(min=0, max=100)
                 ),
+                "default": 0,
             },
         },
         "multiple": True,
@@ -1791,6 +1831,303 @@ def test_state_class_selector_schema(
 
 
 @pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        (None, does_not_raise()),
+        ({}, does_not_raise()),
+        ({"state_classes": "total"}, does_not_raise()),
+        ({"state_classes": None}, does_not_raise()),
+        ({"state_classes": "invalid"}, pytest.raises(probatio.Invalid)),
+        ({"state_classes": ["total"]}, does_not_raise()),
+        ({"state_classes": ["invalid"]}, pytest.raises(probatio.Invalid)),
+        ({"device_classes": None}, does_not_raise()),
+        ({"device_classes": "date"}, does_not_raise()),
+        ({"device_classes": "enum"}, does_not_raise()),
+        ({"device_classes": "temperature"}, does_not_raise()),
+        ({"device_classes": "invalid"}, pytest.raises(probatio.Invalid)),
+        ({"device_classes": ["temperature", "humidity"]}, does_not_raise()),
+        ({"device_classes": ["invalid"]}, pytest.raises(probatio.Invalid)),
+        ({"context": {}}, does_not_raise()),
+        ({"context": {"filter_device_class": "device_class"}}, does_not_raise()),
+        (
+            {
+                "context": {
+                    "filter_device_class": "device_class",
+                    "filter_state_class": "state_class",
+                }
+            },
+            does_not_raise(),
+        ),
+        ({"context": {"filter_entity": "entity_id"}}, pytest.raises(probatio.Invalid)),
+        ({"context": {"filter_device_class": 1}}, pytest.raises(probatio.Invalid)),
+        ({"context": "device_class"}, pytest.raises(probatio.Invalid)),
+        (
+            {
+                "device_classes": "temperature",
+                "context": {"filter_state_class": "state_class"},
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "state_classes": "measurement",
+                "context": {"filter_device_class": "device_class"},
+            },
+            does_not_raise(),
+        ),
+        (
+            {"device_classes": None, "context": {"filter_device_class": "dc"}},
+            does_not_raise(),
+        ),
+        (
+            {"state_classes": [], "context": {"filter_state_class": "sc"}},
+            does_not_raise(),
+        ),
+        (
+            {
+                "device_classes": "temperature",
+                "context": {"filter_device_class": "device_class"},
+            },
+            pytest.raises(probatio.Invalid, match="filter_device_class"),
+        ),
+        (
+            {
+                "state_classes": ["measurement"],
+                "context": {"filter_state_class": "state_class"},
+            },
+            pytest.raises(probatio.Invalid, match="filter_state_class"),
+        ),
+    ],
+)
+def test_uom_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test unit of measurement class selector schemas."""
+    with raises:
+        selector.validate_selector({"unit_of_measurement": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                None,
+            ),
+            (5, ["cats"]),
+        ),
+        (
+            None,
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                None,
+            ),
+            (5, ["cats"]),
+        ),
+        (
+            {"device_classes": "temperature"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+            ("cats", "dogs", DEGREE),
+        ),
+        (
+            {"device_classes": "enum"},
+            (None,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {"device_classes": "date"},
+            (None,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {"state_classes": "measurement"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+            (),
+        ),
+        (
+            {"state_classes": "measurement_angle"},
+            (DEGREE,),
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+        ),
+        (
+            {"device_classes": "wind_direction", "state_classes": "measurement_angle"},
+            (DEGREE,),
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+        ),
+        (
+            {"device_classes": "temperature", "state_classes": "measurement"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+            ("cats", "dogs", DEGREE),
+        ),
+        (
+            {"device_classes": "temperature", "state_classes": "measurement_angle"},
+            (),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {
+                "device_classes": ["battery", "humidity"],
+                "state_classes": ["measurement_angle", "measurement"],
+            },
+            (PERCENTAGE,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {
+                "device_classes": ["battery", "humidity"],
+                "state_classes": ["measurement"],
+            },
+            (PERCENTAGE,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "humidity"]},
+            (UnitOfTemperature.CELSIUS, PERCENTAGE),
+            ("cats", DEGREE, None),
+            id="device_classes_union",
+        ),
+        pytest.param(
+            {"device_classes": "aqi"},
+            (None,),
+            ("cats", PERCENTAGE),
+            id="device_class_without_unit",
+        ),
+        pytest.param(
+            {"device_classes": "monetary"},
+            ("EUR", "USD", None),
+            (5,),
+            id="device_class_without_unit_limit",
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "monetary"]},
+            (UnitOfTemperature.CELSIUS, "EUR"),
+            (5,),
+            id="device_classes_mixed_unrestricted",
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "enum"]},
+            (UnitOfTemperature.CELSIUS, None),
+            ("cats",),
+            id="device_classes_mixed_non_numeric",
+        ),
+        pytest.param(
+            {"state_classes": "measurement_angle"},
+            (),
+            (None,),
+            id="state_class_limited_rejects_none",
+        ),
+        pytest.param(
+            {"state_classes": ["measurement_angle", "measurement"]},
+            (DEGREE, PERCENTAGE, "cats", None),
+            (5,),
+            id="state_classes_mixed_unrestricted",
+        ),
+    ],
+)
+def test_uom_selector_schema(
+    schema: dict[str, Any] | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test uom class selector."""
+    _test_selector("unit_of_measurement", schema, valid_selections, invalid_selections)
+
+
+def test_uom_selector_context_in_config() -> None:
+    """Test the uom selector context is kept in the selector config."""
+    context = {
+        "filter_device_class": "device_class",
+        "filter_state_class": "state_class",
+    }
+    uom_selector = selector.selector({"unit_of_measurement": {"context": context}})
+
+    assert uom_selector.serialize() == {
+        "selector": {"unit_of_measurement": {"context": context}}
+    }
+    assert uom_selector == selector.UnitOfMeasurementSelector(
+        selector.UnitOfMeasurementSelectorConfig(context=context)
+    )
+    assert uom_selector != selector.UnitOfMeasurementSelector()
+
+
+def test_uom_selector_allowed_context_keys() -> None:
+    """Test uom selector allows device class and state class context."""
+    assert selector.UnitOfMeasurementSelector().allowed_context_keys == {
+        "filter_device_class": {"device_class"},
+        "filter_state_class": {"state_class"},
+    }
+
+
+@pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
@@ -1832,15 +2169,53 @@ def test_attribute_selector_schema(
             (None, {}, {"seconds": -1}),
         ),
         (
+            {"mode": "positive"},
+            ({"seconds": 10},),
+            (None, {}, {"seconds": -1}),
+        ),
+        (
             {"allow_negative": True},
             ({"seconds": 10}, {"seconds": -1}),
             (None, {}),
         ),
+        (
+            {"mode": "signed"},
+            ({"seconds": 10}, {"seconds": -1}, {"hours": -1, "minutes": -30}),
+            (None, {}),
+        ),
+        (
+            {"mode": "offset", "enable_day": True},
+            (
+                {"seconds": 10},
+                {"hours": -1, "minutes": -30},
+                {"days": 0, "hours": 0, "minutes": 0, "seconds": 0},
+            ),
+            (None, {}),
+        ),
     ],
 )
-def test_duration_selector_schema(schema, valid_selections, invalid_selections) -> None:
+def test_duration_selector_schema(
+    schema: dict[str, Any],
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
     """Test duration selector."""
     _test_selector("duration", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {"mode": "sideways"},
+        {"mode": "positive", "allow_negative": True},
+        {"mode": "signed", "allow_negative": False},
+        {"mode": "offset", "allow_negative": False},
+    ],
+)
+def test_duration_selector_invalid_config(schema: dict[str, Any]) -> None:
+    """Test duration selector rejects an unknown mode or a conflicting alias."""
+    with pytest.raises(probatio.Invalid):
+        selector.validate_selector({"duration": schema})
 
 
 @pytest.mark.parametrize(
@@ -1935,11 +2310,58 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 },
             ),
         ),
+        (
+            {
+                "accept": ["image/*"],
+                "image_upload": True,
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+        ),
     ],
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test media selector."""
     _test_selector("media", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # image_upload can only be used when accept is not empty
+        {"image_upload": True},
+        {"image_upload": True, "accept": []},
+    ],
+)
+def test_media_selector_schema_error(
+    schema: dict[str, bool | list[str]],
+) -> None:
+    """Test media selector with invalid config."""
+    with pytest.raises(
+        probatio.Invalid, match="image_upload can only be used when accept is not empty"
+    ):
+        selector.validate_selector({"media": schema})
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sia.const import (
     CONF_ACCOUNT,
@@ -17,8 +18,6 @@ from homeassistant.components.sia.const import (
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_DATA = {
     CONF_PORT: 7777,

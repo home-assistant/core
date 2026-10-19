@@ -8,7 +8,6 @@ from typing import Any, override
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 
-from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -61,7 +60,7 @@ def create_elk_system_device_info(elk: Elk, prefix: str, mac: str | None) -> Dev
         sw_version=elk.panel.elkm1_version,
     )
     if mac:
-        device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
+        device_info.connections = {(CONNECTION_NETWORK_MAC, mac)}
     return device_info
 
 
