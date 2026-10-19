@@ -143,44 +143,6 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-# Two sensors are called Trade volume and two Miners revenue, so the first one
-# created takes the plain entity ID and the second one gets a _2 suffix. Picking
-# only the second of a pair used to give it the plain ID; now that every sensor
-# is created, the first one takes it and the plain ID means the other currency.
-# (option that used to win the ID, option that wins it now, ID, where it moved)
-COLLIDING_OPTIONS = (
-    ("trade_volume_usd", "trade_volume_btc", "trade_volume", "trade_volume_2"),
-    ("miners_revenue_btc", "miners_revenue_usd", "miners_revenue", "miners_revenue_2"),
-)
-
-
-@callback
-def _async_warn_about_reused_entity_ids(
-    hass: HomeAssistant, display_options: list[str]
-) -> None:
-    """Warn when an entity ID now belongs to the other currency of a pair."""
-    for option, takes_over, entity_id, moved_to in COLLIDING_OPTIONS:
-        if option not in display_options or takes_over in display_options:
-            continue
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"reused_entity_id_{entity_id}",
-            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="reused_entity_id",
-            translation_placeholders={
-                "entity_id": f"sensor.{entity_id}",
-                "moved_to": f"sensor.{moved_to}",
-                "option": option,
-                "takes_over": takes_over,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-
-
 @callback
 def _async_create_import_issue(
     hass: HomeAssistant, issue_id: str, translation_key: str, currency: str
@@ -232,8 +194,6 @@ async def async_setup_platform(
             )
             return
 
-    _async_warn_about_reused_entity_ids(hass, config[CONF_DISPLAY_OPTIONS])
-
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
@@ -263,8 +223,17 @@ async def async_setup_entry(
         _LOGGER.warning("Currency %s is not available. Using USD", currency)
         currency = DEFAULT_CURRENCY
 
+    # Two sensors share each of the names Trade volume and Miners revenue, and
+    # only the first one created gets the plain entity ID. Creating the sensors
+    # an imported YAML setup already had first keeps their entity IDs.
+    previous = entry.data.get(CONF_DISPLAY_OPTIONS, [])
     async_add_entities(
-        (BitcoinSensor(data, currency, description) for description in SENSOR_TYPES),
+        (
+            BitcoinSensor(data, currency, description)
+            for description in sorted(
+                SENSOR_TYPES, key=lambda description: description.key not in previous
+            )
+        ),
         True,
     )
 

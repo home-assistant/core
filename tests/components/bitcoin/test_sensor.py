@@ -8,11 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bitcoin.const import DOMAIN
-from homeassistant.components.bitcoin.sensor import (
-    COLLIDING_OPTIONS,
-    SCAN_INTERVAL,
-    SENSOR_TYPES,
-)
+from homeassistant.components.bitcoin.sensor import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
@@ -113,7 +109,7 @@ async def test_yaml_import(
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {CONF_CURRENCY: "EUR"}
+    assert entry.data == {CONF_CURRENCY: "EUR", CONF_DISPLAY_OPTIONS: ["exchangerate"]}
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -218,48 +214,6 @@ async def test_yaml_import_failure(
     )
 
 
-@pytest.mark.parametrize(
-    ("display_options", "expected_issue"),
-    [
-        pytest.param(
-            ["trade_volume_usd"], "reused_entity_id_trade_volume", id="trade_volume_usd"
-        ),
-        pytest.param(
-            ["miners_revenue_btc"],
-            "reused_entity_id_miners_revenue",
-            id="miners_revenue_btc",
-        ),
-        pytest.param(["trade_volume_btc"], None, id="trade_volume_btc_keeps_its_id"),
-        pytest.param(
-            ["trade_volume_btc", "trade_volume_usd"], None, id="both_keep_their_ids"
-        ),
-        pytest.param(["exchangerate"], None, id="unaffected_option"),
-    ],
-)
-@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
-async def test_yaml_import_warns_about_reused_entity_ids(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    display_options: list[str],
-    expected_issue: str | None,
-) -> None:
-    """Test only the users whose entity ID changed meaning are warned."""
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {
-            SENSOR_DOMAIN: {
-                **YAML_CONFIG[SENSOR_DOMAIN],
-                CONF_DISPLAY_OPTIONS: display_options,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    reused = [i for i in issue_registry.issues.values() if "reused" in i.issue_id]
-    assert [i.issue_id for i in reused] == ([expected_issue] if expected_issue else [])
-
-
 @pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
 async def test_yaml_import_with_ignored_entry(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
@@ -277,19 +231,47 @@ async def test_yaml_import_with_ignored_entry(
     )
 
 
+@pytest.mark.parametrize(
+    ("display_options", "expected"),
+    [
+        pytest.param(
+            ["trade_volume_usd"], {"sensor.trade_volume": "USD"}, id="trade_volume_usd"
+        ),
+        pytest.param(
+            ["trade_volume_btc"], {"sensor.trade_volume": "BTC"}, id="trade_volume_btc"
+        ),
+        pytest.param(
+            ["trade_volume_btc", "trade_volume_usd"],
+            {"sensor.trade_volume": "BTC", "sensor.trade_volume_2": "USD"},
+            id="both_trade_volumes",
+        ),
+        pytest.param(
+            ["miners_revenue_btc"],
+            {"sensor.miners_revenue": "BTC"},
+            id="miners_revenue_btc",
+        ),
+        pytest.param(
+            ["miners_revenue_usd"],
+            {"sensor.miners_revenue": "USD"},
+            id="miners_revenue_usd",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
-async def test_colliding_options_match_the_created_entities(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_imported_sensors_keep_their_entity_ids(
+    hass: HomeAssistant, display_options: list[str], expected: dict[str, str]
 ) -> None:
-    """Test COLLIDING_OPTIONS still describes the entity IDs that get created."""
-    await setup_integration(hass, mock_config_entry)
+    """Test sensors an imported YAML setup had keep the entity ID they had.
 
-    units = {
-        description.key: description.native_unit_of_measurement
-        for description in SENSOR_TYPES
-    }
-    for option, takes_over, entity_id, moved_to in COLLIDING_OPTIONS:
-        takes_it = hass.states.get(f"sensor.{entity_id}")
-        moved = hass.states.get(f"sensor.{moved_to}")
-        assert takes_it.attributes[ATTR_UNIT_OF_MEASUREMENT] == units[takes_over]
-        assert moved.attributes[ATTR_UNIT_OF_MEASUREMENT] == units[option]
+    The expected values are what the YAML platform created for these
+    display_options before the config flow existed.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Bitcoin",
+        data={CONF_CURRENCY: "USD", CONF_DISPLAY_OPTIONS: display_options},
+    )
+    await setup_integration(hass, entry)
+
+    for entity_id, unit in expected.items():
+        assert hass.states.get(entity_id).attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
