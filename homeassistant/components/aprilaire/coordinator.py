@@ -5,7 +5,8 @@ import logging
 from typing import Any, override
 
 import pyaprilaire.client
-from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
+from pyaprilaire.client import AprilaireResponseError, NackError, ResponseTimeoutError
+from pyaprilaire.const import MODELS, Attribute
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -47,7 +48,6 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             host,
             port,
             self.async_set_updated_data,
-            _LOGGER,
             RECONNECT_INTERVAL,
             RETRY_CONNECTION_INTERVAL,
         )
@@ -112,34 +112,42 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         """Wait for the client to be ready."""
 
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
-            await self.client.read_mac_address()
+            try:
+                data = await self.client.read_mac_address_and_wait(WAIT_TIMEOUT)
+            except ResponseTimeoutError:
+                _LOGGER.error(
+                    "Timed out after %d seconds waiting for the MAC address",
+                    WAIT_TIMEOUT,
+                )
+                await ready_callback(False)
 
-            data = await self.client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 2, WAIT_TIMEOUT
-            )
+                return False
+            except NackError as err:
+                _LOGGER.error("Thermostat rejected the MAC address request: %s", err)
+                await ready_callback(False)
+
+                return False
 
             if not data or Attribute.MAC_ADDRESS not in data:
-                _LOGGER.error("Missing MAC address")
+                _LOGGER.error("MAC address missing from the thermostat response")
                 await ready_callback(False)
 
                 return False
 
         if not self.data or Attribute.THERMOSTAT_MODES not in self.data:
-            await self.client.read_thermostat_iaq_available()
-
-            await self.client.wait_for_response(
-                FunctionalDomain.CONTROL, 7, WAIT_TIMEOUT
-            )
+            try:
+                await self.client.read_thermostat_iaq_available_and_wait(WAIT_TIMEOUT)
+            except AprilaireResponseError as err:
+                _LOGGER.debug("Failed to read thermostat/IAQ available: %s", err)
 
         if (
             not self.data
             or Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS not in self.data
         ):
-            await self.client.read_sensors()
-
-            await self.client.wait_for_response(
-                FunctionalDomain.SENSORS, 2, WAIT_TIMEOUT
-            )
+            try:
+                await self.client.read_sensors_and_wait(WAIT_TIMEOUT)
+            except AprilaireResponseError as err:
+                _LOGGER.debug("Failed to read sensors: %s", err)
 
         await self.client.read_thermostat_status()
 
