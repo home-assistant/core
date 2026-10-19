@@ -5,14 +5,13 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.evohome import EvoData
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize("install", ["minimal"])

@@ -10,6 +10,10 @@ from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
 from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -21,8 +25,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:

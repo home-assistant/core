@@ -14,6 +14,23 @@ from freezegun.api import FrozenDateTimeFactory
 from paho.mqtt.client import MQTTMessage, Properties
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockMqttReasonCode,
+    MockUser,
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import mqtt
@@ -61,24 +78,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockMqttReasonCode,
-    MockUser,
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.sensor.common import MockSensor
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 
 class _DebugDeviceInfo(TypedDict, total=False):

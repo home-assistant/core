@@ -128,6 +128,7 @@ def async_subscribe_receiver(
     return entity.async_subscribe_received_signal(signal_callback)
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class RadioFrequencyConsumerEntity(Entity):
     """Base class for entities that track the availability of RF entities.
 

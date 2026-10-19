@@ -4,6 +4,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from PyViCare.PyViCareUtils import PyViCareRateLimitError
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,8 +16,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 GET_DHW_MODES = (
     "PyViCare.PyViCareHeatingDevice.HeatingDevice.getDomesticHotWaterOperatingModes"

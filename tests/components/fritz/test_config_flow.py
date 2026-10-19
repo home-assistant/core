@@ -13,6 +13,7 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -54,8 +55,6 @@ from .const import (
     MOCK_USER_DATA,
     MOCK_USER_INPUT_SIMPLE,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

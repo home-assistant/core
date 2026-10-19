@@ -1,14 +1,17 @@
 """Tests for the Radio Frequency websocket API."""
 
 import pytest
+from pytest_homeassistant.components.radio_frequency import (
+    ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.radio_frequency import DATA_COMPONENT
 from homeassistant.core import HomeAssistant
-
-from . import ENTITY_ID, RECEIVER_ENTITY_ID
-from .common import MockRadioFrequencyEntity
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("mock_rf_entity", "mock_rf_receiver_entity")

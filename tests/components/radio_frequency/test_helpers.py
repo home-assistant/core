@@ -3,6 +3,19 @@
 from typing import override
 
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.radio_frequency import (
+    ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyCommand,
+    MockRadioFrequencyEntity,
+    MockRadioFrequencyReceiverEntity,
+)
 
 from homeassistant.components.radio_frequency import (
     RadioFrequencyReceivedSignal,
@@ -11,16 +24,6 @@ from homeassistant.components.radio_frequency import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-
-from . import ENTITY_ID, RECEIVER_ENTITY_ID
-from .common import (
-    MockRadioFrequencyCommand,
-    MockRadioFrequencyEntity,
-    MockRadioFrequencyReceiverEntity,
-)
-
-from tests.common import MockEntityPlatform
-from tests.components.common import assert_availability_follows_source_entity
 
 CONSUMER_ENTITY_ID = "test_domain.consumer"
 

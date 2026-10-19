@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
     MultipleWeatherStationsFound,
@@ -13,8 +14,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.zhong_hong.config_flow import DISCOVERY_TIMEOUT
 from homeassistant.components.zhong_hong.const import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import HOST, FakeGateway
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: HOST,
