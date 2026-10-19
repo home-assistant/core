@@ -1,5 +1,6 @@
 """Coordinator for Satel Integra."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -50,6 +51,7 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     ) -> None:
         """Initialize the base coordinator."""
         self.client = client
+        self._unsub_callbacks: list[Callable[[], None]] = []
 
         super().__init__(
             hass,
@@ -61,9 +63,19 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     def setup(self) -> None:
         """Set up client callbacks for this coordinator."""
-        self.client.controller.add_connection_status_callback(
-            self._async_handle_connection_state_update
+        self._unsub_callbacks.append(
+            self.client.controller.add_connection_status_callback(
+                self._async_handle_connection_state_update
+            )
         )
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Unsubscribe callbacks and shut down the coordinator."""
+        await super().async_shutdown()
+        for unsubscribe in self._unsub_callbacks:
+            unsubscribe()
+        self._unsub_callbacks.clear()
 
     @callback
     def _async_handle_connection_state_update(self) -> None:
