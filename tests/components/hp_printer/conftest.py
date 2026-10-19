@@ -15,11 +15,10 @@ from aiohpprinter import (
     HpScannerUsage,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hp_printer.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 HOST = "192.168.1.12"
 SERIAL_NUMBER = "TH12A3B4CD"

@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock
 from aiohpprinter import HpPrinterData, HpPrinterStatus
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hp_printer.coordinator import UPDATE_INTERVAL
@@ -14,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 STATUS = "sensor.hp_officejet_pro_9020_series_status"
 CYAN_LEVEL = "sensor.hp_officejet_pro_9020_series_cyan_level"

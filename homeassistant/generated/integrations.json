@@ -4860,6 +4860,9 @@
     "hp_printer": {
       "name": "HP Printer",
       "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },

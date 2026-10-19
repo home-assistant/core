@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from aiohpprinter import HpConsumable, HpPrinterData
+from aiohpprinter import HpConsumable, HpDeviceStatus, HpPrinterData
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,27 +21,6 @@ from .coordinator import HpPrinterConfigEntry, HpPrinterDataUpdateCoordinator
 from .entity import HpPrinterEntity
 
 PARALLEL_UPDATES = 0
-
-# Status categories reported by the printer, mapped to a translatable state.
-DEVICE_STATUSES = {
-    "canceljob": "cancel_job",
-    "copying": "copying",
-    "inpowersave": "in_power_save",
-    "off": "off",
-    "processing": "processing",
-    "ready": "ready",
-    "scanprocessing": "scan_processing",
-    "trayempty": "tray_empty",
-}
-
-# Consumable label codes reported by the printer, mapped to a translatable name.
-CONSUMABLE_COLORS = {
-    "C": "cyan",
-    "M": "magenta",
-    "Y": "yellow",
-    "K": "black",
-    "CMY": "tri_color",
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,14 +43,10 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(DEVICE_STATUSES.values()),
+        options=[status.value for status in HpDeviceStatus],
         # Unknown statuses are reported as None, which must not hide the sensor.
         always_create=True,
-        value_fn=lambda data: (
-            DEVICE_STATUSES.get(data.status.device_status)
-            if data.status is not None and data.status.device_status is not None
-            else None
-        ),
+        value_fn=lambda data: data.status.status if data.status else None,
     ),
     HpPrinterSensorEntityDescription(
         key="total_pages",
@@ -244,7 +219,7 @@ async def async_setup_entry(
         } | {
             f"{consumable.consumable_id}_{description.key}"
             for consumable in data.consumables
-            if consumable.consumable_id in CONSUMABLE_COLORS
+            if consumable.color is not None
             for description in CONSUMABLE_SENSORS
             if description.value_fn(consumable) is not None
         }
@@ -257,9 +232,7 @@ async def async_setup_entry(
                 if sensor_desc.key in new_sensors
             ]
             consumables_list: list[SensorEntity] = [
-                HpPrinterConsumableSensor(
-                    coordinator, consumable.consumable_id, consumable_desc
-                )
+                HpPrinterConsumableSensor(coordinator, consumable, consumable_desc)
                 for consumable in data.consumables
                 for consumable_desc in CONSUMABLE_SENSORS
                 if f"{consumable.consumable_id}_{consumable_desc.key}" in new_sensors
@@ -300,18 +273,17 @@ class HpPrinterConsumableSensor(HpPrinterEntity, SensorEntity):
     def __init__(
         self,
         coordinator: HpPrinterDataUpdateCoordinator,
-        consumable_id: str,
+        consumable: HpConsumable,
         description: HpPrinterConsumableSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._consumable_id = consumable_id
-        self._attr_translation_key = (
-            f"{CONSUMABLE_COLORS[consumable_id]}_{description.key}"
-        )
+        self._consumable_id = consumable.consumable_id
+        self._attr_translation_key = f"{consumable.color}_{description.key}"
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{consumable_id}_{description.key}"
+            f"{coordinator.config_entry.unique_id}_{consumable.consumable_id}"
+            f"_{description.key}"
         )
 
         self._update_from_consumable()

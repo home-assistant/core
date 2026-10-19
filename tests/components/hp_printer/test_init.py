@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from aiohpprinter import HpPrinterData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hp_printer.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import SERIAL_NUMBER
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 STATUS = "sensor.hp_officejet_pro_9020_series_status"
 

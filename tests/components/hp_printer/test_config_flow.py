@@ -12,6 +12,7 @@ from aiohpprinter import (
     HpPrinterTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hp_printer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import HOST, SERIAL_NUMBER, TITLE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_hp_printer")
@@ -64,6 +63,7 @@ async def test_user_flow_title_falls_back_to_host(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 @pytest.mark.parametrize(
@@ -102,6 +102,7 @@ async def test_user_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 async def test_user_flow_missing_serial_number(
