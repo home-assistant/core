@@ -1,6 +1,5 @@
 """Coordinator for handling data fetching and updates."""
 
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -164,9 +163,9 @@ class LunatoneDevicesDataUpdateCoordinator(
                 translation_key="cannot_retrieve_devices_data",
             ) from ex
 
-        data: dict[int, dict[int, Device]] = defaultdict(dict)
+        data: dict[int, dict[int, Device]] = {}
         for d in self.devices_api.devices.values():
-            data[d.data.line][d.data.id] = d
+            data.setdefault(d.data.line, {})[d.data.id] = d
 
         device_registry = dr.async_get(self.hass)
         assert self.config_entry.unique_id is not None
@@ -179,7 +178,7 @@ class LunatoneDevicesDataUpdateCoordinator(
         remove_devices(device_registry, self.config_entry.entry_id, stale_devices)
         self.previous_devices = current_devices
 
-        return dict(data)
+        return data
 
 
 class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Sensor]]):
