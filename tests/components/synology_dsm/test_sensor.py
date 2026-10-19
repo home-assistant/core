@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.synology_dsm.const import DOMAIN
@@ -30,8 +31,6 @@ from .common import (
     mock_dsm_storage_get_volume,
 )
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

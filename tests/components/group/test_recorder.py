@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import group
@@ -13,8 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)

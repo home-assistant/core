@@ -7,6 +7,7 @@ from aiohttp import ClientConnectionError
 import aiosomecomfort
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -49,8 +50,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import init_integration, reset_mock
-
-from tests.common import async_fire_time_changed
 
 FAN_ACTION = "fan_action"
 

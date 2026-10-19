@@ -2,6 +2,7 @@
 
 import pytest
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytrafikverket import CameraInfoModel
 
 from homeassistant.components.recorder import Recorder
@@ -9,8 +10,6 @@ from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

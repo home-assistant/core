@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.plaato.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 BASE_URL = "http://example.com"
 WEBHOOK_ID = "webhook_id"

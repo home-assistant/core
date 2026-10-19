@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.lektrico.const import DOMAIN
 from homeassistant.const import (
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCKED_DEVICE_IP_ADDRESS = "192.168.100.10"
 MOCKED_DEVICE_SERIAL_NUMBER = "500006"

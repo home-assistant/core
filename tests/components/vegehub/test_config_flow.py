@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.vegehub.const import DOMAIN
@@ -25,8 +26,6 @@ from homeassistant.helpers.service_info.zeroconf import (
 )
 
 from .conftest import TEST_HOSTNAME, TEST_IP, TEST_SIMPLE_MAC
-
-from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_IP),

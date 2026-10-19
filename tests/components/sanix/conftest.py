@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from sanix import (
     ATTR_API_BATTERY,
     ATTR_API_DEVICE_NO,
@@ -20,8 +21,6 @@ from sanix.models import Measurement
 
 from homeassistant.components.sanix.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

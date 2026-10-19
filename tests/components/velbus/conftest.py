@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.channels import (
     Blind,
     Button,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import PORT_TCP
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")

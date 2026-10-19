@@ -15,6 +15,10 @@ from knx_telegram_store import (
     TelegramQuery,
 )
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueRead
@@ -39,8 +43,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
-
-from tests.common import async_fire_time_changed, async_load_json_object_fixture
 
 MOCK_TIMESTAMP = "2023-07-02T14:51:24.045162-07:00"
 MOCK_TELEGRAMS = [

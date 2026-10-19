@@ -2560,6 +2560,15 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "ecosmart": {
+      "name": "ecosmart",
+      "integration_type": "service",
+      "categories": [
+        "energy.energy_prices"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ecospar": {
       "name": "EcoSpar",
       "integration_type": "virtual",
@@ -4533,6 +4542,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "helty_cloud": {
+      "name": "Helty Flow Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -10171,6 +10189,15 @@
       ],
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "skoda": {
+      "name": "\u0160koda",
+      "integration_type": "device",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sky": {
       "name": "Sky",

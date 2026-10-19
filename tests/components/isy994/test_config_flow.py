@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyisy import ISYConnectionError, ISYInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
@@ -26,8 +27,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"
 MOCK_USERNAME = "test-username"

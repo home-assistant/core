@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.canary.const import DOMAIN, MANUFACTURER
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
@@ -22,8 +24,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_device, mock_location, mock_reading
-
-from tests.common import async_fire_time_changed
 
 
 async def test_sensors_pro(

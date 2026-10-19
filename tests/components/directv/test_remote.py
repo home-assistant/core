@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from directv import DIRECTVError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.components.remote import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import RECEIVER_ID, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{REMOTE_DOMAIN}.client"

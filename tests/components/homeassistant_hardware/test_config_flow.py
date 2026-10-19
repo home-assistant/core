@@ -14,6 +14,14 @@ from ha_silabs_firmware_client import (
     FirmwareUpdateClient,
 )
 import pytest
+from pytest_homeassistant.common import (
+    ANY,
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
@@ -44,15 +52,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    ANY,
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test_firmware_domain"
 TEST_DEVICE = "/dev/SomeDevice123"
