@@ -12,6 +12,9 @@ from urllib.parse import parse_qs, urlparse
 from aiohttp import ClientError, ClientPayloadError
 from pyezvizapi.exceptions import PyEzvizError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import (
     DATA_COMPONENT,
@@ -29,10 +32,6 @@ from homeassistant.helpers.network import NoURLAvailableError
 
 from . import setup_integration
 from .test_init import _mock_camera_data
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 SERIAL = "C123456789"
 ENTITY_ID = "camera.camera_1"
