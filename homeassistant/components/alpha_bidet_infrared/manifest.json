@@ -1,6 +1,7 @@
 {
   "domain": "alpha_bidet_infrared",
   "name": "Alpha Bidet Infrared",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@eseverson"],
   "config_flow": true,
   "dependencies": ["infrared"],
