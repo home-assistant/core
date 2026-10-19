@@ -20,7 +20,6 @@ MISSING_ALL = {
     "llm",
     "person",
     "sun",
-    "zone",
 }
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
