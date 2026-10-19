@@ -13,6 +13,14 @@ from freezegun.api import FrozenDateTimeFactory
 import jwt
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    ensure_auth_manager_loaded,
+    flush_store,
+)
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -31,15 +39,6 @@ from homeassistant.auth.const import (
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    CLIENT_ID,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    ensure_auth_manager_loaded,
-    flush_store,
-)
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
 
@@ -983,7 +982,7 @@ async def test_login_flow_limit_unknown_provider(mock_hass: HomeAssistant) -> No
     )
     step = await manager.login_flow.async_init(("insecure_example", None))
 
-    with pytest.raises(KeyError):
+    with pytest.raises(data_entry_flow.UnknownHandler):
         await manager.login_flow.async_init(("unknown", None))
     assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
         step["flow_id"]

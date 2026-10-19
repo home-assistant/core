@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import pydeconz
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.deconz.config_flow import (
     CONF_MANUAL_INPUT,
@@ -31,9 +33,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .conftest import API_KEY, BRIDGE_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 BAD_BRIDGEID = "0000000000000000"
 

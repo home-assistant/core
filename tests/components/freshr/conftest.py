@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.freshr.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEVICE_ID = "SN001"
 

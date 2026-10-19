@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.climate import HVACMode
@@ -12,8 +13,6 @@ from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def _flow_data(

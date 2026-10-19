@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.components.stookwijzer.services import Forecast
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

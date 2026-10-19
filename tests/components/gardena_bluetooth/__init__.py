@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from gardena_bluetooth.parse import ManufacturerData
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.gardena_bluetooth.const import CONF_PRODUCT_TYPE, DOMAIN
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
     name="Timer",
