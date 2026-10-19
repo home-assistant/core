@@ -228,20 +228,32 @@ async def test_event_listener_auth_error_starts_reauth(
 )
 async def test_event_listener_other_error_falls_back_to_polling(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_nanoleaf: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     error: NanoleafError,
 ) -> None:
-    """Test a listener that ends with another error neither reauths nor unloads."""
+    """Test a listener that ends with another error leaves polling in place."""
     mock_nanoleaf.listen_events.side_effect = error
+    mock_nanoleaf.is_on = False
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not get_reauth_flows(hass, mock_config_entry)
     assert "falling back to polling" in caplog.text
-    assert hass.states.get("light.nanoleaf") is not None
+    assert hass.states.get("light.nanoleaf").state == STATE_OFF
+
+    # The device changes while no events arrive anymore: polling must pick it up
+    mock_nanoleaf.is_on = True
+    mock_nanoleaf.get_info.reset_mock()
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_nanoleaf.get_info.assert_called_once()
+    assert hass.states.get("light.nanoleaf").state == STATE_ON
 
 
 @pytest.mark.parametrize("callback_name", ["state_callback", "effects_callback"])
