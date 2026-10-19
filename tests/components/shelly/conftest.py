@@ -543,7 +543,17 @@ MOCK_LEDSTRIP_EFFECTS = {
     "fade": {"name": "Fade", "controls": ["rgb", "speed"]},
     "rainbow": {"name": "Rainbow", "controls": ["speed", "reverse"]},
     "colorwipe": {"name": "Color Wipe", "controls": ["rgb", "speed", "reverse"]},
+    "aurora": {
+        "name": "Aurora",
+        "controls": ["bg_rgb", "palette", "intensity", "speed"],
+    },
     "ddp": {"name": "DDP Receiver", "controls": []},
+}
+MOCK_LEDSTRIP_PALETTES = {
+    "rainbow": "Rainbow",
+    "fire": "Fire",
+    "ocean": "Ocean",
+    "monochrome": "Monochrome",
 }
 
 
@@ -646,6 +656,7 @@ def _mock_rpc_device(version: str | None = None):
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
         ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
+        ledstrip_list_palettes=AsyncMock(return_value=MOCK_LEDSTRIP_PALETTES),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
