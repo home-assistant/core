@@ -4,6 +4,7 @@ import statistics
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 VALUES = [17, 20, 15.3]
 VALUES_ERROR = [17, "string", 15.3]

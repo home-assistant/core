@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -14,8 +15,6 @@ from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifie
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

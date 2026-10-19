@@ -5,12 +5,11 @@ from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rachio.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 BASE_STATION_ID = "base123"
 BASE_STATION_SERIAL = "SN123456"

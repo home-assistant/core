@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tractive.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 BATTERY_ENTITY_ID = "sensor.tracker_device_id_123_battery"
 ACTIVITY_ENTITY_ID = "sensor.test_pet_activity_time"

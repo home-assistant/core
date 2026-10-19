@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 import aiopulse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DUMMY_HOST1 = "127.0.0.1"
 DUMMY_HOST2 = "127.0.0.2"

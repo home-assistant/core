@@ -4,6 +4,7 @@ import datetime as dt
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from yalexs.pubnub_async import AugustPubNub
 
@@ -28,8 +29,6 @@ from .mocks import (
     _mock_lock_from_fixture,
     _timetoken,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_doorsense(hass: HomeAssistant) -> None:

@@ -8,6 +8,7 @@ from deebot_client.events.map import Map
 from deebot_client.models import CleanMode, Room
 from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import vacuum
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .util import notify_and_wait
-
-from tests.typing import WebSocketGenerator
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
 
