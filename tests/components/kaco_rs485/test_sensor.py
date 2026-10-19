@@ -94,7 +94,7 @@ async def test_an_inverter_that_returns_reports_again(
     assert hass.states.get(ac_power).state == "635"
 
 
-async def test_a_half_answered_cycle_keeps_the_missing_half_unknown(
+async def test_a_half_answered_cycle_keeps_the_last_counters(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,

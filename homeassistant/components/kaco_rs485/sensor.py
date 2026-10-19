@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from kaco_rs485 import STATUS_OPTIONS, InverterState, status_slug, uptime_hours
+from kaco_rs485 import STATUS_OPTIONS, InverterState, status_slug
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -135,7 +135,7 @@ SENSORS: tuple[KacoSensorDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda s: uptime_hours(s.totals.total_uptime) if s.totals else None,
+        value_fn=lambda s: s.totals.total_uptime_hours if s.totals else None,
     ),
     KacoSensorDescription(
         key="daily_uptime",
@@ -146,7 +146,7 @@ SENSORS: tuple[KacoSensorDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda s: uptime_hours(s.totals.daily_uptime) if s.totals else None,
+        value_fn=lambda s: s.totals.daily_uptime_hours if s.totals else None,
     ),
     KacoSensorDescription(
         key="status",
