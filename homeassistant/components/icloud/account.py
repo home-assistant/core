@@ -389,6 +389,9 @@ class IcloudAccount:
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
+            # Sent once, after the scan: the platforms iterate the account's
+            # devices on the event loop, so a signal sent from the middle of
+            # the scan could have one iterating while the next device is added.
             dispatcher_send(self.hass, self.signal_device_new)
 
         self._schedule_next_fetch()
