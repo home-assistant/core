@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.neopool import config_flow
 from homeassistant.components.neopool.config_flow import (
@@ -33,11 +34,9 @@ from homeassistant.exceptions import HomeAssistantError
 from . import setup_integration
 from .conftest import MOCK_HOST, MOCK_PORT, MOCK_SERIAL
 
-from tests.common import MockConfigEntry
-
 pytestmark = pytest.mark.usefixtures("mock_socket_connection")
 
-TCP_INPUT = {
+USER_INPUT = {
     CONF_HOST: MOCK_HOST,
     CONF_PORT: MOCK_PORT,
     CONF_MODBUS_FRAMER: "tcp",
@@ -73,7 +72,7 @@ async def test_user_flow_tcp(
     assert result["step_id"] == TYPE_TCP
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TCP_INPUT
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -137,7 +136,7 @@ async def test_user_flow_rejects_out_of_range_unit_id(
     with pytest.raises(InvalidData):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**TCP_INPUT, SECTION_MORE_OPTIONS: {CONF_UNIT_ID: unit_id}},
+            {**USER_INPUT, SECTION_MORE_OPTIONS: {CONF_UNIT_ID: unit_id}},
         )
 
 
@@ -165,14 +164,14 @@ async def test_user_flow_probe_errors(
             AsyncMock(side_effect=exc),
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TCP_INPUT
+            result["flow_id"], USER_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TCP_INPUT
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -192,14 +191,14 @@ async def test_user_flow_device_in_use(
             MagicMock(side_effect=HomeAssistantError("in use")),
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TCP_INPUT
+            result["flow_id"], USER_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TCP_INPUT
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -214,7 +213,7 @@ async def test_user_flow_already_configured(
 
     result = await _advance_to_step(hass, TYPE_TCP)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TCP_INPUT
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT

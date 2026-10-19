@@ -9,12 +9,11 @@ from nexia.sensor import NexiaSensor
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def create_mock_sensor(

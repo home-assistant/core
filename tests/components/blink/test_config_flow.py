@@ -4,13 +4,12 @@ from unittest.mock import MagicMock, patch
 
 from blinkpy.auth import BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import BlinkSetupError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.blink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_2fa(hass: HomeAssistant) -> None:

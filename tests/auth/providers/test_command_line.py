@@ -151,7 +151,7 @@ async def test_login_flow_validates(
         {"username": "good-user", "password": "good-pass"}
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"]["username"] == "good-user"
+    assert result["data"].data["username"] == "good-user"
 
 
 async def test_strip_username(provider: command_line.CommandLineAuthProvider) -> None:
@@ -161,4 +161,4 @@ async def test_strip_username(provider: command_line.CommandLineAuthProvider) ->
         {"username": "\t\ngood-user ", "password": "good-pass"}
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"]["username"] == "good-user"
+    assert result["data"].data["username"] == "good-user"

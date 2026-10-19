@@ -5,6 +5,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.silla_prism.config_flow import (
     _PROBE_TIMEOUT,
@@ -17,9 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import BASE_TOPIC, HELLO_PAYLOAD, HELLO_TOPIC, SERIAL
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 _PROBE_PATH = (
     "homeassistant.components.silla_prism.config_flow.PrismConfigFlow._async_probe"

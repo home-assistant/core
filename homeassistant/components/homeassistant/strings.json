@@ -1,4 +1,14 @@
 {
+  "conditions": {
+    "host_reboot_required": {
+      "description": "Tests if the host needs a reboot to apply installed updates or changed settings.",
+      "name": "Host reboot required"
+    },
+    "restart_required": {
+      "description": "Tests if Home Assistant needs a restart to apply installed updates or changed settings.",
+      "name": "Restart required"
+    }
+  },
   "config": {
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -272,6 +282,18 @@
     "health_wellbeing": {
       "description": "Scales, toothbrushes, sleep and fitness tracking, glucose monitoring and baby care.",
       "name": "Health & wellbeing"
+    },
+    "helpers": {
+      "description": "Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+      "name": "Helpers",
+      "subcategory": {
+        "calculate_value": {
+          "name": "Calculate a value"
+        },
+        "store_value": {
+          "name": "Store a value"
+        }
+      }
     },
     "hubs_protocols": {
       "description": "Smart home hubs and radio protocols that each bring in many kinds of devices.",
@@ -721,6 +743,20 @@
       "user": "User",
       "version": "Version",
       "virtualenv": "Virtual environment"
+    }
+  },
+  "triggers": {
+    "host_reboot_required": {
+      "description": "Triggers when the host needs a reboot to apply installed updates or changed settings.",
+      "name": "Host reboot required"
+    },
+    "restart_required": {
+      "description": "Triggers when Home Assistant needs a restart to apply installed updates or changed settings.",
+      "name": "Restart required"
+    },
+    "updated": {
+      "description": "Triggers once after Home Assistant starts on a different version than it ran before.",
+      "name": "Home Assistant updated"
     }
   }
 }

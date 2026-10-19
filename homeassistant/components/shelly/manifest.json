@@ -9,6 +9,11 @@
       "manufacturer_id": 2985
     }
   ],
+  "categories": [
+    "plugs_switches",
+    "lighting.bulbs_lamps",
+    "energy.meters_monitoring"
+  ],
   "codeowners": ["@bieniu", "@thecode", "@chemelli74", "@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth", "http", "network"],

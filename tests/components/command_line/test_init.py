@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.command_line.const import DOMAIN
@@ -13,12 +18,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
-
-from tests.common import (
-    assert_platform_setup_creates_issue,
-    async_fire_time_changed,
-    get_fixture_path,
-)
 
 
 @pytest.mark.parametrize(

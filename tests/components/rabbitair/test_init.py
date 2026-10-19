@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rabbitair import Mode, Model, Speed
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
 TEST_TOKEN = "0123456789abcdef0123456789abcdef"

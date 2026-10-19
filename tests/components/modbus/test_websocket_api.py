@@ -7,6 +7,15 @@ from unittest.mock import AsyncMock, patch
 from modbus_connection import ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    get_fixture_path,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config as hass_config
 from homeassistant.components.modbus import async_get_unit
@@ -15,16 +24,6 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    get_fixture_path,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import WebSocketGenerator
 
 type ConsumerFactory = Callable[[], MockConfigEntry]
 

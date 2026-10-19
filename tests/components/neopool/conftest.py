@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.neopool.const import (
     CONF_BAUDRATE,
@@ -25,8 +26,6 @@ from homeassistant.components.neopool.const import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.0.2.1"
 MOCK_PORT = DEFAULT_PORT

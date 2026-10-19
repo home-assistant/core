@@ -100,9 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         reader_writer = CoreBackupReaderWriter(hass)
     else:
         # pylint: disable-next=home-assistant-component-root-import
-        from homeassistant.components.hassio.backup import (  # noqa: PLC0415
-            SupervisorBackupReaderWriter,
-        )
+        from homeassistant.components.hassio.backup import SupervisorBackupReaderWriter  # noqa: PLC0415
 
         reader_writer = SupervisorBackupReaderWriter(hass)
 

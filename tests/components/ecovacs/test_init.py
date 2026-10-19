@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+from deebot_client.events import FirmwareEvent, NetworkInfoEvent
 from deebot_client.exceptions import (
     DeebotError,
     DeviceVerificationRequiredError,
@@ -9,6 +10,7 @@ from deebot_client.exceptions import (
 )
 from deebot_client.models import AccountCredentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
@@ -26,8 +28,7 @@ from .const import (
     VALID_ENTRY_DATA_CLOUD,
     VALID_ENTRY_DATA_SELF_HOSTED,
 )
-
-from tests.common import MockConfigEntry
+from .util import notify_and_wait
 
 
 @pytest.mark.usefixtures(
@@ -242,6 +243,43 @@ async def test_devices_in_dr(
         assert device_entry == snapshot(name=device.device_info["did"])
 
 
+async def test_device_info_updated_from_events(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    controller: EcovacsController,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reported firmware and MAC update the device registry."""
+    device = controller.devices[0]
+    identifier = (DOMAIN, device.device_info["did"])
+
+    await notify_and_wait(hass, device.events, FirmwareEvent("1.2.3"))
+    await notify_and_wait(
+        hass,
+        device.events,
+        NetworkInfoEvent("192.168.0.10", "Testnetwork", -62, "AA:BB:CC:DD:EE:FF"),
+    )
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        identifier, mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.sw_version == "1.2.3"
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+    }
+
+    # After a reload the firmware is unknown until reported again
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        identifier, mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.sw_version == "1.2.3"
+
+
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_vacbot", "init_integration"
 )
@@ -250,7 +288,7 @@ async def test_devices_in_dr(
     [
         ("yna5x1", 27),
         ("5xu9h3", 25),
-        ("twunby", 40),
+        ("twunby", 50),
         ("123", 3),
     ],
 )

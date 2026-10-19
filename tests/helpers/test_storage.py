@@ -13,6 +13,12 @@ from unittest.mock import Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import py
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_test_home_assistant,
+    mock_storage,
+)
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -32,13 +38,6 @@ from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.json import JsonValueType
-
-from tests.common import (
-    async_fire_time_changed,
-    async_fire_time_changed_exact,
-    async_test_home_assistant,
-    mock_storage,
-)
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -965,7 +964,7 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            "unexpected character: line 1 column 1 (char 0)"
+            "unexpected character, expected a JSON value: line 1 column 1 (char 0)"
             in issue_entry.translation_placeholders["error"]
         )
 

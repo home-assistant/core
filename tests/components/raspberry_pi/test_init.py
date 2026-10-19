@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.raspberry_pi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)

@@ -1,6 +1,7 @@
 {
   "domain": "matrix",
   "name": "Matrix",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@PaarthShah"],
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "iot_class": "cloud_push",
