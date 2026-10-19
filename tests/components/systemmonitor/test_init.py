@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -23,6 +24,36 @@ async def test_load_unload_entry(
     assert await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_added_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(
+            "binary_sensor.system_monitor_process_python3", id="binary_sensor"
+        ),
+        pytest.param("sensor.system_monitor_memory_free", id="sensor"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unload_entry_after_rename(
+    hass: HomeAssistant,
+    mock_added_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test update subscriptions are removed on unload after renaming an entity."""
+    coordinator = mock_added_config_entry.runtime_data.coordinator
+    assert any(coordinator.update_subscribers.values())
+
+    entity_registry.async_update_entity(entity_id, new_entity_id=f"{entity_id}_new")
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{entity_id}_new")
+
+    assert await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_added_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not any(coordinator.update_subscribers.values())
 
 
 async def test_adding_processor_to_options(

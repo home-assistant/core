@@ -247,6 +247,7 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
         {"state_class": "total_increasing"},  # invalid for temperature DPT
         {"unit_of_measurement": "invalid"},
         {"device_class": "energy", "unit_of_measurement": "invalid"},
+        {"entity_category": "config"},  # sensors can not be added as config entities
     ],
 )
 async def test_sensor_yaml_attribute_validation(
@@ -255,7 +256,7 @@ async def test_sensor_yaml_attribute_validation(
     knx: KNXTestKit,
     attribute_config: dict[str, Any],
 ) -> None:
-    """Test creating a sensor with invalid unit, state_class or device_class."""
+    """Test creating a sensor with invalid attributes."""
     with caplog.at_level(logging.ERROR):
         await knx.setup_integration(
             {
@@ -387,6 +388,17 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
                     "dpt": "9.001",  # temperature 2 byte float
                 },
                 "state_class": "measurement_angle",  # requires degree unit
+                "sync_state": True,
+            }
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "device_class": "enum",  # options can not be configured
                 "sync_state": True,
             }
         ),

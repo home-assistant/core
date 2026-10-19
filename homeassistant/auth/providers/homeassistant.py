@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, MfaLoginFlow
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -338,6 +338,7 @@ class HassAuthProvider(AuthProvider):
         """Get extra info for this credential."""
         return UserMeta(name=credentials.data["username"], is_active=True)
 
+    @override
     async def async_will_remove_credentials(self, credentials: Credentials) -> None:
         """When credentials get removed, also remove the auth."""
         if self.data is None:
@@ -352,7 +353,7 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class HassLoginFlow(LoginFlow[HassAuthProvider]):
+class HassLoginFlow(MfaLoginFlow[HassAuthProvider]):
     """Handler for the login flow."""
 
     @override

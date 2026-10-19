@@ -4,6 +4,7 @@ from datetime import datetime as dt
 from unittest.mock import MagicMock
 
 from freezegun.api import freeze_time
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder import Recorder
@@ -18,7 +19,6 @@ from homeassistant.util import dt as dt_util
 from .conftest import PHOENIX_ZONE_INFO
 
 from tests.common import MockConfigEntry
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @freeze_time("2022-08-02T12:00:00-07:00")

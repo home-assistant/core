@@ -1976,6 +1976,49 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected"),
+    [
+        pytest.param(
+            {"brightness_pct": 100, "color_temp_kelvin": 1000},
+            {"brightness": 255, "rgbww_color": (0, 0, 0, 0, 255)},
+            id="warmer_than_min",
+        ),
+        pytest.param(
+            {"brightness_pct": 100, "color_temp_kelvin": 9000},
+            {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)},
+            id="colder_than_max",
+        ),
+        pytest.param(
+            {"color_temp_kelvin": 6535},
+            {"rgbww_color": (0, 0, 0, 255, 0)},
+            id="no_brightness",
+        ),
+    ],
+)
+async def test_light_service_call_color_temp_conversion_rgbww_only(
+    hass: HomeAssistant, service_data: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test color temp conversion for a light which only supports rgbww."""
+    entity = MockLight("Test_rgbww", STATE_ON)
+    entity.supported_color_modes = {light.ColorMode.RGBWW}
+    entity.color_mode = light.ColorMode.RGBWW
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+    assert entity.brightness is None
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, **service_data},
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == expected
+
+
 async def test_light_service_call_white_mode(hass: HomeAssistant) -> None:
     """Test color_mode white in service calls."""
     entity0 = MockLight("Test_white", STATE_ON)

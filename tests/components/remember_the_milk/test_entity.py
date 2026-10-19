@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.remember_the_milk import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .const import PROFILE
@@ -358,3 +359,34 @@ async def test_services_auth_errors(
     assert entry.state is ConfigEntryState.SETUP_ERROR
     flows = list(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
     assert len(flows) == 1
+
+
+@pytest.mark.usefixtures("storage")
+@pytest.mark.parametrize(
+    ("service", "service_data", "replacement"),
+    [
+        (f"{PROFILE}_create_task", {"name": "Test 1"}, "todo.add_item"),
+        (f"{PROFILE}_complete_task", {"id": "test_1"}, "todo.update_item"),
+    ],
+)
+async def test_deprecated_action_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    replacement: str,
+) -> None:
+    """Test calling a legacy account action creates a deprecation issue."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_key == "deprecated_action"
+    assert issue.translation_placeholders == {
+        "action": f"{DOMAIN}.{service}",
+        "replacement": replacement,
+    }

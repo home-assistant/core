@@ -198,6 +198,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
 )
 async def test_config_entry_migration_v5_collapses_duplicates(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     older: dict,
     newer: dict,
     serial_number: str,
@@ -239,6 +240,10 @@ async def test_config_entry_migration_v5_collapses_duplicates(
     assert unique_entry.unique_id == serial_number
     assert unique_entry.data == newer["data"]
     assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+    assert (
+        "Another configuration entry exists for the adapter with serial number"
+        f" {serial_number}"
+    ) in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -711,7 +716,18 @@ async def test_multi_pan_migration_issue_created_for_addon(
         "hardware_name": "Home Assistant SkyConnect"
     }
     assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 async def test_multi_pan_migration_issue_deleted_for_ezsp(

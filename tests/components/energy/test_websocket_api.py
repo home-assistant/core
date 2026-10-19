@@ -4,6 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
 
 from homeassistant.components.energy import DOMAIN, data, is_configured
 from homeassistant.components.recorder import Recorder
@@ -14,10 +18,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, flush_store, mock_platform
-from tests.components.recorder.common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
 from tests.typing import WebSocketGenerator
 
 

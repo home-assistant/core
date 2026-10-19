@@ -57,7 +57,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
         probatio.Optional(CONF_NAME): probatio.Any(None, cv.string),
-        probatio.Required(CONF_EVENT_TYPES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_EVENT_TYPES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 

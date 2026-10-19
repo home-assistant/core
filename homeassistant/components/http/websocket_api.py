@@ -15,11 +15,12 @@ from homeassistant.exceptions import HomeAssistantError
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
 from .const import (
     ATTR_CONFIG,
+    CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
 )
-from .server import async_verify_can_bind
+from .server import DEFAULT_BIND, async_verify_can_bind, async_verify_hosts_distinct
 
 ERR_BIND_FAILED: Final = "bind_failed"
 ERR_NOT_RUNNING: Final = "not_running"
@@ -122,9 +123,16 @@ async def websocket_set_config(
         return
 
     config: ConfData | None = msg[ATTR_CONFIG]
-    if config is not None and config[CONF_SERVER_PORT] != hass.http.server_port:
+    if config is not None:
+        hosts = config.get(CONF_SERVER_HOST, DEFAULT_BIND)
         try:
-            await async_verify_can_bind(hass, config)
+            if config[CONF_SERVER_PORT] != hass.http.server_port:
+                await async_verify_can_bind(hass, config)
+            elif hosts != hass.http.server_host:
+                # The running server holds the port, so only the hosts can be
+                # checked; a conflict on the port itself is caught when the
+                # restarted server binds and falls back to the stable config.
+                await async_verify_hosts_distinct(hass, hosts)
         except HomeAssistantError as err:
             connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
             return
