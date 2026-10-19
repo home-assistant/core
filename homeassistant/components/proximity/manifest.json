@@ -1,6 +1,7 @@
 {
   "domain": "proximity",
   "name": "Proximity",
+  "categories": ["presence_location", "helpers.calculate_value"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "dependencies": ["device_tracker", "zone"],

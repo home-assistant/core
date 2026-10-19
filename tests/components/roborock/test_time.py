@@ -6,6 +6,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import roborock
 from roborock.data import DnDTimer, RoborockBaseTimer, ValleyElectricityTimer
 
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

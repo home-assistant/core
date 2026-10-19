@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nut.config_flow import PASSWORD_NOT_CHANGED
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .util import _get_mock_nutclient, async_init_integration
-
-from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_HOST: "localhost",

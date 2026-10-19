@@ -24,6 +24,11 @@ from aioengiebelgium import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import (
@@ -54,8 +59,6 @@ from .conftest import (
     build_relations,
     setup_dynamic_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _prices_by_ban(

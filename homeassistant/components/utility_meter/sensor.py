@@ -19,9 +19,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    _suggest_report_issue,
-)
+from homeassistant.components.sensor.recorder import _suggest_report_issue  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,

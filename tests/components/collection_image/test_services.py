@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import Mock, MockConfigEntry
 
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.collection_image.image import CollectionImageImageEntity
@@ -18,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from .conftest import MediaSourceMocks, MediaSourceState
 from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_IMAGE_URI_2
 from .helpers import directory, image
-
-from tests.common import Mock, MockConfigEntry
 
 
 async def _setup_integration(

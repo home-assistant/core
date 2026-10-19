@@ -12,6 +12,11 @@ from aioengiebelgium import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
@@ -28,8 +33,6 @@ from .conftest import (
     build_epex_payload_without_tomorrow,
     setup_dynamic_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("frozen_afternoon")

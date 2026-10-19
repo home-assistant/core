@@ -28,6 +28,7 @@ from aioengiebelgium import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.engie_be.const import (
     CONF_MFA_METHOD,
@@ -37,8 +38,6 @@ from homeassistant.components.engie_be.const import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 EMAIL = "user@example.com"

@@ -17,6 +17,7 @@ from aioengiebelgium import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
@@ -40,8 +41,6 @@ from .conftest import (
     build_relations,
     setup_dynamic_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _current_hour_price(

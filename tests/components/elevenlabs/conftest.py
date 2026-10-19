@@ -8,6 +8,7 @@ from elevenlabs.core import ApiError
 from elevenlabs.types import GetVoicesResponse
 from httpx2 import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elevenlabs.const import (
     CONF_STT_AUTO_LANGUAGE,
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_MODELS, MOCK_VOICES
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
