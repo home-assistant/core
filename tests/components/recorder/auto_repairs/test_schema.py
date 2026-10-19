@@ -1,6 +1,7 @@
 """The test validating and repairing schema."""
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from sqlalchemy import text
 
 from homeassistant.components.recorder import Recorder
@@ -15,8 +16,6 @@ from homeassistant.components.recorder.db_schema import States
 from homeassistant.components.recorder.migration import _modify_columns
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
-
-from ..common import async_wait_recording_done
 
 from tests.typing import RecorderInstanceContextManager
 
