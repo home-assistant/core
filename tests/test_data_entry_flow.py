@@ -8,13 +8,12 @@ from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
-
-from .common import async_capture_events
 
 
 class MockFlowManager(data_entry_flow.FlowManager):

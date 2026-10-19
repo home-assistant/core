@@ -1,15 +1,14 @@
 """Test const module."""
 
 import pytest
-
-from homeassistant import const
-from homeassistant.const import UnitOfDensity, UnitOfRatio
-
-from .common import (
+from pytest_homeassistant.common import (
     help_test_all,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,
 )
+
+from homeassistant import const
+from homeassistant.const import UnitOfDensity, UnitOfRatio
 
 
 def test_all() -> None:

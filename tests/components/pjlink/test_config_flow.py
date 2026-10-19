@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.pjlink.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_DATA, DEFAULT_DATA_W_ENCODING, DEFAULT_DATA_WO_PORT
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_creates_entry(

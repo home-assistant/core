@@ -7,6 +7,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from python_otbr_api import KeyFormat
 
 from homeassistant.components import otbr
@@ -20,9 +22,6 @@ from . import (
     TEST_BORDER_AGENT_ID,
     TEST_COPROCESSOR_VERSION,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="enable_compute_pskc")

@@ -2,6 +2,10 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+)
 
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
@@ -31,8 +35,6 @@ from .conftest import (
     setup_entity,
     setup_mock_devices,
 )
-
-from tests.common import assert_platform_setup_creates_issue, assert_setup_component
 
 
 @pytest.mark.parametrize(

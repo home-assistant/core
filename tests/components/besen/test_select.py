@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 from besen.exceptions import CommandFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.const import DOMAIN
@@ -24,8 +25,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TEMPERATURE_UNIT_ENTITY_ID = "select.garage_temperature_unit"
 

@@ -6,6 +6,14 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components import conversation, stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
@@ -26,14 +34,6 @@ from homeassistant.helpers import chat_session, device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 from tests.components.stt.common import MockSTTProvider, MockSTTProviderEntity
 from tests.components.tts.common import MockTTSEntity, MockTTSProvider
 

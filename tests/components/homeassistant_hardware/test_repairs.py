@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
@@ -11,8 +12,6 @@ from homeassistant.components.homeassistant_hardware.repair_helpers import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 TEST_DOMAIN = "test_hardware"
 

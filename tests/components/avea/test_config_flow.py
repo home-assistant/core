@@ -3,6 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 from homeassistant.components.avea.const import AVEA_SERVICE_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IMPORT, SOURCE_USER
@@ -11,12 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import AVEA_DISCOVERY_INFO, NOT_AVEA_DISCOVERY_INFO
-
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
-)
 
 pytestmark = pytest.mark.usefixtures("enable_bluetooth")
 

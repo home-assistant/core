@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.emoncms.const import (
     CONF_ONLY_INCLUDE_FEEDID,
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, FEEDS, FLOW_RESULT, SENSOR_NAME, UNIQUE_ID
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_URL: "http://1.1.1.1",
