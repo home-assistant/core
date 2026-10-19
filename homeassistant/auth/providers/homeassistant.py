@@ -146,14 +146,16 @@ class Data:
 
         Raises InvalidUsername if the new username is invalid.
         """
+        self.add_hashed_auth(username, self.hash_password(password, True))
+
+    def add_hashed_auth(self, username: str, hashed_password: bytes) -> None:
+        """Add a new user with a password hashed for storage.
+
+        Raises InvalidUsername if the new username is invalid.
+        """
         self._validate_new_username(username)
 
-        self.users.append(
-            {
-                "username": username,
-                "password": self.hash_password(password, True).decode(),
-            }
-        )
+        self.users.append({"username": username, "password": hashed_password.decode()})
 
     @callback
     def async_remove_auth(self, username: str) -> None:
@@ -275,7 +277,12 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        await self.hass.async_add_executor_job(self.data.add_auth, username, password)
+        # Hashed first, so the username is checked and added in one go and two
+        # requests for the same username can't both add it.
+        hashed_password = await self.hass.async_add_executor_job(
+            self.data.hash_password, password, True
+        )
+        self.data.add_hashed_auth(username, hashed_password)
         await self.data.async_save()
 
     async def async_remove_auth(self, username: str) -> None:
