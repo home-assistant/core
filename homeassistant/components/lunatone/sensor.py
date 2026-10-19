@@ -108,7 +108,7 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = [
         LunatoneDALILineStatusSensor(coordinator_info, line_id, config_entry.unique_id)
-        for line_id in coordinator_info.data.lines
+        for line_id in map(int, coordinator_info.data.lines)
     ]
 
     if coordinator_sensors is not None:
@@ -149,14 +149,13 @@ class LunatoneSensor(
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
 
-        self._attr_unique_id = (
-            f"{self._config_entry_unique_id}-sensor{sensor_id}-{description.key}"
+        self._attr_unique_id = self.construct_unique_id(
+            config_entry_unique_id, sensor_id, description.key
         )
         device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, self._config_entry_unique_id)},
+            identifiers={(DOMAIN, config_entry_unique_id)},
         )
         if (
             self.sensor.data.address_type == SensorAddressType.DALI
@@ -166,9 +165,11 @@ class LunatoneSensor(
                 identifiers={
                     (
                         DOMAIN,
-                        f"{self._config_entry_unique_id}"
-                        f"-line{self.sensor.data.dali_sensor_address.line}"
-                        f"-d24-address{self.sensor.data.dali_sensor_address.address}",
+                        (
+                            f"{config_entry_unique_id}"
+                            f"-line{self.sensor.data.dali_sensor_address.line}"
+                            f"-d24-address{self.sensor.data.dali_sensor_address.address}"
+                        ),
                     )
                 },
                 translation_key="dali_sensor",
@@ -180,10 +181,17 @@ class LunatoneSensor(
             with contextlib.suppress(ValueError):
                 device_info.via_device_id = dr.async_get_device_id_by_identifier(
                     self.coordinator.hass,
-                    (DOMAIN, str(self._config_entry_unique_id)),
+                    (DOMAIN, str(config_entry_unique_id)),
                     config_entry_id=self.coordinator.config_entry.entry_id,
                 )
         self._attr_device_info = device_info
+
+    @staticmethod
+    def construct_unique_id(
+        config_entry_unique_id: str, sensor_id: int, key: str
+    ) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-sensor{sensor_id}-{key}"
 
     @property
     def sensor(self) -> Sensor:
@@ -218,7 +226,7 @@ class LunatoneDALILineStatusSensor(
     def __init__(
         self,
         coordinator: LunatoneInfoDataUpdateCoordinator,
-        line_id: str,
+        line_id: int,
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone DALI line status sensor."""
@@ -227,25 +235,43 @@ class LunatoneDALILineStatusSensor(
         self._config_entry_unique_id = config_entry_unique_id
         self._line_id = line_id
 
-        line_unique_id = f"{config_entry_unique_id}-line{line_id}"
         # Name must match the light platform, either of them may create the device
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, line_unique_id)},
+            identifiers={
+                (
+                    DOMAIN,
+                    self.construct_device_unique_id(config_entry_unique_id, line_id),
+                )
+            },
             translation_key="dali_line",
             translation_placeholders={"line_id": str(line_id)},
         )
-        self._attr_unique_id = f"{line_unique_id}-status"
+        self._attr_unique_id = self.construct_unique_id(config_entry_unique_id, line_id)
+
+    @staticmethod
+    def construct_device_unique_id(
+        config_entry_unique_id: str, line_id: int | None = None
+    ) -> str:
+        """Returns the unique_id of the parent device."""
+        return f"{config_entry_unique_id}-line{line_id}"
+
+    @staticmethod
+    def construct_unique_id(
+        config_entry_unique_id: str, line_id: int | None = None
+    ) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-line{line_id}-status"
 
     @property
     @override
     def available(self) -> bool:
-        return super().available and self._line_id in self.coordinator.data.lines
+        return super().available and str(self._line_id) in self.coordinator.data.lines
 
     @property
     @override
     def native_value(self) -> str:
         """Return the value of the sensor."""
-        line_data = self.coordinator.data.lines.get(self._line_id)
+        line_data = self.coordinator.data.lines.get(str(self._line_id))
         return (
             DALI_LINE_STATUS_SENSOR_MAPPING[line_data.line_status]
             if line_data is not None
