@@ -1,55 +1,38 @@
 """Websocket handler for UniFi Network integration."""
 
 import asyncio
-from datetime import datetime, timedelta
 
 import aiohttp
 import aiounifi
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.core import callback
 
 from ..const import LOGGER
 from .connection import UnifiConnectionManager
-
-CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
 class UnifiWebsocket:
     """Manages a single UniFi Network instance."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        api: aiounifi.Controller,
-        connection: UnifiConnectionManager,
-    ) -> None:
+    def __init__(self, connection: UnifiConnectionManager) -> None:
         """Initialize the system."""
-        self.hass = hass
-        self.api = api
         self.connection = connection
+        self.hass = connection.hass
+        self.api = connection.api
 
-        self.ws_task: asyncio.Task | None = None
-        self._cancel_websocket_check: CALLBACK_TYPE | None = None
+        self.ws_task: asyncio.Task[None] | None = None
         self.running = False
 
     @callback
     def start(self) -> None:
         """Start websocket handler."""
         self.running = True
-        self._cancel_websocket_check = async_track_time_interval(
-            self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
-        )
         self.start_websocket()
 
     @callback
     def stop(self) -> None:
         """Stop websocket handler."""
         self.running = False
-        if self._cancel_websocket_check:
-            self._cancel_websocket_check()
-            self._cancel_websocket_check = None
-
         if self.ws_task is not None:
             self.ws_task.cancel()
 
@@ -84,11 +67,3 @@ class UnifiWebsocket:
             self.connection.report_failure(log=True)
 
         self.ws_task = self.hass.loop.create_task(_websocket_runner())
-
-    @callback
-    def _async_watch_websocket(self, now: datetime) -> None:
-        """Watch timestamp for last received websocket message."""
-        LOGGER.debug(
-            "Last received websocket timestamp: %s",
-            self.api.connectivity.ws_message_received,
-        )
