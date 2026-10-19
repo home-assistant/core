@@ -12,7 +12,6 @@ from homeassistant.components.shopping_list.common import _get_shopping_data
 from homeassistant.components.shopping_list.const import (
     ATTR_REVERSE,
     DOMAIN,
-    EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
@@ -25,7 +24,7 @@ from homeassistant.components.websocket_api import (
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, EVENT_SHOPPING_LIST_UPDATED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import intent
