@@ -10,6 +10,7 @@ from ouman_eh_800_api import (
     OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ouman_eh_800.const import (
     DEFAULT_SCAN_INTERVAL_SECONDS,
@@ -26,8 +27,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_ouman_client")

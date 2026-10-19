@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
+from pytest_homeassistant.common import MockConfigEntry
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant.components.awair.const import DOMAIN
@@ -19,8 +20,6 @@ from .const import (
     LOCAL_UNIQUE_ID,
     ZEROCONF_DISCOVERY,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_show_form(hass: HomeAssistant) -> None:

@@ -4,11 +4,10 @@ from unittest.mock import MagicMock
 
 from fullykiosk import FullyKioskError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 
 async def test_notify_text_to_speech(

@@ -6,13 +6,17 @@ from contextlib import contextmanager
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
 @contextmanager

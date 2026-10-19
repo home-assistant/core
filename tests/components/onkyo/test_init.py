@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aioonkyo import ReceiverInfo, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -16,8 +17,6 @@ from . import (
     receive_messages,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_receiver")

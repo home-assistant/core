@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pyotgw.vars as gw_vars
 from pyotgw.vars import OTGW, OTGW_ABOUT
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opentherm_gw.const import (
     DOMAIN,
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_GATEWAY_ID, VERSION_TEST
-
-from tests.common import MockConfigEntry
 
 VERSION_NEW = "4.2.8.1"
 MINIMAL_STATUS_UPD = {OTGW: {OTGW_ABOUT: f"OpenTherm Gateway {VERSION_NEW}"}}

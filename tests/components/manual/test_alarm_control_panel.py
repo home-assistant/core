@@ -5,6 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    mock_component,
+    mock_restore_cache,
+)
 
 from homeassistant.auth.models import User
 from homeassistant.components import alarm_control_panel
@@ -31,7 +36,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, mock_component, mock_restore_cache
 from tests.components.alarm_control_panel import common
 
 CODE = "HELLO_CODE"

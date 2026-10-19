@@ -6,6 +6,7 @@ from airthings_ble import AirthingsDevice, AirthingsDeviceType, UnsupportedDevic
 from bleak import BleakError
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airthings_ble.const import DEVICE_MODEL, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
@@ -23,8 +24,6 @@ from . import (
     patch_async_ble_device_from_address,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

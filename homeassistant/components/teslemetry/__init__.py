@@ -28,6 +28,7 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
+from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue, StreamSink
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
@@ -37,7 +38,11 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -349,6 +354,13 @@ async def _async_resolve_vehicle_api(
         """Report whether the vehicle is currently reachable over Bluetooth."""
         device = async_ble_device_from_address(hass, address, connectable=True)
         if device is None:
+            LOGGER.debug(
+                "Vehicle %s is not reachable over Bluetooth, using cloud: %s",
+                vin,
+                async_address_reachability_diagnostics(
+                    hass, address, BluetoothReachabilityIntent.CONNECTION
+                ),
+            )
             return False
         # The library never refreshes the BLE handle, so set it here while it is known fresh.
         bluetooth_vehicle.set_device(device)
@@ -756,6 +768,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 ble_subentry,
             )
 
+            if isinstance(vehicle_api, VehicleRouter):
+                ble_broadcast_glue = BleBroadcastStreamGlue(
+                    vehicle_api.primary, cast(StreamSink, stream_vehicle)
+                )
+                entry.async_on_unload(ble_broadcast_glue.stop)
+
             vehicles.append(
                 TeslemetryVehicleData(
                     api=vehicle_api,
@@ -833,6 +851,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             ) = await _async_resolve_local_control(
                 hass, entry, bool(battery), site_id, energy_site
             )
+
+            if isinstance(energy_site_api, EnergySiteRouter):
+                info_coordinator.enable_local_polling(energy_site_api.primary)
+                if live_coordinator is not None:
+                    live_coordinator.enable_local_polling(energy_site_api.primary)
 
             energysites.append(
                 TeslemetryEnergyData(

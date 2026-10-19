@@ -4,6 +4,7 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.droplet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import MOCK_CODE, MOCK_DEVICE_ID, MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

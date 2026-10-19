@@ -2,6 +2,12 @@
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.template.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID
@@ -13,10 +19,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 COMPOSITE_ID = "composite00000000000000000000ab"
 TEMPLATE_ENTITY_ID = "sensor.my_template"
