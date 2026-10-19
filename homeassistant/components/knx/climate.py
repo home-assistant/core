@@ -647,14 +647,12 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase, RestoreEntity):
             if hvac_mode != HVACMode.OFF:
                 self._last_hvac_mode = hvac_mode
 
-        operation_modes = mode.operation_modes or mode.gather_operation_modes(
-            only_writable=False
-        )
+        # preset_mode is only available if operation modes are writable
         # inverse of the preset_mode property: operation_mode.name.lower()
         operation_mode = HVACOperationMode.__members__.get(
             str(last_state.attributes.get(ATTR_PRESET_MODE)).upper()
         )
-        if operation_mode is not None and operation_mode in operation_modes:
+        if operation_mode is not None and operation_mode in mode.operation_modes:
             mode.operation_mode = operation_mode
 
     @override

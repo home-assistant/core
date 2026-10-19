@@ -502,12 +502,10 @@ async def test_climate_restore_last_hvac_mode(
         }
     )
     knx.assert_state("climate.test", HVACMode.COOL)
-
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
-    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
-    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
 
+    # turn off and on before any update was received from the bus
     await hass.services.async_call(
         "climate", "turn_off", {"entity_id": "climate.test"}, blocking=True
     )
@@ -519,6 +517,9 @@ async def test_climate_restore_last_hvac_mode(
     )
     await knx.assert_write("1/2/6", (0x03,))
     knx.assert_state("climate.test", HVACMode.COOL)
+
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
 
 
 async def test_climate_restore_off_with_on_off_and_controller_mode(
