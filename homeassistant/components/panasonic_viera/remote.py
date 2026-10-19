@@ -106,7 +106,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
-        num_repeats: int = kwargs[ATTR_NUM_REPEATS]
+        num_repeats: int = kwargs.get(ATTR_NUM_REPEATS, 1)
         delay_secs: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
         command_list = list(command)
 
