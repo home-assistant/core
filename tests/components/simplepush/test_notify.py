@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 from simplepush import ApiError
 from simplepush.legacy import BadRequest, UnknownError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -28,7 +29,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 MOCK_CONFIG = {
     CONF_DEVICE_KEY: "abc",
@@ -227,7 +228,9 @@ def mock_client() -> Generator[MagicMock]:
 
 async def setup_app_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Set up an entry of the current app."""
-    entry = MockConfigEntry(domain=DOMAIN, title="Simplepush", data=APP_CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Simplepush", data=APP_CONFIG, entry_id="app_entry"
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -242,6 +245,18 @@ async def send_entity_message(hass: HomeAssistant, data: dict[str, str]) -> None
         {ATTR_ENTITY_ID: ENTITY_ID, **data},
         blocking=True,
     )
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_notify_platform(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the notify entity of the current app."""
+    entry = await setup_app_entry(hass)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_entity_send_message(
