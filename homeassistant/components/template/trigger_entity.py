@@ -72,6 +72,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 f"template {self.domain} entity",
             )
 
+        self.coordinator_context = self.entity_id
         await super().async_added_to_hass()
 
         if self.coordinator.data is not None:
@@ -334,9 +335,14 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         coordinator_variables = self.coordinator.data["run_variables"]
         if self._entity_variables:
-            entity_variables = self._entity_variables.async_simple_render(
-                coordinator_variables
-            )
+            try:
+                entity_variables = self._entity_variables.async_simple_render(
+                    coordinator_variables
+                )
+            except TemplateError as err:
+                raise TemplateError(
+                    f"Error processing variables for {self.entity_id}: {err}"
+                ) from err
             self._rendered_entity_variables = {
                 **coordinator_variables,
                 **entity_variables,
