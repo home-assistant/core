@@ -2888,7 +2888,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
-        """Get or create the child device described by a child device info."""
+        """Get child device. Create if it doesn't exist.
+
+        If identifiers match those of an existing device, that device is converted to
+        a child device, preserving its id.
+        """
         return self._async_get_or_create_child(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
@@ -2905,7 +2909,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         disabled_by: DeviceEntryDisabler | UndefinedType | None,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
-        """Get or create the child device described by a child device info."""
+        """Get child device. Create if it doesn't exist.
+
+        If identifiers match those of an existing device, that device is converted to
+        a child device, preserving its id.
+        """
         identifiers = device_info.identifiers
         name = device_info.name
         parent_device_id = device_info.parent_device_id
