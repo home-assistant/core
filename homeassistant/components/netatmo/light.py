@@ -20,7 +20,11 @@ from .const import (
     NETATMO_CREATE_LIGHT,
 )
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity, NetatmoReachabilityEntity
+from .entity import (
+    NetatmoModuleEntity,
+    NetatmoReachabilityEntity,
+    netatmo_exception_handler,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,12 +132,14 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
         return super().available and self.data_handler.webhook_delivering
 
     @override
+    @netatmo_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
         await self.device.async_floodlight_on()
 
     @override
+    @netatmo_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
@@ -179,6 +185,7 @@ class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
         )
 
     @override
+    @netatmo_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -194,6 +201,7 @@ class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
         self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.device.async_off()

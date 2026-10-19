@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_COVER
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoReachabilityEntity
+from .entity import NetatmoReachabilityEntity, netatmo_exception_handler
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +78,7 @@ class NetatmoCover(NetatmoReachabilityEntity, CoverEntity):
         )
 
     @override
+    @netatmo_exception_handler
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.device.async_close()
@@ -85,6 +86,7 @@ class NetatmoCover(NetatmoReachabilityEntity, CoverEntity):
         self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.device.async_open()
@@ -92,11 +94,13 @@ class NetatmoCover(NetatmoReachabilityEntity, CoverEntity):
         self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.device.async_stop()
 
     @override
+    @netatmo_exception_handler
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         await self.device.async_set_target_position(kwargs[ATTR_POSITION])

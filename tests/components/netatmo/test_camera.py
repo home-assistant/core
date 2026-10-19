@@ -26,7 +26,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -255,7 +255,7 @@ async def test_service_set_person_away_invalid_person(
         "person": "Batman",
     }
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_PERSON_AWAY,
@@ -264,7 +264,8 @@ async def test_service_set_person_away_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert excinfo.value.translation_key == "person_not_found"
+    assert excinfo.value.translation_placeholders == {"persons": "Batman"}
 
 
 async def test_service_set_persons_home_invalid_person(
@@ -283,7 +284,7 @@ async def test_service_set_persons_home_invalid_person(
         "persons": "Batman",
     }
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_PERSONS_HOME,
@@ -292,7 +293,8 @@ async def test_service_set_persons_home_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert excinfo.value.translation_key == "person_not_found"
+    assert excinfo.value.translation_placeholders == {"persons": "Batman"}
 
 
 async def test_service_set_persons_home(
@@ -434,7 +436,7 @@ async def test_service_set_camera_light_invalid_type(
 
     with (
         patch("pyatmo.home.Home.async_set_state") as mock_set_state,
-        pytest.raises(HomeAssistantError) as excinfo,
+        pytest.raises(ServiceValidationError) as excinfo,
     ):
         await hass.services.async_call(
             "netatmo",
@@ -445,7 +447,8 @@ async def test_service_set_camera_light_invalid_type(
     await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
-    assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
+    assert excinfo.value.translation_key == "no_floodlight"
+    assert excinfo.value.translation_placeholders == {"entity_id": "camera.hall"}
 
 
 @pytest.mark.parametrize(

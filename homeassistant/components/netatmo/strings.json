@@ -153,11 +153,26 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error communicating with Netatmo: {error}"
+    },
     "entry_not_loaded": {
       "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
     },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."
+    },
+    "no_floodlight": {
+      "message": "{entity_id} does not have a floodlight."
+    },
+    "person_not_found": {
+      "message": "No person registered with Netatmo under the name: {persons}."
+    },
+    "rate_limited": {
+      "message": "Netatmo is rate limiting requests. Please try again later."
+    },
+    "schedule_not_found": {
+      "message": "No Netatmo schedule named {schedule_name}."
     }
   },
   "issues": {
