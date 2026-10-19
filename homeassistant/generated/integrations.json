@@ -4535,22 +4535,27 @@
       ]
     },
     "helty": {
-      "name": "Helty Flow",
-      "integration_type": "device",
-      "categories": [
-        "climate.fans_ventilation"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "helty_cloud": {
-      "name": "Helty Flow Cloud",
-      "integration_type": "hub",
-      "categories": [
-        "climate.fans_ventilation"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "name": "Helty",
+      "integrations": {
+        "helty": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Helty Flow"
+        },
+        "helty_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Helty Flow Cloud"
+        }
+      }
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
