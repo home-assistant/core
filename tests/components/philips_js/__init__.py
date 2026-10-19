@@ -1,5 +1,7 @@
 """Tests for the Philips TV integration."""
 
+from typing import Any
+
 MOCK_SERIAL_NO = "1234567890"
 MOCK_NAME = "Philips TV"
 
@@ -209,3 +211,150 @@ MOCK_RECORDINGS_LIST = {
         },
     ],
 }
+
+MOCK_MENU_ENTRY_ID = "01JZ41PCSDC1XDCC68AD3WTQ75"
+MOCK_MENU_UNIQUE_ID = "123456"
+MOCK_MENU_STORAGE_KEY = f"philips_js.{MOCK_MENU_ENTRY_ID}.menu"
+
+MOCK_MENU_TOGGLE = {
+    "node_id": 2,
+    "type": "TOGGLE_NODE",
+    "string_id": "org.droidtv.ui.strings.R.string.MAIN_TOGGLE",
+    "data": {},
+}
+MOCK_MENU_TEXT = {
+    "node_id": 3,
+    "type": "TEXT_ENTRY",
+    "string_id": "org.droidtv.ui.strings.R.string.MAIN_TEXT",
+    "data": {},
+}
+# Named through its current value, like the parent menu around it
+MOCK_MENU_SLIDER = {
+    "node_id": 5,
+    "type": "SLIDER_NODE",
+    "data": {"slider_data": {"min": 0, "max": 100, "step_size": 1}},
+}
+MOCK_MENU_MULTI_SLIDER = {
+    "node_id": 13,
+    "type": "MULTIPLE_SLIDER",
+    "string_id": "org.droidtv.ui.strings.R.string.MAIN_WHITE_POINT",
+    "data": {
+        "sliders": [
+            {
+                "slider_id": "org.droidtv.ui.strings.R.string.MAIN_RED",
+                "slider_data": {"min": 0, "max": 255, "step_size": 1},
+            },
+            {
+                "slider_id": "org.droidtv.ui.strings.R.string.MAIN_GREEN",
+                "slider_data": {"min": 0, "max": 255, "step_size": 1},
+            },
+        ]
+    },
+}
+MOCK_MENU_PICTURE = {
+    "node_id": 4,
+    "type": "PARENT_NODE",
+    "context": "picture",
+    "data": {"nodes": [MOCK_MENU_SLIDER, MOCK_MENU_MULTI_SLIDER]},
+}
+# Parent node with an active node, exposed as a select of its child nodes
+MOCK_MENU_STYLE = {
+    "node_id": 14,
+    "type": "PARENT_NODE",
+    "string_id": "org.droidtv.ui.strings.R.string.MAIN_STYLE",
+    "data": {
+        "nodes": [
+            {
+                "node_id": 15,
+                "type": "PARENT_NODE",
+                "string_id": "org.droidtv.ui.strings.R.string.MAIN_STYLE_VIVID",
+                "data": {},
+            },
+            {
+                "node_id": 16,
+                "type": "PARENT_NODE",
+                "string_id": "org.droidtv.ui.strings.R.string.MAIN_STYLE_NATURAL",
+                "data": {},
+            },
+        ]
+    },
+}
+# Node without string id or name in its current value
+MOCK_MENU_UNNAMED = {
+    "node_id": 10,
+    "type": "TOGGLE_NODE",
+    "context": "unnamed",
+    "data": {},
+}
+MOCK_MENU_ROOT = {
+    "node_id": 1,
+    "type": "PARENT_NODE",
+    "string_id": "org.droidtv.ui.strings.R.string.MAIN_ROOT",
+    "data": {
+        "nodes": [
+            MOCK_MENU_TOGGLE,
+            MOCK_MENU_TEXT,
+            MOCK_MENU_PICTURE,
+            MOCK_MENU_STYLE,
+            MOCK_MENU_UNNAMED,
+        ]
+    },
+}
+
+
+def _mock_menu_value(node_id: int, data: dict, **kwargs: Any) -> dict:
+    """Return a current value of a menu node."""
+    return {
+        "Nodeid": node_id,
+        "Controllable": True,
+        "Available": True,
+        "data": data,
+    } | kwargs
+
+
+MOCK_MENU_CURRENT = {
+    2: _mock_menu_value(2, {"value": True}),
+    4: _mock_menu_value(4, {}, string_id="Picture"),
+    5: _mock_menu_value(5, {"value": 50}, string_id="Brightness"),
+    13: _mock_menu_value(
+        13,
+        {
+            "values": [
+                {"slider_id": "org.droidtv.ui.strings.R.string.MAIN_RED", "value": 127},
+                {
+                    "slider_id": "org.droidtv.ui.strings.R.string.MAIN_GREEN",
+                    "value": 113,
+                },
+            ]
+        },
+    ),
+    14: _mock_menu_value(14, {"activenode_id": 15}),
+}
+MOCK_MENU_STRINGS = {
+    "org.droidtv.ui.strings.R.string.MAIN_TOGGLE": "Toggle",
+    "org.droidtv.ui.strings.R.string.MAIN_WHITE_POINT": "White point",
+    "org.droidtv.ui.strings.R.string.MAIN_RED": "Red",
+    "org.droidtv.ui.strings.R.string.MAIN_GREEN": "Green",
+    "org.droidtv.ui.strings.R.string.MAIN_STYLE": "Style",
+    "org.droidtv.ui.strings.R.string.MAIN_STYLE_VIVID": "Vivid",
+    "org.droidtv.ui.strings.R.string.MAIN_STYLE_NATURAL": "Natural",
+}
+# The menu data stored for MOCK_MENU_ROOT, without grouping parent nodes
+MOCK_MENU_DATA = {
+    "nodes": [
+        {"node": MOCK_MENU_TOGGLE, "name": "Toggle"},
+        {"node": MOCK_MENU_TEXT, "name": "org.droidtv.ui.strings.R.string.MAIN_TEXT"},
+        {"node": MOCK_MENU_SLIDER, "name": "Picture / Brightness"},
+        {"node": MOCK_MENU_MULTI_SLIDER, "name": "Picture / White point"},
+        {"node": MOCK_MENU_STYLE, "name": "Style"},
+    ],
+    # Untranslated strings map to themselves
+    "strings": MOCK_MENU_STRINGS
+    | {
+        "org.droidtv.ui.strings.R.string.MAIN_TEXT": (
+            "org.droidtv.ui.strings.R.string.MAIN_TEXT"
+        ),
+    },
+}
+# Selected menu nodes, one of each entity type and one unknown to the TV
+MOCK_MENU_SELECTED = [2, 99]
