@@ -865,11 +865,13 @@ async def test_contracts_retry_epex_refresh_during_unload_adds_no_entities(
     epex_coordinator.data = None
 
     release_epex = asyncio.Event()
+    epex_refresh_started = asyncio.Event()
 
     def _dynamic_contracts(_ban: str) -> EnergyContractsResponse:
         return build_contracts(dynamic=True)
 
     async def _slow_epex(*args, **kwargs):
+        epex_refresh_started.set()
         await release_epex.wait()
         return build_epex_payload(*args, **kwargs)
 
@@ -878,7 +880,7 @@ async def test_contracts_retry_epex_refresh_during_unload_adds_no_entities(
 
     freezer.tick(CONTRACTS_RETRY_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await epex_refresh_started.wait()
 
     mock_config_entry.mock_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS)
     release_epex.set()
