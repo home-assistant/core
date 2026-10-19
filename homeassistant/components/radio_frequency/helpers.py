@@ -179,7 +179,9 @@ class RadioFrequencyConsumerEntity(Entity):
         self._rf_availability[rf_entity_id] = (
             rf_state is not None and rf_state.state != STATE_UNAVAILABLE
         )
-        self._attr_available = all(self._rf_availability.values())
+        available = all(self._rf_availability.values())
+        if available != self.available:
+            self._async_rf_availability_changed(available)
 
         remove_listener = async_track_state_change_event(
             self.hass, [rf_entity_id], state_changed
