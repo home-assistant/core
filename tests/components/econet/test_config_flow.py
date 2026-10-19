@@ -6,14 +6,13 @@ from aiohttp import ClientConnectionError
 from pyeconet.api import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.econet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_bad_credentials(hass: HomeAssistant) -> None:

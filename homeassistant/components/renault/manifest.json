@@ -1,6 +1,7 @@
 {
   "domain": "renault",
   "name": "Renault",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@epenet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/renault",

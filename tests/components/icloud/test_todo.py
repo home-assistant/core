@@ -6,6 +6,12 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyicloud.services.reminders.client import RemindersApiError
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.icloud.const import CONF_INCLUDE_COMPLETED, DOMAIN
@@ -28,13 +34,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 
 ENTITY_ID = "todo.test_icloud_account_groceries"
 
@@ -62,13 +61,15 @@ def _reminder(
     return reminder
 
 
-def _list(list_id: str, title: str, *, is_group: bool = False) -> MagicMock:
+def _list(
+    list_id: str, title: str, *, is_group: bool = False, deleted: bool = False
+) -> MagicMock:
     """Build a mock pyicloud reminder list."""
     reminder_list = MagicMock()
     reminder_list.id = list_id
     reminder_list.title = title
     reminder_list.is_group = is_group
-    reminder_list.deleted = False
+    reminder_list.deleted = deleted
     return reminder_list
 
 
@@ -165,6 +166,29 @@ async def test_groups_skipped(
 
     assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get("todo.test_icloud_account_family") is None
+
+
+async def test_deleted_lists_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a deleted list's tombstone does not become an entity.
+
+    Sharing a list replaces its record, so every shared list leaves a
+    tombstone behind. Both records keep the list's name, so the tombstone
+    showed the shared list twice, once live and once always empty.
+    """
+    reminders.lists.return_value = [
+        _list("list1", "Groceries"),
+        _list("list2", "Groceries", deleted=True),
+    ]
+
+    await _setup(hass, config_entry)
+
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    assert [entity.entity_id for entity in entities] == [ENTITY_ID]
 
 
 async def test_subtasks_follow_their_parent(

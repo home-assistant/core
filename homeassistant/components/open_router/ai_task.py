@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
 from . import OpenRouterConfigEntry
-from .const import CONF_OUTPUT_MODALITIES
+from .const import CONF_OUTPUT_MODALITIES, DOMAIN
 from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class OpenRouterAITaskEntity(
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
-                "Last content in chat log is not an AssistantContent"
+                translation_domain=DOMAIN, translation_key="response_not_found"
             )
 
         text = chat_log.content[-1].content or ""
@@ -80,7 +80,7 @@ class OpenRouterAITaskEntity(
             data = json_loads(text)
         except JSONDecodeError as err:
             raise HomeAssistantError(
-                "Error with OpenRouter structured response"
+                translation_domain=DOMAIN, translation_key="json_parse_error"
             ) from err
 
         return ai_task.GenDataTaskResult(
@@ -100,11 +100,13 @@ class OpenRouterAITaskEntity(
         content = chat_log.content[-1]
         if not isinstance(content, conversation.AssistantContent):
             raise HomeAssistantError(
-                "Last content in chat log is not an AssistantContent"
+                translation_domain=DOMAIN, translation_key="response_not_found"
             )
 
         if not content.native:
-            raise HomeAssistantError("No image returned")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_image_returned"
+            )
 
         # OpenRouter returns images as data URIs: `data:image/png;base64,<data>`
         try:
@@ -112,11 +114,15 @@ class OpenRouterAITaskEntity(
             metadata, _, encoded = image_url.partition(",")
             image_data = base64.b64decode(encoded, validate=True)
         except (LookupError, TypeError, ValueError) as err:
-            raise HomeAssistantError("Invalid image returned") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="invalid_image_returned"
+            ) from err
 
         mime_type = metadata.removeprefix("data:").split(";")[0]
         if not metadata.startswith("data:") or not mime_type or not image_data:
-            raise HomeAssistantError("Invalid image returned")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="invalid_image_returned"
+            )
 
         return ai_task.GenImageTaskResult(
             image_data=image_data,

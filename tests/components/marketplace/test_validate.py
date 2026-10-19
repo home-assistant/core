@@ -5,6 +5,10 @@ from typing import Any
 
 from probatio.error import Invalid, MultipleInvalid
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.utils.validate import (
@@ -12,8 +16,6 @@ from homeassistant.components.marketplace.utils.validate import (
     VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REPO_DATA,
 )
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 CATEGORIES = (
     "integration",

@@ -1,4 +1,30 @@
 {
+  "exceptions": {
+    "attachments_not_supported": {
+      "message": "AI Task entity {entity_id} does not support attachments."
+    },
+    "entity_not_found": {
+      "message": "AI Task entity {entity_id} not found."
+    },
+    "evaluate_missing_input": {
+      "message": "Evaluation requires state or attachments."
+    },
+    "evaluate_not_supported": {
+      "message": "AI Task entity {entity_id} does not support evaluation."
+    },
+    "generate_data_not_supported": {
+      "message": "AI Task entity {entity_id} does not support generating data."
+    },
+    "generate_image_not_supported": {
+      "message": "AI Task entity {entity_id} does not support generating images."
+    },
+    "local_attachments_only": {
+      "message": "Only local attachments are currently supported."
+    },
+    "no_entity": {
+      "message": "No entity_id provided and no preferred entity set."
+    }
+  },
   "services": {
     "clear_images": {
       "description": "Deletes AI generated images.",
