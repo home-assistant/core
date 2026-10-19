@@ -62,7 +62,7 @@
       'unique_id': '01JTEST0000000000000000000_hue_300',
     }),
     'button.osram_light_mode': dict({
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'name': 'Mode',
       'translation_key': 'mode',
       'unique_id': '01JTEST0000000000000000000_mode',
@@ -210,7 +210,7 @@
       'unique_id': '01JTEST0000000000000000000_hue_300',
     }),
     'button.osram_light_mode': dict({
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'name': 'Mode',
       'translation_key': 'mode',
       'unique_id': '01JTEST0000000000000000000_mode',

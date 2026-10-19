@@ -32,7 +32,6 @@ BUTTON_DESCRIPTIONS: tuple[OsramIrButtonEntityDescription, ...] = tuple(
         in {
             OsramLightCode.BRIGHTNESS_UP,
             OsramLightCode.BRIGHTNESS_DOWN,
-            OsramLightCode.MODE,
         },
     )
     for code in OsramLightCode

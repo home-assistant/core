@@ -30,7 +30,6 @@ from tests.components.infrared.common import MockInfraredEmitterEntity
 ENABLED_CODES = {
     OsramLightCode.BRIGHTNESS_UP,
     OsramLightCode.BRIGHTNESS_DOWN,
-    OsramLightCode.MODE,
 }
 
 
@@ -47,7 +46,7 @@ async def test_entities(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Register every remote button, with only three enabled by default."""
+    """Register every remote button, with only brightness controls enabled."""
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -75,7 +74,6 @@ async def test_entities(
     assert {state.entity_id for state in hass.states.async_all(BUTTON_DOMAIN)} == {
         "button.osram_light_brightness_up",
         "button.osram_light_brightness_down",
-        "button.osram_light_mode",
     }
 
 
@@ -172,7 +170,7 @@ async def test_enable_button(
     command = mock_infrared_emitter_entity.send_command_calls[0]
     assert isinstance(command, NECCommand)
     assert command.command == code.value
-    assert len(hass.states.async_all(BUTTON_DOMAIN)) == 4
+    assert len(hass.states.async_all(BUTTON_DOMAIN)) == 3
 
 
 @pytest.mark.parametrize(
@@ -250,7 +248,7 @@ async def test_existing_entities_preserved(
     ],
 )
 @pytest.mark.parametrize("has_receiver_entity", [False, True])
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_availability(hass: HomeAssistant, entity_id: str) -> None:
     """Button availability follows the emitter, independently of the receiver."""
     hass.states.async_set(RECEIVER_ENTITY_ID, STATE_UNAVAILABLE)
@@ -264,7 +262,7 @@ async def test_availability(hass: HomeAssistant, entity_id: str) -> None:
 
 
 @pytest.mark.parametrize("platforms", [[Platform.BUTTON]])
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_press_without_light(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -282,7 +280,7 @@ async def test_press_without_light(
     assert command.command == OsramLightCode.MODE
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_transmission_failure(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
