@@ -317,6 +317,7 @@ async def test_email_user_flow_success(
         pytest.param(Exception(), "unknown", id="unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_email_user_flow_request_errors(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -334,6 +335,14 @@ async def test_email_user_flow_request_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email"
     assert result["errors"] == {"base": error}
+
+    mock_auth_client.request_magic_link.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], EMAIL_CREDENTIALS
+    )
+    result = await _complete_progress_flow(hass, result)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_email_user_flow_timeout(
@@ -396,6 +405,7 @@ async def test_email_user_flow_timeout(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_email_user_flow_completion_errors(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -410,7 +420,9 @@ async def test_email_user_flow_completion_errors(
         await asyncio.sleep(0)
         raise side_effect
 
-    getattr(mock_auth_client, method).side_effect = raise_error
+    mock_method = getattr(mock_auth_client, method)
+    original_side_effect = mock_method.side_effect
+    mock_method.side_effect = raise_error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], EMAIL_CREDENTIALS
     )
@@ -419,6 +431,14 @@ async def test_email_user_flow_completion_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email"
     assert result["errors"] == {"base": error}
+
+    mock_method.side_effect = original_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], EMAIL_CREDENTIALS
+    )
+    result = await _complete_progress_flow(hass, result)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_email_user_flow_duplicate_email(
