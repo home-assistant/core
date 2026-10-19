@@ -89,18 +89,18 @@ class TrimlightCoordinator(DataUpdateCoordinator[TrimlightLightState]):
     ) -> None:
         """Publish requested changes immediately and let polling confirm them."""
         state = self.data
-        self.async_set_updated_data(
-            replace(
-                state,
-                is_on=on,
-                brightness=state.brightness if brightness is None else brightness,
-                red=state.red if red is None else red,
-                green=state.green if green is None else green,
-                blue=state.blue if blue is None else blue,
-                warm_white=state.warm_white if warm_white is None else warm_white,
-                cold_white=state.cold_white if cold_white is None else cold_white,
-            )
+        self.data = replace(
+            state,
+            is_on=on,
+            brightness=state.brightness if brightness is None else brightness,
+            red=state.red if red is None else red,
+            green=state.green if green is None else green,
+            blue=state.blue if blue is None else blue,
+            warm_white=state.warm_white if warm_white is None else warm_white,
+            cold_white=state.cold_white if cold_white is None else cold_white,
         )
+        # Optimistic changes must not postpone polling that confirms device state.
+        self.async_update_listeners()
 
         try:
             await self.client.set_light_state(

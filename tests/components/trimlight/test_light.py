@@ -179,6 +179,28 @@ async def test_brightness_and_poll(
     assert hass.states.get(ENTITY_ID).attributes[ATTR_BRIGHTNESS] == 64
 
 
+async def test_commands_do_not_postpone_polling(
+    hass: HomeAssistant,
+    mock_trimlight: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test repeated commands leave the periodic state polling scheduled."""
+    for expected_read_count in range(2, 5):
+        for _ in range(2):
+            freezer.tick(SCAN_INTERVAL / 2)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_RGB_COLOR: (40, 50, 60)},
+                blocking=True,
+            )
+
+        assert mock_trimlight.get_light_state.await_count == expected_read_count
+
+
 @pytest.mark.parametrize(
     ("ic_type", "attribute"),
     [
