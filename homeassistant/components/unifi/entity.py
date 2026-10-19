@@ -119,6 +119,8 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
+    discovery_fn: Callable[[UnifiHub, str], bool] | None = None
+    """Require telemetry evidence for first discovery, not continued support."""
     translation_placeholders_fn: Callable[[ItemT], Mapping[str, str]] | None = None
     """Provide translation placeholders used together with translation_key."""
 

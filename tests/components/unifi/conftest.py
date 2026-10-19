@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
+from copy import deepcopy
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any, Protocol
@@ -251,9 +252,9 @@ def fixture_clients_all_data() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(name="device_payload")
-def fixture_device_data() -> list[dict[str, Any]]:
+def fixture_device_data(request: pytest.FixtureRequest) -> list[dict[str, Any]]:
     """Device data."""
-    return []
+    return deepcopy(getattr(request, "param", []))
 
 
 @pytest.fixture(name="dpi_app_payload")
