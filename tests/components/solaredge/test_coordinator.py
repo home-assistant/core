@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from solaredge_web import EnergyData
 
 from homeassistant.components.recorder import Recorder
@@ -45,7 +46,6 @@ from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
