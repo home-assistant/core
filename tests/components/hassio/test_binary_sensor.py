@@ -19,6 +19,10 @@ from aiohasupervisor.models.mounts import (
     NFSMountResponse,
 )
 import pytest
+from pytest_homeassistant.components.hassio.common import (
+    MOCK_REPOSITORIES,
+    MOCK_STORE_ADDONS,
+)
 
 from homeassistant.components.hassio import DOMAIN, get_addons_info
 from homeassistant.components.hassio.const import ADDONS_COORDINATOR
@@ -26,8 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator

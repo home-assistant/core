@@ -2,6 +2,7 @@
 
 from importlib import import_module
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 from aiohttp import web
 import pytest
@@ -11,6 +12,7 @@ from homeassistant import loader
 from homeassistant.components.recorder import Recorder
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant import _paths
@@ -156,3 +158,21 @@ def test_historical_recorder_schema(schema: str) -> None:
     """Historical schema helpers must not import Core's test tree."""
     module = import_module(get_schema_module_path(schema))
     assert module.Base.metadata.tables
+
+
+@pytest.mark.usefixtures("addon_not_installed", "install_addon")
+async def test_supervisor_addon_installation(supervisor_client: AsyncMock) -> None:
+    """Supervisor fixtures simulate add-on installation."""
+    addon = supervisor_client.addons.addon_info.return_value
+    assert addon.available is False
+    await supervisor_client.store.install_addon("test")
+    assert addon.available is True
+    assert addon.state == "stopped"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+def test_entity_registry_enabled_by_default() -> None:
+    """Registry fixtures enable entities that are disabled by default."""
+    entity = Entity()
+    entity._attr_entity_registry_enabled_default = False
+    assert entity.entity_registry_enabled_default
